@@ -7,7 +7,10 @@
         mc:Ignorable="d"
         Title="ErrorMessagesWindow" Height="300" Width="1280">
     <DockPanel Margin="5,0,5,5">
-        <ListView DockPanel.Dock="Left"
+        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+            <Button DockPanel.Dock="Left" Content="Clear List" Click="ClearButtonClicked"/>
+        </DockPanel>
+        <ListView DockPanel.Dock="Top"
             ItemsSource="{Binding ExceptionList, Mode=OneWay}">
             <ListView.View>
                 <GridView>

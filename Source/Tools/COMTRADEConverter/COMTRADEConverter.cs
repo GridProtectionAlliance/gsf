@@ -527,6 +527,11 @@ namespace COMTRADEConverter
             Files.Clear();
         }
 
+        public void ProcessFilesAsync()
+        {
+            
+        }
+
         public void ClearFileList()
         {
             Files.Clear();

@@ -12,10 +12,10 @@
         ScrollViewer.VerticalScrollBarVisibility="Auto">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" >
-                <MenuItem Header="_Add Files" Click="AddFilesButtonClicked" />
-                <MenuItem Header="Clear _Files" Click="ClearFilesButtonClicked" />
-                <MenuItem Header="Change _Destination" Click="BrowseButtonClicked" />
-                <MenuItem Header="_Convert Files" Click="GoButtonClicked" />
+                <MenuItem Name="AddFilesMenu" Header="_Add Files" Click="AddFilesButtonClicked" />
+                <MenuItem Name="ClearFilesMenu" Header="Clea_r Files" Click="ClearFilesButtonClicked" />
+                <MenuItem Name="ChangeDestinationMenu" Header="Change _Destination" Click="BrowseButtonClicked" />
+                <MenuItem Name="ConvertFilesMenu" Header="_Convert Files" Click="GoButtonClicked" />
             </MenuItem>
             <MenuItem Header="_Errors"  Click="ErrorsButtonCLicked"/>
         </Menu>
@@ -26,12 +26,15 @@
                 </Style>
             </StackPanel.Resources>
             <Button
+                Name="AddFilesButton"
                 Content="Add files"
                 Click="AddFilesButtonClicked" />
             <Button 
+                Name="ClearFileListButton"
                 Content="Clear file list"
                 Click="ClearFilesButtonClicked"/>
             <Button
+                Name="ConvertFilesButton"
                 Content="Convert Files"
                 Click="GoButtonClicked"/>
         </StackPanel>
@@ -39,7 +42,7 @@
             <TextBlock Margin="5,0,0,0"
                 DockPanel.Dock="Left" 
                 Text="Destination:" />
-            <Button Margin="0,0,5,0"
+            <Button Margin="0,0,5,0" Name="BrowseButton"
                 DockPanel.Dock="Right"
                 Click="BrowseButtonClicked"
                 Content="Browse"/>

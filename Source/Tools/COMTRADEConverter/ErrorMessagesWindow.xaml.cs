@@ -23,5 +23,11 @@ namespace COMTRADEConverter
         {
             InitializeComponent();
         }
+
+        private void ClearButtonClicked(object sender, RoutedEventArgs e)
+        {
+            COMTRADEConverterViewModel viewModel = DataContext as COMTRADEConverterViewModel;
+            viewModel?.ExceptionList.Clear();
+        }
     }
 }
