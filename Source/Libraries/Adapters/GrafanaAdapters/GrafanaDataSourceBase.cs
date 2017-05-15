@@ -1602,7 +1602,7 @@ namespace GrafanaAdapters
 
                     values = source.ToArray();
 
-                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => FromAngleValue(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = ToAngleValue(angle, angleUnits), Time = values[index].Time, Target = values[index].Target }))
+                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => FromAngleUnits(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = ToAngleUnits(angle, angleUnits), Time = values[index].Time, Target = values[index].Target }))
                         yield return dataValue;
 
                     break;
@@ -1610,14 +1610,14 @@ namespace GrafanaAdapters
                     if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
                         angleUnits = AngleUnits.Degrees;
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = ToAngleValue(FromAngleValue(dataValue.Value, angleUnits).ToRange(-Math.PI, false), angleUnits), Time = dataValue.Time, Target = dataValue.Target }))
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = ToAngleUnits(FromAngleUnits(dataValue.Value, angleUnits).ToRange(-Math.PI, false), angleUnits), Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
             }
         }
 
-        private static Angle FromAngleValue(double value, AngleUnits units)
+        private static Angle FromAngleUnits(double value, AngleUnits units)
         {
             switch (units)
             {
@@ -1638,7 +1638,7 @@ namespace GrafanaAdapters
             }
         }
 
-        private static double ToAngleValue(Angle value, AngleUnits units)
+        private static double ToAngleUnits(Angle value, AngleUnits units)
         {
             switch (units)
             {
