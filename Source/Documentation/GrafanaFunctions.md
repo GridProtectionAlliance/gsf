@@ -336,7 +336,7 @@ Returns a series of values that represent an adjusted set of angles that are unw
 
 * Signature: `UnwrapAngle([units], expression)`
 * Example: `UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)`
-* Variants: `UnwrapAngle`
+* Variants: `UnwrapAngle`, `Unwrap`
 * Execution: Immediate in-memory array load
 
 ## WrapAngle
@@ -345,7 +345,7 @@ Returns a series of values that represent an adjusted set of angles that are wra
 
 * Signature: `WrapAngle([units], expression)`
 * Example: `WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')`
-* Variants: `WrapAngle`
+* Variants: `WrapAngle`, `Wrap`
 * Execution: Deferred enumeration
 
 ## Label
