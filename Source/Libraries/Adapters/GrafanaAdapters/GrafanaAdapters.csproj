@@ -77,6 +77,7 @@
     <Compile Include="TargetCache.cs" />
     <Compile Include="DataSourceValue.cs" />
     <Compile Include="TimeSeriesValues.cs" />
+    <Compile Include="TimeSliceScanner.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">

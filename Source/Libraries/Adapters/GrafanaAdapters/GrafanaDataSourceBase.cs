@@ -353,17 +353,42 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Interval(N, expression)</c><br/>
         /// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
-        /// Variants: Interval, Int<br/>
+        /// Variants: Interval<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Interval,
+        /// <summary>
+        /// Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical
+        /// operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values
+        /// mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads,
+        /// ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>UnwrapAngle(units, expression)</c><br/>
+        /// Example: <c>UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
+        /// Variants: UnwrapAngle<br/>
+        /// Execution: Immediate in-memory array load.
+        /// </remarks>
+        UnwrapAngle,
+        /// <summary>
+        /// Returns a series of values that represent an adjusted set of angles that are wrapped, per specified angle units, so that angle values are consistently
+        /// between -180 and +180 degrees. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians,
+        /// Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>WrapAngle(units, expression)</c><br/>
+        /// Example: <c>WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
+        /// Variants: WrapAngle<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        WrapAngle,
         /// <summary>
         /// Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three
         /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3".
         /// </summary>
         /// <remarks>
         /// Signature: <c>Label(value, expression)</c><br/>
-        /// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType LIKE 'FREQ'))</c><br/>
+        /// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
         /// Variants: Label, Name<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
@@ -391,6 +416,37 @@ namespace GrafanaAdapters
         /// Performs no group operation on the series set.
         /// </summary>
         None
+    }
+
+    /// <summary>
+    /// Angle units for wrap and unwrap functions.
+    /// </summary>
+    public enum AngleUnits
+    {
+        /// <summary>
+        /// Specifies that angle is in degrees.
+        /// </summary>
+        Degrees,
+        /// <summary>
+        /// Specifies that angle is in radians.
+        /// </summary>
+        Radians,
+        /// <summary>
+        /// Specifies that angle is in grads.
+        /// </summary>
+        Grads,
+        /// <summary>
+        /// Specifies that angle is in arc minutes.
+        /// </summary>
+        ArcMinutes,
+        /// <summary>
+        /// Specifies that angle is in arc seconds.
+        /// </summary>
+        ArcSeconds,
+        /// <summary>
+        /// Specifies that angle is in angular mil.
+        /// </summary>
+        AngularMil
     }
 
     #endregion
@@ -491,7 +547,7 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                int maxDataPoints = (int)(request.maxDataPoints * 1.05D);
+                int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
 
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
@@ -629,6 +685,10 @@ namespace GrafanaAdapters
                 // Extract any required function parameters
                 int requiredParameters = s_requiredParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
 
+                // Any slice operation adds one required parameter for time tolerance
+                if (groupOperation == GroupOperation.Slice)
+                    requiredParameters++;
+
                 if (requiredParameters > 0)
                 {
                     int index = 0;
@@ -642,7 +702,7 @@ namespace GrafanaAdapters
                     if (parsedParameters.Count == requiredParameters)
                         expression = expression.Substring(index + 1).Trim();
                     else
-                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {seriesFunction}({expression})");
+                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {(groupOperation == GroupOperation.None ? "" : groupOperation.ToString())}{seriesFunction}({expression})");
                 }
 
                 // Extract any provided optional function parameters
@@ -693,7 +753,7 @@ namespace GrafanaAdapters
             // Query function expression to get series data
             IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, interval, decimate, cancellationToken);
 
-            // Handle label function as a special edge case
+            // Handle label function as a special edge case - groups operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)
             {
                 // Derive label
@@ -718,7 +778,7 @@ namespace GrafanaAdapters
                 switch (groupOperation)
                 {
                     case GroupOperation.Set:
-                        // Flatten all series into a single enumerable for set operations
+                        // Flatten all series into a single enumerable
                         DataSourceValueGroup result = new DataSourceValueGroup
                         {
                             Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
@@ -736,6 +796,16 @@ namespace GrafanaAdapters
 
                         break;
                     case GroupOperation.Slice:
+                        TimeSliceScanner scanner = new TimeSliceScanner(dataset, ParseFloat(parameters[0]) / SI.Milli);
+                        parameters = parameters.Skip(1).ToArray();
+
+                        // Flatten all series into a single enumerable
+                        yield return new DataSourceValueGroup
+                        {
+                            Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                            Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters)
+                        };
+
                         break;
                     default:
                         foreach (DataSourceValueGroup dataValues in dataset)
@@ -748,6 +818,13 @@ namespace GrafanaAdapters
                         break;
                 }
             }
+        }
+
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
+        {
+            // Execute series function over a set of points from each series at the same time-slice
+            while (!scanner.DataReadComplete)
+                yield return ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters).FirstOrDefault();
         }
 
         #endregion
@@ -785,6 +862,8 @@ namespace GrafanaAdapters
         private static readonly Regex s_derivativeExpression;
         private static readonly Regex s_timeIntegrationExpression;
         private static readonly Regex s_intervalExpression;
+        private static readonly Regex s_unwrapAngleExpression;
+        private static readonly Regex s_wrapAngleExpression;
         private static readonly Regex s_labelExpression;
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
         private static readonly Dictionary<SeriesFunction, int> s_optionalParameters;
@@ -828,7 +907,9 @@ namespace GrafanaAdapters
             s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_intervalExpression = new Regex(string.Format(GetExpression, "(Interval|Int)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_intervalExpression = new Regex(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "Unwrap"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_wrapAngleExpression = new Regex(string.Format(GetExpression, "Wrap"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
@@ -863,6 +944,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
                 [SeriesFunction.Interval] = 1,
+                [SeriesFunction.UnwrapAngle] = 0,
+                [SeriesFunction.WrapAngle] = 0,
                 [SeriesFunction.Label] = 1
             };
 
@@ -898,6 +981,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
                 [SeriesFunction.Interval] = 0,
+                [SeriesFunction.UnwrapAngle] = 1,
+                [SeriesFunction.WrapAngle] = 1,
                 [SeriesFunction.Label] = 0
             };
         }
@@ -1126,6 +1211,20 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Interval, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
+                // Look for unwrap angle function
+                lock (s_unwrapAngleExpression)
+                    filterMatch = s_unwrapAngleExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.UnwrapAngle, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for wrap angle function
+                lock (s_wrapAngleExpression)
+                    filterMatch = s_wrapAngleExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.WrapAngle, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
                 // Look for label function
                 lock (s_labelExpression)
                     filterMatch = s_labelExpression.Match(expression);
@@ -1162,6 +1261,7 @@ namespace GrafanaAdapters
             double baseTime, timeStep, value;
             bool normalizeTime;
             int count;
+            AngleUnits angleUnits;
 
             switch (seriesFunction)
             {
@@ -1496,6 +1596,45 @@ namespace GrafanaAdapters
                         }
                     }
                     break;
+                case SeriesFunction.UnwrapAngle:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
+                        angleUnits = AngleUnits.Degrees;
+
+                    values = source.ToArray();
+
+                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => GetAngleValue(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = angle, Time = values[index].Time, Target = values[index].Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.WrapAngle:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
+                        angleUnits = AngleUnits.Degrees;
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = GetAngleValue(dataValue.Value, angleUnits).ToRange(-Math.PI, false), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+            }
+        }
+
+        private static Angle GetAngleValue(double value, AngleUnits units)
+        {
+            switch (units)
+            {
+                case AngleUnits.Radians:
+                    return value;
+                case AngleUnits.Degrees:
+                    return Angle.FromDegrees(value);
+                case AngleUnits.Grads:
+                    return Angle.FromGrads(value);
+                case AngleUnits.ArcMinutes:
+                    return Angle.FromArcMinutes(value);
+                case AngleUnits.ArcSeconds:
+                    return Angle.FromArcSeconds(value);
+                case AngleUnits.AngularMil:
+                    return Angle.FromAngularMil(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
             }
         }
 
