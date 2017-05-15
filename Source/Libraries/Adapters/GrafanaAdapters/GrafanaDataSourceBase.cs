@@ -820,14 +820,6 @@ namespace GrafanaAdapters
             }
         }
 
-        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
-        {
-            // Execute series function over a set of points from each series at the same time-slice
-            while (!scanner.DataReadComplete)
-                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters))
-                    yield return dataValue;
-        }
-
         #endregion
 
         #region [ Static ]
@@ -1241,6 +1233,14 @@ namespace GrafanaAdapters
                 throw new InvalidOperationException($"Unrecognized series function '{matchedFunction.Value}'");
 
             return result;
+        }
+
+        // Execute series function over a set of points from each series at the same time-slice
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
+        {
+            while (!scanner.DataReadComplete)
+                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters))
+                    yield return dataValue;
         }
 
         // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
