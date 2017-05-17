@@ -135,7 +135,7 @@ namespace GSF.Data.Model
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
             m_searchFilterSql = s_searchFilterSql;
-            m_rootQueryRestriction = s_rootQueryRestriction;
+            m_rootQueryRestriction = s_rootQueryRestriction?.Clone();
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
