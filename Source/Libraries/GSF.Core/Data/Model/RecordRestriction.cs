@@ -32,6 +32,11 @@ namespace GSF.Data.Model
     /// <summary>
     /// Defines a parameterized record restriction that can be applied to queries.
     /// </summary>
+    /// <remarks>
+    /// Instances of <see cref="RecordRestriction"/> should be considered temporal and non-reusable
+    /// once used against a function in <see cref="TableOperations{T}"/>. If a record restriction 
+    /// needs to be cached for re-use, use <see cref="Clone()"/> for the table operation function.
+    /// </remarks>
     public class RecordRestriction : IEquatable<RecordRestriction>
     {
         #region [ Members ]
@@ -92,6 +97,46 @@ namespace GSF.Data.Model
             Parameters = parameters;
         }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="Parameters"/> field value for the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">Index into <see cref="Parameters"/> field array.</param>
+        /// <returns><see cref="Parameters"/> field value for the specified <paramref name="index"/>.</returns>
+        public object this[int index]
+        {
+            get
+            {
+                return Parameters[index];
+            }
+            set
+            {
+                Parameters[index] = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Creates a deep copy of this record restriction.
+        /// </summary>
+        /// <returns>Deep copy of this record restriction.</returns>
+        /// <remarks>
+        /// Functions in the <see cref="AdoDataConnection"/> will convert parameters into
+        /// <see cref="IDbDataParameter"/> instances tied to a new <see cref="IDbCommand"/>,
+        /// for this reason <see cref="RecordRestriction"/> instances are typically only
+        /// good for a single use. This function allows a cached instance to be re-used.
+        /// </remarks>
+        public RecordRestriction Clone()
+        {
+            return Clone(this);
+        }
+
         /// <summary>
         /// Determines whether the specified object is equal to the current object.
         /// </summary>
@@ -128,27 +173,6 @@ namespace GSF.Data.Model
             unchecked
             {
                 return ((FilterExpression?.GetHashCode() ?? 0) * 397) ^ (Parameters?.GetHashCode() ?? 0);
-            }
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets <see cref="Parameters"/> field value for the specified <paramref name="index"/>.
-        /// </summary>
-        /// <param name="index">Index into <see cref="Parameters"/> field array.</param>
-        /// <returns><see cref="Parameters"/> field value for the specified <paramref name="index"/>.</returns>
-        public object this[int index]
-        {
-            get
-            {
-                return Parameters[index];
-            }
-            set
-            {
-                Parameters[index] = value;
             }
         }
 
@@ -253,6 +277,33 @@ namespace GSF.Data.Model
         #region [ Static ]
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a deep copy of the <paramref name="source"/> record restriction.
+        /// </summary>
+        /// <param name="source">Record restriction to clone.</param>
+        /// <returns>Deep copy of the <paramref name="source"/> record restriction.</returns>
+        /// <remarks>
+        /// Functions in the <see cref="AdoDataConnection"/> will convert parameters into
+        /// <see cref="IDbDataParameter"/> instances tied to a new <see cref="IDbCommand"/>,
+        /// for this reason <see cref="RecordRestriction"/> instances are typically only
+        /// good for a single use. This function allows a cached instance to be re-used.
+        /// </remarks>
+        public static RecordRestriction Clone(RecordRestriction source)
+        {
+            if ((object)source == null)
+                return null;
+
+            object[] parameters = source.Parameters;
+
+            if ((object)parameters != null && parameters.Length > 0)
+            {
+                parameters = new object[source.Parameters.Length];
+                Array.Copy(source.Parameters, parameters, source.Parameters.Length);
+            }
+
+            return new RecordRestriction(source.FilterExpression, parameters);
+        }
 
         /// <summary>
         /// Combines two record restrictions with an AND condition.
