@@ -33,9 +33,10 @@ namespace GSF.Data.Model
     /// Defines a parameterized record restriction that can be applied to queries.
     /// </summary>
     /// <remarks>
-    /// Instances of <see cref="RecordRestriction"/> should be considered temporal and non-reusable
-    /// once used against a function in <see cref="TableOperations{T}"/>. If a record restriction 
-    /// needs to be cached for re-use, use <see cref="Clone()"/> for the table operation function.
+    /// For versatility, values in the <see cref="Parameters"/> array are mutable, however, this makes the
+    /// array vulnerable to unintended updates for long-lived instances. Consequently, the normal use-case
+    /// of record restriction instances should be considered temporal. If an instance needs to be cached,
+    /// consider use of the <see cref="Clone()"/> function to reduce risk of unintended array updates.
     /// </remarks>
     public class RecordRestriction : IEquatable<RecordRestriction>
     {
@@ -126,12 +127,6 @@ namespace GSF.Data.Model
         /// Creates a deep copy of this record restriction.
         /// </summary>
         /// <returns>Deep copy of this record restriction.</returns>
-        /// <remarks>
-        /// Functions in the <see cref="AdoDataConnection"/> will convert parameters into
-        /// <see cref="IDbDataParameter"/> instances tied to a new <see cref="IDbCommand"/>,
-        /// for this reason <see cref="RecordRestriction"/> instances are typically only
-        /// good for a single use. This function allows a cached instance to be re-used.
-        /// </remarks>
         public RecordRestriction Clone()
         {
             return Clone(this);
@@ -283,12 +278,6 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="source">Record restriction to clone.</param>
         /// <returns>Deep copy of the <paramref name="source"/> record restriction.</returns>
-        /// <remarks>
-        /// Functions in the <see cref="AdoDataConnection"/> will convert parameters into
-        /// <see cref="IDbDataParameter"/> instances tied to a new <see cref="IDbCommand"/>,
-        /// for this reason <see cref="RecordRestriction"/> instances are typically only
-        /// good for a single use. This function allows a cached instance to be re-used.
-        /// </remarks>
         public static RecordRestriction Clone(RecordRestriction source)
         {
             if ((object)source == null)

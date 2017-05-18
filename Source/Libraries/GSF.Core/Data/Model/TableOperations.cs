@@ -584,7 +584,7 @@ namespace GSF.Data.Model
             try
             {
                 if ((object)m_rootQueryRestriction != null)
-                    restriction = m_rootQueryRestriction.Clone() + restriction;
+                    restriction = m_rootQueryRestriction + restriction;
 
                 if (limit < 1)
                 {
@@ -741,7 +741,7 @@ namespace GSF.Data.Model
                 try
                 {
                     if ((object)m_rootQueryRestriction != null)
-                        restriction = m_rootQueryRestriction.Clone() + restriction;
+                        restriction = m_rootQueryRestriction + restriction;
 
                     if ((object)restriction == null)
                     {
@@ -807,7 +807,7 @@ namespace GSF.Data.Model
             try
             {
                 if ((object)m_rootQueryRestriction != null)
-                    restriction = m_rootQueryRestriction.Clone() + restriction;
+                    restriction = m_rootQueryRestriction + restriction;
 
                 if ((object)restriction == null)
                 {
