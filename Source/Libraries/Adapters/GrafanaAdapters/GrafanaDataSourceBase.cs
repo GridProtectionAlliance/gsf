@@ -366,8 +366,8 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high.
         /// The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional,
-        /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &gt;= low and &lt;= high - defaults to false, which means
-        /// values are exclusive, i.e., excluded values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
+        /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means
+        /// values are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
@@ -1641,7 +1641,7 @@ namespace GrafanaAdapters
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
-                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(lowInclusive ? dataValue.Value >= low : dataValue.Value > low) && (highInclusive ? dataValue.Value <= high : dataValue.Value < high)))
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) || (highInclusive ? dataValue.Value >= high : dataValue.Value > high)))
                         yield return dataValue;
 
                     break;
