@@ -354,7 +354,7 @@ namespace GrafanaAdapters
         /// The low and high parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional,
         /// is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means
         /// values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
-        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive
+        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
         /// Signature: <c>IncludeRange(low, high, [inclusive], expression)</c> -or- <c>IncludeRange(low, high, [lowinclusive], [highinclusive], expression)</c><br/>
@@ -368,7 +368,7 @@ namespace GrafanaAdapters
         /// The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional,
         /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &gt;= low and &lt;= high - defaults to false, which means
         /// values are exclusive, i.e., excluded values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
-        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive
+        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
         /// Signature: <c>ExcludeRange(low, high, [inclusive], expression)</c> -or- <c>ExcludeRange(low, high, [lowinclusive], [highinclusive], expression)</c><br/>
@@ -385,7 +385,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>UnwrapAngle(units, expression)</c><br/>
-        /// Example: <c>UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
+        /// Example: <c>UnwrapAngle(FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
         /// Variants: UnwrapAngle, Unwrap<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
