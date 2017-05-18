@@ -357,7 +357,7 @@ Returns a series of values that represent a filtered set of the values in the so
 Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
 
 * Signature: `UnwrapAngle([units], expression)`
-* Example: `UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)`
+* Example: `UnwrapAngle(FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)`
 * Variants: `UnwrapAngle`, `Unwrap`
 * Execution: Immediate in-memory array load
 
