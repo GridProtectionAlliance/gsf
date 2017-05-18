@@ -353,15 +353,30 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high.
         /// The low and high parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional,
         /// is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means
-        /// values are exclusive, i.e., allowed values are &gt; low and &lt; high.
+        /// values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
+        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive
         /// </summary>
         /// <remarks>
-        /// Signature: <c>AllowRange(low, high, [inclusive], expression)</c><br/>
-        /// Example: <c>AllowRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: AllowRange<br/>
+        /// Signature: <c>IncludeRange(low, high, [inclusive], expression)</c> -or- <c>IncludeRange(low, high, [lowinclusive], [highinclusive], expression)</c><br/>
+        /// Example: <c>IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+        /// Variants: IncludeRange, Include<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
-        AllowRange,
+        IncludeRange,
+        /// <summary>
+        /// Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high.
+        /// The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional,
+        /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &gt;= low and &lt;= high - defaults to false, which means
+        /// values are exclusive, i.e., excluded values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
+        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>ExcludeRange(low, high, [inclusive], expression)</c> -or- <c>ExcludeRange(low, high, [lowinclusive], [highinclusive], expression)</c><br/>
+        /// Example: <c>ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
+        /// Variants: ExcludeRange, Exclude<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        ExcludeRange,
         /// <summary>
         /// Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical
         /// operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values
@@ -859,7 +874,8 @@ namespace GrafanaAdapters
         private static readonly Regex s_derivativeExpression;
         private static readonly Regex s_timeIntegrationExpression;
         private static readonly Regex s_intervalExpression;
-        private static readonly Regex s_allowRangeExpression;
+        private static readonly Regex s_includeRangeExpression;
+        private static readonly Regex s_excludeRangeExpression;
         private static readonly Regex s_unwrapAngleExpression;
         private static readonly Regex s_wrapAngleExpression;
         private static readonly Regex s_labelExpression;
@@ -905,7 +921,8 @@ namespace GrafanaAdapters
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_intervalExpression = new Regex(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_allowRangeExpression = new Regex(string.Format(GetExpression, "AllowRange"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_includeRangeExpression = new Regex(string.Format(GetExpression, "(IncludeRange|Include)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_excludeRangeExpression = new Regex(string.Format(GetExpression, "(ExcludeRange|Exclude)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -941,7 +958,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
                 [SeriesFunction.Interval] = 1,
-                [SeriesFunction.AllowRange] = 2,
+                [SeriesFunction.IncludeRange] = 2,
+                [SeriesFunction.ExcludeRange] = 2,
                 [SeriesFunction.UnwrapAngle] = 0,
                 [SeriesFunction.WrapAngle] = 0,
                 [SeriesFunction.Label] = 1
@@ -978,7 +996,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
                 [SeriesFunction.Interval] = 0,
-                [SeriesFunction.AllowRange] = 1,
+                [SeriesFunction.IncludeRange] = 2,
+                [SeriesFunction.ExcludeRange] = 2,
                 [SeriesFunction.UnwrapAngle] = 1,
                 [SeriesFunction.WrapAngle] = 1,
                 [SeriesFunction.Label] = 0
@@ -1202,12 +1221,19 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Interval, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
-                // Look for allow range function
-                lock (s_allowRangeExpression)
-                    filterMatch = s_allowRangeExpression.Match(expression);
+                // Look for include range function
+                lock (s_includeRangeExpression)
+                    filterMatch = s_includeRangeExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.AllowRange, filterMatch.Result("${Expression}").Trim(), groupOperation);
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.IncludeRange, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for exclude range function
+                lock (s_excludeRangeExpression)
+                    filterMatch = s_excludeRangeExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.ExcludeRange, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for unwrap angle function
                 lock (s_unwrapAngleExpression)
@@ -1264,8 +1290,8 @@ namespace GrafanaAdapters
                 return dataValue.Value;
             });
 
-            double baseTime, timeStep, value;
-            bool normalizeTime;
+            double baseTime, timeStep, value, low, high;
+            bool normalizeTime, lowInclusive, highInclusive;
             int count;
             AngleUnits angleUnits;
 
@@ -1599,12 +1625,23 @@ namespace GrafanaAdapters
                         }
                     }
                     break;
-                case SeriesFunction.AllowRange:
-                    double low = ParseFloat(parameters[0], false);
-                    double high = ParseFloat(parameters[1], false);
-                    bool inclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
+                case SeriesFunction.IncludeRange:
+                    low = ParseFloat(parameters[0], false);
+                    high = ParseFloat(parameters[1], false);
+                    lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
+                    highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
-                    foreach (DataSourceValue dataValue in source.Where(dataValue => IsInRange(dataValue.Value, low, high, inclusive)))
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => (lowInclusive ? dataValue.Value >= low : dataValue.Value > low) && (highInclusive ? dataValue.Value <= high : dataValue.Value < high)))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.ExcludeRange:
+                    low = ParseFloat(parameters[0], false);
+                    high = ParseFloat(parameters[1], false);
+                    lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
+                    highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
+
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(lowInclusive ? dataValue.Value >= low : dataValue.Value > low) && (highInclusive ? dataValue.Value <= high : dataValue.Value < high)))
                         yield return dataValue;
 
                     break;
@@ -1763,14 +1800,6 @@ namespace GrafanaAdapters
             }
 
             return percent;
-        }
-
-        private static bool IsInRange(double value, double low, double high, bool inclusive)
-        {
-            if (inclusive)
-                return value >= low && value <= high;
-
-            return value > low && value < high;
         }
 
         #endregion
