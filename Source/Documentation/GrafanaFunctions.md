@@ -35,7 +35,6 @@ Series functions can operate over the set of defined series, producing a single 
 * [Ceiling](#ceiling)
 * [Truncate](#truncate)
 * [StandardDeviation](#standarddeviation)
-* [StandardDeviationSample](#standarddeviationsample)
 * [Median](#median)
 * [Mode](#mode)
 * [Top](#top)
@@ -186,20 +185,11 @@ Returns a series of values that represent the integral part of each of the value
 
 ## StandardDeviation
 
-Returns a single value that represents the standard deviation of the values in the source series.
+Returns a single value that represents the standard deviation of the values in the source series. First parameter, optional, is a boolean flag representing if the sample based calculation should be used - defaults to false, which means the population based calculation should be used.
 
-* Signature: `StandardDeviation(expression)`
+* Signature: `StandardDeviation([samplecalc], expression)`
 * Example: `StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')`
 * Variants: `StandardDeviation`, `StdDev`
-* Execution: Immediate in-memory array load
-
-## StandardDeviationSample
-
-Returns a single value that represents the standard deviation, using sample calculation, of the values in the source series.
-
-* Signature: `StandardDeviationSample(expression)`
-* Example: `StandardDeviationSample(FILTER ActiveMeasurements WHERE SignalType='VPHM')`
-* Variants: `StandardDeviationSample`, `StdDevSamp`
 * Execution: Immediate in-memory array load
 
 ## Median
