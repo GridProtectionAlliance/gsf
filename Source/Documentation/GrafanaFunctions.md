@@ -1,6 +1,6 @@
 # GSF Grafana Functions
 
-The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-set basis. The following defines the available functions that are available for a data source implementing the GSF Grafana interface, e.g., openHistorian.
+The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-set basis. The following defines the available functions that are available for a data source implementing the GSF Grafana interface, e.g., openHistorian. Note that any data source that implements the [GrafanaDataSourceBase](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Libraries/Adapters/GrafanaAdapters/GrafanaDataSourceBase.cs) class will automatically inherit this functionality.
 
 ## Group Operations
 
