@@ -378,6 +378,17 @@ namespace GrafanaAdapters
         /// </remarks>
         ExcludeRange,
         /// <summary>
+        /// Returns a series of values that represent a filtered set of the values in the source series where each value is a real number, i.e., value is not NaN.
+        /// First parameter, optional, is a boolean flag that determines if infinite values should also be excluded - defaults to true.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>FilterNaN([alsoFilterInfinity], expression)</c><br/>
+        /// Example: <c>FilterNaN(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
+        /// Variants: FilterNaN<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>        
+        FilterNaN,
+        /// <summary>
         /// Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical
         /// operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values
         /// mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads,
@@ -876,6 +887,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_intervalExpression;
         private static readonly Regex s_includeRangeExpression;
         private static readonly Regex s_excludeRangeExpression;
+        private static readonly Regex s_filterNaNExpression;
         private static readonly Regex s_unwrapAngleExpression;
         private static readonly Regex s_wrapAngleExpression;
         private static readonly Regex s_labelExpression;
@@ -923,6 +935,7 @@ namespace GrafanaAdapters
             s_intervalExpression = new Regex(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_includeRangeExpression = new Regex(string.Format(GetExpression, "(IncludeRange|Include)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_excludeRangeExpression = new Regex(string.Format(GetExpression, "(ExcludeRange|Exclude)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_filterNaNExpression = new Regex(string.Format(GetExpression, "FilterNaN"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -960,6 +973,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Interval] = 1,
                 [SeriesFunction.IncludeRange] = 2,
                 [SeriesFunction.ExcludeRange] = 2,
+                [SeriesFunction.FilterNaN] = 0,
                 [SeriesFunction.UnwrapAngle] = 0,
                 [SeriesFunction.WrapAngle] = 0,
                 [SeriesFunction.Label] = 1
@@ -998,6 +1012,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Interval] = 0,
                 [SeriesFunction.IncludeRange] = 2,
                 [SeriesFunction.ExcludeRange] = 2,
+                [SeriesFunction.FilterNaN] = 1,
                 [SeriesFunction.UnwrapAngle] = 1,
                 [SeriesFunction.WrapAngle] = 1,
                 [SeriesFunction.Label] = 0
@@ -1234,6 +1249,13 @@ namespace GrafanaAdapters
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.ExcludeRange, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for filter NaN function
+                lock (s_filterNaNExpression)
+                    filterMatch = s_filterNaNExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.FilterNaN, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for unwrap angle function
                 lock (s_unwrapAngleExpression)
@@ -1642,6 +1664,13 @@ namespace GrafanaAdapters
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
                     foreach (DataSourceValue dataValue in source.Where(dataValue => (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) || (highInclusive ? dataValue.Value >= high : dataValue.Value > high)))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.FilterNaN:
+                    bool alsoFilterInifinity = parameters.Length == 0 || parameters[0].Trim().ParseBoolean();
+
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || (alsoFilterInifinity && double.IsInfinity(dataValue.Value)))))
                         yield return dataValue;
 
                     break;

@@ -50,6 +50,7 @@ Series functions can operate over the set of defined series, producing a single 
 * [Interval](#interval)
 * [IncludeRange](#includerange)
 * [ExcludeRange](#excluderange)
+* [FilterNaN](#filternan)
 * [UnwrapAngle](#unwrapangle)
 * [WrapAngle](#wrapangle)
 * [Label](#label)
@@ -340,6 +341,15 @@ Returns a series of values that represent a filtered set of the values in the so
 * Signature: `ExcludeRange(low, high, [inclusive], expression)` -_or_- `ExcludeRange(low, high, [lowInclusive], [highInclusive], expression)`
 * Example: `ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')`
 * Variants: `ExcludeRange`, `Exclude`
+* Execution: Deferred enumeration
+
+## FilterNaN
+
+Returns a series of values that represent a filtered set of the values in the source series where each value is a real number, i.e., value is not NaN. First parameter, optional, is a boolean flag that determines if infinite values should also be excluded - defaults to true.
+
+* Signature: `FilterNaN([alsoFilterInfinity], expression)`
+* Example: `FilterNaN(FILTER ActiveMeasurements WHERE SignalType='VPHM')`
+* Variants: `FilterNaN`
 * Execution: Deferred enumeration
 
 ## UnwrapAngle
