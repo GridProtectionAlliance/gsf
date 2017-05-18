@@ -195,7 +195,7 @@ namespace GrafanaAdapters
         /// means the population based calculation should be used.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>StandardDeviation([samplecalc], expression)</c><br/>
+        /// Signature: <c>StandardDeviation([useSampleCalc], expression)</c><br/>
         /// Example: <c>StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: StandardDeviation, StdDev<br/>
         /// Execution: Immediate in-memory array load.
@@ -357,7 +357,7 @@ namespace GrafanaAdapters
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>IncludeRange(low, high, [inclusive], expression)</c> -or- <c>IncludeRange(low, high, [lowinclusive], [highinclusive], expression)</c><br/>
+        /// Signature: <c>IncludeRange(low, high, [inclusive], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive], [highInclusive], expression)</c><br/>
         /// Example: <c>IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: IncludeRange, Include<br/>
         /// Execution: Deferred enumeration.
@@ -371,7 +371,7 @@ namespace GrafanaAdapters
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>ExcludeRange(low, high, [inclusive], expression)</c> -or- <c>ExcludeRange(low, high, [lowinclusive], [highinclusive], expression)</c><br/>
+        /// Signature: <c>ExcludeRange(low, high, [inclusive], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive], [highInclusive], expression)</c><br/>
         /// Example: <c>ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
         /// Variants: ExcludeRange, Exclude<br/>
         /// Execution: Deferred enumeration.

@@ -187,7 +187,7 @@ Returns a series of values that represent the integral part of each of the value
 
 Returns a single value that represents the standard deviation of the values in the source series. First parameter, optional, is a boolean flag representing if the sample based calculation should be used - defaults to false, which means the population based calculation should be used.
 
-* Signature: `StandardDeviation([samplecalc], expression)`
+* Signature: `StandardDeviation([useSampleCalc], expression)`
 * Example: `StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')`
 * Variants: `StandardDeviation`, `StdDev`
 * Execution: Immediate in-memory array load
@@ -328,7 +328,7 @@ Returns a series of values that represent a decimated set of the values in the s
 
 Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high. The low and high parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., allowed values are >= low and <= high - defaults to false, which means values are exclusive, i.e., allowed values are > low and < high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
 
-* Signature: `IncludeRange(low, high, [inclusive], expression)` -_or_- `IncludeRange(low, high, [lowinclusive], [highinclusive], expression)`
+* Signature: `IncludeRange(low, high, [inclusive], expression)` -_or_- `IncludeRange(low, high, [lowInclusive], [highInclusive], expression)`
 * Example: `IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `IncludeRange`, `Include`
 * Execution: Deferred enumeration
@@ -337,7 +337,7 @@ Returns a series of values that represent a filtered set of the values in the so
 
 Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high. The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., excluded values are <= low or >= high - defaults to false, which means values are exclusive, i.e., excluded values are < low or > high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
 
-* Signature: `ExcludeRange(low, high, [inclusive], expression)` -_or_- `ExcludeRange(low, high, [lowinclusive], [highinclusive], expression)`
+* Signature: `ExcludeRange(low, high, [inclusive], expression)` -_or_- `ExcludeRange(low, high, [lowInclusive], [highInclusive], expression)`
 * Example: `ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')`
 * Variants: `ExcludeRange`, `Exclude`
 * Execution: Deferred enumeration
