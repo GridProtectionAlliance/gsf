@@ -49,6 +49,10 @@ Series functions can operate over the set of defined series, producing a single 
 * [Derivative](#derivative)
 * [TimeIntegration](#timeintegration)
 * [Interval](#interval)
+* [IncludeRange](#includerange)
+* [ExcludeRange](#excluderange)
+* [UnwrapAngle](#unwrapangle)
+* [WrapAngle](#wrapangle)
 * [Label](#label)
 
 ## Average
@@ -328,6 +332,24 @@ Returns a series of values that represent a decimated set of the values in the s
 * Signature: `Interval(N, expression)`
 * Example: `Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))`
 * Variants: `Interval`
+* Execution: Deferred enumeration
+
+## IncludeRange
+
+Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high. The low and high parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., allowed values are >= low and <= high - defaults to false, which means values are exclusive, i.e., allowed values are > low and < high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+
+* Signature: `IncludeRange(low, high, [inclusive], expression)` -_or_- `IncludeRange(low, high, [lowinclusive], [highinclusive], expression)`
+* Example: `IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
+* Variants: `IncludeRange`, `Include`
+* Execution: Deferred enumeration
+
+## ExcludeRange
+
+Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high. The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., excluded values are >= low and <= high - defaults to false, which means values are exclusive, i.e., excluded values are > low and < high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+
+* Signature: `ExcludeRange(low, high, [inclusive], expression)` -_or_- `ExcludeRange(low, high, [lowinclusive], [highinclusive], expression)`
+* Example: `ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')`
+* Variants: `ExcludeRange`, `Exclude`
 * Execution: Deferred enumeration
 
 ## UnwrapAngle
