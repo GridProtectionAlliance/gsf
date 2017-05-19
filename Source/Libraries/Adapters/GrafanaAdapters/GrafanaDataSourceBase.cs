@@ -51,6 +51,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Average(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Average, Avg, Mean<br/>
         /// Execution: Immediate enumeration.
@@ -61,6 +62,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Minimum(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Minimum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Minimum, Min<br/>
         /// Execution: Immediate enumeration.
@@ -71,6 +73,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Maximum(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Maximum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Maximum, Max<br/>
         /// Execution: Immediate enumeration.
@@ -81,6 +84,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Total(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Total, Sum<br/>
         /// Execution: Immediate enumeration.
@@ -91,6 +95,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Range(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Range(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Range<br/>
         /// Execution: Immediate enumeration.
@@ -101,6 +106,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Count(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Count(PPA:1; PPA:2; PPA:3)</c><br/>
         /// Variants: Count<br/>
         /// Execution: Immediate enumeration.
@@ -111,6 +117,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Distinct(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Distinct(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Distinct, Unique<br/>
         /// Execution: Deferred enumeration.
@@ -121,6 +128,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>AbsoluteValue(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>AbsoluteValue(FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: AbsoluteValue, Abs<br/>
         /// Execution: Deferred enumeration.
@@ -132,6 +140,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Add(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Add<br/>
         /// Execution: Deferred enumeration.
@@ -143,6 +152,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Multiply(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Multiply<br/>
         /// Execution: Deferred enumeration.
@@ -153,7 +163,8 @@ namespace GrafanaAdapters
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Round([N], expression)</c><br/>
+        /// Signature: <c>Round([N = 0], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Round<br/>
         /// Execution: Deferred enumeration.
@@ -164,6 +175,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Floor(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Floor(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Floor<br/>
         /// Execution: Deferred enumeration.
@@ -174,6 +186,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Ceiling(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Ceiling, Ceil<br/>
         /// Execution: Deferred enumeration.
@@ -184,6 +197,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Truncate(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Truncate(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Truncate, Trunc<br/>
         /// Execution: Deferred enumeration.
@@ -195,7 +209,8 @@ namespace GrafanaAdapters
         /// means the population based calculation should be used.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>StandardDeviation([useSampleCalc], expression)</c><br/>
+        /// Signature: <c>StandardDeviation([useSampleCalc = false], expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: StandardDeviation, StdDev<br/>
         /// Execution: Immediate in-memory array load.
@@ -206,6 +221,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Median(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Median(FILTER ActiveMeasurements WHERE SignalType='ALOG')</c><br/>
         /// Variants: Median, Med, Mid<br/>
         /// Execution: Immediate in-memory array load.
@@ -216,6 +232,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Mode(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
         /// Variants: Mode<br/>
         /// Execution: Immediate in-memory array load.
@@ -228,7 +245,8 @@ namespace GrafanaAdapters
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Top(N|N%, [normalizeTime], expression)</c><br/>
+        /// Signature: <c>Top(N|N%, [normalizeTime = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Top, Largest<br/>
         /// Execution: Immediate in-memory array load.
@@ -241,7 +259,8 @@ namespace GrafanaAdapters
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Bottom(N|N%, [normalizeTime], expression)</c><br/>
+        /// Signature: <c>Bottom(N|N%, [normalizeTime = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Bottom, Bot, Smallest<br/>
         /// Execution: Immediate in-memory array load.
@@ -254,7 +273,8 @@ namespace GrafanaAdapters
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Random(N|N%, [normalizeTime], expression)</c><br/>
+        /// Signature: <c>Random(N|N%, [normalizeTime = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: Random, Rand, Sample<br/>
         /// Execution: Immediate in-memory array load.
@@ -266,7 +286,8 @@ namespace GrafanaAdapters
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>First([N|N%], expression)</c><br/>
+        /// Signature: <c>First([N|N% = 1], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: First<br/>
         /// Execution: Immediate in-memory array load.
@@ -278,7 +299,8 @@ namespace GrafanaAdapters
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Last([N|N%], expression)</c><br/>
+        /// Signature: <c>Last([N|N% = 1], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Last(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Last<br/>
         /// Execution: Immediate in-memory array load.
@@ -290,6 +312,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Percentile(N[%], expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Percentile(10%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: Percentile, Pctl<br/>
         /// Execution: Immediate in-memory array load.
@@ -300,26 +323,35 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Difference(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Difference, Diff<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Difference,
         /// <summary>
-        /// Returns a series of values that represent the time difference, in seconds, between consecutive values in the source series.
+        /// Returns a series of values that represent the time difference, in time units, between consecutive values in the source series. The units
+        /// parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds,
+        /// Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or
+        /// AtomicUnitsOfTime - defaults to Seconds.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>TimeDifference(expression)</c><br/>
+        /// Signature: <c>TimeDifference([units = Seconds], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: TimeDifference, TimeDiff, Elapsed<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         TimeDifference,
         /// <summary>
-        /// Returns a series of values that represent the rate of change, per second, for the difference between consecutive values in the source series.
+        /// Returns a series of values that represent the rate of change, per time units, for the difference between consecutive values in the source
+        /// series. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
+        /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
+        /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Derivative(expression)</c><br/>
+        /// Signature: <c>Derivative([units = Seconds], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Derivative(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Derivative, Der<br/>
         /// Execution: Deferred enumeration.
@@ -327,10 +359,13 @@ namespace GrafanaAdapters
         Derivative,
         /// <summary>
         /// Returns a single value that represents the time-based integration, i.e., the sum of <c>V(n) * (T(n) - T(n-1))</c> where time difference is
-        /// calculated in hours, of the values in the source series.
+        /// calculated in the specified time units, of the values in the source series. The units parameter, optional, specifies the type of time units
+        /// and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional
+        /// Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or AtomicUnitsOfTime - defaults to Hours.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>TimeIntegration(expression)</c><br/>
+        /// Signature: <c>TimeIntegration([units = Hours], expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')</c><br/>
         /// Variants: TimeIntegration, TimeInt<br/>
         /// Execution: Immediate enumeration.
@@ -344,6 +379,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Interval(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
         /// Variants: Interval<br/>
         /// Execution: Deferred enumeration.
@@ -357,7 +393,8 @@ namespace GrafanaAdapters
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>IncludeRange(low, high, [inclusive], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive], [highInclusive], expression)</c><br/>
+        /// Signature: <c>IncludeRange(low, high, [inclusive = false], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: IncludeRange, Include<br/>
         /// Execution: Deferred enumeration.
@@ -371,7 +408,8 @@ namespace GrafanaAdapters
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>ExcludeRange(low, high, [inclusive], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive], [highInclusive], expression)</c><br/>
+        /// Signature: <c>ExcludeRange(low, high, [inclusive = false], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
         /// Variants: ExcludeRange, Exclude<br/>
         /// Execution: Deferred enumeration.
@@ -382,7 +420,8 @@ namespace GrafanaAdapters
         /// First parameter, optional, is a boolean flag that determines if infinite values should also be excluded - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>FilterNaN([alsoFilterInfinity], expression)</c><br/>
+        /// Signature: <c>FilterNaN([alsoFilterInfinity = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>FilterNaN(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: FilterNaN<br/>
         /// Execution: Deferred enumeration.
@@ -395,7 +434,8 @@ namespace GrafanaAdapters
         /// ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>UnwrapAngle(units, expression)</c><br/>
+        /// Signature: <c>UnwrapAngle([units = Degrees], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>UnwrapAngle(FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
         /// Variants: UnwrapAngle, Unwrap<br/>
         /// Execution: Immediate in-memory array load.
@@ -407,7 +447,8 @@ namespace GrafanaAdapters
         /// Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>WrapAngle(units, expression)</c><br/>
+        /// Signature: <c>WrapAngle([units = Degrees], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
         /// Variants: WrapAngle, Wrap<br/>
         /// Execution: Deferred enumeration.
@@ -415,10 +456,12 @@ namespace GrafanaAdapters
         WrapAngle,
         /// <summary>
         /// Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three
-        /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3".
+        /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this
+        /// function will be ignored.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Label(value, expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
         /// Variants: Label, Name<br/>
         /// Execution: Deferred enumeration.
@@ -447,6 +490,61 @@ namespace GrafanaAdapters
         /// Performs no group operation on the series set.
         /// </summary>
         None
+    }
+
+    /// <summary>
+    /// Time units for time functions.
+    /// </summary>
+    public enum TimeUnits
+    {
+        /// <summary>
+        /// Specifies that the time is in ticks, 100-nanoseconds intervals.
+        /// </summary>
+        Ticks,
+        /// <summary>
+        /// Specifies that the time is in nanoseconds.
+        /// </summary>
+        Nanoseconds,
+        /// <summary>
+        /// Specifies that the time is in microseconds.
+        /// </summary>
+        Microseconds,
+        /// <summary>
+        /// Specifies that the time is in milliseconds.
+        /// </summary>
+        Milliseconds,
+        /// <summary>
+        /// Specifies that the time is in seconds.
+        /// </summary>
+        Seconds,
+        /// <summary>
+        /// Specifies that the time is in minutes.
+        /// </summary>
+        Minutes,
+        /// <summary>
+        /// Specifies that the time is in hours.
+        /// </summary>
+        Hours,
+        /// <summary>
+        /// Specifies that the time is in days.
+        /// </summary>
+        Days,
+        /// <summary>
+        /// Specifies that the time is in weeks.
+        /// </summary>
+        Weeks,
+        /// <summary>
+        /// Specifies that the time is in ke, the traditional Chinese unit of decimal time.
+        /// </summary>
+        Ke,
+        /// <summary>
+        /// Specifies that the time is in Planck time.
+        /// </summary>
+        PlanckTime,
+        /// <summary>
+        /// Specifies that the time is in atomic units of time.
+        /// </summary>
+        AtomicUnitsOfTime
     }
 
     /// <summary>
@@ -720,6 +818,7 @@ namespace GrafanaAdapters
                 if (groupOperation == GroupOperation.Slice)
                     requiredParameters++;
 
+                // TODO: Consider parsing with regular expression so function results could be used as parameter values
                 if (requiredParameters > 0)
                 {
                     int index = 0;
@@ -1006,9 +1105,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Last] = 1,
                 [SeriesFunction.Percentile] = 0,
                 [SeriesFunction.Difference] = 0,
-                [SeriesFunction.TimeDifference] = 0,
-                [SeriesFunction.Derivative] = 0,
-                [SeriesFunction.TimeIntegration] = 0,
+                [SeriesFunction.TimeDifference] = 1,
+                [SeriesFunction.Derivative] = 1,
+                [SeriesFunction.TimeIntegration] = 1,
                 [SeriesFunction.Interval] = 0,
                 [SeriesFunction.IncludeRange] = 2,
                 [SeriesFunction.ExcludeRange] = 2,
@@ -1021,7 +1120,7 @@ namespace GrafanaAdapters
 
         // Static Methods
         private static Tuple<SeriesFunction, string, GroupOperation> ParseSeriesFunction(Match matchedFunction)
-        {            
+        {
             Tuple<SeriesFunction, string, GroupOperation> result = TargetCache<Tuple<SeriesFunction, string, GroupOperation>>.GetOrAdd(matchedFunction.Value, () =>
             {
                 GroupOperation groupOperation;
@@ -1315,6 +1414,7 @@ namespace GrafanaAdapters
             double baseTime, timeStep, value, low, high;
             bool normalizeTime, lowInclusive, highInclusive;
             int count;
+            TimeUnits timeUnits;
             AngleUnits angleUnits;
 
             switch (seriesFunction)
@@ -1588,20 +1688,26 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.TimeDifference:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
+                        timeUnits = TimeUnits.Seconds;
+
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Time - lastTime) * SI.Milli, Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
                     }
                     break;
                 case SeriesFunction.Derivative:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
+                        timeUnits = TimeUnits.Seconds;
+
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ((dataValue.Time - lastTime) * SI.Milli), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -1609,12 +1715,15 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.TimeIntegration:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
+                        timeUnits = TimeUnits.Hours;
+
                     result.Value = 0.0D;
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            result.Value += dataValue.Value * ((dataValue.Time - lastTime) * SI.Milli / 3600.0D);
+                            result.Value += dataValue.Value * ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits);
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -1732,6 +1841,39 @@ namespace GrafanaAdapters
                     return value.ToArcSeconds();
                 case AngleUnits.AngularMil:
                     return value.ToAngularMil();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
+            }
+        }
+
+        private static double ToTimeUnits(Time value, TimeUnits units)
+        {
+            switch (units)
+            {
+                case TimeUnits.Seconds:
+                    return value;
+                case TimeUnits.Ticks:
+                    return Ticks.FromSeconds(value);
+                case TimeUnits.Nanoseconds:
+                    return value / SI.Nano;
+                case TimeUnits.Microseconds:
+                    return value / SI.Micro;
+                case TimeUnits.Milliseconds:
+                    return value / SI.Milli;
+                case TimeUnits.Minutes:
+                    return value.ToMinutes();
+                case TimeUnits.Hours:
+                    return value.ToHours();
+                case TimeUnits.Days:
+                    return value.ToDays();
+                case TimeUnits.Weeks:
+                    return value.ToWeeks();
+                case TimeUnits.Ke:
+                    return value.ToKe();
+                case TimeUnits.PlanckTime:
+                    return value.ToPlanckTime();
+                case TimeUnits.AtomicUnitsOfTime:
+                    return value.ToAtomicUnitsOfTime();
                 default:
                     throw new ArgumentOutOfRangeException(nameof(units), units, null);
             }
