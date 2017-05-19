@@ -493,7 +493,7 @@ namespace GrafanaAdapters
     }
 
     /// <summary>
-    /// Time units for time functions.
+    /// Time units for time related functions.
     /// </summary>
     public enum TimeUnits
     {

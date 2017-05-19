@@ -22,14 +22,16 @@ Series functions can operate over the set of defined series, producing a single 
 
 Many series functions have parameters that can be required or optional. Optional values will always define a default state. Currently, parameter values must be a constant value.
 
+### Execution Modes
 Each of the series functions include documentation for the mode of execution required by the function. These modes determine the level of processing expense and memory burden incurred by the function. The impacts of the execution modes increase as the time-range or resolution of the series data increases.
 
 | Execution Mode | Description | Impact |
 |----------------|-------------|--------|
-|<a id="mode_de" name="mode_de"></a> _Deferred enumeration_ | Series data will be processed serially outside of function | Minimal processing and memory impact |
+| _Deferred enumeration_ | Series data will be processed serially outside of function | Minimal processing and memory impact |
 | <a id="mode_ie" name="mode_ie"></a> _Immediate enumeration_ | Series data will be processed serially inside the function | Increased processing impact, minimal memory impact |
 | <a id="mode_iimal" name="mode_iimal"></a> _Immediate in-memory array load_ | Series data will be loaded into an array and processed inside the function | Higher processing and memory impact |
 
+### Available Functions
 
 * [Average](#average)
 * [Minimum](#minimum)
@@ -74,7 +76,7 @@ Returns a single value that represents the mean of the values in the source seri
 * Returns: Single value
 * Example: `Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Average`, `Avg`, `Mean`
-* Execution: [Immediate enumeration](#mode_ie)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Minimum
 
@@ -84,7 +86,7 @@ Returns a single value that is the minimum of the values in the source series.
 * Returns: Single value
 * Example: `Minimum(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Minimum`, `Min`
-* Execution: [Immediate enumeration](#mode_ie)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Maximum
 
@@ -94,7 +96,7 @@ Returns a single value that is the maximum of the values in the source series.
 * Returns: Single value
 * Example: `Maximum(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Maximum`, `Max`
-* Execution: [Immediate enumeration](#mode_ie)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Total
 
@@ -104,7 +106,7 @@ Returns a single value that represents the sum of the values in the source serie
 * Returns: Single value
 * Example: `Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 * Variants: `Total`, `Sum`
-* Execution: [Immediate enumeration](#mode_ie)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Range
 
@@ -114,7 +116,7 @@ Returns a single value that represents the range, i.e., `maximum - minimum`, of 
 * Returns: Single value
 * Example: `Range(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Range`
-* Execution: [Immediate enumeration](#mode_ie)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Count
 
@@ -124,7 +126,7 @@ Returns a single value that is the count of the values in the source series.
 * Returns: Single value
 * Example: `Count(PPA:1; PPA:2; PPA:3)`
 * Variants: `Count`
-* Execution:[Immediate enumeration](#mode_ie)
+* Execution:[Immediate enumeration](#execution-modes)
 
 ## Distinct
 
@@ -134,7 +136,7 @@ Returns a series of values that represent the unique set of values in the source
 * Returns: Series of values
 * Example: `Distinct(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Distinct`, `Unique`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## AbsoluteValue
 
@@ -144,7 +146,7 @@ Returns a series of values that represent the absolute value each of the values 
 * Returns: Series of values
 * Example: `AbsoluteValue(FILTER ActiveMeasurements WHERE SignalType='CALC')`
 * Variants: `AbsoluteValue`, `Abs`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Add
 
@@ -155,7 +157,7 @@ N is a floating point value representing an additive offset to be applied to eac
 * Returns: Series of values
 * Example: `Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')`
 * Variants: `Add`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Multiply
 
@@ -166,7 +168,7 @@ N is a floating point value representing a multiplicative factor to be applied t
 * Returns: Series of values
 * Example: `Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')`
 * Variants: `Multiply`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Round
 
@@ -177,7 +179,7 @@ N, optional, is a positive integer value representing the number of decimal plac
 * Returns: Series of values
 * Example: `Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Round`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Floor
 
@@ -187,7 +189,7 @@ Returns a series of values that represent the smallest integral value that is le
 * Returns: Series of values
 * Example: `Floor(FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 * Variants: `Floor`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Ceiling
 
@@ -197,7 +199,7 @@ Returns a series of values that represent the smallest integral value that is gr
 * Returns: Series of values
 * Example: `Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 * Variants: `Ceiling`, `Ceil`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Truncate
 
@@ -207,7 +209,7 @@ Returns a series of values that represent the integral part of each of the value
 * Returns: Series of values
 * Example: `Truncate(FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 * Variants: `Truncate`, `Trunc`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## StandardDeviation
 
@@ -217,7 +219,7 @@ Returns a single value that represents the standard deviation of the values in t
 * Returns: Single value
 * Example: `StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')`
 * Variants: `StandardDeviation`, `StdDev`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Median
 
@@ -227,7 +229,7 @@ Returns a single value that represents the median of the values in the source se
 * Returns: Single value
 * Example: `Median(FILTER ActiveMeasurements WHERE SignalType='ALOG')`
 * Variants: `Median`, `Med`, `Mid`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Mode
 
@@ -237,7 +239,7 @@ Returns a single value that represents the mode of the values in the source seri
 * Returns: Single value
 * Example: `Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')`
 * Variants: `Mode`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Top
 
@@ -250,7 +252,7 @@ Second parameter, optional, is a boolean flag representing if time in dataset sh
 * Returns: Series of values
 * Example: `Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Top`, `Largest`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Bottom
 
@@ -263,7 +265,7 @@ Second parameter, optional, is a boolean flag representing if time in dataset sh
 * Returns: Series of values
 * Example: `Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Bottom`, `Bot`, `Smallest`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Random
 
@@ -276,7 +278,7 @@ Second parameter, optional, is a boolean flag representing if time in dataset sh
 * Returns: Series of values
 * Example: `Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')`
 * Variants: `Random`, `Rand`, `Sample`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## First
 
@@ -288,7 +290,7 @@ suffixed with '%' representing a percentage, that must range from greater than 0
 * Returns: Series of values
 * Example: `First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `First`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Last
 
@@ -300,7 +302,7 @@ suffixed with '%' representing a percentage, that must range from greater than 0
 * Returns: Series of values
 * Example: `Last(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Last`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Percentile
 
@@ -311,7 +313,7 @@ N is a floating point value, representing a percentage, that must range from 0 t
 * Returns: Single value
 * Example: `Percentile(10%, FILTER ActiveMeasurements WHERE SignalType='VPHM')`
 * Variants: `Percentile`, `Pctl`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## Difference
 
@@ -321,7 +323,7 @@ Returns a series of values that represent the difference between consecutive val
 * Returns: Series of values
 * Example: `Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Difference`, `Diff`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## TimeDifference
 
@@ -331,7 +333,7 @@ Returns a series of values that represent the time difference, in time units, be
 * Returns: Series of values
 * Example: `TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `TimeDifference`, `TimeDiff`, `Elapsed`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Derivative
 
@@ -341,7 +343,7 @@ Returns a series of values that represent the rate of change, per time units, fo
 * Returns: Series of values
 * Example: `Derivative(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `Derivative`, `Der`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## TimeIntegration
 
@@ -351,7 +353,7 @@ Returns a single value that represents the time-based integration, i.e., the sum
 * Returns: Single value
 * Example: `TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')`
 * Variants: `TimeIntegration`, `TimeInt`
-* Execution: [Immediate enumeration](#mode_ie)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Interval
 
@@ -361,7 +363,7 @@ Returns a series of values that represent a decimated set of the values in the s
 * Returns: Series of values
 * Example: `Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))`
 * Variants: `Interval`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## IncludeRange
 
@@ -371,7 +373,7 @@ Returns a series of values that represent a filtered set of the values in the so
 * Returns: Series of values
 * Example: `IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 * Variants: `IncludeRange`, `Include`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## ExcludeRange
 
@@ -381,7 +383,7 @@ Returns a series of values that represent a filtered set of the values in the so
 * Returns: Series of values
 * Example: `ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')`
 * Variants: `ExcludeRange`, `Exclude`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## FilterNaN
 
@@ -391,7 +393,7 @@ Returns a series of values that represent a filtered set of the values in the so
 * Returns: Series of values
 * Example: `FilterNaN(FILTER ActiveMeasurements WHERE SignalType='VPHM')`
 * Variants: `FilterNaN`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## UnwrapAngle
 
@@ -401,7 +403,7 @@ Returns a series of values that represent an adjusted set of angles that are unw
 * Returns: Series of values
 * Example: `UnwrapAngle(FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)`
 * Variants: `UnwrapAngle`, `Unwrap`
-* Execution: [Immediate in-memory array load](#mode_iimal)
+* Execution: [Immediate in-memory array load](#execution-modes)
 
 ## WrapAngle
 
@@ -411,7 +413,7 @@ Returns a series of values that represent an adjusted set of angles that are wra
 * Returns: Series of values
 * Example: `WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')`
 * Variants: `WrapAngle`, `Wrap`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
 
 ## Label
 
@@ -421,4 +423,4 @@ Renames a series with the specified label value. If multiple series are targeted
 * Returns: Series of values
 * Example: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))`
 * Variants: `Label`, `Name`
-* Execution: [Deferred enumeration](#mode_de)
+* Execution: [Deferred enumeration](#execution-modes)
