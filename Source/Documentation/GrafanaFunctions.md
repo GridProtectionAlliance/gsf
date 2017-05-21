@@ -28,8 +28,8 @@ Each of the series functions include documentation for the mode of execution req
 | Execution Mode | Description | Impact |
 |----------------|-------------|--------|
 | _Deferred enumeration_ | Series data will be processed serially outside of function | Minimal processing and memory impact |
-| <a id="mode_ie" name="mode_ie"></a> _Immediate enumeration_ | Series data will be processed serially inside the function | Increased processing impact, minimal memory impact |
-| <a id="mode_iimal" name="mode_iimal"></a> _Immediate in-memory array load_ | Series data will be loaded into an array and processed inside the function | Higher processing and memory impact |
+| _Immediate enumeration_ | Series data will be processed serially inside the function | Increased processing impact, minimal memory impact |
+| _Immediate in-memory array load_ | Series data will be loaded into an array and processed inside the function | Higher processing and memory impact |
 
 ### Available Functions
 
