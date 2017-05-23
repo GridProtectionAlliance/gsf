@@ -372,13 +372,15 @@ namespace GrafanaAdapters
         /// </remarks>
         TimeIntegration,
         /// <summary>
-        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds.
-        /// N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in seconds, for the returned data.
-        /// Setting N value to zero will request non-decimated, full resolution data from the data source. A zero value will always produce the most accurate
-        /// aggregation calculation results but will increase query burden for large time ranges.
+        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.
+        /// N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned
+        /// data. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
+        /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
+        /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds. Setting N value to zero will request non-decimated, full resolution data from the data
+        /// source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Interval(N, expression)</c><br/>
+        /// Signature: <c>Interval(N, [units = Seconds], expression)</c><br/>
         /// Returns: Series of values.<br/>
         /// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
         /// Variants: Interval<br/>
@@ -1737,7 +1739,10 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.Interval:
-                    value = ParseFloat(parameters[0]) / SI.Milli;
+                    if (parameters.Length == 1 || !Enum.TryParse(parameters[1], true, out timeUnits))
+                        timeUnits = TimeUnits.Seconds;
+
+                    value = FromTimeUnits(ParseFloat(parameters[0]), timeUnits) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -1841,6 +1846,39 @@ namespace GrafanaAdapters
                     return value.ToArcSeconds();
                 case AngleUnits.AngularMil:
                     return value.ToAngularMil();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
+            }
+        }
+
+        private static Time FromTimeUnits(double value, TimeUnits units)
+        {
+            switch (units)
+            {
+                case TimeUnits.Seconds:
+                    return value;
+                case TimeUnits.Ticks:
+                    return new Ticks((long)value).ToSeconds();
+                case TimeUnits.Nanoseconds:
+                    return value * SI.Nano;
+                case TimeUnits.Microseconds:
+                    return value * SI.Micro;
+                case TimeUnits.Milliseconds:
+                    return value * SI.Milli;
+                case TimeUnits.Minutes:
+                    return Time.FromMinutes(value);
+                case TimeUnits.Hours:
+                    return Time.FromHours(value);
+                case TimeUnits.Days:
+                    return Time.FromDays(value);
+                case TimeUnits.Weeks:
+                    return Time.FromWeeks(value);
+                case TimeUnits.Ke:
+                    return Time.FromKe(value);
+                case TimeUnits.PlanckTime:
+                    return Time.FromPlanckTime(value);
+                case TimeUnits.AtomicUnitsOfTime:
+                    return Time.FromAtomicUnitsOfTime(value);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(units), units, null);
             }

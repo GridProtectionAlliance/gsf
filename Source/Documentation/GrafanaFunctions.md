@@ -357,9 +357,9 @@ Returns a single value that represents the time-based integration, i.e., the sum
 
 ## Interval
 
-Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds. N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in seconds, for the returned data. Setting N value to zero will request non-decimated, full resolution data from the data source. A zero value will always produce the most accurate aggregation calculation results but will increase query burden on data source for large time ranges.
+Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units. N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned data. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or AtomicUnitsOfTime - defaults to Seconds.  Setting N value to zero will request non-decimated, full resolution data from the data source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden on data source for large time ranges.
 
-* Signature: `Interval(N, expression)`
+* Signature: `Interval(N, [units = Seconds], expression)`
 * Returns: Series of values
 * Example: `Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))`
 * Variants: `Interval`
