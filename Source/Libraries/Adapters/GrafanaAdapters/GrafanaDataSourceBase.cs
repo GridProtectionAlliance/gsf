@@ -459,7 +459,9 @@ namespace GrafanaAdapters
         /// <summary>
         /// Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three
         /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this
-        /// function will be ignored.
+        /// function will be ignored. The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly
+        /// map to a point tag, one of the following metadata value substitutions can be used in the label value: {ID}, {SignalID}, {PointTag}, {AlternateTag},
+        /// {SignalReference}, {Device} or {SignalType} - where applicable, these substitutions can be used in any combination.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Label(value, expression)</c><br/>
@@ -797,6 +799,7 @@ namespace GrafanaAdapters
                     yield return new DataSourceValueGroup
                     {
                         Target = target.Value,
+                        RootTarget = target.Value,
                         Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value))
                     };
             }
@@ -898,9 +901,29 @@ namespace GrafanaAdapters
 
                 for (int i = 0; i < groups.Length; i++)
                 {
+                    string target = groups[i].RootTarget;
+
+                    string seriesLabel = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
+                    {
+                        string derivedLabel = label;
+                        DataRow record = target.MetadataRecordFromTag(Metadata);
+
+                        if ((object)record != null)
+                        {
+                            foreach (string fieldName in s_metadataRecordFields)
+                                derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
+                        }
+
+                        if (derivedLabel.Equals(label, StringComparison.Ordinal))
+                            derivedLabel = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}";
+
+                        return derivedLabel;
+                    });
+                                                              
                     yield return new DataSourceValueGroup
                     {
-                        Target = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}",
+                        Target = seriesLabel,
+                        RootTarget = target,
                         Source = groups[i].Source
                     };
                 }
@@ -914,6 +937,7 @@ namespace GrafanaAdapters
                         DataSourceValueGroup result = new DataSourceValueGroup
                         {
                             Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                            RootTarget = targetExpression,
                             Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
                         };
 
@@ -922,6 +946,7 @@ namespace GrafanaAdapters
                         {
                             DataSourceValue dataValue = result.Source.First();
                             result.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                            result.RootTarget = dataValue.Target;
                         }
 
                         yield return result;
@@ -935,6 +960,7 @@ namespace GrafanaAdapters
                         yield return new DataSourceValueGroup
                         {
                             Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                            RootTarget = targetExpression,
                             Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters)
                         };
 
@@ -944,6 +970,7 @@ namespace GrafanaAdapters
                             yield return new DataSourceValueGroup
                             {
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
+                                RootTarget = dataValues.Target,
                                 Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
                             };
 
@@ -995,6 +1022,7 @@ namespace GrafanaAdapters
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
         private static readonly Dictionary<SeriesFunction, int> s_optionalParameters;
         private static readonly string[] s_groupOperationNames;
+        private static readonly string[] s_metadataRecordFields;
 
         // Static Constructor
         static GrafanaDataSourceBase()
@@ -1004,6 +1032,7 @@ namespace GrafanaAdapters
             // RegEx instance to find all series functions
             s_groupOperationNames = Enum.GetNames(typeof(GroupOperation));
             s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!\s+IN\s+)\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_metadataRecordFields = new[] { "ID", "SignalID", "PointTag", "AlternateTag", "SignalReference", "Device", "SignalType" };
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);

@@ -39,6 +39,11 @@ namespace GrafanaAdapters
         public string Target;
 
         /// <summary>
+        /// Defines the root target expression, without any referenced series functions.
+        /// </summary>
+        public string RootTarget;
+
+        /// <summary>
         /// Data source values enumerable.
         /// </summary>
         public IEnumerable<DataSourceValue> Source;
