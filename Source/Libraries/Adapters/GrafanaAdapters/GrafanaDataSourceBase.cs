@@ -687,8 +687,10 @@ namespace GrafanaAdapters
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target }).ToList();
 
+                // Process series data in parallel
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
+                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation
                     series.datapoints = valueGroups.First(group => group.Target.Equals(series.target)).Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
 
@@ -914,6 +916,7 @@ namespace GrafanaAdapters
                                 derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
                         }
 
+                        // ReSharper disable once AccessToModifiedClosure
                         if (derivedLabel.Equals(label, StringComparison.Ordinal))
                             derivedLabel = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}";
 

@@ -9,13 +9,13 @@
         the more complex .NET features (e.g., sockets and encryption) easier to use and adds functions not included
         in the .NET.
       </para>
-      <para>
+      <!--<para>
         See the following for documentation for time-series adapters that are available as part of the Grid Solutions Framework:
         <externalLink>
           <linkText>Time-series Adapters</linkText>
           <linkUri>https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/Adapters/</linkUri>
         </externalLink>        
-      </para>
+      </para>-->
       <para>
         NuGet Download:
         <externalLink>
@@ -26,13 +26,13 @@
       <para>
         <externalLink>
           <linkText>Product components in Grid Solutions Framework for developing time-series applications.</linkText>
-          <linkUri>http://download-codeplex.sec.s-msft.com/Download?ProjectName=gsf&amp;DownloadId=917968</linkUri>
+          <linkUri>http://gridprotectionalliance.org/docs/products/gsf/tsl-components-2015.pdf</linkUri>
         </externalLink>
         The open Phasor Data Concentrator (openPDC), Secure Information Exchange Gateway (SIEGate) and
         open Historian (openHistorian) are examples of time-series applications that use the Grid Solutions Framework.
         <markup>
           <p style="text-align:center">
-            <img src="http://download-codeplex.sec.s-msft.com/Download?ProjectName=gsf&amp;DownloadId=696537" />
+            <img src="http://gridprotectionalliance.org/images/technology/TSLoverview540R1.png" />
           </p>
         </markup>
       </para>
@@ -77,8 +77,8 @@
         <para>
           <markup>
             <p style="text-align:center">
-              <a title="Full size GSF poster (4 x 3 feet)" href="https://www.gridprotectionalliance.org/images/GSF%20Poster%20(4x3).png" target="_blank">
-                <img src="https://www.codeplex.com/Download?ProjectName=gsf&amp;DownloadId=890652" alt="GSF Poster (4x3)" width="461" height="346" />
+              <a title="Full size GSF poster (4 x 3 feet)" href="http://raw.github.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF%20Poster%20(4x3).png" target="_blank">
+                <img src="http://raw.github.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF%20Poster%20(small).png" alt="GSF Poster (4x3)" />
               </a>
             </p>
           </markup>
