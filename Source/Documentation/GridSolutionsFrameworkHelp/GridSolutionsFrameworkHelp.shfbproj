@@ -54,7 +54,7 @@
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <CppCommentsFixup>False</CppCommentsFixup>
     <CleanIntermediates>True</CleanIntermediates>
-    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter, AutoDocumentDispose</MissingTags>
+    <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <ApiFilter>
       <Filter entryType="Namespace" fullName="GSF.Annotations" isExposed="False" />
       <Filter entryType="Namespace" fullName="XamlGeneratedNamespace" isExposed="False" />
