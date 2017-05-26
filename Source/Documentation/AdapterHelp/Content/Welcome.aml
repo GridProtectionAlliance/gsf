@@ -14,13 +14,13 @@
         The open Phasor Data Concentrator, Secure Information Exchange Gateway (SIEGate) and the open Historian are examples
         of projects based on this time-series adapter library.
       </para>
-      <para>
+      <!--<para>
         See the following for documentation for core components of the Grid Solutions Framework:
         <externalLink>
           <linkText>GSF Core Framework</linkText>
           <linkUri>https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/</linkUri>
         </externalLink>
-      </para>
+      </para>-->
     </introduction>
 
     <section>
@@ -29,7 +29,7 @@
         <para>
           The time-series adapter library can be molded to route measurements in any fashion, but the system defines three fundamental
           measurement processing categorizations to kick start most any time-series processing architecture; these are the 
-          <legacyItalic>Input</legacyItalic>, <legacyItalic>Action</legacyItalic> and <legacyItalic>Output</legacyItalic> interface
+          _Input_, _Action_ and _Output_ interface
           adapters. These base level adapters are called Iaon Adapters (pronounced "yo-wan" if you want to speak it). Each adapter
           type performs a basic time-series data operation:
         </para>
@@ -37,7 +37,7 @@
         <list class="bullet">
           <listItem>
             <para>
-              <legacyBold>Input Adapters</legacyBold>: Typically "maps" measurements from a data source (i.e., assigns a 
+              **Input Adapters**: Typically "maps" measurements from a data source (i.e., assigns a 
               timestamp and an ID to measured values parsed from a stream of data), new measurements are presented to the system
               by calling "void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)" method.
             </para>
@@ -48,7 +48,7 @@
 
           <listItem>
             <para>
-              <legacyBold>Action Adapters</legacyBold>: Typically filters and sorts measurements by time allowing adapter to take
+              **Action Adapters**: Typically filters and sorts measurements by time allowing adapter to take
               action on a synchronized set of data provided in the "abstract void PublishFrame(IFrame frame, int index)" method which
               adapter overrides (note that frame contains a collection of measurements all collected into the same time-indexed
               frame bucket). If the action causes the creation of new measurements, new measurements are presented to the system by
@@ -61,7 +61,7 @@
 
           <listItem>
             <para>
-              <legacyBold>Output Adapters</legacyBold>: Typically queues all measurements (no sorting) for processing. Queued
+              **Output Adapters**: Typically queues all measurements (no sorting) for processing. Queued
               measurements are presented to the adapter for processing in the "void ProcessMeasurements(IMeasurement[] measurements)"
               method – if measurements continue to build up in memory and are not processed in a timely manner they will be removed
               from the queue as protective measure to prevent catastrophic out-of-memory failures. Since output adapters are used to
@@ -78,7 +78,7 @@
         <para>
           <markup>
             <p style="text-align:center">
-              <img title="IaonAdapters.png" src="http://i3.codeplex.com/Download?ProjectName=timeseriesframework&amp;DownloadId=147719" alt="IaonAdapters.png" />
+              <img title="IaonAdapters.png" src="http://gridprotectionalliance.org/images/technology/TSLoverview540R1.png" alt="IaonAdapters.png" />
             </p>
           </markup>
         </para>

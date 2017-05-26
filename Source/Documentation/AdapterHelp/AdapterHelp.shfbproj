@@ -13,19 +13,14 @@
     <RootNamespace>AdapterHelp</RootNamespace>
     <Name>AdapterHelp</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.5</FrameworkVersion>
+    <FrameworkVersion>.NET Portable Library 4.6</FrameworkVersion>
     <OutputPath>..\..\..\Build\Help\Adapters\</OutputPath>
     <HtmlHelpName>GSFTimeSeriesAdapters</HtmlHelpName>
     <Language>en-US</Language>
     <TransformComponentArguments>
-      <Argument Key="logoFile" Value="GSF64x64.png" />
-      <Argument Key="logoHeight" Value="" />
-      <Argument Key="logoWidth" Value="" />
-      <Argument Key="logoAltText" Value="GSF Time-series Adapter Library" />
-      <Argument Key="logoPlacement" Value="left" />
-      <Argument Key="logoAlignment" Value="left" />
       <Argument Key="maxVersionParts" Value="" />
-      <Argument Key="defaultLanguage" Value="cs" />
+      <Argument Key="includeEnumValues" Value="true" />
+      <Argument Key="baseSourceCodeUrl" Value="https://github.com/GridProtectionAlliance/gsf/tree/master/Source/" />
     </TransformComponentArguments>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
@@ -55,47 +50,40 @@
       <DocumentationSource sourceFile="..\..\Libraries\Adapters\WavInputAdapter\WavInputAdapter.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\Hadoop.Replication\Hadoop.Replication.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\Adapters\PIAdapters\PIAdapters.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\Adapters\GrafanaAdapters\GrafanaAdapters.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\Adapters\Kafka\KafkaAdapters.csproj" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
-    <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
+    <HelpFileFormat>Markdown</HelpFileFormat>
     <IndentHtml>True</IndentHtml>
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <CppCommentsFixup>False</CppCommentsFixup>
     <CleanIntermediates>True</CleanIntermediates>
     <MaximumGroupParts>2</MaximumGroupParts>
-    <NamespaceGrouping>False</NamespaceGrouping>
+    <NamespaceGrouping>True</NamespaceGrouping>
     <SyntaxFilters>C#, Visual Basic, Managed C++, F#, JavaScript</SyntaxFilters>
     <SdkLinkTarget>Blank</SdkLinkTarget>
-    <RootNamespaceContainer>False</RootNamespaceContainer>
-    <PresentationStyle>VS2013</PresentationStyle>
+    <RootNamespaceContainer>True</RootNamespaceContainer>
+    <PresentationStyle>Markdown</PresentationStyle>
     <Preliminary>False</Preliminary>
     <NamingMethod>MemberName</NamingMethod>
     <HelpTitle>GSF Time-series Adapter Library Documentation</HelpTitle>
-    <FooterText>See &amp;lt%3ba href=&amp;quot%3bhttps://gsf.codeplex.com/&amp;quot%3b&amp;gt%3bGrid Solutions Framework Project&amp;lt%3b/a&amp;gt%3b for latest code.</FooterText>
+    <FooterText>See &amp;lt%3ba href=&amp;quot%3bhttps://github.com/GridProtectionAlliance/gsf&amp;quot%3b&amp;gt%3bGrid Solutions Framework Project&amp;lt%3b/a&amp;gt%3b for latest code.</FooterText>
     <FeedbackEMailLinkText>GPA Development</FeedbackEMailLinkText>
     <FeedbackEMailAddress>rcarroll%40gridprotectionalliance.org</FeedbackEMailAddress>
-    <CopyrightText>Copyright &amp;#169%3b 2015, Grid Protection Alliance.  All Rights Reserved.</CopyrightText>
+    <CopyrightText>Copyright &amp;#169%3b 2017, Grid Protection Alliance.  All Rights Reserved.</CopyrightText>
     <CopyrightHref>https://www.gridprotectionalliance.org/</CopyrightHref>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
     <ComponentConfigurations>
-      <ComponentConfig id="API Token Resolution" enabled="True" xmlns="">
+      <ComponentConfig id="API Token Resolution" enabled="True">
         <component id="API Token Resolution">{@TokenFiles}
 <replace elements="/*//token" item="string(.)" /></component>
       </ComponentConfig>
-      <ComponentConfig id="Code Block Component" enabled="True" xmlns="">
-        <component id="Code Block Component">
-          <basePath value="{@HtmlEncProjectFolder}" />
-          <outputPaths>{@HelpFormatOutputPaths}</outputPaths>
-          <allowMissingSource value="false" />
-          <removeRegionMarkers value="false" />
-          <colorizer syntaxFile="{@SHFBFolder}Colorizer\highlight.xml" styleFile="{@SHFBFolder}Colorizer\highlight.xsl" stylesheet="{@SHFBFolder}Colorizer\highlight.css" scriptFile="{@SHFBFolder}Colorizer\highlight.js" disabled="{@DisableCodeBlockComponent}" language="cs" tabSize="4" numberLines="false" outlining="false" keepSeeTags="false" defaultTitle="true" />
-        </component>
-      </ComponentConfig>
-      <ComponentConfig id="Syntax Component" enabled="True" xmlns="">
+      <ComponentConfig id="Syntax Component" enabled="True">
         <component id="Syntax Component">
-          <syntax input="/document/reference" output="/document/syntax" renderReferenceLinks="false" />
+          <syntax input="/document/reference" output="/document/syntax" renderReferenceLinks="true" />
           <generators>
     {@SyntaxFilters}
 </generators>
@@ -105,20 +93,43 @@
             <generator id="Visual Basic">
               <includeLineContinuation value="false" />
             </generator>
-            <generator id="F#" />
-            <generator id="JavaScript" />
-            <generator id="Managed C++" />
             <generator id="Visual Basic Usage">
               <includeLineContinuation value="false" />
             </generator>
+            <generator id="Managed C++" />
+            <generator id="F#" />
             <generator id="J#" />
             <generator id="JScript" />
+            <generator id="JavaScript" />
             <generator id="XAML Usage" />
             <generator id="ASP.NET" />
+            <generator id="X#" />
           </configurations>
         </component>
       </ComponentConfig>
+      <ComponentConfig id="Code Block Component" enabled="True">
+        <component id="Code Block Component">
+          <basePath value="{@HtmlEncProjectFolder}" />
+          <outputPaths>{@HelpFormatOutputPaths}</outputPaths>
+          <allowMissingSource value="false" />
+          <removeRegionMarkers value="false" />
+          <colorizer syntaxFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xml" styleFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xsl" stylesheet="{@SHFBFolder}PresentationStyles\Colorizer\highlight.css" scriptFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.js" disabled="{@DisableCodeBlockComponent}" language="cs" tabSize="0" numberLines="false" outlining="false" keepSeeTags="false" defaultTitle="true" />
+        </component>
+      </ComponentConfig>
     </ComponentConfigurations>
+    <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
+    <HelpFileVersion>2.0.0.0</HelpFileVersion>
+    <RootNamespaceTitle>TSL Adapter Namespaces</RootNamespaceTitle>
+    <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
+    <PlugInConfigurations>
+      <PlugInConfig id="Additional Reference Links" enabled="True" xmlns="">
+        <configuration>
+          <targets>
+            <target htmlSdkLinkType="None" helpViewerSdkLinkType="Id" websiteSdkLinkType="None" helpFileProject="..\GridSolutionsFrameworkHelp\GridSolutionsFrameworkHelp.shfbproj" />
+          </targets>
+        </configuration>
+      </PlugInConfig>
+    </PlugInConfigurations>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
