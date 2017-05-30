@@ -14,13 +14,13 @@
         The open Phasor Data Concentrator, Secure Information Exchange Gateway (SIEGate) and the open Historian are examples
         of projects based on this time-series adapter library.
       </para>
-      <!--<para>
+      <para>
         See the following for documentation for core components of the Grid Solutions Framework:
         <externalLink>
           <linkText>GSF Core Framework</linkText>
-          <linkUri>https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/</linkUri>
+          <linkUri>../../</linkUri>
         </externalLink>
-      </para>-->
+      </para>
     </introduction>
 
     <section>
@@ -29,7 +29,7 @@
         <para>
           The time-series adapter library can be molded to route measurements in any fashion, but the system defines three fundamental
           measurement processing categorizations to kick start most any time-series processing architecture; these are the 
-          _Input_, _Action_ and _Output_ interface
+          <legacyItalic>Input</legacyItalic>, <legacyItalic>Action</legacyItalic> and <legacyItalic>Output</legacyItalic> interface
           adapters. These base level adapters are called Iaon Adapters (pronounced "yo-wan" if you want to speak it). Each adapter
           type performs a basic time-series data operation:
         </para>
@@ -37,32 +37,50 @@
         <list class="bullet">
           <listItem>
             <para>
-              **Input Adapters**: Typically "maps" measurements from a data source (i.e., assigns a 
+              <legacyBold>Input Adapters</legacyBold>: Typically "maps" measurements from a data source (i.e., assigns a
               timestamp and an ID to measured values parsed from a stream of data), new measurements are presented to the system
-              by calling "void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)" method.
+              by calling <codeInline>void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)</codeInline> method.
             </para>
             <para>
-              Interface: IInputAdapter, base class: InputAdapterBase
+              Interface:
+              <externalLink>
+                <linkText>IInputAdapter</linkText>
+                <linkUri>../../html/T_GSF_TimeSeries_Adapters_IInputAdapter.htm</linkUri>
+              </externalLink>,
+              base class:
+              <externalLink>
+                <linkText>InputAdapterBase</linkText>
+                <linkUri>../../html/T_GSF_TimeSeries_Adapters_InputAdapterBase.htm</linkUri>
+              </externalLink>
             </para>
           </listItem>
 
           <listItem>
             <para>
-              **Action Adapters**: Typically filters and sorts measurements by time allowing adapter to take
-              action on a synchronized set of data provided in the "abstract void PublishFrame(IFrame frame, int index)" method which
+              <legacyBold>Action Adapters</legacyBold>: Typically filters and sorts measurements by time allowing adapter to take
+              action on a synchronized set of data provided in the <codeInline>abstract void PublishFrame(IFrame frame, int index)</codeInline> method which
               adapter overrides (note that frame contains a collection of measurements all collected into the same time-indexed
               frame bucket). If the action causes the creation of new measurements, new measurements are presented to the system by
-              calling "void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)” method.              
+              calling <codeInline>void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)</codeInline> method.
             </para>
             <para>
-              Interface: IActionAdapter, base class: ActionAdapterBase
+              Interface:
+              <externalLink>
+                <linkText>IActionAdapter</linkText>
+                <linkUri>../../html/T_GSF_TimeSeries_Adapters_IActionAdapter.htm</linkUri>
+              </externalLink>,
+              base class:
+              <externalLink>
+                <linkText>ActionAdapterBase</linkText>
+                <linkUri>../../html/T_GSF_TimeSeries_Adapters_ActionAdapterBase.htm</linkUri>
+              </externalLink>
             </para>
           </listItem>
 
           <listItem>
             <para>
-              **Output Adapters**: Typically queues all measurements (no sorting) for processing. Queued
-              measurements are presented to the adapter for processing in the "void ProcessMeasurements(IMeasurement[] measurements)"
+              <legacyBold>Output Adapters</legacyBold>: Typically queues all measurements (no sorting) for processing. Queued
+              measurements are presented to the adapter for processing in the <codeInline>void ProcessMeasurements(IMeasurement[] measurements)</codeInline>
               method – if measurements continue to build up in memory and are not processed in a timely manner they will be removed
               from the queue as protective measure to prevent catastrophic out-of-memory failures. Since output adapters are used to
               archive data this is often the slowest part in the system (disks tend to be a bottleneck), outputs can optionally be
@@ -70,7 +88,16 @@
               different distributed outputs which allows large systems to stay ahead of the incoming data stream.
             </para>
             <para>
-              Interface: IOutputAdapter, base class: OutputAdapterBase
+              Interface:
+              <externalLink>
+                <linkText>IOutputAdapter</linkText>
+                <linkUri>../../html/T_GSF_TimeSeries_Adapters_IOutputAdapter.htm</linkUri>
+              </externalLink>,
+              base class:
+              <externalLink>
+                <linkText>OutputAdapterBase</linkText>
+                <linkUri>../../html/T_GSF_TimeSeries_Adapters_OutputAdapterBase.htm</linkUri>
+              </externalLink>
             </para>
           </listItem>
         </list>
