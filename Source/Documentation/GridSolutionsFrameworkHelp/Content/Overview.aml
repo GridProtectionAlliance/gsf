@@ -13,7 +13,7 @@
         See the following for documentation for time-series adapters that are available as part of the Grid Solutions Framework:
         <externalLink>
           <linkText>Time-series Adapters</linkText>
-          <linkUri>./Adapters/index.html</linkUri>
+          <linkUri>../Adapters/index.html</linkUri>
         </externalLink>        
       </para>
       <para>

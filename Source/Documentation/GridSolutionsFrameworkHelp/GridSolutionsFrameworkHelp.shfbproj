@@ -61,7 +61,7 @@
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <CppCommentsFixup>False</CppCommentsFixup>
-    <CleanIntermediates>False</CleanIntermediates>
+    <CleanIntermediates>True</CleanIntermediates>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <ApiFilter>
       <Filter entryType="Namespace" fullName="GSF.Annotations" isExposed="False" />
