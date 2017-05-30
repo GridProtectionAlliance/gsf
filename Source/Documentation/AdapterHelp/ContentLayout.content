@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Topics>
-  <Topic id="1218d5aa-0d5c-42fe-a65e-d0a1b30bba41" visible="True" isDefault="true" isSelected="true" apiParentMode="InsertAsChild" title="GSF Time-series Library" tocTitle="Welcome" linkText="Welcome">
+  <Topic id="1218d5aa-0d5c-42fe-a65e-d0a1b30bba41" visible="True" isDefault="true" isSelected="true" apiParentMode="InsertAfter" title="Overview">
     <HelpKeywords>
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>

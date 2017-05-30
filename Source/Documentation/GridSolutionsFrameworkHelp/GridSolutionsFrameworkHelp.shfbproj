@@ -18,9 +18,17 @@
     <HtmlHelpName>GridSolutionsFramework</HtmlHelpName>
     <Language>en-US</Language>
     <TransformComponentArguments>
+      <Argument Key="logoFile" Value="GSF64x64.png" />
+      <Argument Key="logoHeight" Value="" />
+      <Argument Key="logoWidth" Value="" />
+      <Argument Key="logoAltText" Value="" />
+      <Argument Key="logoPlacement" Value="left" />
+      <Argument Key="logoAlignment" Value="left" />
       <Argument Key="maxVersionParts" Value="" />
+      <Argument Key="defaultLanguage" Value="cs" />
       <Argument Key="includeEnumValues" Value="true" />
       <Argument Key="baseSourceCodeUrl" Value="https://github.com/GridProtectionAlliance/gsf/tree/master/Source/" />
+      <Argument Key="requestExampleUrl" Value="" />
     </TransformComponentArguments>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
@@ -48,24 +56,23 @@
       <DocumentationSource sourceFile="..\..\Libraries\GSF.ASN1\GSF.ASN1.csproj" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
-    <HelpFileFormat>Markdown</HelpFileFormat>
+    <HelpFileFormat>Website</HelpFileFormat>
     <IndentHtml>True</IndentHtml>
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <CppCommentsFixup>False</CppCommentsFixup>
-    <CleanIntermediates>True</CleanIntermediates>
+    <CleanIntermediates>False</CleanIntermediates>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <ApiFilter>
       <Filter entryType="Namespace" fullName="GSF.Annotations" isExposed="False" />
-      <Filter entryType="Namespace" fullName="XamlGeneratedNamespace" isExposed="False" />
-    </ApiFilter>
+<Filter entryType="Namespace" fullName="XamlGeneratedNamespace" isExposed="False" /></ApiFilter>
     <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
     <MaximumGroupParts>2</MaximumGroupParts>
-    <NamespaceGrouping>True</NamespaceGrouping>
+    <NamespaceGrouping>False</NamespaceGrouping>
     <SyntaxFilters>C#, Visual Basic, Managed C++, F#, JavaScript</SyntaxFilters>
     <SdkLinkTarget>Blank</SdkLinkTarget>
     <RootNamespaceContainer>True</RootNamespaceContainer>
-    <PresentationStyle>Markdown</PresentationStyle>
+    <PresentationStyle>VS2013</PresentationStyle>
     <Preliminary>False</Preliminary>
     <NamingMethod>MemberName</NamingMethod>
     <HelpTitle>Grid Solutions Framework Documentation</HelpTitle>
@@ -117,6 +124,8 @@
     <HelpFileVersion>2.0.0.0</HelpFileVersion>
     <RootNamespaceTitle>GSF Namespaces</RootNamespaceTitle>
     <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
+    <WarnOnMissingSourceContext>True</WarnOnMissingSourceContext>
+    <SourceCodeBasePath>..\..\</SourceCodeBasePath>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
@@ -142,7 +151,7 @@
     <Folder Include="Media" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Content\Welcome.aml" />
+    <None Include="Content\Overview.aml" />
   </ItemGroup>
   <ItemGroup>
     <ContentLayout Include="ContentLayout.content" />

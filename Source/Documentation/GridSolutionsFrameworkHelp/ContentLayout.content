@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Topics>
-  <Topic id="48e4686b-c63d-405c-ad8e-04f95f6e87fe" visible="True" isDefault="true" isSelected="true" apiParentMode="InsertAfter" title="Grid Solutions Framework" tocTitle="Welcome" linkText="Welcome">
+  <Topic id="48e4686b-c63d-405c-ad8e-04f95f6e87fe" visible="True" isDefault="true" isSelected="true" apiParentMode="InsertAfter" title="Overview">
     <HelpKeywords>
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <topic id="48e4686b-c63d-405c-ad8e-04f95f6e87fe" revisionNumber="1">
   <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
     <introduction>
@@ -9,13 +9,13 @@
         the more complex .NET features (e.g., sockets and encryption) easier to use and adds functions not included
         in the .NET.
       </para>
-      <!--<para>
+      <para>
         See the following for documentation for time-series adapters that are available as part of the Grid Solutions Framework:
         <externalLink>
           <linkText>Time-series Adapters</linkText>
-          <linkUri>https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/Adapters/</linkUri>
+          <linkUri>./Adapters/index.html</linkUri>
         </externalLink>        
-      </para>-->
+      </para>
       <para>
         NuGet Download:
         <externalLink>

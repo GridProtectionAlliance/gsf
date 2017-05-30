@@ -222,7 +222,7 @@ namespace GSF.Web.Hosting
         }
 
         /// <summary>
-        /// // Sub-folder post handler - depth 1.
+        /// Sub-folder post handler - depth 1.
         /// </summary>
         /// <param name="folder1">First folder.</param>
         /// <param name="pageName">Page name to render.</param>
