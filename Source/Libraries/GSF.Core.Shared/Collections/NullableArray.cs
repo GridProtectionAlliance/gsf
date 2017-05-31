@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.Collection
+namespace GSF.Collections
 {
     /// <summary>
     /// Creates an array of a struct type that uses bitmask for designating a null value.

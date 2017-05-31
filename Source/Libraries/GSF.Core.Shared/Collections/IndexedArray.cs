@@ -26,7 +26,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace GSF.Collection
+namespace GSF.Collections
 {
     /// <summary>
     /// A self growing array of items. This class is thread safe.

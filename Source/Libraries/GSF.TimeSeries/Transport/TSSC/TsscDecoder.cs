@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System;
-using GSF.Collection;
+using GSF.Collections;
 
 namespace GSF.TimeSeries.Transport.TSSC
 {
