@@ -137,6 +137,7 @@ namespace GSF.Data.Model
         /// customTokens = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
         /// </code>
         /// </remarks>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public TableOperations(AdoDataConnection connection, IEnumerable<KeyValuePair<string, string>> customTokens = null)
         {
             if ((object)connection == null)
