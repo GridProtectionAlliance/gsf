@@ -421,7 +421,8 @@ namespace GSF.Security.Cryptography
         }
 
         // Primary cryptographic key and initialization vector cache.
-        private static KeyIVCache s_keyIVCache;
+        private static KeyIVCache GlobalKeyIVCache => s_keyIVCache.Value;
+        private static Lazy<KeyIVCache> s_keyIVCache;
 
         // Set default encoding base Base64 strings
         private static Encoding s_textEncoding;
@@ -453,82 +454,89 @@ namespace GSF.Security.Cryptography
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
-            // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
-            localKeyIVCache = new KeyIVCache
+            s_keyIVCache = new Lazy<KeyIVCache>(() =>
             {
-                FileName = localCacheFileName,
-                RetryDelayInterval = retryDelayInterval,
-                MaximumRetryAttempts = maximumRetryAttempts,
-                ManagedEncryption = s_managedEncryption,
+                KeyIVCache globalKeyIVCache;
+
+                // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
+                localKeyIVCache = new KeyIVCache
+                {
+                    FileName = localCacheFileName,
+                    RetryDelayInterval = retryDelayInterval,
+                    MaximumRetryAttempts = maximumRetryAttempts,
+                    ManagedEncryption = s_managedEncryption,
 #if DNF45 && !MONO
-                ReloadOnChange = true,
+                    ReloadOnChange = true,
 #else
                 // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
                 // automatic runtime reloading of key/iv data cached by another application.
                 ReloadOnChange = false,
 #endif
-                AutoSave = false
-            };
+                    AutoSave = false
+                };
 
-            // Load initial keys
-            localKeyIVCache.Load();
+                // Load initial keys
+                localKeyIVCache.Load();
 
-            try
-            {
-                // Validate that user has write access to the local cryptographic cache folder
-                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid() + ".tmp";
-
-                using (File.Create(tempFile))
+                try
                 {
+                    // Validate that user has write access to the local cryptographic cache folder
+                    string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid() + ".tmp";
+
+                    using (File.Create(tempFile))
+                    {
+                    }
+
+                    if (File.Exists(tempFile))
+                        File.Delete(tempFile);
+
+                    // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
+                    globalKeyIVCache = localKeyIVCache;
+                    globalKeyIVCache.AutoSave = true;
+                    localKeyIVCache = null;
                 }
-
-                if (File.Exists(tempFile))
-                    File.Delete(tempFile);
-
-                // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
-                s_keyIVCache = localKeyIVCache;
-                s_keyIVCache.AutoSave = true;
-                localKeyIVCache = null;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                // User does not have needed serialization access to common cryptographic cache folder, use a path where user will have rights
-                string userCacheFolder = FilePath.AddPathSuffix(FilePath.GetApplicationDataFolder());
-                string userCacheFileName = userCacheFolder + FilePath.GetFileName(localCacheFileName);
-
-                // Make sure user directory exists
-                if (!Directory.Exists(userCacheFolder))
-                    Directory.CreateDirectory(userCacheFolder);
-
-                // Copy existing common cryptographic cache if none exists
-                if (File.Exists(localCacheFileName) && !File.Exists(userCacheFileName))
-                    File.Copy(localCacheFileName, userCacheFileName);
-
-                // Initialize primary cryptographic key and initialization vector cache within user folder
-                s_keyIVCache = new KeyIVCache
+                catch (UnauthorizedAccessException)
                 {
-                    FileName = userCacheFileName,
-                    RetryDelayInterval = retryDelayInterval,
-                    MaximumRetryAttempts = maximumRetryAttempts,
+                    // User does not have needed serialization access to common cryptographic cache folder, use a path where user will have rights
+                    string userCacheFolder = FilePath.AddPathSuffix(FilePath.GetApplicationDataFolder());
+                    string userCacheFileName = userCacheFolder + FilePath.GetFileName(localCacheFileName);
+
+                    // Make sure user directory exists
+                    if (!Directory.Exists(userCacheFolder))
+                        Directory.CreateDirectory(userCacheFolder);
+
+                    // Copy existing common cryptographic cache if none exists
+                    if (File.Exists(localCacheFileName) && !File.Exists(userCacheFileName))
+                        File.Copy(localCacheFileName, userCacheFileName);
+
+                    // Initialize primary cryptographic key and initialization vector cache within user folder
+                    globalKeyIVCache = new KeyIVCache
+                    {
+                        FileName = userCacheFileName,
+                        RetryDelayInterval = retryDelayInterval,
+                        MaximumRetryAttempts = maximumRetryAttempts,
 #if DNF45 && !MONO
-                    ReloadOnChange = true,
+                        ReloadOnChange = true,
 #else
                     // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
                     // automatic runtime reloading of key/iv data cached by another application.
                     ReloadOnChange = false,
 #endif
-                    AutoSave = true
-                };
+                        AutoSave = true
+                    };
 
-                // Load initial keys
-                s_keyIVCache.Load();
+                    // Load initial keys
+                    globalKeyIVCache.Load();
 
-                // Merge new or updated keys, protected folder keys taking precedence over user keys
-                s_keyIVCache.MergeRight(localKeyIVCache);
-            }
+                    // Merge new or updated keys, protected folder keys taking precedence over user keys
+                    globalKeyIVCache.MergeRight(localKeyIVCache);
+                }
 
-            if ((object)localKeyIVCache != null)
-                localKeyIVCache.Dispose();
+                if ((object)localKeyIVCache != null)
+                    localKeyIVCache.Dispose();
+
+                return globalKeyIVCache;
+            });
         }
 
         /// <summary>
@@ -558,7 +566,7 @@ namespace GSF.Security.Cryptography
         /// </remarks>
         public static void FlushCache(int millisecondsTimeout = Timeout.Infinite)
         {
-            s_keyIVCache.WaitForSave(millisecondsTimeout);
+            GlobalKeyIVCache.WaitForSave(millisecondsTimeout);
         }
 
         /// <summary>
@@ -574,14 +582,14 @@ namespace GSF.Security.Cryptography
             int maximumRetryAttempts = 0;
 
             // Load the system key cache
-            s_keyIVCache.Load();
+            GlobalKeyIVCache.Load();
 
             // Load cryptographic settings
             config = ConfigurationFile.Current;
             settings = config.Settings[CryptoServicesSettingsCategory];
             commonCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(commonCacheFileName));
 
-            if (commonCacheFileName != s_keyIVCache.FileName)
+            if (commonCacheFileName != GlobalKeyIVCache.FileName)
             {
                 // System key cache is not loaded from common cache folder.
                 // We need to merge the common key cache with the system key cache.
@@ -603,7 +611,7 @@ namespace GSF.Security.Cryptography
                     commonKeyIVCache.Load();
 
                     // Merge new or updated keys, common cache folder keys taking precedence
-                    s_keyIVCache.MergeRight(commonKeyIVCache);
+                    GlobalKeyIVCache.MergeRight(commonKeyIVCache);
                 }
             }
         }
@@ -616,7 +624,7 @@ namespace GSF.Security.Cryptography
         /// <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
         public static bool KeyIVExists(string password, int keySize)
         {
-            return s_keyIVCache.KeyIVExists(password, keySize);
+            return GlobalKeyIVCache.KeyIVExists(password, keySize);
         }
 
         /// <summary>
@@ -630,7 +638,7 @@ namespace GSF.Security.Cryptography
         /// </remarks>
         public static void ImportKeyIV(string password, int keySize, string keyIVText)
         {
-            s_keyIVCache.ImportKeyIV(password, keySize, keyIVText);
+            GlobalKeyIVCache.ImportKeyIV(password, keySize, keyIVText);
         }
 
         /// <summary>
@@ -644,7 +652,7 @@ namespace GSF.Security.Cryptography
         /// </remarks>
         public static string ExportKeyIV(string password, int keySize)
         {
-            return s_keyIVCache.ExportKeyIV(password, keySize);
+            return GlobalKeyIVCache.ExportKeyIV(password, keySize);
         }
 
         /// <summary>
@@ -728,7 +736,7 @@ namespace GSF.Security.Cryptography
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException(nameof(password));
 
-            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
+            byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
 
             return source.Encrypt(startIndex, length, keyIV[KeyIndex], keyIV[IVIndex], strength);
         }
@@ -874,7 +882,7 @@ namespace GSF.Security.Cryptography
                 if (string.IsNullOrEmpty(password))
                     throw new ArgumentNullException(nameof(password));
 
-                byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
+                byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
 
                 sourceFileStream.Encrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
@@ -931,7 +939,7 @@ namespace GSF.Security.Cryptography
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException(nameof(password));
 
-            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
+            byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
 
             return source.Decrypt(startIndex, length, keyIV[KeyIndex], keyIV[IVIndex], strength);
         }
@@ -1089,7 +1097,7 @@ namespace GSF.Security.Cryptography
                 if (string.IsNullOrEmpty(password))
                     throw new ArgumentNullException(nameof(password));
 
-                byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
+                byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
 
                 sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
