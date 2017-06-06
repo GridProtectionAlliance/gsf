@@ -51,6 +51,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Average(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Average, Avg, Mean<br/>
         /// Execution: Immediate enumeration.
@@ -61,6 +62,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Minimum(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Minimum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Minimum, Min<br/>
         /// Execution: Immediate enumeration.
@@ -71,6 +73,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Maximum(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Maximum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Maximum, Max<br/>
         /// Execution: Immediate enumeration.
@@ -81,6 +84,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Total(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Total, Sum<br/>
         /// Execution: Immediate enumeration.
@@ -91,6 +95,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Range(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Range(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Range<br/>
         /// Execution: Immediate enumeration.
@@ -101,6 +106,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Count(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Count(PPA:1; PPA:2; PPA:3)</c><br/>
         /// Variants: Count<br/>
         /// Execution: Immediate enumeration.
@@ -111,6 +117,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Distinct(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Distinct(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Distinct, Unique<br/>
         /// Execution: Deferred enumeration.
@@ -121,6 +128,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>AbsoluteValue(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>AbsoluteValue(FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: AbsoluteValue, Abs<br/>
         /// Execution: Deferred enumeration.
@@ -132,6 +140,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Add(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Add<br/>
         /// Execution: Deferred enumeration.
@@ -143,6 +152,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Multiply(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Multiply<br/>
         /// Execution: Deferred enumeration.
@@ -153,7 +163,8 @@ namespace GrafanaAdapters
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Round([N], expression)</c><br/>
+        /// Signature: <c>Round([N = 0], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Round<br/>
         /// Execution: Deferred enumeration.
@@ -164,6 +175,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Floor(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Floor(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Floor<br/>
         /// Execution: Deferred enumeration.
@@ -174,6 +186,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Ceiling(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Ceiling, Ceil<br/>
         /// Execution: Deferred enumeration.
@@ -184,36 +197,31 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Truncate(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Truncate(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Truncate, Trunc<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Truncate,
         /// <summary>
-        /// Returns a single value that represents the standard deviation of the values in the source series.
+        /// Returns a single value that represents the standard deviation of the values in the source series. First parameter,
+        /// optional, is a boolean flag representing if the sample based calculation should be used - defaults to false, which
+        /// means the population based calculation should be used.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>StandardDeviation(expression)</c><br/>
+        /// Signature: <c>StandardDeviation([useSampleCalc = false], expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: StandardDeviation, StdDev<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         StandardDeviation,
         /// <summary>
-        /// Returns a single value that represents the standard deviation, using sample calculation, of the values in the source series.
-        /// </summary>
-        /// <remarks>
-        /// Signature: <c>StandardDeviationSample(expression)</c><br/>
-        /// Example: <c>StandardDeviationSample(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
-        /// Variants: StandardDeviationSample, StdDevSamp<br/>
-        /// Execution: Immediate in-memory array load.
-        /// </remarks>
-        StandardDeviationSample,
-        /// <summary>
         /// Returns a single value that represents the median of the values in the source series.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Median(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Median(FILTER ActiveMeasurements WHERE SignalType='ALOG')</c><br/>
         /// Variants: Median, Med, Mid<br/>
         /// Execution: Immediate in-memory array load.
@@ -224,6 +232,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Mode(expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
         /// Variants: Mode<br/>
         /// Execution: Immediate in-memory array load.
@@ -236,7 +245,8 @@ namespace GrafanaAdapters
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Top(N|N%, [normalizeTime], expression)</c><br/>
+        /// Signature: <c>Top(N|N%, [normalizeTime = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Top, Largest<br/>
         /// Execution: Immediate in-memory array load.
@@ -249,7 +259,8 @@ namespace GrafanaAdapters
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Bottom(N|N%, [normalizeTime], expression)</c><br/>
+        /// Signature: <c>Bottom(N|N%, [normalizeTime = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Bottom, Bot, Smallest<br/>
         /// Execution: Immediate in-memory array load.
@@ -262,7 +273,8 @@ namespace GrafanaAdapters
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Random(N|N%, [normalizeTime], expression)</c><br/>
+        /// Signature: <c>Random(N|N%, [normalizeTime = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: Random, Rand, Sample<br/>
         /// Execution: Immediate in-memory array load.
@@ -274,7 +286,8 @@ namespace GrafanaAdapters
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>First([N|N%], expression)</c><br/>
+        /// Signature: <c>First([N|N% = 1], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: First<br/>
         /// Execution: Immediate in-memory array load.
@@ -286,7 +299,8 @@ namespace GrafanaAdapters
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Last([N|N%], expression)</c><br/>
+        /// Signature: <c>Last([N|N% = 1], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Last(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Last<br/>
         /// Execution: Immediate in-memory array load.
@@ -298,6 +312,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Percentile(N[%], expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>Percentile(10%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: Percentile, Pctl<br/>
         /// Execution: Immediate in-memory array load.
@@ -308,26 +323,35 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Signature: <c>Difference(expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Difference, Diff<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Difference,
         /// <summary>
-        /// Returns a series of values that represent the time difference, in seconds, between consecutive values in the source series.
+        /// Returns a series of values that represent the time difference, in time units, between consecutive values in the source series. The units
+        /// parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds,
+        /// Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or
+        /// AtomicUnitsOfTime - defaults to Seconds.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>TimeDifference(expression)</c><br/>
+        /// Signature: <c>TimeDifference([units = Seconds], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: TimeDifference, TimeDiff, Elapsed<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         TimeDifference,
         /// <summary>
-        /// Returns a series of values that represent the rate of change, per second, for the difference between consecutive values in the source series.
+        /// Returns a series of values that represent the rate of change, per time units, for the difference between consecutive values in the source
+        /// series. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
+        /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
+        /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Derivative(expression)</c><br/>
+        /// Signature: <c>Derivative([units = Seconds], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Derivative(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Derivative, Der<br/>
         /// Execution: Deferred enumeration.
@@ -335,35 +359,114 @@ namespace GrafanaAdapters
         Derivative,
         /// <summary>
         /// Returns a single value that represents the time-based integration, i.e., the sum of <c>V(n) * (T(n) - T(n-1))</c> where time difference is
-        /// calculated in hours, of the values in the source series.
+        /// calculated in the specified time units, of the values in the source series. The units parameter, optional, specifies the type of time units
+        /// and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional
+        /// Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or AtomicUnitsOfTime - defaults to Hours.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>TimeIntegration(expression)</c><br/>
+        /// Signature: <c>TimeIntegration([units = Hours], expression)</c><br/>
+        /// Returns: Single value.<br/>
         /// Example: <c>TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')</c><br/>
         /// Variants: TimeIntegration, TimeInt<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         TimeIntegration,
         /// <summary>
-        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds.
-        /// N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in seconds, for the returned data.
-        /// Setting N value to zero will request non-decimated, full resolution data from the data source. A zero value will always produce the most accurate
-        /// aggregation calculation results but will increase query burden for large time ranges.
+        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.
+        /// N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned
+        /// data. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
+        /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
+        /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds. Setting N value to zero will request non-decimated, full resolution data from the data
+        /// source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges.
         /// </summary>
         /// <remarks>
-        /// Signature: <c>Interval(N, expression)</c><br/>
+        /// Signature: <c>Interval(N, [units = Seconds], expression)</c><br/>
+        /// Returns: Series of values.<br/>
         /// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
-        /// Variants: Interval, Int<br/>
+        /// Variants: Interval<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Interval,
         /// <summary>
+        /// Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high.
+        /// The low and high parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional,
+        /// is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means
+        /// values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
+        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>IncludeRange(low, high, [inclusive = false], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+        /// Variants: IncludeRange, Include<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        IncludeRange,
+        /// <summary>
+        /// Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high.
+        /// The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional,
+        /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means
+        /// values are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four
+        /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>ExcludeRange(low, high, [inclusive = false], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
+        /// Variants: ExcludeRange, Exclude<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        ExcludeRange,
+        /// <summary>
+        /// Returns a series of values that represent a filtered set of the values in the source series where each value is a real number, i.e., value is not NaN.
+        /// First parameter, optional, is a boolean flag that determines if infinite values should also be excluded - defaults to true.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>FilterNaN([alsoFilterInfinity = true], expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>FilterNaN(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
+        /// Variants: FilterNaN<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>        
+        FilterNaN,
+        /// <summary>
+        /// Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical
+        /// operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values
+        /// mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads,
+        /// ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>UnwrapAngle([units = Degrees], expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>UnwrapAngle(FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
+        /// Variants: UnwrapAngle, Unwrap<br/>
+        /// Execution: Immediate in-memory array load.
+        /// </remarks>
+        UnwrapAngle,
+        /// <summary>
+        /// Returns a series of values that represent an adjusted set of angles that are wrapped, per specified angle units, so that angle values are consistently
+        /// between -180 and +180 degrees. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians,
+        /// Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>WrapAngle([units = Degrees], expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
+        /// Variants: WrapAngle, Wrap<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        WrapAngle,
+        /// <summary>
         /// Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three
-        /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3".
+        /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this
+        /// function will be ignored. The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly
+        /// map to a point tag, one of the following metadata value substitutions can be used in the label value: {ID}, {SignalID}, {PointTag}, {AlternateTag},
+        /// {SignalReference}, {Device} or {SignalType} - where applicable, these substitutions can be used in any combination.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Label(value, expression)</c><br/>
-        /// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType LIKE 'FREQ'))</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
         /// Variants: Label, Name<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
@@ -391,6 +494,92 @@ namespace GrafanaAdapters
         /// Performs no group operation on the series set.
         /// </summary>
         None
+    }
+
+    /// <summary>
+    /// Time units for time related functions.
+    /// </summary>
+    public enum TimeUnits
+    {
+        /// <summary>
+        /// Specifies that the time is in ticks, 100-nanoseconds intervals.
+        /// </summary>
+        Ticks,
+        /// <summary>
+        /// Specifies that the time is in nanoseconds.
+        /// </summary>
+        Nanoseconds,
+        /// <summary>
+        /// Specifies that the time is in microseconds.
+        /// </summary>
+        Microseconds,
+        /// <summary>
+        /// Specifies that the time is in milliseconds.
+        /// </summary>
+        Milliseconds,
+        /// <summary>
+        /// Specifies that the time is in seconds.
+        /// </summary>
+        Seconds,
+        /// <summary>
+        /// Specifies that the time is in minutes.
+        /// </summary>
+        Minutes,
+        /// <summary>
+        /// Specifies that the time is in hours.
+        /// </summary>
+        Hours,
+        /// <summary>
+        /// Specifies that the time is in days.
+        /// </summary>
+        Days,
+        /// <summary>
+        /// Specifies that the time is in weeks.
+        /// </summary>
+        Weeks,
+        /// <summary>
+        /// Specifies that the time is in ke, the traditional Chinese unit of decimal time.
+        /// </summary>
+        Ke,
+        /// <summary>
+        /// Specifies that the time is in Planck time.
+        /// </summary>
+        PlanckTime,
+        /// <summary>
+        /// Specifies that the time is in atomic units of time.
+        /// </summary>
+        AtomicUnitsOfTime
+    }
+
+    /// <summary>
+    /// Angle units for wrap and unwrap functions.
+    /// </summary>
+    public enum AngleUnits
+    {
+        /// <summary>
+        /// Specifies that angle is in degrees.
+        /// </summary>
+        Degrees,
+        /// <summary>
+        /// Specifies that angle is in radians.
+        /// </summary>
+        Radians,
+        /// <summary>
+        /// Specifies that angle is in grads.
+        /// </summary>
+        Grads,
+        /// <summary>
+        /// Specifies that angle is in arc minutes.
+        /// </summary>
+        ArcMinutes,
+        /// <summary>
+        /// Specifies that angle is in arc seconds.
+        /// </summary>
+        ArcSeconds,
+        /// <summary>
+        /// Specifies that angle is in angular mil.
+        /// </summary>
+        AngularMil
     }
 
     #endregion
@@ -491,15 +680,17 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                int maxDataPoints = (int)(request.maxDataPoints * 1.05D);
+                int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
 
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target }).ToList();
 
+                // Process series data in parallel
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
+                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation
                     series.datapoints = valueGroups.First(group => group.Target.Equals(series.target)).Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
 
@@ -610,6 +801,7 @@ namespace GrafanaAdapters
                     yield return new DataSourceValueGroup
                     {
                         Target = target.Value,
+                        RootTarget = target.Value,
                         Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value))
                     };
             }
@@ -629,6 +821,11 @@ namespace GrafanaAdapters
                 // Extract any required function parameters
                 int requiredParameters = s_requiredParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
 
+                // Any slice operation adds one required parameter for time tolerance
+                if (groupOperation == GroupOperation.Slice)
+                    requiredParameters++;
+
+                // TODO: Consider parsing with regular expression so function results could be used as parameter values
                 if (requiredParameters > 0)
                 {
                     int index = 0;
@@ -642,7 +839,7 @@ namespace GrafanaAdapters
                     if (parsedParameters.Count == requiredParameters)
                         expression = expression.Substring(index + 1).Trim();
                     else
-                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {seriesFunction}({expression})");
+                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {(groupOperation == GroupOperation.None ? "" : groupOperation.ToString())}{seriesFunction}({expression})");
                 }
 
                 // Extract any provided optional function parameters
@@ -693,7 +890,7 @@ namespace GrafanaAdapters
             // Query function expression to get series data
             IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, interval, decimate, cancellationToken);
 
-            // Handle label function as a special edge case
+            // Handle label function as a special edge case - groups operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)
             {
                 // Derive label
@@ -706,9 +903,30 @@ namespace GrafanaAdapters
 
                 for (int i = 0; i < groups.Length; i++)
                 {
+                    string target = groups[i].RootTarget;
+
+                    string seriesLabel = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
+                    {
+                        string derivedLabel = label;
+                        DataRow record = target.MetadataRecordFromTag(Metadata);
+
+                        if ((object)record != null)
+                        {
+                            foreach (string fieldName in s_metadataRecordFields)
+                                derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
+                        }
+
+                        // ReSharper disable once AccessToModifiedClosure
+                        if (derivedLabel.Equals(label, StringComparison.Ordinal))
+                            derivedLabel = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}";
+
+                        return derivedLabel;
+                    });
+                                                              
                     yield return new DataSourceValueGroup
                     {
-                        Target = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}",
+                        Target = seriesLabel,
+                        RootTarget = target,
                         Source = groups[i].Source
                     };
                 }
@@ -718,10 +936,11 @@ namespace GrafanaAdapters
                 switch (groupOperation)
                 {
                     case GroupOperation.Set:
-                        // Flatten all series into a single enumerable for set operations
+                        // Flatten all series into a single enumerable
                         DataSourceValueGroup result = new DataSourceValueGroup
                         {
                             Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                            RootTarget = targetExpression,
                             Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
                         };
 
@@ -730,18 +949,31 @@ namespace GrafanaAdapters
                         {
                             DataSourceValue dataValue = result.Source.First();
                             result.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                            result.RootTarget = dataValue.Target;
                         }
 
                         yield return result;
 
                         break;
                     case GroupOperation.Slice:
+                        TimeSliceScanner scanner = new TimeSliceScanner(dataset, ParseFloat(parameters[0]) / SI.Milli);
+                        parameters = parameters.Skip(1).ToArray();
+
+                        // Flatten all series into a single enumerable
+                        yield return new DataSourceValueGroup
+                        {
+                            Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                            RootTarget = targetExpression,
+                            Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters)
+                        };
+
                         break;
                     default:
                         foreach (DataSourceValueGroup dataValues in dataset)
                             yield return new DataSourceValueGroup
                             {
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
+                                RootTarget = dataValues.Target,
                                 Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
                             };
 
@@ -771,7 +1003,6 @@ namespace GrafanaAdapters
         private static readonly Regex s_ceilingExpression;
         private static readonly Regex s_truncateExpression;
         private static readonly Regex s_standardDeviationExpression;
-        private static readonly Regex s_standardDeviationSampleExpression;
         private static readonly Regex s_medianExpression;
         private static readonly Regex s_modeExpression;
         private static readonly Regex s_topExpression;
@@ -785,10 +1016,16 @@ namespace GrafanaAdapters
         private static readonly Regex s_derivativeExpression;
         private static readonly Regex s_timeIntegrationExpression;
         private static readonly Regex s_intervalExpression;
+        private static readonly Regex s_includeRangeExpression;
+        private static readonly Regex s_excludeRangeExpression;
+        private static readonly Regex s_filterNaNExpression;
+        private static readonly Regex s_unwrapAngleExpression;
+        private static readonly Regex s_wrapAngleExpression;
         private static readonly Regex s_labelExpression;
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
         private static readonly Dictionary<SeriesFunction, int> s_optionalParameters;
         private static readonly string[] s_groupOperationNames;
+        private static readonly string[] s_metadataRecordFields;
 
         // Static Constructor
         static GrafanaDataSourceBase()
@@ -798,6 +1035,7 @@ namespace GrafanaAdapters
             // RegEx instance to find all series functions
             s_groupOperationNames = Enum.GetNames(typeof(GroupOperation));
             s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!\s+IN\s+)\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_metadataRecordFields = new[] { "ID", "SignalID", "PointTag", "AlternateTag", "SignalReference", "Device", "SignalType" };
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -815,7 +1053,6 @@ namespace GrafanaAdapters
             s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_truncateExpression = new Regex(string.Format(GetExpression, "(Truncate|Trunc)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_topExpression = new Regex(string.Format(GetExpression, "(Top|Largest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -828,7 +1065,12 @@ namespace GrafanaAdapters
             s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_intervalExpression = new Regex(string.Format(GetExpression, "(Interval|Int)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_intervalExpression = new Regex(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_includeRangeExpression = new Regex(string.Format(GetExpression, "(IncludeRange|Include)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_excludeRangeExpression = new Regex(string.Format(GetExpression, "(ExcludeRange|Exclude)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_filterNaNExpression = new Regex(string.Format(GetExpression, "FilterNaN"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
@@ -849,7 +1091,6 @@ namespace GrafanaAdapters
                 [SeriesFunction.Ceiling] = 0,
                 [SeriesFunction.Truncate] = 0,
                 [SeriesFunction.StandardDeviation] = 0,
-                [SeriesFunction.StandardDeviationSample] = 0,
                 [SeriesFunction.Median] = 0,
                 [SeriesFunction.Mode] = 0,
                 [SeriesFunction.Top] = 1,
@@ -863,6 +1104,11 @@ namespace GrafanaAdapters
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
                 [SeriesFunction.Interval] = 1,
+                [SeriesFunction.IncludeRange] = 2,
+                [SeriesFunction.ExcludeRange] = 2,
+                [SeriesFunction.FilterNaN] = 0,
+                [SeriesFunction.UnwrapAngle] = 0,
+                [SeriesFunction.WrapAngle] = 0,
                 [SeriesFunction.Label] = 1
             };
 
@@ -883,8 +1129,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
                 [SeriesFunction.Truncate] = 0,
-                [SeriesFunction.StandardDeviation] = 0,
-                [SeriesFunction.StandardDeviationSample] = 0,
+                [SeriesFunction.StandardDeviation] = 1,
                 [SeriesFunction.Median] = 0,
                 [SeriesFunction.Mode] = 0,
                 [SeriesFunction.Top] = 1,
@@ -894,17 +1139,22 @@ namespace GrafanaAdapters
                 [SeriesFunction.Last] = 1,
                 [SeriesFunction.Percentile] = 0,
                 [SeriesFunction.Difference] = 0,
-                [SeriesFunction.TimeDifference] = 0,
-                [SeriesFunction.Derivative] = 0,
-                [SeriesFunction.TimeIntegration] = 0,
+                [SeriesFunction.TimeDifference] = 1,
+                [SeriesFunction.Derivative] = 1,
+                [SeriesFunction.TimeIntegration] = 1,
                 [SeriesFunction.Interval] = 0,
+                [SeriesFunction.IncludeRange] = 2,
+                [SeriesFunction.ExcludeRange] = 2,
+                [SeriesFunction.FilterNaN] = 1,
+                [SeriesFunction.UnwrapAngle] = 1,
+                [SeriesFunction.WrapAngle] = 1,
                 [SeriesFunction.Label] = 0
             };
         }
 
         // Static Methods
         private static Tuple<SeriesFunction, string, GroupOperation> ParseSeriesFunction(Match matchedFunction)
-        {            
+        {
             Tuple<SeriesFunction, string, GroupOperation> result = TargetCache<Tuple<SeriesFunction, string, GroupOperation>>.GetOrAdd(matchedFunction.Value, () =>
             {
                 GroupOperation groupOperation;
@@ -1028,13 +1278,6 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.StandardDeviation, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
-                // Look for sampled-based standard deviation function
-                lock (s_standardDeviationSampleExpression)
-                    filterMatch = s_standardDeviationSampleExpression.Match(expression);
-
-                if (filterMatch.Success)
-                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.StandardDeviationSample, filterMatch.Result("${Expression}").Trim(), groupOperation);
-
                 // Look for median function
                 lock (s_medianExpression)
                     filterMatch = s_medianExpression.Match(expression);
@@ -1126,6 +1369,41 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Interval, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
+                // Look for include range function
+                lock (s_includeRangeExpression)
+                    filterMatch = s_includeRangeExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.IncludeRange, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for exclude range function
+                lock (s_excludeRangeExpression)
+                    filterMatch = s_excludeRangeExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.ExcludeRange, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for filter NaN function
+                lock (s_filterNaNExpression)
+                    filterMatch = s_filterNaNExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.FilterNaN, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for unwrap angle function
+                lock (s_unwrapAngleExpression)
+                    filterMatch = s_unwrapAngleExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.UnwrapAngle, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for wrap angle function
+                lock (s_wrapAngleExpression)
+                    filterMatch = s_wrapAngleExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.WrapAngle, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
                 // Look for label function
                 lock (s_labelExpression)
                     filterMatch = s_labelExpression.Match(expression);
@@ -1141,6 +1419,14 @@ namespace GrafanaAdapters
                 throw new InvalidOperationException($"Unrecognized series function '{matchedFunction.Value}'");
 
             return result;
+        }
+
+        // Execute series function over a set of points from each series at the same time-slice
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
+        {
+            while (!scanner.DataReadComplete)
+                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters))
+                    yield return dataValue;
         }
 
         // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
@@ -1159,9 +1445,11 @@ namespace GrafanaAdapters
                 return dataValue.Value;
             });
 
-            double baseTime, timeStep, value;
-            bool normalizeTime;
+            double baseTime, timeStep, value, low, high;
+            bool normalizeTime, lowInclusive, highInclusive;
             int count;
+            TimeUnits timeUnits;
+            AngleUnits angleUnits;
 
             switch (seriesFunction)
             {
@@ -1276,13 +1564,7 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.StandardDeviation:
-                    result.Value = trackedValues.StandardDeviation();
-                    result.Time = lastTime;
-                    result.Target = lastTarget;
-                    yield return result;
-                    break;
-                case SeriesFunction.StandardDeviationSample:
-                    result.Value = trackedValues.StandardDeviation(true);
+                    result.Value = trackedValues.StandardDeviation(parameters.Length > 0 && parameters[0].Trim().ParseBoolean());
                     result.Time = lastTime;
                     result.Target = lastTarget;
                     yield return result;
@@ -1320,7 +1602,7 @@ namespace GrafanaAdapters
                     timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
                     Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
 
-                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time }))
+                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
@@ -1340,7 +1622,7 @@ namespace GrafanaAdapters
                     timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
                     Array.Sort(values, (a, b) => a.Value > b.Value ? -1 : (a.Value < b.Value ? 1 : 0));
 
-                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time }))
+                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
@@ -1361,7 +1643,7 @@ namespace GrafanaAdapters
                     List<int> indexes = new List<int>(Enumerable.Range(0, values.Length));
                     indexes.Scramble();
 
-                    foreach (DataSourceValue dataValue in indexes.Take(count).Select((index, i) => new DataSourceValue { Value = values[index].Value, Time = normalizeTime ? baseTime + i * timeStep : values[index].Time }))
+                    foreach (DataSourceValue dataValue in indexes.Take(count).Select((index, i) => new DataSourceValue { Value = values[index].Value, Time = normalizeTime ? baseTime + i * timeStep : values[index].Time, Target = values[index].Target }))
                         yield return dataValue;
 
                     break;
@@ -1432,38 +1714,50 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time };
+                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
+                        lastTarget = dataValue.Target;
                     }
                     break;
                 case SeriesFunction.TimeDifference:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
+                        timeUnits = TimeUnits.Seconds;
+
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Time - lastTime) * SI.Milli, Time = dataValue.Time };
+                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
+                        lastTarget = dataValue.Target;
                     }
                     break;
                 case SeriesFunction.Derivative:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
+                        timeUnits = TimeUnits.Seconds;
+
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ((dataValue.Time - lastTime) * SI.Milli), Time = dataValue.Time };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
+                        lastTarget = dataValue.Target;
                     }
                     break;
                 case SeriesFunction.TimeIntegration:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
+                        timeUnits = TimeUnits.Hours;
+
                     result.Value = 0.0D;
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            result.Value += dataValue.Value * ((dataValue.Time - lastTime) * SI.Milli / 3600.0D);
+                            result.Value += dataValue.Value * ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits);
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -1477,7 +1771,10 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.Interval:
-                    value = ParseFloat(parameters[0]) / SI.Milli;
+                    if (parameters.Length == 1 || !Enum.TryParse(parameters[1], true, out timeUnits))
+                        timeUnits = TimeUnits.Seconds;
+
+                    value = FromTimeUnits(ParseFloat(parameters[0]), timeUnits) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -1496,6 +1793,159 @@ namespace GrafanaAdapters
                         }
                     }
                     break;
+                case SeriesFunction.IncludeRange:
+                    low = ParseFloat(parameters[0], false);
+                    high = ParseFloat(parameters[1], false);
+                    lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
+                    highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
+
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => (lowInclusive ? dataValue.Value >= low : dataValue.Value > low) && (highInclusive ? dataValue.Value <= high : dataValue.Value < high)))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.ExcludeRange:
+                    low = ParseFloat(parameters[0], false);
+                    high = ParseFloat(parameters[1], false);
+                    lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
+                    highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
+
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) || (highInclusive ? dataValue.Value >= high : dataValue.Value > high)))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.FilterNaN:
+                    bool alsoFilterInifinity = parameters.Length == 0 || parameters[0].Trim().ParseBoolean();
+
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || (alsoFilterInifinity && double.IsInfinity(dataValue.Value)))))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.UnwrapAngle:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
+                        angleUnits = AngleUnits.Degrees;
+
+                    values = source.ToArray();
+
+                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => FromAngleUnits(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = ToAngleUnits(angle, angleUnits), Time = values[index].Time, Target = values[index].Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.WrapAngle:
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
+                        angleUnits = AngleUnits.Degrees;
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = ToAngleUnits(FromAngleUnits(dataValue.Value, angleUnits).ToRange(-Math.PI, false), angleUnits), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+            }
+        }
+
+        private static Angle FromAngleUnits(double value, AngleUnits units)
+        {
+            switch (units)
+            {
+                case AngleUnits.Radians:
+                    return value;
+                case AngleUnits.Degrees:
+                    return Angle.FromDegrees(value);
+                case AngleUnits.Grads:
+                    return Angle.FromGrads(value);
+                case AngleUnits.ArcMinutes:
+                    return Angle.FromArcMinutes(value);
+                case AngleUnits.ArcSeconds:
+                    return Angle.FromArcSeconds(value);
+                case AngleUnits.AngularMil:
+                    return Angle.FromAngularMil(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
+            }
+        }
+
+        private static double ToAngleUnits(Angle value, AngleUnits units)
+        {
+            switch (units)
+            {
+                case AngleUnits.Radians:
+                    return value;
+                case AngleUnits.Degrees:
+                    return value.ToDegrees();
+                case AngleUnits.Grads:
+                    return value.ToGrads();
+                case AngleUnits.ArcMinutes:
+                    return value.ToArcMinutes();
+                case AngleUnits.ArcSeconds:
+                    return value.ToArcSeconds();
+                case AngleUnits.AngularMil:
+                    return value.ToAngularMil();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
+            }
+        }
+
+        private static Time FromTimeUnits(double value, TimeUnits units)
+        {
+            switch (units)
+            {
+                case TimeUnits.Seconds:
+                    return value;
+                case TimeUnits.Ticks:
+                    return new Ticks((long)value).ToSeconds();
+                case TimeUnits.Nanoseconds:
+                    return value * SI.Nano;
+                case TimeUnits.Microseconds:
+                    return value * SI.Micro;
+                case TimeUnits.Milliseconds:
+                    return value * SI.Milli;
+                case TimeUnits.Minutes:
+                    return Time.FromMinutes(value);
+                case TimeUnits.Hours:
+                    return Time.FromHours(value);
+                case TimeUnits.Days:
+                    return Time.FromDays(value);
+                case TimeUnits.Weeks:
+                    return Time.FromWeeks(value);
+                case TimeUnits.Ke:
+                    return Time.FromKe(value);
+                case TimeUnits.PlanckTime:
+                    return Time.FromPlanckTime(value);
+                case TimeUnits.AtomicUnitsOfTime:
+                    return Time.FromAtomicUnitsOfTime(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
+            }
+        }
+
+        private static double ToTimeUnits(Time value, TimeUnits units)
+        {
+            switch (units)
+            {
+                case TimeUnits.Seconds:
+                    return value;
+                case TimeUnits.Ticks:
+                    return Ticks.FromSeconds(value);
+                case TimeUnits.Nanoseconds:
+                    return value / SI.Nano;
+                case TimeUnits.Microseconds:
+                    return value / SI.Micro;
+                case TimeUnits.Milliseconds:
+                    return value / SI.Milli;
+                case TimeUnits.Minutes:
+                    return value.ToMinutes();
+                case TimeUnits.Hours:
+                    return value.ToHours();
+                case TimeUnits.Days:
+                    return value.ToDays();
+                case TimeUnits.Weeks:
+                    return value.ToWeeks();
+                case TimeUnits.Ke:
+                    return value.ToKe();
+                case TimeUnits.PlanckTime:
+                    return value.ToPlanckTime();
+                case TimeUnits.AtomicUnitsOfTime:
+                    return value.ToAtomicUnitsOfTime();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
             }
         }
 

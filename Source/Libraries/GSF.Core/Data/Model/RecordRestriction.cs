@@ -32,6 +32,12 @@ namespace GSF.Data.Model
     /// <summary>
     /// Defines a parameterized record restriction that can be applied to queries.
     /// </summary>
+    /// <remarks>
+    /// For versatility, values in the <see cref="Parameters"/> array are mutable, however, this makes the
+    /// array vulnerable to unintended updates for long-lived instances. Consequently, the normal use-case
+    /// of record restriction instances should be considered temporal. If an instance needs to be cached,
+    /// consider use of the <see cref="Clone()"/> function to reduce risk of unintended array updates.
+    /// </remarks>
     public class RecordRestriction : IEquatable<RecordRestriction>
     {
         #region [ Members ]
@@ -92,6 +98,40 @@ namespace GSF.Data.Model
             Parameters = parameters;
         }
 
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="Parameters"/> field value for the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">Index into <see cref="Parameters"/> field array.</param>
+        /// <returns><see cref="Parameters"/> field value for the specified <paramref name="index"/>.</returns>
+        public object this[int index]
+        {
+            get
+            {
+                return Parameters[index];
+            }
+            set
+            {
+                Parameters[index] = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Creates a deep copy of this record restriction.
+        /// </summary>
+        /// <returns>Deep copy of this record restriction.</returns>
+        public RecordRestriction Clone()
+        {
+            return Clone(this);
+        }
+
         /// <summary>
         /// Determines whether the specified object is equal to the current object.
         /// </summary>
@@ -128,27 +168,6 @@ namespace GSF.Data.Model
             unchecked
             {
                 return ((FilterExpression?.GetHashCode() ?? 0) * 397) ^ (Parameters?.GetHashCode() ?? 0);
-            }
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets <see cref="Parameters"/> field value for the specified <paramref name="index"/>.
-        /// </summary>
-        /// <param name="index">Index into <see cref="Parameters"/> field array.</param>
-        /// <returns><see cref="Parameters"/> field value for the specified <paramref name="index"/>.</returns>
-        public object this[int index]
-        {
-            get
-            {
-                return Parameters[index];
-            }
-            set
-            {
-                Parameters[index] = value;
             }
         }
 
@@ -253,6 +272,27 @@ namespace GSF.Data.Model
         #region [ Static ]
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a deep copy of the <paramref name="source"/> record restriction.
+        /// </summary>
+        /// <param name="source">Record restriction to clone.</param>
+        /// <returns>Deep copy of the <paramref name="source"/> record restriction.</returns>
+        public static RecordRestriction Clone(RecordRestriction source)
+        {
+            if ((object)source == null)
+                return null;
+
+            object[] parameters = source.Parameters;
+
+            if ((object)parameters != null && parameters.Length > 0)
+            {
+                parameters = new object[source.Parameters.Length];
+                Array.Copy(source.Parameters, parameters, source.Parameters.Length);
+            }
+
+            return new RecordRestriction(source.FilterExpression, parameters);
+        }
 
         /// <summary>
         /// Combines two record restrictions with an AND condition.

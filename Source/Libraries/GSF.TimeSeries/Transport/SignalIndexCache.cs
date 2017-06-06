@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using GSF.Collection;
+using GSF.Collections;
 using GSF.Parsing;
 
 #pragma warning disable 618

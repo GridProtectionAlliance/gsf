@@ -37,7 +37,7 @@ The [open Phasor Data Concentrator](https://github.com/GridProtectionAlliance/op
 
 # Deployment
 
-1. Make sure your system meets all the [requirements](#requirements) below.
+* Make sure your system meets all the [requirements](#requirements) below.
 * Open the project you want to leverage the GSF on in Visual Studio.
 * In the solution explorer, right-click on the project or solution.
 * Click on manage Nuget packages.
@@ -56,7 +56,7 @@ The [open Phasor Data Concentrator](https://github.com/GridProtectionAlliance/op
 # Contributing
 If you would like to contribute please:
 
-1. Read our [styleguide.](https://www.gridprotectionalliance.org/docs/GPA_Coding_Guidelines_2011_03.pdf)
+* Read our [styleguide.](https://www.gridprotectionalliance.org/docs/GPA_Coding_Guidelines_2011_03.pdf)
 * Fork the repository.
 * Code like a boss.
 * Create a pull request.

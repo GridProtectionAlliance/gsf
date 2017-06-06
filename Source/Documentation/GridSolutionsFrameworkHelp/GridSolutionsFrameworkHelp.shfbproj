@@ -13,7 +13,7 @@
     <RootNamespace>GridSolutionsFrameworkHelp</RootNamespace>
     <Name>GridSolutionsFrameworkHelp</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.5</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.6</FrameworkVersion>
     <OutputPath>..\..\..\Build\Help\</OutputPath>
     <HtmlHelpName>GridSolutionsFramework</HtmlHelpName>
     <Language>en-US</Language>
@@ -21,18 +21,20 @@
       <Argument Key="logoFile" Value="GSF64x64.png" />
       <Argument Key="logoHeight" Value="" />
       <Argument Key="logoWidth" Value="" />
-      <Argument Key="logoAltText" Value="Grid Solutions Framework" />
+      <Argument Key="logoAltText" Value="" />
       <Argument Key="logoPlacement" Value="left" />
       <Argument Key="logoAlignment" Value="left" />
       <Argument Key="maxVersionParts" Value="" />
       <Argument Key="defaultLanguage" Value="cs" />
+      <Argument Key="includeEnumValues" Value="true" />
+      <Argument Key="baseSourceCodeUrl" Value="https://github.com/GridProtectionAlliance/gsf/tree/master/Source/" />
+      <Argument Key="requestExampleUrl" Value="" />
     </TransformComponentArguments>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.ASN1\GSF.ASN1.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.Communication\GSF.Communication.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.COMTRADE\GSF.COMTRADE.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.Core\GSF.Core.csproj" />
@@ -50,78 +52,80 @@
       <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.Web\GSF.Web.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.Windows\GSF.Windows.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\GSF.Geo\GSF.Geo.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\GSF.ASN1\GSF.ASN1.csproj" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
-    <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
+    <HelpFileFormat>Website</HelpFileFormat>
     <IndentHtml>True</IndentHtml>
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <CppCommentsFixup>False</CppCommentsFixup>
     <CleanIntermediates>True</CleanIntermediates>
-    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter, AutoDocumentDispose</MissingTags>
+    <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <ApiFilter>
       <Filter entryType="Namespace" fullName="GSF.Annotations" isExposed="False" />
-      <Filter entryType="Namespace" fullName="XamlGeneratedNamespace" isExposed="False" />
-    </ApiFilter>
+<Filter entryType="Namespace" fullName="XamlGeneratedNamespace" isExposed="False" /></ApiFilter>
     <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
     <MaximumGroupParts>2</MaximumGroupParts>
     <NamespaceGrouping>False</NamespaceGrouping>
     <SyntaxFilters>C#, Visual Basic, Managed C++, F#, JavaScript</SyntaxFilters>
     <SdkLinkTarget>Blank</SdkLinkTarget>
-    <RootNamespaceContainer>False</RootNamespaceContainer>
+    <RootNamespaceContainer>True</RootNamespaceContainer>
     <PresentationStyle>VS2013</PresentationStyle>
     <Preliminary>False</Preliminary>
     <NamingMethod>MemberName</NamingMethod>
     <HelpTitle>Grid Solutions Framework Documentation</HelpTitle>
-    <FooterText>See &amp;lt%3ba href=&amp;quot%3bhttps://gsf.codeplex.com/&amp;quot%3b&amp;gt%3bGrid Solutions Framework Project&amp;lt%3b/a&amp;gt%3b for latest code.</FooterText>
+    <FooterText>See &amp;lt%3ba href=&amp;quot%3bhttps://github.com/GridProtectionAlliance/gsf/&amp;quot%3b&amp;gt%3bGrid Solutions Framework Project&amp;lt%3b/a&amp;gt%3b for latest code.</FooterText>
     <FeedbackEMailLinkText>GPA Development</FeedbackEMailLinkText>
     <FeedbackEMailAddress>rcarroll%40gridprotectionalliance.org</FeedbackEMailAddress>
-    <CopyrightText>Copyright &amp;#169%3b 2015, Grid Protection Alliance.  All Rights Reserved.</CopyrightText>
+    <CopyrightText>Copyright &amp;#169%3b 2017, Grid Protection Alliance.  All Rights Reserved.</CopyrightText>
     <CopyrightHref>https://www.gridprotectionalliance.org/</CopyrightHref>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <NamespaceSummaries>
       <NamespaceSummaryItem name="(global)" isDocumented="True" xmlns="" />
     </NamespaceSummaries>
     <ComponentConfigurations>
-      <ComponentConfig id="Code Block Component" enabled="True" xmlns="">
+      <ComponentConfig id="Code Block Component" enabled="True">
         <component id="Code Block Component">
-          <basePath value="{@HtmlEncProjectFolder}" />
-          <outputPaths>{@HelpFormatOutputPaths}</outputPaths>
-          <allowMissingSource value="false" />
-          <removeRegionMarkers value="false" />
-          <colorizer syntaxFile="{@SHFBFolder}Colorizer\highlight.xml" styleFile="{@SHFBFolder}Colorizer\highlight.xsl" stylesheet="{@SHFBFolder}Colorizer\highlight.css" scriptFile="{@SHFBFolder}Colorizer\highlight.js" disabled="{@DisableCodeBlockComponent}" language="cs" tabSize="4" numberLines="false" outlining="false" keepSeeTags="false" defaultTitle="true" />
-        </component>
+  <basePath value="{@HtmlEncProjectFolder}" />
+  <outputPaths>{@HelpFormatOutputPaths}</outputPaths>
+  <allowMissingSource value="false" />
+  <removeRegionMarkers value="false" />
+  <colorizer syntaxFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xml" styleFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xsl" stylesheet="{@SHFBFolder}PresentationStyles\Colorizer\highlight.css" scriptFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.js" disabled="{@DisableCodeBlockComponent}" language="cs" tabSize="0" numberLines="false" outlining="false" keepSeeTags="false" defaultTitle="true" />
+</component>
       </ComponentConfig>
-      <ComponentConfig id="Syntax Component" enabled="True" xmlns="">
-        <component id="Syntax Component">
-          <syntax input="/document/reference" output="/document/syntax" renderReferenceLinks="true" />
-          <generators>
+<ComponentConfig id="API Token Resolution" enabled="True"><component id="API Token Resolution">{@TokenFiles}
+<replace elements="/*//token" item="string(.)" /></component></ComponentConfig>
+<ComponentConfig id="Syntax Component" enabled="True"><component id="Syntax Component">
+  <syntax input="/document/reference" output="/document/syntax" renderReferenceLinks="true" />
+  <generators>
     {@SyntaxFilters}
 </generators>
-          <containerElement name="codeSnippetGroup" addNoExampleTabs="true" includeOnSingleSnippets="false" groupingEnabled="{@CodeSnippetGrouping}" />
-          <configurations>
-            <generator id="C#" />
-            <generator id="Visual Basic">
-              <includeLineContinuation value="false" />
-            </generator>
-            <generator id="F#" />
-            <generator id="JavaScript" />
-            <generator id="Managed C++" />
-            <generator id="Visual Basic Usage">
-              <includeLineContinuation value="false" />
-            </generator>
-            <generator id="J#" />
-            <generator id="JScript" />
-            <generator id="XAML Usage" />
-            <generator id="ASP.NET" />
-          </configurations>
-        </component>
-      </ComponentConfig>
-      <ComponentConfig id="API Token Resolution" enabled="True" xmlns="">
-        <component id="API Token Resolution">{@TokenFiles}
-<replace elements="/*//token" item="string(.)" /></component>
-      </ComponentConfig>
-    </ComponentConfigurations>
+  <containerElement name="codeSnippetGroup" addNoExampleTabs="true" includeOnSingleSnippets="false" groupingEnabled="{@CodeSnippetGrouping}" />
+  <configurations>
+    <generator id="C#" />
+    <generator id="Visual Basic">
+      <includeLineContinuation value="false" />
+    </generator>
+    <generator id="Visual Basic Usage">
+      <includeLineContinuation value="false" />
+    </generator>
+    <generator id="Managed C++" />
+    <generator id="F#" />
+    <generator id="J#" />
+    <generator id="JScript" />
+    <generator id="JavaScript" />
+    <generator id="XAML Usage" />
+    <generator id="ASP.NET" />
+    <generator id="X#" />
+  </configurations>
+</component></ComponentConfig></ComponentConfigurations>
+    <HelpFileVersion>2.0.0.0</HelpFileVersion>
+    <RootNamespaceTitle>GSF Namespaces</RootNamespaceTitle>
+    <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
+    <WarnOnMissingSourceContext>True</WarnOnMissingSourceContext>
+    <SourceCodeBasePath>..\..\</SourceCodeBasePath>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
@@ -147,7 +151,7 @@
     <Folder Include="Media" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Content\Welcome.aml" />
+    <None Include="Content\Overview.aml" />
   </ItemGroup>
   <ItemGroup>
     <ContentLayout Include="ContentLayout.content" />

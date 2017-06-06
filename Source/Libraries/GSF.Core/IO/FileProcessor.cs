@@ -1281,7 +1281,7 @@ namespace GSF.IO
 #if MONO
                 try
                 {
-                    timeout = !m_waitObject?.WaitOne(0);
+                    timeout = !(m_waitObject?.WaitOne(0) ?? false);
                 }
                 catch (ObjectDisposedException)
                 {

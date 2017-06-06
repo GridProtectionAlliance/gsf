@@ -35,6 +35,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using GSF.Annotations;
 using GSF.Configuration;
 
@@ -559,8 +560,7 @@ namespace GSF.Data
         public int ExecuteNonQuery(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            FixParameters(parameters);
-            return m_connection.ExecuteNonQuery(sql, timeout, parameters);
+            return m_connection.ExecuteNonQuery(sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -600,8 +600,7 @@ namespace GSF.Data
         public IDataReader ExecuteReader(CommandBehavior behavior, int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            FixParameters(parameters);
-            return m_connection.ExecuteReader(sql, behavior, timeout, parameters);
+            return m_connection.ExecuteReader(sql, behavior, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -777,8 +776,7 @@ namespace GSF.Data
         public object ExecuteScalar(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            FixParameters(parameters);
-            return m_connection.ExecuteScalar(sql, timeout, parameters);
+            return m_connection.ExecuteScalar(sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -804,8 +802,7 @@ namespace GSF.Data
         public DataRow RetrieveRow(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            FixParameters(parameters);
-            return m_connection.RetrieveRow(m_adapterType, sql, timeout, parameters);
+            return m_connection.RetrieveRow(m_adapterType, sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -833,8 +830,7 @@ namespace GSF.Data
         public DataTable RetrieveData(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            FixParameters(parameters);
-            return m_connection.RetrieveData(m_adapterType, sql, timeout, parameters);
+            return m_connection.RetrieveData(m_adapterType, sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -862,8 +858,7 @@ namespace GSF.Data
         public DataSet RetrieveDataSet(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            FixParameters(parameters);
-            return m_connection.RetrieveDataSet(m_adapterType, sql, timeout, parameters);
+            return m_connection.RetrieveDataSet(m_adapterType, sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -983,6 +978,7 @@ namespace GSF.Data
         /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
         /// <returns>A parameterized query string based on the given format and parameter names.</returns>
         [StringFormatMethod("format")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ParameterizedQueryString(string format, params string[] parameterNames)
         {
             char paramChar = IsOracle ? ':' : '@';
@@ -1024,32 +1020,42 @@ namespace GSF.Data
             return type;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GenericParameterizedQueryString(string sqlFormat, object[] parameters)
         {
             string[] parameterNames = parameters.Select((parameter, index) => "p" + index).ToArray();
-
             return ParameterizedQueryString(sqlFormat, parameterNames);
         }
 
-        private void FixParameters(object[] parameters)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object[] ResolveParameters(object[] parameters)
         {
-            using (IDbCommand command = m_connection.CreateCommand())
-            {
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    if (parameters[i] == null)
-                        parameters[i] = DBNull.Value;
-                    else if (parameters[i] is bool)
-                        parameters[i] = Bool((bool)parameters[i]);
-                    else if (parameters[i] is Guid)
-                        parameters[i] = Guid((Guid)parameters[i]);
+            IDbDataParameter[] dataParameters = new IDbDataParameter[parameters.Length];
 
-                    IDbDataParameter parameter = command.CreateParameter();
-                    parameter.ParameterName = "@p" + i;
-                    parameter.Value = parameters[i];
-                    parameters[i] = parameter;
+            if (parameters.Length > 0)
+            {
+                using (IDbCommand command = m_connection.CreateCommand())
+                {
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        object value = parameters[i];
+
+                        if (value == null)
+                            value = DBNull.Value;
+                        else if (value is bool)
+                            value = Bool((bool)value);
+                        else if (value is Guid)
+                            value = Guid((Guid)value);
+
+                        IDbDataParameter parameter = command.CreateParameter();
+                        parameter.ParameterName = "@p" + i;
+                        parameter.Value = value;
+                        dataParameters[i] = parameter;
+                    }
                 }
             }
+
+            return dataParameters;
         }
 
         #endregion

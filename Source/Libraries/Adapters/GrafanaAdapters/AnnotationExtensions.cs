@@ -340,7 +340,7 @@ namespace GrafanaAdapters
         /// </remarks>
         internal static MeasurementKey KeyFromTag(this string pointTag, DataSet source)
         {
-            DataRow record = GetMetaData(source, "ActiveMeasurements", $"PointTag = '{pointTag}'");
+            DataRow record = pointTag.MetadataRecordFromTag(source);
 
             if ((object)record == null)
                 return MeasurementKey.Undefined;
@@ -353,6 +353,22 @@ namespace GrafanaAdapters
             {
                 return MeasurementKey.Undefined;
             }
+        }
+
+        /// <summary>
+        /// Looks up metadata record from point tag.
+        /// </summary>
+        /// <param name="pointTag">Point tag to lookup.</param>
+        /// <param name="source">Source metadata.</param>
+        /// <returns>Metadata record from source metadata for provided point tag.</returns>
+        /// <remarks>
+        /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+        /// search algorithm that can be slow for large data sets, it is recommended that any results
+        /// for calls to this function be cached to improve performance.
+        /// </remarks>
+        internal static DataRow MetadataRecordFromTag(this string pointTag, DataSet source)
+        {
+            return GetMetaData(source, "ActiveMeasurements", $"PointTag = '{pointTag}'");
         }
 
         private static DataRow GetMetaData(DataSet source, string table, string expression)

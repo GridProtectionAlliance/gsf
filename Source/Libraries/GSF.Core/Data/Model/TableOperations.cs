@@ -26,15 +26,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using ExpressionEvaluator;
 using GSF.Collections;
 using GSF.ComponentModel;
 using GSF.Reflection;
+using ExpressionEvaluator;
 
 // ReSharper disable StaticMemberInGenericType
 // ReSharper disable UnusedMember.Local
@@ -56,6 +57,25 @@ namespace GSF.Data.Model
             public TableOperations<T> TableOperations;
             public AdoDataConnection Connection;
             #pragma warning restore 169, 414, 649
+        }
+
+        private class NullConnection : IDbConnection
+        {
+            #region [ Null Implementation ]
+
+            public string ConnectionString { get; set; }
+            public int ConnectionTimeout { get; }
+            public string Database { get; }
+            public ConnectionState State { get; }
+            public void Open() { }
+            public void Close() { }
+            public void Dispose() { }
+            public void ChangeDatabase(string databaseName) { }
+            public IDbCommand CreateCommand() => null;
+            public IDbTransaction BeginTransaction() => null;
+            public IDbTransaction BeginTransaction(IsolationLevel il) => null;
+
+            #endregion
         }
 
         // Constants
@@ -117,6 +137,7 @@ namespace GSF.Data.Model
         /// customTokens = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
         /// </code>
         /// </remarks>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public TableOperations(AdoDataConnection connection, IEnumerable<KeyValuePair<string, string>> customTokens = null)
         {
             if ((object)connection == null)
@@ -135,7 +156,7 @@ namespace GSF.Data.Model
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
             m_searchFilterSql = s_searchFilterSql;
-            m_rootQueryRestriction = s_rootQueryRestriction;
+            m_rootQueryRestriction = s_rootQueryRestriction?.Clone();
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
@@ -473,6 +494,41 @@ namespace GSF.Data.Model
                 throw new ArgumentException($"Cannot apply defaults for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             ApplyRecordDefaults(record);
+        }
+
+        /// <summary>
+        /// Applies the update values on the specified modeled table <paramref name="record"/> where
+        /// any of the properties are marked with <see cref="UpdateValueExpressionAttribute"/>.
+        /// </summary>
+        /// <param name="record">Record to update.</param>
+        public void ApplyRecordUpdates(T record)
+        {
+            try
+            {
+                s_updateRecordInstance(new CurrentScope
+                {
+                    Instance = record,
+                    TableOperations = this,
+                    Connection = m_connection
+                });
+            }
+            catch (Exception ex)
+            {
+                if ((object)m_exceptionHandler == null)
+                    throw;
+
+                m_exceptionHandler(ex);
+            }
+        }
+
+        void ITableOperations.ApplyRecordUpdates(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot apply updates for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            ApplyRecordUpdates(record);
         }
 
         /// <summary>
@@ -1956,6 +2012,66 @@ namespace GSF.Data.Model
         }
 
         // Static Methods
+
+        /// <summary>
+        /// Gets a delegate for the <see cref="LoadRecord(DataRow)"/> function for specified type <typeparamref name="T"/>.
+        /// </summary>
+        /// <returns>Delegate for the <see cref="LoadRecord(DataRow)"/> function.</returns>
+        /// <remarks>
+        /// This method is useful to deserialize a <see cref="DataRow"/> into a type <typeparamref name="T"/> instance
+        /// when no data connection is available, e.g., when using a deserialized <see cref="DataSet"/>.
+        /// </remarks>
+        public static Func<DataRow, T> LoadRecordFunction()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(null, typeof(NullConnection), typeof(DbDataAdapter)))
+                return new TableOperations<T>(connection).LoadRecord;
+        }
+
+        /// <summary>
+        /// Gets a delegate for the <see cref="NewRecord"/> function for specified type <typeparamref name="T"/>.
+        /// </summary>
+        /// <returns>Delegate for the <see cref="NewRecord"/> function.</returns>
+        /// <remarks>
+        /// This method is useful to create a new type <typeparamref name="T"/> instance when no data connection
+        /// is available, applying any modeled default values as specified by a <see cref="DefaultValueAttribute"/>
+        /// or <see cref="DefaultValueExpressionAttribute"/> on the model properties.
+        /// </remarks>
+        public static Func<T> NewRecordFunction()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(null, typeof(NullConnection), typeof(DbDataAdapter)))
+                return new TableOperations<T>(connection).NewRecord;
+        }
+
+        /// <summary>
+        /// Gets a delegate for the <see cref="ApplyRecordDefaults"/> method for specified type <typeparamref name="T"/>.
+        /// </summary>
+        /// <returns>Delegate for the <see cref="ApplyRecordDefaults"/> method.</returns>
+        /// <remarks>
+        /// This method is useful to apply defaults values to an existing type <typeparamref name="T"/> instance when no data
+        /// connection is available, applying any modeled default values as specified by a <see cref="DefaultValueAttribute"/>
+        /// or <see cref="DefaultValueExpressionAttribute"/> on the model properties.
+        /// </remarks>
+        public static Action<T> ApplyRecordDefaultsFunction()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(null, typeof(NullConnection), typeof(DbDataAdapter)))
+                return new TableOperations<T>(connection).ApplyRecordDefaults;
+        }
+
+        /// <summary>
+        /// Gets a delegate for the <see cref="ApplyRecordUpdates"/> method for specified type <typeparamref name="T"/>.
+        /// </summary>
+        /// <returns>Delegate for the <see cref="ApplyRecordUpdates"/> method.</returns>
+        /// <remarks>
+        /// This method is useful to apply update values to an existing type <typeparamref name="T"/> instance when no data
+        /// connection is available, applying any modeled update values as specified by instances of the
+        /// <see cref="UpdateValueExpressionAttribute"/> on the model properties.
+        /// </remarks>
+        public static Action<T> ApplyRecordUpdatesFunction()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(null, typeof(NullConnection), typeof(DbDataAdapter)))
+                return new TableOperations<T>(connection).ApplyRecordUpdates;
+        }
+
         private static string GetFieldName(PropertyInfo property)
         {
             FieldNameAttribute fieldNameAttribute;

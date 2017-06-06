@@ -24,7 +24,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GSF.Collection
+namespace GSF.Collections
 {
     /// <summary>
     /// Creates a <see cref="SortedQueue{TKey,TValue}"/>.
