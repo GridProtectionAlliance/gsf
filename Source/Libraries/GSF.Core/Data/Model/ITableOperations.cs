@@ -184,6 +184,12 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
+        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
+        /// to be called, replacing the target parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
+        /// </para>
+        /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
@@ -235,6 +241,12 @@ namespace GSF.Data.Model
         /// will be converted into query parameters where each of the corresponding values in the
         /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
         /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
+        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
+        /// to be called, replacing the target parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -322,6 +334,12 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
+        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
+        /// to be called, replacing the target parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
+        /// </para>
+        /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
@@ -391,6 +409,12 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
+        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
+        /// to be called, replacing the target parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
+        /// </para>
+        /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
@@ -435,6 +459,12 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
+        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
+        /// to be called, replacing the target parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
+        /// </para>
+        /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
@@ -477,6 +507,12 @@ namespace GSF.Data.Model
         /// will be converted into query parameters where each of the corresponding values in the
         /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
         /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
+        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
+        /// to be called, replacing the target parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -570,16 +606,15 @@ namespace GSF.Data.Model
         /// <param name="fieldName">Field name to retrieve.</param>
         /// <returns>Field value or <c>null</c> if field is not found.</returns>
         object GetFieldValue(object record, string fieldName);
-        
+
         /// <summary>
         /// Gets the value for the specified field, returning intermediate <see cref="IDbDataParameter"/> values as needed.
         /// </summary>
         /// <param name="fieldName">Field name to retrieve.</param>
         /// <param name="value">Field value to use.</param>
         /// <returns>
-        /// <c>null</c> if field is not found; otherwise, <paramref name="value"/> or intermediate <see cref="IDbDataParameter"/>
-        /// value when <paramref name="fieldName"/> has been been modeled with a <see cref="FieldDataTypeAttribute"/> that matches
-        /// active database type.
+        /// If field has been been modeled with a <see cref="FieldDataTypeAttribute"/> that matches active database type,
+        /// intermediate <see cref="IDbDataParameter"/> value; otherwise, <paramref name="value"/>.
         /// </returns>
         /// <remarks>
         /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="FieldDataTypeAttribute"/>,
