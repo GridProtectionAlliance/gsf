@@ -39,6 +39,7 @@ using ExpressionEvaluator;
 
 // ReSharper disable StaticMemberInGenericType
 // ReSharper disable UnusedMember.Local
+// ReSharper disable AssignNullToNotNullAttribute
 namespace GSF.Data.Model
 {
     /// <summary>
@@ -61,12 +62,10 @@ namespace GSF.Data.Model
 
         private class NullConnection : IDbConnection
         {
-            #region [ Null Implementation ]
-
             public string ConnectionString { get; set; }
-            public int ConnectionTimeout { get; }
-            public string Database { get; }
-            public ConnectionState State { get; }
+            public int ConnectionTimeout { get; } = 0;
+            public string Database { get; } = null;
+            public ConnectionState State { get; } = ConnectionState.Open;
             public void Open() { }
             public void Close() { }
             public void Dispose() { }
@@ -74,8 +73,20 @@ namespace GSF.Data.Model
             public IDbCommand CreateCommand() => null;
             public IDbTransaction BeginTransaction() => null;
             public IDbTransaction BeginTransaction(IsolationLevel il) => null;
+        }
 
-            #endregion
+        private class IntermediateParameter : IDbDataParameter
+        {
+            public DbType DbType { get; set; }
+            public ParameterDirection Direction { get; set; }
+            public bool IsNullable { get; } = false;
+            public string ParameterName { get; set; }
+            public string SourceColumn { get; set; }
+            public DataRowVersion SourceVersion { get; set; }
+            public object Value { get; set; }
+            public byte Precision { get; set; }
+            public byte Scale { get; set; }
+            public int Size { get; set; }
         }
 
         // Constants
@@ -924,7 +935,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                return LoadRecord(m_connection.RetrieveRow(m_selectRowSql, primaryKeys));
+                return LoadRecord(m_connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(primaryKeys)));
             }
             catch (Exception ex)
             {
@@ -1003,7 +1014,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                int affectedRecords = m_connection.ExecuteNonQuery(m_deleteSql, primaryKeys);
+                int affectedRecords = m_connection.ExecuteNonQuery(m_deleteSql, GetInterpretedPrimaryKeys(primaryKeys));
 
                 if (affectedRecords > 0)
                     m_primaryKeyCache = null;
@@ -1155,10 +1166,10 @@ namespace GSF.Data.Model
                 try
                 {
                     foreach (PropertyInfo property in s_updateProperties)
-                        values.Add(property.GetValue(record));
+                        values.Add(GetInterpretedPropertyValue(property, record));
 
                     foreach (PropertyInfo property in s_primaryKeyProperties)
-                        values.Add(property.GetValue(record));
+                        values.Add(GetInterpretedPropertyValue(property, record));
 
                     return m_connection.ExecuteNonQuery(m_updateSql, values.ToArray());
                 }
@@ -1179,7 +1190,7 @@ namespace GSF.Data.Model
             try
             {
                 foreach (PropertyInfo property in s_updateProperties)
-                    values.Add(property.GetValue(record));
+                    values.Add(GetInterpretedPropertyValue(property, record));
 
                 values.AddRange(restriction.Parameters);
 
@@ -1327,7 +1338,7 @@ namespace GSF.Data.Model
             try
             {
                 foreach (PropertyInfo property in s_addNewProperties)
-                    values.Add(property.GetValue(record));
+                    values.Add(GetInterpretedPropertyValue(property, record));
 
                 int affectedRecords = m_connection.ExecuteNonQuery(m_addNewSql, values.ToArray());
 
@@ -1592,6 +1603,35 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Gets the value for the specified field, returning intermediate <see cref="IDbDataParameter"/> values as needed.
+        /// </summary>
+        /// <param name="fieldName">Field name to retrieve.</param>
+        /// <param name="value">Field value to use.</param>
+        /// <returns>
+        /// <c>null</c> if field is not found; otherwise, <paramref name="value"/> or intermediate <see cref="IDbDataParameter"/>
+        /// value when <paramref name="fieldName"/> has been been modeled with a <see cref="FieldDataTypeAttribute"/> that matches
+        /// active database type.
+        /// </returns>
+        /// <remarks>
+        /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="FieldDataTypeAttribute"/>,
+        /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
+        /// </remarks>
+        public object GetInterpretedFieldValue(string fieldName, object value)
+        {
+            if ((object)s_fieldDataTypeTargets == null)
+                return value;
+
+            string propertyName;
+            PropertyInfo property;
+
+            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property))
+                return GetInterpretedValue(property, value);
+
+            return value;
+        }
+
+        /// <summary>
         /// Gets the <see cref="Type"/> for the specified field.
         /// </summary>
         /// <param name="fieldName">Field name to retrieve.</param>
@@ -1665,6 +1705,51 @@ namespace GSF.Data.Model
         public void ClearPrimaryKeyCache()
         {
             m_primaryKeyCache = null;
+        }
+
+        // Derive raw field values or IDbCommandParameter values with specific DbType if a primary key
+        // field data type has been targeted for specific database type
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object[] GetInterpretedPrimaryKeys(object[] primaryKeys)
+        {
+            if ((object)s_fieldDataTypeTargets == null)
+                return primaryKeys;
+
+            object[] interpretedKeys = new object[s_primaryKeyProperties.Length];
+
+            for (int i = 0; i < interpretedKeys.Length; i++)
+                interpretedKeys[i] = GetInterpretedValue(s_primaryKeyProperties[i], primaryKeys[i]);
+
+            return interpretedKeys;
+        }
+
+        // Derive raw field value or IDbCommandParameter with specific DbType if a field data type
+        // has been targeted for specific database type
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object GetInterpretedPropertyValue(PropertyInfo property, T record)
+        {
+            object value = property.GetValue(record);
+
+            if ((object)s_fieldDataTypeTargets == null)
+                return value;
+
+            return GetInterpretedValue(property, property.GetValue(record));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object GetInterpretedValue(PropertyInfo property, object value)
+        {
+            Dictionary<DatabaseType, DbType> fieldDataTypeTargets;
+            DbType fieldDataType;
+
+            if (s_fieldDataTypeTargets.TryGetValue(property, out fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(m_connection.DatabaseType, out fieldDataType))
+                return new IntermediateParameter
+                {
+                    Value = value,
+                    DbType = fieldDataType
+                };
+
+            return value;
         }
 
         // Derive table name, escaping it if requested by model
@@ -1756,6 +1841,7 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_addNewProperties;
         private static readonly PropertyInfo[] s_updateProperties;
         private static readonly PropertyInfo[] s_primaryKeyProperties;
+        private static readonly Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>> s_fieldDataTypeTargets;
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
@@ -1840,9 +1926,18 @@ namespace GSF.Data.Model
                 string fieldName = s_fieldNames[property.Name];
                 PrimaryKeyAttribute primaryKeyAttribute;
                 SearchableAttribute searchableAttribute;
+                FieldDataTypeAttribute[] fieldDataTypeAttributes;
 
                 property.TryGetAttribute(out primaryKeyAttribute);
                 property.TryGetAttribute(out searchableAttribute);
+
+                if (property.TryGetAttributes(out fieldDataTypeAttributes))
+                {
+                    if ((object)s_fieldDataTypeTargets == null)
+                        s_fieldDataTypeTargets = new Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>>();
+
+                    s_fieldDataTypeTargets[property] = DeriveFieldDataTypeTargets(fieldDataTypeAttributes);
+                }
 
                 if (property.TryGetAttributes(out useEscapedNameAttributes))
                 {
@@ -2080,6 +2175,37 @@ namespace GSF.Data.Model
                 return fieldNameAttribute.FieldName;
 
             return property.Name;
+        }
+
+        private static Dictionary<DatabaseType, DbType> DeriveFieldDataTypeTargets(FieldDataTypeAttribute[] fieldDataTypeAttributes)
+        {
+            if (fieldDataTypeAttributes == null || fieldDataTypeAttributes.Length == 0)
+                return null;
+
+            DatabaseType[] databaseTypes;
+            DbType defaultFieldDataType;
+
+            // If any attribute has no database target type specified, then all database types are assumed
+            if (fieldDataTypeAttributes.Any(attribute => attribute.TargetDatabaseType == null))
+            {
+                databaseTypes = Enum.GetValues(typeof(DatabaseType)).Cast<DatabaseType>().ToArray();
+                defaultFieldDataType = fieldDataTypeAttributes.First(attribute => attribute.TargetDatabaseType == null).FieldDataType;
+            }
+            else
+            {
+                databaseTypes = fieldDataTypeAttributes.Select(attribute => attribute.TargetDatabaseType.GetValueOrDefault()).Distinct().ToArray();
+                defaultFieldDataType = DbType.String;
+            }
+
+            Dictionary<DatabaseType, DbType> fieldDataTypes = new Dictionary<DatabaseType, DbType>(databaseTypes.Length);
+
+            foreach (DatabaseType databaseType in databaseTypes)
+            {
+                FieldDataTypeAttribute fieldDataTypeAttribute = fieldDataTypeAttributes.FirstOrDefault(attribute => attribute.TargetDatabaseType == databaseType);
+                fieldDataTypes[databaseType] = (object)fieldDataTypeAttribute != null ? fieldDataTypeAttribute.FieldDataType : defaultFieldDataType;
+            }
+
+            return fieldDataTypes;
         }
 
         private static Dictionary<DatabaseType, bool> DeriveEscapedNameTargets(UseEscapedNameAttribute[] useEscapedNameAttributes)

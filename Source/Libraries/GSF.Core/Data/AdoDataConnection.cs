@@ -1039,6 +1039,14 @@ namespace GSF.Data
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         object value = parameters[i];
+                        DbType? type = null;
+
+                        if (value is IDbDataParameter)
+                        {
+                            IDbDataParameter intermediateParameter = value as IDbDataParameter;
+                            type = intermediateParameter.DbType;
+                            value = intermediateParameter.Value;
+                        }
 
                         if (value == null)
                             value = DBNull.Value;
@@ -1048,6 +1056,10 @@ namespace GSF.Data
                             value = Guid((Guid)value);
 
                         IDbDataParameter parameter = command.CreateParameter();
+
+                        if (type.HasValue)
+                            parameter.DbType = type.Value;
+
                         parameter.ParameterName = "@p" + i;
                         parameter.Value = value;
                         dataParameters[i] = parameter;
@@ -1055,6 +1067,7 @@ namespace GSF.Data
                 }
             }
 
+            // ReSharper disable once CoVariantArrayConversion
             return dataParameters;
         }
 

@@ -570,6 +570,23 @@ namespace GSF.Data.Model
         /// <param name="fieldName">Field name to retrieve.</param>
         /// <returns>Field value or <c>null</c> if field is not found.</returns>
         object GetFieldValue(object record, string fieldName);
+        
+        /// <summary>
+        /// Gets the value for the specified field, returning intermediate <see cref="IDbDataParameter"/> values as needed.
+        /// </summary>
+        /// <param name="fieldName">Field name to retrieve.</param>
+        /// <param name="value">Field value to use.</param>
+        /// <returns>
+        /// <c>null</c> if field is not found; otherwise, <paramref name="value"/> or intermediate <see cref="IDbDataParameter"/>
+        /// value when <paramref name="fieldName"/> has been been modeled with a <see cref="FieldDataTypeAttribute"/> that matches
+        /// active database type.
+        /// </returns>
+        /// <remarks>
+        /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="FieldDataTypeAttribute"/>,
+        /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data type
+        /// will be properly set before executing the database function.
+        /// </remarks>
+        object GetInterpretedFieldValue(string fieldName, object value);
 
         /// <summary>
         /// Gets the <see cref="Type"/> for the specified field.
