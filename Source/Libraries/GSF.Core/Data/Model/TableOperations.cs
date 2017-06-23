@@ -1768,7 +1768,7 @@ namespace GSF.Data.Model
             if ((object)s_fieldDataTypeTargets == null)
                 return value;
 
-            return GetInterpretedValue(property, property.GetValue(record));
+            return GetInterpretedValue(property, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
