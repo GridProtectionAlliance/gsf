@@ -187,7 +187,7 @@ namespace GSF.Data.Model
         /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
         /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
         /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -246,7 +246,7 @@ namespace GSF.Data.Model
         /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
         /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
         /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -337,7 +337,7 @@ namespace GSF.Data.Model
         /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
         /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
         /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -412,7 +412,7 @@ namespace GSF.Data.Model
         /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
         /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
         /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -462,7 +462,7 @@ namespace GSF.Data.Model
         /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
         /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
         /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -512,7 +512,7 @@ namespace GSF.Data.Model
         /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
         /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
         /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -619,7 +619,7 @@ namespace GSF.Data.Model
         /// <remarks>
         /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="FieldDataTypeAttribute"/>,
         /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data type
-        /// will be properly set before executing the database function.
+        /// will be properly set prior to executing the database function.
         /// </remarks>
         object GetInterpretedFieldValue(string fieldName, object value);
 
