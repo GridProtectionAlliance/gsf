@@ -212,7 +212,7 @@ namespace HistorianView
         {
             OpenFileDialog archiveDialog = new OpenFileDialog();
 
-            archiveDialog.Filter = "Archive files|*_archive.d|Metadata files|*_dbase.dat";
+            archiveDialog.Filter = "Archive files|*_archive.d|Metadata files|*_dbase.dat;*_dbase.dat2";
             archiveDialog.CheckFileExists = true;
 
             if (archiveDialog.ShowDialog() == true)

@@ -607,6 +607,8 @@ namespace HistorianView
                 archiveFilePath = paths[0];
             else if (paths[0].EndsWith("_dbase.dat", StringComparison.OrdinalIgnoreCase))
                 archiveFilePath = string.Format("{0}_archive.d", paths[0].Remove(paths[0].Length - 10));
+            else if (paths[0].EndsWith("_dbase.dat2", StringComparison.OrdinalIgnoreCase))
+                archiveFilePath = string.Format("{0}_archive.d", paths[0].Remove(paths[0].Length - 11));
             else
                 return null;
 
