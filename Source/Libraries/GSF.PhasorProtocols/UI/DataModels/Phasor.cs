@@ -532,7 +532,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         measurement.DeviceID = device.ID;
                         measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
+                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
                         measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
@@ -545,7 +545,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     {
                         // Update existing record when needed or when phasor source index has changed
                         measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
+                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
                         measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;

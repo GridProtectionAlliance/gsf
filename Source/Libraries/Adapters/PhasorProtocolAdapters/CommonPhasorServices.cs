@@ -409,11 +409,12 @@ namespace PhasorProtocolAdapters
         /// <param name="deviceAcronym">Device name acronym to use for the point tag.</param>
         /// <param name="vendorAcronym">Vendor name acronym to use for the point tag. Can be null.</param>
         /// <param name="signalTypeAcronym">Acronym of signal type of the point.</param>
+        /// <param name="phasorLabel">The label of the phasor associated with the point.</param>
         /// <param name="signalIndex">Signal index of the point, if any.</param>
         /// <param name="phase">Signal phase of the point, if any.</param>
         /// <returns>A new point tag created using the configured point tag name expression.</returns>
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, int signalIndex = -1, char phase = '_')
+        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string phasorLabel = null, int signalIndex = -1, char phase = '_')
         {
             // Initialize point tag expression parser
             if ((object)s_pointTagExpressionParser == null)
@@ -439,6 +440,9 @@ namespace PhasorProtocolAdapters
             if ((object)vendorAcronym == null)
                 vendorAcronym = "";
 
+            if ((object)phasorLabel == null)
+                phasorLabel = "";
+
             companyAcronym = companyAcronym.Trim();
             deviceAcronym = deviceAcronym.Trim();
             vendorAcronym = vendorAcronym.Trim();
@@ -449,6 +453,7 @@ namespace PhasorProtocolAdapters
                 { "{CompanyAcronym}", companyAcronym },
                 { "{DeviceAcronym}", deviceAcronym },
                 { "{VendorAcronym}", vendorAcronym },
+                { "{PhasorLabel}", phasorLabel },
                 { "{SignalIndex}", signalIndex.ToString() },
                 { "{Phase}", phase.ToString() }
             };
@@ -1066,12 +1071,12 @@ namespace PhasorProtocolAdapters
             {
                 statusMessage("Renaming all point tags...");
 
-                string device, vendor, signalAcronym;
+                string device, vendor, signalAcronym, phasorLabel;
                 char? phase;
                 int? vendorDeviceID;
                 SignalReference signal;
 
-                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, Phase FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
+                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
                 {
                     company = measurement.ConvertField<string>("CompanyAcronym");
 
@@ -1104,9 +1109,10 @@ namespace PhasorProtocolAdapters
                             signalIndex = -1;
                         }
 
+                        phasorLabel = measurement.ConvertField<string>("PhasorLabel");
                         phase = measurement.ConvertNullableField<char>("Phase");
 
-                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, signalIndex, phase ?? '_')}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
+                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, phasorLabel, signalIndex, phase ?? '_')}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
                     }
                 }
             }
