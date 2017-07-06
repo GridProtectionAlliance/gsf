@@ -75,6 +75,7 @@ namespace GSF.IO
         // Fields
         private readonly string m_fullPath;
         private readonly bool m_alreadyProcessed;
+        private readonly bool m_raisedByFileWatcher;
         private bool m_requeue;
 
         #endregion
@@ -86,10 +87,12 @@ namespace GSF.IO
         /// </summary>
         /// <param name="fullPath">The full path to the file to be processed.</param>
         /// <param name="alreadyProcessed">Flag indicating whether this file has been processed before.</param>
-        public FileProcessorEventArgs(string fullPath, bool alreadyProcessed)
+        /// <param name="raisedByFileWatcher">Flag indicating whether this event was raised by the file watcher.</param>
+        public FileProcessorEventArgs(string fullPath, bool alreadyProcessed, bool raisedByFileWatcher)
         {
             m_fullPath = fullPath;
             m_alreadyProcessed = alreadyProcessed;
+            m_raisedByFileWatcher = raisedByFileWatcher;
         }
 
         #endregion
@@ -115,6 +118,17 @@ namespace GSF.IO
             get
             {
                 return m_alreadyProcessed;
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag that indicates whether this event was raised by the file watcher.
+        /// </summary>
+        public bool RaisedByFileWatcher
+        {
+            get
+            {
+                return m_raisedByFileWatcher;
             }
         }
 
@@ -566,7 +580,7 @@ namespace GSF.IO
                         }
 
                         enumerationThread.Push(enumerateNextFile);
-                        m_fileProcessor.TouchLockAndProcess(file);
+                        m_fileProcessor.TouchAndProcess(file, false);
                     });
                 }
                 catch
@@ -1171,21 +1185,9 @@ namespace GSF.IO
                 return false;
             }
         }
-
-        // Queues the file for processing.
-        private void QueueFileForProcessing(string filePath)
-        {
-            if (!MatchesFilter(filePath))
-            {
-                Interlocked.Increment(ref m_skippedFileCount);
-                return;
-            }
-
-            m_processingThread.Push(2, () => TouchLockAndProcess(filePath));
-        }
-
-        // Checks and updates the touchedFiles lookup table, then calls LockAndProcess.
-        private void TouchLockAndProcess(string filePath)
+        
+        // Checks and updates the touchedFiles lookup table, then starts the processing loop.
+        private void TouchAndProcess(string filePath, bool raisedByFileWatcher)
         {
             DateTime lastWriteTime = File.GetLastWriteTimeUtc(filePath);
             DateTime lastKnownWriteTime;
@@ -1193,13 +1195,13 @@ namespace GSF.IO
             if (!m_touchedFiles.TryGetValue(filePath, out lastKnownWriteTime) || lastKnownWriteTime < lastWriteTime)
             {
                 m_touchedFiles[filePath] = lastWriteTime;
-                StartProcessLoop(filePath);
+                StartProcessLoop(filePath, raisedByFileWatcher);
             }
         }
 
         // Starts a loop to process the file.
         // Continues looping so long as the user continues requesting to requeue.
-        private void StartProcessLoop(string filePath)
+        private void StartProcessLoop(string filePath, bool raisedByFileWatcher)
         {
             int retryCount = 0;
             Action delayAndProcess = null;
@@ -1212,7 +1214,7 @@ namespace GSF.IO
                 {
                     int delay;
 
-                    if (ProcessFile(filePath))
+                    if (ProcessFile(filePath, raisedByFileWatcher))
                     {
                         if (retryCount < 8)
                             delay = 250;
@@ -1232,7 +1234,7 @@ namespace GSF.IO
                 });
             };
 
-            if (ProcessFile(filePath))
+            if (ProcessFile(filePath, raisedByFileWatcher))
             {
                 Interlocked.Increment(ref m_requeuedFileCount);
                 DelayAndExecute(delayAndProcess, 250);
@@ -1241,7 +1243,7 @@ namespace GSF.IO
 
         // Attempts to processes the given file.
         // Returns true if the user requested to requeue the file.
-        private bool ProcessFile(string filePath)
+        private bool ProcessFile(string filePath, bool raisedByFileWatcher)
         {
             bool alreadyProcessed;
 
@@ -1254,7 +1256,7 @@ namespace GSF.IO
             alreadyProcessed = m_processedFiles.Contains(filePath);
 
             // If the user requests to requeue the file, return true
-            if (OnProcessing(filePath, alreadyProcessed))
+            if (OnProcessing(filePath, alreadyProcessed, raisedByFileWatcher))
                 return true;
 
             Interlocked.Increment(ref m_processedFileCount);
@@ -1374,13 +1376,13 @@ namespace GSF.IO
         }
 
         // Triggers the processing event for the given file.
-        private bool OnProcessing(string fullPath, bool alreadyProcessed)
+        private bool OnProcessing(string fullPath, bool alreadyProcessed, bool raisedByFileWatcher)
         {
             FileProcessorEventArgs args;
 
             if ((object)Processing != null)
             {
-                args = new FileProcessorEventArgs(fullPath, alreadyProcessed);
+                args = new FileProcessorEventArgs(fullPath, alreadyProcessed, raisedByFileWatcher);
                 Processing(this, args);
                 return args.Requeue;
             }
@@ -1406,7 +1408,7 @@ namespace GSF.IO
                     return;
                 }
 
-                m_processingThread.Push(2, () => TouchLockAndProcess(args.FullPath));
+                m_processingThread.Push(2, () => TouchAndProcess(args.FullPath, true));
             });
         }
 
@@ -1423,7 +1425,7 @@ namespace GSF.IO
                     m_processingThread.Push(2, () =>
                     {
                         m_touchedFiles.Remove(args.FullPath);
-                        TouchLockAndProcess(args.FullPath);
+                        TouchAndProcess(args.FullPath, true);
                     });
                 }
                 else
@@ -1453,7 +1455,7 @@ namespace GSF.IO
                         m_processedFiles.Add(args.FullPath);
 
                     if (!oldMatch && newMatch)
-                        TouchLockAndProcess(args.FullPath);
+                        TouchAndProcess(args.FullPath, true);
                 });
             });
         }
