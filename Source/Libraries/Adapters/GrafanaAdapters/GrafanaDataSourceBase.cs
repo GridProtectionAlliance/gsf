@@ -680,7 +680,7 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
+                //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
 
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
@@ -694,15 +694,15 @@ namespace GrafanaAdapters
                     series.datapoints = valueGroups.First(group => group.Target.Equals(series.target)).Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
 
-                // Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
-                foreach (TimeSeriesValues series in result)
-                {
-                    if (series.datapoints.Count > maxDataPoints)
-                    {
-                        double indexFactor = series.datapoints.Count / (double)request.maxDataPoints;
-                        series.datapoints = Enumerable.Range(0, request.maxDataPoints).Select(index => series.datapoints[(int)(index * indexFactor)]).ToList();
-                    }
-                }
+                //// Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
+                //foreach (TimeSeriesValues series in result)
+                //{
+                //    if (series.datapoints.Count > maxDataPoints)
+                //    {
+                //        double indexFactor = series.datapoints.Count / (double)request.maxDataPoints;
+                //        series.datapoints = Enumerable.Range(0, request.maxDataPoints).Select(index => series.datapoints[(int)(index * indexFactor)]).ToList();
+                //    }
+                //}
 
                 return result;
             },
