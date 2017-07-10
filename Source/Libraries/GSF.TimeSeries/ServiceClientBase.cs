@@ -45,6 +45,7 @@ using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
+using GSF.Threading;
 
 namespace GSF.TimeSeries
 {
@@ -297,6 +298,21 @@ namespace GSF.TimeSeries
 
                         lastConnectAttempt = DateTime.UtcNow.Ticks;
 
+                        ICancellationToken timeoutCancellationToken = new Threading.CancellationToken();
+
+                        if (System.Console.IsInputRedirected)
+                        {
+                            // If the client is invoked as part of a command line script,
+                            // implement a 5-second timeout in case of connectivity issues
+                            Action timeoutAction = () =>
+                            {
+                                if (!timeoutCancellationToken.IsCancelled)
+                                    Environment.Exit(1);
+                            };
+
+                            timeoutAction.DelayAndExecute(5000);
+                        }
+
                         if (!m_authenticationFailure)
                         {
                             // If there has been no authentication
@@ -327,6 +343,8 @@ namespace GSF.TimeSeries
 
                             Connect(username.ToString(), password.ToString());
                         }
+
+                        timeoutCancellationToken.Cancel();
 
                         while (m_authenticated && m_clientHelper.Enabled && (object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                         {
