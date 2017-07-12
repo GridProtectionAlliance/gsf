@@ -776,9 +776,9 @@ namespace GSF.IO
 
             m_fileWatchersLock = new object();
             m_fileWatchers = new List<SafeFileWatcher>();
-            m_threadScheduler = new LogicalThreadScheduler();
+            m_threadScheduler = new LogicalThreadScheduler(2);
             m_threadScheduler.UnhandledException += (sender, args) => OnError(args.Argument);
-            m_processingThread = m_threadScheduler.CreateThread(2);
+            m_processingThread = m_threadScheduler.CreateThread();
             m_watcherThread = m_threadScheduler.CreateThread();
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;

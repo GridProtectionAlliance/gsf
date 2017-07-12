@@ -235,7 +235,7 @@ namespace GSF.ServiceProcess
             {
                 m_clientID = clientID;
                 m_filter = new ClientFilter();
-                m_thread = serviceHelper.m_threadScheduler.CreateThread(2);
+                m_thread = serviceHelper.m_threadScheduler.CreateThread();
                 m_messageCounts = new List<Tuple<DateTime, int>>();
                 m_serviceHelper = serviceHelper;
             }
@@ -720,9 +720,9 @@ namespace GSF.ServiceProcess
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
 
             m_clientStatusUpdateLookup = new Dictionary<Guid, ClientStatusUpdateConfiguration>();
-            m_threadScheduler = new LogicalThreadScheduler();
+            m_threadScheduler = new LogicalThreadScheduler(2);
             m_threadScheduler.UnhandledException += LogicalThread_ProcessException;
-            m_statusUpdateThread = m_threadScheduler.CreateThread(2);
+            m_statusUpdateThread = m_threadScheduler.CreateThread();
             m_statusUpdateQueue = new List<StatusUpdate>();
 
             // Components

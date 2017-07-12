@@ -158,7 +158,8 @@ namespace GSF.Threading
         private LogicalThreadScheduler m_scheduler;
         private ConcurrentQueue<Action>[] m_queues;
         private Dictionary<object, object> m_threadLocalStorage;
-        private int m_isActive;
+        private ICancellationToken m_nextExecutionToken;
+        private int m_activePriority;
 
         private LogicalThreadStatistics m_statistics;
 
@@ -170,16 +171,7 @@ namespace GSF.Threading
         /// Creates a new instance of the <see cref="LogicalThread"/> class.
         /// </summary>
         public LogicalThread()
-            : this(1)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="LogicalThread"/> class.
-        /// </summary>
-        /// <param name="priorityLevels">The number of levels of priority supported by this logical thread.</param>
-        public LogicalThread(int priorityLevels)
-            : this(DefaultScheduler, priorityLevels)
+            : this(DefaultScheduler)
         {
         }
 
@@ -187,20 +179,16 @@ namespace GSF.Threading
         /// Creates a new instance of the <see cref="LogicalThread"/> class.
         /// </summary>
         /// <param name="scheduler">The <see cref="LogicalThreadScheduler"/> that created this thread.</param>
-        /// <param name="priorityLevels">The number of levels of priority supported by this logical thread.</param>
         /// <exception cref="ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
-        /// <exception cref="ArgumentException"><paramref name="priorityLevels"/> is less than or equal to zero.</exception>
-        internal LogicalThread(LogicalThreadScheduler scheduler, int priorityLevels)
+        internal LogicalThread(LogicalThreadScheduler scheduler)
         {
             if ((object)scheduler == null)
                 throw new ArgumentNullException(nameof(scheduler));
 
-            if (priorityLevels <= 0)
-                throw new ArgumentException($"A logical thread must have at least one priority level.", nameof(priorityLevels));
-
             m_scheduler = scheduler;
-            m_queues = new ConcurrentQueue<Action>[priorityLevels];
+            m_queues = new ConcurrentQueue<Action>[PriorityLevels];
             m_threadLocalStorage = new Dictionary<object, object>();
+            m_nextExecutionToken = new CancellationToken();
             m_statistics = new LogicalThreadStatistics();
 
             for (int i = 0; i < m_queues.Length; i++)
@@ -219,7 +207,7 @@ namespace GSF.Threading
         {
             get
             {
-                return m_queues.Length;
+                return m_scheduler.PriorityLevels;
             }
         }
 
@@ -232,6 +220,49 @@ namespace GSF.Threading
             get
             {
                 return m_queues.Any(queue => !queue.IsEmpty);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the priority at which the
+        /// logical thread is queued by the scheduler.
+        /// </summary>
+        internal int ActivePriority
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref m_activePriority, 0, 0);
+            }
+            set
+            {
+                Interlocked.Exchange(ref m_activePriority, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the priority of the next action to be processed on this logical thread.
+        /// </summary>
+        internal int NextPriority
+        {
+            get
+            {
+                return PriorityLevels - m_queues.TakeWhile(queue => queue.IsEmpty).Count();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the cancellation token for the next time
+        /// the thread's actions will be executed by the scheduler.
+        /// </summary>
+        internal ICancellationToken NextExecutionToken
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref m_nextExecutionToken, null, null);
+            }
+            set
+            {
+                Interlocked.Exchange(ref m_nextExecutionToken, value);
             }
         }
 
@@ -260,7 +291,7 @@ namespace GSF.Threading
                 throw new ArgumentException($"Priority {priority} is outside the range between 1 and {PriorityLevels}.", nameof(priority));
 
             m_queues[PriorityLevels - priority].Enqueue(action);
-            m_scheduler.SignalItemHandler(this);
+            m_scheduler.SignalItemHandler(this, priority);
         }
 
         /// <summary>
@@ -305,20 +336,28 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Activates the thread if it is not already active.
+        /// Attempts to activate the thread at the given priority.
         /// </summary>
-        /// <returns>True if this call to TryActivate caused the thread to be active.</returns>
-        internal bool TryActivate()
+        /// <param name="priority">The priority at which to activate the thread.</param>
+        /// <returns>True if the thread's priority needs to be changed to the given priority; false otherwise.</returns>
+        internal bool TryActivate(int priority)
         {
-            return Interlocked.CompareExchange(ref m_isActive, 1, 0) == 0;
+            // Always get the execution token before the
+            // active priority to mitigate race conditions
+            ICancellationToken nextExecutionToken = NextExecutionToken;
+            int activePriority = ActivePriority;
+            return (activePriority < priority) && nextExecutionToken.Cancel();
         }
 
         /// <summary>
-        /// Deactivates the thread.
+        /// Completely deactivates the thread, making it available for reactivation at any priority.
         /// </summary>
         internal void Deactivate()
         {
-            Interlocked.Exchange(ref m_isActive, 0);
+            // Always update the active priority before the
+            // execution token to mitigate race conditions
+            ActivePriority = 0;
+            NextExecutionToken = new CancellationToken();
         }
 
         /// <summary>

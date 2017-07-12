@@ -47,7 +47,7 @@ namespace GSF.Threading
         public event EventHandler<EventArgs<Exception>> UnhandledException;
 
         // Fields
-        private ConcurrentQueue<LogicalThread> m_logicalThreads;
+        private ConcurrentQueue<Func<LogicalThread>>[] m_logicalThreadQueues;
         private int m_maxThreadCount;
         private int m_threadCount;
         private bool m_useBackgroundThreads;
@@ -59,11 +59,19 @@ namespace GSF.Threading
         /// <summary>
         /// Creates a new instance of the <see cref="LogicalThreadScheduler"/> class.
         /// </summary>
-        public LogicalThreadScheduler()
+        /// <param name="priorityLevels">The number of levels of priority supported by this logical thread scheduler.</param>
+        /// <exception cref="ArgumentException"><paramref name="priorityLevels"/> is less than or equal to zero.</exception>
+        public LogicalThreadScheduler(int priorityLevels = 1)
         {
+            if (priorityLevels < 1)
+                throw new ArgumentException($"A logical thread scheduler must have at least one priority level.", nameof(priorityLevels));
+
             m_maxThreadCount = Environment.ProcessorCount;
-            m_logicalThreads = new ConcurrentQueue<LogicalThread>();
+            m_logicalThreadQueues = new ConcurrentQueue<Func<LogicalThread>>[priorityLevels];
             m_useBackgroundThreads = true;
+
+            for (int i = 0; i < priorityLevels; i++)
+                m_logicalThreadQueues[i] = new ConcurrentQueue<Func<LogicalThread>>();
         }
 
         #endregion
@@ -86,7 +94,7 @@ namespace GSF.Threading
                     throw new ArgumentException("Max thread count must be greater than zero", nameof(value));
 
                 int diff = value - m_maxThreadCount;
-                int inactiveThreads = Math.Min(diff, m_logicalThreads.Count);
+                int inactiveThreads = Math.Min(diff, m_logicalThreadQueues.Sum(queue => queue.Count));
 
                 Interlocked.Exchange(ref m_maxThreadCount, value);
 
@@ -112,6 +120,18 @@ namespace GSF.Threading
         }
 
         /// <summary>
+        /// Gets the number of levels of priority
+        /// supported by this scheduler.
+        /// </summary>
+        public int PriorityLevels
+        {
+            get
+            {
+                return m_logicalThreadQueues.Length;
+            }
+        }
+
+        /// <summary>
         /// Gets the current number of active physical threads.
         /// </summary>
         private int ThreadCount
@@ -133,18 +153,7 @@ namespace GSF.Threading
         /// <returns>A new logical thread managed by this scheduler.</returns>
         public LogicalThread CreateThread()
         {
-            return CreateThread(1);
-        }
-
-        /// <summary>
-        /// Creates a new logical thread whose
-        /// execution is managed by this scheduler.
-        /// </summary>
-        /// <param name="priorityLevels">The number of levels of priority supported by the logical thread.</param>
-        /// <returns>A new logical thread managed by this scheduler.</returns>
-        public LogicalThread CreateThread(int priorityLevels)
-        {
-            return new LogicalThread(this, priorityLevels);
+            return new LogicalThread(this);
         }
 
         /// <summary>
@@ -152,11 +161,12 @@ namespace GSF.Threading
         /// thread has new actions to be processed.
         /// </summary>
         /// <param name="thread">The thread with new actions to be processed.</param>
-        internal void SignalItemHandler(LogicalThread thread)
+        /// <param name="priority">The priority at which the thread is being signaled.</param>
+        internal void SignalItemHandler(LogicalThread thread, int priority)
         {
-            if (thread.TryActivate())
+            if (thread.TryActivate(priority))
             {
-                m_logicalThreads.Enqueue(thread);
+                Enqueue(thread);
                 ActivatePhysicalThread();
             }
         }
@@ -204,13 +214,19 @@ namespace GSF.Threading
         private void ProcessLogicalThreads()
         {
             Stopwatch stopwatch;
+            Func<LogicalThread> accessor = null;
             LogicalThread thread;
             Action action;
 
             stopwatch = new Stopwatch();
 
-            while (ThreadCount <= MaxThreadCount && m_logicalThreads.TryDequeue(out thread))
+            while (ThreadCount <= MaxThreadCount && (object)m_logicalThreadQueues.FirstOrDefault(queue => queue.TryDequeue(out accessor)) != null)
             {
+                thread = accessor();
+
+                if ((object)thread == null)
+                    continue;
+
                 action = thread.Pull();
 
                 if ((object)action != null)
@@ -226,15 +242,60 @@ namespace GSF.Threading
                 }
 
                 if (thread.HasAction)
-                    m_logicalThreads.Enqueue(thread);
+                    Enqueue(thread);
                 else
                     thread.Deactivate();
             }
 
             DeactivatePhysicalThread();
 
-            if (!m_logicalThreads.IsEmpty)
+            if (!m_logicalThreadQueues.All(queue => queue.IsEmpty))
                 ActivatePhysicalThread();
+        }
+
+        /// <summary>
+        /// Queues the given thread for execution.
+        /// </summary>
+        /// <param name="thread">The thread to be queued for execution.</param>
+        private void Enqueue(LogicalThread thread)
+        {
+            ICancellationToken executionToken;
+            int activePriority;
+            int nextPriority;
+
+            do
+            {
+                // Create the execution token to be used in the closure
+                ICancellationToken nextExecutionToken = new CancellationToken();
+
+                // Always update the thread's active priority before
+                // the execution token to mitigate race conditions
+                nextPriority = thread.NextPriority;
+                thread.ActivePriority = nextPriority;
+                thread.NextExecutionToken = nextExecutionToken;
+
+                // Now that the action can be cancelled by another thread using the
+                // new cancellation token, it should be safe to put it in the queue
+                m_logicalThreadQueues[PriorityLevels - nextPriority].Enqueue(() =>
+                {
+                    if (nextExecutionToken.Cancel())
+                        return thread;
+
+                    return null;
+                });
+
+                // Because enqueuing the thread is a multi-step process, we need to
+                // double-check in case the thread's priority changed in the meantime
+                activePriority = thread.ActivePriority;
+                nextPriority = thread.NextPriority;
+
+                // We can use the cancellation token we just created because we only
+                // really need to double-check the work that was done on this thread;
+                // in other words, if another thread changed the priority in the
+                // meantime, it can double-check its own work
+                executionToken = nextExecutionToken;
+            }
+            while (activePriority != nextPriority && executionToken.Cancel());
         }
 
         /// <summary>
