@@ -891,8 +891,7 @@ namespace StatHistorianReportGenerator
                 deviceDetails = new string[levels[level].Count][];
                 levelDetails[level] = deviceDetails;
 
-                // Sort the devices in this level by name
-                //levels[level].Sort((device1, device2) => string.Compare(device1.Name, device2.Name, StringComparison.Ordinal));
+                // Sort the devices in this level by completeness, then data errors descending, then name
                 levels[level] = levels[level].OrderBy(device => Math.Round(device.MeasurementsReceived[ReportDays - 1] / device.MeasurementsExpected[ReportDays - 1], 4)).ThenByDescending(device => device.DataQualityErrors[ReportDays - 1]).ThenBy(device => device.Name).ToList();
 
                 for (int device = 0; device < levels[level].Count; device++)
