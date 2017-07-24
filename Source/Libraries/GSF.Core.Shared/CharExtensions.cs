@@ -129,5 +129,35 @@ namespace GSF
 
             return false;
         }
+
+        //**********  New methods July 2017, To Be Tested   ********************
+
+        /// <summary>
+        /// Converts <paramref name="value"/> to lower case
+        /// </summary>
+        /// <returns>
+        /// <paramref name="value"/> converted to lower case
+        /// </returns>
+        public static char ToLower(this char value)
+        {
+            if (value > 64 && value < 91)
+                return (char)(value + 32);
+
+            return value;
+        }
+
+        /// <summary>
+        /// Converts <paramref name="value"/> to upper case
+        /// </summary>
+        /// <returns>
+        /// <paramref name="value"/> converted to upper case
+        /// </returns>
+        public static char ToUpper(this char value)
+        {
+            if (value > 96 && value < 122)
+                return (char)(value - 32);
+
+            return value;
+        }
     }
 }

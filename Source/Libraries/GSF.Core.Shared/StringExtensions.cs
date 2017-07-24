@@ -1666,5 +1666,444 @@ namespace GSF
         {
             return Uri.EscapeDataString(value);
         }
+
+        //**********  New methods July 2017, To Be Tested   ********************
+
+        /// <summary>
+        /// Removes one or more instances of a specified string from the beginning of a string.
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="stringToRemove">The string to remove</param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
+        /// <returns>A string with <paramref name="stringToRemove"/> deleted from the beginning</returns>
+        public static string RemoveLeadingString(this string value, string stringToRemove, bool matchCase = true)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            if (string.IsNullOrEmpty(stringToRemove))
+                return value;
+
+            StringComparison scCase = (matchCase) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+            int i = value.IndexOf(stringToRemove, scCase);
+            if (i < 0)
+                return value;  //handle the "do nothing" case quickly
+
+            while (value.StartsWith(stringToRemove, scCase))
+            {
+                if (value.Length <= stringToRemove.Length)
+                    return string.Empty;
+
+                value = value.Substring(stringToRemove.Length);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Removes one or more instances of a specified char from the beginning of a string.
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="charToRemove">The char to remove</param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
+        /// <returns>A string with <paramref name="charToRemove"/> deleted from the beginning</returns>
+        public static string RemoveLeadingString(this string value, char charToRemove, bool matchCase = true)
+        {
+
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            if (charToRemove == 0)
+                return value;
+
+            string result = value;
+            if (!matchCase)
+            {
+                value = value.ToLower();
+                charToRemove = charToRemove.ToLower();
+            }
+
+            //handle the "do nothing" case quickly
+            if (value[0] != charToRemove) return result;
+
+            for (int i = 1; i < value.Length; i++)
+            {
+                if (value[i] != charToRemove)
+                {
+                    return result.Substring(i - 1);
+                }
+            }
+            //all the characters are to be removed.
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Assures that numeric value is a well formed number
+        /// Adds a leading zero in front of a decimal, if present
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name = "AssureParseDouble">Set to TRUE to assure that value parses to Double</param>
+        /// <returns>A string with deleted from the beginning</returns>
+        /// <remarks>Note: AssureParseDouble also removes trailing zeros following a decimal which implies loss of precision in the value</remarks>
+        public static string RemoveLeadingZeros(this string value, bool AssureParseDouble = false)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "0";
+
+            value = value.Trim();
+
+            if (value.Length == 0)
+                return "0";
+
+            if (AssureParseDouble)
+            {
+                double test = 0.0;
+                if (!double.TryParse(value, out test))
+                    return "0";
+
+                return test.ToString();
+            }
+
+            bool isNeg = false;
+
+            if (value.Substring(0, 1) == "-")
+            {
+                isNeg = true;
+                value = value.Substring(1);
+            }
+
+            while (value.Substring(0, 1) == "0")
+            {
+                if (value.Length <= 1)
+                    return "0";
+
+                value = value.Substring(1);
+            }
+
+            if (value.Substring(0, 1) == ".")
+                value = "0" + value;
+
+            if (isNeg && value != "0.0")
+                value = "-" + value;
+
+            return value;
+        }
+
+        /// <summary>
+        /// Removes one or more instances of a string from the end of a string
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="stringToRemove">The string to remove</param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
+        /// <returns>A string with <paramref name="stringToRemove"/> deleted from the end</returns>
+        public static string RemoveTrailingString(this string value, string stringToRemove, bool matchCase = true)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            if (string.IsNullOrEmpty(stringToRemove))
+                return value;
+
+            StringComparison scCase = (matchCase) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+            int i = value.IndexOf(stringToRemove, scCase);
+
+            if (i < 0)
+                return value;  //handle the "do nothing" case quickly
+
+            while (value.EndsWith(stringToRemove, scCase))
+            {
+                if (value.Length <= stringToRemove.Length)
+                    return string.Empty;
+
+                value = value.Substring(0, value.Length - stringToRemove.Length);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Removes one or more instances of a character from the end of a string
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="charToRemove">The char to remove</param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
+        /// <returns>A string with <paramref name="charToRemove"/> deleted from the end</returns>
+        public static string RemoveTrailingString(this string value, char charToRemove, bool matchCase = true)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            if (charToRemove == 0)
+                return value;
+
+            string result = value;
+            if (!matchCase)
+            {
+                value = value.ToLower();
+                charToRemove = charToRemove.ToLower();
+            }
+
+            //handle the "do nothing" case quickly
+            if (value[value.Length - 1] != charToRemove) return result;
+
+            for (int i = value.Length - 1; i > -1; i--)
+            {
+                if (value[i] != charToRemove)
+                {
+                    return result.Substring(0, i + 1);
+                }
+            }
+            //all the characters are to be removed.
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Returns a string consisting of a specified number of characters from the end of a string "to the left"
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="length">The number of characters from the end of the string to return</param>
+        /// <returns>A string of length <paramref name="length" /></returns>
+        public static string SubstringEnd(this string value, int length)
+        {
+            if (string.IsNullOrEmpty(value) || length <= 0)
+                return string.Empty;
+
+            if (value.Length <= length)
+                return value;
+
+            return value.Substring(value.Length - length);
+        }
+
+        /// <summary>
+        /// Returns a string consisting of a specified number of characters to the left (previous chars) from the provided startIndex
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="endIndex">The index in <paramref name="value" /> at the end of the desired returned string.</param>
+        /// <param name="length">The number of characters from the <paramref name="endIndex" /> of the string to return</param>
+        /// <returns>A string to the left of <paramref name="endIndex" /> of length up to <paramref name="length" /> </returns>
+        public static string SubstringPrevious(this string value, int endIndex, int length)
+        {
+            if (string.IsNullOrEmpty(value) || endIndex < 0 || length <= 0)
+                return string.Empty;
+
+            if (endIndex > value.Length - 1)
+                return string.Empty;
+
+            int startIndex = endIndex - length + 1;
+
+            if (startIndex < 0)
+                startIndex = 0;
+
+            return value.Substring(startIndex, endIndex - startIndex + 1);
+        }
+
+        /// <summary>
+        /// Searches a string from right to left for the next instance of a specified string.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="testString">The string to find.</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for <paramref name="testString"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <returns>The start (or left most) index of <paramref name="testString"/> within <paramref name="value"/> or (-1) if not found.</returns>
+        public static int IndexOfPrevious(this string value, string testString, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (string.IsNullOrEmpty(testString))
+                return -1;
+
+            if (startIndex < 0)
+                return -1;
+
+            if (startIndex > value.Length - 1 || startIndex - testString.Length + 1 < 0)
+            {
+                //return -1;
+                throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
+            }
+
+            //this is the fastest way to do this 
+            string s = value.Reverse();
+            string v = testString.Reverse();
+            int i = s.IndexOf(v, s.Length - startIndex - 1);
+
+            if (i > -1)
+                return s.Length - i - testString.Length;
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches a string from right to left for the next instance of a specified character.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="testChar">The char to find.</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for <paramref name="testChar"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <returns>The index of <paramref name="testChar"/> within <paramref name="value"/> or (-1) if not found.</returns>
+        public static int IndexOfPrevious(this string value, char testChar, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (testChar == 0)
+                return -1;
+
+            if (startIndex < 0)
+                return -1;
+
+            if (startIndex > value.Length - 1)
+            {
+                throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
+            }
+
+            for (int j = startIndex; j > -1; j--)
+            {
+                if (value[j] == testChar)
+                    return j;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Finds the first index that is NOT included in testChars
+        /// </summary>
+        /// <param name="value">String to process</param>
+        /// <param name="anyOf">the characters use to test</param>
+        /// <param name="startIndex">the index at which to begin testing <paramref name="value"/></param>
+        /// <returns>The first index of a character NOT included in <paramref name="anyOf"/>. </returns>
+        public static int IndexOfNot(this string value, char[] anyOf, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (anyOf == null || anyOf[0] == 0)
+                return -1;
+
+            if (startIndex >= value.Length)
+                return -1;
+
+            for (int i = startIndex; i < value.Length; i++)
+            {
+                if (value.IndexOfAny(anyOf) == -1)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Counts the total number of the occurrences of string within a string
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="testString">String to be counted.</param>
+        /// <param name="startIndex">The index at which to begin <paramref name="value"/></param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
+        /// <returns>Total number of the occurrences of <paramref name="testString" /> in the given string.</returns>
+        public static int StringCount(this string value, string testString, int startIndex = 0, bool matchCase = true)
+        {
+            if (string.IsNullOrEmpty(value))
+                return 0;
+
+            //error - ambiguous safe case
+            if (startIndex < 0)
+                return 0;
+
+            if (startIndex >= value.Length)
+            {
+                throw new ArgumentException("StringCount startIndex Invalid " + startIndex.ToString());
+            }
+
+            if (string.IsNullOrEmpty(testString))
+                return 0;
+
+            int total = 0;
+            StringComparison scCase = (matchCase) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            int k = value.IndexOf(testString, startIndex, scCase);
+
+            while (k > -1)
+            {
+                total++;
+                k = value.IndexOf(testString, k + testString.Length, scCase);
+            }
+            return total;
+        }
+
+        /// <summary>
+        /// Unwraps quotes similar to Excel.  However, a little more predictable for unusual edge cases.
+        /// </summary>
+        /// <param name="value">The string to process</param>
+        /// <param name="quoteChar">The quote char to use.  Default is double quote. Due to trimming, quoteChar of whitespace is not allowed.</param>
+        /// <remarks> 
+        ///           To remove all quote chars at beginning and end of a string regardless of match use .Trim('\"')  It's faster.
+        ///           Three consecutive quotes assures a singe quote char in output.
+        /// </remarks>
+        /// <returns>The sent string with matched surrounding double quotes removed.</returns>
+        public static string quoteUnwrap(this string value, char quoteChar = '\"')
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            string s = value.Trim();
+            if (s.Length <= 1)
+                return value;
+
+            if (quoteChar == ' ')
+                throw new ArgumentOutOfRangeException("quoteChar cannot be space (Character 32).");
+
+            string assuredQuote = new string(quoteChar, 3);
+            const char marker = (char)2;
+            string markerString = new string(marker, 1);
+            string quoteString = new string(quoteChar, 1);
+
+            s = s.Replace(assuredQuote, markerString);
+
+            int quoteCount = s.CharCount(quoteChar);
+            if (quoteCount > 2 && quoteCount % 2 == 0)  //even number and more than two quotes, assume that quotes are important to retain.
+            {
+                return s.Replace(markerString, quoteString);
+            }
+
+            while (s.IndexOf(quoteChar) == 0)  //work off front of string -- and reduce it.
+            {
+                if (s[s.Length - 1] == quoteChar)  //have matching end quote
+                {
+                    s = s.Substring(1, s.Length - 2);
+                    int nq = s.IndexOf(quoteChar);
+                    int ns = s.IndexOf(' ');
+                    if (nq > -1 && ns > -1 && nq > ns)  //allow white spaces between quotes -- but don't strip spaces following quotes
+                        s.Trim();
+                    if (s.Length <= 1)
+                        return s.Replace(markerString, quoteString);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return s.Replace(markerString, quoteString);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quoteChars"></param>
+        /// <returns></returns>
+        public static string quoteUnwrap(this string value, char[] quoteChars)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            if (quoteChars == null || quoteChars[0] == 0)
+                return value;
+
+            foreach (char c in quoteChars)
+            {
+                value = value.quoteUnwrap(c);
+            }
+
+            return value;
+        }
     }
 }

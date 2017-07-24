@@ -285,6 +285,7 @@
     <Compile Include="Parsing\ISupportSourceIdentifiableFrameImage.cs" />
     <Compile Include="Parsing\MultiSourceFrameImageParserBase.cs" />
     <Compile Include="Parsing\NamespaceDoc.cs" />
+    <Compile Include="Parsing\StringParser.cs" />
     <Compile Include="Parsing\TemplatedExpressionParser.cs" />
     <Compile Include="PrecisionTimer.cs" />
     <Compile Include="ProcessProgress.cs" />
