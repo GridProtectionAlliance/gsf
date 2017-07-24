@@ -43,7 +43,7 @@
                 <sdk:DataGridTemplateColumn Header="Enabled" Width="*" SortMemberPath="Enabled" >
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" HorizontalAlignment="Center" Click="DataGridEnabledCheckBox_Click"/>
+                            <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" Margin="0" HorizontalAlignment="Center" Click="DataGridEnabledCheckBox_Click"/>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>

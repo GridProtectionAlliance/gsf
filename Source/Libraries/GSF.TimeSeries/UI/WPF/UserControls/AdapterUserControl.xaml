@@ -157,7 +157,7 @@
 
                     <StackPanel Grid.Row="1" Grid.Column="2" Margin="10,5,0,0">
                         <TextBlock Name="ParameterValueTextBlock" Margin="0" Text="Value" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <Button Content="Default" Margin="0" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
+                        <Button Content="Default" Margin="0" Padding="2" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.Column="3" DataContext="{Binding ElementName=ParameterListBox, Path=SelectedItem}">
                         <StackPanel.Resources>
@@ -237,7 +237,7 @@
                 <sdk:DataGridTemplateColumn Header="Enabled" Width="*" SortMemberPath="Enabled" >
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" HorizontalAlignment="Center" Click="DataGridEnabledCheckBox_Click" />
+                            <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" Margin="0" HorizontalAlignment="Center" Click="DataGridEnabledCheckBox_Click" />
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>

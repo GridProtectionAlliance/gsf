@@ -7,7 +7,7 @@
              d:DesignHeight="30" d:DesignWidth="800">
     
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-        <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Width="Auto" Margin="2">
+        <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Width="Auto" Margin="5,2">
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -22,7 +22,7 @@
                 </ControlTemplate>
             </Button.Template>
         </Button>
-        <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Width="Auto" Margin="2">
+        <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Width="Auto" Margin="5,2">
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -37,7 +37,7 @@
                 </ControlTemplate>
             </Button.Template>
         </Button>
-        <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SaveEnabled}" Width="Auto" Margin="2">
+        <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SaveEnabled}" Width="Auto" Margin="5,2">
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
