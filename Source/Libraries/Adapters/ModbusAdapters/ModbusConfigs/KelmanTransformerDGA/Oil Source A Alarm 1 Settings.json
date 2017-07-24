@@ -1,0 +1,544 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Oil Source: A Alarm: 1 Hydrogen Conc. Limit Low",
+                    "address": "4299",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Hydrogen Conc. Limit High",
+                    "address": "4300",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Hydrogen Conc. Limit",
+                    "address": "Single(HR4299,HR4300)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Dioxide Conc. Limit Low",
+                    "address": "4301",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Dioxide Conc. Limit High",
+                    "address": "4302",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Dioxide Conc. Limit",
+                    "address": "Single(HR4301,HR4302)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Monoxide Conc. Limit Low",
+                    "address": "4303",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Monoxide Conc. Limit High",
+                    "address": "4304",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Monoxide Conc. Limit",
+                    "address": "Single(HR4303,HR4304)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethylene Conc. Limit Low",
+                    "address": "4305",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethylene Conc. Limit High",
+                    "address": "4306",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethylene Conc. Limit",
+                    "address": "Single(HR4305,HR4306)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethane Conc. Limit Low",
+                    "address": "4307",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethane Conc. Limit High",
+                    "address": "4308",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethane Conc. Limit",
+                    "address": "Single(HR4307,HR4308)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Methane Conc. Limit Low",
+                    "address": "4309",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Methane Conc. Limit High",
+                    "address": "4310",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Methane Conc. Limit",
+                    "address": "Single(HR4309,HR4310)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Acetylene Conc. Limit Low",
+                    "address": "4311",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Acetylene Conc. Limit High",
+                    "address": "4312",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Acetylene Conc. Limit",
+                    "address": "Single(HR4311,HR4312)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Water Conc. Limit Low",
+                    "address": "4313",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Water Conc. Limit High",
+                    "address": "4314",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Water Conc. Limit",
+                    "address": "Single(HR4313,HR4314)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Oxygen Conc. Limit Low",
+                    "address": "4315",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Oxygen Conc. Limit High",
+                    "address": "4316",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Oxygen Conc. Limit",
+                    "address": "Single(HR4315,HR4316)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Total Dissolved Combustible Gas Conc. Limit Low",
+                    "address": "4317",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Total Dissolved Combustible Gas Conc. Limit High",
+                    "address": "4318",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Total Dissolved Combustible Gas Conc. Limit",
+                    "address": "Single(HR4317,HR4318)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Nitrogen Conc. Limit Low",
+                    "address": "4319",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Nitrogen Conc. Limit High",
+                    "address": "4320",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Nitrogen Conc. Limit",
+                    "address": "Single(HR4319,HR4320)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Register [1]",
+                    "address": "4321",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [2]",
+                    "address": "4322",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [3]",
+                    "address": "4323",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [4]",
+                    "address": "4324",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [5]",
+                    "address": "4325",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [6]",
+                    "address": "4326",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [7]",
+                    "address": "4327",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [8]",
+                    "address": "4328",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [9]",
+                    "address": "4329",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [10]",
+                    "address": "4330",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [11]",
+                    "address": "4331",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [12]",
+                    "address": "4332",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [13]",
+                    "address": "4333",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [14]",
+                    "address": "4334",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [15]",
+                    "address": "4335",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [16]",
+                    "address": "4336",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [17]",
+                    "address": "4337",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register [18]",
+                    "address": "4338",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Register",
+                    "address": "String(HR4321,HR4322,HR4323,HR4324,HR4325,HR4326,HR4327,HR4328,HR4329,HR4330,HR4331,HR4332,HR4333,HR4334,HR4335,HR4336,HR4337,HR4338)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Hydrogen ROC Limit Low",
+                    "address": "4339",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Hydrogen ROC Limit High",
+                    "address": "4340",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Hydrogen ROC Limit",
+                    "address": "Single(HR4339,HR4340)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Dioxide ROC Limit Low",
+                    "address": "4341",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Dioxide ROC Limit High",
+                    "address": "4342",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Dioxide ROC Limit",
+                    "address": "Single(HR4341,HR4342)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Monoxide ROC Limit Low",
+                    "address": "4343",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Monoxide ROC Limit High",
+                    "address": "4344",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Carbon Monoxide ROC Limit",
+                    "address": "Single(HR4343,HR4344)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethylene ROC Limit Low",
+                    "address": "4345",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethylene ROC Limit High",
+                    "address": "4346",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethylene ROC Limit",
+                    "address": "Single(HR4345,HR4346)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethane ROC Limit Low",
+                    "address": "4347",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethane ROC Limit High",
+                    "address": "4348",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Ethane ROC Limit",
+                    "address": "Single(HR4347,HR4348)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Methane ROC Limit Low",
+                    "address": "4349",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Methane ROC Limit High",
+                    "address": "4350",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Methane ROC Limit",
+                    "address": "Single(HR4349,HR4350)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Acetylene ROC Limit Low",
+                    "address": "4351",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Acetylene ROC Limit High",
+                    "address": "4352",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Acetylene ROC Limit",
+                    "address": "Single(HR4351,HR4352)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Water ROC Limit Low",
+                    "address": "4353",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Water ROC Limit High",
+                    "address": "4354",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Water ROC Limit",
+                    "address": "Single(HR4353,HR4354)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Oxygen ROC Limit Low",
+                    "address": "4355",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Oxygen ROC Limit High",
+                    "address": "4356",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Oxygen ROC Limit",
+                    "address": "Single(HR4355,HR4356)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Total Dissolved Combustible Gas ROC Limit Low",
+                    "address": "4357",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Total Dissolved Combustible Gas ROC Limit High",
+                    "address": "4358",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Total Dissolved Combustible Gas ROC Limit",
+                    "address": "Single(HR4357,HR4358)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Nitrogen ROC Limit Low",
+                    "address": "4359",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Nitrogen ROC Limit High",
+                    "address": "4360",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Nitrogen ROC Limit",
+                    "address": "Single(HR4359,HR4360)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Oil Source A Alarm 1 Settings 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Oil Source: A Alarm: 1 Output",
+                    "address": "4379",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Time Window (in hours) for ROC Calculation",
+                    "address": "4380",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source: A Alarm: 1 Minimum Number of Samples for ROC Calculation",
+                    "address": "4381",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source A Alarm 1 Settings 2",
+            "type": 0
+        }
+    ]
+}

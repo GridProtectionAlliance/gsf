@@ -1,0 +1,52 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Measurement Scheduling Mode for Peripheral Devices",
+                    "address": "2654",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Schedule For Peripheral Devices in Normal Mode",
+                    "address": "2655",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Schedule For Peripheral Devices in Caution Mode",
+                    "address": "2656",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Schedule For Peripheral Devices in Alarm Mode",
+                    "address": "2657",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Next Measurement: Years (GMT Time)",
+                    "address": "2658",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Next Measurement: Month, Days (GMT Time)",
+                    "address": "2659",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Next Measurement: Hours, Minutes (GMT Time)",
+                    "address": "2660",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Peripheral Device Scheduler Settings 1",
+            "type": 0
+        }
+    ]
+}

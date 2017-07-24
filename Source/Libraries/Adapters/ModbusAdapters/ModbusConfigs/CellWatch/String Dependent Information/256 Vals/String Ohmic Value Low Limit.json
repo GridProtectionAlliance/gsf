@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Ohmic Value Low Limit 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "46897",
+                    "description": "String Ohmic Value Low Limit Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46898",
+                    "description": "String Ohmic Value Low Limit Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46899",
+                    "description": "String Ohmic Value Low Limit Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46900",
+                    "description": "String Ohmic Value Low Limit Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46901",
+                    "description": "String Ohmic Value Low Limit Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46902",
+                    "description": "String Ohmic Value Low Limit Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46903",
+                    "description": "String Ohmic Value Low Limit Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46904",
+                    "description": "String Ohmic Value Low Limit Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46905",
+                    "description": "String Ohmic Value Low Limit Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46906",
+                    "description": "String Ohmic Value Low Limit Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46907",
+                    "description": "String Ohmic Value Low Limit Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46908",
+                    "description": "String Ohmic Value Low Limit Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46909",
+                    "description": "String Ohmic Value Low Limit Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46910",
+                    "description": "String Ohmic Value Low Limit Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46911",
+                    "description": "String Ohmic Value Low Limit Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46912",
+                    "description": "String Ohmic Value Low Limit Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46913",
+                    "description": "String Ohmic Value Low Limit Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46914",
+                    "description": "String Ohmic Value Low Limit Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46915",
+                    "description": "String Ohmic Value Low Limit Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46916",
+                    "description": "String Ohmic Value Low Limit Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46917",
+                    "description": "String Ohmic Value Low Limit Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46918",
+                    "description": "String Ohmic Value Low Limit Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46919",
+                    "description": "String Ohmic Value Low Limit Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46920",
+                    "description": "String Ohmic Value Low Limit Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46921",
+                    "description": "String Ohmic Value Low Limit Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46922",
+                    "description": "String Ohmic Value Low Limit Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46923",
+                    "description": "String Ohmic Value Low Limit Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46924",
+                    "description": "String Ohmic Value Low Limit Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46925",
+                    "description": "String Ohmic Value Low Limit Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46926",
+                    "description": "String Ohmic Value Low Limit Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46927",
+                    "description": "String Ohmic Value Low Limit Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46928",
+                    "description": "String Ohmic Value Low Limit Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46929",
+                    "description": "String Ohmic Value Low Limit Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46930",
+                    "description": "String Ohmic Value Low Limit Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46931",
+                    "description": "String Ohmic Value Low Limit Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46932",
+                    "description": "String Ohmic Value Low Limit Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46933",
+                    "description": "String Ohmic Value Low Limit Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46934",
+                    "description": "String Ohmic Value Low Limit Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46935",
+                    "description": "String Ohmic Value Low Limit Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46936",
+                    "description": "String Ohmic Value Low Limit Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46937",
+                    "description": "String Ohmic Value Low Limit Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46938",
+                    "description": "String Ohmic Value Low Limit Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46939",
+                    "description": "String Ohmic Value Low Limit Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46940",
+                    "description": "String Ohmic Value Low Limit Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46941",
+                    "description": "String Ohmic Value Low Limit Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46942",
+                    "description": "String Ohmic Value Low Limit Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46943",
+                    "description": "String Ohmic Value Low Limit Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46944",
+                    "description": "String Ohmic Value Low Limit Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46945",
+                    "description": "String Ohmic Value Low Limit Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46946",
+                    "description": "String Ohmic Value Low Limit Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46947",
+                    "description": "String Ohmic Value Low Limit Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46948",
+                    "description": "String Ohmic Value Low Limit Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46949",
+                    "description": "String Ohmic Value Low Limit Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46950",
+                    "description": "String Ohmic Value Low Limit Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46951",
+                    "description": "String Ohmic Value Low Limit Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46952",
+                    "description": "String Ohmic Value Low Limit Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46953",
+                    "description": "String Ohmic Value Low Limit Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46954",
+                    "description": "String Ohmic Value Low Limit Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46955",
+                    "description": "String Ohmic Value Low Limit Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46956",
+                    "description": "String Ohmic Value Low Limit Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46957",
+                    "description": "String Ohmic Value Low Limit Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46958",
+                    "description": "String Ohmic Value Low Limit Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46959",
+                    "description": "String Ohmic Value Low Limit Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46960",
+                    "description": "String Ohmic Value Low Limit Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46961",
+                    "description": "String Ohmic Value Low Limit Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46962",
+                    "description": "String Ohmic Value Low Limit Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46963",
+                    "description": "String Ohmic Value Low Limit Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46964",
+                    "description": "String Ohmic Value Low Limit Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46965",
+                    "description": "String Ohmic Value Low Limit Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46966",
+                    "description": "String Ohmic Value Low Limit Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46967",
+                    "description": "String Ohmic Value Low Limit Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46968",
+                    "description": "String Ohmic Value Low Limit Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46969",
+                    "description": "String Ohmic Value Low Limit Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46970",
+                    "description": "String Ohmic Value Low Limit Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46971",
+                    "description": "String Ohmic Value Low Limit Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46972",
+                    "description": "String Ohmic Value Low Limit Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46973",
+                    "description": "String Ohmic Value Low Limit Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46974",
+                    "description": "String Ohmic Value Low Limit Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46975",
+                    "description": "String Ohmic Value Low Limit Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46976",
+                    "description": "String Ohmic Value Low Limit Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46977",
+                    "description": "String Ohmic Value Low Limit Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46978",
+                    "description": "String Ohmic Value Low Limit Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46979",
+                    "description": "String Ohmic Value Low Limit Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46980",
+                    "description": "String Ohmic Value Low Limit Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46981",
+                    "description": "String Ohmic Value Low Limit Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46982",
+                    "description": "String Ohmic Value Low Limit Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46983",
+                    "description": "String Ohmic Value Low Limit Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46984",
+                    "description": "String Ohmic Value Low Limit Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46985",
+                    "description": "String Ohmic Value Low Limit Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46986",
+                    "description": "String Ohmic Value Low Limit Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46987",
+                    "description": "String Ohmic Value Low Limit Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46988",
+                    "description": "String Ohmic Value Low Limit Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46989",
+                    "description": "String Ohmic Value Low Limit Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46990",
+                    "description": "String Ohmic Value Low Limit Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46991",
+                    "description": "String Ohmic Value Low Limit Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46992",
+                    "description": "String Ohmic Value Low Limit Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46993",
+                    "description": "String Ohmic Value Low Limit Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46994",
+                    "description": "String Ohmic Value Low Limit Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46995",
+                    "description": "String Ohmic Value Low Limit Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46996",
+                    "description": "String Ohmic Value Low Limit Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Low Limit 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "46997",
+                    "description": "String Ohmic Value Low Limit Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46998",
+                    "description": "String Ohmic Value Low Limit Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46999",
+                    "description": "String Ohmic Value Low Limit Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47000",
+                    "description": "String Ohmic Value Low Limit Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47001",
+                    "description": "String Ohmic Value Low Limit Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47002",
+                    "description": "String Ohmic Value Low Limit Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47003",
+                    "description": "String Ohmic Value Low Limit Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47004",
+                    "description": "String Ohmic Value Low Limit Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47005",
+                    "description": "String Ohmic Value Low Limit Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47006",
+                    "description": "String Ohmic Value Low Limit Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47007",
+                    "description": "String Ohmic Value Low Limit Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47008",
+                    "description": "String Ohmic Value Low Limit Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47009",
+                    "description": "String Ohmic Value Low Limit Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47010",
+                    "description": "String Ohmic Value Low Limit Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47011",
+                    "description": "String Ohmic Value Low Limit Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47012",
+                    "description": "String Ohmic Value Low Limit Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47013",
+                    "description": "String Ohmic Value Low Limit Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47014",
+                    "description": "String Ohmic Value Low Limit Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47015",
+                    "description": "String Ohmic Value Low Limit Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47016",
+                    "description": "String Ohmic Value Low Limit Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47017",
+                    "description": "String Ohmic Value Low Limit Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47018",
+                    "description": "String Ohmic Value Low Limit Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47019",
+                    "description": "String Ohmic Value Low Limit Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47020",
+                    "description": "String Ohmic Value Low Limit Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47021",
+                    "description": "String Ohmic Value Low Limit Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47022",
+                    "description": "String Ohmic Value Low Limit Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47023",
+                    "description": "String Ohmic Value Low Limit Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47024",
+                    "description": "String Ohmic Value Low Limit Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47025",
+                    "description": "String Ohmic Value Low Limit Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47026",
+                    "description": "String Ohmic Value Low Limit Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47027",
+                    "description": "String Ohmic Value Low Limit Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47028",
+                    "description": "String Ohmic Value Low Limit Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47029",
+                    "description": "String Ohmic Value Low Limit Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47030",
+                    "description": "String Ohmic Value Low Limit Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47031",
+                    "description": "String Ohmic Value Low Limit Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47032",
+                    "description": "String Ohmic Value Low Limit Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47033",
+                    "description": "String Ohmic Value Low Limit Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47034",
+                    "description": "String Ohmic Value Low Limit Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47035",
+                    "description": "String Ohmic Value Low Limit Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47036",
+                    "description": "String Ohmic Value Low Limit Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47037",
+                    "description": "String Ohmic Value Low Limit Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47038",
+                    "description": "String Ohmic Value Low Limit Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47039",
+                    "description": "String Ohmic Value Low Limit Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47040",
+                    "description": "String Ohmic Value Low Limit Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47041",
+                    "description": "String Ohmic Value Low Limit Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47042",
+                    "description": "String Ohmic Value Low Limit Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47043",
+                    "description": "String Ohmic Value Low Limit Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47044",
+                    "description": "String Ohmic Value Low Limit Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47045",
+                    "description": "String Ohmic Value Low Limit Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47046",
+                    "description": "String Ohmic Value Low Limit Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47047",
+                    "description": "String Ohmic Value Low Limit Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47048",
+                    "description": "String Ohmic Value Low Limit Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47049",
+                    "description": "String Ohmic Value Low Limit Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47050",
+                    "description": "String Ohmic Value Low Limit Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47051",
+                    "description": "String Ohmic Value Low Limit Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47052",
+                    "description": "String Ohmic Value Low Limit Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47053",
+                    "description": "String Ohmic Value Low Limit Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47054",
+                    "description": "String Ohmic Value Low Limit Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47055",
+                    "description": "String Ohmic Value Low Limit Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47056",
+                    "description": "String Ohmic Value Low Limit Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47057",
+                    "description": "String Ohmic Value Low Limit Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47058",
+                    "description": "String Ohmic Value Low Limit Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47059",
+                    "description": "String Ohmic Value Low Limit Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47060",
+                    "description": "String Ohmic Value Low Limit Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47061",
+                    "description": "String Ohmic Value Low Limit Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47062",
+                    "description": "String Ohmic Value Low Limit Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47063",
+                    "description": "String Ohmic Value Low Limit Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47064",
+                    "description": "String Ohmic Value Low Limit Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47065",
+                    "description": "String Ohmic Value Low Limit Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47066",
+                    "description": "String Ohmic Value Low Limit Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47067",
+                    "description": "String Ohmic Value Low Limit Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47068",
+                    "description": "String Ohmic Value Low Limit Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47069",
+                    "description": "String Ohmic Value Low Limit Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47070",
+                    "description": "String Ohmic Value Low Limit Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47071",
+                    "description": "String Ohmic Value Low Limit Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47072",
+                    "description": "String Ohmic Value Low Limit Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47073",
+                    "description": "String Ohmic Value Low Limit Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47074",
+                    "description": "String Ohmic Value Low Limit Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47075",
+                    "description": "String Ohmic Value Low Limit Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47076",
+                    "description": "String Ohmic Value Low Limit Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47077",
+                    "description": "String Ohmic Value Low Limit Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47078",
+                    "description": "String Ohmic Value Low Limit Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47079",
+                    "description": "String Ohmic Value Low Limit Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47080",
+                    "description": "String Ohmic Value Low Limit Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47081",
+                    "description": "String Ohmic Value Low Limit Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47082",
+                    "description": "String Ohmic Value Low Limit Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47083",
+                    "description": "String Ohmic Value Low Limit Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47084",
+                    "description": "String Ohmic Value Low Limit Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47085",
+                    "description": "String Ohmic Value Low Limit Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47086",
+                    "description": "String Ohmic Value Low Limit Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47087",
+                    "description": "String Ohmic Value Low Limit Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47088",
+                    "description": "String Ohmic Value Low Limit Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47089",
+                    "description": "String Ohmic Value Low Limit Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47090",
+                    "description": "String Ohmic Value Low Limit Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47091",
+                    "description": "String Ohmic Value Low Limit Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47092",
+                    "description": "String Ohmic Value Low Limit Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47093",
+                    "description": "String Ohmic Value Low Limit Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47094",
+                    "description": "String Ohmic Value Low Limit Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47095",
+                    "description": "String Ohmic Value Low Limit Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47096",
+                    "description": "String Ohmic Value Low Limit Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Low Limit 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "47097",
+                    "description": "String Ohmic Value Low Limit Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47098",
+                    "description": "String Ohmic Value Low Limit Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47099",
+                    "description": "String Ohmic Value Low Limit Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47100",
+                    "description": "String Ohmic Value Low Limit Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47101",
+                    "description": "String Ohmic Value Low Limit Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47102",
+                    "description": "String Ohmic Value Low Limit Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47103",
+                    "description": "String Ohmic Value Low Limit Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47104",
+                    "description": "String Ohmic Value Low Limit Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47105",
+                    "description": "String Ohmic Value Low Limit Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47106",
+                    "description": "String Ohmic Value Low Limit Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47107",
+                    "description": "String Ohmic Value Low Limit Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47108",
+                    "description": "String Ohmic Value Low Limit Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47109",
+                    "description": "String Ohmic Value Low Limit Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47110",
+                    "description": "String Ohmic Value Low Limit Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47111",
+                    "description": "String Ohmic Value Low Limit Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47112",
+                    "description": "String Ohmic Value Low Limit Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47113",
+                    "description": "String Ohmic Value Low Limit Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47114",
+                    "description": "String Ohmic Value Low Limit Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47115",
+                    "description": "String Ohmic Value Low Limit Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47116",
+                    "description": "String Ohmic Value Low Limit Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47117",
+                    "description": "String Ohmic Value Low Limit Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47118",
+                    "description": "String Ohmic Value Low Limit Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47119",
+                    "description": "String Ohmic Value Low Limit Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47120",
+                    "description": "String Ohmic Value Low Limit Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47121",
+                    "description": "String Ohmic Value Low Limit Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47122",
+                    "description": "String Ohmic Value Low Limit Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47123",
+                    "description": "String Ohmic Value Low Limit Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47124",
+                    "description": "String Ohmic Value Low Limit Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47125",
+                    "description": "String Ohmic Value Low Limit Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47126",
+                    "description": "String Ohmic Value Low Limit Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47127",
+                    "description": "String Ohmic Value Low Limit Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47128",
+                    "description": "String Ohmic Value Low Limit Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47129",
+                    "description": "String Ohmic Value Low Limit Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47130",
+                    "description": "String Ohmic Value Low Limit Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47131",
+                    "description": "String Ohmic Value Low Limit Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47132",
+                    "description": "String Ohmic Value Low Limit Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47133",
+                    "description": "String Ohmic Value Low Limit Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47134",
+                    "description": "String Ohmic Value Low Limit Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47135",
+                    "description": "String Ohmic Value Low Limit Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47136",
+                    "description": "String Ohmic Value Low Limit Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47137",
+                    "description": "String Ohmic Value Low Limit Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47138",
+                    "description": "String Ohmic Value Low Limit Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47139",
+                    "description": "String Ohmic Value Low Limit Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47140",
+                    "description": "String Ohmic Value Low Limit Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47141",
+                    "description": "String Ohmic Value Low Limit Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47142",
+                    "description": "String Ohmic Value Low Limit Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47143",
+                    "description": "String Ohmic Value Low Limit Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47144",
+                    "description": "String Ohmic Value Low Limit Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47145",
+                    "description": "String Ohmic Value Low Limit Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47146",
+                    "description": "String Ohmic Value Low Limit Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47147",
+                    "description": "String Ohmic Value Low Limit Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47148",
+                    "description": "String Ohmic Value Low Limit Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47149",
+                    "description": "String Ohmic Value Low Limit Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47150",
+                    "description": "String Ohmic Value Low Limit Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47151",
+                    "description": "String Ohmic Value Low Limit Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47152",
+                    "description": "String Ohmic Value Low Limit Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

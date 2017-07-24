@@ -1,0 +1,34 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Oil Source A Relative Saturation Upper Limit in Percent Low",
+                    "address": "4901",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Relative Saturation Upper Limit in Percent High",
+                    "address": "4902",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Relative Saturation Upper Limit in Percent",
+                    "address": "Single(HR4901,HR4902)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Relative Saturation Alarm Output",
+                    "address": "4903",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source A Relative Saturation Alarm Settings 1",
+            "type": 0
+        }
+    ]
+}

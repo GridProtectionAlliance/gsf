@@ -1,0 +1,178 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Record Date and Time (UTC) UNIX Format Low",
+                    "address": "8347",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time (UTC) UNIX Format High",
+                    "address": "8348",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time (UTC) UNIX Format",
+                    "address": "Uint32(HR8347,HR8348)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Record Number",
+                    "address": "8349",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Oil Source",
+                    "address": "8350",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Year",
+                    "address": "8351",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Month, Day",
+                    "address": "8352",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Time (UTC/Local): Hours, Minutes",
+                    "address": "8353",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Input Number",
+                    "address": "8354",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Type",
+                    "address": "8355",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Name [1]",
+                    "address": "8356",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Name [2]",
+                    "address": "8357",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Name [3]",
+                    "address": "8358",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Name [4]",
+                    "address": "8359",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Name [5]",
+                    "address": "8360",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Name",
+                    "address": "String(HR8356,HR8357,HR8358,HR8359,HR8360)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Digital Input 1 Result Status",
+                    "address": "8361",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Output Flags",
+                    "address": "8362",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 1 Value (ON/OFF)",
+                    "address": "8363",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Number of Digital Input 1 Transition Since Last Digital Input 1 Enable Low",
+                    "address": "8364",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Number of Digital Input 1 Transition Since Last Digital Input 1 Enable High",
+                    "address": "8365",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Number of Digital Input 1 Transition Since Last Digital Input 1 Enable",
+                    "address": "Single(HR8364,HR8365)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "8366",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "8367",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR8366,HR8367)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "8368",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "8369",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR8368,HR8369)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Digital Input 1 Last Record 1",
+            "type": 0
+        }
+    ]
+}

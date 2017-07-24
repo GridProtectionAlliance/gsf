@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Average 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 000-001",
+                    "address": "3568"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 002-003",
+                    "address": "3569"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 004-005",
+                    "address": "3570"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 006-007",
+                    "address": "3571"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 008-009",
+                    "address": "3572"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 010-011",
+                    "address": "3573"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 012-013",
+                    "address": "3574"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 014-015",
+                    "address": "3575"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 016-017",
+                    "address": "3576"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 018-019",
+                    "address": "3577"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 020-021",
+                    "address": "3578"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 022-023",
+                    "address": "3579"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 024-025",
+                    "address": "3580"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 026-027",
+                    "address": "3581"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 028-029",
+                    "address": "3582"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 030-031",
+                    "address": "3583"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 032-033",
+                    "address": "3584"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 034-035",
+                    "address": "3585"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 036-037",
+                    "address": "3586"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 038-039",
+                    "address": "3587"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 040-041",
+                    "address": "3588"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 042-043",
+                    "address": "3589"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 044-045",
+                    "address": "3590"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 046-047",
+                    "address": "3591"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 048-049",
+                    "address": "3592"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 050-051",
+                    "address": "3593"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 052-053",
+                    "address": "3594"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 054-055",
+                    "address": "3595"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 056-057",
+                    "address": "3596"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 058-059",
+                    "address": "3597"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 060-061",
+                    "address": "3598"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 062-063",
+                    "address": "3599"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 064-065",
+                    "address": "3600"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 066-067",
+                    "address": "3601"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 068-069",
+                    "address": "3602"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 070-071",
+                    "address": "3603"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 072-073",
+                    "address": "3604"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 074-075",
+                    "address": "3605"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 076-077",
+                    "address": "3606"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 078-079",
+                    "address": "3607"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 080-081",
+                    "address": "3608"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 082-083",
+                    "address": "3609"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 084-085",
+                    "address": "3610"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 086-087",
+                    "address": "3611"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 088-089",
+                    "address": "3612"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 090-091",
+                    "address": "3613"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 092-093",
+                    "address": "3614"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 094-095",
+                    "address": "3615"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 096-097",
+                    "address": "3616"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 098-099",
+                    "address": "3617"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 100-101",
+                    "address": "3618"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 102-103",
+                    "address": "3619"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 104-105",
+                    "address": "3620"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 106-107",
+                    "address": "3621"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 108-109",
+                    "address": "3622"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 110-111",
+                    "address": "3623"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 112-113",
+                    "address": "3624"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 114-115",
+                    "address": "3625"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 116-117",
+                    "address": "3626"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 118-119",
+                    "address": "3627"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 120-121",
+                    "address": "3628"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 122-123",
+                    "address": "3629"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 124-125",
+                    "address": "3630"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 126-127",
+                    "address": "3631"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 128-129",
+                    "address": "3632"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 130-131",
+                    "address": "3633"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 132-133",
+                    "address": "3634"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 134-135",
+                    "address": "3635"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 136-137",
+                    "address": "3636"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 138-139",
+                    "address": "3637"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 140-141",
+                    "address": "3638"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 142-143",
+                    "address": "3639"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 144-145",
+                    "address": "3640"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 146-147",
+                    "address": "3641"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 148-149",
+                    "address": "3642"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 150-151",
+                    "address": "3643"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 152-153",
+                    "address": "3644"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 154-155",
+                    "address": "3645"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 156-157",
+                    "address": "3646"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 158-159",
+                    "address": "3647"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 160-161",
+                    "address": "3648"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 162-163",
+                    "address": "3649"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 164-165",
+                    "address": "3650"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 166-167",
+                    "address": "3651"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 168-169",
+                    "address": "3652"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 170-171",
+                    "address": "3653"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 172-173",
+                    "address": "3654"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 174-175",
+                    "address": "3655"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 176-177",
+                    "address": "3656"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 178-179",
+                    "address": "3657"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 180-181",
+                    "address": "3658"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 182-183",
+                    "address": "3659"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 184-185",
+                    "address": "3660"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 186-187",
+                    "address": "3661"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 188-189",
+                    "address": "3662"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 190-191",
+                    "address": "3663"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 192-193",
+                    "address": "3664"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 194-195",
+                    "address": "3665"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 196-197",
+                    "address": "3666"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 198-199",
+                    "address": "3667"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Average 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 200-201",
+                    "address": "3668"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 202-203",
+                    "address": "3669"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 204-205",
+                    "address": "3670"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 206-207",
+                    "address": "3671"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 208-209",
+                    "address": "3672"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 210-211",
+                    "address": "3673"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 212-213",
+                    "address": "3674"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 214-215",
+                    "address": "3675"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 216-217",
+                    "address": "3676"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 218-219",
+                    "address": "3677"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 220-221",
+                    "address": "3678"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 222-223",
+                    "address": "3679"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 224-225",
+                    "address": "3680"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 226-227",
+                    "address": "3681"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 228-229",
+                    "address": "3682"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 230-231",
+                    "address": "3683"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 232-233",
+                    "address": "3684"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 234-235",
+                    "address": "3685"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 236-237",
+                    "address": "3686"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 238-239",
+                    "address": "3687"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 240-241",
+                    "address": "3688"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 242-243",
+                    "address": "3689"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 244-245",
+                    "address": "3690"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 246-247",
+                    "address": "3691"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 248-249",
+                    "address": "3692"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 250-251",
+                    "address": "3693"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 252-253",
+                    "address": "3694"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 254-255",
+                    "address": "3695"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 256-257",
+                    "address": "3696"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 258-259",
+                    "address": "3697"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 260-261",
+                    "address": "3698"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 262-263",
+                    "address": "3699"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 264-265",
+                    "address": "3700"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 266-267",
+                    "address": "3701"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 268-269",
+                    "address": "3702"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 270-271",
+                    "address": "3703"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 272-273",
+                    "address": "3704"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 274-275",
+                    "address": "3705"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 276-277",
+                    "address": "3706"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 278-279",
+                    "address": "3707"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 280-281",
+                    "address": "3708"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 282-283",
+                    "address": "3709"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 284-285",
+                    "address": "3710"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 286-287",
+                    "address": "3711"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 288-289",
+                    "address": "3712"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 290-291",
+                    "address": "3713"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 292-293",
+                    "address": "3714"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 294-295",
+                    "address": "3715"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 296-297",
+                    "address": "3716"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 298-299",
+                    "address": "3717"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 300-301",
+                    "address": "3718"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 302-303",
+                    "address": "3719"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 304-305",
+                    "address": "3720"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 306-307",
+                    "address": "3721"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 308-309",
+                    "address": "3722"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 310-311",
+                    "address": "3723"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 312-313",
+                    "address": "3724"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 314-315",
+                    "address": "3725"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 316-317",
+                    "address": "3726"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 318-319",
+                    "address": "3727"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 320-321",
+                    "address": "3728"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 322-323",
+                    "address": "3729"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 324-325",
+                    "address": "3730"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 326-327",
+                    "address": "3731"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 328-329",
+                    "address": "3732"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 330-331",
+                    "address": "3733"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 332-333",
+                    "address": "3734"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 334-335",
+                    "address": "3735"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 336-337",
+                    "address": "3736"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 338-339",
+                    "address": "3737"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 340-341",
+                    "address": "3738"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 342-343",
+                    "address": "3739"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 344-345",
+                    "address": "3740"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 346-347",
+                    "address": "3741"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 348-349",
+                    "address": "3742"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 350-351",
+                    "address": "3743"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 352-353",
+                    "address": "3744"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 354-355",
+                    "address": "3745"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 356-357",
+                    "address": "3746"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 358-359",
+                    "address": "3747"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 360-361",
+                    "address": "3748"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 362-363",
+                    "address": "3749"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 364-365",
+                    "address": "3750"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 366-367",
+                    "address": "3751"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 368-369",
+                    "address": "3752"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 370-371",
+                    "address": "3753"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 372-373",
+                    "address": "3754"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 374-375",
+                    "address": "3755"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 376-377",
+                    "address": "3756"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 378-379",
+                    "address": "3757"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 380-381",
+                    "address": "3758"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 382-383",
+                    "address": "3759"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 384-385",
+                    "address": "3760"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 386-387",
+                    "address": "3761"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 388-389",
+                    "address": "3762"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 390-391",
+                    "address": "3763"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 392-393",
+                    "address": "3764"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 394-395",
+                    "address": "3765"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 396-397",
+                    "address": "3766"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 398-399",
+                    "address": "3767"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Average 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 400-401",
+                    "address": "3768"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 402-403",
+                    "address": "3769"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 404-405",
+                    "address": "3770"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 406-407",
+                    "address": "3771"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 408-409",
+                    "address": "3772"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 410-411",
+                    "address": "3773"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 412-413",
+                    "address": "3774"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 414-415",
+                    "address": "3775"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 416-417",
+                    "address": "3776"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 418-419",
+                    "address": "3777"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 420-421",
+                    "address": "3778"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 422-423",
+                    "address": "3779"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 424-425",
+                    "address": "3780"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 426-427",
+                    "address": "3781"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 428-429",
+                    "address": "3782"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 430-431",
+                    "address": "3783"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 432-433",
+                    "address": "3784"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 434-435",
+                    "address": "3785"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 436-437",
+                    "address": "3786"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 438-439",
+                    "address": "3787"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 440-441",
+                    "address": "3788"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 442-443",
+                    "address": "3789"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 444-445",
+                    "address": "3790"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 446-447",
+                    "address": "3791"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 448-449",
+                    "address": "3792"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 450-451",
+                    "address": "3793"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 452-453",
+                    "address": "3794"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 454-455",
+                    "address": "3795"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 456-457",
+                    "address": "3796"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 458-459",
+                    "address": "3797"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 460-461",
+                    "address": "3798"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 462-463",
+                    "address": "3799"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 464-465",
+                    "address": "3800"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 466-467",
+                    "address": "3801"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 468-469",
+                    "address": "3802"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 470-471",
+                    "address": "3803"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 472-473",
+                    "address": "3804"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 474-475",
+                    "address": "3805"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 476-477",
+                    "address": "3806"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 478-479",
+                    "address": "3807"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 480-481",
+                    "address": "3808"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 482-483",
+                    "address": "3809"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 484-485",
+                    "address": "3810"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 486-487",
+                    "address": "3811"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 488-489",
+                    "address": "3812"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 490-491",
+                    "address": "3813"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 492-493",
+                    "address": "3814"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 494-495",
+                    "address": "3815"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 496-497",
+                    "address": "3816"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 498-499",
+                    "address": "3817"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 500-501",
+                    "address": "3818"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 502-503",
+                    "address": "3819"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 504-505",
+                    "address": "3820"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 506-507",
+                    "address": "3821"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 508-509",
+                    "address": "3822"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Bytes 510-511",
+                    "address": "3823"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,226 @@
+{
+    "sequences": [
+        {
+            "name": "String Input Bit 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 00-01",
+                    "address": "784"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 02-03",
+                    "address": "785"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 04-05",
+                    "address": "786"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 06-07",
+                    "address": "787"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 08-09",
+                    "address": "788"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 10-11",
+                    "address": "789"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 12-13",
+                    "address": "790"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 14-15",
+                    "address": "791"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 16-17",
+                    "address": "792"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 18-19",
+                    "address": "793"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 20-21",
+                    "address": "794"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 22-23",
+                    "address": "795"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 24-25",
+                    "address": "796"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 26-27",
+                    "address": "797"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 28-29",
+                    "address": "798"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 30-31",
+                    "address": "799"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 32-33",
+                    "address": "800"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 34-35",
+                    "address": "801"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 36-37",
+                    "address": "802"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 38-39",
+                    "address": "803"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 40-41",
+                    "address": "804"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 42-43",
+                    "address": "805"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 44-45",
+                    "address": "806"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 46-47",
+                    "address": "807"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 48-49",
+                    "address": "808"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 50-51",
+                    "address": "809"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 52-53",
+                    "address": "810"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 54-55",
+                    "address": "811"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 56-57",
+                    "address": "812"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 58-59",
+                    "address": "813"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 60-61",
+                    "address": "814"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Label Bytes 62-63",
+                    "address": "815"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Input Bit 2 Label",
+                    "address": "String(HR784,HR785,HR786,HR787,HR788,HR789,HR790,HR791,HR792,HR793,HR794,HR795,HR796,HR797,HR798,HR799,HR800,HR801,HR802,HR803,HR804,HR805,HR806,HR807,HR808,HR809,HR810,HR811,HR812,HR813,HR814,HR815)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 State",
+                    "address": "816"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Alarm",
+                    "address": "817"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 2 Limit (On/Off)",
+                    "address": "818"
+                }
+            ]
+        }
+    ]
+}

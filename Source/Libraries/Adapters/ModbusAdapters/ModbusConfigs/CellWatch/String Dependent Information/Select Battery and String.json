@@ -1,0 +1,22 @@
+{
+    "sequences": [
+        {
+            "type": 1,
+            "name": "Select Battery and String",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "52",
+                    "description": "Select Battery",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "53",
+                    "description": "Select String",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

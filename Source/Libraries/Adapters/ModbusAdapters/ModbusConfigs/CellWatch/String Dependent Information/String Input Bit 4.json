@@ -1,0 +1,226 @@
+{
+    "sequences": [
+        {
+            "name": "String Input Bit 4",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 00-01",
+                    "address": "880"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 02-03",
+                    "address": "881"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 04-05",
+                    "address": "882"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 06-07",
+                    "address": "883"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 08-09",
+                    "address": "884"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 10-11",
+                    "address": "885"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 12-13",
+                    "address": "886"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 14-15",
+                    "address": "887"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 16-17",
+                    "address": "888"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 18-19",
+                    "address": "889"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 20-21",
+                    "address": "890"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 22-23",
+                    "address": "891"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 24-25",
+                    "address": "892"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 26-27",
+                    "address": "893"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 28-29",
+                    "address": "894"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 30-31",
+                    "address": "895"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 32-33",
+                    "address": "896"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 34-35",
+                    "address": "897"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 36-37",
+                    "address": "898"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 38-39",
+                    "address": "899"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 40-41",
+                    "address": "900"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 42-43",
+                    "address": "901"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 44-45",
+                    "address": "902"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 46-47",
+                    "address": "903"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 48-49",
+                    "address": "904"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 50-51",
+                    "address": "905"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 52-53",
+                    "address": "906"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 54-55",
+                    "address": "907"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 56-57",
+                    "address": "908"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 58-59",
+                    "address": "909"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 60-61",
+                    "address": "910"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Label Bytes 62-63",
+                    "address": "911"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Input Bit 4 Label",
+                    "address": "String(HR880,HR881,HR882,HR883,HR884,HR885,HR886,HR887,HR888,HR889,HR890,HR891,HR892,HR893,HR894,HR895,HR896,HR897,HR898,HR899,HR900,HR901,HR902,HR903,HR904,HR905,HR906,HR907,HR908,HR909,HR910,HR911)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 State",
+                    "address": "912"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Alarm",
+                    "address": "913"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 4 Limit (On/Off)",
+                    "address": "914"
+                }
+            ]
+        }
+    ]
+}

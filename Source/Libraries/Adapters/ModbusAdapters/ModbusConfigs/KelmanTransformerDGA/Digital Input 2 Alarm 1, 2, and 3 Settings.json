@@ -1,0 +1,76 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Digital Input 2 Alarm 1 Max Level of Transition Count Low",
+                    "address": "2859",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 2 Alarm 1 Max Level of Transition Count High",
+                    "address": "2860",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 2 Alarm 1 Max Level of Transition Count",
+                    "address": "Single(HR2859,HR2860)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Digital Input 2 Alarm 1, 2, and 3 Settings 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Digital Input 2 Alarm 2 Max Level of Transition Count Low",
+                    "address": "2879",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 2 Alarm 2 Max Level of Transition Count High",
+                    "address": "2880",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 2 Alarm 2 Max Level of Transition Count",
+                    "address": "Single(HR2879,HR2880)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Digital Input 2 Alarm 1, 2, and 3 Settings 2",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Digital Input 2 Alarm 3 Max Level of Transition Count Low",
+                    "address": "2899",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 2 Alarm 3 Max Level of Transition Count High",
+                    "address": "2900",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Digital Input 2 Alarm 3 Max Level of Transition Count",
+                    "address": "Single(HR2899,HR2900)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Digital Input 2 Alarm 1, 2, and 3 Settings 3",
+            "type": 0
+        }
+    ]
+}

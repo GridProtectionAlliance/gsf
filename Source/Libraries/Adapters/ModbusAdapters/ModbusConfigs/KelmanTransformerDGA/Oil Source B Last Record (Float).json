@@ -1,0 +1,598 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Record Date and Time(UTC) in UNIX Format Low",
+                    "address": "5097",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time(UTC) in UNIX Format High",
+                    "address": "5098",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time(UTC) in UNIX Format",
+                    "address": "Uint32(HR5097,HR5098)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Record Number",
+                    "address": "5099",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Oil Source",
+                    "address": "5100",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Years",
+                    "address": "5101",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Months, Days",
+                    "address": "5102",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Time (UTC/Local): Hours, Minutes",
+                    "address": "5103",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Firmware Version",
+                    "address": "5104",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Host Firmware Version",
+                    "address": "5105",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Gas Conc. Level Alarm Status",
+                    "address": "5106",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Gas ROC Alarm Status",
+                    "address": "5107",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Transfix Status",
+                    "address": "5108",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Flags",
+                    "address": "5109",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA State (If Error Occurred)",
+                    "address": "5110",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes Low",
+                    "address": "5111",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes High",
+                    "address": "5112",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes",
+                    "address": "Single(HR5111,HR5112)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Measurement Duration (Seconds)",
+                    "address": "5113",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ratio Alarm Status",
+                    "address": "5114",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Hydrogen Conc. (PPM) Low",
+                    "address": "5115",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Hydrogen Conc. (PPM) High",
+                    "address": "5116",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Hydrogen Conc. (PPM)",
+                    "address": "Single(HR5115,HR5116)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Carbon Dioxide Conc. (PPM) Low",
+                    "address": "5117",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Carbon Dioxide Conc. (PPM) High",
+                    "address": "5118",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Carbon Dioxide Conc. (PPM)",
+                    "address": "Single(HR5117,HR5118)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Carbon Monoxide Conc. (PPM) Low",
+                    "address": "5119",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Carbon Monoxide Conc. (PPM) High",
+                    "address": "5120",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Carbon Monoxide Conc. (PPM)",
+                    "address": "Single(HR5119,HR5120)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ethylene Conc. (PPM) Low",
+                    "address": "5121",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ethylene Conc. (PPM) High",
+                    "address": "5122",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ethylene Conc. (PPM)",
+                    "address": "Single(HR5121,HR5122)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ethane Conc. (PPM) Low",
+                    "address": "5123",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ethane Conc. (PPM) High",
+                    "address": "5124",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ethane Conc. (PPM)",
+                    "address": "Single(HR5123,HR5124)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Methane Conc. (PPM) Low",
+                    "address": "5125",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Methane Conc. (PPM) High",
+                    "address": "5126",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Methane Conc. (PPM)",
+                    "address": "Single(HR5125,HR5126)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Acetylene Conc. (PPM) Low",
+                    "address": "5127",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Acetylene Conc. (PPM) High",
+                    "address": "5128",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Acetylene Conc. (PPM)",
+                    "address": "Single(HR5127,HR5128)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Water Conc. (PPM) Low",
+                    "address": "5129",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Water Conc. (PPM) High",
+                    "address": "5130",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Water Conc. (PPM)",
+                    "address": "Single(HR5129,HR5130)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Oxygen Conc. (PPM) Low",
+                    "address": "5131",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Oxygen Conc. (PPM) High",
+                    "address": "5132",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Oxygen Conc. (PPM)",
+                    "address": "Single(HR5131,HR5132)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Total Disolved Combustible Gas Conc. (PPM) Low",
+                    "address": "5133",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Total Disolved Combustible Gas Conc. (PPM) High",
+                    "address": "5134",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Total Disolved Combustible Gas Conc. (PPM)",
+                    "address": "Single(HR5133,HR5134)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Nitrogen Conc. (PPM) Low",
+                    "address": "5135",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Nitrogen Conc. (PPM) High",
+                    "address": "5136",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Nitrogen Conc. (PPM)",
+                    "address": "Single(HR5135,HR5136)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Total Dissolved Gas Conc. (PPM) Low",
+                    "address": "5137",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Total Dissolved Gas Conc. (PPM) High",
+                    "address": "5138",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Total Dissolved Gas Conc. (PPM)",
+                    "address": "Single(HR5137,HR5138)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Oil Pressure (kPa) Low",
+                    "address": "5139",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Oil Pressure (kPa) High",
+                    "address": "5140",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Oil Pressure (kPa)",
+                    "address": "Single(HR5139,HR5140)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Oil Temperature (C) Low",
+                    "address": "5141",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Oil Temperature (C) High",
+                    "address": "5142",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Oil Temperature (C)",
+                    "address": "Single(HR5141,HR5142)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ambient Temperature (C) Low",
+                    "address": "5143",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ambient Temperature (C) High",
+                    "address": "5144",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ambient Temperature (C)",
+                    "address": "Single(HR5143,HR5144)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Normalisation Temperature (C) Low",
+                    "address": "5145",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Normalisation Temperature (C) High",
+                    "address": "5146",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Normalisation Temperature (C)",
+                    "address": "Single(HR5145,HR5146)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Analog Input 1 (Transformer Load) Low",
+                    "address": "5147",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 1 (Transformer Load) High",
+                    "address": "5148",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 1 (Transformer Load)",
+                    "address": "Single(HR5147,HR5148)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Analog Input 2 Low",
+                    "address": "5149",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 2 High",
+                    "address": "5150",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 2",
+                    "address": "Single(HR5149,HR5150)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Analog Input 3 Low",
+                    "address": "5151",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 3 High",
+                    "address": "5152",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 3",
+                    "address": "Single(HR5151,HR5152)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Analog Input 4 Low",
+                    "address": "5153",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 4 High",
+                    "address": "5154",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 4",
+                    "address": "Single(HR5153,HR5154)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Analog Input 5 Low",
+                    "address": "5155",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 5 High",
+                    "address": "5156",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 5",
+                    "address": "Single(HR5155,HR5156)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Analog Input 6 Low",
+                    "address": "5157",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 6 High",
+                    "address": "5158",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Analog Input 6",
+                    "address": "Single(HR5157,HR5158)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Spare Register Low",
+                    "address": "5159",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Spare Register High",
+                    "address": "5160",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Spare Register",
+                    "address": "Single(HR5159,HR5160)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B ESHL (Estimated Safe Handling Limit) (%) Low",
+                    "address": "5161",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B ESHL (Estimated Safe Handling Limit) (%) High",
+                    "address": "5162",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B ESHL (Estimated Safe Handling Limit) (%)",
+                    "address": "Single(HR5161,HR5162)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Relative Saturation (%) Low",
+                    "address": "5163",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Relative Saturation (%) High",
+                    "address": "5164",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Relative Saturation (%)",
+                    "address": "Single(HR5163,HR5164)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B TDH (Total Dissolved Hydrocarbons (PPM) Low",
+                    "address": "5165",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B TDH (Total Dissolved Hydrocarbons (PPM) High",
+                    "address": "5166",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B TDH (Total Dissolved Hydrocarbons (PPM)",
+                    "address": "Single(HR5165,HR5166)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Oil Source B Last Record (Float) 1",
+            "type": 0
+        }
+    ]
+}

@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Status 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 000-001",
+                    "address": "4080"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 002-003",
+                    "address": "4081"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 004-005",
+                    "address": "4082"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 006-007",
+                    "address": "4083"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 008-009",
+                    "address": "4084"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 010-011",
+                    "address": "4085"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 012-013",
+                    "address": "4086"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 014-015",
+                    "address": "4087"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 016-017",
+                    "address": "4088"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 018-019",
+                    "address": "4089"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 020-021",
+                    "address": "4090"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 022-023",
+                    "address": "4091"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 024-025",
+                    "address": "4092"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 026-027",
+                    "address": "4093"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 028-029",
+                    "address": "4094"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 030-031",
+                    "address": "4095"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 032-033",
+                    "address": "4096"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 034-035",
+                    "address": "4097"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 036-037",
+                    "address": "4098"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 038-039",
+                    "address": "4099"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 040-041",
+                    "address": "4100"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 042-043",
+                    "address": "4101"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 044-045",
+                    "address": "4102"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 046-047",
+                    "address": "4103"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 048-049",
+                    "address": "4104"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 050-051",
+                    "address": "4105"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 052-053",
+                    "address": "4106"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 054-055",
+                    "address": "4107"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 056-057",
+                    "address": "4108"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 058-059",
+                    "address": "4109"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 060-061",
+                    "address": "4110"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 062-063",
+                    "address": "4111"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 064-065",
+                    "address": "4112"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 066-067",
+                    "address": "4113"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 068-069",
+                    "address": "4114"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 070-071",
+                    "address": "4115"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 072-073",
+                    "address": "4116"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 074-075",
+                    "address": "4117"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 076-077",
+                    "address": "4118"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 078-079",
+                    "address": "4119"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 080-081",
+                    "address": "4120"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 082-083",
+                    "address": "4121"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 084-085",
+                    "address": "4122"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 086-087",
+                    "address": "4123"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 088-089",
+                    "address": "4124"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 090-091",
+                    "address": "4125"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 092-093",
+                    "address": "4126"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 094-095",
+                    "address": "4127"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 096-097",
+                    "address": "4128"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 098-099",
+                    "address": "4129"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 100-101",
+                    "address": "4130"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 102-103",
+                    "address": "4131"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 104-105",
+                    "address": "4132"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 106-107",
+                    "address": "4133"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 108-109",
+                    "address": "4134"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 110-111",
+                    "address": "4135"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 112-113",
+                    "address": "4136"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 114-115",
+                    "address": "4137"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 116-117",
+                    "address": "4138"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 118-119",
+                    "address": "4139"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 120-121",
+                    "address": "4140"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 122-123",
+                    "address": "4141"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 124-125",
+                    "address": "4142"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 126-127",
+                    "address": "4143"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 128-129",
+                    "address": "4144"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 130-131",
+                    "address": "4145"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 132-133",
+                    "address": "4146"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 134-135",
+                    "address": "4147"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 136-137",
+                    "address": "4148"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 138-139",
+                    "address": "4149"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 140-141",
+                    "address": "4150"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 142-143",
+                    "address": "4151"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 144-145",
+                    "address": "4152"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 146-147",
+                    "address": "4153"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 148-149",
+                    "address": "4154"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 150-151",
+                    "address": "4155"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 152-153",
+                    "address": "4156"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 154-155",
+                    "address": "4157"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 156-157",
+                    "address": "4158"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 158-159",
+                    "address": "4159"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 160-161",
+                    "address": "4160"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 162-163",
+                    "address": "4161"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 164-165",
+                    "address": "4162"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 166-167",
+                    "address": "4163"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 168-169",
+                    "address": "4164"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 170-171",
+                    "address": "4165"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 172-173",
+                    "address": "4166"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 174-175",
+                    "address": "4167"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 176-177",
+                    "address": "4168"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 178-179",
+                    "address": "4169"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 180-181",
+                    "address": "4170"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 182-183",
+                    "address": "4171"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 184-185",
+                    "address": "4172"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 186-187",
+                    "address": "4173"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 188-189",
+                    "address": "4174"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 190-191",
+                    "address": "4175"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 192-193",
+                    "address": "4176"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 194-195",
+                    "address": "4177"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 196-197",
+                    "address": "4178"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 198-199",
+                    "address": "4179"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Status 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 200-201",
+                    "address": "4180"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 202-203",
+                    "address": "4181"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 204-205",
+                    "address": "4182"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 206-207",
+                    "address": "4183"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 208-209",
+                    "address": "4184"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 210-211",
+                    "address": "4185"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 212-213",
+                    "address": "4186"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 214-215",
+                    "address": "4187"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 216-217",
+                    "address": "4188"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 218-219",
+                    "address": "4189"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 220-221",
+                    "address": "4190"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 222-223",
+                    "address": "4191"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 224-225",
+                    "address": "4192"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 226-227",
+                    "address": "4193"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 228-229",
+                    "address": "4194"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 230-231",
+                    "address": "4195"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 232-233",
+                    "address": "4196"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 234-235",
+                    "address": "4197"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 236-237",
+                    "address": "4198"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 238-239",
+                    "address": "4199"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 240-241",
+                    "address": "4200"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 242-243",
+                    "address": "4201"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 244-245",
+                    "address": "4202"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 246-247",
+                    "address": "4203"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 248-249",
+                    "address": "4204"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 250-251",
+                    "address": "4205"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 252-253",
+                    "address": "4206"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 254-255",
+                    "address": "4207"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 256-257",
+                    "address": "4208"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 258-259",
+                    "address": "4209"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 260-261",
+                    "address": "4210"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 262-263",
+                    "address": "4211"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 264-265",
+                    "address": "4212"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 266-267",
+                    "address": "4213"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 268-269",
+                    "address": "4214"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 270-271",
+                    "address": "4215"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 272-273",
+                    "address": "4216"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 274-275",
+                    "address": "4217"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 276-277",
+                    "address": "4218"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 278-279",
+                    "address": "4219"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 280-281",
+                    "address": "4220"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 282-283",
+                    "address": "4221"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 284-285",
+                    "address": "4222"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 286-287",
+                    "address": "4223"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 288-289",
+                    "address": "4224"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 290-291",
+                    "address": "4225"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 292-293",
+                    "address": "4226"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 294-295",
+                    "address": "4227"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 296-297",
+                    "address": "4228"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 298-299",
+                    "address": "4229"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 300-301",
+                    "address": "4230"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 302-303",
+                    "address": "4231"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 304-305",
+                    "address": "4232"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 306-307",
+                    "address": "4233"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 308-309",
+                    "address": "4234"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 310-311",
+                    "address": "4235"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 312-313",
+                    "address": "4236"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 314-315",
+                    "address": "4237"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 316-317",
+                    "address": "4238"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 318-319",
+                    "address": "4239"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 320-321",
+                    "address": "4240"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 322-323",
+                    "address": "4241"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 324-325",
+                    "address": "4242"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 326-327",
+                    "address": "4243"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 328-329",
+                    "address": "4244"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 330-331",
+                    "address": "4245"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 332-333",
+                    "address": "4246"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 334-335",
+                    "address": "4247"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 336-337",
+                    "address": "4248"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 338-339",
+                    "address": "4249"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 340-341",
+                    "address": "4250"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 342-343",
+                    "address": "4251"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 344-345",
+                    "address": "4252"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 346-347",
+                    "address": "4253"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 348-349",
+                    "address": "4254"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 350-351",
+                    "address": "4255"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 352-353",
+                    "address": "4256"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 354-355",
+                    "address": "4257"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 356-357",
+                    "address": "4258"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 358-359",
+                    "address": "4259"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 360-361",
+                    "address": "4260"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 362-363",
+                    "address": "4261"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 364-365",
+                    "address": "4262"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 366-367",
+                    "address": "4263"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 368-369",
+                    "address": "4264"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 370-371",
+                    "address": "4265"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 372-373",
+                    "address": "4266"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 374-375",
+                    "address": "4267"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 376-377",
+                    "address": "4268"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 378-379",
+                    "address": "4269"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 380-381",
+                    "address": "4270"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 382-383",
+                    "address": "4271"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 384-385",
+                    "address": "4272"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 386-387",
+                    "address": "4273"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 388-389",
+                    "address": "4274"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 390-391",
+                    "address": "4275"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 392-393",
+                    "address": "4276"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 394-395",
+                    "address": "4277"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 396-397",
+                    "address": "4278"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 398-399",
+                    "address": "4279"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Status 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 400-401",
+                    "address": "4280"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 402-403",
+                    "address": "4281"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 404-405",
+                    "address": "4282"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 406-407",
+                    "address": "4283"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 408-409",
+                    "address": "4284"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 410-411",
+                    "address": "4285"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 412-413",
+                    "address": "4286"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 414-415",
+                    "address": "4287"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 416-417",
+                    "address": "4288"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 418-419",
+                    "address": "4289"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 420-421",
+                    "address": "4290"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 422-423",
+                    "address": "4291"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 424-425",
+                    "address": "4292"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 426-427",
+                    "address": "4293"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 428-429",
+                    "address": "4294"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 430-431",
+                    "address": "4295"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 432-433",
+                    "address": "4296"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 434-435",
+                    "address": "4297"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 436-437",
+                    "address": "4298"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 438-439",
+                    "address": "4299"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 440-441",
+                    "address": "4300"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 442-443",
+                    "address": "4301"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 444-445",
+                    "address": "4302"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 446-447",
+                    "address": "4303"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 448-449",
+                    "address": "4304"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 450-451",
+                    "address": "4305"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 452-453",
+                    "address": "4306"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 454-455",
+                    "address": "4307"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 456-457",
+                    "address": "4308"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 458-459",
+                    "address": "4309"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 460-461",
+                    "address": "4310"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 462-463",
+                    "address": "4311"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 464-465",
+                    "address": "4312"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 466-467",
+                    "address": "4313"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 468-469",
+                    "address": "4314"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 470-471",
+                    "address": "4315"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 472-473",
+                    "address": "4316"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 474-475",
+                    "address": "4317"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 476-477",
+                    "address": "4318"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 478-479",
+                    "address": "4319"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 480-481",
+                    "address": "4320"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 482-483",
+                    "address": "4321"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 484-485",
+                    "address": "4322"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 486-487",
+                    "address": "4323"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 488-489",
+                    "address": "4324"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 490-491",
+                    "address": "4325"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 492-493",
+                    "address": "4326"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 494-495",
+                    "address": "4327"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 496-497",
+                    "address": "4328"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 498-499",
+                    "address": "4329"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 500-501",
+                    "address": "4330"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 502-503",
+                    "address": "4331"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 504-505",
+                    "address": "4332"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 506-507",
+                    "address": "4333"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 508-509",
+                    "address": "4334"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Status Bytes 510-511",
+                    "address": "4335"
+                }
+            ]
+        }
+    ]
+}

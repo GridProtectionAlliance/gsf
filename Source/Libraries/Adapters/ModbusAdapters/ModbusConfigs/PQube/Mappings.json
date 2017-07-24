@@ -1,0 +1,2356 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "L1 To Earth Low",
+                    "address": "7000",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Earth High",
+                    "address": "7001",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Earth (RMS Volts)",
+                    "address": "Single(HR7000,HR7001)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Earth Low",
+                    "address": "7002",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Earth High",
+                    "address": "7003",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Earth (RMS Volts)",
+                    "address": "Single(HR7002,HR7003)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Earth Low",
+                    "address": "7004",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Earth High",
+                    "address": "7005",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Earth (RMS Volts)",
+                    "address": "Single(HR7004,HR7005)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Neutral To Earth Low",
+                    "address": "7006",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Neutral To Earth High",
+                    "address": "7007",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Neutral To Earth (RMS Volts)",
+                    "address": "Single(HR7006,HR7007)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral Low",
+                    "address": "7008",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral High",
+                    "address": "7009",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral (RMS Volts)",
+                    "address": "Single(HR7008,HR7009)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Low",
+                    "address": "7010",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral High",
+                    "address": "7011",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral (RMS Volts)",
+                    "address": "Single(HR7010,HR7011)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Low",
+                    "address": "7012",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral High",
+                    "address": "7013",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral (RMS Volts)",
+                    "address": "Single(HR7012,HR7013)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To L2 Low",
+                    "address": "7014",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To L2 High",
+                    "address": "7015",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To L2 (RMS Volts)",
+                    "address": "Single(HR7014,HR7015)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To L3 Low",
+                    "address": "7016",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To L3 High",
+                    "address": "7017",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To L3 (RMS Volts)",
+                    "address": "Single(HR7016,HR7017)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To L1 Low",
+                    "address": "7018",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To L1 High",
+                    "address": "7019",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To L1 (RMS Volts)",
+                    "address": "Single(HR7018,HR7019)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog1 To Earth Low",
+                    "address": "7020",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog1 To Earth High",
+                    "address": "7021",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog1 To Earth (RMS Volts)",
+                    "address": "Single(HR7020,HR7021)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog2 To Earth Low",
+                    "address": "7022",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog2 To Earth High",
+                    "address": "7023",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog2 To Earth (RMS Volts)",
+                    "address": "Single(HR7022,HR7023)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog1 To Analog2 Low",
+                    "address": "7024",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog1 To Analog2 High",
+                    "address": "7025",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Analog1 To Analog2 (RMS Volts)",
+                    "address": "Single(HR7024,HR7025)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Frequency Low",
+                    "address": "7026",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Frequency High",
+                    "address": "7027",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Frequency (Hertz)",
+                    "address": "Single(HR7026,HR7027)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Low",
+                    "address": "7028",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current High",
+                    "address": "7029",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current (RMS Amps)",
+                    "address": "Single(HR7028,HR7029)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Low",
+                    "address": "7030",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current High",
+                    "address": "7031",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current (RMS Amps)",
+                    "address": "Single(HR7030,HR7031)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Low",
+                    "address": "7032",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current High",
+                    "address": "7033",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current (RMS Amps)",
+                    "address": "Single(HR7032,HR7033)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Neutral Current Low",
+                    "address": "7034",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Neutral Current High",
+                    "address": "7035",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Neutral Current (RMS Amps)",
+                    "address": "Single(HR7034,HR7035)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Power Low",
+                    "address": "7036",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Power High",
+                    "address": "7037",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Power (Watts)",
+                    "address": "Single(HR7036,HR7037)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Apparent Power Low",
+                    "address": "7038",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Apparent Power High",
+                    "address": "7039",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Apparent Power (VA)",
+                    "address": "Single(HR7038,HR7039)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Digital Input Low",
+                    "address": "7040",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Digital Input High",
+                    "address": "7041",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Digital Input",
+                    "address": "Single(HR7040,HR7041)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(1 Cycle) Low",
+                    "address": "7042",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(1 Cycle) High",
+                    "address": "7043",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(1 Cycle) (RMS Amps)",
+                    "address": "Single(HR7042,HR7043)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(1 Minute Low",
+                    "address": "7044",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(1 Minute High",
+                    "address": "7045",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(1 Minute (RMS Amps)",
+                    "address": "Single(HR7044,HR7045)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(N Minutes) Low",
+                    "address": "7046",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(N Minutes) High",
+                    "address": "7047",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current(N Minutes) (RMS Amps)",
+                    "address": "Single(HR7046,HR7047)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(1 Cycle) Low",
+                    "address": "7048",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(1 Cycle) High",
+                    "address": "7049",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(1 Cycle) (Watts)",
+                    "address": "Single(HR7048,HR7049)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(1 Minute) Low",
+                    "address": "7050",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(1 Minute) High",
+                    "address": "7051",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(1 Minute) (Watts)",
+                    "address": "Single(HR7050,HR7051)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(N Minutes) Low",
+                    "address": "7052",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(N Minutes) High",
+                    "address": "7053",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power(N Minutes) (Watts)",
+                    "address": "Single(HR7052,HR7053)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(1 Cycle) Low",
+                    "address": "7054",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(1 Cycle) High",
+                    "address": "7055",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(1 Cycle)",
+                    "address": "Single(HR7054,HR7055)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(1 Minute) Low",
+                    "address": "7056",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(1 Minute) High",
+                    "address": "7057",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(1 Minute)",
+                    "address": "Single(HR7056,HR7057)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(N Minutes) Low",
+                    "address": "7058",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(N Minutes) High",
+                    "address": "7059",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA(N Minutes)",
+                    "address": "Single(HR7058,HR7059)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Energy Low",
+                    "address": "7060",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Energy High",
+                    "address": "7061",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Energy (Wh)",
+                    "address": "Single(HR7060,HR7061)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Apparent Energy Low",
+                    "address": "7062",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Apparent Energy High",
+                    "address": "7063",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Apparent Energy (VAh)",
+                    "address": "Single(HR7062,HR7063)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Voltage THD Low",
+                    "address": "7064",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Voltage THD High",
+                    "address": "7065",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Voltage THD (%)",
+                    "address": "Single(HR7064,HR7065)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Current TDD Low",
+                    "address": "7066",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Current TDD High",
+                    "address": "7067",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Current TDD (RMS Amps)",
+                    "address": "Single(HR7066,HR7067)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "ANSI Voltage Unbalance Low",
+                    "address": "7068",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "ANSI Voltage Unbalance High",
+                    "address": "7069",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "ANSI Voltage Unbalance (%)",
+                    "address": "Single(HR7068,HR7069)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "ANSI Current Unbalance Low",
+                    "address": "7070",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "ANSI Current Unbalance High",
+                    "address": "7071",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "ANSI Current Unbalance (%)",
+                    "address": "Single(HR7070,HR7071)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (Instantaneous) Low",
+                    "address": "7072",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (Instantaneous) High",
+                    "address": "7073",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (Instantaneous)",
+                    "address": "Single(HR7072,HR7073)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (10 Minutes) Low",
+                    "address": "7074",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (10 Minutes) High",
+                    "address": "7075",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (10 Minutes)",
+                    "address": "Single(HR7074,HR7075)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (2 Hours) Low",
+                    "address": "7076",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (2 Hours) High",
+                    "address": "7077",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Flicker (2 Hours)",
+                    "address": "Single(HR7076,HR7077)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "New Event Recordings",
+                    "address": "7078",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "New Trend Recordings",
+                    "address": "7079",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Volt-Amps Reactive Low",
+                    "address": "7080",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Volt-Amps Reactive High",
+                    "address": "7081",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Volt-Amps Reactive (VAR)",
+                    "address": "Single(HR7080,HR7081)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "True Power Factor Low",
+                    "address": "7082",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "True Power Factor High",
+                    "address": "7083",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "True Power Factor",
+                    "address": "Single(HR7082,HR7083)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Temperature Probe 1 Low",
+                    "address": "7084",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Temperature Probe 1 High",
+                    "address": "7085",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Temperature Probe 1 (Celsius)",
+                    "address": "Single(HR7084,HR7085)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Humidity Probe 1 Low",
+                    "address": "7086",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Humidity Probe 1 High",
+                    "address": "7087",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Humidity Probe 1 (%RH)",
+                    "address": "Single(HR7086,HR7087)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Temperature Probe 2 Low",
+                    "address": "7088",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Temperature Probe 2 High",
+                    "address": "7089",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Temperature Probe 2 (Celsius)",
+                    "address": "Single(HR7088,HR7089)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Humidity Probe 2 Low",
+                    "address": "7090",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Humidity Probe 2 High",
+                    "address": "7091",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Humidity Probe 2 (%RH)",
+                    "address": "Single(HR7090,HR7091)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CO2 Rate Low",
+                    "address": "7092",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CO2 Rate High",
+                    "address": "7093",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CO2 Rate (Grams per Hour)",
+                    "address": "Single(HR7092,HR7093)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CO2 Accumulated Low",
+                    "address": "7094",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CO2 Accumulated High",
+                    "address": "7095",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CO2 Accumulated (Grams)",
+                    "address": "Single(HR7094,HR7095)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Earth Current Low",
+                    "address": "7096",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Earth Current High",
+                    "address": "7097",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Earth Current (RMS Amps)",
+                    "address": "Single(HR7096,HR7097)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral Voltage Fundamental Magnitude Low",
+                    "address": "7098",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral Voltage Fundamental Magnitude High",
+                    "address": "7099",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral Voltage Fundamental Magnitude (RMS Volts)",
+                    "address": "Single(HR7098,HR7099)",
+                    "recordType": 4,
+                    "dataValue": ""
+                }
+            ],
+            "type": 0,
+            "name": "PQube Register Mappings 1"
+        },
+        {
+            "records": [
+                {
+                    "description": "L1 To Neutral Voltage Fundamental Angle Low",
+                    "address": "7100",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral Voltage Fundamental Angle High",
+                    "address": "7101",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 To Neutral Voltage Fundamental Angle (degrees)",
+                    "address": "Single(HR7100,HR7101)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Voltage Fundamental Magnitude Low",
+                    "address": "7102",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Voltage Fundamental Magnitude High",
+                    "address": "7103",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Voltage Fundamental Magnitude (RMS Volts)",
+                    "address": "Single(HR7102,HR7103)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Voltage Fundamental Angle Low",
+                    "address": "7104",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Voltage Fundamental Angle High",
+                    "address": "7105",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 To Neutral Voltage Fundamental Angle (degrees)",
+                    "address": "Single(HR7104,HR7105)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Voltage Fundamental Magnitude Low",
+                    "address": "7106",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Voltage Fundamental Magnitude High",
+                    "address": "7107",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Voltage Fundamental Magnitude (RMS Volts)",
+                    "address": "Single(HR7106,HR7107)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Voltage Fundamental Angle Low",
+                    "address": "7108",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Voltage Fundamental Angle High",
+                    "address": "7109",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 To Neutral Voltage Fundamental Angle (degrees)",
+                    "address": "Single(HR7108,HR7109)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Fundamental Magnitude Low",
+                    "address": "7110",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Fundamental Magnitude High",
+                    "address": "7111",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Fundamental Magnitude (RMS Amps)",
+                    "address": "Single(HR7110,HR7111)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Fundamental Angle Low",
+                    "address": "7112",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Fundamental Angle High",
+                    "address": "7113",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current Fundamental Angle (degrees)",
+                    "address": "Single(HR7112,HR7113)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Fundamental Magnitude Low",
+                    "address": "7114",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Fundamental Magnitude High",
+                    "address": "7115",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Fundamental Magnitude (RMS Amps)",
+                    "address": "Single(HR7114,HR7115)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Fundamental Angle Low",
+                    "address": "7116",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Fundamental Angle High",
+                    "address": "7117",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current Fundamental Angle (degrees)",
+                    "address": "Single(HR7116,HR7117)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Fundamental Magnitude Low",
+                    "address": "7118",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Fundamental Magnitude High",
+                    "address": "7119",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Fundamental Magnitude (RMS Amps)",
+                    "address": "Single(HR7118,HR7119)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Fundamental Angle Low",
+                    "address": "7120",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Fundamental Angle High",
+                    "address": "7121",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current Fundamental Angle (degrees)",
+                    "address": "Single(HR7120,HR7121)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current \"Since\" Date (Year)",
+                    "address": "7122",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current \"Since\" Date (Month)",
+                    "address": "7123",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Current \"Since\" Date (Day)",
+                    "address": "7124",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power \"Since\" Date (Year)",
+                    "address": "7125",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power \"Since\" Date (Month)",
+                    "address": "7126",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak Power \"Since\" Date (Day)",
+                    "address": "7127",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA \"Since\" Date (Year)",
+                    "address": "7128",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA \"Since\" Date (Month)",
+                    "address": "7129",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Peak VA \"Since\" Date (Day)",
+                    "address": "7130",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Energy \"Since\" Date (Year)",
+                    "address": "7131",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Energy \"Since\" Date (Month)",
+                    "address": "7132",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Energy \"Since\" Date (Day)",
+                    "address": "7133",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Clock-Calendar (Year)",
+                    "address": "7134",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Clock-Calendar (Month)",
+                    "address": "7135",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Clock-Calendar (Day)",
+                    "address": "7136",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Clock-Calendar (Hour)",
+                    "address": "7137",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Clock-Calendar (Minute)",
+                    "address": "7138",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Clock-Calendar (Second)",
+                    "address": "7139",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Offset from UTC Low",
+                    "address": "7140",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Offset from UTC High",
+                    "address": "7141",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Offset from UTC",
+                    "address": "Single(HR7140,HR7141)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 To Neutral Volts Low",
+                    "address": "7142",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 To Neutral Volts High",
+                    "address": "7143",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 To Neutral Volts (RMS Volts)",
+                    "address": "Single(HR7142,HR7143)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 To Neutral Volts Low",
+                    "address": "7144",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 To Neutral Volts High",
+                    "address": "7145",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 To Neutral Volts (RMS Volts)",
+                    "address": "Single(HR7144,HR7145)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 To Neutral Volts Low",
+                    "address": "7146",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 To Neutral Volts High",
+                    "address": "7147",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 To Neutral Volts (RMS Volts)",
+                    "address": "Single(HR7146,HR7147)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 Current Low",
+                    "address": "7148",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 Current High",
+                    "address": "7149",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 Current (RMS Amps)",
+                    "address": "Single(HR7148,HR7149)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 Current Low",
+                    "address": "7150",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 Current High",
+                    "address": "7151",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 Current (RMS Amps)",
+                    "address": "Single(HR7150,HR7151)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 Current Low",
+                    "address": "7152",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 Current High",
+                    "address": "7153",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 Current (RMS Amps)",
+                    "address": "Single(HR7152,HR7153)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 To Neutral Voltage Angle Low",
+                    "address": "7154",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 To Neutral Voltage Angle High",
+                    "address": "7155",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 To Neutral Voltage Angle (degrees)",
+                    "address": "Single(HR7154,HR7155)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 To Neutral Voltage Angle Low",
+                    "address": "7156",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 To Neutral Voltage Angle High",
+                    "address": "7157",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 To Neutral Voltage Angle (degrees)",
+                    "address": "Single(HR7156,HR7157)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 To Neutral Voltage Angle Low",
+                    "address": "7158",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 To Neutral Voltage Angle High",
+                    "address": "7159",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 To Neutral Voltage Angle (degrees)",
+                    "address": "Single(HR7158,HR7159)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 Current Angle Low",
+                    "address": "7160",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 Current Angle High",
+                    "address": "7161",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L1 Current Angle (degrees)",
+                    "address": "Single(HR7160,HR7161)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 Current Angle Low",
+                    "address": "7162",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 Current Angle High",
+                    "address": "7163",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L2 Current Angle (degrees)",
+                    "address": "Single(HR7162,HR7163)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 Current Angle Low",
+                    "address": "7164",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 Current Angle High",
+                    "address": "7165",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic L3 Current Angle (degrees)",
+                    "address": "Single(HR7164,HR7165)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Harmonic Order of Interest",
+                    "address": "7166",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Status",
+                    "address": "7167",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Latitude Low",
+                    "address": "7168",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Latitude High",
+                    "address": "7169",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Latitude (degrees)",
+                    "address": "Single(HR7168,HR7169)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Longitude Low",
+                    "address": "7170",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Longitude High",
+                    "address": "7171",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Longitude (degrees)",
+                    "address": "Single(HR7170,HR7171)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "GPS Number of Sattelites",
+                    "address": "7172",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Unused",
+                    "address": "7173",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -V- Low",
+                    "address": "7174",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -V- High",
+                    "address": "7175",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -V- (%)",
+                    "address": "Single(HR7174,HR7175)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -A- Low",
+                    "address": "7176",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -A- High",
+                    "address": "7177",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -A- (%)",
+                    "address": "Single(HR7176,HR7177)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -V0- Low",
+                    "address": "7178",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -V0- High",
+                    "address": "7179",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -V0- (%)",
+                    "address": "Single(HR7178,HR7179)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -A0- Low",
+                    "address": "7180",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -A0- High",
+                    "address": "7181",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "IEC or GB Unbalance -A0- (%)",
+                    "address": "Single(HR7180,HR7181)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Power Low",
+                    "address": "7182",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Power High",
+                    "address": "7183",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Power (Watts)",
+                    "address": "Single(HR7182,HR7183)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Energy Low",
+                    "address": "7184",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Energy High",
+                    "address": "7185",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Energy (Wh)",
+                    "address": "Single(HR7184,HR7185)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "User Counter 1",
+                    "address": "7186",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "User Counter 2",
+                    "address": "7187",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "User Counter 3",
+                    "address": "7188",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "User Counter 4",
+                    "address": "7189",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "User Counter",
+                    "address": "Int64(HR7186,HR7187,HR7188,HR7189)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Trigger Snapshot",
+                    "address": "7190",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Reset Peak Measurements",
+                    "address": "7191",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Voltage THD Low",
+                    "address": "7192",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Voltage THD High",
+                    "address": "7193",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Voltage THD (%)",
+                    "address": "Single(HR7192,HR7193)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Voltage THD Low",
+                    "address": "7194",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Voltage THD High",
+                    "address": "7195",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Voltage THD (%)",
+                    "address": "Single(HR7194,HR7195)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Voltage THD Low",
+                    "address": "7196",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Voltage THD High",
+                    "address": "7197",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Voltage THD (%)",
+                    "address": "Single(HR7196,HR7197)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current TDD Low",
+                    "address": "7198",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current TDD High",
+                    "address": "7199",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Current TDD (RMS Amps)",
+                    "address": "Single(HR7198,HR7199)",
+                    "recordType": 4,
+                    "dataValue": ""
+                }
+            ],
+            "type": 0,
+            "name": "PQube Register Mappings 2"
+        },
+        {
+            "records": [
+                {
+                    "description": "L2 Current TDD Low",
+                    "address": "7200",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current TDD High",
+                    "address": "7201",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Current TDD (RMS Amps)",
+                    "address": "Single(HR7200,HR7201)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current TDD Low",
+                    "address": "7202",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current TDD High",
+                    "address": "7203",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Current TDD (RMS Amps)",
+                    "address": "Single(HR7202,HR7203)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Power Low",
+                    "address": "7204",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Power High",
+                    "address": "7205",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Power (Watts)",
+                    "address": "Single(HR7204,HR7205)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Power Low",
+                    "address": "7206",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Power High",
+                    "address": "7207",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Power (Watts)",
+                    "address": "Single(HR7206,HR7207)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Power Low",
+                    "address": "7208",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Power High",
+                    "address": "7209",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Power (Watts)",
+                    "address": "Single(HR7208,HR7209)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Apparent Power  Low",
+                    "address": "7210",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Apparent Power  High",
+                    "address": "7211",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Apparent Power  (VA)",
+                    "address": "Single(HR7210,HR7211)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Apparent Power  Low",
+                    "address": "7212",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Apparent Power  High",
+                    "address": "7213",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Apparent Power  (VA)",
+                    "address": "Single(HR7212,HR7213)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Apparent Power  Low",
+                    "address": "7214",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Apparent Power  High",
+                    "address": "7215",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Apparent Power  (VA)",
+                    "address": "Single(HR7214,HR7215)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Volt-Amps Reactive Low",
+                    "address": "7216",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Volt-Amps Reactive High",
+                    "address": "7217",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 Volt-Amps Reactive (VAR)",
+                    "address": "Single(HR7216,HR7217)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Volt-Amps Reactive Low",
+                    "address": "7218",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Volt-Amps Reactive High",
+                    "address": "7219",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Volt-Amps Reactive (VAR)",
+                    "address": "Single(HR7218,HR7219)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Volt-Amps Reactive Low",
+                    "address": "7220",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Volt-Amps Reactive High",
+                    "address": "7221",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Volt-Amps Reactive (VAR)",
+                    "address": "Single(HR7220,HR7221)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 True Power Factor Low",
+                    "address": "7222",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 True Power Factor High",
+                    "address": "7223",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L1 True Power Factor",
+                    "address": "Single(HR7222,HR7223)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 True Power Factor Low",
+                    "address": "7224",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 True Power Factor High",
+                    "address": "7225",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 True Power Factor",
+                    "address": "Single(HR7224,HR7225)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 True Power Factor Low",
+                    "address": "7226",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 True Power Factor High",
+                    "address": "7227",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 True Power Factor",
+                    "address": "Single(HR7226,HR7227)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (Instananeous) Low",
+                    "address": "7228",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (Instananeous) High",
+                    "address": "7229",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (Instananeous)",
+                    "address": "Single(HR7228,HR7229)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (Instananeous) Low",
+                    "address": "7230",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (Instananeous) High",
+                    "address": "7231",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (Instananeous)",
+                    "address": "Single(HR7230,HR7231)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (10 Minutes) Low",
+                    "address": "7232",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (10 Minutes) High",
+                    "address": "7233",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (10 Minutes)",
+                    "address": "Single(HR7232,HR7233)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (10 Minutes) Low",
+                    "address": "7234",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (10 Minutes) High",
+                    "address": "7235",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (10 Minutes)",
+                    "address": "Single(HR7234,HR7235)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (2 Hours) Low",
+                    "address": "7236",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (2 Hours) High",
+                    "address": "7237",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L2 Flicker (2 Hours)",
+                    "address": "Single(HR7236,HR7237)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (2 Hours) Low",
+                    "address": "7238",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (2 Hours) High",
+                    "address": "7239",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "L3 Flicker (2 Hours)",
+                    "address": "Single(HR7238,HR7239)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "VAR Hours Accumulated Low",
+                    "address": "7240",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "VAR Hours Accumulated High",
+                    "address": "7241",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "VAR Hours Accumulated",
+                    "address": "Single(HR7240,HR7241)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Energy \"Since\" Date (Year)",
+                    "address": "7242",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Energy \"Since\" Date (Month)",
+                    "address": "7243",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "DC Energy \"Since\" Date (Day)",
+                    "address": "7244",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Reset Energy Acculuators (Wh)",
+                    "address": "7245",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Reset Analog Energy Accumulators (Wh)",
+                    "address": "7246",
+                    "recordType": 3,
+                    "dataValue": ""
+                }
+            ],
+            "type": 0,
+            "name": "PQube Register Mappings 3"
+        },
+        {
+            "records": [
+                {
+                    "description": "PQube Firmware Major Revision",
+                    "address": "8000",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Firmware Minor Revision",
+                    "address": "8001",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Firmware Bug Fix Revision",
+                    "address": "8002",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Firmware Build Number",
+                    "address": "8003",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Line To Neutral Voltage Low",
+                    "address": "8004",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Line To Neutral Voltage High",
+                    "address": "8005",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Line To Neutral Voltage (RMS Volts)",
+                    "address": "Single(HR8004,HR8005)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Line To Line Voltage Low",
+                    "address": "8006",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Line To Line Voltage High",
+                    "address": "8007",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Line To Line Voltage (RMS Volts)",
+                    "address": "Single(HR8006,HR8007)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Frequency Low",
+                    "address": "8008",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Frequency High",
+                    "address": "8009",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Nominal Frequency (Hertz)",
+                    "address": "Single(HR8008,HR8009)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PT (Potential Transformer) Ratio Low",
+                    "address": "8010",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PT (Potential Transformer) Ratio High",
+                    "address": "8011",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PT (Potential Transformer) Ratio",
+                    "address": "Single(HR8010,HR8011)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CT (Current Transformer) Ratio Low",
+                    "address": "8012",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CT (Current Transformer) Ratio High",
+                    "address": "8013",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "CT (Current Transformer) Ratio (RMS Amps)",
+                    "address": "Single(HR8012,HR8013)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Serial Number Low",
+                    "address": "8014",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Serial Number High",
+                    "address": "8015",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "PQube Serial Number",
+                    "address": "Single(HR8014,HR8015)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "AN1 (Analog 1 To Earth) Multiplier Low",
+                    "address": "8016",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "AN1 (Analog 1 To Earth) Multiplier High",
+                    "address": "8017",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "AN1 (Analog 1 To Earth) Multiplier",
+                    "address": "Single(HR8016,HR8017)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "AN2 (Analog 2 To Earth) Multiplier Low",
+                    "address": "8018",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "AN2 (Analog 2 To Earth) Multiplier High",
+                    "address": "8019",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "AN2 (Analog 2 To Earth) Multiplier",
+                    "address": "Single(HR8018,HR8019)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Current Basis For TDD Low",
+                    "address": "8020",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Current Basis For TDD High",
+                    "address": "8021",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Current Basis For TDD (RMS Amps)",
+                    "address": "Single(HR8020,HR8021)",
+                    "recordType": 4,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Power Configuration",
+                    "address": "8022",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "Ground Point",
+                    "address": "8023",
+                    "recordType": 3,
+                    "dataValue": ""
+                },
+                {
+                    "description": "N-Minutes",
+                    "address": "8024",
+                    "recordType": 3,
+                    "dataValue": ""
+                }
+            ],
+            "type": 0,
+            "name": "PQube Static Information"
+        }
+    ]
+}

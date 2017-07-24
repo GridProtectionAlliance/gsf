@@ -1,0 +1,292 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Analog Input 4 Alarm 1 Min Limit of Value Low",
+                    "address": "3339",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1 Min Limit of Value High",
+                    "address": "3340",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1 Min Limit of Value",
+                    "address": "Single(HR3339,HR3340)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Max Limit of Value Low",
+                    "address": "3341",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Max Limit of Value High",
+                    "address": "3342",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Max Limit of Value",
+                    "address": "Single(HR3341,HR3342)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Max Positive Limit of RoC Low",
+                    "address": "3343",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Max Positive Limit of RoC High",
+                    "address": "3344",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Max Positive Limit of RoC",
+                    "address": "Single(HR3343,HR3344)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "3345",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "3346",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR3345,HR3346)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1Output Alerts",
+                    "address": "3347",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1 Time Window (hours) for ROC Calculation",
+                    "address": "3348",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 1 Min Number of Samples for ROC Calculation",
+                    "address": "3349",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Analog Input 4 Alarm 1, 2, and 3 Settings 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Analog Input 4 Alarm 2 Min Limit of Value Low",
+                    "address": "3359",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2 Min Limit of Value High",
+                    "address": "3360",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2 Min Limit of Value",
+                    "address": "Single(HR3359,HR3360)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Max Limit of Value Low",
+                    "address": "3361",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Max Limit of Value High",
+                    "address": "3362",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Max Limit of Value",
+                    "address": "Single(HR3361,HR3362)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Max Positive Limit of RoC Low",
+                    "address": "3363",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Max Positive Limit of RoC High",
+                    "address": "3364",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Max Positive Limit of RoC",
+                    "address": "Single(HR3363,HR3364)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "3365",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "3366",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR3365,HR3366)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2Output Alerts",
+                    "address": "3367",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2 Time Window (hours) for ROC Calculation",
+                    "address": "3368",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 2 Min Number of Samples for ROC Calculation",
+                    "address": "3369",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Analog Input 4 Alarm 1, 2, and 3 Settings 2",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Analog Input 4 Alarm 3 Min Limit of Value Low",
+                    "address": "3379",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3 Min Limit of Value High",
+                    "address": "3380",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3 Min Limit of Value",
+                    "address": "Single(HR3379,HR3380)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Max Limit of Value Low",
+                    "address": "3381",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Max Limit of Value High",
+                    "address": "3382",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Max Limit of Value",
+                    "address": "Single(HR3381,HR3382)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Max Positive Limit of RoC Low",
+                    "address": "3383",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Max Positive Limit of RoC High",
+                    "address": "3384",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Max Positive Limit of RoC",
+                    "address": "Single(HR3383,HR3384)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "3385",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "3386",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR3385,HR3386)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3Output Alerts",
+                    "address": "3387",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3 Time Window (hours) for ROC Calculation",
+                    "address": "3388",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 4 Alarm 3 Min Number of Samples for ROC Calculation",
+                    "address": "3389",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Analog Input 4 Alarm 1, 2, and 3 Settings 3",
+            "type": 0
+        }
+    ]
+}

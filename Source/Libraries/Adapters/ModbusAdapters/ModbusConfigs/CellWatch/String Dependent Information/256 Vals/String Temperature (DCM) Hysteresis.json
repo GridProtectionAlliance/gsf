@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Hysteresis 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42801",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42802",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42803",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42804",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42805",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42806",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42807",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42808",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42809",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42810",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42811",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42812",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42813",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42814",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42815",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42816",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42817",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42818",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42819",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42820",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42821",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42822",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42823",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42824",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42825",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42826",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42827",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42828",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42829",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42830",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42831",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42832",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42833",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42834",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42835",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42836",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42837",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42838",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42839",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42840",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42841",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42842",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42843",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42844",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42845",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42846",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42847",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42848",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42849",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42850",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42851",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42852",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42853",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42854",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42855",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42856",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42857",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42858",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42859",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42860",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42861",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42862",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42863",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42864",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42865",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42866",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42867",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42868",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42869",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42870",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42871",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42872",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42873",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42874",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42875",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42876",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42877",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42878",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42879",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42880",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42881",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42882",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42883",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42884",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42885",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42886",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42887",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42888",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42889",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42890",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42891",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42892",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42893",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42894",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42895",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42896",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42897",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42898",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42899",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42900",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Hysteresis 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42901",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42902",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42903",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42904",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42905",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42906",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42907",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42908",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42909",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42910",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42911",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42912",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42913",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42914",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42915",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42916",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42917",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42918",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42919",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42920",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42921",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42922",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42923",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42924",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42925",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42926",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42927",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42928",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42929",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42930",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42931",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42932",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42933",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42934",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42935",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42936",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42937",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42938",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42939",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42940",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42941",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42942",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42943",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42944",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42945",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42946",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42947",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42948",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42949",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42950",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42951",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42952",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42953",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42954",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42955",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42956",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42957",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42958",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42959",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42960",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42961",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42962",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42963",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42964",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42965",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42966",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42967",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42968",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42969",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42970",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42971",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42972",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42973",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42974",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42975",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42976",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42977",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42978",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42979",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42980",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42981",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42982",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42983",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42984",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42985",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42986",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42987",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42988",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42989",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42990",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42991",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42992",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42993",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42994",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42995",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42996",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42997",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42998",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42999",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43000",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Hysteresis 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "43001",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43002",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43003",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43004",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43005",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43006",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43007",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43008",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43009",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43010",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43011",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43012",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43013",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43014",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43015",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43016",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43017",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43018",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43019",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43020",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43021",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43022",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43023",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43024",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43025",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43026",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43027",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43028",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43029",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43030",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43031",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43032",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43033",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43034",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43035",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43036",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43037",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43038",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43039",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43040",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43041",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43042",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43043",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43044",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43045",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43046",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43047",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43048",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43049",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43050",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43051",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43052",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43053",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43054",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43055",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43056",
+                    "description": "String Temperature (DCM) Hysteresis Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

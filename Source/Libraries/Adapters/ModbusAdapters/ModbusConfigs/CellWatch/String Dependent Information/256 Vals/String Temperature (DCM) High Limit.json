@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) High Limit 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42289",
+                    "description": "String Temperature (DCM) High Limit Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42290",
+                    "description": "String Temperature (DCM) High Limit Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42291",
+                    "description": "String Temperature (DCM) High Limit Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42292",
+                    "description": "String Temperature (DCM) High Limit Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42293",
+                    "description": "String Temperature (DCM) High Limit Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42294",
+                    "description": "String Temperature (DCM) High Limit Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42295",
+                    "description": "String Temperature (DCM) High Limit Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42296",
+                    "description": "String Temperature (DCM) High Limit Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42297",
+                    "description": "String Temperature (DCM) High Limit Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42298",
+                    "description": "String Temperature (DCM) High Limit Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42299",
+                    "description": "String Temperature (DCM) High Limit Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42300",
+                    "description": "String Temperature (DCM) High Limit Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42301",
+                    "description": "String Temperature (DCM) High Limit Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42302",
+                    "description": "String Temperature (DCM) High Limit Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42303",
+                    "description": "String Temperature (DCM) High Limit Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42304",
+                    "description": "String Temperature (DCM) High Limit Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42305",
+                    "description": "String Temperature (DCM) High Limit Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42306",
+                    "description": "String Temperature (DCM) High Limit Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42307",
+                    "description": "String Temperature (DCM) High Limit Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42308",
+                    "description": "String Temperature (DCM) High Limit Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42309",
+                    "description": "String Temperature (DCM) High Limit Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42310",
+                    "description": "String Temperature (DCM) High Limit Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42311",
+                    "description": "String Temperature (DCM) High Limit Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42312",
+                    "description": "String Temperature (DCM) High Limit Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42313",
+                    "description": "String Temperature (DCM) High Limit Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42314",
+                    "description": "String Temperature (DCM) High Limit Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42315",
+                    "description": "String Temperature (DCM) High Limit Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42316",
+                    "description": "String Temperature (DCM) High Limit Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42317",
+                    "description": "String Temperature (DCM) High Limit Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42318",
+                    "description": "String Temperature (DCM) High Limit Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42319",
+                    "description": "String Temperature (DCM) High Limit Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42320",
+                    "description": "String Temperature (DCM) High Limit Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42321",
+                    "description": "String Temperature (DCM) High Limit Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42322",
+                    "description": "String Temperature (DCM) High Limit Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42323",
+                    "description": "String Temperature (DCM) High Limit Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42324",
+                    "description": "String Temperature (DCM) High Limit Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42325",
+                    "description": "String Temperature (DCM) High Limit Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42326",
+                    "description": "String Temperature (DCM) High Limit Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42327",
+                    "description": "String Temperature (DCM) High Limit Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42328",
+                    "description": "String Temperature (DCM) High Limit Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42329",
+                    "description": "String Temperature (DCM) High Limit Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42330",
+                    "description": "String Temperature (DCM) High Limit Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42331",
+                    "description": "String Temperature (DCM) High Limit Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42332",
+                    "description": "String Temperature (DCM) High Limit Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42333",
+                    "description": "String Temperature (DCM) High Limit Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42334",
+                    "description": "String Temperature (DCM) High Limit Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42335",
+                    "description": "String Temperature (DCM) High Limit Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42336",
+                    "description": "String Temperature (DCM) High Limit Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42337",
+                    "description": "String Temperature (DCM) High Limit Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42338",
+                    "description": "String Temperature (DCM) High Limit Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42339",
+                    "description": "String Temperature (DCM) High Limit Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42340",
+                    "description": "String Temperature (DCM) High Limit Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42341",
+                    "description": "String Temperature (DCM) High Limit Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42342",
+                    "description": "String Temperature (DCM) High Limit Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42343",
+                    "description": "String Temperature (DCM) High Limit Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42344",
+                    "description": "String Temperature (DCM) High Limit Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42345",
+                    "description": "String Temperature (DCM) High Limit Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42346",
+                    "description": "String Temperature (DCM) High Limit Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42347",
+                    "description": "String Temperature (DCM) High Limit Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42348",
+                    "description": "String Temperature (DCM) High Limit Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42349",
+                    "description": "String Temperature (DCM) High Limit Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42350",
+                    "description": "String Temperature (DCM) High Limit Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42351",
+                    "description": "String Temperature (DCM) High Limit Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42352",
+                    "description": "String Temperature (DCM) High Limit Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42353",
+                    "description": "String Temperature (DCM) High Limit Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42354",
+                    "description": "String Temperature (DCM) High Limit Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42355",
+                    "description": "String Temperature (DCM) High Limit Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42356",
+                    "description": "String Temperature (DCM) High Limit Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42357",
+                    "description": "String Temperature (DCM) High Limit Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42358",
+                    "description": "String Temperature (DCM) High Limit Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42359",
+                    "description": "String Temperature (DCM) High Limit Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42360",
+                    "description": "String Temperature (DCM) High Limit Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42361",
+                    "description": "String Temperature (DCM) High Limit Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42362",
+                    "description": "String Temperature (DCM) High Limit Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42363",
+                    "description": "String Temperature (DCM) High Limit Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42364",
+                    "description": "String Temperature (DCM) High Limit Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42365",
+                    "description": "String Temperature (DCM) High Limit Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42366",
+                    "description": "String Temperature (DCM) High Limit Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42367",
+                    "description": "String Temperature (DCM) High Limit Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42368",
+                    "description": "String Temperature (DCM) High Limit Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42369",
+                    "description": "String Temperature (DCM) High Limit Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42370",
+                    "description": "String Temperature (DCM) High Limit Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42371",
+                    "description": "String Temperature (DCM) High Limit Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42372",
+                    "description": "String Temperature (DCM) High Limit Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42373",
+                    "description": "String Temperature (DCM) High Limit Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42374",
+                    "description": "String Temperature (DCM) High Limit Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42375",
+                    "description": "String Temperature (DCM) High Limit Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42376",
+                    "description": "String Temperature (DCM) High Limit Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42377",
+                    "description": "String Temperature (DCM) High Limit Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42378",
+                    "description": "String Temperature (DCM) High Limit Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42379",
+                    "description": "String Temperature (DCM) High Limit Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42380",
+                    "description": "String Temperature (DCM) High Limit Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42381",
+                    "description": "String Temperature (DCM) High Limit Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42382",
+                    "description": "String Temperature (DCM) High Limit Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42383",
+                    "description": "String Temperature (DCM) High Limit Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42384",
+                    "description": "String Temperature (DCM) High Limit Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42385",
+                    "description": "String Temperature (DCM) High Limit Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42386",
+                    "description": "String Temperature (DCM) High Limit Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42387",
+                    "description": "String Temperature (DCM) High Limit Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42388",
+                    "description": "String Temperature (DCM) High Limit Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) High Limit 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42389",
+                    "description": "String Temperature (DCM) High Limit Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42390",
+                    "description": "String Temperature (DCM) High Limit Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42391",
+                    "description": "String Temperature (DCM) High Limit Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42392",
+                    "description": "String Temperature (DCM) High Limit Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42393",
+                    "description": "String Temperature (DCM) High Limit Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42394",
+                    "description": "String Temperature (DCM) High Limit Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42395",
+                    "description": "String Temperature (DCM) High Limit Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42396",
+                    "description": "String Temperature (DCM) High Limit Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42397",
+                    "description": "String Temperature (DCM) High Limit Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42398",
+                    "description": "String Temperature (DCM) High Limit Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42399",
+                    "description": "String Temperature (DCM) High Limit Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42400",
+                    "description": "String Temperature (DCM) High Limit Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42401",
+                    "description": "String Temperature (DCM) High Limit Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42402",
+                    "description": "String Temperature (DCM) High Limit Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42403",
+                    "description": "String Temperature (DCM) High Limit Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42404",
+                    "description": "String Temperature (DCM) High Limit Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42405",
+                    "description": "String Temperature (DCM) High Limit Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42406",
+                    "description": "String Temperature (DCM) High Limit Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42407",
+                    "description": "String Temperature (DCM) High Limit Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42408",
+                    "description": "String Temperature (DCM) High Limit Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42409",
+                    "description": "String Temperature (DCM) High Limit Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42410",
+                    "description": "String Temperature (DCM) High Limit Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42411",
+                    "description": "String Temperature (DCM) High Limit Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42412",
+                    "description": "String Temperature (DCM) High Limit Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42413",
+                    "description": "String Temperature (DCM) High Limit Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42414",
+                    "description": "String Temperature (DCM) High Limit Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42415",
+                    "description": "String Temperature (DCM) High Limit Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42416",
+                    "description": "String Temperature (DCM) High Limit Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42417",
+                    "description": "String Temperature (DCM) High Limit Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42418",
+                    "description": "String Temperature (DCM) High Limit Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42419",
+                    "description": "String Temperature (DCM) High Limit Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42420",
+                    "description": "String Temperature (DCM) High Limit Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42421",
+                    "description": "String Temperature (DCM) High Limit Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42422",
+                    "description": "String Temperature (DCM) High Limit Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42423",
+                    "description": "String Temperature (DCM) High Limit Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42424",
+                    "description": "String Temperature (DCM) High Limit Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42425",
+                    "description": "String Temperature (DCM) High Limit Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42426",
+                    "description": "String Temperature (DCM) High Limit Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42427",
+                    "description": "String Temperature (DCM) High Limit Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42428",
+                    "description": "String Temperature (DCM) High Limit Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42429",
+                    "description": "String Temperature (DCM) High Limit Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42430",
+                    "description": "String Temperature (DCM) High Limit Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42431",
+                    "description": "String Temperature (DCM) High Limit Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42432",
+                    "description": "String Temperature (DCM) High Limit Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42433",
+                    "description": "String Temperature (DCM) High Limit Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42434",
+                    "description": "String Temperature (DCM) High Limit Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42435",
+                    "description": "String Temperature (DCM) High Limit Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42436",
+                    "description": "String Temperature (DCM) High Limit Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42437",
+                    "description": "String Temperature (DCM) High Limit Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42438",
+                    "description": "String Temperature (DCM) High Limit Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42439",
+                    "description": "String Temperature (DCM) High Limit Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42440",
+                    "description": "String Temperature (DCM) High Limit Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42441",
+                    "description": "String Temperature (DCM) High Limit Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42442",
+                    "description": "String Temperature (DCM) High Limit Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42443",
+                    "description": "String Temperature (DCM) High Limit Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42444",
+                    "description": "String Temperature (DCM) High Limit Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42445",
+                    "description": "String Temperature (DCM) High Limit Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42446",
+                    "description": "String Temperature (DCM) High Limit Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42447",
+                    "description": "String Temperature (DCM) High Limit Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42448",
+                    "description": "String Temperature (DCM) High Limit Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42449",
+                    "description": "String Temperature (DCM) High Limit Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42450",
+                    "description": "String Temperature (DCM) High Limit Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42451",
+                    "description": "String Temperature (DCM) High Limit Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42452",
+                    "description": "String Temperature (DCM) High Limit Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42453",
+                    "description": "String Temperature (DCM) High Limit Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42454",
+                    "description": "String Temperature (DCM) High Limit Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42455",
+                    "description": "String Temperature (DCM) High Limit Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42456",
+                    "description": "String Temperature (DCM) High Limit Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42457",
+                    "description": "String Temperature (DCM) High Limit Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42458",
+                    "description": "String Temperature (DCM) High Limit Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42459",
+                    "description": "String Temperature (DCM) High Limit Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42460",
+                    "description": "String Temperature (DCM) High Limit Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42461",
+                    "description": "String Temperature (DCM) High Limit Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42462",
+                    "description": "String Temperature (DCM) High Limit Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42463",
+                    "description": "String Temperature (DCM) High Limit Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42464",
+                    "description": "String Temperature (DCM) High Limit Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42465",
+                    "description": "String Temperature (DCM) High Limit Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42466",
+                    "description": "String Temperature (DCM) High Limit Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42467",
+                    "description": "String Temperature (DCM) High Limit Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42468",
+                    "description": "String Temperature (DCM) High Limit Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42469",
+                    "description": "String Temperature (DCM) High Limit Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42470",
+                    "description": "String Temperature (DCM) High Limit Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42471",
+                    "description": "String Temperature (DCM) High Limit Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42472",
+                    "description": "String Temperature (DCM) High Limit Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42473",
+                    "description": "String Temperature (DCM) High Limit Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42474",
+                    "description": "String Temperature (DCM) High Limit Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42475",
+                    "description": "String Temperature (DCM) High Limit Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42476",
+                    "description": "String Temperature (DCM) High Limit Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42477",
+                    "description": "String Temperature (DCM) High Limit Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42478",
+                    "description": "String Temperature (DCM) High Limit Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42479",
+                    "description": "String Temperature (DCM) High Limit Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42480",
+                    "description": "String Temperature (DCM) High Limit Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42481",
+                    "description": "String Temperature (DCM) High Limit Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42482",
+                    "description": "String Temperature (DCM) High Limit Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42483",
+                    "description": "String Temperature (DCM) High Limit Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42484",
+                    "description": "String Temperature (DCM) High Limit Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42485",
+                    "description": "String Temperature (DCM) High Limit Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42486",
+                    "description": "String Temperature (DCM) High Limit Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42487",
+                    "description": "String Temperature (DCM) High Limit Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42488",
+                    "description": "String Temperature (DCM) High Limit Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) High Limit 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42489",
+                    "description": "String Temperature (DCM) High Limit Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42490",
+                    "description": "String Temperature (DCM) High Limit Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42491",
+                    "description": "String Temperature (DCM) High Limit Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42492",
+                    "description": "String Temperature (DCM) High Limit Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42493",
+                    "description": "String Temperature (DCM) High Limit Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42494",
+                    "description": "String Temperature (DCM) High Limit Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42495",
+                    "description": "String Temperature (DCM) High Limit Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42496",
+                    "description": "String Temperature (DCM) High Limit Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42497",
+                    "description": "String Temperature (DCM) High Limit Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42498",
+                    "description": "String Temperature (DCM) High Limit Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42499",
+                    "description": "String Temperature (DCM) High Limit Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42500",
+                    "description": "String Temperature (DCM) High Limit Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42501",
+                    "description": "String Temperature (DCM) High Limit Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42502",
+                    "description": "String Temperature (DCM) High Limit Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42503",
+                    "description": "String Temperature (DCM) High Limit Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42504",
+                    "description": "String Temperature (DCM) High Limit Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42505",
+                    "description": "String Temperature (DCM) High Limit Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42506",
+                    "description": "String Temperature (DCM) High Limit Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42507",
+                    "description": "String Temperature (DCM) High Limit Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42508",
+                    "description": "String Temperature (DCM) High Limit Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42509",
+                    "description": "String Temperature (DCM) High Limit Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42510",
+                    "description": "String Temperature (DCM) High Limit Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42511",
+                    "description": "String Temperature (DCM) High Limit Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42512",
+                    "description": "String Temperature (DCM) High Limit Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42513",
+                    "description": "String Temperature (DCM) High Limit Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42514",
+                    "description": "String Temperature (DCM) High Limit Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42515",
+                    "description": "String Temperature (DCM) High Limit Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42516",
+                    "description": "String Temperature (DCM) High Limit Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42517",
+                    "description": "String Temperature (DCM) High Limit Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42518",
+                    "description": "String Temperature (DCM) High Limit Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42519",
+                    "description": "String Temperature (DCM) High Limit Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42520",
+                    "description": "String Temperature (DCM) High Limit Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42521",
+                    "description": "String Temperature (DCM) High Limit Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42522",
+                    "description": "String Temperature (DCM) High Limit Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42523",
+                    "description": "String Temperature (DCM) High Limit Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42524",
+                    "description": "String Temperature (DCM) High Limit Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42525",
+                    "description": "String Temperature (DCM) High Limit Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42526",
+                    "description": "String Temperature (DCM) High Limit Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42527",
+                    "description": "String Temperature (DCM) High Limit Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42528",
+                    "description": "String Temperature (DCM) High Limit Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42529",
+                    "description": "String Temperature (DCM) High Limit Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42530",
+                    "description": "String Temperature (DCM) High Limit Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42531",
+                    "description": "String Temperature (DCM) High Limit Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42532",
+                    "description": "String Temperature (DCM) High Limit Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42533",
+                    "description": "String Temperature (DCM) High Limit Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42534",
+                    "description": "String Temperature (DCM) High Limit Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42535",
+                    "description": "String Temperature (DCM) High Limit Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42536",
+                    "description": "String Temperature (DCM) High Limit Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42537",
+                    "description": "String Temperature (DCM) High Limit Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42538",
+                    "description": "String Temperature (DCM) High Limit Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42539",
+                    "description": "String Temperature (DCM) High Limit Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42540",
+                    "description": "String Temperature (DCM) High Limit Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42541",
+                    "description": "String Temperature (DCM) High Limit Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42542",
+                    "description": "String Temperature (DCM) High Limit Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42543",
+                    "description": "String Temperature (DCM) High Limit Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42544",
+                    "description": "String Temperature (DCM) High Limit Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

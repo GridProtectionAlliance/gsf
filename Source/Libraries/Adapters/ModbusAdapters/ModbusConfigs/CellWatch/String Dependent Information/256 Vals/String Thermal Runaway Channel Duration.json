@@ -1,0 +1,4648 @@
+{
+    "sequences": [
+        {
+            "name": "String Thermal Runaway Channel Duration 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 000 LSW",
+                    "address": "49201"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 001 MSW",
+                    "address": "49202"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 002 LSW",
+                    "address": "49203"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 003 MSW",
+                    "address": "49204"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 004 LSW",
+                    "address": "49205"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 005 MSW",
+                    "address": "49206"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 006 LSW",
+                    "address": "49207"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 007 MSW",
+                    "address": "49208"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 008 LSW",
+                    "address": "49209"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 009 MSW",
+                    "address": "49210"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 010 LSW",
+                    "address": "49211"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 011 MSW",
+                    "address": "49212"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 012 LSW",
+                    "address": "49213"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 013 MSW",
+                    "address": "49214"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 014 LSW",
+                    "address": "49215"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 015 MSW",
+                    "address": "49216"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 016 LSW",
+                    "address": "49217"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 017 MSW",
+                    "address": "49218"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 018 LSW",
+                    "address": "49219"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 019 MSW",
+                    "address": "49220"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 020 LSW",
+                    "address": "49221"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 021 MSW",
+                    "address": "49222"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 022 LSW",
+                    "address": "49223"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 023 MSW",
+                    "address": "49224"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 024 LSW",
+                    "address": "49225"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 025 MSW",
+                    "address": "49226"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 026 LSW",
+                    "address": "49227"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 027 MSW",
+                    "address": "49228"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 028 LSW",
+                    "address": "49229"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 029 MSW",
+                    "address": "49230"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 030 LSW",
+                    "address": "49231"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 031 MSW",
+                    "address": "49232"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 032 LSW",
+                    "address": "49233"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 033 MSW",
+                    "address": "49234"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 034 LSW",
+                    "address": "49235"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 035 MSW",
+                    "address": "49236"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 036 LSW",
+                    "address": "49237"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 037 MSW",
+                    "address": "49238"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 038 LSW",
+                    "address": "49239"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 039 MSW",
+                    "address": "49240"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 040 LSW",
+                    "address": "49241"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 041 MSW",
+                    "address": "49242"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 042 LSW",
+                    "address": "49243"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 043 MSW",
+                    "address": "49244"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 044 LSW",
+                    "address": "49245"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 045 MSW",
+                    "address": "49246"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 046 LSW",
+                    "address": "49247"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 047 MSW",
+                    "address": "49248"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 048 LSW",
+                    "address": "49249"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 049 MSW",
+                    "address": "49250"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 050 LSW",
+                    "address": "49251"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 051 MSW",
+                    "address": "49252"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 052 LSW",
+                    "address": "49253"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 053 MSW",
+                    "address": "49254"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 054 LSW",
+                    "address": "49255"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 055 MSW",
+                    "address": "49256"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 056 LSW",
+                    "address": "49257"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 057 MSW",
+                    "address": "49258"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 058 LSW",
+                    "address": "49259"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 059 MSW",
+                    "address": "49260"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 060 LSW",
+                    "address": "49261"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 061 MSW",
+                    "address": "49262"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 062 LSW",
+                    "address": "49263"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 063 MSW",
+                    "address": "49264"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 064 LSW",
+                    "address": "49265"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 065 MSW",
+                    "address": "49266"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 066 LSW",
+                    "address": "49267"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 067 MSW",
+                    "address": "49268"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 068 LSW",
+                    "address": "49269"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 069 MSW",
+                    "address": "49270"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 070 LSW",
+                    "address": "49271"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 071 MSW",
+                    "address": "49272"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 072 LSW",
+                    "address": "49273"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 073 MSW",
+                    "address": "49274"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 074 LSW",
+                    "address": "49275"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 075 MSW",
+                    "address": "49276"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 076 LSW",
+                    "address": "49277"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 077 MSW",
+                    "address": "49278"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 078 LSW",
+                    "address": "49279"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 079 MSW",
+                    "address": "49280"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 080 LSW",
+                    "address": "49281"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 081 MSW",
+                    "address": "49282"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 082 LSW",
+                    "address": "49283"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 083 MSW",
+                    "address": "49284"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 084 LSW",
+                    "address": "49285"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 085 MSW",
+                    "address": "49286"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 086 LSW",
+                    "address": "49287"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 087 MSW",
+                    "address": "49288"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 088 LSW",
+                    "address": "49289"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 089 MSW",
+                    "address": "49290"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 090 LSW",
+                    "address": "49291"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 091 MSW",
+                    "address": "49292"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 092 LSW",
+                    "address": "49293"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 093 MSW",
+                    "address": "49294"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 094 LSW",
+                    "address": "49295"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 095 MSW",
+                    "address": "49296"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 096 LSW",
+                    "address": "49297"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 097 MSW",
+                    "address": "49298"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 098 LSW",
+                    "address": "49299"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 099 MSW",
+                    "address": "49300"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 000",
+                    "address": "Int32(HR49201,HR49202)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 001",
+                    "address": "Int32(HR49203,HR49204)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 002",
+                    "address": "Int32(HR49205,HR49206)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 003",
+                    "address": "Int32(HR49207,HR49208)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 004",
+                    "address": "Int32(HR49209,HR49210)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 005",
+                    "address": "Int32(HR49211,HR49212)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 006",
+                    "address": "Int32(HR49213,HR49214)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 007",
+                    "address": "Int32(HR49215,HR49216)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 008",
+                    "address": "Int32(HR49217,HR49218)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 009",
+                    "address": "Int32(HR49219,HR49220)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 010",
+                    "address": "Int32(HR49221,HR49222)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 011",
+                    "address": "Int32(HR49223,HR49224)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 012",
+                    "address": "Int32(HR49225,HR49226)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 013",
+                    "address": "Int32(HR49227,HR49228)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 014",
+                    "address": "Int32(HR49229,HR49230)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 015",
+                    "address": "Int32(HR49231,HR49232)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 016",
+                    "address": "Int32(HR49233,HR49234)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 017",
+                    "address": "Int32(HR49235,HR49236)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 018",
+                    "address": "Int32(HR49237,HR49238)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 019",
+                    "address": "Int32(HR49239,HR49240)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 020",
+                    "address": "Int32(HR49241,HR49242)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 021",
+                    "address": "Int32(HR49243,HR49244)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 022",
+                    "address": "Int32(HR49245,HR49246)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 023",
+                    "address": "Int32(HR49247,HR49248)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 024",
+                    "address": "Int32(HR49249,HR49250)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 025",
+                    "address": "Int32(HR49251,HR49252)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 026",
+                    "address": "Int32(HR49253,HR49254)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 027",
+                    "address": "Int32(HR49255,HR49256)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 028",
+                    "address": "Int32(HR49257,HR49258)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 029",
+                    "address": "Int32(HR49259,HR49260)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 030",
+                    "address": "Int32(HR49261,HR49262)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 031",
+                    "address": "Int32(HR49263,HR49264)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 032",
+                    "address": "Int32(HR49265,HR49266)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 033",
+                    "address": "Int32(HR49267,HR49268)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 034",
+                    "address": "Int32(HR49269,HR49270)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 035",
+                    "address": "Int32(HR49271,HR49272)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 036",
+                    "address": "Int32(HR49273,HR49274)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 037",
+                    "address": "Int32(HR49275,HR49276)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 038",
+                    "address": "Int32(HR49277,HR49278)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 039",
+                    "address": "Int32(HR49279,HR49280)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 040",
+                    "address": "Int32(HR49281,HR49282)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 041",
+                    "address": "Int32(HR49283,HR49284)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 042",
+                    "address": "Int32(HR49285,HR49286)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 043",
+                    "address": "Int32(HR49287,HR49288)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 044",
+                    "address": "Int32(HR49289,HR49290)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 045",
+                    "address": "Int32(HR49291,HR49292)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 046",
+                    "address": "Int32(HR49293,HR49294)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 047",
+                    "address": "Int32(HR49295,HR49296)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 048",
+                    "address": "Int32(HR49297,HR49298)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 049",
+                    "address": "Int32(HR49299,HR49300)"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Duration 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 100 LSW",
+                    "address": "49301"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 101 MSW",
+                    "address": "49302"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 102 LSW",
+                    "address": "49303"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 103 MSW",
+                    "address": "49304"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 104 LSW",
+                    "address": "49305"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 105 MSW",
+                    "address": "49306"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 106 LSW",
+                    "address": "49307"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 107 MSW",
+                    "address": "49308"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 108 LSW",
+                    "address": "49309"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 109 MSW",
+                    "address": "49310"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 110 LSW",
+                    "address": "49311"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 111 MSW",
+                    "address": "49312"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 112 LSW",
+                    "address": "49313"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 113 MSW",
+                    "address": "49314"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 114 LSW",
+                    "address": "49315"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 115 MSW",
+                    "address": "49316"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 116 LSW",
+                    "address": "49317"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 117 MSW",
+                    "address": "49318"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 118 LSW",
+                    "address": "49319"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 119 MSW",
+                    "address": "49320"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 120 LSW",
+                    "address": "49321"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 121 MSW",
+                    "address": "49322"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 122 LSW",
+                    "address": "49323"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 123 MSW",
+                    "address": "49324"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 124 LSW",
+                    "address": "49325"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 125 MSW",
+                    "address": "49326"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 126 LSW",
+                    "address": "49327"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 127 MSW",
+                    "address": "49328"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 128 LSW",
+                    "address": "49329"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 129 MSW",
+                    "address": "49330"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 130 LSW",
+                    "address": "49331"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 131 MSW",
+                    "address": "49332"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 132 LSW",
+                    "address": "49333"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 133 MSW",
+                    "address": "49334"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 134 LSW",
+                    "address": "49335"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 135 MSW",
+                    "address": "49336"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 136 LSW",
+                    "address": "49337"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 137 MSW",
+                    "address": "49338"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 138 LSW",
+                    "address": "49339"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 139 MSW",
+                    "address": "49340"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 140 LSW",
+                    "address": "49341"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 141 MSW",
+                    "address": "49342"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 142 LSW",
+                    "address": "49343"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 143 MSW",
+                    "address": "49344"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 144 LSW",
+                    "address": "49345"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 145 MSW",
+                    "address": "49346"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 146 LSW",
+                    "address": "49347"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 147 MSW",
+                    "address": "49348"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 148 LSW",
+                    "address": "49349"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 149 MSW",
+                    "address": "49350"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 150 LSW",
+                    "address": "49351"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 151 MSW",
+                    "address": "49352"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 152 LSW",
+                    "address": "49353"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 153 MSW",
+                    "address": "49354"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 154 LSW",
+                    "address": "49355"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 155 MSW",
+                    "address": "49356"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 156 LSW",
+                    "address": "49357"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 157 MSW",
+                    "address": "49358"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 158 LSW",
+                    "address": "49359"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 159 MSW",
+                    "address": "49360"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 160 LSW",
+                    "address": "49361"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 161 MSW",
+                    "address": "49362"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 162 LSW",
+                    "address": "49363"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 163 MSW",
+                    "address": "49364"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 164 LSW",
+                    "address": "49365"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 165 MSW",
+                    "address": "49366"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 166 LSW",
+                    "address": "49367"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 167 MSW",
+                    "address": "49368"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 168 LSW",
+                    "address": "49369"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 169 MSW",
+                    "address": "49370"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 170 LSW",
+                    "address": "49371"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 171 MSW",
+                    "address": "49372"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 172 LSW",
+                    "address": "49373"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 173 MSW",
+                    "address": "49374"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 174 LSW",
+                    "address": "49375"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 175 MSW",
+                    "address": "49376"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 176 LSW",
+                    "address": "49377"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 177 MSW",
+                    "address": "49378"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 178 LSW",
+                    "address": "49379"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 179 MSW",
+                    "address": "49380"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 180 LSW",
+                    "address": "49381"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 181 MSW",
+                    "address": "49382"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 182 LSW",
+                    "address": "49383"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 183 MSW",
+                    "address": "49384"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 184 LSW",
+                    "address": "49385"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 185 MSW",
+                    "address": "49386"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 186 LSW",
+                    "address": "49387"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 187 MSW",
+                    "address": "49388"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 188 LSW",
+                    "address": "49389"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 189 MSW",
+                    "address": "49390"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 190 LSW",
+                    "address": "49391"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 191 MSW",
+                    "address": "49392"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 192 LSW",
+                    "address": "49393"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 193 MSW",
+                    "address": "49394"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 194 LSW",
+                    "address": "49395"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 195 MSW",
+                    "address": "49396"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 196 LSW",
+                    "address": "49397"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 197 MSW",
+                    "address": "49398"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 198 LSW",
+                    "address": "49399"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 199 MSW",
+                    "address": "49400"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 050",
+                    "address": "Int32(HR49301,HR49302)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 051",
+                    "address": "Int32(HR49303,HR49304)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 052",
+                    "address": "Int32(HR49305,HR49306)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 053",
+                    "address": "Int32(HR49307,HR49308)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 054",
+                    "address": "Int32(HR49309,HR49310)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 055",
+                    "address": "Int32(HR49311,HR49312)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 056",
+                    "address": "Int32(HR49313,HR49314)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 057",
+                    "address": "Int32(HR49315,HR49316)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 058",
+                    "address": "Int32(HR49317,HR49318)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 059",
+                    "address": "Int32(HR49319,HR49320)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 060",
+                    "address": "Int32(HR49321,HR49322)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 061",
+                    "address": "Int32(HR49323,HR49324)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 062",
+                    "address": "Int32(HR49325,HR49326)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 063",
+                    "address": "Int32(HR49327,HR49328)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 064",
+                    "address": "Int32(HR49329,HR49330)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 065",
+                    "address": "Int32(HR49331,HR49332)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 066",
+                    "address": "Int32(HR49333,HR49334)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 067",
+                    "address": "Int32(HR49335,HR49336)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 068",
+                    "address": "Int32(HR49337,HR49338)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 069",
+                    "address": "Int32(HR49339,HR49340)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 070",
+                    "address": "Int32(HR49341,HR49342)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 071",
+                    "address": "Int32(HR49343,HR49344)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 072",
+                    "address": "Int32(HR49345,HR49346)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 073",
+                    "address": "Int32(HR49347,HR49348)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 074",
+                    "address": "Int32(HR49349,HR49350)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 075",
+                    "address": "Int32(HR49351,HR49352)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 076",
+                    "address": "Int32(HR49353,HR49354)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 077",
+                    "address": "Int32(HR49355,HR49356)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 078",
+                    "address": "Int32(HR49357,HR49358)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 079",
+                    "address": "Int32(HR49359,HR49360)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 080",
+                    "address": "Int32(HR49361,HR49362)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 081",
+                    "address": "Int32(HR49363,HR49364)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 082",
+                    "address": "Int32(HR49365,HR49366)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 083",
+                    "address": "Int32(HR49367,HR49368)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 084",
+                    "address": "Int32(HR49369,HR49370)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 085",
+                    "address": "Int32(HR49371,HR49372)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 086",
+                    "address": "Int32(HR49373,HR49374)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 087",
+                    "address": "Int32(HR49375,HR49376)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 088",
+                    "address": "Int32(HR49377,HR49378)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 089",
+                    "address": "Int32(HR49379,HR49380)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 090",
+                    "address": "Int32(HR49381,HR49382)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 091",
+                    "address": "Int32(HR49383,HR49384)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 092",
+                    "address": "Int32(HR49385,HR49386)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 093",
+                    "address": "Int32(HR49387,HR49388)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 094",
+                    "address": "Int32(HR49389,HR49390)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 095",
+                    "address": "Int32(HR49391,HR49392)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 096",
+                    "address": "Int32(HR49393,HR49394)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 097",
+                    "address": "Int32(HR49395,HR49396)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 098",
+                    "address": "Int32(HR49397,HR49398)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 099",
+                    "address": "Int32(HR49399,HR49400)"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Duration 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 200 LSW",
+                    "address": "49401"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 201 MSW",
+                    "address": "49402"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 202 LSW",
+                    "address": "49403"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 203 MSW",
+                    "address": "49404"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 204 LSW",
+                    "address": "49405"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 205 MSW",
+                    "address": "49406"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 206 LSW",
+                    "address": "49407"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 207 MSW",
+                    "address": "49408"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 208 LSW",
+                    "address": "49409"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 209 MSW",
+                    "address": "49410"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 210 LSW",
+                    "address": "49411"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 211 MSW",
+                    "address": "49412"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 212 LSW",
+                    "address": "49413"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 213 MSW",
+                    "address": "49414"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 214 LSW",
+                    "address": "49415"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 215 MSW",
+                    "address": "49416"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 216 LSW",
+                    "address": "49417"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 217 MSW",
+                    "address": "49418"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 218 LSW",
+                    "address": "49419"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 219 MSW",
+                    "address": "49420"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 220 LSW",
+                    "address": "49421"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 221 MSW",
+                    "address": "49422"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 222 LSW",
+                    "address": "49423"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 223 MSW",
+                    "address": "49424"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 224 LSW",
+                    "address": "49425"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 225 MSW",
+                    "address": "49426"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 226 LSW",
+                    "address": "49427"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 227 MSW",
+                    "address": "49428"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 228 LSW",
+                    "address": "49429"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 229 MSW",
+                    "address": "49430"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 230 LSW",
+                    "address": "49431"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 231 MSW",
+                    "address": "49432"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 232 LSW",
+                    "address": "49433"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 233 MSW",
+                    "address": "49434"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 234 LSW",
+                    "address": "49435"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 235 MSW",
+                    "address": "49436"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 236 LSW",
+                    "address": "49437"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 237 MSW",
+                    "address": "49438"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 238 LSW",
+                    "address": "49439"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 239 MSW",
+                    "address": "49440"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 240 LSW",
+                    "address": "49441"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 241 MSW",
+                    "address": "49442"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 242 LSW",
+                    "address": "49443"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 243 MSW",
+                    "address": "49444"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 244 LSW",
+                    "address": "49445"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 245 MSW",
+                    "address": "49446"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 246 LSW",
+                    "address": "49447"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 247 MSW",
+                    "address": "49448"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 248 LSW",
+                    "address": "49449"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 249 MSW",
+                    "address": "49450"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 250 LSW",
+                    "address": "49451"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 251 MSW",
+                    "address": "49452"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 252 LSW",
+                    "address": "49453"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 253 MSW",
+                    "address": "49454"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 254 LSW",
+                    "address": "49455"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 255 MSW",
+                    "address": "49456"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 256 LSW",
+                    "address": "49457"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 257 MSW",
+                    "address": "49458"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 258 LSW",
+                    "address": "49459"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 259 MSW",
+                    "address": "49460"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 260 LSW",
+                    "address": "49461"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 261 MSW",
+                    "address": "49462"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 262 LSW",
+                    "address": "49463"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 263 MSW",
+                    "address": "49464"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 264 LSW",
+                    "address": "49465"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 265 MSW",
+                    "address": "49466"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 266 LSW",
+                    "address": "49467"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 267 MSW",
+                    "address": "49468"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 268 LSW",
+                    "address": "49469"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 269 MSW",
+                    "address": "49470"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 270 LSW",
+                    "address": "49471"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 271 MSW",
+                    "address": "49472"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 272 LSW",
+                    "address": "49473"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 273 MSW",
+                    "address": "49474"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 274 LSW",
+                    "address": "49475"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 275 MSW",
+                    "address": "49476"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 276 LSW",
+                    "address": "49477"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 277 MSW",
+                    "address": "49478"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 278 LSW",
+                    "address": "49479"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 279 MSW",
+                    "address": "49480"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 280 LSW",
+                    "address": "49481"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 281 MSW",
+                    "address": "49482"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 282 LSW",
+                    "address": "49483"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 283 MSW",
+                    "address": "49484"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 284 LSW",
+                    "address": "49485"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 285 MSW",
+                    "address": "49486"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 286 LSW",
+                    "address": "49487"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 287 MSW",
+                    "address": "49488"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 288 LSW",
+                    "address": "49489"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 289 MSW",
+                    "address": "49490"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 290 LSW",
+                    "address": "49491"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 291 MSW",
+                    "address": "49492"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 292 LSW",
+                    "address": "49493"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 293 MSW",
+                    "address": "49494"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 294 LSW",
+                    "address": "49495"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 295 MSW",
+                    "address": "49496"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 296 LSW",
+                    "address": "49497"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 297 MSW",
+                    "address": "49498"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 298 LSW",
+                    "address": "49499"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 299 MSW",
+                    "address": "49500"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 100",
+                    "address": "Int32(HR49401,HR49402)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 101",
+                    "address": "Int32(HR49403,HR49404)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 102",
+                    "address": "Int32(HR49405,HR49406)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 103",
+                    "address": "Int32(HR49407,HR49408)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 104",
+                    "address": "Int32(HR49409,HR49410)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 105",
+                    "address": "Int32(HR49411,HR49412)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 106",
+                    "address": "Int32(HR49413,HR49414)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 107",
+                    "address": "Int32(HR49415,HR49416)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 108",
+                    "address": "Int32(HR49417,HR49418)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 109",
+                    "address": "Int32(HR49419,HR49420)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 110",
+                    "address": "Int32(HR49421,HR49422)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 111",
+                    "address": "Int32(HR49423,HR49424)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 112",
+                    "address": "Int32(HR49425,HR49426)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 113",
+                    "address": "Int32(HR49427,HR49428)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 114",
+                    "address": "Int32(HR49429,HR49430)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 115",
+                    "address": "Int32(HR49431,HR49432)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 116",
+                    "address": "Int32(HR49433,HR49434)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 117",
+                    "address": "Int32(HR49435,HR49436)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 118",
+                    "address": "Int32(HR49437,HR49438)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 119",
+                    "address": "Int32(HR49439,HR49440)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 120",
+                    "address": "Int32(HR49441,HR49442)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 121",
+                    "address": "Int32(HR49443,HR49444)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 122",
+                    "address": "Int32(HR49445,HR49446)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 123",
+                    "address": "Int32(HR49447,HR49448)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 124",
+                    "address": "Int32(HR49449,HR49450)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 125",
+                    "address": "Int32(HR49451,HR49452)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 126",
+                    "address": "Int32(HR49453,HR49454)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 127",
+                    "address": "Int32(HR49455,HR49456)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 128",
+                    "address": "Int32(HR49457,HR49458)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 129",
+                    "address": "Int32(HR49459,HR49460)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 130",
+                    "address": "Int32(HR49461,HR49462)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 131",
+                    "address": "Int32(HR49463,HR49464)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 132",
+                    "address": "Int32(HR49465,HR49466)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 133",
+                    "address": "Int32(HR49467,HR49468)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 134",
+                    "address": "Int32(HR49469,HR49470)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 135",
+                    "address": "Int32(HR49471,HR49472)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 136",
+                    "address": "Int32(HR49473,HR49474)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 137",
+                    "address": "Int32(HR49475,HR49476)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 138",
+                    "address": "Int32(HR49477,HR49478)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 139",
+                    "address": "Int32(HR49479,HR49480)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 140",
+                    "address": "Int32(HR49481,HR49482)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 141",
+                    "address": "Int32(HR49483,HR49484)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 142",
+                    "address": "Int32(HR49485,HR49486)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 143",
+                    "address": "Int32(HR49487,HR49488)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 144",
+                    "address": "Int32(HR49489,HR49490)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 145",
+                    "address": "Int32(HR49491,HR49492)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 146",
+                    "address": "Int32(HR49493,HR49494)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 147",
+                    "address": "Int32(HR49495,HR49496)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 148",
+                    "address": "Int32(HR49497,HR49498)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 149",
+                    "address": "Int32(HR49499,HR49500)"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Duration 3",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 300 LSW",
+                    "address": "49501"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 301 MSW",
+                    "address": "49502"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 302 LSW",
+                    "address": "49503"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 303 MSW",
+                    "address": "49504"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 304 LSW",
+                    "address": "49505"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 305 MSW",
+                    "address": "49506"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 306 LSW",
+                    "address": "49507"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 307 MSW",
+                    "address": "49508"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 308 LSW",
+                    "address": "49509"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 309 MSW",
+                    "address": "49510"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 310 LSW",
+                    "address": "49511"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 311 MSW",
+                    "address": "49512"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 312 LSW",
+                    "address": "49513"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 313 MSW",
+                    "address": "49514"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 314 LSW",
+                    "address": "49515"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 315 MSW",
+                    "address": "49516"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 316 LSW",
+                    "address": "49517"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 317 MSW",
+                    "address": "49518"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 318 LSW",
+                    "address": "49519"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 319 MSW",
+                    "address": "49520"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 320 LSW",
+                    "address": "49521"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 321 MSW",
+                    "address": "49522"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 322 LSW",
+                    "address": "49523"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 323 MSW",
+                    "address": "49524"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 324 LSW",
+                    "address": "49525"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 325 MSW",
+                    "address": "49526"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 326 LSW",
+                    "address": "49527"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 327 MSW",
+                    "address": "49528"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 328 LSW",
+                    "address": "49529"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 329 MSW",
+                    "address": "49530"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 330 LSW",
+                    "address": "49531"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 331 MSW",
+                    "address": "49532"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 332 LSW",
+                    "address": "49533"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 333 MSW",
+                    "address": "49534"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 334 LSW",
+                    "address": "49535"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 335 MSW",
+                    "address": "49536"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 336 LSW",
+                    "address": "49537"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 337 MSW",
+                    "address": "49538"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 338 LSW",
+                    "address": "49539"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 339 MSW",
+                    "address": "49540"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 340 LSW",
+                    "address": "49541"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 341 MSW",
+                    "address": "49542"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 342 LSW",
+                    "address": "49543"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 343 MSW",
+                    "address": "49544"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 344 LSW",
+                    "address": "49545"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 345 MSW",
+                    "address": "49546"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 346 LSW",
+                    "address": "49547"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 347 MSW",
+                    "address": "49548"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 348 LSW",
+                    "address": "49549"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 349 MSW",
+                    "address": "49550"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 350 LSW",
+                    "address": "49551"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 351 MSW",
+                    "address": "49552"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 352 LSW",
+                    "address": "49553"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 353 MSW",
+                    "address": "49554"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 354 LSW",
+                    "address": "49555"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 355 MSW",
+                    "address": "49556"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 356 LSW",
+                    "address": "49557"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 357 MSW",
+                    "address": "49558"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 358 LSW",
+                    "address": "49559"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 359 MSW",
+                    "address": "49560"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 360 LSW",
+                    "address": "49561"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 361 MSW",
+                    "address": "49562"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 362 LSW",
+                    "address": "49563"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 363 MSW",
+                    "address": "49564"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 364 LSW",
+                    "address": "49565"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 365 MSW",
+                    "address": "49566"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 366 LSW",
+                    "address": "49567"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 367 MSW",
+                    "address": "49568"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 368 LSW",
+                    "address": "49569"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 369 MSW",
+                    "address": "49570"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 370 LSW",
+                    "address": "49571"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 371 MSW",
+                    "address": "49572"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 372 LSW",
+                    "address": "49573"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 373 MSW",
+                    "address": "49574"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 374 LSW",
+                    "address": "49575"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 375 MSW",
+                    "address": "49576"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 376 LSW",
+                    "address": "49577"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 377 MSW",
+                    "address": "49578"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 378 LSW",
+                    "address": "49579"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 379 MSW",
+                    "address": "49580"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 380 LSW",
+                    "address": "49581"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 381 MSW",
+                    "address": "49582"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 382 LSW",
+                    "address": "49583"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 383 MSW",
+                    "address": "49584"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 384 LSW",
+                    "address": "49585"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 385 MSW",
+                    "address": "49586"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 386 LSW",
+                    "address": "49587"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 387 MSW",
+                    "address": "49588"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 388 LSW",
+                    "address": "49589"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 389 MSW",
+                    "address": "49590"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 390 LSW",
+                    "address": "49591"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 391 MSW",
+                    "address": "49592"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 392 LSW",
+                    "address": "49593"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 393 MSW",
+                    "address": "49594"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 394 LSW",
+                    "address": "49595"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 395 MSW",
+                    "address": "49596"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 396 LSW",
+                    "address": "49597"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 397 MSW",
+                    "address": "49598"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 398 LSW",
+                    "address": "49599"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 399 MSW",
+                    "address": "49600"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 150",
+                    "address": "Int32(HR49501,HR49502)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 151",
+                    "address": "Int32(HR49503,HR49504)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 152",
+                    "address": "Int32(HR49505,HR49506)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 153",
+                    "address": "Int32(HR49507,HR49508)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 154",
+                    "address": "Int32(HR49509,HR49510)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 155",
+                    "address": "Int32(HR49511,HR49512)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 156",
+                    "address": "Int32(HR49513,HR49514)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 157",
+                    "address": "Int32(HR49515,HR49516)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 158",
+                    "address": "Int32(HR49517,HR49518)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 159",
+                    "address": "Int32(HR49519,HR49520)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 160",
+                    "address": "Int32(HR49521,HR49522)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 161",
+                    "address": "Int32(HR49523,HR49524)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 162",
+                    "address": "Int32(HR49525,HR49526)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 163",
+                    "address": "Int32(HR49527,HR49528)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 164",
+                    "address": "Int32(HR49529,HR49530)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 165",
+                    "address": "Int32(HR49531,HR49532)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 166",
+                    "address": "Int32(HR49533,HR49534)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 167",
+                    "address": "Int32(HR49535,HR49536)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 168",
+                    "address": "Int32(HR49537,HR49538)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 169",
+                    "address": "Int32(HR49539,HR49540)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 170",
+                    "address": "Int32(HR49541,HR49542)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 171",
+                    "address": "Int32(HR49543,HR49544)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 172",
+                    "address": "Int32(HR49545,HR49546)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 173",
+                    "address": "Int32(HR49547,HR49548)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 174",
+                    "address": "Int32(HR49549,HR49550)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 175",
+                    "address": "Int32(HR49551,HR49552)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 176",
+                    "address": "Int32(HR49553,HR49554)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 177",
+                    "address": "Int32(HR49555,HR49556)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 178",
+                    "address": "Int32(HR49557,HR49558)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 179",
+                    "address": "Int32(HR49559,HR49560)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 180",
+                    "address": "Int32(HR49561,HR49562)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 181",
+                    "address": "Int32(HR49563,HR49564)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 182",
+                    "address": "Int32(HR49565,HR49566)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 183",
+                    "address": "Int32(HR49567,HR49568)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 184",
+                    "address": "Int32(HR49569,HR49570)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 185",
+                    "address": "Int32(HR49571,HR49572)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 186",
+                    "address": "Int32(HR49573,HR49574)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 187",
+                    "address": "Int32(HR49575,HR49576)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 188",
+                    "address": "Int32(HR49577,HR49578)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 189",
+                    "address": "Int32(HR49579,HR49580)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 190",
+                    "address": "Int32(HR49581,HR49582)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 191",
+                    "address": "Int32(HR49583,HR49584)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 192",
+                    "address": "Int32(HR49585,HR49586)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 193",
+                    "address": "Int32(HR49587,HR49588)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 194",
+                    "address": "Int32(HR49589,HR49590)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 195",
+                    "address": "Int32(HR49591,HR49592)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 196",
+                    "address": "Int32(HR49593,HR49594)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 197",
+                    "address": "Int32(HR49595,HR49596)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 198",
+                    "address": "Int32(HR49597,HR49598)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 199",
+                    "address": "Int32(HR49599,HR49600)"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Duration 4",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 400 LSW",
+                    "address": "49601"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 401 MSW",
+                    "address": "49602"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 402 LSW",
+                    "address": "49603"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 403 MSW",
+                    "address": "49604"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 404 LSW",
+                    "address": "49605"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 405 MSW",
+                    "address": "49606"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 406 LSW",
+                    "address": "49607"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 407 MSW",
+                    "address": "49608"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 408 LSW",
+                    "address": "49609"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 409 MSW",
+                    "address": "49610"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 410 LSW",
+                    "address": "49611"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 411 MSW",
+                    "address": "49612"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 412 LSW",
+                    "address": "49613"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 413 MSW",
+                    "address": "49614"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 414 LSW",
+                    "address": "49615"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 415 MSW",
+                    "address": "49616"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 416 LSW",
+                    "address": "49617"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 417 MSW",
+                    "address": "49618"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 418 LSW",
+                    "address": "49619"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 419 MSW",
+                    "address": "49620"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 420 LSW",
+                    "address": "49621"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 421 MSW",
+                    "address": "49622"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 422 LSW",
+                    "address": "49623"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 423 MSW",
+                    "address": "49624"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 424 LSW",
+                    "address": "49625"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 425 MSW",
+                    "address": "49626"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 426 LSW",
+                    "address": "49627"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 427 MSW",
+                    "address": "49628"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 428 LSW",
+                    "address": "49629"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 429 MSW",
+                    "address": "49630"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 430 LSW",
+                    "address": "49631"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 431 MSW",
+                    "address": "49632"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 432 LSW",
+                    "address": "49633"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 433 MSW",
+                    "address": "49634"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 434 LSW",
+                    "address": "49635"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 435 MSW",
+                    "address": "49636"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 436 LSW",
+                    "address": "49637"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 437 MSW",
+                    "address": "49638"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 438 LSW",
+                    "address": "49639"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 439 MSW",
+                    "address": "49640"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 440 LSW",
+                    "address": "49641"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 441 MSW",
+                    "address": "49642"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 442 LSW",
+                    "address": "49643"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 443 MSW",
+                    "address": "49644"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 444 LSW",
+                    "address": "49645"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 445 MSW",
+                    "address": "49646"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 446 LSW",
+                    "address": "49647"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 447 MSW",
+                    "address": "49648"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 448 LSW",
+                    "address": "49649"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 449 MSW",
+                    "address": "49650"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 450 LSW",
+                    "address": "49651"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 451 MSW",
+                    "address": "49652"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 452 LSW",
+                    "address": "49653"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 453 MSW",
+                    "address": "49654"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 454 LSW",
+                    "address": "49655"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 455 MSW",
+                    "address": "49656"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 456 LSW",
+                    "address": "49657"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 457 MSW",
+                    "address": "49658"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 458 LSW",
+                    "address": "49659"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 459 MSW",
+                    "address": "49660"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 460 LSW",
+                    "address": "49661"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 461 MSW",
+                    "address": "49662"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 462 LSW",
+                    "address": "49663"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 463 MSW",
+                    "address": "49664"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 464 LSW",
+                    "address": "49665"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 465 MSW",
+                    "address": "49666"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 466 LSW",
+                    "address": "49667"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 467 MSW",
+                    "address": "49668"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 468 LSW",
+                    "address": "49669"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 469 MSW",
+                    "address": "49670"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 470 LSW",
+                    "address": "49671"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 471 MSW",
+                    "address": "49672"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 472 LSW",
+                    "address": "49673"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 473 MSW",
+                    "address": "49674"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 474 LSW",
+                    "address": "49675"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 475 MSW",
+                    "address": "49676"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 476 LSW",
+                    "address": "49677"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 477 MSW",
+                    "address": "49678"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 478 LSW",
+                    "address": "49679"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 479 MSW",
+                    "address": "49680"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 480 LSW",
+                    "address": "49681"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 481 MSW",
+                    "address": "49682"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 482 LSW",
+                    "address": "49683"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 483 MSW",
+                    "address": "49684"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 484 LSW",
+                    "address": "49685"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 485 MSW",
+                    "address": "49686"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 486 LSW",
+                    "address": "49687"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 487 MSW",
+                    "address": "49688"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 488 LSW",
+                    "address": "49689"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 489 MSW",
+                    "address": "49690"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 490 LSW",
+                    "address": "49691"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 491 MSW",
+                    "address": "49692"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 492 LSW",
+                    "address": "49693"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 493 MSW",
+                    "address": "49694"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 494 LSW",
+                    "address": "49695"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 495 MSW",
+                    "address": "49696"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 496 LSW",
+                    "address": "49697"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 497 MSW",
+                    "address": "49698"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 498 LSW",
+                    "address": "49699"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 499 MSW",
+                    "address": "49700"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 200",
+                    "address": "Int32(HR49601,HR49602)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 201",
+                    "address": "Int32(HR49603,HR49604)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 202",
+                    "address": "Int32(HR49605,HR49606)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 203",
+                    "address": "Int32(HR49607,HR49608)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 204",
+                    "address": "Int32(HR49609,HR49610)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 205",
+                    "address": "Int32(HR49611,HR49612)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 206",
+                    "address": "Int32(HR49613,HR49614)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 207",
+                    "address": "Int32(HR49615,HR49616)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 208",
+                    "address": "Int32(HR49617,HR49618)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 209",
+                    "address": "Int32(HR49619,HR49620)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 210",
+                    "address": "Int32(HR49621,HR49622)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 211",
+                    "address": "Int32(HR49623,HR49624)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 212",
+                    "address": "Int32(HR49625,HR49626)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 213",
+                    "address": "Int32(HR49627,HR49628)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 214",
+                    "address": "Int32(HR49629,HR49630)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 215",
+                    "address": "Int32(HR49631,HR49632)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 216",
+                    "address": "Int32(HR49633,HR49634)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 217",
+                    "address": "Int32(HR49635,HR49636)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 218",
+                    "address": "Int32(HR49637,HR49638)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 219",
+                    "address": "Int32(HR49639,HR49640)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 220",
+                    "address": "Int32(HR49641,HR49642)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 221",
+                    "address": "Int32(HR49643,HR49644)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 222",
+                    "address": "Int32(HR49645,HR49646)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 223",
+                    "address": "Int32(HR49647,HR49648)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 224",
+                    "address": "Int32(HR49649,HR49650)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 225",
+                    "address": "Int32(HR49651,HR49652)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 226",
+                    "address": "Int32(HR49653,HR49654)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 227",
+                    "address": "Int32(HR49655,HR49656)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 228",
+                    "address": "Int32(HR49657,HR49658)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 229",
+                    "address": "Int32(HR49659,HR49660)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 230",
+                    "address": "Int32(HR49661,HR49662)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 231",
+                    "address": "Int32(HR49663,HR49664)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 232",
+                    "address": "Int32(HR49665,HR49666)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 233",
+                    "address": "Int32(HR49667,HR49668)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 234",
+                    "address": "Int32(HR49669,HR49670)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 235",
+                    "address": "Int32(HR49671,HR49672)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 236",
+                    "address": "Int32(HR49673,HR49674)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 237",
+                    "address": "Int32(HR49675,HR49676)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 238",
+                    "address": "Int32(HR49677,HR49678)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 239",
+                    "address": "Int32(HR49679,HR49680)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 240",
+                    "address": "Int32(HR49681,HR49682)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 241",
+                    "address": "Int32(HR49683,HR49684)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 242",
+                    "address": "Int32(HR49685,HR49686)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 243",
+                    "address": "Int32(HR49687,HR49688)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 244",
+                    "address": "Int32(HR49689,HR49690)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 245",
+                    "address": "Int32(HR49691,HR49692)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 246",
+                    "address": "Int32(HR49693,HR49694)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 247",
+                    "address": "Int32(HR49695,HR49696)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 248",
+                    "address": "Int32(HR49697,HR49698)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 249",
+                    "address": "Int32(HR49699,HR49700)"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Duration 5",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 500 LSW",
+                    "address": "49701"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 501 MSW",
+                    "address": "49702"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 502 LSW",
+                    "address": "49703"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 503 MSW",
+                    "address": "49704"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 504 LSW",
+                    "address": "49705"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 505 MSW",
+                    "address": "49706"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 506 LSW",
+                    "address": "49707"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 507 MSW",
+                    "address": "49708"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 508 LSW",
+                    "address": "49709"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 509 MSW",
+                    "address": "49710"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 510 LSW",
+                    "address": "49711"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Duration 511 MSW",
+                    "address": "49712"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 250",
+                    "address": "Int32(HR49701,HR49702)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 251",
+                    "address": "Int32(HR49703,HR49704)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 252",
+                    "address": "Int32(HR49705,HR49706)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 253",
+                    "address": "Int32(HR49707,HR49708)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 254",
+                    "address": "Int32(HR49709,HR49710)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Thermal Runaway Channel Duration 255",
+                    "address": "Int32(HR49711,HR49712)"
+                }
+            ]
+        }
+    ]
+}

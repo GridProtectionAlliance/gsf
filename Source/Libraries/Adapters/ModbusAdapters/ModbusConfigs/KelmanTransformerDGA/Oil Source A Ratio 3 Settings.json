@@ -1,0 +1,148 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Oil Source A Ratio 3 Name [1]",
+                    "address": "7139",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [2]",
+                    "address": "7140",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [3]",
+                    "address": "7141",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [4]",
+                    "address": "7142",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [5]",
+                    "address": "7143",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [6]",
+                    "address": "7144",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [7]",
+                    "address": "7145",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name [8]",
+                    "address": "7146",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Name",
+                    "address": "String(HR7139,HR7140,HR7141,HR7142,HR7143,HR7144,HR7145,HR7146)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Numerator",
+                    "address": "7147",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Denominator",
+                    "address": "7148",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Upper Limit Low",
+                    "address": "7149",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Upper Limit High",
+                    "address": "7150",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Upper Limit",
+                    "address": "Single(HR7149,HR7150)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Lower Limit Low",
+                    "address": "7151",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Lower Limit High",
+                    "address": "7152",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Lower Limit",
+                    "address": "Single(HR7151,HR7152)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Enable",
+                    "address": "7153",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Alarm Output",
+                    "address": "7154",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Value From Last Measurement Low",
+                    "address": "7155",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Value From Last Measurement High",
+                    "address": "7156",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Value From Last Measurement",
+                    "address": "Single(HR7155,HR7156)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ratio 3 Output Flags From Last Measurement",
+                    "address": "7157",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source A Ratio 3 Settings 1",
+            "type": 0
+        }
+    ]
+}

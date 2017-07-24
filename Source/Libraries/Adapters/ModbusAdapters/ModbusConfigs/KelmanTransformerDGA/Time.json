@@ -1,0 +1,88 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Time (UTC) in UNIX format Low",
+                    "address": "1196",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Time (UTC) in UNIX format High",
+                    "address": "1197",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Time (UTC) in UNIX format",
+                    "address": "Uint32(HR1196,HR1197)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Time 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "UTC Clock: Years",
+                    "address": "1199",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "UTC Clock: Months, Days",
+                    "address": "1200",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "UTC Clock: Hours, Minutes",
+                    "address": "1201",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "UTC Clock: Seconds, Day of Week",
+                    "address": "1202",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Time 2",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Local Time: Years",
+                    "address": "1265",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Local Time: Months, Days",
+                    "address": "1266",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Local Time: Hours, Minutes",
+                    "address": "1267",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Local Time: Seconds, Day of Week",
+                    "address": "1268",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Time 3",
+            "type": 0
+        }
+    ]
+}

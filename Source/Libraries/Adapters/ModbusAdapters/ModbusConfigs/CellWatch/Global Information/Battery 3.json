@@ -1,0 +1,232 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "Battery 3",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "224",
+                    "description": "Battery 3 Label Bytes 00-01",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "225",
+                    "description": "Battery 3 Label Bytes 02-03",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "226",
+                    "description": "Battery 3 Label Bytes 04-05",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "227",
+                    "description": "Battery 3 Label Bytes 06-07",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "228",
+                    "description": "Battery 3 Label Bytes 08-09",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "229",
+                    "description": "Battery 3 Label Bytes 10-11",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "230",
+                    "description": "Battery 3 Label Bytes 12-13",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "231",
+                    "description": "Battery 3 Label Bytes 14-15",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "232",
+                    "description": "Battery 3 Label Bytes 16-17",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "233",
+                    "description": "Battery 3 Label Bytes 18-19",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "234",
+                    "description": "Battery 3 Label Bytes 20-21",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "235",
+                    "description": "Battery 3 Label Bytes 22-23",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "236",
+                    "description": "Battery 3 Label Bytes 24-25",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "237",
+                    "description": "Battery 3 Label Bytes 26-27",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "238",
+                    "description": "Battery 3 Label Bytes 28-29",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "239",
+                    "description": "Battery 3 Label Bytes 30-31",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "240",
+                    "description": "Battery 3 Label Bytes 32-33",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "241",
+                    "description": "Battery 3 Label Bytes 34-35",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "242",
+                    "description": "Battery 3 Label Bytes 36-37",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "243",
+                    "description": "Battery 3 Label Bytes 38-39",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "244",
+                    "description": "Battery 3 Label Bytes 40-41",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "245",
+                    "description": "Battery 3 Label Bytes 42-43",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "246",
+                    "description": "Battery 3 Label Bytes 44-45",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "247",
+                    "description": "Battery 3 Label Bytes 46-47",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "248",
+                    "description": "Battery 3 Label Bytes 48-49",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "249",
+                    "description": "Battery 3 Label Bytes 50-51",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "250",
+                    "description": "Battery 3 Label Bytes 52-53",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "251",
+                    "description": "Battery 3 Label Bytes 54-55",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "252",
+                    "description": "Battery 3 Label Bytes 56-57",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "253",
+                    "description": "Battery 3 Label Bytes 58-59",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "254",
+                    "description": "Battery 3 Label Bytes 60-61",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "255",
+                    "description": "Battery 3 Label Bytes 62-63",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "256",
+                    "description": "Battery 3 String Count",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "257",
+                    "description": "Battery 3 Status (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "258",
+                    "description": "Battery 3 Status (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR258,HR257)",
+                    "description": "Battery 3 Status",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "String(HR224,HR225,HR226,HR227,HR228,HR229,HR230,HR231,HR232,HR233,HR234,HR235,HR236,HR237,HR238,HR239,HR240,HR241,HR242,HR243,HR244,HR245,HR246,HR247,HR248,HR249,HR250,HR251,HR252,HR253,HR254,HR255)",
+                    "description": "Battery 3 Label",
+                    "dataValue": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+                }
+            ]
+        }
+    ]
+}

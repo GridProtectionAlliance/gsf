@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Low Discharge Limit 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 000-001",
+                    "address": "5360"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 002-003",
+                    "address": "5361"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 004-005",
+                    "address": "5362"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 006-007",
+                    "address": "5363"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 008-009",
+                    "address": "5364"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 010-011",
+                    "address": "5365"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 012-013",
+                    "address": "5366"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 014-015",
+                    "address": "5367"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 016-017",
+                    "address": "5368"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 018-019",
+                    "address": "5369"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 020-021",
+                    "address": "5370"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 022-023",
+                    "address": "5371"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 024-025",
+                    "address": "5372"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 026-027",
+                    "address": "5373"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 028-029",
+                    "address": "5374"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 030-031",
+                    "address": "5375"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 032-033",
+                    "address": "5376"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 034-035",
+                    "address": "5377"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 036-037",
+                    "address": "5378"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 038-039",
+                    "address": "5379"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 040-041",
+                    "address": "5380"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 042-043",
+                    "address": "5381"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 044-045",
+                    "address": "5382"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 046-047",
+                    "address": "5383"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 048-049",
+                    "address": "5384"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 050-051",
+                    "address": "5385"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 052-053",
+                    "address": "5386"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 054-055",
+                    "address": "5387"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 056-057",
+                    "address": "5388"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 058-059",
+                    "address": "5389"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 060-061",
+                    "address": "5390"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 062-063",
+                    "address": "5391"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 064-065",
+                    "address": "5392"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 066-067",
+                    "address": "5393"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 068-069",
+                    "address": "5394"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 070-071",
+                    "address": "5395"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 072-073",
+                    "address": "5396"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 074-075",
+                    "address": "5397"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 076-077",
+                    "address": "5398"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 078-079",
+                    "address": "5399"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 080-081",
+                    "address": "5400"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 082-083",
+                    "address": "5401"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 084-085",
+                    "address": "5402"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 086-087",
+                    "address": "5403"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 088-089",
+                    "address": "5404"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 090-091",
+                    "address": "5405"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 092-093",
+                    "address": "5406"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 094-095",
+                    "address": "5407"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 096-097",
+                    "address": "5408"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 098-099",
+                    "address": "5409"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 100-101",
+                    "address": "5410"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 102-103",
+                    "address": "5411"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 104-105",
+                    "address": "5412"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 106-107",
+                    "address": "5413"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 108-109",
+                    "address": "5414"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 110-111",
+                    "address": "5415"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 112-113",
+                    "address": "5416"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 114-115",
+                    "address": "5417"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 116-117",
+                    "address": "5418"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 118-119",
+                    "address": "5419"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 120-121",
+                    "address": "5420"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 122-123",
+                    "address": "5421"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 124-125",
+                    "address": "5422"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 126-127",
+                    "address": "5423"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 128-129",
+                    "address": "5424"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 130-131",
+                    "address": "5425"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 132-133",
+                    "address": "5426"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 134-135",
+                    "address": "5427"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 136-137",
+                    "address": "5428"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 138-139",
+                    "address": "5429"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 140-141",
+                    "address": "5430"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 142-143",
+                    "address": "5431"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 144-145",
+                    "address": "5432"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 146-147",
+                    "address": "5433"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 148-149",
+                    "address": "5434"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 150-151",
+                    "address": "5435"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 152-153",
+                    "address": "5436"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 154-155",
+                    "address": "5437"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 156-157",
+                    "address": "5438"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 158-159",
+                    "address": "5439"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 160-161",
+                    "address": "5440"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 162-163",
+                    "address": "5441"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 164-165",
+                    "address": "5442"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 166-167",
+                    "address": "5443"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 168-169",
+                    "address": "5444"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 170-171",
+                    "address": "5445"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 172-173",
+                    "address": "5446"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 174-175",
+                    "address": "5447"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 176-177",
+                    "address": "5448"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 178-179",
+                    "address": "5449"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 180-181",
+                    "address": "5450"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 182-183",
+                    "address": "5451"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 184-185",
+                    "address": "5452"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 186-187",
+                    "address": "5453"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 188-189",
+                    "address": "5454"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 190-191",
+                    "address": "5455"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 192-193",
+                    "address": "5456"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 194-195",
+                    "address": "5457"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 196-197",
+                    "address": "5458"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 198-199",
+                    "address": "5459"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Low Discharge Limit 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 200-201",
+                    "address": "5460"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 202-203",
+                    "address": "5461"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 204-205",
+                    "address": "5462"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 206-207",
+                    "address": "5463"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 208-209",
+                    "address": "5464"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 210-211",
+                    "address": "5465"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 212-213",
+                    "address": "5466"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 214-215",
+                    "address": "5467"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 216-217",
+                    "address": "5468"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 218-219",
+                    "address": "5469"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 220-221",
+                    "address": "5470"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 222-223",
+                    "address": "5471"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 224-225",
+                    "address": "5472"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 226-227",
+                    "address": "5473"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 228-229",
+                    "address": "5474"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 230-231",
+                    "address": "5475"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 232-233",
+                    "address": "5476"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 234-235",
+                    "address": "5477"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 236-237",
+                    "address": "5478"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 238-239",
+                    "address": "5479"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 240-241",
+                    "address": "5480"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 242-243",
+                    "address": "5481"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 244-245",
+                    "address": "5482"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 246-247",
+                    "address": "5483"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 248-249",
+                    "address": "5484"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 250-251",
+                    "address": "5485"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 252-253",
+                    "address": "5486"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 254-255",
+                    "address": "5487"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 256-257",
+                    "address": "5488"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 258-259",
+                    "address": "5489"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 260-261",
+                    "address": "5490"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 262-263",
+                    "address": "5491"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 264-265",
+                    "address": "5492"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 266-267",
+                    "address": "5493"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 268-269",
+                    "address": "5494"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 270-271",
+                    "address": "5495"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 272-273",
+                    "address": "5496"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 274-275",
+                    "address": "5497"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 276-277",
+                    "address": "5498"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 278-279",
+                    "address": "5499"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 280-281",
+                    "address": "5500"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 282-283",
+                    "address": "5501"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 284-285",
+                    "address": "5502"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 286-287",
+                    "address": "5503"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 288-289",
+                    "address": "5504"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 290-291",
+                    "address": "5505"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 292-293",
+                    "address": "5506"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 294-295",
+                    "address": "5507"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 296-297",
+                    "address": "5508"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 298-299",
+                    "address": "5509"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 300-301",
+                    "address": "5510"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 302-303",
+                    "address": "5511"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 304-305",
+                    "address": "5512"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 306-307",
+                    "address": "5513"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 308-309",
+                    "address": "5514"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 310-311",
+                    "address": "5515"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 312-313",
+                    "address": "5516"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 314-315",
+                    "address": "5517"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 316-317",
+                    "address": "5518"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 318-319",
+                    "address": "5519"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 320-321",
+                    "address": "5520"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 322-323",
+                    "address": "5521"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 324-325",
+                    "address": "5522"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 326-327",
+                    "address": "5523"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 328-329",
+                    "address": "5524"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 330-331",
+                    "address": "5525"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 332-333",
+                    "address": "5526"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 334-335",
+                    "address": "5527"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 336-337",
+                    "address": "5528"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 338-339",
+                    "address": "5529"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 340-341",
+                    "address": "5530"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 342-343",
+                    "address": "5531"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 344-345",
+                    "address": "5532"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 346-347",
+                    "address": "5533"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 348-349",
+                    "address": "5534"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 350-351",
+                    "address": "5535"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 352-353",
+                    "address": "5536"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 354-355",
+                    "address": "5537"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 356-357",
+                    "address": "5538"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 358-359",
+                    "address": "5539"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 360-361",
+                    "address": "5540"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 362-363",
+                    "address": "5541"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 364-365",
+                    "address": "5542"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 366-367",
+                    "address": "5543"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 368-369",
+                    "address": "5544"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 370-371",
+                    "address": "5545"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 372-373",
+                    "address": "5546"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 374-375",
+                    "address": "5547"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 376-377",
+                    "address": "5548"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 378-379",
+                    "address": "5549"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 380-381",
+                    "address": "5550"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 382-383",
+                    "address": "5551"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 384-385",
+                    "address": "5552"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 386-387",
+                    "address": "5553"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 388-389",
+                    "address": "5554"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 390-391",
+                    "address": "5555"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 392-393",
+                    "address": "5556"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 394-395",
+                    "address": "5557"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 396-397",
+                    "address": "5558"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 398-399",
+                    "address": "5559"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Low Discharge Limit 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 400-401",
+                    "address": "5560"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 402-403",
+                    "address": "5561"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 404-405",
+                    "address": "5562"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 406-407",
+                    "address": "5563"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 408-409",
+                    "address": "5564"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 410-411",
+                    "address": "5565"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 412-413",
+                    "address": "5566"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 414-415",
+                    "address": "5567"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 416-417",
+                    "address": "5568"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 418-419",
+                    "address": "5569"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 420-421",
+                    "address": "5570"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 422-423",
+                    "address": "5571"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 424-425",
+                    "address": "5572"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 426-427",
+                    "address": "5573"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 428-429",
+                    "address": "5574"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 430-431",
+                    "address": "5575"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 432-433",
+                    "address": "5576"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 434-435",
+                    "address": "5577"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 436-437",
+                    "address": "5578"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 438-439",
+                    "address": "5579"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 440-441",
+                    "address": "5580"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 442-443",
+                    "address": "5581"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 444-445",
+                    "address": "5582"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 446-447",
+                    "address": "5583"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 448-449",
+                    "address": "5584"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 450-451",
+                    "address": "5585"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 452-453",
+                    "address": "5586"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 454-455",
+                    "address": "5587"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 456-457",
+                    "address": "5588"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 458-459",
+                    "address": "5589"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 460-461",
+                    "address": "5590"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 462-463",
+                    "address": "5591"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 464-465",
+                    "address": "5592"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 466-467",
+                    "address": "5593"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 468-469",
+                    "address": "5594"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 470-471",
+                    "address": "5595"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 472-473",
+                    "address": "5596"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 474-475",
+                    "address": "5597"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 476-477",
+                    "address": "5598"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 478-479",
+                    "address": "5599"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 480-481",
+                    "address": "5600"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 482-483",
+                    "address": "5601"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 484-485",
+                    "address": "5602"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 486-487",
+                    "address": "5603"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 488-489",
+                    "address": "5604"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 490-491",
+                    "address": "5605"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 492-493",
+                    "address": "5606"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 494-495",
+                    "address": "5607"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 496-497",
+                    "address": "5608"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 498-499",
+                    "address": "5609"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 500-501",
+                    "address": "5610"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 502-503",
+                    "address": "5611"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 504-505",
+                    "address": "5612"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 506-507",
+                    "address": "5613"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 508-509",
+                    "address": "5614"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Discharge Limit Bytes 510-511",
+                    "address": "5615"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Average Count 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 000-001",
+                    "address": "3824"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 002-003",
+                    "address": "3825"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 004-005",
+                    "address": "3826"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 006-007",
+                    "address": "3827"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 008-009",
+                    "address": "3828"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 010-011",
+                    "address": "3829"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 012-013",
+                    "address": "3830"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 014-015",
+                    "address": "3831"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 016-017",
+                    "address": "3832"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 018-019",
+                    "address": "3833"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 020-021",
+                    "address": "3834"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 022-023",
+                    "address": "3835"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 024-025",
+                    "address": "3836"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 026-027",
+                    "address": "3837"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 028-029",
+                    "address": "3838"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 030-031",
+                    "address": "3839"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 032-033",
+                    "address": "3840"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 034-035",
+                    "address": "3841"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 036-037",
+                    "address": "3842"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 038-039",
+                    "address": "3843"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 040-041",
+                    "address": "3844"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 042-043",
+                    "address": "3845"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 044-045",
+                    "address": "3846"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 046-047",
+                    "address": "3847"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 048-049",
+                    "address": "3848"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 050-051",
+                    "address": "3849"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 052-053",
+                    "address": "3850"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 054-055",
+                    "address": "3851"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 056-057",
+                    "address": "3852"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 058-059",
+                    "address": "3853"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 060-061",
+                    "address": "3854"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 062-063",
+                    "address": "3855"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 064-065",
+                    "address": "3856"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 066-067",
+                    "address": "3857"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 068-069",
+                    "address": "3858"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 070-071",
+                    "address": "3859"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 072-073",
+                    "address": "3860"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 074-075",
+                    "address": "3861"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 076-077",
+                    "address": "3862"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 078-079",
+                    "address": "3863"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 080-081",
+                    "address": "3864"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 082-083",
+                    "address": "3865"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 084-085",
+                    "address": "3866"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 086-087",
+                    "address": "3867"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 088-089",
+                    "address": "3868"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 090-091",
+                    "address": "3869"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 092-093",
+                    "address": "3870"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 094-095",
+                    "address": "3871"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 096-097",
+                    "address": "3872"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 098-099",
+                    "address": "3873"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 100-101",
+                    "address": "3874"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 102-103",
+                    "address": "3875"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 104-105",
+                    "address": "3876"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 106-107",
+                    "address": "3877"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 108-109",
+                    "address": "3878"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 110-111",
+                    "address": "3879"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 112-113",
+                    "address": "3880"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 114-115",
+                    "address": "3881"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 116-117",
+                    "address": "3882"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 118-119",
+                    "address": "3883"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 120-121",
+                    "address": "3884"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 122-123",
+                    "address": "3885"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 124-125",
+                    "address": "3886"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 126-127",
+                    "address": "3887"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 128-129",
+                    "address": "3888"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 130-131",
+                    "address": "3889"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 132-133",
+                    "address": "3890"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 134-135",
+                    "address": "3891"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 136-137",
+                    "address": "3892"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 138-139",
+                    "address": "3893"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 140-141",
+                    "address": "3894"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 142-143",
+                    "address": "3895"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 144-145",
+                    "address": "3896"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 146-147",
+                    "address": "3897"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 148-149",
+                    "address": "3898"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 150-151",
+                    "address": "3899"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 152-153",
+                    "address": "3900"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 154-155",
+                    "address": "3901"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 156-157",
+                    "address": "3902"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 158-159",
+                    "address": "3903"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 160-161",
+                    "address": "3904"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 162-163",
+                    "address": "3905"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 164-165",
+                    "address": "3906"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 166-167",
+                    "address": "3907"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 168-169",
+                    "address": "3908"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 170-171",
+                    "address": "3909"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 172-173",
+                    "address": "3910"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 174-175",
+                    "address": "3911"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 176-177",
+                    "address": "3912"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 178-179",
+                    "address": "3913"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 180-181",
+                    "address": "3914"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 182-183",
+                    "address": "3915"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 184-185",
+                    "address": "3916"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 186-187",
+                    "address": "3917"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 188-189",
+                    "address": "3918"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 190-191",
+                    "address": "3919"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 192-193",
+                    "address": "3920"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 194-195",
+                    "address": "3921"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 196-197",
+                    "address": "3922"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 198-199",
+                    "address": "3923"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Average Count 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 200-201",
+                    "address": "3924"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 202-203",
+                    "address": "3925"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 204-205",
+                    "address": "3926"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 206-207",
+                    "address": "3927"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 208-209",
+                    "address": "3928"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 210-211",
+                    "address": "3929"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 212-213",
+                    "address": "3930"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 214-215",
+                    "address": "3931"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 216-217",
+                    "address": "3932"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 218-219",
+                    "address": "3933"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 220-221",
+                    "address": "3934"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 222-223",
+                    "address": "3935"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 224-225",
+                    "address": "3936"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 226-227",
+                    "address": "3937"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 228-229",
+                    "address": "3938"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 230-231",
+                    "address": "3939"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 232-233",
+                    "address": "3940"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 234-235",
+                    "address": "3941"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 236-237",
+                    "address": "3942"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 238-239",
+                    "address": "3943"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 240-241",
+                    "address": "3944"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 242-243",
+                    "address": "3945"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 244-245",
+                    "address": "3946"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 246-247",
+                    "address": "3947"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 248-249",
+                    "address": "3948"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 250-251",
+                    "address": "3949"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 252-253",
+                    "address": "3950"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 254-255",
+                    "address": "3951"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 256-257",
+                    "address": "3952"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 258-259",
+                    "address": "3953"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 260-261",
+                    "address": "3954"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 262-263",
+                    "address": "3955"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 264-265",
+                    "address": "3956"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 266-267",
+                    "address": "3957"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 268-269",
+                    "address": "3958"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 270-271",
+                    "address": "3959"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 272-273",
+                    "address": "3960"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 274-275",
+                    "address": "3961"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 276-277",
+                    "address": "3962"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 278-279",
+                    "address": "3963"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 280-281",
+                    "address": "3964"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 282-283",
+                    "address": "3965"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 284-285",
+                    "address": "3966"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 286-287",
+                    "address": "3967"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 288-289",
+                    "address": "3968"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 290-291",
+                    "address": "3969"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 292-293",
+                    "address": "3970"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 294-295",
+                    "address": "3971"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 296-297",
+                    "address": "3972"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 298-299",
+                    "address": "3973"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 300-301",
+                    "address": "3974"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 302-303",
+                    "address": "3975"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 304-305",
+                    "address": "3976"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 306-307",
+                    "address": "3977"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 308-309",
+                    "address": "3978"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 310-311",
+                    "address": "3979"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 312-313",
+                    "address": "3980"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 314-315",
+                    "address": "3981"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 316-317",
+                    "address": "3982"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 318-319",
+                    "address": "3983"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 320-321",
+                    "address": "3984"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 322-323",
+                    "address": "3985"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 324-325",
+                    "address": "3986"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 326-327",
+                    "address": "3987"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 328-329",
+                    "address": "3988"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 330-331",
+                    "address": "3989"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 332-333",
+                    "address": "3990"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 334-335",
+                    "address": "3991"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 336-337",
+                    "address": "3992"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 338-339",
+                    "address": "3993"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 340-341",
+                    "address": "3994"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 342-343",
+                    "address": "3995"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 344-345",
+                    "address": "3996"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 346-347",
+                    "address": "3997"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 348-349",
+                    "address": "3998"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 350-351",
+                    "address": "3999"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 352-353",
+                    "address": "4000"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 354-355",
+                    "address": "4001"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 356-357",
+                    "address": "4002"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 358-359",
+                    "address": "4003"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 360-361",
+                    "address": "4004"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 362-363",
+                    "address": "4005"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 364-365",
+                    "address": "4006"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 366-367",
+                    "address": "4007"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 368-369",
+                    "address": "4008"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 370-371",
+                    "address": "4009"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 372-373",
+                    "address": "4010"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 374-375",
+                    "address": "4011"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 376-377",
+                    "address": "4012"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 378-379",
+                    "address": "4013"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 380-381",
+                    "address": "4014"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 382-383",
+                    "address": "4015"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 384-385",
+                    "address": "4016"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 386-387",
+                    "address": "4017"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 388-389",
+                    "address": "4018"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 390-391",
+                    "address": "4019"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 392-393",
+                    "address": "4020"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 394-395",
+                    "address": "4021"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 396-397",
+                    "address": "4022"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 398-399",
+                    "address": "4023"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Average Count 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 400-401",
+                    "address": "4024"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 402-403",
+                    "address": "4025"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 404-405",
+                    "address": "4026"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 406-407",
+                    "address": "4027"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 408-409",
+                    "address": "4028"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 410-411",
+                    "address": "4029"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 412-413",
+                    "address": "4030"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 414-415",
+                    "address": "4031"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 416-417",
+                    "address": "4032"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 418-419",
+                    "address": "4033"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 420-421",
+                    "address": "4034"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 422-423",
+                    "address": "4035"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 424-425",
+                    "address": "4036"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 426-427",
+                    "address": "4037"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 428-429",
+                    "address": "4038"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 430-431",
+                    "address": "4039"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 432-433",
+                    "address": "4040"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 434-435",
+                    "address": "4041"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 436-437",
+                    "address": "4042"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 438-439",
+                    "address": "4043"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 440-441",
+                    "address": "4044"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 442-443",
+                    "address": "4045"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 444-445",
+                    "address": "4046"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 446-447",
+                    "address": "4047"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 448-449",
+                    "address": "4048"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 450-451",
+                    "address": "4049"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 452-453",
+                    "address": "4050"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 454-455",
+                    "address": "4051"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 456-457",
+                    "address": "4052"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 458-459",
+                    "address": "4053"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 460-461",
+                    "address": "4054"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 462-463",
+                    "address": "4055"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 464-465",
+                    "address": "4056"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 466-467",
+                    "address": "4057"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 468-469",
+                    "address": "4058"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 470-471",
+                    "address": "4059"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 472-473",
+                    "address": "4060"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 474-475",
+                    "address": "4061"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 476-477",
+                    "address": "4062"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 478-479",
+                    "address": "4063"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 480-481",
+                    "address": "4064"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 482-483",
+                    "address": "4065"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 484-485",
+                    "address": "4066"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 486-487",
+                    "address": "4067"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 488-489",
+                    "address": "4068"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 490-491",
+                    "address": "4069"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 492-493",
+                    "address": "4070"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 494-495",
+                    "address": "4071"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 496-497",
+                    "address": "4072"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 498-499",
+                    "address": "4073"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 500-501",
+                    "address": "4074"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 502-503",
+                    "address": "4075"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 504-505",
+                    "address": "4076"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 506-507",
+                    "address": "4077"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 508-509",
+                    "address": "4078"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Average Count Bytes 510-511",
+                    "address": "4079"
+                }
+            ]
+        }
+    ]
+}

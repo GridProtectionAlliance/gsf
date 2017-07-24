@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{074BC7DC-9B65-4E47-87E3-D61DEF3B3C40}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ModbusAdapters</RootNamespace>
+    <AssemblyName>ModbusAdapters</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NModbus4, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\NModbus4.2.1.0\lib\net40\NModbus4.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ModbusHubClient.cs" />
+    <Compile Include="ModbusOperations.cs" />
+    <Compile Include="ModbusPoller.cs" />
+    <Compile Include="Model\ProgressUpdate.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
+      <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
+      <Name>GSF.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
+      <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.Web\GSF.Web.csproj">
+      <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
+      <Name>GSF.Web</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ModbusConfig.cshtml" />
+    <EmbeddedResource Include="Images\ModbusConfigEditor.png" />
+    <EmbeddedResource Include="Scripts\MapViewModel.js" />
+    <EmbeddedResource Include="Scripts\RecordViewModel.js" />
+    <EmbeddedResource Include="Scripts\SequenceViewModel.js" />
+    <EmbeddedResource Include="Scripts\knockout-3.4.0.js" />
+    <EmbeddedResource Include="Scripts\knockout.mapping-latest.js" />
+    <EmbeddedResource Include="Scripts\knockout.validation.js" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 1.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 2.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 3.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 4.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Physical CT.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\System Summary.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\Scripts.py" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String FED Electrolyte Alarm Enabled.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String FED Electrolyte Level Status.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Average Counts.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Average.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value High Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Hysteresis.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Last Measurement Day.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Last Measurement Hour.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Last Measurement Minute.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Last Measurement Month.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Last Measurement Second.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Last Measurement Year.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Low Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value Status.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Ohmic Value.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Average Count.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Average.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 High Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Hysteresis.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Low Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Status.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Thermal Runaway Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Value.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Duration.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Status.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Day.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Hour.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Minute.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Month.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Second.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Year.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Average Count.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Average.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage High Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Hysteresis.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Low Discharge Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Low Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Status.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Thermal Runaway Limit.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Value.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\CellWatch PoC.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\Select Battery and String.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Input Bit 1.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Input Bit 2.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Input Bit 3.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Input Bit 4.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Logical Current.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Status.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 1.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 2.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 3.json" />
+    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 4.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 1 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 1 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 2 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 2 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 3 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 3 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 4 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 4 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 5 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 5 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 6 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 6 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 1 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 1 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 2 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 2 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 3 Alarm 1, 2, and 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 3 Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\General Information.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Kelman Mapping.py" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Alarm 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Alarm 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Alarm 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Alarm 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Alarm 5 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Alarm 6 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Last Record %28Float%29.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Last Record %28Int%29.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Ratio 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Ratio 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Ratio 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Ratio 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Ratio 5 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Relative Saturation Alarm Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source A Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Alarm 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Alarm 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Alarm 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Alarm 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Alarm 5 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Alarm 6 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Last Record %28Float%29.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Last Record %28Int%29.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Ratio 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Ratio 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Ratio 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Ratio 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Ratio 5 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Relative Saturation Alarm Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source B Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Alarm 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Alarm 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Alarm 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Alarm 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Alarm 5 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Alarm 6 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Last Record %28Float%29.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Last Record %28Int%29.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Ratio 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Ratio 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Ratio 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Ratio 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Ratio 5 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Relative Saturation Alarm Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Oil Source C Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Peripheral Device Scheduler Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\PreSens O2 Sensor 1 and 2 Configuration Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Time.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Alarm 1 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Alarm 2 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Alarm 3 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Alarm 4 Settings.json" />
+    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Last Record.json" />
+    <EmbeddedResource Include="ModbusConfigs\PQube\Mappings.json" />
+    <EmbeddedResource Include="ModbusConfigs\PQube\PQubeScript.py" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+    <EmbeddedResource Include="Status.cshtml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

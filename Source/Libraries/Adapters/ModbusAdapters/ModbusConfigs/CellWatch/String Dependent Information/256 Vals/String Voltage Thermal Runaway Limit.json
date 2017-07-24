@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Thermal Runaway Limit 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 000-001",
+                    "address": "5104"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 002-003",
+                    "address": "5105"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 004-005",
+                    "address": "5106"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 006-007",
+                    "address": "5107"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 008-009",
+                    "address": "5108"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 010-011",
+                    "address": "5109"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 012-013",
+                    "address": "5110"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 014-015",
+                    "address": "5111"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 016-017",
+                    "address": "5112"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 018-019",
+                    "address": "5113"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 020-021",
+                    "address": "5114"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 022-023",
+                    "address": "5115"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 024-025",
+                    "address": "5116"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 026-027",
+                    "address": "5117"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 028-029",
+                    "address": "5118"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 030-031",
+                    "address": "5119"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 032-033",
+                    "address": "5120"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 034-035",
+                    "address": "5121"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 036-037",
+                    "address": "5122"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 038-039",
+                    "address": "5123"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 040-041",
+                    "address": "5124"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 042-043",
+                    "address": "5125"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 044-045",
+                    "address": "5126"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 046-047",
+                    "address": "5127"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 048-049",
+                    "address": "5128"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 050-051",
+                    "address": "5129"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 052-053",
+                    "address": "5130"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 054-055",
+                    "address": "5131"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 056-057",
+                    "address": "5132"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 058-059",
+                    "address": "5133"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 060-061",
+                    "address": "5134"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 062-063",
+                    "address": "5135"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 064-065",
+                    "address": "5136"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 066-067",
+                    "address": "5137"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 068-069",
+                    "address": "5138"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 070-071",
+                    "address": "5139"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 072-073",
+                    "address": "5140"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 074-075",
+                    "address": "5141"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 076-077",
+                    "address": "5142"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 078-079",
+                    "address": "5143"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 080-081",
+                    "address": "5144"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 082-083",
+                    "address": "5145"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 084-085",
+                    "address": "5146"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 086-087",
+                    "address": "5147"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 088-089",
+                    "address": "5148"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 090-091",
+                    "address": "5149"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 092-093",
+                    "address": "5150"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 094-095",
+                    "address": "5151"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 096-097",
+                    "address": "5152"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 098-099",
+                    "address": "5153"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 100-101",
+                    "address": "5154"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 102-103",
+                    "address": "5155"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 104-105",
+                    "address": "5156"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 106-107",
+                    "address": "5157"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 108-109",
+                    "address": "5158"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 110-111",
+                    "address": "5159"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 112-113",
+                    "address": "5160"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 114-115",
+                    "address": "5161"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 116-117",
+                    "address": "5162"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 118-119",
+                    "address": "5163"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 120-121",
+                    "address": "5164"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 122-123",
+                    "address": "5165"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 124-125",
+                    "address": "5166"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 126-127",
+                    "address": "5167"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 128-129",
+                    "address": "5168"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 130-131",
+                    "address": "5169"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 132-133",
+                    "address": "5170"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 134-135",
+                    "address": "5171"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 136-137",
+                    "address": "5172"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 138-139",
+                    "address": "5173"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 140-141",
+                    "address": "5174"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 142-143",
+                    "address": "5175"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 144-145",
+                    "address": "5176"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 146-147",
+                    "address": "5177"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 148-149",
+                    "address": "5178"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 150-151",
+                    "address": "5179"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 152-153",
+                    "address": "5180"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 154-155",
+                    "address": "5181"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 156-157",
+                    "address": "5182"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 158-159",
+                    "address": "5183"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 160-161",
+                    "address": "5184"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 162-163",
+                    "address": "5185"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 164-165",
+                    "address": "5186"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 166-167",
+                    "address": "5187"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 168-169",
+                    "address": "5188"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 170-171",
+                    "address": "5189"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 172-173",
+                    "address": "5190"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 174-175",
+                    "address": "5191"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 176-177",
+                    "address": "5192"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 178-179",
+                    "address": "5193"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 180-181",
+                    "address": "5194"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 182-183",
+                    "address": "5195"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 184-185",
+                    "address": "5196"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 186-187",
+                    "address": "5197"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 188-189",
+                    "address": "5198"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 190-191",
+                    "address": "5199"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 192-193",
+                    "address": "5200"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 194-195",
+                    "address": "5201"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 196-197",
+                    "address": "5202"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 198-199",
+                    "address": "5203"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Thermal Runaway Limit 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 200-201",
+                    "address": "5204"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 202-203",
+                    "address": "5205"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 204-205",
+                    "address": "5206"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 206-207",
+                    "address": "5207"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 208-209",
+                    "address": "5208"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 210-211",
+                    "address": "5209"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 212-213",
+                    "address": "5210"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 214-215",
+                    "address": "5211"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 216-217",
+                    "address": "5212"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 218-219",
+                    "address": "5213"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 220-221",
+                    "address": "5214"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 222-223",
+                    "address": "5215"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 224-225",
+                    "address": "5216"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 226-227",
+                    "address": "5217"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 228-229",
+                    "address": "5218"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 230-231",
+                    "address": "5219"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 232-233",
+                    "address": "5220"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 234-235",
+                    "address": "5221"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 236-237",
+                    "address": "5222"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 238-239",
+                    "address": "5223"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 240-241",
+                    "address": "5224"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 242-243",
+                    "address": "5225"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 244-245",
+                    "address": "5226"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 246-247",
+                    "address": "5227"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 248-249",
+                    "address": "5228"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 250-251",
+                    "address": "5229"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 252-253",
+                    "address": "5230"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 254-255",
+                    "address": "5231"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 256-257",
+                    "address": "5232"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 258-259",
+                    "address": "5233"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 260-261",
+                    "address": "5234"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 262-263",
+                    "address": "5235"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 264-265",
+                    "address": "5236"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 266-267",
+                    "address": "5237"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 268-269",
+                    "address": "5238"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 270-271",
+                    "address": "5239"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 272-273",
+                    "address": "5240"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 274-275",
+                    "address": "5241"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 276-277",
+                    "address": "5242"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 278-279",
+                    "address": "5243"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 280-281",
+                    "address": "5244"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 282-283",
+                    "address": "5245"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 284-285",
+                    "address": "5246"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 286-287",
+                    "address": "5247"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 288-289",
+                    "address": "5248"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 290-291",
+                    "address": "5249"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 292-293",
+                    "address": "5250"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 294-295",
+                    "address": "5251"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 296-297",
+                    "address": "5252"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 298-299",
+                    "address": "5253"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 300-301",
+                    "address": "5254"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 302-303",
+                    "address": "5255"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 304-305",
+                    "address": "5256"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 306-307",
+                    "address": "5257"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 308-309",
+                    "address": "5258"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 310-311",
+                    "address": "5259"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 312-313",
+                    "address": "5260"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 314-315",
+                    "address": "5261"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 316-317",
+                    "address": "5262"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 318-319",
+                    "address": "5263"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 320-321",
+                    "address": "5264"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 322-323",
+                    "address": "5265"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 324-325",
+                    "address": "5266"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 326-327",
+                    "address": "5267"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 328-329",
+                    "address": "5268"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 330-331",
+                    "address": "5269"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 332-333",
+                    "address": "5270"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 334-335",
+                    "address": "5271"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 336-337",
+                    "address": "5272"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 338-339",
+                    "address": "5273"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 340-341",
+                    "address": "5274"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 342-343",
+                    "address": "5275"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 344-345",
+                    "address": "5276"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 346-347",
+                    "address": "5277"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 348-349",
+                    "address": "5278"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 350-351",
+                    "address": "5279"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 352-353",
+                    "address": "5280"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 354-355",
+                    "address": "5281"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 356-357",
+                    "address": "5282"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 358-359",
+                    "address": "5283"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 360-361",
+                    "address": "5284"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 362-363",
+                    "address": "5285"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 364-365",
+                    "address": "5286"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 366-367",
+                    "address": "5287"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 368-369",
+                    "address": "5288"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 370-371",
+                    "address": "5289"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 372-373",
+                    "address": "5290"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 374-375",
+                    "address": "5291"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 376-377",
+                    "address": "5292"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 378-379",
+                    "address": "5293"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 380-381",
+                    "address": "5294"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 382-383",
+                    "address": "5295"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 384-385",
+                    "address": "5296"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 386-387",
+                    "address": "5297"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 388-389",
+                    "address": "5298"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 390-391",
+                    "address": "5299"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 392-393",
+                    "address": "5300"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 394-395",
+                    "address": "5301"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 396-397",
+                    "address": "5302"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 398-399",
+                    "address": "5303"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Thermal Runaway Limit 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 400-401",
+                    "address": "5304"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 402-403",
+                    "address": "5305"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 404-405",
+                    "address": "5306"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 406-407",
+                    "address": "5307"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 408-409",
+                    "address": "5308"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 410-411",
+                    "address": "5309"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 412-413",
+                    "address": "5310"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 414-415",
+                    "address": "5311"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 416-417",
+                    "address": "5312"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 418-419",
+                    "address": "5313"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 420-421",
+                    "address": "5314"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 422-423",
+                    "address": "5315"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 424-425",
+                    "address": "5316"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 426-427",
+                    "address": "5317"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 428-429",
+                    "address": "5318"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 430-431",
+                    "address": "5319"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 432-433",
+                    "address": "5320"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 434-435",
+                    "address": "5321"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 436-437",
+                    "address": "5322"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 438-439",
+                    "address": "5323"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 440-441",
+                    "address": "5324"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 442-443",
+                    "address": "5325"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 444-445",
+                    "address": "5326"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 446-447",
+                    "address": "5327"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 448-449",
+                    "address": "5328"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 450-451",
+                    "address": "5329"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 452-453",
+                    "address": "5330"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 454-455",
+                    "address": "5331"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 456-457",
+                    "address": "5332"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 458-459",
+                    "address": "5333"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 460-461",
+                    "address": "5334"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 462-463",
+                    "address": "5335"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 464-465",
+                    "address": "5336"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 466-467",
+                    "address": "5337"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 468-469",
+                    "address": "5338"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 470-471",
+                    "address": "5339"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 472-473",
+                    "address": "5340"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 474-475",
+                    "address": "5341"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 476-477",
+                    "address": "5342"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 478-479",
+                    "address": "5343"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 480-481",
+                    "address": "5344"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 482-483",
+                    "address": "5345"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 484-485",
+                    "address": "5346"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 486-487",
+                    "address": "5347"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 488-489",
+                    "address": "5348"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 490-491",
+                    "address": "5349"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 492-493",
+                    "address": "5350"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 494-495",
+                    "address": "5351"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 496-497",
+                    "address": "5352"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 498-499",
+                    "address": "5353"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 500-501",
+                    "address": "5354"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 502-503",
+                    "address": "5355"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 504-505",
+                    "address": "5356"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 506-507",
+                    "address": "5357"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 508-509",
+                    "address": "5358"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Thermal Runaway Limit Bytes 510-511",
+                    "address": "5359"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String FED Electrolyte Level Status 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 000-001",
+                    "address": "13296"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 002-003",
+                    "address": "13297"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 004-005",
+                    "address": "13298"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 006-007",
+                    "address": "13299"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 008-009",
+                    "address": "13300"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 010-011",
+                    "address": "13301"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 012-013",
+                    "address": "13302"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 014-015",
+                    "address": "13303"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 016-017",
+                    "address": "13304"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 018-019",
+                    "address": "13305"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 020-021",
+                    "address": "13306"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 022-023",
+                    "address": "13307"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 024-025",
+                    "address": "13308"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 026-027",
+                    "address": "13309"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 028-029",
+                    "address": "13310"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 030-031",
+                    "address": "13311"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 032-033",
+                    "address": "13312"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 034-035",
+                    "address": "13313"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 036-037",
+                    "address": "13314"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 038-039",
+                    "address": "13315"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 040-041",
+                    "address": "13316"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 042-043",
+                    "address": "13317"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 044-045",
+                    "address": "13318"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 046-047",
+                    "address": "13319"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 048-049",
+                    "address": "13320"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 050-051",
+                    "address": "13321"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 052-053",
+                    "address": "13322"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 054-055",
+                    "address": "13323"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 056-057",
+                    "address": "13324"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 058-059",
+                    "address": "13325"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 060-061",
+                    "address": "13326"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 062-063",
+                    "address": "13327"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 064-065",
+                    "address": "13328"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 066-067",
+                    "address": "13329"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 068-069",
+                    "address": "13330"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 070-071",
+                    "address": "13331"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 072-073",
+                    "address": "13332"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 074-075",
+                    "address": "13333"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 076-077",
+                    "address": "13334"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 078-079",
+                    "address": "13335"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 080-081",
+                    "address": "13336"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 082-083",
+                    "address": "13337"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 084-085",
+                    "address": "13338"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 086-087",
+                    "address": "13339"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 088-089",
+                    "address": "13340"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 090-091",
+                    "address": "13341"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 092-093",
+                    "address": "13342"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 094-095",
+                    "address": "13343"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 096-097",
+                    "address": "13344"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 098-099",
+                    "address": "13345"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 100-101",
+                    "address": "13346"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 102-103",
+                    "address": "13347"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 104-105",
+                    "address": "13348"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 106-107",
+                    "address": "13349"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 108-109",
+                    "address": "13350"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 110-111",
+                    "address": "13351"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 112-113",
+                    "address": "13352"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 114-115",
+                    "address": "13353"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 116-117",
+                    "address": "13354"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 118-119",
+                    "address": "13355"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 120-121",
+                    "address": "13356"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 122-123",
+                    "address": "13357"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 124-125",
+                    "address": "13358"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 126-127",
+                    "address": "13359"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 128-129",
+                    "address": "13360"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 130-131",
+                    "address": "13361"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 132-133",
+                    "address": "13362"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 134-135",
+                    "address": "13363"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 136-137",
+                    "address": "13364"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 138-139",
+                    "address": "13365"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 140-141",
+                    "address": "13366"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 142-143",
+                    "address": "13367"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 144-145",
+                    "address": "13368"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 146-147",
+                    "address": "13369"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 148-149",
+                    "address": "13370"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 150-151",
+                    "address": "13371"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 152-153",
+                    "address": "13372"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 154-155",
+                    "address": "13373"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 156-157",
+                    "address": "13374"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 158-159",
+                    "address": "13375"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 160-161",
+                    "address": "13376"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 162-163",
+                    "address": "13377"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 164-165",
+                    "address": "13378"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 166-167",
+                    "address": "13379"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 168-169",
+                    "address": "13380"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 170-171",
+                    "address": "13381"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 172-173",
+                    "address": "13382"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 174-175",
+                    "address": "13383"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 176-177",
+                    "address": "13384"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 178-179",
+                    "address": "13385"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 180-181",
+                    "address": "13386"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 182-183",
+                    "address": "13387"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 184-185",
+                    "address": "13388"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 186-187",
+                    "address": "13389"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 188-189",
+                    "address": "13390"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 190-191",
+                    "address": "13391"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 192-193",
+                    "address": "13392"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 194-195",
+                    "address": "13393"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 196-197",
+                    "address": "13394"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 198-199",
+                    "address": "13395"
+                }
+            ]
+        },
+        {
+            "name": "String FED Electrolyte Level Status 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 200-201",
+                    "address": "13396"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 202-203",
+                    "address": "13397"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 204-205",
+                    "address": "13398"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 206-207",
+                    "address": "13399"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 208-209",
+                    "address": "13400"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 210-211",
+                    "address": "13401"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 212-213",
+                    "address": "13402"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 214-215",
+                    "address": "13403"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 216-217",
+                    "address": "13404"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 218-219",
+                    "address": "13405"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 220-221",
+                    "address": "13406"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 222-223",
+                    "address": "13407"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 224-225",
+                    "address": "13408"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 226-227",
+                    "address": "13409"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 228-229",
+                    "address": "13410"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 230-231",
+                    "address": "13411"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 232-233",
+                    "address": "13412"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 234-235",
+                    "address": "13413"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 236-237",
+                    "address": "13414"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 238-239",
+                    "address": "13415"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 240-241",
+                    "address": "13416"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 242-243",
+                    "address": "13417"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 244-245",
+                    "address": "13418"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 246-247",
+                    "address": "13419"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 248-249",
+                    "address": "13420"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 250-251",
+                    "address": "13421"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 252-253",
+                    "address": "13422"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 254-255",
+                    "address": "13423"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 256-257",
+                    "address": "13424"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 258-259",
+                    "address": "13425"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 260-261",
+                    "address": "13426"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 262-263",
+                    "address": "13427"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 264-265",
+                    "address": "13428"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 266-267",
+                    "address": "13429"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 268-269",
+                    "address": "13430"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 270-271",
+                    "address": "13431"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 272-273",
+                    "address": "13432"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 274-275",
+                    "address": "13433"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 276-277",
+                    "address": "13434"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 278-279",
+                    "address": "13435"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 280-281",
+                    "address": "13436"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 282-283",
+                    "address": "13437"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 284-285",
+                    "address": "13438"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 286-287",
+                    "address": "13439"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 288-289",
+                    "address": "13440"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 290-291",
+                    "address": "13441"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 292-293",
+                    "address": "13442"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 294-295",
+                    "address": "13443"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 296-297",
+                    "address": "13444"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 298-299",
+                    "address": "13445"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 300-301",
+                    "address": "13446"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 302-303",
+                    "address": "13447"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 304-305",
+                    "address": "13448"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 306-307",
+                    "address": "13449"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 308-309",
+                    "address": "13450"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 310-311",
+                    "address": "13451"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 312-313",
+                    "address": "13452"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 314-315",
+                    "address": "13453"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 316-317",
+                    "address": "13454"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 318-319",
+                    "address": "13455"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 320-321",
+                    "address": "13456"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 322-323",
+                    "address": "13457"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 324-325",
+                    "address": "13458"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 326-327",
+                    "address": "13459"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 328-329",
+                    "address": "13460"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 330-331",
+                    "address": "13461"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 332-333",
+                    "address": "13462"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 334-335",
+                    "address": "13463"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 336-337",
+                    "address": "13464"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 338-339",
+                    "address": "13465"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 340-341",
+                    "address": "13466"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 342-343",
+                    "address": "13467"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 344-345",
+                    "address": "13468"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 346-347",
+                    "address": "13469"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 348-349",
+                    "address": "13470"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 350-351",
+                    "address": "13471"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 352-353",
+                    "address": "13472"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 354-355",
+                    "address": "13473"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 356-357",
+                    "address": "13474"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 358-359",
+                    "address": "13475"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 360-361",
+                    "address": "13476"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 362-363",
+                    "address": "13477"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 364-365",
+                    "address": "13478"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 366-367",
+                    "address": "13479"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 368-369",
+                    "address": "13480"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 370-371",
+                    "address": "13481"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 372-373",
+                    "address": "13482"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 374-375",
+                    "address": "13483"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 376-377",
+                    "address": "13484"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 378-379",
+                    "address": "13485"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 380-381",
+                    "address": "13486"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 382-383",
+                    "address": "13487"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 384-385",
+                    "address": "13488"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 386-387",
+                    "address": "13489"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 388-389",
+                    "address": "13490"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 390-391",
+                    "address": "13491"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 392-393",
+                    "address": "13492"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 394-395",
+                    "address": "13493"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 396-397",
+                    "address": "13494"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 398-399",
+                    "address": "13495"
+                }
+            ]
+        },
+        {
+            "name": "String FED Electrolyte Level Status 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 400-401",
+                    "address": "13496"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 402-403",
+                    "address": "13497"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 404-405",
+                    "address": "13498"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 406-407",
+                    "address": "13499"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 408-409",
+                    "address": "13500"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 410-411",
+                    "address": "13501"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 412-413",
+                    "address": "13502"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 414-415",
+                    "address": "13503"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 416-417",
+                    "address": "13504"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 418-419",
+                    "address": "13505"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 420-421",
+                    "address": "13506"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 422-423",
+                    "address": "13507"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 424-425",
+                    "address": "13508"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 426-427",
+                    "address": "13509"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 428-429",
+                    "address": "13510"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 430-431",
+                    "address": "13511"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 432-433",
+                    "address": "13512"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 434-435",
+                    "address": "13513"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 436-437",
+                    "address": "13514"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 438-439",
+                    "address": "13515"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 440-441",
+                    "address": "13516"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 442-443",
+                    "address": "13517"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 444-445",
+                    "address": "13518"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 446-447",
+                    "address": "13519"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 448-449",
+                    "address": "13520"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 450-451",
+                    "address": "13521"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 452-453",
+                    "address": "13522"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 454-455",
+                    "address": "13523"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 456-457",
+                    "address": "13524"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 458-459",
+                    "address": "13525"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 460-461",
+                    "address": "13526"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 462-463",
+                    "address": "13527"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 464-465",
+                    "address": "13528"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 466-467",
+                    "address": "13529"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 468-469",
+                    "address": "13530"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 470-471",
+                    "address": "13531"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 472-473",
+                    "address": "13532"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 474-475",
+                    "address": "13533"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 476-477",
+                    "address": "13534"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 478-479",
+                    "address": "13535"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 480-481",
+                    "address": "13536"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 482-483",
+                    "address": "13537"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 484-485",
+                    "address": "13538"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 486-487",
+                    "address": "13539"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 488-489",
+                    "address": "13540"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 490-491",
+                    "address": "13541"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 492-493",
+                    "address": "13542"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 494-495",
+                    "address": "13543"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 496-497",
+                    "address": "13544"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 498-499",
+                    "address": "13545"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 500-501",
+                    "address": "13546"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 502-503",
+                    "address": "13547"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 504-505",
+                    "address": "13548"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 506-507",
+                    "address": "13549"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 508-509",
+                    "address": "13550"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String FED Electrolyte Level Status Bytes 510-511",
+                    "address": "13551"
+                }
+            ]
+        }
+    ]
+}

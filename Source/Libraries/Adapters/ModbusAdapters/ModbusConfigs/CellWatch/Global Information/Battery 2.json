@@ -1,0 +1,232 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "Battery 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "176",
+                    "description": "Battery 2 Label Bytes 00-01",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "177",
+                    "description": "Battery 2 Label Bytes 02-03",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "178",
+                    "description": "Battery 2 Label Bytes 04-05",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "179",
+                    "description": "Battery 2 Label Bytes 06-07",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "180",
+                    "description": "Battery 2 Label Bytes 08-09",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "181",
+                    "description": "Battery 2 Label Bytes 10-11",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "182",
+                    "description": "Battery 2 Label Bytes 12-13",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "183",
+                    "description": "Battery 2 Label Bytes 14-15",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "184",
+                    "description": "Battery 2 Label Bytes 16-17",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "185",
+                    "description": "Battery 2 Label Bytes 18-19",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "186",
+                    "description": "Battery 2 Label Bytes 20-21",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "187",
+                    "description": "Battery 2 Label Bytes 22-23",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "188",
+                    "description": "Battery 2 Label Bytes 24-25",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "189",
+                    "description": "Battery 2 Label Bytes 26-27",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "190",
+                    "description": "Battery 2 Label Bytes 28-29",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "191",
+                    "description": "Battery 2 Label Bytes 30-31",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "192",
+                    "description": "Battery 2 Label Bytes 32-33",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "193",
+                    "description": "Battery 2 Label Bytes 34-35",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "194",
+                    "description": "Battery 2 Label Bytes 36-37",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "195",
+                    "description": "Battery 2 Label Bytes 38-39",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "196",
+                    "description": "Battery 2 Label Bytes 40-41",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "197",
+                    "description": "Battery 2 Label Bytes 42-43",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "198",
+                    "description": "Battery 2 Label Bytes 44-45",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "199",
+                    "description": "Battery 2 Label Bytes 46-47",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "200",
+                    "description": "Battery 2 Label Bytes 48-49",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "201",
+                    "description": "Battery 2 Label Bytes 50-51",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "202",
+                    "description": "Battery 2 Label Bytes 52-53",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "203",
+                    "description": "Battery 2 Label Bytes 54-55",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "204",
+                    "description": "Battery 2 Label Bytes 56-57",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "205",
+                    "description": "Battery 2 Label Bytes 58-59",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "206",
+                    "description": "Battery 2 Label Bytes 60-61",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "207",
+                    "description": "Battery 2 Label Bytes 62-63",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "208",
+                    "description": "Battery 2 String Count",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "209",
+                    "description": "Battery 2 Status (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "210",
+                    "description": "Battery 2 Status (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR210,HR209)",
+                    "description": "Battery 2 Status",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "String(HR176,HR177,HR178,HR179,HR180,HR181,HR182,HR183,HR184,HR185,HR186,HR187,HR188,HR189,HR190,HR191,HR192,HR193,HR194,HR195,HR196,HR197,HR198,HR199,HR200,HR201,HR202,HR203,HR204,HR205,HR206,HR207)",
+                    "description": "Battery 2 Label",
+                    "dataValue": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,598 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Record Date and Time(UTC) in UNIX Format Low",
+                    "address": "4097",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time(UTC) in UNIX Format High",
+                    "address": "4098",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time(UTC) in UNIX Format",
+                    "address": "Uint32(HR4097,HR4098)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Record Number",
+                    "address": "4099",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Oil Source",
+                    "address": "4100",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Years",
+                    "address": "4101",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Months, Days",
+                    "address": "4102",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Time (UTC/Local): Hours, Minutes",
+                    "address": "4103",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Firmware Version",
+                    "address": "4104",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Host Firmware Version",
+                    "address": "4105",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Gas Conc. Level Alarm Status",
+                    "address": "4106",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Gas ROC Alarm Status",
+                    "address": "4107",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Transfix Status",
+                    "address": "4108",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Flags",
+                    "address": "4109",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA State (If Error Occurred)",
+                    "address": "4110",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes Low",
+                    "address": "4111",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes High",
+                    "address": "4112",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes",
+                    "address": "Single(HR4111,HR4112)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Measurement Duration (Seconds)",
+                    "address": "4113",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ratio Alarm Status",
+                    "address": "4114",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Hydrogen Conc. (PPM) Low",
+                    "address": "4115",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Hydrogen Conc. (PPM) High",
+                    "address": "4116",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Hydrogen Conc. (PPM)",
+                    "address": "Single(HR4115,HR4116)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Carbon Dioxide Conc. (PPM) Low",
+                    "address": "4117",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Carbon Dioxide Conc. (PPM) High",
+                    "address": "4118",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Carbon Dioxide Conc. (PPM)",
+                    "address": "Single(HR4117,HR4118)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Carbon Monoxide Conc. (PPM) Low",
+                    "address": "4119",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Carbon Monoxide Conc. (PPM) High",
+                    "address": "4120",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Carbon Monoxide Conc. (PPM)",
+                    "address": "Single(HR4119,HR4120)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ethylene Conc. (PPM) Low",
+                    "address": "4121",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ethylene Conc. (PPM) High",
+                    "address": "4122",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ethylene Conc. (PPM)",
+                    "address": "Single(HR4121,HR4122)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ethane Conc. (PPM) Low",
+                    "address": "4123",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ethane Conc. (PPM) High",
+                    "address": "4124",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ethane Conc. (PPM)",
+                    "address": "Single(HR4123,HR4124)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Methane Conc. (PPM) Low",
+                    "address": "4125",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Methane Conc. (PPM) High",
+                    "address": "4126",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Methane Conc. (PPM)",
+                    "address": "Single(HR4125,HR4126)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Acetylene Conc. (PPM) Low",
+                    "address": "4127",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Acetylene Conc. (PPM) High",
+                    "address": "4128",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Acetylene Conc. (PPM)",
+                    "address": "Single(HR4127,HR4128)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Water Conc. (PPM) Low",
+                    "address": "4129",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Water Conc. (PPM) High",
+                    "address": "4130",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Water Conc. (PPM)",
+                    "address": "Single(HR4129,HR4130)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Oxygen Conc. (PPM) Low",
+                    "address": "4131",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Oxygen Conc. (PPM) High",
+                    "address": "4132",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Oxygen Conc. (PPM)",
+                    "address": "Single(HR4131,HR4132)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Total Disolved Combustible Gas Conc. (PPM) Low",
+                    "address": "4133",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Total Disolved Combustible Gas Conc. (PPM) High",
+                    "address": "4134",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Total Disolved Combustible Gas Conc. (PPM)",
+                    "address": "Single(HR4133,HR4134)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Nitrogen Conc. (PPM) Low",
+                    "address": "4135",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Nitrogen Conc. (PPM) High",
+                    "address": "4136",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Nitrogen Conc. (PPM)",
+                    "address": "Single(HR4135,HR4136)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Total Dissolved Gas Conc. (PPM) Low",
+                    "address": "4137",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Total Dissolved Gas Conc. (PPM) High",
+                    "address": "4138",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Total Dissolved Gas Conc. (PPM)",
+                    "address": "Single(HR4137,HR4138)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Oil Pressure (kPa) Low",
+                    "address": "4139",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Oil Pressure (kPa) High",
+                    "address": "4140",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Oil Pressure (kPa)",
+                    "address": "Single(HR4139,HR4140)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Oil Temperature (C) Low",
+                    "address": "4141",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Oil Temperature (C) High",
+                    "address": "4142",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Oil Temperature (C)",
+                    "address": "Single(HR4141,HR4142)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Ambient Temperature (C) Low",
+                    "address": "4143",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ambient Temperature (C) High",
+                    "address": "4144",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Ambient Temperature (C)",
+                    "address": "Single(HR4143,HR4144)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Normalisation Temperature (C) Low",
+                    "address": "4145",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Normalisation Temperature (C) High",
+                    "address": "4146",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Normalisation Temperature (C)",
+                    "address": "Single(HR4145,HR4146)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Analog Input 1 (Transformer Load) Low",
+                    "address": "4147",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 1 (Transformer Load) High",
+                    "address": "4148",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 1 (Transformer Load)",
+                    "address": "Single(HR4147,HR4148)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Analog Input 2 Low",
+                    "address": "4149",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 2 High",
+                    "address": "4150",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 2",
+                    "address": "Single(HR4149,HR4150)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Analog Input 3 Low",
+                    "address": "4151",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 3 High",
+                    "address": "4152",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 3",
+                    "address": "Single(HR4151,HR4152)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Analog Input 4 Low",
+                    "address": "4153",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 4 High",
+                    "address": "4154",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 4",
+                    "address": "Single(HR4153,HR4154)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Analog Input 5 Low",
+                    "address": "4155",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 5 High",
+                    "address": "4156",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 5",
+                    "address": "Single(HR4155,HR4156)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Analog Input 6 Low",
+                    "address": "4157",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 6 High",
+                    "address": "4158",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Analog Input 6",
+                    "address": "Single(HR4157,HR4158)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Spare Register Low",
+                    "address": "4159",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Spare Register High",
+                    "address": "4160",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Spare Register",
+                    "address": "Single(HR4159,HR4160)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A ESHL (Estimated Safe Handling Limit) (%) Low",
+                    "address": "4161",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A ESHL (Estimated Safe Handling Limit) (%) High",
+                    "address": "4162",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A ESHL (Estimated Safe Handling Limit) (%)",
+                    "address": "Single(HR4161,HR4162)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A Relative Saturation (%) Low",
+                    "address": "4163",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Relative Saturation (%) High",
+                    "address": "4164",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A Relative Saturation (%)",
+                    "address": "Single(HR4163,HR4164)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source A TDH (Total Dissolved Hydrocarbons (PPM) Low",
+                    "address": "4165",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A TDH (Total Dissolved Hydrocarbons (PPM) High",
+                    "address": "4166",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source A TDH (Total Dissolved Hydrocarbons (PPM)",
+                    "address": "Single(HR4165,HR4166)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Oil Source A Last Record (Float) 1",
+            "type": 0
+        }
+    ]
+}

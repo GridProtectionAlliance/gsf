@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Low Limit 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 000-001",
+                    "address": "4592"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 002-003",
+                    "address": "4593"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 004-005",
+                    "address": "4594"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 006-007",
+                    "address": "4595"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 008-009",
+                    "address": "4596"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 010-011",
+                    "address": "4597"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 012-013",
+                    "address": "4598"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 014-015",
+                    "address": "4599"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 016-017",
+                    "address": "4600"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 018-019",
+                    "address": "4601"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 020-021",
+                    "address": "4602"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 022-023",
+                    "address": "4603"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 024-025",
+                    "address": "4604"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 026-027",
+                    "address": "4605"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 028-029",
+                    "address": "4606"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 030-031",
+                    "address": "4607"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 032-033",
+                    "address": "4608"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 034-035",
+                    "address": "4609"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 036-037",
+                    "address": "4610"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 038-039",
+                    "address": "4611"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 040-041",
+                    "address": "4612"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 042-043",
+                    "address": "4613"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 044-045",
+                    "address": "4614"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 046-047",
+                    "address": "4615"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 048-049",
+                    "address": "4616"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 050-051",
+                    "address": "4617"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 052-053",
+                    "address": "4618"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 054-055",
+                    "address": "4619"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 056-057",
+                    "address": "4620"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 058-059",
+                    "address": "4621"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 060-061",
+                    "address": "4622"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 062-063",
+                    "address": "4623"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 064-065",
+                    "address": "4624"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 066-067",
+                    "address": "4625"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 068-069",
+                    "address": "4626"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 070-071",
+                    "address": "4627"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 072-073",
+                    "address": "4628"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 074-075",
+                    "address": "4629"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 076-077",
+                    "address": "4630"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 078-079",
+                    "address": "4631"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 080-081",
+                    "address": "4632"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 082-083",
+                    "address": "4633"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 084-085",
+                    "address": "4634"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 086-087",
+                    "address": "4635"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 088-089",
+                    "address": "4636"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 090-091",
+                    "address": "4637"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 092-093",
+                    "address": "4638"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 094-095",
+                    "address": "4639"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 096-097",
+                    "address": "4640"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 098-099",
+                    "address": "4641"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 100-101",
+                    "address": "4642"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 102-103",
+                    "address": "4643"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 104-105",
+                    "address": "4644"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 106-107",
+                    "address": "4645"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 108-109",
+                    "address": "4646"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 110-111",
+                    "address": "4647"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 112-113",
+                    "address": "4648"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 114-115",
+                    "address": "4649"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 116-117",
+                    "address": "4650"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 118-119",
+                    "address": "4651"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 120-121",
+                    "address": "4652"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 122-123",
+                    "address": "4653"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 124-125",
+                    "address": "4654"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 126-127",
+                    "address": "4655"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 128-129",
+                    "address": "4656"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 130-131",
+                    "address": "4657"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 132-133",
+                    "address": "4658"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 134-135",
+                    "address": "4659"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 136-137",
+                    "address": "4660"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 138-139",
+                    "address": "4661"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 140-141",
+                    "address": "4662"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 142-143",
+                    "address": "4663"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 144-145",
+                    "address": "4664"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 146-147",
+                    "address": "4665"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 148-149",
+                    "address": "4666"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 150-151",
+                    "address": "4667"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 152-153",
+                    "address": "4668"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 154-155",
+                    "address": "4669"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 156-157",
+                    "address": "4670"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 158-159",
+                    "address": "4671"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 160-161",
+                    "address": "4672"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 162-163",
+                    "address": "4673"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 164-165",
+                    "address": "4674"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 166-167",
+                    "address": "4675"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 168-169",
+                    "address": "4676"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 170-171",
+                    "address": "4677"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 172-173",
+                    "address": "4678"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 174-175",
+                    "address": "4679"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 176-177",
+                    "address": "4680"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 178-179",
+                    "address": "4681"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 180-181",
+                    "address": "4682"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 182-183",
+                    "address": "4683"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 184-185",
+                    "address": "4684"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 186-187",
+                    "address": "4685"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 188-189",
+                    "address": "4686"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 190-191",
+                    "address": "4687"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 192-193",
+                    "address": "4688"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 194-195",
+                    "address": "4689"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 196-197",
+                    "address": "4690"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 198-199",
+                    "address": "4691"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Low Limit 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 200-201",
+                    "address": "4692"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 202-203",
+                    "address": "4693"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 204-205",
+                    "address": "4694"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 206-207",
+                    "address": "4695"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 208-209",
+                    "address": "4696"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 210-211",
+                    "address": "4697"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 212-213",
+                    "address": "4698"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 214-215",
+                    "address": "4699"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 216-217",
+                    "address": "4700"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 218-219",
+                    "address": "4701"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 220-221",
+                    "address": "4702"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 222-223",
+                    "address": "4703"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 224-225",
+                    "address": "4704"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 226-227",
+                    "address": "4705"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 228-229",
+                    "address": "4706"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 230-231",
+                    "address": "4707"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 232-233",
+                    "address": "4708"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 234-235",
+                    "address": "4709"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 236-237",
+                    "address": "4710"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 238-239",
+                    "address": "4711"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 240-241",
+                    "address": "4712"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 242-243",
+                    "address": "4713"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 244-245",
+                    "address": "4714"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 246-247",
+                    "address": "4715"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 248-249",
+                    "address": "4716"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 250-251",
+                    "address": "4717"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 252-253",
+                    "address": "4718"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 254-255",
+                    "address": "4719"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 256-257",
+                    "address": "4720"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 258-259",
+                    "address": "4721"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 260-261",
+                    "address": "4722"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 262-263",
+                    "address": "4723"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 264-265",
+                    "address": "4724"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 266-267",
+                    "address": "4725"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 268-269",
+                    "address": "4726"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 270-271",
+                    "address": "4727"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 272-273",
+                    "address": "4728"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 274-275",
+                    "address": "4729"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 276-277",
+                    "address": "4730"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 278-279",
+                    "address": "4731"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 280-281",
+                    "address": "4732"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 282-283",
+                    "address": "4733"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 284-285",
+                    "address": "4734"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 286-287",
+                    "address": "4735"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 288-289",
+                    "address": "4736"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 290-291",
+                    "address": "4737"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 292-293",
+                    "address": "4738"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 294-295",
+                    "address": "4739"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 296-297",
+                    "address": "4740"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 298-299",
+                    "address": "4741"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 300-301",
+                    "address": "4742"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 302-303",
+                    "address": "4743"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 304-305",
+                    "address": "4744"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 306-307",
+                    "address": "4745"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 308-309",
+                    "address": "4746"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 310-311",
+                    "address": "4747"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 312-313",
+                    "address": "4748"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 314-315",
+                    "address": "4749"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 316-317",
+                    "address": "4750"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 318-319",
+                    "address": "4751"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 320-321",
+                    "address": "4752"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 322-323",
+                    "address": "4753"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 324-325",
+                    "address": "4754"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 326-327",
+                    "address": "4755"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 328-329",
+                    "address": "4756"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 330-331",
+                    "address": "4757"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 332-333",
+                    "address": "4758"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 334-335",
+                    "address": "4759"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 336-337",
+                    "address": "4760"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 338-339",
+                    "address": "4761"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 340-341",
+                    "address": "4762"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 342-343",
+                    "address": "4763"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 344-345",
+                    "address": "4764"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 346-347",
+                    "address": "4765"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 348-349",
+                    "address": "4766"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 350-351",
+                    "address": "4767"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 352-353",
+                    "address": "4768"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 354-355",
+                    "address": "4769"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 356-357",
+                    "address": "4770"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 358-359",
+                    "address": "4771"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 360-361",
+                    "address": "4772"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 362-363",
+                    "address": "4773"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 364-365",
+                    "address": "4774"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 366-367",
+                    "address": "4775"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 368-369",
+                    "address": "4776"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 370-371",
+                    "address": "4777"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 372-373",
+                    "address": "4778"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 374-375",
+                    "address": "4779"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 376-377",
+                    "address": "4780"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 378-379",
+                    "address": "4781"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 380-381",
+                    "address": "4782"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 382-383",
+                    "address": "4783"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 384-385",
+                    "address": "4784"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 386-387",
+                    "address": "4785"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 388-389",
+                    "address": "4786"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 390-391",
+                    "address": "4787"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 392-393",
+                    "address": "4788"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 394-395",
+                    "address": "4789"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 396-397",
+                    "address": "4790"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 398-399",
+                    "address": "4791"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Low Limit 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 400-401",
+                    "address": "4792"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 402-403",
+                    "address": "4793"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 404-405",
+                    "address": "4794"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 406-407",
+                    "address": "4795"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 408-409",
+                    "address": "4796"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 410-411",
+                    "address": "4797"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 412-413",
+                    "address": "4798"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 414-415",
+                    "address": "4799"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 416-417",
+                    "address": "4800"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 418-419",
+                    "address": "4801"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 420-421",
+                    "address": "4802"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 422-423",
+                    "address": "4803"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 424-425",
+                    "address": "4804"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 426-427",
+                    "address": "4805"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 428-429",
+                    "address": "4806"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 430-431",
+                    "address": "4807"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 432-433",
+                    "address": "4808"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 434-435",
+                    "address": "4809"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 436-437",
+                    "address": "4810"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 438-439",
+                    "address": "4811"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 440-441",
+                    "address": "4812"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 442-443",
+                    "address": "4813"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 444-445",
+                    "address": "4814"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 446-447",
+                    "address": "4815"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 448-449",
+                    "address": "4816"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 450-451",
+                    "address": "4817"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 452-453",
+                    "address": "4818"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 454-455",
+                    "address": "4819"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 456-457",
+                    "address": "4820"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 458-459",
+                    "address": "4821"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 460-461",
+                    "address": "4822"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 462-463",
+                    "address": "4823"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 464-465",
+                    "address": "4824"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 466-467",
+                    "address": "4825"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 468-469",
+                    "address": "4826"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 470-471",
+                    "address": "4827"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 472-473",
+                    "address": "4828"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 474-475",
+                    "address": "4829"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 476-477",
+                    "address": "4830"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 478-479",
+                    "address": "4831"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 480-481",
+                    "address": "4832"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 482-483",
+                    "address": "4833"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 484-485",
+                    "address": "4834"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 486-487",
+                    "address": "4835"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 488-489",
+                    "address": "4836"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 490-491",
+                    "address": "4837"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 492-493",
+                    "address": "4838"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 494-495",
+                    "address": "4839"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 496-497",
+                    "address": "4840"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 498-499",
+                    "address": "4841"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 500-501",
+                    "address": "4842"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 502-503",
+                    "address": "4843"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 504-505",
+                    "address": "4844"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 506-507",
+                    "address": "4845"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 508-509",
+                    "address": "4846"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Low Limit Bytes 510-511",
+                    "address": "4847"
+                }
+            ]
+        }
+    ]
+}

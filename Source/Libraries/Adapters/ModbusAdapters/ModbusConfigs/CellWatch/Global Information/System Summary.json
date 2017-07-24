@@ -1,0 +1,406 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "System Summary",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "0",
+                    "description": "System Summary Label Bytes 00-01",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "1",
+                    "description": "System Summary Label Bytes 02-03",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "2",
+                    "description": "System Summary Label Bytes 04-05",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "3",
+                    "description": "System Summary Label Bytes 06-07",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "4",
+                    "description": "System Summary Label Bytes 08-09",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "5",
+                    "description": "System Summary Label Bytes 10-11",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "6",
+                    "description": "System Summary Label Bytes 12-13",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "7",
+                    "description": "System Summary Label Bytes 14-15",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "8",
+                    "description": "System Summary Label Bytes 16-17",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "9",
+                    "description": "System Summary Label Bytes 18-19",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "10",
+                    "description": "System Summary Label Bytes 20-21",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "11",
+                    "description": "System Summary Label Bytes 22-23",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "12",
+                    "description": "System Summary Label Bytes 24-25",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "13",
+                    "description": "System Summary Label Bytes 26-27",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "14",
+                    "description": "System Summary Label Bytes 28-29",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "15",
+                    "description": "System Summary Label Bytes 30-31",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "16",
+                    "description": "System Summary Label Bytes 32-33",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "17",
+                    "description": "System Summary Label Bytes 34-35",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "18",
+                    "description": "System Summary Label Bytes 36-37",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "19",
+                    "description": "System Summary Label Bytes 38-39",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "20",
+                    "description": "System Summary Label Bytes 40-41",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "21",
+                    "description": "System Summary Label Bytes 42-43",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "22",
+                    "description": "System Summary Label Bytes 44-45",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "23",
+                    "description": "System Summary Label Bytes 46-47",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "24",
+                    "description": "System Summary Label Bytes 48-49",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "25",
+                    "description": "System Summary Label Bytes 50-51",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "26",
+                    "description": "System Summary Label Bytes 52-53",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "27",
+                    "description": "System Summary Label Bytes 54-55",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "28",
+                    "description": "System Summary Label Bytes 56-57",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "29",
+                    "description": "System Summary Label Bytes 58-59",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "30",
+                    "description": "System Summary Label Bytes 60-61",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "31",
+                    "description": "System Summary Label Bytes 62-63",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "32",
+                    "description": " Number of Batteries Configured",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "33",
+                    "description": " Number of Current Probes Configured",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "34",
+                    "description": " Number of DCMs (Total Actual Detected)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "35",
+                    "description": " Number of Channels (Total Actual Detected)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "36",
+                    "description": " Last Scan Year",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "37",
+                    "description": " Last Scan Month",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "38",
+                    "description": " Last Scan Day",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "39",
+                    "description": " Last Scan Hour",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "40",
+                    "description": " Last Scan Minute",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41",
+                    "description": " Last Scan Second",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42",
+                    "description": " Alarm Status (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43",
+                    "description": " Scan Status (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "44",
+                    "description": " Scan Status (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45",
+                    "description": " Scanner Software Version",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46",
+                    "description": " Modbus Software Version",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47",
+                    "description": " Scan Control Flags ",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48",
+                    "description": " Alarm Relay Control Bits (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "49",
+                    "description": " Alarm Relay State",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "50",
+                    "description": " Ohmic Scan Schedule Hour",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "51",
+                    "description": " Ohmic Frequency (Days)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "52",
+                    "description": " Selected Battery Number \"B\"",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "53",
+                    "description": " Selected String Number \"S\"",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "54",
+                    "description": " TOD Year",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "55",
+                    "description": " TOD Month",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "56",
+                    "description": " TOD Day",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "57",
+                    "description": " TOD Hour",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "58",
+                    "description": " TOD Minute",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "59",
+                    "description": " TOD Second",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "60",
+                    "description": " Alarm Status (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "61",
+                    "description": " Alarm Relay Control Bits (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR60,HR42)",
+                    "description": "Alarm Status",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR44,HR43)",
+                    "description": "Scan Status",
+                    "dataValue": 1
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR61,HR48)",
+                    "description": "Alarm Relay Control Bits",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "String(HR0,HR1,HR2,HR3,HR4,HR5,HR6,HR7,HR8,HR9,HR10,HR11,HR12,HR13,HR14,HR15,HR16,HR17,HR18,HR19,HR20,HR21,HR22,HR23,HR24,HR25,HR26,HR27,HR28,HR29,HR30,HR31)",
+                    "description": "System Summary Label",
+                    "dataValue": "frontier\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+                }
+            ]
+        }
+    ]
+}

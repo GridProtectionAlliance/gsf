@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Ohmic Value Status 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "46385",
+                    "description": "String Ohmic Value Status Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46386",
+                    "description": "String Ohmic Value Status Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46387",
+                    "description": "String Ohmic Value Status Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46388",
+                    "description": "String Ohmic Value Status Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46389",
+                    "description": "String Ohmic Value Status Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46390",
+                    "description": "String Ohmic Value Status Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46391",
+                    "description": "String Ohmic Value Status Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46392",
+                    "description": "String Ohmic Value Status Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46393",
+                    "description": "String Ohmic Value Status Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46394",
+                    "description": "String Ohmic Value Status Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46395",
+                    "description": "String Ohmic Value Status Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46396",
+                    "description": "String Ohmic Value Status Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46397",
+                    "description": "String Ohmic Value Status Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46398",
+                    "description": "String Ohmic Value Status Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46399",
+                    "description": "String Ohmic Value Status Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46400",
+                    "description": "String Ohmic Value Status Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46401",
+                    "description": "String Ohmic Value Status Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46402",
+                    "description": "String Ohmic Value Status Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46403",
+                    "description": "String Ohmic Value Status Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46404",
+                    "description": "String Ohmic Value Status Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46405",
+                    "description": "String Ohmic Value Status Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46406",
+                    "description": "String Ohmic Value Status Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46407",
+                    "description": "String Ohmic Value Status Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46408",
+                    "description": "String Ohmic Value Status Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46409",
+                    "description": "String Ohmic Value Status Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46410",
+                    "description": "String Ohmic Value Status Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46411",
+                    "description": "String Ohmic Value Status Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46412",
+                    "description": "String Ohmic Value Status Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46413",
+                    "description": "String Ohmic Value Status Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46414",
+                    "description": "String Ohmic Value Status Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46415",
+                    "description": "String Ohmic Value Status Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46416",
+                    "description": "String Ohmic Value Status Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46417",
+                    "description": "String Ohmic Value Status Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46418",
+                    "description": "String Ohmic Value Status Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46419",
+                    "description": "String Ohmic Value Status Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46420",
+                    "description": "String Ohmic Value Status Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46421",
+                    "description": "String Ohmic Value Status Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46422",
+                    "description": "String Ohmic Value Status Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46423",
+                    "description": "String Ohmic Value Status Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46424",
+                    "description": "String Ohmic Value Status Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46425",
+                    "description": "String Ohmic Value Status Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46426",
+                    "description": "String Ohmic Value Status Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46427",
+                    "description": "String Ohmic Value Status Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46428",
+                    "description": "String Ohmic Value Status Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46429",
+                    "description": "String Ohmic Value Status Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46430",
+                    "description": "String Ohmic Value Status Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46431",
+                    "description": "String Ohmic Value Status Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46432",
+                    "description": "String Ohmic Value Status Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46433",
+                    "description": "String Ohmic Value Status Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46434",
+                    "description": "String Ohmic Value Status Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46435",
+                    "description": "String Ohmic Value Status Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46436",
+                    "description": "String Ohmic Value Status Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46437",
+                    "description": "String Ohmic Value Status Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46438",
+                    "description": "String Ohmic Value Status Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46439",
+                    "description": "String Ohmic Value Status Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46440",
+                    "description": "String Ohmic Value Status Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46441",
+                    "description": "String Ohmic Value Status Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46442",
+                    "description": "String Ohmic Value Status Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46443",
+                    "description": "String Ohmic Value Status Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46444",
+                    "description": "String Ohmic Value Status Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46445",
+                    "description": "String Ohmic Value Status Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46446",
+                    "description": "String Ohmic Value Status Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46447",
+                    "description": "String Ohmic Value Status Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46448",
+                    "description": "String Ohmic Value Status Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46449",
+                    "description": "String Ohmic Value Status Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46450",
+                    "description": "String Ohmic Value Status Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46451",
+                    "description": "String Ohmic Value Status Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46452",
+                    "description": "String Ohmic Value Status Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46453",
+                    "description": "String Ohmic Value Status Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46454",
+                    "description": "String Ohmic Value Status Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46455",
+                    "description": "String Ohmic Value Status Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46456",
+                    "description": "String Ohmic Value Status Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46457",
+                    "description": "String Ohmic Value Status Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46458",
+                    "description": "String Ohmic Value Status Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46459",
+                    "description": "String Ohmic Value Status Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46460",
+                    "description": "String Ohmic Value Status Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46461",
+                    "description": "String Ohmic Value Status Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46462",
+                    "description": "String Ohmic Value Status Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46463",
+                    "description": "String Ohmic Value Status Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46464",
+                    "description": "String Ohmic Value Status Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46465",
+                    "description": "String Ohmic Value Status Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46466",
+                    "description": "String Ohmic Value Status Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46467",
+                    "description": "String Ohmic Value Status Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46468",
+                    "description": "String Ohmic Value Status Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46469",
+                    "description": "String Ohmic Value Status Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46470",
+                    "description": "String Ohmic Value Status Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46471",
+                    "description": "String Ohmic Value Status Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46472",
+                    "description": "String Ohmic Value Status Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46473",
+                    "description": "String Ohmic Value Status Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46474",
+                    "description": "String Ohmic Value Status Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46475",
+                    "description": "String Ohmic Value Status Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46476",
+                    "description": "String Ohmic Value Status Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46477",
+                    "description": "String Ohmic Value Status Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46478",
+                    "description": "String Ohmic Value Status Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46479",
+                    "description": "String Ohmic Value Status Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46480",
+                    "description": "String Ohmic Value Status Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46481",
+                    "description": "String Ohmic Value Status Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46482",
+                    "description": "String Ohmic Value Status Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46483",
+                    "description": "String Ohmic Value Status Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46484",
+                    "description": "String Ohmic Value Status Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Status 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "46485",
+                    "description": "String Ohmic Value Status Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46486",
+                    "description": "String Ohmic Value Status Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46487",
+                    "description": "String Ohmic Value Status Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46488",
+                    "description": "String Ohmic Value Status Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46489",
+                    "description": "String Ohmic Value Status Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46490",
+                    "description": "String Ohmic Value Status Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46491",
+                    "description": "String Ohmic Value Status Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46492",
+                    "description": "String Ohmic Value Status Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46493",
+                    "description": "String Ohmic Value Status Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46494",
+                    "description": "String Ohmic Value Status Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46495",
+                    "description": "String Ohmic Value Status Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46496",
+                    "description": "String Ohmic Value Status Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46497",
+                    "description": "String Ohmic Value Status Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46498",
+                    "description": "String Ohmic Value Status Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46499",
+                    "description": "String Ohmic Value Status Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46500",
+                    "description": "String Ohmic Value Status Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46501",
+                    "description": "String Ohmic Value Status Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46502",
+                    "description": "String Ohmic Value Status Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46503",
+                    "description": "String Ohmic Value Status Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46504",
+                    "description": "String Ohmic Value Status Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46505",
+                    "description": "String Ohmic Value Status Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46506",
+                    "description": "String Ohmic Value Status Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46507",
+                    "description": "String Ohmic Value Status Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46508",
+                    "description": "String Ohmic Value Status Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46509",
+                    "description": "String Ohmic Value Status Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46510",
+                    "description": "String Ohmic Value Status Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46511",
+                    "description": "String Ohmic Value Status Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46512",
+                    "description": "String Ohmic Value Status Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46513",
+                    "description": "String Ohmic Value Status Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46514",
+                    "description": "String Ohmic Value Status Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46515",
+                    "description": "String Ohmic Value Status Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46516",
+                    "description": "String Ohmic Value Status Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46517",
+                    "description": "String Ohmic Value Status Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46518",
+                    "description": "String Ohmic Value Status Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46519",
+                    "description": "String Ohmic Value Status Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46520",
+                    "description": "String Ohmic Value Status Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46521",
+                    "description": "String Ohmic Value Status Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46522",
+                    "description": "String Ohmic Value Status Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46523",
+                    "description": "String Ohmic Value Status Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46524",
+                    "description": "String Ohmic Value Status Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46525",
+                    "description": "String Ohmic Value Status Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46526",
+                    "description": "String Ohmic Value Status Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46527",
+                    "description": "String Ohmic Value Status Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46528",
+                    "description": "String Ohmic Value Status Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46529",
+                    "description": "String Ohmic Value Status Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46530",
+                    "description": "String Ohmic Value Status Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46531",
+                    "description": "String Ohmic Value Status Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46532",
+                    "description": "String Ohmic Value Status Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46533",
+                    "description": "String Ohmic Value Status Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46534",
+                    "description": "String Ohmic Value Status Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46535",
+                    "description": "String Ohmic Value Status Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46536",
+                    "description": "String Ohmic Value Status Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46537",
+                    "description": "String Ohmic Value Status Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46538",
+                    "description": "String Ohmic Value Status Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46539",
+                    "description": "String Ohmic Value Status Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46540",
+                    "description": "String Ohmic Value Status Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46541",
+                    "description": "String Ohmic Value Status Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46542",
+                    "description": "String Ohmic Value Status Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46543",
+                    "description": "String Ohmic Value Status Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46544",
+                    "description": "String Ohmic Value Status Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46545",
+                    "description": "String Ohmic Value Status Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46546",
+                    "description": "String Ohmic Value Status Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46547",
+                    "description": "String Ohmic Value Status Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46548",
+                    "description": "String Ohmic Value Status Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46549",
+                    "description": "String Ohmic Value Status Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46550",
+                    "description": "String Ohmic Value Status Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46551",
+                    "description": "String Ohmic Value Status Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46552",
+                    "description": "String Ohmic Value Status Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46553",
+                    "description": "String Ohmic Value Status Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46554",
+                    "description": "String Ohmic Value Status Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46555",
+                    "description": "String Ohmic Value Status Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46556",
+                    "description": "String Ohmic Value Status Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46557",
+                    "description": "String Ohmic Value Status Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46558",
+                    "description": "String Ohmic Value Status Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46559",
+                    "description": "String Ohmic Value Status Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46560",
+                    "description": "String Ohmic Value Status Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46561",
+                    "description": "String Ohmic Value Status Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46562",
+                    "description": "String Ohmic Value Status Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46563",
+                    "description": "String Ohmic Value Status Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46564",
+                    "description": "String Ohmic Value Status Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46565",
+                    "description": "String Ohmic Value Status Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46566",
+                    "description": "String Ohmic Value Status Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46567",
+                    "description": "String Ohmic Value Status Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46568",
+                    "description": "String Ohmic Value Status Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46569",
+                    "description": "String Ohmic Value Status Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46570",
+                    "description": "String Ohmic Value Status Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46571",
+                    "description": "String Ohmic Value Status Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46572",
+                    "description": "String Ohmic Value Status Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46573",
+                    "description": "String Ohmic Value Status Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46574",
+                    "description": "String Ohmic Value Status Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46575",
+                    "description": "String Ohmic Value Status Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46576",
+                    "description": "String Ohmic Value Status Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46577",
+                    "description": "String Ohmic Value Status Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46578",
+                    "description": "String Ohmic Value Status Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46579",
+                    "description": "String Ohmic Value Status Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46580",
+                    "description": "String Ohmic Value Status Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46581",
+                    "description": "String Ohmic Value Status Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46582",
+                    "description": "String Ohmic Value Status Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46583",
+                    "description": "String Ohmic Value Status Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46584",
+                    "description": "String Ohmic Value Status Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Status 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "46585",
+                    "description": "String Ohmic Value Status Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46586",
+                    "description": "String Ohmic Value Status Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46587",
+                    "description": "String Ohmic Value Status Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46588",
+                    "description": "String Ohmic Value Status Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46589",
+                    "description": "String Ohmic Value Status Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46590",
+                    "description": "String Ohmic Value Status Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46591",
+                    "description": "String Ohmic Value Status Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46592",
+                    "description": "String Ohmic Value Status Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46593",
+                    "description": "String Ohmic Value Status Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46594",
+                    "description": "String Ohmic Value Status Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46595",
+                    "description": "String Ohmic Value Status Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46596",
+                    "description": "String Ohmic Value Status Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46597",
+                    "description": "String Ohmic Value Status Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46598",
+                    "description": "String Ohmic Value Status Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46599",
+                    "description": "String Ohmic Value Status Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46600",
+                    "description": "String Ohmic Value Status Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46601",
+                    "description": "String Ohmic Value Status Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46602",
+                    "description": "String Ohmic Value Status Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46603",
+                    "description": "String Ohmic Value Status Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46604",
+                    "description": "String Ohmic Value Status Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46605",
+                    "description": "String Ohmic Value Status Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46606",
+                    "description": "String Ohmic Value Status Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46607",
+                    "description": "String Ohmic Value Status Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46608",
+                    "description": "String Ohmic Value Status Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46609",
+                    "description": "String Ohmic Value Status Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46610",
+                    "description": "String Ohmic Value Status Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46611",
+                    "description": "String Ohmic Value Status Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46612",
+                    "description": "String Ohmic Value Status Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46613",
+                    "description": "String Ohmic Value Status Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46614",
+                    "description": "String Ohmic Value Status Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46615",
+                    "description": "String Ohmic Value Status Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46616",
+                    "description": "String Ohmic Value Status Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46617",
+                    "description": "String Ohmic Value Status Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46618",
+                    "description": "String Ohmic Value Status Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46619",
+                    "description": "String Ohmic Value Status Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46620",
+                    "description": "String Ohmic Value Status Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46621",
+                    "description": "String Ohmic Value Status Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46622",
+                    "description": "String Ohmic Value Status Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46623",
+                    "description": "String Ohmic Value Status Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46624",
+                    "description": "String Ohmic Value Status Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46625",
+                    "description": "String Ohmic Value Status Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46626",
+                    "description": "String Ohmic Value Status Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46627",
+                    "description": "String Ohmic Value Status Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46628",
+                    "description": "String Ohmic Value Status Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46629",
+                    "description": "String Ohmic Value Status Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46630",
+                    "description": "String Ohmic Value Status Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46631",
+                    "description": "String Ohmic Value Status Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46632",
+                    "description": "String Ohmic Value Status Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46633",
+                    "description": "String Ohmic Value Status Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46634",
+                    "description": "String Ohmic Value Status Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46635",
+                    "description": "String Ohmic Value Status Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46636",
+                    "description": "String Ohmic Value Status Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46637",
+                    "description": "String Ohmic Value Status Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46638",
+                    "description": "String Ohmic Value Status Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46639",
+                    "description": "String Ohmic Value Status Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46640",
+                    "description": "String Ohmic Value Status Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

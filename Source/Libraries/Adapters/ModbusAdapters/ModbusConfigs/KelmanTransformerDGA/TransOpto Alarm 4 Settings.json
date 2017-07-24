@@ -1,0 +1,604 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "TransOpto Channel 1 Min Limit of Value Low",
+                    "address": "2399",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Min Limit of Value High",
+                    "address": "2400",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Min Limit of Value",
+                    "address": "Single(HR2399,HR2400)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 2 Min Limit of Value Low",
+                    "address": "2401",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Min Limit of Value High",
+                    "address": "2402",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Min Limit of Value",
+                    "address": "Single(HR2401,HR2402)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 3 Min Limit of Value Low",
+                    "address": "2403",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Min Limit of Value High",
+                    "address": "2404",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Min Limit of Value",
+                    "address": "Single(HR2403,HR2404)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 4 Min Limit of Value Low",
+                    "address": "2405",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Min Limit of Value High",
+                    "address": "2406",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Min Limit of Value",
+                    "address": "Single(HR2405,HR2406)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 5 Min Limit of Value Low",
+                    "address": "2407",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Min Limit of Value High",
+                    "address": "2408",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Min Limit of Value",
+                    "address": "Single(HR2407,HR2408)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 6 Min Limit of Value Low",
+                    "address": "2409",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Min Limit of Value High",
+                    "address": "2410",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Min Limit of Value",
+                    "address": "Single(HR2409,HR2410)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 7 Min Limit of Value Low",
+                    "address": "2411",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Min Limit of Value High",
+                    "address": "2412",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Min Limit of Value",
+                    "address": "Single(HR2411,HR2412)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 8 Min Limit of Value Low",
+                    "address": "2413",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Min Limit of Value High",
+                    "address": "2414",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Min Limit of Value",
+                    "address": "Single(HR2413,HR2414)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 1 Max Limit of Value Low",
+                    "address": "2415",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Max Limit of Value High",
+                    "address": "2416",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Max Limit of Value",
+                    "address": "Single(HR2415,HR2416)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 2 Max Limit of Value Low",
+                    "address": "2417",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Max Limit of Value High",
+                    "address": "2418",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Max Limit of Value",
+                    "address": "Single(HR2417,HR2418)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 3 Max Limit of Value Low",
+                    "address": "2419",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Max Limit of Value High",
+                    "address": "2420",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Max Limit of Value",
+                    "address": "Single(HR2419,HR2420)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 4 Max Limit of Value Low",
+                    "address": "2421",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Max Limit of Value High",
+                    "address": "2422",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Max Limit of Value",
+                    "address": "Single(HR2421,HR2422)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 5 Max Limit of Value Low",
+                    "address": "2423",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Max Limit of Value High",
+                    "address": "2424",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Max Limit of Value",
+                    "address": "Single(HR2423,HR2424)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 6 Max Limit of Value Low",
+                    "address": "2425",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Max Limit of Value High",
+                    "address": "2426",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Max Limit of Value",
+                    "address": "Single(HR2425,HR2426)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 7 Max Limit of Value Low",
+                    "address": "2427",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Max Limit of Value High",
+                    "address": "2428",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Max Limit of Value",
+                    "address": "Single(HR2427,HR2428)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 8 Max Limit of Value Low",
+                    "address": "2429",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Max Limit of Value High",
+                    "address": "2430",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Max Limit of Value",
+                    "address": "Single(HR2429,HR2430)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 1 Max Positive Limit of RoC Low",
+                    "address": "2431",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Max Positive Limit of RoC High",
+                    "address": "2432",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Max Positive Limit of RoC",
+                    "address": "Single(HR2431,HR2432)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 2 Max Positive Limit of RoC Low",
+                    "address": "2433",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Max Positive Limit of RoC High",
+                    "address": "2434",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Max Positive Limit of RoC",
+                    "address": "Single(HR2433,HR2434)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 3 Max Positive Limit of RoC Low",
+                    "address": "2435",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Max Positive Limit of RoC High",
+                    "address": "2436",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Max Positive Limit of RoC",
+                    "address": "Single(HR2435,HR2436)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 4 Max Positive Limit of RoC Low",
+                    "address": "2437",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Max Positive Limit of RoC High",
+                    "address": "2438",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Max Positive Limit of RoC",
+                    "address": "Single(HR2437,HR2438)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 5 Max Positive Limit of RoC Low",
+                    "address": "2439",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Max Positive Limit of RoC High",
+                    "address": "2440",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Max Positive Limit of RoC",
+                    "address": "Single(HR2439,HR2440)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 6 Max Positive Limit of RoC Low",
+                    "address": "2441",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Max Positive Limit of RoC High",
+                    "address": "2442",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Max Positive Limit of RoC",
+                    "address": "Single(HR2441,HR2442)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 7 Max Positive Limit of RoC Low",
+                    "address": "2443",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Max Positive Limit of RoC High",
+                    "address": "2444",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Max Positive Limit of RoC",
+                    "address": "Single(HR2443,HR2444)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Channel 8 Max Positive Limit of RoC Low",
+                    "address": "2445",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Max Positive Limit of RoC High",
+                    "address": "2446",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Max Positive Limit of RoC",
+                    "address": "Single(HR2445,HR2446)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2447",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2448",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2447,HR2448)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2449",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2450",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2449,HR2450)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2451",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2452",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2451,HR2452)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2453",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2454",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2453,HR2454)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2455",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2456",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2455,HR2456)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2457",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2458",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2457,HR2458)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2459",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2460",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2459,HR2460)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "2461",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "2462",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR2461,HR2462)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "TransOpto Alarm 4 Output",
+                    "address": "2463",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Time Window for Alarm 4 ROC Calculation (Hours)",
+                    "address": "2464",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Minimum Number of Samples for Alarm 4 ROC Calculation",
+                    "address": "2465",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "TransOpto Alarm 4 Settings 1",
+            "type": 0
+        }
+    ]
+}
