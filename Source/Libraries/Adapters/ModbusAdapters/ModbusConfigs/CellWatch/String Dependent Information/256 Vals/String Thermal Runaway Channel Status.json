@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Thermal Runaway Channel Status 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 000-001",
+                    "address": "8944"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 002-003",
+                    "address": "8945"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 004-005",
+                    "address": "8946"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 006-007",
+                    "address": "8947"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 008-009",
+                    "address": "8948"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 010-011",
+                    "address": "8949"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 012-013",
+                    "address": "8950"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 014-015",
+                    "address": "8951"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 016-017",
+                    "address": "8952"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 018-019",
+                    "address": "8953"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 020-021",
+                    "address": "8954"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 022-023",
+                    "address": "8955"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 024-025",
+                    "address": "8956"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 026-027",
+                    "address": "8957"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 028-029",
+                    "address": "8958"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 030-031",
+                    "address": "8959"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 032-033",
+                    "address": "8960"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 034-035",
+                    "address": "8961"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 036-037",
+                    "address": "8962"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 038-039",
+                    "address": "8963"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 040-041",
+                    "address": "8964"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 042-043",
+                    "address": "8965"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 044-045",
+                    "address": "8966"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 046-047",
+                    "address": "8967"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 048-049",
+                    "address": "8968"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 050-051",
+                    "address": "8969"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 052-053",
+                    "address": "8970"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 054-055",
+                    "address": "8971"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 056-057",
+                    "address": "8972"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 058-059",
+                    "address": "8973"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 060-061",
+                    "address": "8974"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 062-063",
+                    "address": "8975"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 064-065",
+                    "address": "8976"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 066-067",
+                    "address": "8977"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 068-069",
+                    "address": "8978"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 070-071",
+                    "address": "8979"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 072-073",
+                    "address": "8980"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 074-075",
+                    "address": "8981"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 076-077",
+                    "address": "8982"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 078-079",
+                    "address": "8983"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 080-081",
+                    "address": "8984"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 082-083",
+                    "address": "8985"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 084-085",
+                    "address": "8986"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 086-087",
+                    "address": "8987"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 088-089",
+                    "address": "8988"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 090-091",
+                    "address": "8989"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 092-093",
+                    "address": "8990"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 094-095",
+                    "address": "8991"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 096-097",
+                    "address": "8992"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 098-099",
+                    "address": "8993"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 100-101",
+                    "address": "8994"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 102-103",
+                    "address": "8995"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 104-105",
+                    "address": "8996"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 106-107",
+                    "address": "8997"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 108-109",
+                    "address": "8998"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 110-111",
+                    "address": "8999"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 112-113",
+                    "address": "9000"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 114-115",
+                    "address": "9001"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 116-117",
+                    "address": "9002"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 118-119",
+                    "address": "9003"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 120-121",
+                    "address": "9004"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 122-123",
+                    "address": "9005"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 124-125",
+                    "address": "9006"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 126-127",
+                    "address": "9007"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 128-129",
+                    "address": "9008"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 130-131",
+                    "address": "9009"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 132-133",
+                    "address": "9010"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 134-135",
+                    "address": "9011"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 136-137",
+                    "address": "9012"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 138-139",
+                    "address": "9013"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 140-141",
+                    "address": "9014"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 142-143",
+                    "address": "9015"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 144-145",
+                    "address": "9016"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 146-147",
+                    "address": "9017"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 148-149",
+                    "address": "9018"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 150-151",
+                    "address": "9019"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 152-153",
+                    "address": "9020"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 154-155",
+                    "address": "9021"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 156-157",
+                    "address": "9022"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 158-159",
+                    "address": "9023"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 160-161",
+                    "address": "9024"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 162-163",
+                    "address": "9025"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 164-165",
+                    "address": "9026"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 166-167",
+                    "address": "9027"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 168-169",
+                    "address": "9028"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 170-171",
+                    "address": "9029"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 172-173",
+                    "address": "9030"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 174-175",
+                    "address": "9031"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 176-177",
+                    "address": "9032"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 178-179",
+                    "address": "9033"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 180-181",
+                    "address": "9034"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 182-183",
+                    "address": "9035"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 184-185",
+                    "address": "9036"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 186-187",
+                    "address": "9037"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 188-189",
+                    "address": "9038"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 190-191",
+                    "address": "9039"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 192-193",
+                    "address": "9040"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 194-195",
+                    "address": "9041"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 196-197",
+                    "address": "9042"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 198-199",
+                    "address": "9043"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Status 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 200-201",
+                    "address": "9044"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 202-203",
+                    "address": "9045"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 204-205",
+                    "address": "9046"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 206-207",
+                    "address": "9047"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 208-209",
+                    "address": "9048"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 210-211",
+                    "address": "9049"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 212-213",
+                    "address": "9050"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 214-215",
+                    "address": "9051"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 216-217",
+                    "address": "9052"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 218-219",
+                    "address": "9053"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 220-221",
+                    "address": "9054"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 222-223",
+                    "address": "9055"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 224-225",
+                    "address": "9056"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 226-227",
+                    "address": "9057"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 228-229",
+                    "address": "9058"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 230-231",
+                    "address": "9059"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 232-233",
+                    "address": "9060"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 234-235",
+                    "address": "9061"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 236-237",
+                    "address": "9062"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 238-239",
+                    "address": "9063"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 240-241",
+                    "address": "9064"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 242-243",
+                    "address": "9065"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 244-245",
+                    "address": "9066"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 246-247",
+                    "address": "9067"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 248-249",
+                    "address": "9068"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 250-251",
+                    "address": "9069"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 252-253",
+                    "address": "9070"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 254-255",
+                    "address": "9071"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 256-257",
+                    "address": "9072"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 258-259",
+                    "address": "9073"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 260-261",
+                    "address": "9074"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 262-263",
+                    "address": "9075"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 264-265",
+                    "address": "9076"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 266-267",
+                    "address": "9077"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 268-269",
+                    "address": "9078"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 270-271",
+                    "address": "9079"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 272-273",
+                    "address": "9080"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 274-275",
+                    "address": "9081"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 276-277",
+                    "address": "9082"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 278-279",
+                    "address": "9083"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 280-281",
+                    "address": "9084"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 282-283",
+                    "address": "9085"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 284-285",
+                    "address": "9086"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 286-287",
+                    "address": "9087"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 288-289",
+                    "address": "9088"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 290-291",
+                    "address": "9089"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 292-293",
+                    "address": "9090"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 294-295",
+                    "address": "9091"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 296-297",
+                    "address": "9092"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 298-299",
+                    "address": "9093"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 300-301",
+                    "address": "9094"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 302-303",
+                    "address": "9095"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 304-305",
+                    "address": "9096"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 306-307",
+                    "address": "9097"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 308-309",
+                    "address": "9098"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 310-311",
+                    "address": "9099"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 312-313",
+                    "address": "9100"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 314-315",
+                    "address": "9101"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 316-317",
+                    "address": "9102"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 318-319",
+                    "address": "9103"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 320-321",
+                    "address": "9104"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 322-323",
+                    "address": "9105"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 324-325",
+                    "address": "9106"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 326-327",
+                    "address": "9107"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 328-329",
+                    "address": "9108"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 330-331",
+                    "address": "9109"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 332-333",
+                    "address": "9110"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 334-335",
+                    "address": "9111"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 336-337",
+                    "address": "9112"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 338-339",
+                    "address": "9113"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 340-341",
+                    "address": "9114"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 342-343",
+                    "address": "9115"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 344-345",
+                    "address": "9116"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 346-347",
+                    "address": "9117"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 348-349",
+                    "address": "9118"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 350-351",
+                    "address": "9119"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 352-353",
+                    "address": "9120"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 354-355",
+                    "address": "9121"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 356-357",
+                    "address": "9122"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 358-359",
+                    "address": "9123"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 360-361",
+                    "address": "9124"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 362-363",
+                    "address": "9125"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 364-365",
+                    "address": "9126"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 366-367",
+                    "address": "9127"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 368-369",
+                    "address": "9128"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 370-371",
+                    "address": "9129"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 372-373",
+                    "address": "9130"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 374-375",
+                    "address": "9131"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 376-377",
+                    "address": "9132"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 378-379",
+                    "address": "9133"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 380-381",
+                    "address": "9134"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 382-383",
+                    "address": "9135"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 384-385",
+                    "address": "9136"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 386-387",
+                    "address": "9137"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 388-389",
+                    "address": "9138"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 390-391",
+                    "address": "9139"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 392-393",
+                    "address": "9140"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 394-395",
+                    "address": "9141"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 396-397",
+                    "address": "9142"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 398-399",
+                    "address": "9143"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Status 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 400-401",
+                    "address": "9144"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 402-403",
+                    "address": "9145"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 404-405",
+                    "address": "9146"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 406-407",
+                    "address": "9147"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 408-409",
+                    "address": "9148"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 410-411",
+                    "address": "9149"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 412-413",
+                    "address": "9150"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 414-415",
+                    "address": "9151"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 416-417",
+                    "address": "9152"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 418-419",
+                    "address": "9153"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 420-421",
+                    "address": "9154"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 422-423",
+                    "address": "9155"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 424-425",
+                    "address": "9156"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 426-427",
+                    "address": "9157"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 428-429",
+                    "address": "9158"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 430-431",
+                    "address": "9159"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 432-433",
+                    "address": "9160"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 434-435",
+                    "address": "9161"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 436-437",
+                    "address": "9162"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 438-439",
+                    "address": "9163"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 440-441",
+                    "address": "9164"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 442-443",
+                    "address": "9165"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 444-445",
+                    "address": "9166"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 446-447",
+                    "address": "9167"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 448-449",
+                    "address": "9168"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 450-451",
+                    "address": "9169"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 452-453",
+                    "address": "9170"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 454-455",
+                    "address": "9171"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 456-457",
+                    "address": "9172"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 458-459",
+                    "address": "9173"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 460-461",
+                    "address": "9174"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 462-463",
+                    "address": "9175"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 464-465",
+                    "address": "9176"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 466-467",
+                    "address": "9177"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 468-469",
+                    "address": "9178"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 470-471",
+                    "address": "9179"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 472-473",
+                    "address": "9180"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 474-475",
+                    "address": "9181"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 476-477",
+                    "address": "9182"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 478-479",
+                    "address": "9183"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 480-481",
+                    "address": "9184"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 482-483",
+                    "address": "9185"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 484-485",
+                    "address": "9186"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 486-487",
+                    "address": "9187"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 488-489",
+                    "address": "9188"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 490-491",
+                    "address": "9189"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 492-493",
+                    "address": "9190"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 494-495",
+                    "address": "9191"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 496-497",
+                    "address": "9192"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 498-499",
+                    "address": "9193"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 500-501",
+                    "address": "9194"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 502-503",
+                    "address": "9195"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 504-505",
+                    "address": "9196"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 506-507",
+                    "address": "9197"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 508-509",
+                    "address": "9198"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Status Bytes 510-511",
+                    "address": "9199"
+                }
+            ]
+        }
+    ]
+}

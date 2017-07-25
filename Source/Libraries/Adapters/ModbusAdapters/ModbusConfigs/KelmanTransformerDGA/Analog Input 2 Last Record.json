@@ -1,0 +1,178 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Analog Input 2 Record Date and Time (UTC) in Unix Format Low",
+                    "address": "8049",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Record Date and Time (UTC) in Unix Format High",
+                    "address": "8050",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Record Date and Time (UTC) in Unix Format",
+                    "address": "Int32(HR8049,HR8050)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 2 Record Number",
+                    "address": "8051",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Oil Source",
+                    "address": "8052",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Record Date (UTC/Local) Year",
+                    "address": "8053",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Record Date (UTC/Local) Month, Day",
+                    "address": "8054",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Record Time (UTC/Local) Hours, Minutes",
+                    "address": "8055",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Input Number",
+                    "address": "8056",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Type of Analog Input",
+                    "address": "8057",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Name [1]",
+                    "address": "8058",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Name [2]",
+                    "address": "8059",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Name [3]",
+                    "address": "8060",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Name [4]",
+                    "address": "8061",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Name [5]",
+                    "address": "8062",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Name",
+                    "address": "String(HR8058,HR8059,HR8060,HR8061,HR8062)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 2 Units Low",
+                    "address": "8063",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Units High",
+                    "address": "8064",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Units",
+                    "address": "Single(HR8063,HR8064)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 2 Alarm Status (Reason for Alarm)",
+                    "address": "8065",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 Alarm Output",
+                    "address": "8066",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 PGA Value (Float) Low",
+                    "address": "8067",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 PGA Value (Float) High",
+                    "address": "8068",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Analog Input 2 PGA Value (Float)",
+                    "address": "Single(HR8067,HR8068)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Analog Input 2 PGA Value (Int)",
+                    "address": "8069",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare Low",
+                    "address": "8070",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare High",
+                    "address": "8071",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "Single(HR8070,HR8071)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "Analog Input 2 Last Record 1",
+            "type": 0
+        }
+    ]
+}

@@ -16,6 +16,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/StyleResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -46,7 +47,7 @@
                     <Setter Property="Cursor" Value="Hand" />
                     <Setter Property="HorizontalAlignment" Value="Center" />
                     <Setter Property="VerticalAlignment" Value="Center" />
-                    <Setter Property="Padding" Value="10,-2" />
+                    <Setter Property="Padding" Value="10,2" />
                     <EventSetter Event="Click" Handler="TraverseDecisionTree" />
                 </Style>
             </TabControl.Resources>

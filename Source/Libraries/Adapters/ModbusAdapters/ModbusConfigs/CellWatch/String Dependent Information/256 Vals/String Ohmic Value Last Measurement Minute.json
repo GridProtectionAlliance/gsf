@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Ohmic Value Last Measurement Minute 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "48433",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48434",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48435",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48436",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48437",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48438",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48439",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48440",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48441",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48442",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48443",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48444",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48445",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48446",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48447",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48448",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48449",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48450",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48451",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48452",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48453",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48454",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48455",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48456",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48457",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48458",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48459",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48460",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48461",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48462",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48463",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48464",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48465",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48466",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48467",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48468",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48469",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48470",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48471",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48472",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48473",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48474",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48475",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48476",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48477",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48478",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48479",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48480",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48481",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48482",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48483",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48484",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48485",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48486",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48487",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48488",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48489",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48490",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48491",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48492",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48493",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48494",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48495",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48496",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48497",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48498",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48499",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48500",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48501",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48502",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48503",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48504",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48505",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48506",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48507",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48508",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48509",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48510",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48511",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48512",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48513",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48514",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48515",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48516",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48517",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48518",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48519",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48520",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48521",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48522",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48523",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48524",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48525",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48526",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48527",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48528",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48529",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48530",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48531",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48532",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Last Measurement Minute 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "48533",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48534",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48535",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48536",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48537",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48538",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48539",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48540",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48541",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48542",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48543",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48544",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48545",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48546",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48547",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48548",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48549",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48550",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48551",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48552",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48553",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48554",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48555",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48556",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48557",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48558",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48559",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48560",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48561",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48562",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48563",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48564",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48565",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48566",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48567",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48568",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48569",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48570",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48571",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48572",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48573",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48574",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48575",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48576",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48577",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48578",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48579",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48580",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48581",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48582",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48583",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48584",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48585",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48586",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48587",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48588",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48589",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48590",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48591",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48592",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48593",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48594",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48595",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48596",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48597",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48598",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48599",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48600",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48601",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48602",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48603",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48604",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48605",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48606",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48607",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48608",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48609",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48610",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48611",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48612",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48613",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48614",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48615",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48616",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48617",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48618",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48619",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48620",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48621",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48622",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48623",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48624",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48625",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48626",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48627",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48628",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48629",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48630",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48631",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48632",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Last Measurement Minute 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "48633",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48634",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48635",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48636",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48637",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48638",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48639",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48640",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48641",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48642",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48643",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48644",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48645",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48646",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48647",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48648",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48649",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48650",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48651",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48652",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48653",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48654",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48655",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48656",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48657",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48658",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48659",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48660",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48661",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48662",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48663",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48664",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48665",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48666",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48667",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48668",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48669",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48670",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48671",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48672",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48673",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48674",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48675",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48676",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48677",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48678",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48679",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48680",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48681",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48682",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48683",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48684",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48685",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48686",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48687",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "48688",
+                    "description": "String Ohmic Value Last Measurement Minute Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

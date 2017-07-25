@@ -1,0 +1,148 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Oil Source B Ratio 2 Name [1]",
+                    "address": "7319",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [2]",
+                    "address": "7320",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [3]",
+                    "address": "7321",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [4]",
+                    "address": "7322",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [5]",
+                    "address": "7323",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [6]",
+                    "address": "7324",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [7]",
+                    "address": "7325",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name [8]",
+                    "address": "7326",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Name",
+                    "address": "String(HR7319,HR7320,HR7321,HR7322,HR7323,HR7324,HR7325,HR7326)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Numerator",
+                    "address": "7327",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Denominator",
+                    "address": "7328",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Upper Limit Low",
+                    "address": "7329",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Upper Limit High",
+                    "address": "7330",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Upper Limit",
+                    "address": "Single(HR7329,HR7330)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Lower Limit Low",
+                    "address": "7331",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Lower Limit High",
+                    "address": "7332",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Lower Limit",
+                    "address": "Single(HR7331,HR7332)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Enable",
+                    "address": "7333",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Alarm Output",
+                    "address": "7334",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Value From Last Measurement Low",
+                    "address": "7335",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Value From Last Measurement High",
+                    "address": "7336",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Value From Last Measurement",
+                    "address": "Single(HR7335,HR7336)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source B Ratio 2 Output Flags From Last Measurement",
+                    "address": "7337",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source B Ratio 2 Settings 1",
+            "type": 0
+        }
+    ]
+}

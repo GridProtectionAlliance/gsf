@@ -150,6 +150,7 @@ namespace GSF.Web
         private static readonly HashSet<string> s_executingAssemblyResources;
         private static readonly HashSet<string> s_callingAssemblyResources;
         private static readonly HashSet<string> s_entryAssemblyResources;
+        private static Dictionary<Assembly, HashSet<string>> s_embeddedResourceAssemblies;
 
         // Static Constructor
         static WebExtensions()
@@ -157,6 +158,7 @@ namespace GSF.Web
             s_executingAssemblyResources = new HashSet<string>(Assembly.GetExecutingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
             s_callingAssemblyResources = new HashSet<string>(Assembly.GetCallingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
             s_entryAssemblyResources = new HashSet<string>(Assembly.GetEntryAssembly()?.GetManifestResourceNames() ?? new[] { "" }, StringComparer.Ordinal);
+            s_embeddedResourceAssemblies = new Dictionary<Assembly, HashSet<string>>();
         }
 
         // Static Methods
@@ -403,7 +405,8 @@ namespace GSF.Web
             return
                 s_executingAssemblyResources.Contains(resourceName) ||
                 s_callingAssemblyResources.Contains(resourceName) ||
-                s_entryAssemblyResources.Contains(resourceName);
+                s_entryAssemblyResources.Contains(resourceName) ||
+                s_embeddedResourceAssemblies.Any(resources => resources.Value.Contains(resourceName));
         }
 
         /// <summary>
@@ -422,7 +425,35 @@ namespace GSF.Web
             if (s_entryAssemblyResources.Contains(resourceName))
                 return Assembly.GetEntryAssembly().GetManifestResourceStream(resourceName);
 
+            foreach (KeyValuePair<Assembly, HashSet<string>> resources in s_embeddedResourceAssemblies)
+            {
+                Assembly assembly = resources.Key;
+                HashSet<string> resourceNames = resources.Value;
+
+                if (resourceName.Contains(resourceName))
+                    return assembly.GetManifestResourceStream(resourceName);
+            }
+
             return null;
+        }
+
+        /// <summary>
+        /// Adds embedded resources from the specified assembly.
+        /// </summary>
+        /// <param name="assembly">Assembly to add resources from.</param>
+        public static void AddEmbeddedResourceAssembly(Assembly assembly)
+        {
+            string[] resourceNames = assembly?.GetManifestResourceNames();
+
+            if ((object)resourceNames != null && resourceNames.Length > 0)
+            {
+                HashSet<string> embeddedResourceNames = new HashSet<string>(StringComparer.Ordinal);
+
+                foreach (string resourceName in resourceNames)
+                    embeddedResourceNames.Add(resourceName);
+
+                s_embeddedResourceAssemblies[assembly] = embeddedResourceNames;
+            }
         }
     }
 }

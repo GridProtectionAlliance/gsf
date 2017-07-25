@@ -1,0 +1,256 @@
+{
+    "sequences": [
+        {
+            "name": "String Temperature Probe 3",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 00-01",
+                    "address": "1024"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 02-03",
+                    "address": "1025"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 04-05",
+                    "address": "1026"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 06-07",
+                    "address": "1027"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 08-09",
+                    "address": "1028"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 10-11",
+                    "address": "1029"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 12-13",
+                    "address": "1030"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 14-15",
+                    "address": "1031"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 16-17",
+                    "address": "1032"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 18-19",
+                    "address": "1033"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 20-21",
+                    "address": "1034"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 22-23",
+                    "address": "1035"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 24-25",
+                    "address": "1036"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 26-27",
+                    "address": "1037"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 28-29",
+                    "address": "1038"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 30-31",
+                    "address": "1039"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 32-33",
+                    "address": "1040"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 34-35",
+                    "address": "1041"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 36-37",
+                    "address": "1042"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 38-39",
+                    "address": "1043"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 40-41",
+                    "address": "1044"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 42-43",
+                    "address": "1045"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 44-45",
+                    "address": "1046"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 46-47",
+                    "address": "1047"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 48-49",
+                    "address": "1048"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 50-51",
+                    "address": "1049"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 52-53",
+                    "address": "1050"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 54-55",
+                    "address": "1051"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 56-57",
+                    "address": "1052"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 58-59",
+                    "address": "1053"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 60-61",
+                    "address": "1054"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Label Bytes 62-63",
+                    "address": "1055"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Temperature Probe 3 Label",
+                    "address": "String(HR1024,HR1025,HR1026,HR1027,HR1028,HR1029,HR1030,HR1031,HR1032,HR1033,HR1034,HR1035,HR1036,HR1037,HR1038,HR1039,HR1040,HR1041,HR1042,HR1043,HR1044,HR1045,HR1046,HR1047,HR1048,HR1049,HR1050,HR1051,HR1052,HR1053,HR1054,HR1055)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Value",
+                    "address": "1056"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Average",
+                    "address": "1057"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Average Count",
+                    "address": "1058"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Status",
+                    "address": "1059"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 High Limit",
+                    "address": "1060"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Low Limit",
+                    "address": "1061"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Hysteresis",
+                    "address": "1062"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 3 Thermal Runaway Limit",
+                    "address": "1063"
+                }
+            ]
+        }
+    ]
+}

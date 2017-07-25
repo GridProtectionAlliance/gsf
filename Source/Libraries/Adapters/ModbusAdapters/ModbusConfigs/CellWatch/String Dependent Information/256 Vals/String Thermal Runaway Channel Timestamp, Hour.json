@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Thermal Runaway Channel Timestamp, Hour 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 000-001",
+                    "address": "10480"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 002-003",
+                    "address": "10481"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 004-005",
+                    "address": "10482"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 006-007",
+                    "address": "10483"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 008-009",
+                    "address": "10484"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 010-011",
+                    "address": "10485"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 012-013",
+                    "address": "10486"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 014-015",
+                    "address": "10487"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 016-017",
+                    "address": "10488"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 018-019",
+                    "address": "10489"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 020-021",
+                    "address": "10490"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 022-023",
+                    "address": "10491"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 024-025",
+                    "address": "10492"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 026-027",
+                    "address": "10493"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 028-029",
+                    "address": "10494"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 030-031",
+                    "address": "10495"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 032-033",
+                    "address": "10496"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 034-035",
+                    "address": "10497"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 036-037",
+                    "address": "10498"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 038-039",
+                    "address": "10499"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 040-041",
+                    "address": "10500"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 042-043",
+                    "address": "10501"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 044-045",
+                    "address": "10502"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 046-047",
+                    "address": "10503"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 048-049",
+                    "address": "10504"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 050-051",
+                    "address": "10505"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 052-053",
+                    "address": "10506"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 054-055",
+                    "address": "10507"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 056-057",
+                    "address": "10508"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 058-059",
+                    "address": "10509"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 060-061",
+                    "address": "10510"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 062-063",
+                    "address": "10511"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 064-065",
+                    "address": "10512"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 066-067",
+                    "address": "10513"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 068-069",
+                    "address": "10514"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 070-071",
+                    "address": "10515"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 072-073",
+                    "address": "10516"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 074-075",
+                    "address": "10517"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 076-077",
+                    "address": "10518"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 078-079",
+                    "address": "10519"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 080-081",
+                    "address": "10520"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 082-083",
+                    "address": "10521"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 084-085",
+                    "address": "10522"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 086-087",
+                    "address": "10523"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 088-089",
+                    "address": "10524"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 090-091",
+                    "address": "10525"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 092-093",
+                    "address": "10526"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 094-095",
+                    "address": "10527"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 096-097",
+                    "address": "10528"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 098-099",
+                    "address": "10529"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 100-101",
+                    "address": "10530"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 102-103",
+                    "address": "10531"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 104-105",
+                    "address": "10532"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 106-107",
+                    "address": "10533"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 108-109",
+                    "address": "10534"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 110-111",
+                    "address": "10535"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 112-113",
+                    "address": "10536"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 114-115",
+                    "address": "10537"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 116-117",
+                    "address": "10538"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 118-119",
+                    "address": "10539"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 120-121",
+                    "address": "10540"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 122-123",
+                    "address": "10541"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 124-125",
+                    "address": "10542"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 126-127",
+                    "address": "10543"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 128-129",
+                    "address": "10544"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 130-131",
+                    "address": "10545"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 132-133",
+                    "address": "10546"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 134-135",
+                    "address": "10547"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 136-137",
+                    "address": "10548"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 138-139",
+                    "address": "10549"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 140-141",
+                    "address": "10550"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 142-143",
+                    "address": "10551"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 144-145",
+                    "address": "10552"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 146-147",
+                    "address": "10553"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 148-149",
+                    "address": "10554"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 150-151",
+                    "address": "10555"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 152-153",
+                    "address": "10556"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 154-155",
+                    "address": "10557"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 156-157",
+                    "address": "10558"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 158-159",
+                    "address": "10559"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 160-161",
+                    "address": "10560"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 162-163",
+                    "address": "10561"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 164-165",
+                    "address": "10562"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 166-167",
+                    "address": "10563"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 168-169",
+                    "address": "10564"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 170-171",
+                    "address": "10565"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 172-173",
+                    "address": "10566"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 174-175",
+                    "address": "10567"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 176-177",
+                    "address": "10568"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 178-179",
+                    "address": "10569"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 180-181",
+                    "address": "10570"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 182-183",
+                    "address": "10571"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 184-185",
+                    "address": "10572"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 186-187",
+                    "address": "10573"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 188-189",
+                    "address": "10574"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 190-191",
+                    "address": "10575"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 192-193",
+                    "address": "10576"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 194-195",
+                    "address": "10577"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 196-197",
+                    "address": "10578"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 198-199",
+                    "address": "10579"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Timestamp, Hour 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 200-201",
+                    "address": "10580"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 202-203",
+                    "address": "10581"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 204-205",
+                    "address": "10582"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 206-207",
+                    "address": "10583"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 208-209",
+                    "address": "10584"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 210-211",
+                    "address": "10585"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 212-213",
+                    "address": "10586"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 214-215",
+                    "address": "10587"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 216-217",
+                    "address": "10588"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 218-219",
+                    "address": "10589"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 220-221",
+                    "address": "10590"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 222-223",
+                    "address": "10591"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 224-225",
+                    "address": "10592"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 226-227",
+                    "address": "10593"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 228-229",
+                    "address": "10594"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 230-231",
+                    "address": "10595"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 232-233",
+                    "address": "10596"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 234-235",
+                    "address": "10597"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 236-237",
+                    "address": "10598"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 238-239",
+                    "address": "10599"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 240-241",
+                    "address": "10600"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 242-243",
+                    "address": "10601"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 244-245",
+                    "address": "10602"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 246-247",
+                    "address": "10603"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 248-249",
+                    "address": "10604"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 250-251",
+                    "address": "10605"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 252-253",
+                    "address": "10606"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 254-255",
+                    "address": "10607"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 256-257",
+                    "address": "10608"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 258-259",
+                    "address": "10609"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 260-261",
+                    "address": "10610"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 262-263",
+                    "address": "10611"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 264-265",
+                    "address": "10612"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 266-267",
+                    "address": "10613"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 268-269",
+                    "address": "10614"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 270-271",
+                    "address": "10615"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 272-273",
+                    "address": "10616"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 274-275",
+                    "address": "10617"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 276-277",
+                    "address": "10618"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 278-279",
+                    "address": "10619"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 280-281",
+                    "address": "10620"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 282-283",
+                    "address": "10621"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 284-285",
+                    "address": "10622"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 286-287",
+                    "address": "10623"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 288-289",
+                    "address": "10624"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 290-291",
+                    "address": "10625"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 292-293",
+                    "address": "10626"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 294-295",
+                    "address": "10627"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 296-297",
+                    "address": "10628"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 298-299",
+                    "address": "10629"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 300-301",
+                    "address": "10630"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 302-303",
+                    "address": "10631"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 304-305",
+                    "address": "10632"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 306-307",
+                    "address": "10633"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 308-309",
+                    "address": "10634"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 310-311",
+                    "address": "10635"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 312-313",
+                    "address": "10636"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 314-315",
+                    "address": "10637"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 316-317",
+                    "address": "10638"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 318-319",
+                    "address": "10639"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 320-321",
+                    "address": "10640"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 322-323",
+                    "address": "10641"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 324-325",
+                    "address": "10642"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 326-327",
+                    "address": "10643"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 328-329",
+                    "address": "10644"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 330-331",
+                    "address": "10645"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 332-333",
+                    "address": "10646"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 334-335",
+                    "address": "10647"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 336-337",
+                    "address": "10648"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 338-339",
+                    "address": "10649"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 340-341",
+                    "address": "10650"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 342-343",
+                    "address": "10651"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 344-345",
+                    "address": "10652"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 346-347",
+                    "address": "10653"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 348-349",
+                    "address": "10654"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 350-351",
+                    "address": "10655"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 352-353",
+                    "address": "10656"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 354-355",
+                    "address": "10657"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 356-357",
+                    "address": "10658"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 358-359",
+                    "address": "10659"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 360-361",
+                    "address": "10660"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 362-363",
+                    "address": "10661"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 364-365",
+                    "address": "10662"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 366-367",
+                    "address": "10663"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 368-369",
+                    "address": "10664"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 370-371",
+                    "address": "10665"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 372-373",
+                    "address": "10666"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 374-375",
+                    "address": "10667"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 376-377",
+                    "address": "10668"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 378-379",
+                    "address": "10669"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 380-381",
+                    "address": "10670"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 382-383",
+                    "address": "10671"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 384-385",
+                    "address": "10672"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 386-387",
+                    "address": "10673"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 388-389",
+                    "address": "10674"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 390-391",
+                    "address": "10675"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 392-393",
+                    "address": "10676"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 394-395",
+                    "address": "10677"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 396-397",
+                    "address": "10678"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 398-399",
+                    "address": "10679"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Timestamp, Hour 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 400-401",
+                    "address": "10680"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 402-403",
+                    "address": "10681"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 404-405",
+                    "address": "10682"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 406-407",
+                    "address": "10683"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 408-409",
+                    "address": "10684"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 410-411",
+                    "address": "10685"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 412-413",
+                    "address": "10686"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 414-415",
+                    "address": "10687"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 416-417",
+                    "address": "10688"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 418-419",
+                    "address": "10689"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 420-421",
+                    "address": "10690"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 422-423",
+                    "address": "10691"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 424-425",
+                    "address": "10692"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 426-427",
+                    "address": "10693"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 428-429",
+                    "address": "10694"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 430-431",
+                    "address": "10695"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 432-433",
+                    "address": "10696"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 434-435",
+                    "address": "10697"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 436-437",
+                    "address": "10698"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 438-439",
+                    "address": "10699"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 440-441",
+                    "address": "10700"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 442-443",
+                    "address": "10701"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 444-445",
+                    "address": "10702"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 446-447",
+                    "address": "10703"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 448-449",
+                    "address": "10704"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 450-451",
+                    "address": "10705"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 452-453",
+                    "address": "10706"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 454-455",
+                    "address": "10707"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 456-457",
+                    "address": "10708"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 458-459",
+                    "address": "10709"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 460-461",
+                    "address": "10710"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 462-463",
+                    "address": "10711"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 464-465",
+                    "address": "10712"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 466-467",
+                    "address": "10713"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 468-469",
+                    "address": "10714"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 470-471",
+                    "address": "10715"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 472-473",
+                    "address": "10716"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 474-475",
+                    "address": "10717"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 476-477",
+                    "address": "10718"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 478-479",
+                    "address": "10719"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 480-481",
+                    "address": "10720"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 482-483",
+                    "address": "10721"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 484-485",
+                    "address": "10722"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 486-487",
+                    "address": "10723"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 488-489",
+                    "address": "10724"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 490-491",
+                    "address": "10725"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 492-493",
+                    "address": "10726"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 494-495",
+                    "address": "10727"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 496-497",
+                    "address": "10728"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 498-499",
+                    "address": "10729"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 500-501",
+                    "address": "10730"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 502-503",
+                    "address": "10731"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 504-505",
+                    "address": "10732"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 506-507",
+                    "address": "10733"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 508-509",
+                    "address": "10734"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Hour Bytes 510-511",
+                    "address": "10735"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage High Limit 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 000-001",
+                    "address": "4336"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 002-003",
+                    "address": "4337"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 004-005",
+                    "address": "4338"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 006-007",
+                    "address": "4339"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 008-009",
+                    "address": "4340"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 010-011",
+                    "address": "4341"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 012-013",
+                    "address": "4342"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 014-015",
+                    "address": "4343"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 016-017",
+                    "address": "4344"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 018-019",
+                    "address": "4345"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 020-021",
+                    "address": "4346"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 022-023",
+                    "address": "4347"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 024-025",
+                    "address": "4348"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 026-027",
+                    "address": "4349"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 028-029",
+                    "address": "4350"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 030-031",
+                    "address": "4351"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 032-033",
+                    "address": "4352"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 034-035",
+                    "address": "4353"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 036-037",
+                    "address": "4354"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 038-039",
+                    "address": "4355"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 040-041",
+                    "address": "4356"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 042-043",
+                    "address": "4357"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 044-045",
+                    "address": "4358"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 046-047",
+                    "address": "4359"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 048-049",
+                    "address": "4360"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 050-051",
+                    "address": "4361"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 052-053",
+                    "address": "4362"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 054-055",
+                    "address": "4363"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 056-057",
+                    "address": "4364"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 058-059",
+                    "address": "4365"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 060-061",
+                    "address": "4366"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 062-063",
+                    "address": "4367"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 064-065",
+                    "address": "4368"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 066-067",
+                    "address": "4369"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 068-069",
+                    "address": "4370"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 070-071",
+                    "address": "4371"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 072-073",
+                    "address": "4372"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 074-075",
+                    "address": "4373"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 076-077",
+                    "address": "4374"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 078-079",
+                    "address": "4375"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 080-081",
+                    "address": "4376"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 082-083",
+                    "address": "4377"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 084-085",
+                    "address": "4378"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 086-087",
+                    "address": "4379"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 088-089",
+                    "address": "4380"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 090-091",
+                    "address": "4381"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 092-093",
+                    "address": "4382"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 094-095",
+                    "address": "4383"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 096-097",
+                    "address": "4384"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 098-099",
+                    "address": "4385"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 100-101",
+                    "address": "4386"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 102-103",
+                    "address": "4387"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 104-105",
+                    "address": "4388"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 106-107",
+                    "address": "4389"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 108-109",
+                    "address": "4390"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 110-111",
+                    "address": "4391"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 112-113",
+                    "address": "4392"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 114-115",
+                    "address": "4393"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 116-117",
+                    "address": "4394"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 118-119",
+                    "address": "4395"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 120-121",
+                    "address": "4396"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 122-123",
+                    "address": "4397"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 124-125",
+                    "address": "4398"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 126-127",
+                    "address": "4399"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 128-129",
+                    "address": "4400"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 130-131",
+                    "address": "4401"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 132-133",
+                    "address": "4402"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 134-135",
+                    "address": "4403"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 136-137",
+                    "address": "4404"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 138-139",
+                    "address": "4405"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 140-141",
+                    "address": "4406"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 142-143",
+                    "address": "4407"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 144-145",
+                    "address": "4408"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 146-147",
+                    "address": "4409"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 148-149",
+                    "address": "4410"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 150-151",
+                    "address": "4411"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 152-153",
+                    "address": "4412"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 154-155",
+                    "address": "4413"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 156-157",
+                    "address": "4414"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 158-159",
+                    "address": "4415"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 160-161",
+                    "address": "4416"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 162-163",
+                    "address": "4417"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 164-165",
+                    "address": "4418"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 166-167",
+                    "address": "4419"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 168-169",
+                    "address": "4420"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 170-171",
+                    "address": "4421"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 172-173",
+                    "address": "4422"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 174-175",
+                    "address": "4423"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 176-177",
+                    "address": "4424"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 178-179",
+                    "address": "4425"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 180-181",
+                    "address": "4426"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 182-183",
+                    "address": "4427"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 184-185",
+                    "address": "4428"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 186-187",
+                    "address": "4429"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 188-189",
+                    "address": "4430"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 190-191",
+                    "address": "4431"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 192-193",
+                    "address": "4432"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 194-195",
+                    "address": "4433"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 196-197",
+                    "address": "4434"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 198-199",
+                    "address": "4435"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage High Limit 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 200-201",
+                    "address": "4436"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 202-203",
+                    "address": "4437"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 204-205",
+                    "address": "4438"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 206-207",
+                    "address": "4439"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 208-209",
+                    "address": "4440"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 210-211",
+                    "address": "4441"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 212-213",
+                    "address": "4442"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 214-215",
+                    "address": "4443"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 216-217",
+                    "address": "4444"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 218-219",
+                    "address": "4445"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 220-221",
+                    "address": "4446"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 222-223",
+                    "address": "4447"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 224-225",
+                    "address": "4448"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 226-227",
+                    "address": "4449"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 228-229",
+                    "address": "4450"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 230-231",
+                    "address": "4451"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 232-233",
+                    "address": "4452"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 234-235",
+                    "address": "4453"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 236-237",
+                    "address": "4454"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 238-239",
+                    "address": "4455"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 240-241",
+                    "address": "4456"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 242-243",
+                    "address": "4457"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 244-245",
+                    "address": "4458"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 246-247",
+                    "address": "4459"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 248-249",
+                    "address": "4460"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 250-251",
+                    "address": "4461"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 252-253",
+                    "address": "4462"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 254-255",
+                    "address": "4463"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 256-257",
+                    "address": "4464"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 258-259",
+                    "address": "4465"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 260-261",
+                    "address": "4466"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 262-263",
+                    "address": "4467"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 264-265",
+                    "address": "4468"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 266-267",
+                    "address": "4469"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 268-269",
+                    "address": "4470"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 270-271",
+                    "address": "4471"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 272-273",
+                    "address": "4472"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 274-275",
+                    "address": "4473"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 276-277",
+                    "address": "4474"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 278-279",
+                    "address": "4475"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 280-281",
+                    "address": "4476"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 282-283",
+                    "address": "4477"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 284-285",
+                    "address": "4478"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 286-287",
+                    "address": "4479"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 288-289",
+                    "address": "4480"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 290-291",
+                    "address": "4481"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 292-293",
+                    "address": "4482"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 294-295",
+                    "address": "4483"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 296-297",
+                    "address": "4484"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 298-299",
+                    "address": "4485"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 300-301",
+                    "address": "4486"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 302-303",
+                    "address": "4487"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 304-305",
+                    "address": "4488"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 306-307",
+                    "address": "4489"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 308-309",
+                    "address": "4490"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 310-311",
+                    "address": "4491"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 312-313",
+                    "address": "4492"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 314-315",
+                    "address": "4493"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 316-317",
+                    "address": "4494"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 318-319",
+                    "address": "4495"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 320-321",
+                    "address": "4496"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 322-323",
+                    "address": "4497"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 324-325",
+                    "address": "4498"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 326-327",
+                    "address": "4499"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 328-329",
+                    "address": "4500"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 330-331",
+                    "address": "4501"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 332-333",
+                    "address": "4502"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 334-335",
+                    "address": "4503"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 336-337",
+                    "address": "4504"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 338-339",
+                    "address": "4505"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 340-341",
+                    "address": "4506"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 342-343",
+                    "address": "4507"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 344-345",
+                    "address": "4508"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 346-347",
+                    "address": "4509"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 348-349",
+                    "address": "4510"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 350-351",
+                    "address": "4511"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 352-353",
+                    "address": "4512"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 354-355",
+                    "address": "4513"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 356-357",
+                    "address": "4514"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 358-359",
+                    "address": "4515"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 360-361",
+                    "address": "4516"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 362-363",
+                    "address": "4517"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 364-365",
+                    "address": "4518"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 366-367",
+                    "address": "4519"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 368-369",
+                    "address": "4520"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 370-371",
+                    "address": "4521"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 372-373",
+                    "address": "4522"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 374-375",
+                    "address": "4523"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 376-377",
+                    "address": "4524"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 378-379",
+                    "address": "4525"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 380-381",
+                    "address": "4526"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 382-383",
+                    "address": "4527"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 384-385",
+                    "address": "4528"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 386-387",
+                    "address": "4529"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 388-389",
+                    "address": "4530"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 390-391",
+                    "address": "4531"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 392-393",
+                    "address": "4532"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 394-395",
+                    "address": "4533"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 396-397",
+                    "address": "4534"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 398-399",
+                    "address": "4535"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage High Limit 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 400-401",
+                    "address": "4536"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 402-403",
+                    "address": "4537"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 404-405",
+                    "address": "4538"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 406-407",
+                    "address": "4539"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 408-409",
+                    "address": "4540"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 410-411",
+                    "address": "4541"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 412-413",
+                    "address": "4542"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 414-415",
+                    "address": "4543"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 416-417",
+                    "address": "4544"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 418-419",
+                    "address": "4545"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 420-421",
+                    "address": "4546"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 422-423",
+                    "address": "4547"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 424-425",
+                    "address": "4548"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 426-427",
+                    "address": "4549"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 428-429",
+                    "address": "4550"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 430-431",
+                    "address": "4551"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 432-433",
+                    "address": "4552"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 434-435",
+                    "address": "4553"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 436-437",
+                    "address": "4554"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 438-439",
+                    "address": "4555"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 440-441",
+                    "address": "4556"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 442-443",
+                    "address": "4557"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 444-445",
+                    "address": "4558"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 446-447",
+                    "address": "4559"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 448-449",
+                    "address": "4560"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 450-451",
+                    "address": "4561"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 452-453",
+                    "address": "4562"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 454-455",
+                    "address": "4563"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 456-457",
+                    "address": "4564"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 458-459",
+                    "address": "4565"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 460-461",
+                    "address": "4566"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 462-463",
+                    "address": "4567"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 464-465",
+                    "address": "4568"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 466-467",
+                    "address": "4569"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 468-469",
+                    "address": "4570"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 470-471",
+                    "address": "4571"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 472-473",
+                    "address": "4572"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 474-475",
+                    "address": "4573"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 476-477",
+                    "address": "4574"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 478-479",
+                    "address": "4575"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 480-481",
+                    "address": "4576"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 482-483",
+                    "address": "4577"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 484-485",
+                    "address": "4578"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 486-487",
+                    "address": "4579"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 488-489",
+                    "address": "4580"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 490-491",
+                    "address": "4581"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 492-493",
+                    "address": "4582"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 494-495",
+                    "address": "4583"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 496-497",
+                    "address": "4584"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 498-499",
+                    "address": "4585"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 500-501",
+                    "address": "4586"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 502-503",
+                    "address": "4587"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 504-505",
+                    "address": "4588"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 506-507",
+                    "address": "4589"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 508-509",
+                    "address": "4590"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage High Limit Bytes 510-511",
+                    "address": "4591"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,40 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "O2 Sensor 1 Enable",
+                    "address": "3699",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "O2 Sensor 1 Modbus Address",
+                    "address": "3700",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "PreSens O2 Sensor 1 and 2 Configuration Settings 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "O2 Sensor 2 Enable",
+                    "address": "3739",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "O2 Sensor 2 Modbus Address",
+                    "address": "3740",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "PreSens O2 Sensor 1 and 2 Configuration Settings 2",
+            "type": 0
+        }
+    ]
+}

@@ -14,6 +14,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/StyleResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -90,7 +91,7 @@
             </StackPanel>
             <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
                 <TextBlock Name="SignalLabel" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1, AncestorType=UserControl}, Path=DataContext.SelectedMeasurementLabel}" />
-                <Button Width="Auto" HorizontalAlignment="Left" Content=". . ." Click="MeasurementPagerButton_Click" />
+                <Button Width="Auto" Padding="10,2" HorizontalAlignment="Left" Content=". . ." Click="MeasurementPagerButton_Click" />
             </StackPanel>
 
             <TextBlock Text="Operation" Grid.Row="2" Grid.Column="0" />
@@ -112,7 +113,7 @@
             <TextBlock Name="HysteresisBox" Text="Hysteresis" Grid.Row="4" Grid.Column="2" />
             <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
 
-            <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" VerticalAlignment="Top" />
+            <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" />
             <TextBox Grid.Row="5" Grid.Column="1" Grid.RowSpan="2" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" MinLines="2" MaxLines="2" VerticalScrollBarVisibility="Auto" />
 
             <TextBlock Text="Severity" Grid.Row="5" Grid.Column="2" />

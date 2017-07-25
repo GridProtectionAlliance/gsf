@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Thermal Runaway Channel Timestamp, Month 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 000-001",
+                    "address": "9968"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 002-003",
+                    "address": "9969"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 004-005",
+                    "address": "9970"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 006-007",
+                    "address": "9971"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 008-009",
+                    "address": "9972"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 010-011",
+                    "address": "9973"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 012-013",
+                    "address": "9974"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 014-015",
+                    "address": "9975"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 016-017",
+                    "address": "9976"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 018-019",
+                    "address": "9977"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 020-021",
+                    "address": "9978"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 022-023",
+                    "address": "9979"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 024-025",
+                    "address": "9980"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 026-027",
+                    "address": "9981"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 028-029",
+                    "address": "9982"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 030-031",
+                    "address": "9983"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 032-033",
+                    "address": "9984"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 034-035",
+                    "address": "9985"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 036-037",
+                    "address": "9986"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 038-039",
+                    "address": "9987"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 040-041",
+                    "address": "9988"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 042-043",
+                    "address": "9989"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 044-045",
+                    "address": "9990"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 046-047",
+                    "address": "9991"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 048-049",
+                    "address": "9992"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 050-051",
+                    "address": "9993"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 052-053",
+                    "address": "9994"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 054-055",
+                    "address": "9995"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 056-057",
+                    "address": "9996"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 058-059",
+                    "address": "9997"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 060-061",
+                    "address": "9998"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 062-063",
+                    "address": "9999"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 064-065",
+                    "address": "10000"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 066-067",
+                    "address": "10001"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 068-069",
+                    "address": "10002"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 070-071",
+                    "address": "10003"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 072-073",
+                    "address": "10004"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 074-075",
+                    "address": "10005"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 076-077",
+                    "address": "10006"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 078-079",
+                    "address": "10007"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 080-081",
+                    "address": "10008"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 082-083",
+                    "address": "10009"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 084-085",
+                    "address": "10010"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 086-087",
+                    "address": "10011"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 088-089",
+                    "address": "10012"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 090-091",
+                    "address": "10013"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 092-093",
+                    "address": "10014"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 094-095",
+                    "address": "10015"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 096-097",
+                    "address": "10016"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 098-099",
+                    "address": "10017"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 100-101",
+                    "address": "10018"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 102-103",
+                    "address": "10019"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 104-105",
+                    "address": "10020"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 106-107",
+                    "address": "10021"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 108-109",
+                    "address": "10022"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 110-111",
+                    "address": "10023"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 112-113",
+                    "address": "10024"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 114-115",
+                    "address": "10025"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 116-117",
+                    "address": "10026"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 118-119",
+                    "address": "10027"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 120-121",
+                    "address": "10028"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 122-123",
+                    "address": "10029"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 124-125",
+                    "address": "10030"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 126-127",
+                    "address": "10031"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 128-129",
+                    "address": "10032"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 130-131",
+                    "address": "10033"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 132-133",
+                    "address": "10034"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 134-135",
+                    "address": "10035"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 136-137",
+                    "address": "10036"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 138-139",
+                    "address": "10037"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 140-141",
+                    "address": "10038"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 142-143",
+                    "address": "10039"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 144-145",
+                    "address": "10040"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 146-147",
+                    "address": "10041"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 148-149",
+                    "address": "10042"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 150-151",
+                    "address": "10043"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 152-153",
+                    "address": "10044"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 154-155",
+                    "address": "10045"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 156-157",
+                    "address": "10046"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 158-159",
+                    "address": "10047"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 160-161",
+                    "address": "10048"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 162-163",
+                    "address": "10049"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 164-165",
+                    "address": "10050"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 166-167",
+                    "address": "10051"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 168-169",
+                    "address": "10052"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 170-171",
+                    "address": "10053"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 172-173",
+                    "address": "10054"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 174-175",
+                    "address": "10055"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 176-177",
+                    "address": "10056"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 178-179",
+                    "address": "10057"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 180-181",
+                    "address": "10058"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 182-183",
+                    "address": "10059"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 184-185",
+                    "address": "10060"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 186-187",
+                    "address": "10061"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 188-189",
+                    "address": "10062"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 190-191",
+                    "address": "10063"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 192-193",
+                    "address": "10064"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 194-195",
+                    "address": "10065"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 196-197",
+                    "address": "10066"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 198-199",
+                    "address": "10067"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Timestamp, Month 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 200-201",
+                    "address": "10068"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 202-203",
+                    "address": "10069"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 204-205",
+                    "address": "10070"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 206-207",
+                    "address": "10071"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 208-209",
+                    "address": "10072"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 210-211",
+                    "address": "10073"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 212-213",
+                    "address": "10074"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 214-215",
+                    "address": "10075"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 216-217",
+                    "address": "10076"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 218-219",
+                    "address": "10077"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 220-221",
+                    "address": "10078"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 222-223",
+                    "address": "10079"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 224-225",
+                    "address": "10080"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 226-227",
+                    "address": "10081"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 228-229",
+                    "address": "10082"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 230-231",
+                    "address": "10083"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 232-233",
+                    "address": "10084"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 234-235",
+                    "address": "10085"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 236-237",
+                    "address": "10086"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 238-239",
+                    "address": "10087"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 240-241",
+                    "address": "10088"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 242-243",
+                    "address": "10089"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 244-245",
+                    "address": "10090"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 246-247",
+                    "address": "10091"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 248-249",
+                    "address": "10092"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 250-251",
+                    "address": "10093"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 252-253",
+                    "address": "10094"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 254-255",
+                    "address": "10095"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 256-257",
+                    "address": "10096"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 258-259",
+                    "address": "10097"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 260-261",
+                    "address": "10098"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 262-263",
+                    "address": "10099"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 264-265",
+                    "address": "10100"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 266-267",
+                    "address": "10101"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 268-269",
+                    "address": "10102"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 270-271",
+                    "address": "10103"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 272-273",
+                    "address": "10104"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 274-275",
+                    "address": "10105"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 276-277",
+                    "address": "10106"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 278-279",
+                    "address": "10107"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 280-281",
+                    "address": "10108"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 282-283",
+                    "address": "10109"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 284-285",
+                    "address": "10110"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 286-287",
+                    "address": "10111"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 288-289",
+                    "address": "10112"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 290-291",
+                    "address": "10113"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 292-293",
+                    "address": "10114"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 294-295",
+                    "address": "10115"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 296-297",
+                    "address": "10116"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 298-299",
+                    "address": "10117"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 300-301",
+                    "address": "10118"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 302-303",
+                    "address": "10119"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 304-305",
+                    "address": "10120"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 306-307",
+                    "address": "10121"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 308-309",
+                    "address": "10122"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 310-311",
+                    "address": "10123"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 312-313",
+                    "address": "10124"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 314-315",
+                    "address": "10125"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 316-317",
+                    "address": "10126"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 318-319",
+                    "address": "10127"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 320-321",
+                    "address": "10128"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 322-323",
+                    "address": "10129"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 324-325",
+                    "address": "10130"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 326-327",
+                    "address": "10131"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 328-329",
+                    "address": "10132"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 330-331",
+                    "address": "10133"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 332-333",
+                    "address": "10134"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 334-335",
+                    "address": "10135"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 336-337",
+                    "address": "10136"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 338-339",
+                    "address": "10137"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 340-341",
+                    "address": "10138"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 342-343",
+                    "address": "10139"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 344-345",
+                    "address": "10140"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 346-347",
+                    "address": "10141"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 348-349",
+                    "address": "10142"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 350-351",
+                    "address": "10143"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 352-353",
+                    "address": "10144"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 354-355",
+                    "address": "10145"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 356-357",
+                    "address": "10146"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 358-359",
+                    "address": "10147"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 360-361",
+                    "address": "10148"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 362-363",
+                    "address": "10149"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 364-365",
+                    "address": "10150"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 366-367",
+                    "address": "10151"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 368-369",
+                    "address": "10152"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 370-371",
+                    "address": "10153"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 372-373",
+                    "address": "10154"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 374-375",
+                    "address": "10155"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 376-377",
+                    "address": "10156"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 378-379",
+                    "address": "10157"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 380-381",
+                    "address": "10158"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 382-383",
+                    "address": "10159"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 384-385",
+                    "address": "10160"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 386-387",
+                    "address": "10161"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 388-389",
+                    "address": "10162"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 390-391",
+                    "address": "10163"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 392-393",
+                    "address": "10164"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 394-395",
+                    "address": "10165"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 396-397",
+                    "address": "10166"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 398-399",
+                    "address": "10167"
+                }
+            ]
+        },
+        {
+            "name": "String Thermal Runaway Channel Timestamp, Month 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 400-401",
+                    "address": "10168"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 402-403",
+                    "address": "10169"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 404-405",
+                    "address": "10170"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 406-407",
+                    "address": "10171"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 408-409",
+                    "address": "10172"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 410-411",
+                    "address": "10173"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 412-413",
+                    "address": "10174"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 414-415",
+                    "address": "10175"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 416-417",
+                    "address": "10176"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 418-419",
+                    "address": "10177"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 420-421",
+                    "address": "10178"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 422-423",
+                    "address": "10179"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 424-425",
+                    "address": "10180"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 426-427",
+                    "address": "10181"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 428-429",
+                    "address": "10182"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 430-431",
+                    "address": "10183"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 432-433",
+                    "address": "10184"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 434-435",
+                    "address": "10185"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 436-437",
+                    "address": "10186"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 438-439",
+                    "address": "10187"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 440-441",
+                    "address": "10188"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 442-443",
+                    "address": "10189"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 444-445",
+                    "address": "10190"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 446-447",
+                    "address": "10191"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 448-449",
+                    "address": "10192"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 450-451",
+                    "address": "10193"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 452-453",
+                    "address": "10194"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 454-455",
+                    "address": "10195"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 456-457",
+                    "address": "10196"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 458-459",
+                    "address": "10197"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 460-461",
+                    "address": "10198"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 462-463",
+                    "address": "10199"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 464-465",
+                    "address": "10200"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 466-467",
+                    "address": "10201"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 468-469",
+                    "address": "10202"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 470-471",
+                    "address": "10203"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 472-473",
+                    "address": "10204"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 474-475",
+                    "address": "10205"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 476-477",
+                    "address": "10206"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 478-479",
+                    "address": "10207"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 480-481",
+                    "address": "10208"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 482-483",
+                    "address": "10209"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 484-485",
+                    "address": "10210"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 486-487",
+                    "address": "10211"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 488-489",
+                    "address": "10212"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 490-491",
+                    "address": "10213"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 492-493",
+                    "address": "10214"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 494-495",
+                    "address": "10215"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 496-497",
+                    "address": "10216"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 498-499",
+                    "address": "10217"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 500-501",
+                    "address": "10218"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 502-503",
+                    "address": "10219"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 504-505",
+                    "address": "10220"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 506-507",
+                    "address": "10221"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 508-509",
+                    "address": "10222"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Thermal Runaway Channel Timestamp, Month Bytes 510-511",
+                    "address": "10223"
+                }
+            ]
+        }
+    ]
+}

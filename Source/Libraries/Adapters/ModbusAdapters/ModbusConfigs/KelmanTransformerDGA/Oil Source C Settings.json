@@ -1,0 +1,250 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Oil Source C ID String [1]",
+                    "address": "5999",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [2]",
+                    "address": "6000",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [3]",
+                    "address": "6001",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [4]",
+                    "address": "6002",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [5]",
+                    "address": "6003",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [6]",
+                    "address": "6004",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [7]",
+                    "address": "6005",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String [8]",
+                    "address": "6006",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ID String",
+                    "address": "String(HR5999,HR6000,HR6001,HR6002,HR6003,HR6004,HR6005,HR6006)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Measurement Scheduling Mode for Oil Source C",
+                    "address": "6007",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Schedule for Oil Source C in Normal Mode",
+                    "address": "6008",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Schedule for Oil Source C in Caution Mode",
+                    "address": "6009",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Measurement Schedule for Oil Source C in Alarm Mode",
+                    "address": "6010",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Enables/Disables the Oil Source, Used in MultiTrans Only",
+                    "address": "6011",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Scheduler Control",
+                    "address": "6012",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source C Settings 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Hydrogen Conc. Calibration Gain in %",
+                    "address": "6019",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Hydrogen Conc. Calibration Offset in PPM",
+                    "address": "6020",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Carbon Dioxide Conc. Calibration Gain in %",
+                    "address": "6021",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Carbon Dioxide Conc. Calibration Offset in PPM",
+                    "address": "6022",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Carbon Monoxide Conc. Calibration Gain in %",
+                    "address": "6023",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Carbon Monoxide Conc. Calibration Offset in PPM",
+                    "address": "6024",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ethylene Conc. Calibration Gain in %",
+                    "address": "6025",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ethylene Conc. Calibration Offset in PPM",
+                    "address": "6026",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ethane Conc. Calibration Gain in %",
+                    "address": "6027",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ethane Conc. Calibration Offset in PPM",
+                    "address": "6028",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Methane Conc. Calibration Gain in %",
+                    "address": "6029",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Methane Conc. Calibration Offset in PPM",
+                    "address": "6030",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Acetylene Conc. Calibration Gain in %",
+                    "address": "6031",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Acetylene Conc. Calibration Offset in PPM",
+                    "address": "6032",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Water Conc. Calibration Gain in %",
+                    "address": "6033",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Water Conc. Calibration Offset in PPM",
+                    "address": "6034",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oxygen Conc. Calibration Gain in %",
+                    "address": "6035",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oxygen Conc. Calibration Offset in PPM",
+                    "address": "6036",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Nitrogen Conc. Calibration Gain in %",
+                    "address": "6037",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Nitrogen Conc. Calibration Offset in PPM",
+                    "address": "6038",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source C Settings 2",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Next Measurement (UTC/Local): Years",
+                    "address": "6049",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Next Measurement (UTC/Local): Month, Days",
+                    "address": "6050",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Next Measurement (UTC/Local): Hours, Minutes",
+                    "address": "6051",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source C Settings 3",
+            "type": 0
+        }
+    ]
+}

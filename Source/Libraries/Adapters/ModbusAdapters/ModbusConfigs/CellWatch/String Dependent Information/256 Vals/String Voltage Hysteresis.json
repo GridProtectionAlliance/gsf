@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "name": "String Voltage Hysteresis 0",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 000-001",
+                    "address": "4848"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 002-003",
+                    "address": "4849"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 004-005",
+                    "address": "4850"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 006-007",
+                    "address": "4851"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 008-009",
+                    "address": "4852"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 010-011",
+                    "address": "4853"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 012-013",
+                    "address": "4854"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 014-015",
+                    "address": "4855"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 016-017",
+                    "address": "4856"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 018-019",
+                    "address": "4857"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 020-021",
+                    "address": "4858"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 022-023",
+                    "address": "4859"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 024-025",
+                    "address": "4860"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 026-027",
+                    "address": "4861"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 028-029",
+                    "address": "4862"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 030-031",
+                    "address": "4863"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 032-033",
+                    "address": "4864"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 034-035",
+                    "address": "4865"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 036-037",
+                    "address": "4866"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 038-039",
+                    "address": "4867"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 040-041",
+                    "address": "4868"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 042-043",
+                    "address": "4869"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 044-045",
+                    "address": "4870"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 046-047",
+                    "address": "4871"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 048-049",
+                    "address": "4872"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 050-051",
+                    "address": "4873"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 052-053",
+                    "address": "4874"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 054-055",
+                    "address": "4875"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 056-057",
+                    "address": "4876"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 058-059",
+                    "address": "4877"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 060-061",
+                    "address": "4878"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 062-063",
+                    "address": "4879"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 064-065",
+                    "address": "4880"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 066-067",
+                    "address": "4881"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 068-069",
+                    "address": "4882"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 070-071",
+                    "address": "4883"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 072-073",
+                    "address": "4884"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 074-075",
+                    "address": "4885"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 076-077",
+                    "address": "4886"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 078-079",
+                    "address": "4887"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 080-081",
+                    "address": "4888"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 082-083",
+                    "address": "4889"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 084-085",
+                    "address": "4890"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 086-087",
+                    "address": "4891"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 088-089",
+                    "address": "4892"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 090-091",
+                    "address": "4893"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 092-093",
+                    "address": "4894"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 094-095",
+                    "address": "4895"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 096-097",
+                    "address": "4896"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 098-099",
+                    "address": "4897"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 100-101",
+                    "address": "4898"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 102-103",
+                    "address": "4899"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 104-105",
+                    "address": "4900"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 106-107",
+                    "address": "4901"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 108-109",
+                    "address": "4902"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 110-111",
+                    "address": "4903"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 112-113",
+                    "address": "4904"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 114-115",
+                    "address": "4905"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 116-117",
+                    "address": "4906"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 118-119",
+                    "address": "4907"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 120-121",
+                    "address": "4908"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 122-123",
+                    "address": "4909"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 124-125",
+                    "address": "4910"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 126-127",
+                    "address": "4911"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 128-129",
+                    "address": "4912"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 130-131",
+                    "address": "4913"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 132-133",
+                    "address": "4914"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 134-135",
+                    "address": "4915"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 136-137",
+                    "address": "4916"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 138-139",
+                    "address": "4917"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 140-141",
+                    "address": "4918"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 142-143",
+                    "address": "4919"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 144-145",
+                    "address": "4920"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 146-147",
+                    "address": "4921"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 148-149",
+                    "address": "4922"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 150-151",
+                    "address": "4923"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 152-153",
+                    "address": "4924"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 154-155",
+                    "address": "4925"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 156-157",
+                    "address": "4926"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 158-159",
+                    "address": "4927"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 160-161",
+                    "address": "4928"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 162-163",
+                    "address": "4929"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 164-165",
+                    "address": "4930"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 166-167",
+                    "address": "4931"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 168-169",
+                    "address": "4932"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 170-171",
+                    "address": "4933"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 172-173",
+                    "address": "4934"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 174-175",
+                    "address": "4935"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 176-177",
+                    "address": "4936"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 178-179",
+                    "address": "4937"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 180-181",
+                    "address": "4938"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 182-183",
+                    "address": "4939"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 184-185",
+                    "address": "4940"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 186-187",
+                    "address": "4941"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 188-189",
+                    "address": "4942"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 190-191",
+                    "address": "4943"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 192-193",
+                    "address": "4944"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 194-195",
+                    "address": "4945"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 196-197",
+                    "address": "4946"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 198-199",
+                    "address": "4947"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Hysteresis 1",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 200-201",
+                    "address": "4948"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 202-203",
+                    "address": "4949"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 204-205",
+                    "address": "4950"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 206-207",
+                    "address": "4951"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 208-209",
+                    "address": "4952"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 210-211",
+                    "address": "4953"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 212-213",
+                    "address": "4954"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 214-215",
+                    "address": "4955"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 216-217",
+                    "address": "4956"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 218-219",
+                    "address": "4957"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 220-221",
+                    "address": "4958"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 222-223",
+                    "address": "4959"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 224-225",
+                    "address": "4960"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 226-227",
+                    "address": "4961"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 228-229",
+                    "address": "4962"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 230-231",
+                    "address": "4963"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 232-233",
+                    "address": "4964"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 234-235",
+                    "address": "4965"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 236-237",
+                    "address": "4966"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 238-239",
+                    "address": "4967"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 240-241",
+                    "address": "4968"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 242-243",
+                    "address": "4969"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 244-245",
+                    "address": "4970"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 246-247",
+                    "address": "4971"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 248-249",
+                    "address": "4972"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 250-251",
+                    "address": "4973"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 252-253",
+                    "address": "4974"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 254-255",
+                    "address": "4975"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 256-257",
+                    "address": "4976"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 258-259",
+                    "address": "4977"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 260-261",
+                    "address": "4978"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 262-263",
+                    "address": "4979"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 264-265",
+                    "address": "4980"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 266-267",
+                    "address": "4981"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 268-269",
+                    "address": "4982"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 270-271",
+                    "address": "4983"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 272-273",
+                    "address": "4984"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 274-275",
+                    "address": "4985"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 276-277",
+                    "address": "4986"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 278-279",
+                    "address": "4987"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 280-281",
+                    "address": "4988"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 282-283",
+                    "address": "4989"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 284-285",
+                    "address": "4990"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 286-287",
+                    "address": "4991"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 288-289",
+                    "address": "4992"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 290-291",
+                    "address": "4993"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 292-293",
+                    "address": "4994"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 294-295",
+                    "address": "4995"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 296-297",
+                    "address": "4996"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 298-299",
+                    "address": "4997"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 300-301",
+                    "address": "4998"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 302-303",
+                    "address": "4999"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 304-305",
+                    "address": "5000"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 306-307",
+                    "address": "5001"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 308-309",
+                    "address": "5002"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 310-311",
+                    "address": "5003"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 312-313",
+                    "address": "5004"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 314-315",
+                    "address": "5005"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 316-317",
+                    "address": "5006"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 318-319",
+                    "address": "5007"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 320-321",
+                    "address": "5008"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 322-323",
+                    "address": "5009"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 324-325",
+                    "address": "5010"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 326-327",
+                    "address": "5011"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 328-329",
+                    "address": "5012"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 330-331",
+                    "address": "5013"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 332-333",
+                    "address": "5014"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 334-335",
+                    "address": "5015"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 336-337",
+                    "address": "5016"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 338-339",
+                    "address": "5017"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 340-341",
+                    "address": "5018"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 342-343",
+                    "address": "5019"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 344-345",
+                    "address": "5020"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 346-347",
+                    "address": "5021"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 348-349",
+                    "address": "5022"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 350-351",
+                    "address": "5023"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 352-353",
+                    "address": "5024"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 354-355",
+                    "address": "5025"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 356-357",
+                    "address": "5026"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 358-359",
+                    "address": "5027"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 360-361",
+                    "address": "5028"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 362-363",
+                    "address": "5029"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 364-365",
+                    "address": "5030"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 366-367",
+                    "address": "5031"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 368-369",
+                    "address": "5032"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 370-371",
+                    "address": "5033"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 372-373",
+                    "address": "5034"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 374-375",
+                    "address": "5035"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 376-377",
+                    "address": "5036"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 378-379",
+                    "address": "5037"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 380-381",
+                    "address": "5038"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 382-383",
+                    "address": "5039"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 384-385",
+                    "address": "5040"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 386-387",
+                    "address": "5041"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 388-389",
+                    "address": "5042"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 390-391",
+                    "address": "5043"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 392-393",
+                    "address": "5044"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 394-395",
+                    "address": "5045"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 396-397",
+                    "address": "5046"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 398-399",
+                    "address": "5047"
+                }
+            ]
+        },
+        {
+            "name": "String Voltage Hysteresis 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 400-401",
+                    "address": "5048"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 402-403",
+                    "address": "5049"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 404-405",
+                    "address": "5050"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 406-407",
+                    "address": "5051"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 408-409",
+                    "address": "5052"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 410-411",
+                    "address": "5053"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 412-413",
+                    "address": "5054"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 414-415",
+                    "address": "5055"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 416-417",
+                    "address": "5056"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 418-419",
+                    "address": "5057"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 420-421",
+                    "address": "5058"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 422-423",
+                    "address": "5059"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 424-425",
+                    "address": "5060"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 426-427",
+                    "address": "5061"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 428-429",
+                    "address": "5062"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 430-431",
+                    "address": "5063"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 432-433",
+                    "address": "5064"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 434-435",
+                    "address": "5065"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 436-437",
+                    "address": "5066"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 438-439",
+                    "address": "5067"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 440-441",
+                    "address": "5068"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 442-443",
+                    "address": "5069"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 444-445",
+                    "address": "5070"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 446-447",
+                    "address": "5071"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 448-449",
+                    "address": "5072"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 450-451",
+                    "address": "5073"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 452-453",
+                    "address": "5074"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 454-455",
+                    "address": "5075"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 456-457",
+                    "address": "5076"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 458-459",
+                    "address": "5077"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 460-461",
+                    "address": "5078"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 462-463",
+                    "address": "5079"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 464-465",
+                    "address": "5080"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 466-467",
+                    "address": "5081"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 468-469",
+                    "address": "5082"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 470-471",
+                    "address": "5083"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 472-473",
+                    "address": "5084"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 474-475",
+                    "address": "5085"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 476-477",
+                    "address": "5086"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 478-479",
+                    "address": "5087"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 480-481",
+                    "address": "5088"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 482-483",
+                    "address": "5089"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 484-485",
+                    "address": "5090"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 486-487",
+                    "address": "5091"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 488-489",
+                    "address": "5092"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 490-491",
+                    "address": "5093"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 492-493",
+                    "address": "5094"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 494-495",
+                    "address": "5095"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 496-497",
+                    "address": "5096"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 498-499",
+                    "address": "5097"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 500-501",
+                    "address": "5098"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 502-503",
+                    "address": "5099"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 504-505",
+                    "address": "5100"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 506-507",
+                    "address": "5101"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 508-509",
+                    "address": "5102"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Voltage Hysteresis Bytes 510-511",
+                    "address": "5103"
+                }
+            ]
+        }
+    ]
+}

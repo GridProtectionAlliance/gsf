@@ -1,0 +1,472 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "512",
+                    "description": "String Label Bytes 00-01",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "513",
+                    "description": "String Label Bytes 02-03",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "514",
+                    "description": "String Label Bytes 04-05",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "515",
+                    "description": "String Label Bytes 06-07",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "516",
+                    "description": "String Label Bytes 08-09",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "517",
+                    "description": "String Label Bytes 10-11",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "518",
+                    "description": "String Label Bytes 12-13",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "519",
+                    "description": "String Label Bytes 14-15",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "520",
+                    "description": "String Label Bytes 16-17",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "521",
+                    "description": "String Label Bytes 18-19",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "522",
+                    "description": "String Label Bytes 20-21",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "523",
+                    "description": "String Label Bytes 22-23",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "524",
+                    "description": "String Label Bytes 24-25",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "525",
+                    "description": "String Label Bytes 26-27",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "526",
+                    "description": "String Label Bytes 28-29",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "527",
+                    "description": "String Label Bytes 30-31",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "528",
+                    "description": "String Label Bytes 32-33",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "529",
+                    "description": "String Label Bytes 34-35",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "530",
+                    "description": "String Label Bytes 36-37",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "531",
+                    "description": "String Label Bytes 38-39",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "532",
+                    "description": "String Label Bytes 40-41",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "533",
+                    "description": "String Label Bytes 42-43",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "534",
+                    "description": "String Label Bytes 44-45",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "535",
+                    "description": "String Label Bytes 46-47",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "536",
+                    "description": "String Label Bytes 48-49",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "537",
+                    "description": "String Label Bytes 50-51",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "538",
+                    "description": "String Label Bytes 52-53",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "539",
+                    "description": "String Label Bytes 54-55",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "540",
+                    "description": "String Label Bytes 56-57",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "541",
+                    "description": "String Label Bytes 58-59",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "542",
+                    "description": "String Label Bytes 60-61",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "543",
+                    "description": "String Label Bytes 62-63",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "544",
+                    "description": "String Number of DCMs Configured",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "545",
+                    "description": "String Channels Count Detected ",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "546",
+                    "description": "String Input Bit Count Configured",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "547",
+                    "description": "String Logical Current Probe Configured",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "548",
+                    "description": "String Temperature Probe Count Configured",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "549",
+                    "description": "String Voltage (calculated)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "550",
+                    "description": "String Average Voltage (calculated)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "551",
+                    "description": "String Number of Averaged Measurements",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "552",
+                    "description": "String Voltage Status",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "553",
+                    "description": "String Voltage High Limit",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "554",
+                    "description": "String Voltage Low Limit",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "555",
+                    "description": "String Voltage Hysteresis",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "556",
+                    "description": "String Voltage Thermal Limit",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "557",
+                    "description": "String Voltage Limit Low Discharge",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "558",
+                    "description": "String Ohmic Value (calculated)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "559",
+                    "description": "String Average Ohmic Value (calculated)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "560",
+                    "description": "String Number of Averaged Measurements",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "561",
+                    "description": "String Ohmic Value Status",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "562",
+                    "description": "String Ohmic Value High Limit",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "563",
+                    "description": "String Ohmic Value Low Limit",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "564",
+                    "description": "String Ohmic Value Hysteresis",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "565",
+                    "description": "String Status (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "566",
+                    "description": "String Ripple Voltage",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "567",
+                    "description": "String Ripple Average",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "568",
+                    "description": "String Ripple Average Count",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "569",
+                    "description": "String Ripple Status",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "570",
+                    "description": "String Ripple Limit",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "571",
+                    "description": "String Ripple Hysteresis",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "572",
+                    "description": "String Thermal Runaway Status",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "573",
+                    "description": "String Thermal Runaway Year",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "574",
+                    "description": "String Thermal Runaway Month",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "575",
+                    "description": "String Thermal Runaway Day",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "576",
+                    "description": "String Thermal Runaway Hour",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "577",
+                    "description": "String Thermal Runaway Minute",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "578",
+                    "description": "String Thermal Runaway Second",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "579",
+                    "description": "String Thermal Runaway Duration",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "580",
+                    "description": "String Thermal Runaway Time-To-Cutoff (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "581",
+                    "description": "String Thermal Runaway Time-To-Cutoff (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "582",
+                    "description": "String Thermal Runaway Hold Delay (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "583",
+                    "description": "String Thermal Runaway Hold Delay (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "584",
+                    "description": "String Status (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR565,HR584)",
+                    "description": "String Status",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR581,HR580)",
+                    "description": "String Thermal Runaway Time-To-Cutoff",
+                    "dataValue": -1
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR583,HR582)",
+                    "description": "String Thermal Runaway Hold Delay",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "String(HR512,HR513,HR514,HR515,HR516,HR517,HR518,HR519,HR520,HR521,HR522,HR523,HR524,HR525,HR526,HR527,HR528,HR529,HR530,HR531,HR532,HR533,HR534,HR535,HR536,HR537,HR538,HR539,HR540,HR541,HR542,HR543)",
+                    "description": "String Label",
+                    "dataValue": "Battery 1 String 1\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+                }
+            ]
+        }
+    ]
+}

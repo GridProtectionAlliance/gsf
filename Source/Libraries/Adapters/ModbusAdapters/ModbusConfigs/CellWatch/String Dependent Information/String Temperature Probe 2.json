@@ -1,0 +1,256 @@
+{
+    "sequences": [
+        {
+            "name": "String Temperature Probe 2",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 00-01",
+                    "address": "976"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 02-03",
+                    "address": "977"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 04-05",
+                    "address": "978"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 06-07",
+                    "address": "979"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 08-09",
+                    "address": "980"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 10-11",
+                    "address": "981"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 12-13",
+                    "address": "982"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 14-15",
+                    "address": "983"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 16-17",
+                    "address": "984"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 18-19",
+                    "address": "985"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 20-21",
+                    "address": "986"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 22-23",
+                    "address": "987"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 24-25",
+                    "address": "988"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 26-27",
+                    "address": "989"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 28-29",
+                    "address": "990"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 30-31",
+                    "address": "991"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 32-33",
+                    "address": "992"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 34-35",
+                    "address": "993"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 36-37",
+                    "address": "994"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 38-39",
+                    "address": "995"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 40-41",
+                    "address": "996"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 42-43",
+                    "address": "997"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 44-45",
+                    "address": "998"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 46-47",
+                    "address": "999"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 48-49",
+                    "address": "1000"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 50-51",
+                    "address": "1001"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 52-53",
+                    "address": "1002"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 54-55",
+                    "address": "1003"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 56-57",
+                    "address": "1004"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 58-59",
+                    "address": "1005"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 60-61",
+                    "address": "1006"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Label Bytes 62-63",
+                    "address": "1007"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Temperature Probe 2 Label",
+                    "address": "String(HR976,HR977,HR978,HR979,HR980,HR981,HR982,HR983,HR984,HR985,HR986,HR987,HR988,HR989,HR990,HR991,HR992,HR993,HR994,HR995,HR996,HR997,HR998,HR999,HR1000,HR1001,HR1002,HR1003,HR1004,HR1005,HR1006,HR1007)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Value",
+                    "address": "1008"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Average",
+                    "address": "1009"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Average Count",
+                    "address": "1010"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Status",
+                    "address": "1011"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 High Limit",
+                    "address": "1012"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Low Limit",
+                    "address": "1013"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Hysteresis",
+                    "address": "1014"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Temperature Probe 2 Thermal Runaway Limit",
+                    "address": "1015"
+                }
+            ]
+        }
+    ]
+}

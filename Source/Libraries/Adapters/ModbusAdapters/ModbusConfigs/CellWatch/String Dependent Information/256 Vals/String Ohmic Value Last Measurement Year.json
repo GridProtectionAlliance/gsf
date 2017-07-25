@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Ohmic Value Last Measurement Year 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "47409",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47410",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47411",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47412",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47413",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47414",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47415",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47416",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47417",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47418",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47419",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47420",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47421",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47422",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47423",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47424",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47425",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47426",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47427",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47428",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47429",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47430",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47431",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47432",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47433",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47434",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47435",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47436",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47437",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47438",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47439",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47440",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47441",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47442",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47443",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47444",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47445",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47446",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47447",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47448",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47449",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47450",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47451",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47452",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47453",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47454",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47455",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47456",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47457",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47458",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47459",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47460",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47461",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47462",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47463",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47464",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47465",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47466",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47467",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47468",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47469",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47470",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47471",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47472",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47473",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47474",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47475",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47476",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47477",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47478",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47479",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47480",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47481",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47482",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47483",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47484",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47485",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47486",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47487",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47488",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47489",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47490",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47491",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47492",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47493",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47494",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47495",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47496",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47497",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47498",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47499",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47500",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47501",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47502",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47503",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47504",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47505",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47506",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47507",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47508",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Last Measurement Year 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "47509",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47510",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47511",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47512",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47513",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47514",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47515",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47516",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47517",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47518",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47519",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47520",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47521",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47522",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47523",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47524",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47525",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47526",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47527",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47528",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47529",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47530",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47531",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47532",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47533",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47534",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47535",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47536",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47537",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47538",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47539",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47540",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47541",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47542",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47543",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47544",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47545",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47546",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47547",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47548",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47549",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47550",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47551",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47552",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47553",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47554",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47555",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47556",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47557",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47558",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47559",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47560",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47561",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47562",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47563",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47564",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47565",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47566",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47567",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47568",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47569",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47570",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47571",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47572",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47573",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47574",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47575",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47576",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47577",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47578",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47579",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47580",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47581",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47582",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47583",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47584",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47585",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47586",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47587",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47588",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47589",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47590",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47591",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47592",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47593",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47594",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47595",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47596",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47597",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47598",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47599",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47600",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47601",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47602",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47603",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47604",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47605",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47606",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47607",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47608",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Last Measurement Year 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "47609",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47610",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47611",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47612",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47613",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47614",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47615",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47616",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47617",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47618",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47619",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47620",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47621",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47622",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47623",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47624",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47625",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47626",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47627",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47628",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47629",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47630",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47631",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47632",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47633",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47634",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47635",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47636",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47637",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47638",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47639",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47640",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47641",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47642",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47643",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47644",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47645",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47646",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47647",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47648",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47649",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47650",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47651",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47652",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47653",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47654",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47655",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47656",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47657",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47658",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47659",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47660",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47661",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47662",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47663",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "47664",
+                    "description": "String Ohmic Value Last Measurement Year Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

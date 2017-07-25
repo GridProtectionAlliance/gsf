@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Low Limit 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42545",
+                    "description": "String Temperature (DCM) Low Limit Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42546",
+                    "description": "String Temperature (DCM) Low Limit Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42547",
+                    "description": "String Temperature (DCM) Low Limit Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42548",
+                    "description": "String Temperature (DCM) Low Limit Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42549",
+                    "description": "String Temperature (DCM) Low Limit Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42550",
+                    "description": "String Temperature (DCM) Low Limit Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42551",
+                    "description": "String Temperature (DCM) Low Limit Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42552",
+                    "description": "String Temperature (DCM) Low Limit Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42553",
+                    "description": "String Temperature (DCM) Low Limit Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42554",
+                    "description": "String Temperature (DCM) Low Limit Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42555",
+                    "description": "String Temperature (DCM) Low Limit Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42556",
+                    "description": "String Temperature (DCM) Low Limit Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42557",
+                    "description": "String Temperature (DCM) Low Limit Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42558",
+                    "description": "String Temperature (DCM) Low Limit Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42559",
+                    "description": "String Temperature (DCM) Low Limit Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42560",
+                    "description": "String Temperature (DCM) Low Limit Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42561",
+                    "description": "String Temperature (DCM) Low Limit Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42562",
+                    "description": "String Temperature (DCM) Low Limit Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42563",
+                    "description": "String Temperature (DCM) Low Limit Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42564",
+                    "description": "String Temperature (DCM) Low Limit Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42565",
+                    "description": "String Temperature (DCM) Low Limit Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42566",
+                    "description": "String Temperature (DCM) Low Limit Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42567",
+                    "description": "String Temperature (DCM) Low Limit Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42568",
+                    "description": "String Temperature (DCM) Low Limit Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42569",
+                    "description": "String Temperature (DCM) Low Limit Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42570",
+                    "description": "String Temperature (DCM) Low Limit Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42571",
+                    "description": "String Temperature (DCM) Low Limit Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42572",
+                    "description": "String Temperature (DCM) Low Limit Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42573",
+                    "description": "String Temperature (DCM) Low Limit Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42574",
+                    "description": "String Temperature (DCM) Low Limit Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42575",
+                    "description": "String Temperature (DCM) Low Limit Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42576",
+                    "description": "String Temperature (DCM) Low Limit Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42577",
+                    "description": "String Temperature (DCM) Low Limit Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42578",
+                    "description": "String Temperature (DCM) Low Limit Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42579",
+                    "description": "String Temperature (DCM) Low Limit Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42580",
+                    "description": "String Temperature (DCM) Low Limit Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42581",
+                    "description": "String Temperature (DCM) Low Limit Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42582",
+                    "description": "String Temperature (DCM) Low Limit Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42583",
+                    "description": "String Temperature (DCM) Low Limit Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42584",
+                    "description": "String Temperature (DCM) Low Limit Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42585",
+                    "description": "String Temperature (DCM) Low Limit Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42586",
+                    "description": "String Temperature (DCM) Low Limit Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42587",
+                    "description": "String Temperature (DCM) Low Limit Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42588",
+                    "description": "String Temperature (DCM) Low Limit Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42589",
+                    "description": "String Temperature (DCM) Low Limit Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42590",
+                    "description": "String Temperature (DCM) Low Limit Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42591",
+                    "description": "String Temperature (DCM) Low Limit Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42592",
+                    "description": "String Temperature (DCM) Low Limit Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42593",
+                    "description": "String Temperature (DCM) Low Limit Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42594",
+                    "description": "String Temperature (DCM) Low Limit Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42595",
+                    "description": "String Temperature (DCM) Low Limit Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42596",
+                    "description": "String Temperature (DCM) Low Limit Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42597",
+                    "description": "String Temperature (DCM) Low Limit Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42598",
+                    "description": "String Temperature (DCM) Low Limit Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42599",
+                    "description": "String Temperature (DCM) Low Limit Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42600",
+                    "description": "String Temperature (DCM) Low Limit Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42601",
+                    "description": "String Temperature (DCM) Low Limit Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42602",
+                    "description": "String Temperature (DCM) Low Limit Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42603",
+                    "description": "String Temperature (DCM) Low Limit Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42604",
+                    "description": "String Temperature (DCM) Low Limit Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42605",
+                    "description": "String Temperature (DCM) Low Limit Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42606",
+                    "description": "String Temperature (DCM) Low Limit Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42607",
+                    "description": "String Temperature (DCM) Low Limit Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42608",
+                    "description": "String Temperature (DCM) Low Limit Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42609",
+                    "description": "String Temperature (DCM) Low Limit Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42610",
+                    "description": "String Temperature (DCM) Low Limit Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42611",
+                    "description": "String Temperature (DCM) Low Limit Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42612",
+                    "description": "String Temperature (DCM) Low Limit Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42613",
+                    "description": "String Temperature (DCM) Low Limit Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42614",
+                    "description": "String Temperature (DCM) Low Limit Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42615",
+                    "description": "String Temperature (DCM) Low Limit Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42616",
+                    "description": "String Temperature (DCM) Low Limit Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42617",
+                    "description": "String Temperature (DCM) Low Limit Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42618",
+                    "description": "String Temperature (DCM) Low Limit Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42619",
+                    "description": "String Temperature (DCM) Low Limit Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42620",
+                    "description": "String Temperature (DCM) Low Limit Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42621",
+                    "description": "String Temperature (DCM) Low Limit Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42622",
+                    "description": "String Temperature (DCM) Low Limit Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42623",
+                    "description": "String Temperature (DCM) Low Limit Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42624",
+                    "description": "String Temperature (DCM) Low Limit Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42625",
+                    "description": "String Temperature (DCM) Low Limit Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42626",
+                    "description": "String Temperature (DCM) Low Limit Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42627",
+                    "description": "String Temperature (DCM) Low Limit Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42628",
+                    "description": "String Temperature (DCM) Low Limit Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42629",
+                    "description": "String Temperature (DCM) Low Limit Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42630",
+                    "description": "String Temperature (DCM) Low Limit Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42631",
+                    "description": "String Temperature (DCM) Low Limit Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42632",
+                    "description": "String Temperature (DCM) Low Limit Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42633",
+                    "description": "String Temperature (DCM) Low Limit Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42634",
+                    "description": "String Temperature (DCM) Low Limit Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42635",
+                    "description": "String Temperature (DCM) Low Limit Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42636",
+                    "description": "String Temperature (DCM) Low Limit Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42637",
+                    "description": "String Temperature (DCM) Low Limit Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42638",
+                    "description": "String Temperature (DCM) Low Limit Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42639",
+                    "description": "String Temperature (DCM) Low Limit Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42640",
+                    "description": "String Temperature (DCM) Low Limit Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42641",
+                    "description": "String Temperature (DCM) Low Limit Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42642",
+                    "description": "String Temperature (DCM) Low Limit Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42643",
+                    "description": "String Temperature (DCM) Low Limit Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42644",
+                    "description": "String Temperature (DCM) Low Limit Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Low Limit 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42645",
+                    "description": "String Temperature (DCM) Low Limit Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42646",
+                    "description": "String Temperature (DCM) Low Limit Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42647",
+                    "description": "String Temperature (DCM) Low Limit Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42648",
+                    "description": "String Temperature (DCM) Low Limit Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42649",
+                    "description": "String Temperature (DCM) Low Limit Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42650",
+                    "description": "String Temperature (DCM) Low Limit Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42651",
+                    "description": "String Temperature (DCM) Low Limit Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42652",
+                    "description": "String Temperature (DCM) Low Limit Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42653",
+                    "description": "String Temperature (DCM) Low Limit Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42654",
+                    "description": "String Temperature (DCM) Low Limit Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42655",
+                    "description": "String Temperature (DCM) Low Limit Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42656",
+                    "description": "String Temperature (DCM) Low Limit Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42657",
+                    "description": "String Temperature (DCM) Low Limit Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42658",
+                    "description": "String Temperature (DCM) Low Limit Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42659",
+                    "description": "String Temperature (DCM) Low Limit Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42660",
+                    "description": "String Temperature (DCM) Low Limit Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42661",
+                    "description": "String Temperature (DCM) Low Limit Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42662",
+                    "description": "String Temperature (DCM) Low Limit Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42663",
+                    "description": "String Temperature (DCM) Low Limit Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42664",
+                    "description": "String Temperature (DCM) Low Limit Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42665",
+                    "description": "String Temperature (DCM) Low Limit Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42666",
+                    "description": "String Temperature (DCM) Low Limit Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42667",
+                    "description": "String Temperature (DCM) Low Limit Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42668",
+                    "description": "String Temperature (DCM) Low Limit Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42669",
+                    "description": "String Temperature (DCM) Low Limit Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42670",
+                    "description": "String Temperature (DCM) Low Limit Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42671",
+                    "description": "String Temperature (DCM) Low Limit Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42672",
+                    "description": "String Temperature (DCM) Low Limit Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42673",
+                    "description": "String Temperature (DCM) Low Limit Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42674",
+                    "description": "String Temperature (DCM) Low Limit Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42675",
+                    "description": "String Temperature (DCM) Low Limit Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42676",
+                    "description": "String Temperature (DCM) Low Limit Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42677",
+                    "description": "String Temperature (DCM) Low Limit Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42678",
+                    "description": "String Temperature (DCM) Low Limit Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42679",
+                    "description": "String Temperature (DCM) Low Limit Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42680",
+                    "description": "String Temperature (DCM) Low Limit Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42681",
+                    "description": "String Temperature (DCM) Low Limit Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42682",
+                    "description": "String Temperature (DCM) Low Limit Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42683",
+                    "description": "String Temperature (DCM) Low Limit Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42684",
+                    "description": "String Temperature (DCM) Low Limit Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42685",
+                    "description": "String Temperature (DCM) Low Limit Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42686",
+                    "description": "String Temperature (DCM) Low Limit Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42687",
+                    "description": "String Temperature (DCM) Low Limit Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42688",
+                    "description": "String Temperature (DCM) Low Limit Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42689",
+                    "description": "String Temperature (DCM) Low Limit Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42690",
+                    "description": "String Temperature (DCM) Low Limit Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42691",
+                    "description": "String Temperature (DCM) Low Limit Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42692",
+                    "description": "String Temperature (DCM) Low Limit Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42693",
+                    "description": "String Temperature (DCM) Low Limit Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42694",
+                    "description": "String Temperature (DCM) Low Limit Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42695",
+                    "description": "String Temperature (DCM) Low Limit Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42696",
+                    "description": "String Temperature (DCM) Low Limit Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42697",
+                    "description": "String Temperature (DCM) Low Limit Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42698",
+                    "description": "String Temperature (DCM) Low Limit Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42699",
+                    "description": "String Temperature (DCM) Low Limit Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42700",
+                    "description": "String Temperature (DCM) Low Limit Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42701",
+                    "description": "String Temperature (DCM) Low Limit Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42702",
+                    "description": "String Temperature (DCM) Low Limit Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42703",
+                    "description": "String Temperature (DCM) Low Limit Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42704",
+                    "description": "String Temperature (DCM) Low Limit Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42705",
+                    "description": "String Temperature (DCM) Low Limit Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42706",
+                    "description": "String Temperature (DCM) Low Limit Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42707",
+                    "description": "String Temperature (DCM) Low Limit Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42708",
+                    "description": "String Temperature (DCM) Low Limit Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42709",
+                    "description": "String Temperature (DCM) Low Limit Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42710",
+                    "description": "String Temperature (DCM) Low Limit Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42711",
+                    "description": "String Temperature (DCM) Low Limit Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42712",
+                    "description": "String Temperature (DCM) Low Limit Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42713",
+                    "description": "String Temperature (DCM) Low Limit Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42714",
+                    "description": "String Temperature (DCM) Low Limit Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42715",
+                    "description": "String Temperature (DCM) Low Limit Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42716",
+                    "description": "String Temperature (DCM) Low Limit Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42717",
+                    "description": "String Temperature (DCM) Low Limit Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42718",
+                    "description": "String Temperature (DCM) Low Limit Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42719",
+                    "description": "String Temperature (DCM) Low Limit Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42720",
+                    "description": "String Temperature (DCM) Low Limit Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42721",
+                    "description": "String Temperature (DCM) Low Limit Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42722",
+                    "description": "String Temperature (DCM) Low Limit Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42723",
+                    "description": "String Temperature (DCM) Low Limit Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42724",
+                    "description": "String Temperature (DCM) Low Limit Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42725",
+                    "description": "String Temperature (DCM) Low Limit Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42726",
+                    "description": "String Temperature (DCM) Low Limit Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42727",
+                    "description": "String Temperature (DCM) Low Limit Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42728",
+                    "description": "String Temperature (DCM) Low Limit Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42729",
+                    "description": "String Temperature (DCM) Low Limit Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42730",
+                    "description": "String Temperature (DCM) Low Limit Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42731",
+                    "description": "String Temperature (DCM) Low Limit Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42732",
+                    "description": "String Temperature (DCM) Low Limit Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42733",
+                    "description": "String Temperature (DCM) Low Limit Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42734",
+                    "description": "String Temperature (DCM) Low Limit Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42735",
+                    "description": "String Temperature (DCM) Low Limit Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42736",
+                    "description": "String Temperature (DCM) Low Limit Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42737",
+                    "description": "String Temperature (DCM) Low Limit Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42738",
+                    "description": "String Temperature (DCM) Low Limit Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42739",
+                    "description": "String Temperature (DCM) Low Limit Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42740",
+                    "description": "String Temperature (DCM) Low Limit Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42741",
+                    "description": "String Temperature (DCM) Low Limit Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42742",
+                    "description": "String Temperature (DCM) Low Limit Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42743",
+                    "description": "String Temperature (DCM) Low Limit Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42744",
+                    "description": "String Temperature (DCM) Low Limit Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Low Limit 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "42745",
+                    "description": "String Temperature (DCM) Low Limit Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42746",
+                    "description": "String Temperature (DCM) Low Limit Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42747",
+                    "description": "String Temperature (DCM) Low Limit Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42748",
+                    "description": "String Temperature (DCM) Low Limit Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42749",
+                    "description": "String Temperature (DCM) Low Limit Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42750",
+                    "description": "String Temperature (DCM) Low Limit Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42751",
+                    "description": "String Temperature (DCM) Low Limit Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42752",
+                    "description": "String Temperature (DCM) Low Limit Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42753",
+                    "description": "String Temperature (DCM) Low Limit Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42754",
+                    "description": "String Temperature (DCM) Low Limit Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42755",
+                    "description": "String Temperature (DCM) Low Limit Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42756",
+                    "description": "String Temperature (DCM) Low Limit Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42757",
+                    "description": "String Temperature (DCM) Low Limit Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42758",
+                    "description": "String Temperature (DCM) Low Limit Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42759",
+                    "description": "String Temperature (DCM) Low Limit Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42760",
+                    "description": "String Temperature (DCM) Low Limit Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42761",
+                    "description": "String Temperature (DCM) Low Limit Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42762",
+                    "description": "String Temperature (DCM) Low Limit Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42763",
+                    "description": "String Temperature (DCM) Low Limit Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42764",
+                    "description": "String Temperature (DCM) Low Limit Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42765",
+                    "description": "String Temperature (DCM) Low Limit Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42766",
+                    "description": "String Temperature (DCM) Low Limit Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42767",
+                    "description": "String Temperature (DCM) Low Limit Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42768",
+                    "description": "String Temperature (DCM) Low Limit Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42769",
+                    "description": "String Temperature (DCM) Low Limit Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42770",
+                    "description": "String Temperature (DCM) Low Limit Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42771",
+                    "description": "String Temperature (DCM) Low Limit Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42772",
+                    "description": "String Temperature (DCM) Low Limit Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42773",
+                    "description": "String Temperature (DCM) Low Limit Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42774",
+                    "description": "String Temperature (DCM) Low Limit Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42775",
+                    "description": "String Temperature (DCM) Low Limit Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42776",
+                    "description": "String Temperature (DCM) Low Limit Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42777",
+                    "description": "String Temperature (DCM) Low Limit Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42778",
+                    "description": "String Temperature (DCM) Low Limit Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42779",
+                    "description": "String Temperature (DCM) Low Limit Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42780",
+                    "description": "String Temperature (DCM) Low Limit Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42781",
+                    "description": "String Temperature (DCM) Low Limit Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42782",
+                    "description": "String Temperature (DCM) Low Limit Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42783",
+                    "description": "String Temperature (DCM) Low Limit Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42784",
+                    "description": "String Temperature (DCM) Low Limit Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42785",
+                    "description": "String Temperature (DCM) Low Limit Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42786",
+                    "description": "String Temperature (DCM) Low Limit Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42787",
+                    "description": "String Temperature (DCM) Low Limit Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42788",
+                    "description": "String Temperature (DCM) Low Limit Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42789",
+                    "description": "String Temperature (DCM) Low Limit Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42790",
+                    "description": "String Temperature (DCM) Low Limit Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42791",
+                    "description": "String Temperature (DCM) Low Limit Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42792",
+                    "description": "String Temperature (DCM) Low Limit Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42793",
+                    "description": "String Temperature (DCM) Low Limit Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42794",
+                    "description": "String Temperature (DCM) Low Limit Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42795",
+                    "description": "String Temperature (DCM) Low Limit Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42796",
+                    "description": "String Temperature (DCM) Low Limit Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42797",
+                    "description": "String Temperature (DCM) Low Limit Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42798",
+                    "description": "String Temperature (DCM) Low Limit Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42799",
+                    "description": "String Temperature (DCM) Low Limit Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "42800",
+                    "description": "String Temperature (DCM) Low Limit Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

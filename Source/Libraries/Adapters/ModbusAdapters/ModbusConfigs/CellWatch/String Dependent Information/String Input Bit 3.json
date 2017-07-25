@@ -1,0 +1,226 @@
+{
+    "sequences": [
+        {
+            "name": "String Input Bit 3",
+            "type": 0,
+            "records": [
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 00-01",
+                    "address": "832"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 02-03",
+                    "address": "833"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 04-05",
+                    "address": "834"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 06-07",
+                    "address": "835"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 08-09",
+                    "address": "836"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 10-11",
+                    "address": "837"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 12-13",
+                    "address": "838"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 14-15",
+                    "address": "839"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 16-17",
+                    "address": "840"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 18-19",
+                    "address": "841"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 20-21",
+                    "address": "842"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 22-23",
+                    "address": "843"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 24-25",
+                    "address": "844"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 26-27",
+                    "address": "845"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 28-29",
+                    "address": "846"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 30-31",
+                    "address": "847"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 32-33",
+                    "address": "848"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 34-35",
+                    "address": "849"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 36-37",
+                    "address": "850"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 38-39",
+                    "address": "851"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 40-41",
+                    "address": "852"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 42-43",
+                    "address": "853"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 44-45",
+                    "address": "854"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 46-47",
+                    "address": "855"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 48-49",
+                    "address": "856"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 50-51",
+                    "address": "857"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 52-53",
+                    "address": "858"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 54-55",
+                    "address": "859"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 56-57",
+                    "address": "860"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 58-59",
+                    "address": "861"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 60-61",
+                    "address": "862"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Label Bytes 62-63",
+                    "address": "863"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 4,
+                    "description": "String Input Bit 3 Label",
+                    "address": "String(HR832,HR833,HR834,HR835,HR836,HR837,HR838,HR839,HR840,HR841,HR842,HR843,HR844,HR845,HR846,HR847,HR848,HR849,HR850,HR851,HR852,HR853,HR854,HR855,HR856,HR857,HR858,HR859,HR860,HR861,HR862,HR863)"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 State",
+                    "address": "864"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Alarm",
+                    "address": "865"
+                },
+                {
+                    "dataValue": "",
+                    "recordType": 3,
+                    "description": "String Input Bit 3 Limit (On/Off)",
+                    "address": "866"
+                }
+            ]
+        }
+    ]
+}

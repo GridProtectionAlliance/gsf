@@ -79,14 +79,14 @@
         <Setter Property="Width" Value="{StaticResource LargerItemSize}"/>
         <Setter Property="Height" Value="Auto"/>
         <Setter Property="MinHeight" Value="22"/>
-        <Setter Property="Margin" Value="2"/>
-        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="4"/>
+        <Setter Property="Padding" Value="5"/>
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
 
     <Style TargetType="CheckBox">
-        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Margin" Value="5"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
@@ -245,7 +245,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
         <Setter Property="Height" Value="Auto"/>
-        <Setter Property="Padding" Value="0,-2,0,-2"/>
+        <Setter Property="Padding" Value="2"/>
         <Setter Property="Margin" Value="2"/>
     </Style>
 

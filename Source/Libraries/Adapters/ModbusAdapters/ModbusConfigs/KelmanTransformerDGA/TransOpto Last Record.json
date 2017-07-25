@@ -1,0 +1,154 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Record Date and Time (UTC) UNIX Format Low",
+                    "address": "8297",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time (UTC) UNIX Format High",
+                    "address": "8298",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time (UTC) UNIX Format",
+                    "address": "Uint32(HR8297,HR8298)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Record Number",
+                    "address": "8299",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Oil Source",
+                    "address": "8300",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Years",
+                    "address": "8301",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date (UTC/Local): Months, Days",
+                    "address": "8302",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Time (UTC/Local): Hours, Minutes",
+                    "address": "8303",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "8304",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "8305",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Units",
+                    "address": "8306",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Calibration Type",
+                    "address": "8307",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Alarm Status HI Word",
+                    "address": "8308",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Alarm Status LO Word",
+                    "address": "8309",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Alarm Output Flags From Last Measurement",
+                    "address": "8310",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 1 Current Value",
+                    "address": "8311",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 2 Current Value",
+                    "address": "8312",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 3 Current Value",
+                    "address": "8313",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 4 Current Value",
+                    "address": "8314",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 5 Current Value",
+                    "address": "8315",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 6 Current Value",
+                    "address": "8316",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 7 Current Value",
+                    "address": "8317",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TransOpto Channel 8 Current Value",
+                    "address": "8318",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Spare",
+                    "address": "8319",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "TransOpto Last Record 1",
+            "type": 0
+        }
+    ]
+}

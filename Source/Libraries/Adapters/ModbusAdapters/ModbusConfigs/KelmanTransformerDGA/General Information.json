@@ -1,0 +1,328 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Device ID [1]",
+                    "address": "999",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [2]",
+                    "address": "1000",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [3]",
+                    "address": "1001",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [4]",
+                    "address": "1002",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [5]",
+                    "address": "1003",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [6]",
+                    "address": "1004",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [7]",
+                    "address": "1005",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [8]",
+                    "address": "1006",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [9]",
+                    "address": "1007",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [10]",
+                    "address": "1008",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [11]",
+                    "address": "1009",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [12]",
+                    "address": "1010",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [13]",
+                    "address": "1011",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [14]",
+                    "address": "1012",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [15]",
+                    "address": "1013",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID [16]",
+                    "address": "1014",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Device ID",
+                    "address": "String(HR999,HR1000,HR1001,HR1002,HR1003,HR1004,HR1005,HR1006,HR1007,HR1008,HR1009,HR1010,HR1011,HR1012,HR1013,HR1014)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Serial Number [1]",
+                    "address": "1015",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [2]",
+                    "address": "1016",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [3]",
+                    "address": "1017",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [4]",
+                    "address": "1018",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [5]",
+                    "address": "1019",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [6]",
+                    "address": "1020",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [7]",
+                    "address": "1021",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number [8]",
+                    "address": "1022",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Serial Number",
+                    "address": "String(HR1015,HR1016,HR1017,HR1018,HR1019,HR1020,HR1021,HR1022)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Firmware Version",
+                    "address": "1023",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "General Information 1",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Number of Oil Sources Available",
+                    "address": "1025",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TRANSFIX Class",
+                    "address": "1026",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Chosen User Language",
+                    "address": "1027",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TRANSIFX Firmware Verion Low",
+                    "address": "1028",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TRANSIFX Firmware Verion High",
+                    "address": "1029",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "TRANSIFX Firmware Verion",
+                    "address": "Int32(HR1028,HR1029)",
+                    "dataValue": "",
+                    "recordType": 4
+                }
+            ],
+            "name": "General Information 2",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Measurement Counter",
+                    "address": "1042",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "General Information 3",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Heartbeat",
+                    "address": "1044",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Normal State",
+                    "address": "1045",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "General Information 4",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Measuring / Standby",
+                    "address": "1050",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Scheduler Enable",
+                    "address": "1051",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "General Information 5",
+            "type": 0
+        },
+        {
+            "records": [
+                {
+                    "description": "Caution Indicator",
+                    "address": "1059",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Alarm Indicator",
+                    "address": "1060",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Service Indicator",
+                    "address": "1061",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Relay 2",
+                    "address": "1062",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Relay 3",
+                    "address": "1063",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Relay 4",
+                    "address": "1064",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Relay 5",
+                    "address": "1065",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Relay 6",
+                    "address": "1066",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Relay 7",
+                    "address": "1067",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Alarm Reflash Enable",
+                    "address": "1068",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "General Information 6",
+            "type": 0
+        }
+    ]
+}

@@ -1,0 +1,60 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "549",
+                    "description": "String Voltage (mV)",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "566",
+                    "description": "String Ripple Voltage (mV)",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "672",
+                    "description": "String Current (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "673",
+                    "description": "String Current (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR673,HR672)",
+                    "description": "String Current (mA)",
+                    "dataValue": -10115
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "960",
+                    "description": "Temperature Probe 1 (.01 C)",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

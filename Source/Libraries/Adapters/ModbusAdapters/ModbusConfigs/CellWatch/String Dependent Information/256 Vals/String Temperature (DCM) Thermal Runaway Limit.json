@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Thermal Runaway Limit 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "43057",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43058",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43059",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43060",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43061",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43062",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43063",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43064",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43065",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43066",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43067",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43068",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43069",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43070",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43071",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43072",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43073",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43074",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43075",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43076",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43077",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43078",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43079",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43080",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43081",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43082",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43083",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43084",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43085",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43086",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43087",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43088",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43089",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43090",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43091",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43092",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43093",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43094",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43095",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43096",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43097",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43098",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43099",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43100",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43101",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43102",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43103",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43104",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43105",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43106",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43107",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43108",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43109",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43110",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43111",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43112",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43113",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43114",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43115",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43116",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43117",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43118",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43119",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43120",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43121",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43122",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43123",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43124",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43125",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43126",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43127",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43128",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43129",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43130",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43131",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43132",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43133",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43134",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43135",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43136",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43137",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43138",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43139",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43140",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43141",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43142",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43143",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43144",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43145",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43146",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43147",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43148",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43149",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43150",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43151",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43152",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43153",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43154",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43155",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43156",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Thermal Runaway Limit 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "43157",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43158",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43159",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43160",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43161",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43162",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43163",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43164",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43165",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43166",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43167",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43168",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43169",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43170",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43171",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43172",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43173",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43174",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43175",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43176",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43177",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43178",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43179",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43180",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43181",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43182",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43183",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43184",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43185",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43186",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43187",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43188",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43189",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43190",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43191",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43192",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43193",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43194",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43195",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43196",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43197",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43198",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43199",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43200",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43201",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43202",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43203",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43204",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43205",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43206",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43207",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43208",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43209",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43210",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43211",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43212",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43213",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43214",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43215",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43216",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43217",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43218",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43219",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43220",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43221",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43222",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43223",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43224",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43225",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43226",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43227",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43228",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43229",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43230",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43231",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43232",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43233",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43234",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43235",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43236",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43237",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43238",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43239",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43240",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43241",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43242",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43243",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43244",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43245",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43246",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43247",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43248",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43249",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43250",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43251",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43252",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43253",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43254",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43255",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43256",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Thermal Runaway Limit 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "43257",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43258",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43259",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43260",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43261",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43262",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43263",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43264",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43265",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43266",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43267",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43268",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43269",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43270",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43271",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43272",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43273",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43274",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43275",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43276",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43277",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43278",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43279",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43280",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43281",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43282",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43283",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43284",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43285",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43286",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43287",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43288",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43289",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43290",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43291",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43292",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43293",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43294",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43295",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43296",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43297",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43298",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43299",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43300",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43301",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43302",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43303",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43304",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43305",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43306",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43307",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43308",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43309",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43310",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43311",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "43312",
+                    "description": "String Temperature (DCM) Thermal Runaway Limit Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

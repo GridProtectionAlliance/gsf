@@ -1,0 +1,82 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "Physical CT",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "80",
+                    "description": "Physical CT 1 LSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "81",
+                    "description": "Physical CT 1 MSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "82",
+                    "description": "Physical CT 2 LSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "83",
+                    "description": "Physical CT 2 MSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "84",
+                    "description": "Physical CT 3 LSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "85",
+                    "description": "Physical CT 3 MSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "86",
+                    "description": "Physical CT 4 LSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "87",
+                    "description": "Physical CT 4 MSW",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR81,HR80)",
+                    "description": "Physical CT 1",
+                    "dataValue": -10127
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR83,HR82)",
+                    "description": "Physical CT 2",
+                    "dataValue": -2147483647
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR85,HR84)",
+                    "description": "Physical CT 3",
+                    "dataValue": -2147483647
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR87,HR86)",
+                    "description": "Physical CT 4",
+                    "dataValue": -2147483647
+                }
+            ]
+        }
+    ]
+}

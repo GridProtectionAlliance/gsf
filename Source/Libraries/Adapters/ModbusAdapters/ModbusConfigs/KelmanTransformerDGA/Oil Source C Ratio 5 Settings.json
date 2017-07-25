@@ -1,0 +1,148 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Oil Source C Ratio 5 Name [1]",
+                    "address": "7579",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [2]",
+                    "address": "7580",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [3]",
+                    "address": "7581",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [4]",
+                    "address": "7582",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [5]",
+                    "address": "7583",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [6]",
+                    "address": "7584",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [7]",
+                    "address": "7585",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name [8]",
+                    "address": "7586",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Name",
+                    "address": "String(HR7579,HR7580,HR7581,HR7582,HR7583,HR7584,HR7585,HR7586)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Numerator",
+                    "address": "7587",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Denominator",
+                    "address": "7588",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Upper Limit Low",
+                    "address": "7589",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Upper Limit High",
+                    "address": "7590",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Upper Limit",
+                    "address": "Single(HR7589,HR7590)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Lower Limit Low",
+                    "address": "7591",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Lower Limit High",
+                    "address": "7592",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Lower Limit",
+                    "address": "Single(HR7591,HR7592)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Enable",
+                    "address": "7593",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Alarm Output",
+                    "address": "7594",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Value From Last Measurement Low",
+                    "address": "7595",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Value From Last Measurement High",
+                    "address": "7596",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Value From Last Measurement",
+                    "address": "Single(HR7595,HR7596)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source C Ratio 5 Output Flags From Last Measurement",
+                    "address": "7597",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source C Ratio 5 Settings 1",
+            "type": 0
+        }
+    ]
+}

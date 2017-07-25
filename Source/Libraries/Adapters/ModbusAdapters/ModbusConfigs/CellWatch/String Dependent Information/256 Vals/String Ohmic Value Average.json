@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Ohmic Value Average 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "45873",
+                    "description": "String Ohmic Value Average Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45874",
+                    "description": "String Ohmic Value Average Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45875",
+                    "description": "String Ohmic Value Average Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45876",
+                    "description": "String Ohmic Value Average Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45877",
+                    "description": "String Ohmic Value Average Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45878",
+                    "description": "String Ohmic Value Average Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45879",
+                    "description": "String Ohmic Value Average Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45880",
+                    "description": "String Ohmic Value Average Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45881",
+                    "description": "String Ohmic Value Average Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45882",
+                    "description": "String Ohmic Value Average Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45883",
+                    "description": "String Ohmic Value Average Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45884",
+                    "description": "String Ohmic Value Average Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45885",
+                    "description": "String Ohmic Value Average Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45886",
+                    "description": "String Ohmic Value Average Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45887",
+                    "description": "String Ohmic Value Average Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45888",
+                    "description": "String Ohmic Value Average Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45889",
+                    "description": "String Ohmic Value Average Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45890",
+                    "description": "String Ohmic Value Average Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45891",
+                    "description": "String Ohmic Value Average Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45892",
+                    "description": "String Ohmic Value Average Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45893",
+                    "description": "String Ohmic Value Average Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45894",
+                    "description": "String Ohmic Value Average Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45895",
+                    "description": "String Ohmic Value Average Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45896",
+                    "description": "String Ohmic Value Average Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45897",
+                    "description": "String Ohmic Value Average Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45898",
+                    "description": "String Ohmic Value Average Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45899",
+                    "description": "String Ohmic Value Average Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45900",
+                    "description": "String Ohmic Value Average Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45901",
+                    "description": "String Ohmic Value Average Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45902",
+                    "description": "String Ohmic Value Average Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45903",
+                    "description": "String Ohmic Value Average Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45904",
+                    "description": "String Ohmic Value Average Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45905",
+                    "description": "String Ohmic Value Average Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45906",
+                    "description": "String Ohmic Value Average Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45907",
+                    "description": "String Ohmic Value Average Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45908",
+                    "description": "String Ohmic Value Average Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45909",
+                    "description": "String Ohmic Value Average Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45910",
+                    "description": "String Ohmic Value Average Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45911",
+                    "description": "String Ohmic Value Average Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45912",
+                    "description": "String Ohmic Value Average Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45913",
+                    "description": "String Ohmic Value Average Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45914",
+                    "description": "String Ohmic Value Average Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45915",
+                    "description": "String Ohmic Value Average Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45916",
+                    "description": "String Ohmic Value Average Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45917",
+                    "description": "String Ohmic Value Average Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45918",
+                    "description": "String Ohmic Value Average Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45919",
+                    "description": "String Ohmic Value Average Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45920",
+                    "description": "String Ohmic Value Average Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45921",
+                    "description": "String Ohmic Value Average Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45922",
+                    "description": "String Ohmic Value Average Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45923",
+                    "description": "String Ohmic Value Average Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45924",
+                    "description": "String Ohmic Value Average Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45925",
+                    "description": "String Ohmic Value Average Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45926",
+                    "description": "String Ohmic Value Average Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45927",
+                    "description": "String Ohmic Value Average Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45928",
+                    "description": "String Ohmic Value Average Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45929",
+                    "description": "String Ohmic Value Average Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45930",
+                    "description": "String Ohmic Value Average Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45931",
+                    "description": "String Ohmic Value Average Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45932",
+                    "description": "String Ohmic Value Average Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45933",
+                    "description": "String Ohmic Value Average Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45934",
+                    "description": "String Ohmic Value Average Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45935",
+                    "description": "String Ohmic Value Average Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45936",
+                    "description": "String Ohmic Value Average Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45937",
+                    "description": "String Ohmic Value Average Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45938",
+                    "description": "String Ohmic Value Average Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45939",
+                    "description": "String Ohmic Value Average Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45940",
+                    "description": "String Ohmic Value Average Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45941",
+                    "description": "String Ohmic Value Average Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45942",
+                    "description": "String Ohmic Value Average Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45943",
+                    "description": "String Ohmic Value Average Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45944",
+                    "description": "String Ohmic Value Average Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45945",
+                    "description": "String Ohmic Value Average Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45946",
+                    "description": "String Ohmic Value Average Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45947",
+                    "description": "String Ohmic Value Average Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45948",
+                    "description": "String Ohmic Value Average Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45949",
+                    "description": "String Ohmic Value Average Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45950",
+                    "description": "String Ohmic Value Average Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45951",
+                    "description": "String Ohmic Value Average Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45952",
+                    "description": "String Ohmic Value Average Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45953",
+                    "description": "String Ohmic Value Average Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45954",
+                    "description": "String Ohmic Value Average Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45955",
+                    "description": "String Ohmic Value Average Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45956",
+                    "description": "String Ohmic Value Average Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45957",
+                    "description": "String Ohmic Value Average Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45958",
+                    "description": "String Ohmic Value Average Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45959",
+                    "description": "String Ohmic Value Average Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45960",
+                    "description": "String Ohmic Value Average Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45961",
+                    "description": "String Ohmic Value Average Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45962",
+                    "description": "String Ohmic Value Average Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45963",
+                    "description": "String Ohmic Value Average Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45964",
+                    "description": "String Ohmic Value Average Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45965",
+                    "description": "String Ohmic Value Average Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45966",
+                    "description": "String Ohmic Value Average Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45967",
+                    "description": "String Ohmic Value Average Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45968",
+                    "description": "String Ohmic Value Average Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45969",
+                    "description": "String Ohmic Value Average Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45970",
+                    "description": "String Ohmic Value Average Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45971",
+                    "description": "String Ohmic Value Average Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45972",
+                    "description": "String Ohmic Value Average Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Average 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "45973",
+                    "description": "String Ohmic Value Average Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45974",
+                    "description": "String Ohmic Value Average Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45975",
+                    "description": "String Ohmic Value Average Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45976",
+                    "description": "String Ohmic Value Average Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45977",
+                    "description": "String Ohmic Value Average Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45978",
+                    "description": "String Ohmic Value Average Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45979",
+                    "description": "String Ohmic Value Average Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45980",
+                    "description": "String Ohmic Value Average Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45981",
+                    "description": "String Ohmic Value Average Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45982",
+                    "description": "String Ohmic Value Average Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45983",
+                    "description": "String Ohmic Value Average Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45984",
+                    "description": "String Ohmic Value Average Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45985",
+                    "description": "String Ohmic Value Average Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45986",
+                    "description": "String Ohmic Value Average Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45987",
+                    "description": "String Ohmic Value Average Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45988",
+                    "description": "String Ohmic Value Average Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45989",
+                    "description": "String Ohmic Value Average Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45990",
+                    "description": "String Ohmic Value Average Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45991",
+                    "description": "String Ohmic Value Average Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45992",
+                    "description": "String Ohmic Value Average Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45993",
+                    "description": "String Ohmic Value Average Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45994",
+                    "description": "String Ohmic Value Average Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45995",
+                    "description": "String Ohmic Value Average Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45996",
+                    "description": "String Ohmic Value Average Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45997",
+                    "description": "String Ohmic Value Average Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45998",
+                    "description": "String Ohmic Value Average Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "45999",
+                    "description": "String Ohmic Value Average Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46000",
+                    "description": "String Ohmic Value Average Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46001",
+                    "description": "String Ohmic Value Average Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46002",
+                    "description": "String Ohmic Value Average Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46003",
+                    "description": "String Ohmic Value Average Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46004",
+                    "description": "String Ohmic Value Average Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46005",
+                    "description": "String Ohmic Value Average Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46006",
+                    "description": "String Ohmic Value Average Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46007",
+                    "description": "String Ohmic Value Average Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46008",
+                    "description": "String Ohmic Value Average Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46009",
+                    "description": "String Ohmic Value Average Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46010",
+                    "description": "String Ohmic Value Average Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46011",
+                    "description": "String Ohmic Value Average Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46012",
+                    "description": "String Ohmic Value Average Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46013",
+                    "description": "String Ohmic Value Average Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46014",
+                    "description": "String Ohmic Value Average Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46015",
+                    "description": "String Ohmic Value Average Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46016",
+                    "description": "String Ohmic Value Average Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46017",
+                    "description": "String Ohmic Value Average Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46018",
+                    "description": "String Ohmic Value Average Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46019",
+                    "description": "String Ohmic Value Average Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46020",
+                    "description": "String Ohmic Value Average Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46021",
+                    "description": "String Ohmic Value Average Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46022",
+                    "description": "String Ohmic Value Average Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46023",
+                    "description": "String Ohmic Value Average Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46024",
+                    "description": "String Ohmic Value Average Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46025",
+                    "description": "String Ohmic Value Average Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46026",
+                    "description": "String Ohmic Value Average Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46027",
+                    "description": "String Ohmic Value Average Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46028",
+                    "description": "String Ohmic Value Average Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46029",
+                    "description": "String Ohmic Value Average Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46030",
+                    "description": "String Ohmic Value Average Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46031",
+                    "description": "String Ohmic Value Average Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46032",
+                    "description": "String Ohmic Value Average Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46033",
+                    "description": "String Ohmic Value Average Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46034",
+                    "description": "String Ohmic Value Average Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46035",
+                    "description": "String Ohmic Value Average Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46036",
+                    "description": "String Ohmic Value Average Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46037",
+                    "description": "String Ohmic Value Average Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46038",
+                    "description": "String Ohmic Value Average Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46039",
+                    "description": "String Ohmic Value Average Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46040",
+                    "description": "String Ohmic Value Average Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46041",
+                    "description": "String Ohmic Value Average Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46042",
+                    "description": "String Ohmic Value Average Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46043",
+                    "description": "String Ohmic Value Average Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46044",
+                    "description": "String Ohmic Value Average Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46045",
+                    "description": "String Ohmic Value Average Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46046",
+                    "description": "String Ohmic Value Average Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46047",
+                    "description": "String Ohmic Value Average Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46048",
+                    "description": "String Ohmic Value Average Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46049",
+                    "description": "String Ohmic Value Average Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46050",
+                    "description": "String Ohmic Value Average Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46051",
+                    "description": "String Ohmic Value Average Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46052",
+                    "description": "String Ohmic Value Average Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46053",
+                    "description": "String Ohmic Value Average Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46054",
+                    "description": "String Ohmic Value Average Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46055",
+                    "description": "String Ohmic Value Average Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46056",
+                    "description": "String Ohmic Value Average Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46057",
+                    "description": "String Ohmic Value Average Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46058",
+                    "description": "String Ohmic Value Average Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46059",
+                    "description": "String Ohmic Value Average Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46060",
+                    "description": "String Ohmic Value Average Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46061",
+                    "description": "String Ohmic Value Average Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46062",
+                    "description": "String Ohmic Value Average Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46063",
+                    "description": "String Ohmic Value Average Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46064",
+                    "description": "String Ohmic Value Average Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46065",
+                    "description": "String Ohmic Value Average Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46066",
+                    "description": "String Ohmic Value Average Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46067",
+                    "description": "String Ohmic Value Average Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46068",
+                    "description": "String Ohmic Value Average Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46069",
+                    "description": "String Ohmic Value Average Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46070",
+                    "description": "String Ohmic Value Average Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46071",
+                    "description": "String Ohmic Value Average Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46072",
+                    "description": "String Ohmic Value Average Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Ohmic Value Average 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "46073",
+                    "description": "String Ohmic Value Average Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46074",
+                    "description": "String Ohmic Value Average Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46075",
+                    "description": "String Ohmic Value Average Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46076",
+                    "description": "String Ohmic Value Average Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46077",
+                    "description": "String Ohmic Value Average Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46078",
+                    "description": "String Ohmic Value Average Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46079",
+                    "description": "String Ohmic Value Average Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46080",
+                    "description": "String Ohmic Value Average Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46081",
+                    "description": "String Ohmic Value Average Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46082",
+                    "description": "String Ohmic Value Average Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46083",
+                    "description": "String Ohmic Value Average Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46084",
+                    "description": "String Ohmic Value Average Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46085",
+                    "description": "String Ohmic Value Average Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46086",
+                    "description": "String Ohmic Value Average Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46087",
+                    "description": "String Ohmic Value Average Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46088",
+                    "description": "String Ohmic Value Average Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46089",
+                    "description": "String Ohmic Value Average Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46090",
+                    "description": "String Ohmic Value Average Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46091",
+                    "description": "String Ohmic Value Average Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46092",
+                    "description": "String Ohmic Value Average Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46093",
+                    "description": "String Ohmic Value Average Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46094",
+                    "description": "String Ohmic Value Average Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46095",
+                    "description": "String Ohmic Value Average Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46096",
+                    "description": "String Ohmic Value Average Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46097",
+                    "description": "String Ohmic Value Average Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46098",
+                    "description": "String Ohmic Value Average Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46099",
+                    "description": "String Ohmic Value Average Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46100",
+                    "description": "String Ohmic Value Average Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46101",
+                    "description": "String Ohmic Value Average Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46102",
+                    "description": "String Ohmic Value Average Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46103",
+                    "description": "String Ohmic Value Average Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46104",
+                    "description": "String Ohmic Value Average Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46105",
+                    "description": "String Ohmic Value Average Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46106",
+                    "description": "String Ohmic Value Average Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46107",
+                    "description": "String Ohmic Value Average Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46108",
+                    "description": "String Ohmic Value Average Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46109",
+                    "description": "String Ohmic Value Average Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46110",
+                    "description": "String Ohmic Value Average Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46111",
+                    "description": "String Ohmic Value Average Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46112",
+                    "description": "String Ohmic Value Average Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46113",
+                    "description": "String Ohmic Value Average Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46114",
+                    "description": "String Ohmic Value Average Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46115",
+                    "description": "String Ohmic Value Average Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46116",
+                    "description": "String Ohmic Value Average Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46117",
+                    "description": "String Ohmic Value Average Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46118",
+                    "description": "String Ohmic Value Average Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46119",
+                    "description": "String Ohmic Value Average Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46120",
+                    "description": "String Ohmic Value Average Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46121",
+                    "description": "String Ohmic Value Average Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46122",
+                    "description": "String Ohmic Value Average Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46123",
+                    "description": "String Ohmic Value Average Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46124",
+                    "description": "String Ohmic Value Average Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46125",
+                    "description": "String Ohmic Value Average Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46126",
+                    "description": "String Ohmic Value Average Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46127",
+                    "description": "String Ohmic Value Average Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "46128",
+                    "description": "String Ohmic Value Average Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,442 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Logical Current",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "640",
+                    "description": "String Logical Current Label Bytes 00-01",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "641",
+                    "description": "String Logical Current Label Bytes 02-03",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "642",
+                    "description": "String Logical Current Label Bytes 04-05",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "643",
+                    "description": "String Logical Current Label Bytes 06-07",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "644",
+                    "description": "String Logical Current Label Bytes 08-09",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "645",
+                    "description": "String Logical Current Label Bytes 10-11",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "646",
+                    "description": "String Logical Current Label Bytes 12-13",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "647",
+                    "description": "String Logical Current Label Bytes 14-15",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "648",
+                    "description": "String Logical Current Label Bytes 16-17",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "649",
+                    "description": "String Logical Current Label Bytes 18-19",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "650",
+                    "description": "String Logical Current Label Bytes 20-21",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "651",
+                    "description": "String Logical Current Label Bytes 22-23",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "652",
+                    "description": "String Logical Current Label Bytes 24-25",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "653",
+                    "description": "String Logical Current Label Bytes 26-27",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "654",
+                    "description": "String Logical Current Label Bytes 28-29",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "655",
+                    "description": "String Logical Current Label Bytes 30-31",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "656",
+                    "description": "String Logical Current Label Bytes 32-33",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "657",
+                    "description": "String Logical Current Label Bytes 34-35",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "658",
+                    "description": "String Logical Current Label Bytes 36-37",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "659",
+                    "description": "String Logical Current Label Bytes 38-39",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "660",
+                    "description": "String Logical Current Label Bytes 40-41",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "661",
+                    "description": "String Logical Current Label Bytes 42-43",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "662",
+                    "description": "String Logical Current Label Bytes 44-45",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "663",
+                    "description": "String Logical Current Label Bytes 46-47",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "664",
+                    "description": "String Logical Current Label Bytes 48-49",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "665",
+                    "description": "String Logical Current Label Bytes 50-51",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "666",
+                    "description": "String Logical Current Label Bytes 52-53",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "667",
+                    "description": "String Logical Current Label Bytes 54-55",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "668",
+                    "description": "String Logical Current Label Bytes 56-57",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "669",
+                    "description": "String Logical Current Label Bytes 58-59",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "670",
+                    "description": "String Logical Current Label Bytes 60-61",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "671",
+                    "description": "String Logical Current Label Bytes 62-63",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "672",
+                    "description": " Current Value (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "673",
+                    "description": " Current Value (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "674",
+                    "description": " Average (non-Discharge, LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "675",
+                    "description": " Average (non-Discharge, MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "676",
+                    "description": " Average Count",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "677",
+                    "description": " Current Status",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "678",
+                    "description": " Discharge Peak (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "679",
+                    "description": " Discharge Peak (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "680",
+                    "description": " Charge Peak (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "681",
+                    "description": " Charge Peak (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "682",
+                    "description": " Discharge Start Year",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "683",
+                    "description": " Discharge Start Month",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "684",
+                    "description": " Discharge Start Day",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "685",
+                    "description": " Discharge Start Hour",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "686",
+                    "description": " Discharge Start Minute",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "687",
+                    "description": " Discharge Start Second",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "688",
+                    "description": " Discharge Duration (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "689",
+                    "description": " Discharge Duration (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "690",
+                    "description": " Bulk Charge Start Year",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "691",
+                    "description": " Bulk Charge Start Month",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "692",
+                    "description": " Bulk Charge Start Day",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "693",
+                    "description": " Bulk Charge Start Hour",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "694",
+                    "description": " Bulk Charge Start Minute",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "695",
+                    "description": " Bulk Charge Start Second",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "696",
+                    "description": " Bulk Charge Duration (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "697",
+                    "description": " Bulk Charge Duration (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "698",
+                    "description": " Discharge Limit (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "699",
+                    "description": " Discharge Limit (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "700",
+                    "description": " Charge Limit (LSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "701",
+                    "description": " Charge Limit (MSW)",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "702",
+                    "description": " Hysteresis",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR673,HR672)",
+                    "description": "Current Value",
+                    "dataValue": -10115
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR675,HR674)",
+                    "description": "Average (non-Discharge)",
+                    "dataValue": -10124
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR679,HR678)",
+                    "description": "Discharge Peak",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR681,HR680)",
+                    "description": "Charge Peak",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR689,HR688)",
+                    "description": "Discharge Duration",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR697,HR696)",
+                    "description": "Bulk Charge Duration",
+                    "dataValue": 0
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR699,HR698)",
+                    "description": "Discharge Limit",
+                    "dataValue": -25000
+                },
+                {
+                    "recordType": 4,
+                    "address": "Int32(HR701HR700)",
+                    "description": "Charge Limit",
+                    "dataValue": 655360000
+                },
+                {
+                    "recordType": 4,
+                    "address": "String(HR640,HR641,HR642,HR643,HR644,HR645,HR646,HR647,HR648,HR649,HR650,HR651,HR652,HR653,HR654,HR655,HR656,HR657,HR658,HR659,HR660,HR661,HR662,HR663,HR664,HR665,HR666,HR667,HR668,HR669,HR670,HR671)",
+                    "description": "String Logical Current Label",
+                    "dataValue": "Battery 1 String 1\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+                }
+            ]
+        }
+    ]
+}

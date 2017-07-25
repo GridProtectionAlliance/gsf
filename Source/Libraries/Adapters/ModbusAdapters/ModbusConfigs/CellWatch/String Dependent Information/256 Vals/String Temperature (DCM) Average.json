@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Average 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "41521",
+                    "description": "String Temperature (DCM) Average Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41522",
+                    "description": "String Temperature (DCM) Average Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41523",
+                    "description": "String Temperature (DCM) Average Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41524",
+                    "description": "String Temperature (DCM) Average Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41525",
+                    "description": "String Temperature (DCM) Average Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41526",
+                    "description": "String Temperature (DCM) Average Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41527",
+                    "description": "String Temperature (DCM) Average Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41528",
+                    "description": "String Temperature (DCM) Average Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41529",
+                    "description": "String Temperature (DCM) Average Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41530",
+                    "description": "String Temperature (DCM) Average Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41531",
+                    "description": "String Temperature (DCM) Average Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41532",
+                    "description": "String Temperature (DCM) Average Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41533",
+                    "description": "String Temperature (DCM) Average Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41534",
+                    "description": "String Temperature (DCM) Average Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41535",
+                    "description": "String Temperature (DCM) Average Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41536",
+                    "description": "String Temperature (DCM) Average Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41537",
+                    "description": "String Temperature (DCM) Average Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41538",
+                    "description": "String Temperature (DCM) Average Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41539",
+                    "description": "String Temperature (DCM) Average Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41540",
+                    "description": "String Temperature (DCM) Average Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41541",
+                    "description": "String Temperature (DCM) Average Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41542",
+                    "description": "String Temperature (DCM) Average Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41543",
+                    "description": "String Temperature (DCM) Average Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41544",
+                    "description": "String Temperature (DCM) Average Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41545",
+                    "description": "String Temperature (DCM) Average Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41546",
+                    "description": "String Temperature (DCM) Average Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41547",
+                    "description": "String Temperature (DCM) Average Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41548",
+                    "description": "String Temperature (DCM) Average Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41549",
+                    "description": "String Temperature (DCM) Average Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41550",
+                    "description": "String Temperature (DCM) Average Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41551",
+                    "description": "String Temperature (DCM) Average Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41552",
+                    "description": "String Temperature (DCM) Average Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41553",
+                    "description": "String Temperature (DCM) Average Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41554",
+                    "description": "String Temperature (DCM) Average Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41555",
+                    "description": "String Temperature (DCM) Average Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41556",
+                    "description": "String Temperature (DCM) Average Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41557",
+                    "description": "String Temperature (DCM) Average Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41558",
+                    "description": "String Temperature (DCM) Average Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41559",
+                    "description": "String Temperature (DCM) Average Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41560",
+                    "description": "String Temperature (DCM) Average Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41561",
+                    "description": "String Temperature (DCM) Average Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41562",
+                    "description": "String Temperature (DCM) Average Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41563",
+                    "description": "String Temperature (DCM) Average Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41564",
+                    "description": "String Temperature (DCM) Average Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41565",
+                    "description": "String Temperature (DCM) Average Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41566",
+                    "description": "String Temperature (DCM) Average Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41567",
+                    "description": "String Temperature (DCM) Average Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41568",
+                    "description": "String Temperature (DCM) Average Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41569",
+                    "description": "String Temperature (DCM) Average Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41570",
+                    "description": "String Temperature (DCM) Average Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41571",
+                    "description": "String Temperature (DCM) Average Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41572",
+                    "description": "String Temperature (DCM) Average Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41573",
+                    "description": "String Temperature (DCM) Average Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41574",
+                    "description": "String Temperature (DCM) Average Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41575",
+                    "description": "String Temperature (DCM) Average Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41576",
+                    "description": "String Temperature (DCM) Average Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41577",
+                    "description": "String Temperature (DCM) Average Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41578",
+                    "description": "String Temperature (DCM) Average Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41579",
+                    "description": "String Temperature (DCM) Average Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41580",
+                    "description": "String Temperature (DCM) Average Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41581",
+                    "description": "String Temperature (DCM) Average Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41582",
+                    "description": "String Temperature (DCM) Average Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41583",
+                    "description": "String Temperature (DCM) Average Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41584",
+                    "description": "String Temperature (DCM) Average Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41585",
+                    "description": "String Temperature (DCM) Average Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41586",
+                    "description": "String Temperature (DCM) Average Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41587",
+                    "description": "String Temperature (DCM) Average Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41588",
+                    "description": "String Temperature (DCM) Average Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41589",
+                    "description": "String Temperature (DCM) Average Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41590",
+                    "description": "String Temperature (DCM) Average Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41591",
+                    "description": "String Temperature (DCM) Average Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41592",
+                    "description": "String Temperature (DCM) Average Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41593",
+                    "description": "String Temperature (DCM) Average Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41594",
+                    "description": "String Temperature (DCM) Average Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41595",
+                    "description": "String Temperature (DCM) Average Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41596",
+                    "description": "String Temperature (DCM) Average Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41597",
+                    "description": "String Temperature (DCM) Average Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41598",
+                    "description": "String Temperature (DCM) Average Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41599",
+                    "description": "String Temperature (DCM) Average Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41600",
+                    "description": "String Temperature (DCM) Average Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41601",
+                    "description": "String Temperature (DCM) Average Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41602",
+                    "description": "String Temperature (DCM) Average Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41603",
+                    "description": "String Temperature (DCM) Average Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41604",
+                    "description": "String Temperature (DCM) Average Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41605",
+                    "description": "String Temperature (DCM) Average Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41606",
+                    "description": "String Temperature (DCM) Average Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41607",
+                    "description": "String Temperature (DCM) Average Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41608",
+                    "description": "String Temperature (DCM) Average Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41609",
+                    "description": "String Temperature (DCM) Average Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41610",
+                    "description": "String Temperature (DCM) Average Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41611",
+                    "description": "String Temperature (DCM) Average Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41612",
+                    "description": "String Temperature (DCM) Average Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41613",
+                    "description": "String Temperature (DCM) Average Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41614",
+                    "description": "String Temperature (DCM) Average Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41615",
+                    "description": "String Temperature (DCM) Average Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41616",
+                    "description": "String Temperature (DCM) Average Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41617",
+                    "description": "String Temperature (DCM) Average Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41618",
+                    "description": "String Temperature (DCM) Average Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41619",
+                    "description": "String Temperature (DCM) Average Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41620",
+                    "description": "String Temperature (DCM) Average Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Average 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "41621",
+                    "description": "String Temperature (DCM) Average Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41622",
+                    "description": "String Temperature (DCM) Average Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41623",
+                    "description": "String Temperature (DCM) Average Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41624",
+                    "description": "String Temperature (DCM) Average Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41625",
+                    "description": "String Temperature (DCM) Average Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41626",
+                    "description": "String Temperature (DCM) Average Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41627",
+                    "description": "String Temperature (DCM) Average Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41628",
+                    "description": "String Temperature (DCM) Average Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41629",
+                    "description": "String Temperature (DCM) Average Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41630",
+                    "description": "String Temperature (DCM) Average Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41631",
+                    "description": "String Temperature (DCM) Average Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41632",
+                    "description": "String Temperature (DCM) Average Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41633",
+                    "description": "String Temperature (DCM) Average Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41634",
+                    "description": "String Temperature (DCM) Average Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41635",
+                    "description": "String Temperature (DCM) Average Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41636",
+                    "description": "String Temperature (DCM) Average Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41637",
+                    "description": "String Temperature (DCM) Average Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41638",
+                    "description": "String Temperature (DCM) Average Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41639",
+                    "description": "String Temperature (DCM) Average Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41640",
+                    "description": "String Temperature (DCM) Average Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41641",
+                    "description": "String Temperature (DCM) Average Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41642",
+                    "description": "String Temperature (DCM) Average Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41643",
+                    "description": "String Temperature (DCM) Average Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41644",
+                    "description": "String Temperature (DCM) Average Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41645",
+                    "description": "String Temperature (DCM) Average Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41646",
+                    "description": "String Temperature (DCM) Average Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41647",
+                    "description": "String Temperature (DCM) Average Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41648",
+                    "description": "String Temperature (DCM) Average Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41649",
+                    "description": "String Temperature (DCM) Average Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41650",
+                    "description": "String Temperature (DCM) Average Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41651",
+                    "description": "String Temperature (DCM) Average Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41652",
+                    "description": "String Temperature (DCM) Average Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41653",
+                    "description": "String Temperature (DCM) Average Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41654",
+                    "description": "String Temperature (DCM) Average Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41655",
+                    "description": "String Temperature (DCM) Average Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41656",
+                    "description": "String Temperature (DCM) Average Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41657",
+                    "description": "String Temperature (DCM) Average Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41658",
+                    "description": "String Temperature (DCM) Average Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41659",
+                    "description": "String Temperature (DCM) Average Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41660",
+                    "description": "String Temperature (DCM) Average Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41661",
+                    "description": "String Temperature (DCM) Average Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41662",
+                    "description": "String Temperature (DCM) Average Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41663",
+                    "description": "String Temperature (DCM) Average Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41664",
+                    "description": "String Temperature (DCM) Average Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41665",
+                    "description": "String Temperature (DCM) Average Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41666",
+                    "description": "String Temperature (DCM) Average Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41667",
+                    "description": "String Temperature (DCM) Average Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41668",
+                    "description": "String Temperature (DCM) Average Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41669",
+                    "description": "String Temperature (DCM) Average Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41670",
+                    "description": "String Temperature (DCM) Average Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41671",
+                    "description": "String Temperature (DCM) Average Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41672",
+                    "description": "String Temperature (DCM) Average Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41673",
+                    "description": "String Temperature (DCM) Average Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41674",
+                    "description": "String Temperature (DCM) Average Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41675",
+                    "description": "String Temperature (DCM) Average Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41676",
+                    "description": "String Temperature (DCM) Average Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41677",
+                    "description": "String Temperature (DCM) Average Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41678",
+                    "description": "String Temperature (DCM) Average Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41679",
+                    "description": "String Temperature (DCM) Average Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41680",
+                    "description": "String Temperature (DCM) Average Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41681",
+                    "description": "String Temperature (DCM) Average Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41682",
+                    "description": "String Temperature (DCM) Average Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41683",
+                    "description": "String Temperature (DCM) Average Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41684",
+                    "description": "String Temperature (DCM) Average Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41685",
+                    "description": "String Temperature (DCM) Average Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41686",
+                    "description": "String Temperature (DCM) Average Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41687",
+                    "description": "String Temperature (DCM) Average Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41688",
+                    "description": "String Temperature (DCM) Average Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41689",
+                    "description": "String Temperature (DCM) Average Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41690",
+                    "description": "String Temperature (DCM) Average Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41691",
+                    "description": "String Temperature (DCM) Average Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41692",
+                    "description": "String Temperature (DCM) Average Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41693",
+                    "description": "String Temperature (DCM) Average Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41694",
+                    "description": "String Temperature (DCM) Average Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41695",
+                    "description": "String Temperature (DCM) Average Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41696",
+                    "description": "String Temperature (DCM) Average Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41697",
+                    "description": "String Temperature (DCM) Average Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41698",
+                    "description": "String Temperature (DCM) Average Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41699",
+                    "description": "String Temperature (DCM) Average Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41700",
+                    "description": "String Temperature (DCM) Average Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41701",
+                    "description": "String Temperature (DCM) Average Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41702",
+                    "description": "String Temperature (DCM) Average Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41703",
+                    "description": "String Temperature (DCM) Average Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41704",
+                    "description": "String Temperature (DCM) Average Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41705",
+                    "description": "String Temperature (DCM) Average Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41706",
+                    "description": "String Temperature (DCM) Average Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41707",
+                    "description": "String Temperature (DCM) Average Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41708",
+                    "description": "String Temperature (DCM) Average Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41709",
+                    "description": "String Temperature (DCM) Average Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41710",
+                    "description": "String Temperature (DCM) Average Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41711",
+                    "description": "String Temperature (DCM) Average Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41712",
+                    "description": "String Temperature (DCM) Average Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41713",
+                    "description": "String Temperature (DCM) Average Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41714",
+                    "description": "String Temperature (DCM) Average Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41715",
+                    "description": "String Temperature (DCM) Average Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41716",
+                    "description": "String Temperature (DCM) Average Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41717",
+                    "description": "String Temperature (DCM) Average Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41718",
+                    "description": "String Temperature (DCM) Average Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41719",
+                    "description": "String Temperature (DCM) Average Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41720",
+                    "description": "String Temperature (DCM) Average Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Average 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "41721",
+                    "description": "String Temperature (DCM) Average Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41722",
+                    "description": "String Temperature (DCM) Average Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41723",
+                    "description": "String Temperature (DCM) Average Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41724",
+                    "description": "String Temperature (DCM) Average Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41725",
+                    "description": "String Temperature (DCM) Average Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41726",
+                    "description": "String Temperature (DCM) Average Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41727",
+                    "description": "String Temperature (DCM) Average Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41728",
+                    "description": "String Temperature (DCM) Average Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41729",
+                    "description": "String Temperature (DCM) Average Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41730",
+                    "description": "String Temperature (DCM) Average Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41731",
+                    "description": "String Temperature (DCM) Average Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41732",
+                    "description": "String Temperature (DCM) Average Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41733",
+                    "description": "String Temperature (DCM) Average Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41734",
+                    "description": "String Temperature (DCM) Average Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41735",
+                    "description": "String Temperature (DCM) Average Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41736",
+                    "description": "String Temperature (DCM) Average Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41737",
+                    "description": "String Temperature (DCM) Average Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41738",
+                    "description": "String Temperature (DCM) Average Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41739",
+                    "description": "String Temperature (DCM) Average Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41740",
+                    "description": "String Temperature (DCM) Average Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41741",
+                    "description": "String Temperature (DCM) Average Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41742",
+                    "description": "String Temperature (DCM) Average Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41743",
+                    "description": "String Temperature (DCM) Average Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41744",
+                    "description": "String Temperature (DCM) Average Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41745",
+                    "description": "String Temperature (DCM) Average Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41746",
+                    "description": "String Temperature (DCM) Average Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41747",
+                    "description": "String Temperature (DCM) Average Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41748",
+                    "description": "String Temperature (DCM) Average Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41749",
+                    "description": "String Temperature (DCM) Average Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41750",
+                    "description": "String Temperature (DCM) Average Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41751",
+                    "description": "String Temperature (DCM) Average Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41752",
+                    "description": "String Temperature (DCM) Average Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41753",
+                    "description": "String Temperature (DCM) Average Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41754",
+                    "description": "String Temperature (DCM) Average Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41755",
+                    "description": "String Temperature (DCM) Average Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41756",
+                    "description": "String Temperature (DCM) Average Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41757",
+                    "description": "String Temperature (DCM) Average Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41758",
+                    "description": "String Temperature (DCM) Average Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41759",
+                    "description": "String Temperature (DCM) Average Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41760",
+                    "description": "String Temperature (DCM) Average Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41761",
+                    "description": "String Temperature (DCM) Average Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41762",
+                    "description": "String Temperature (DCM) Average Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41763",
+                    "description": "String Temperature (DCM) Average Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41764",
+                    "description": "String Temperature (DCM) Average Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41765",
+                    "description": "String Temperature (DCM) Average Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41766",
+                    "description": "String Temperature (DCM) Average Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41767",
+                    "description": "String Temperature (DCM) Average Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41768",
+                    "description": "String Temperature (DCM) Average Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41769",
+                    "description": "String Temperature (DCM) Average Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41770",
+                    "description": "String Temperature (DCM) Average Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41771",
+                    "description": "String Temperature (DCM) Average Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41772",
+                    "description": "String Temperature (DCM) Average Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41773",
+                    "description": "String Temperature (DCM) Average Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41774",
+                    "description": "String Temperature (DCM) Average Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41775",
+                    "description": "String Temperature (DCM) Average Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41776",
+                    "description": "String Temperature (DCM) Average Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1558 @@
+{
+    "sequences": [
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Value 0",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "41265",
+                    "description": "String Temperature (DCM) Value Bytes 000-001",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41266",
+                    "description": "String Temperature (DCM) Value Bytes 002-003",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41267",
+                    "description": "String Temperature (DCM) Value Bytes 004-005",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41268",
+                    "description": "String Temperature (DCM) Value Bytes 006-007",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41269",
+                    "description": "String Temperature (DCM) Value Bytes 008-009",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41270",
+                    "description": "String Temperature (DCM) Value Bytes 010-011",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41271",
+                    "description": "String Temperature (DCM) Value Bytes 012-013",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41272",
+                    "description": "String Temperature (DCM) Value Bytes 014-015",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41273",
+                    "description": "String Temperature (DCM) Value Bytes 016-017",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41274",
+                    "description": "String Temperature (DCM) Value Bytes 018-019",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41275",
+                    "description": "String Temperature (DCM) Value Bytes 020-021",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41276",
+                    "description": "String Temperature (DCM) Value Bytes 022-023",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41277",
+                    "description": "String Temperature (DCM) Value Bytes 024-025",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41278",
+                    "description": "String Temperature (DCM) Value Bytes 026-027",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41279",
+                    "description": "String Temperature (DCM) Value Bytes 028-029",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41280",
+                    "description": "String Temperature (DCM) Value Bytes 030-031",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41281",
+                    "description": "String Temperature (DCM) Value Bytes 032-033",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41282",
+                    "description": "String Temperature (DCM) Value Bytes 034-035",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41283",
+                    "description": "String Temperature (DCM) Value Bytes 036-037",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41284",
+                    "description": "String Temperature (DCM) Value Bytes 038-039",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41285",
+                    "description": "String Temperature (DCM) Value Bytes 040-041",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41286",
+                    "description": "String Temperature (DCM) Value Bytes 042-043",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41287",
+                    "description": "String Temperature (DCM) Value Bytes 044-045",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41288",
+                    "description": "String Temperature (DCM) Value Bytes 046-047",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41289",
+                    "description": "String Temperature (DCM) Value Bytes 048-049",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41290",
+                    "description": "String Temperature (DCM) Value Bytes 050-051",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41291",
+                    "description": "String Temperature (DCM) Value Bytes 052-053",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41292",
+                    "description": "String Temperature (DCM) Value Bytes 054-055",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41293",
+                    "description": "String Temperature (DCM) Value Bytes 056-057",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41294",
+                    "description": "String Temperature (DCM) Value Bytes 058-059",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41295",
+                    "description": "String Temperature (DCM) Value Bytes 060-061",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41296",
+                    "description": "String Temperature (DCM) Value Bytes 062-063",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41297",
+                    "description": "String Temperature (DCM) Value Bytes 064-065",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41298",
+                    "description": "String Temperature (DCM) Value Bytes 066-067",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41299",
+                    "description": "String Temperature (DCM) Value Bytes 068-069",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41300",
+                    "description": "String Temperature (DCM) Value Bytes 070-071",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41301",
+                    "description": "String Temperature (DCM) Value Bytes 072-073",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41302",
+                    "description": "String Temperature (DCM) Value Bytes 074-075",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41303",
+                    "description": "String Temperature (DCM) Value Bytes 076-077",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41304",
+                    "description": "String Temperature (DCM) Value Bytes 078-079",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41305",
+                    "description": "String Temperature (DCM) Value Bytes 080-081",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41306",
+                    "description": "String Temperature (DCM) Value Bytes 082-083",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41307",
+                    "description": "String Temperature (DCM) Value Bytes 084-085",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41308",
+                    "description": "String Temperature (DCM) Value Bytes 086-087",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41309",
+                    "description": "String Temperature (DCM) Value Bytes 088-089",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41310",
+                    "description": "String Temperature (DCM) Value Bytes 090-091",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41311",
+                    "description": "String Temperature (DCM) Value Bytes 092-093",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41312",
+                    "description": "String Temperature (DCM) Value Bytes 094-095",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41313",
+                    "description": "String Temperature (DCM) Value Bytes 096-097",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41314",
+                    "description": "String Temperature (DCM) Value Bytes 098-099",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41315",
+                    "description": "String Temperature (DCM) Value Bytes 100-101",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41316",
+                    "description": "String Temperature (DCM) Value Bytes 102-103",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41317",
+                    "description": "String Temperature (DCM) Value Bytes 104-105",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41318",
+                    "description": "String Temperature (DCM) Value Bytes 106-107",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41319",
+                    "description": "String Temperature (DCM) Value Bytes 108-109",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41320",
+                    "description": "String Temperature (DCM) Value Bytes 110-111",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41321",
+                    "description": "String Temperature (DCM) Value Bytes 112-113",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41322",
+                    "description": "String Temperature (DCM) Value Bytes 114-115",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41323",
+                    "description": "String Temperature (DCM) Value Bytes 116-117",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41324",
+                    "description": "String Temperature (DCM) Value Bytes 118-119",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41325",
+                    "description": "String Temperature (DCM) Value Bytes 120-121",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41326",
+                    "description": "String Temperature (DCM) Value Bytes 122-123",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41327",
+                    "description": "String Temperature (DCM) Value Bytes 124-125",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41328",
+                    "description": "String Temperature (DCM) Value Bytes 126-127",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41329",
+                    "description": "String Temperature (DCM) Value Bytes 128-129",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41330",
+                    "description": "String Temperature (DCM) Value Bytes 130-131",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41331",
+                    "description": "String Temperature (DCM) Value Bytes 132-133",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41332",
+                    "description": "String Temperature (DCM) Value Bytes 134-135",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41333",
+                    "description": "String Temperature (DCM) Value Bytes 136-137",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41334",
+                    "description": "String Temperature (DCM) Value Bytes 138-139",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41335",
+                    "description": "String Temperature (DCM) Value Bytes 140-141",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41336",
+                    "description": "String Temperature (DCM) Value Bytes 142-143",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41337",
+                    "description": "String Temperature (DCM) Value Bytes 144-145",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41338",
+                    "description": "String Temperature (DCM) Value Bytes 146-147",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41339",
+                    "description": "String Temperature (DCM) Value Bytes 148-149",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41340",
+                    "description": "String Temperature (DCM) Value Bytes 150-151",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41341",
+                    "description": "String Temperature (DCM) Value Bytes 152-153",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41342",
+                    "description": "String Temperature (DCM) Value Bytes 154-155",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41343",
+                    "description": "String Temperature (DCM) Value Bytes 156-157",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41344",
+                    "description": "String Temperature (DCM) Value Bytes 158-159",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41345",
+                    "description": "String Temperature (DCM) Value Bytes 160-161",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41346",
+                    "description": "String Temperature (DCM) Value Bytes 162-163",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41347",
+                    "description": "String Temperature (DCM) Value Bytes 164-165",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41348",
+                    "description": "String Temperature (DCM) Value Bytes 166-167",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41349",
+                    "description": "String Temperature (DCM) Value Bytes 168-169",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41350",
+                    "description": "String Temperature (DCM) Value Bytes 170-171",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41351",
+                    "description": "String Temperature (DCM) Value Bytes 172-173",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41352",
+                    "description": "String Temperature (DCM) Value Bytes 174-175",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41353",
+                    "description": "String Temperature (DCM) Value Bytes 176-177",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41354",
+                    "description": "String Temperature (DCM) Value Bytes 178-179",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41355",
+                    "description": "String Temperature (DCM) Value Bytes 180-181",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41356",
+                    "description": "String Temperature (DCM) Value Bytes 182-183",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41357",
+                    "description": "String Temperature (DCM) Value Bytes 184-185",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41358",
+                    "description": "String Temperature (DCM) Value Bytes 186-187",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41359",
+                    "description": "String Temperature (DCM) Value Bytes 188-189",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41360",
+                    "description": "String Temperature (DCM) Value Bytes 190-191",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41361",
+                    "description": "String Temperature (DCM) Value Bytes 192-193",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41362",
+                    "description": "String Temperature (DCM) Value Bytes 194-195",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41363",
+                    "description": "String Temperature (DCM) Value Bytes 196-197",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41364",
+                    "description": "String Temperature (DCM) Value Bytes 198-199",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Value 1",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "41365",
+                    "description": "String Temperature (DCM) Value Bytes 200-201",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41366",
+                    "description": "String Temperature (DCM) Value Bytes 202-203",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41367",
+                    "description": "String Temperature (DCM) Value Bytes 204-205",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41368",
+                    "description": "String Temperature (DCM) Value Bytes 206-207",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41369",
+                    "description": "String Temperature (DCM) Value Bytes 208-209",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41370",
+                    "description": "String Temperature (DCM) Value Bytes 210-211",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41371",
+                    "description": "String Temperature (DCM) Value Bytes 212-213",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41372",
+                    "description": "String Temperature (DCM) Value Bytes 214-215",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41373",
+                    "description": "String Temperature (DCM) Value Bytes 216-217",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41374",
+                    "description": "String Temperature (DCM) Value Bytes 218-219",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41375",
+                    "description": "String Temperature (DCM) Value Bytes 220-221",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41376",
+                    "description": "String Temperature (DCM) Value Bytes 222-223",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41377",
+                    "description": "String Temperature (DCM) Value Bytes 224-225",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41378",
+                    "description": "String Temperature (DCM) Value Bytes 226-227",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41379",
+                    "description": "String Temperature (DCM) Value Bytes 228-229",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41380",
+                    "description": "String Temperature (DCM) Value Bytes 230-231",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41381",
+                    "description": "String Temperature (DCM) Value Bytes 232-233",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41382",
+                    "description": "String Temperature (DCM) Value Bytes 234-235",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41383",
+                    "description": "String Temperature (DCM) Value Bytes 236-237",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41384",
+                    "description": "String Temperature (DCM) Value Bytes 238-239",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41385",
+                    "description": "String Temperature (DCM) Value Bytes 240-241",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41386",
+                    "description": "String Temperature (DCM) Value Bytes 242-243",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41387",
+                    "description": "String Temperature (DCM) Value Bytes 244-245",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41388",
+                    "description": "String Temperature (DCM) Value Bytes 246-247",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41389",
+                    "description": "String Temperature (DCM) Value Bytes 248-249",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41390",
+                    "description": "String Temperature (DCM) Value Bytes 250-251",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41391",
+                    "description": "String Temperature (DCM) Value Bytes 252-253",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41392",
+                    "description": "String Temperature (DCM) Value Bytes 254-255",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41393",
+                    "description": "String Temperature (DCM) Value Bytes 256-257",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41394",
+                    "description": "String Temperature (DCM) Value Bytes 258-259",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41395",
+                    "description": "String Temperature (DCM) Value Bytes 260-261",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41396",
+                    "description": "String Temperature (DCM) Value Bytes 262-263",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41397",
+                    "description": "String Temperature (DCM) Value Bytes 264-265",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41398",
+                    "description": "String Temperature (DCM) Value Bytes 266-267",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41399",
+                    "description": "String Temperature (DCM) Value Bytes 268-269",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41400",
+                    "description": "String Temperature (DCM) Value Bytes 270-271",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41401",
+                    "description": "String Temperature (DCM) Value Bytes 272-273",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41402",
+                    "description": "String Temperature (DCM) Value Bytes 274-275",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41403",
+                    "description": "String Temperature (DCM) Value Bytes 276-277",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41404",
+                    "description": "String Temperature (DCM) Value Bytes 278-279",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41405",
+                    "description": "String Temperature (DCM) Value Bytes 280-281",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41406",
+                    "description": "String Temperature (DCM) Value Bytes 282-283",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41407",
+                    "description": "String Temperature (DCM) Value Bytes 284-285",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41408",
+                    "description": "String Temperature (DCM) Value Bytes 286-287",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41409",
+                    "description": "String Temperature (DCM) Value Bytes 288-289",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41410",
+                    "description": "String Temperature (DCM) Value Bytes 290-291",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41411",
+                    "description": "String Temperature (DCM) Value Bytes 292-293",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41412",
+                    "description": "String Temperature (DCM) Value Bytes 294-295",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41413",
+                    "description": "String Temperature (DCM) Value Bytes 296-297",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41414",
+                    "description": "String Temperature (DCM) Value Bytes 298-299",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41415",
+                    "description": "String Temperature (DCM) Value Bytes 300-301",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41416",
+                    "description": "String Temperature (DCM) Value Bytes 302-303",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41417",
+                    "description": "String Temperature (DCM) Value Bytes 304-305",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41418",
+                    "description": "String Temperature (DCM) Value Bytes 306-307",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41419",
+                    "description": "String Temperature (DCM) Value Bytes 308-309",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41420",
+                    "description": "String Temperature (DCM) Value Bytes 310-311",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41421",
+                    "description": "String Temperature (DCM) Value Bytes 312-313",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41422",
+                    "description": "String Temperature (DCM) Value Bytes 314-315",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41423",
+                    "description": "String Temperature (DCM) Value Bytes 316-317",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41424",
+                    "description": "String Temperature (DCM) Value Bytes 318-319",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41425",
+                    "description": "String Temperature (DCM) Value Bytes 320-321",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41426",
+                    "description": "String Temperature (DCM) Value Bytes 322-323",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41427",
+                    "description": "String Temperature (DCM) Value Bytes 324-325",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41428",
+                    "description": "String Temperature (DCM) Value Bytes 326-327",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41429",
+                    "description": "String Temperature (DCM) Value Bytes 328-329",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41430",
+                    "description": "String Temperature (DCM) Value Bytes 330-331",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41431",
+                    "description": "String Temperature (DCM) Value Bytes 332-333",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41432",
+                    "description": "String Temperature (DCM) Value Bytes 334-335",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41433",
+                    "description": "String Temperature (DCM) Value Bytes 336-337",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41434",
+                    "description": "String Temperature (DCM) Value Bytes 338-339",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41435",
+                    "description": "String Temperature (DCM) Value Bytes 340-341",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41436",
+                    "description": "String Temperature (DCM) Value Bytes 342-343",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41437",
+                    "description": "String Temperature (DCM) Value Bytes 344-345",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41438",
+                    "description": "String Temperature (DCM) Value Bytes 346-347",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41439",
+                    "description": "String Temperature (DCM) Value Bytes 348-349",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41440",
+                    "description": "String Temperature (DCM) Value Bytes 350-351",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41441",
+                    "description": "String Temperature (DCM) Value Bytes 352-353",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41442",
+                    "description": "String Temperature (DCM) Value Bytes 354-355",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41443",
+                    "description": "String Temperature (DCM) Value Bytes 356-357",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41444",
+                    "description": "String Temperature (DCM) Value Bytes 358-359",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41445",
+                    "description": "String Temperature (DCM) Value Bytes 360-361",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41446",
+                    "description": "String Temperature (DCM) Value Bytes 362-363",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41447",
+                    "description": "String Temperature (DCM) Value Bytes 364-365",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41448",
+                    "description": "String Temperature (DCM) Value Bytes 366-367",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41449",
+                    "description": "String Temperature (DCM) Value Bytes 368-369",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41450",
+                    "description": "String Temperature (DCM) Value Bytes 370-371",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41451",
+                    "description": "String Temperature (DCM) Value Bytes 372-373",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41452",
+                    "description": "String Temperature (DCM) Value Bytes 374-375",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41453",
+                    "description": "String Temperature (DCM) Value Bytes 376-377",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41454",
+                    "description": "String Temperature (DCM) Value Bytes 378-379",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41455",
+                    "description": "String Temperature (DCM) Value Bytes 380-381",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41456",
+                    "description": "String Temperature (DCM) Value Bytes 382-383",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41457",
+                    "description": "String Temperature (DCM) Value Bytes 384-385",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41458",
+                    "description": "String Temperature (DCM) Value Bytes 386-387",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41459",
+                    "description": "String Temperature (DCM) Value Bytes 388-389",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41460",
+                    "description": "String Temperature (DCM) Value Bytes 390-391",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41461",
+                    "description": "String Temperature (DCM) Value Bytes 392-393",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41462",
+                    "description": "String Temperature (DCM) Value Bytes 394-395",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41463",
+                    "description": "String Temperature (DCM) Value Bytes 396-397",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41464",
+                    "description": "String Temperature (DCM) Value Bytes 398-399",
+                    "dataValue": ""
+                }
+            ]
+        },
+        {
+            "type": 0,
+            "name": "String Temperature (DCM) Value 2",
+            "records": [
+                {
+                    "recordType": 3,
+                    "address": "41465",
+                    "description": "String Temperature (DCM) Value Bytes 400-401",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41466",
+                    "description": "String Temperature (DCM) Value Bytes 402-403",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41467",
+                    "description": "String Temperature (DCM) Value Bytes 404-405",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41468",
+                    "description": "String Temperature (DCM) Value Bytes 406-407",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41469",
+                    "description": "String Temperature (DCM) Value Bytes 408-409",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41470",
+                    "description": "String Temperature (DCM) Value Bytes 410-411",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41471",
+                    "description": "String Temperature (DCM) Value Bytes 412-413",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41472",
+                    "description": "String Temperature (DCM) Value Bytes 414-415",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41473",
+                    "description": "String Temperature (DCM) Value Bytes 416-417",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41474",
+                    "description": "String Temperature (DCM) Value Bytes 418-419",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41475",
+                    "description": "String Temperature (DCM) Value Bytes 420-421",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41476",
+                    "description": "String Temperature (DCM) Value Bytes 422-423",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41477",
+                    "description": "String Temperature (DCM) Value Bytes 424-425",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41478",
+                    "description": "String Temperature (DCM) Value Bytes 426-427",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41479",
+                    "description": "String Temperature (DCM) Value Bytes 428-429",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41480",
+                    "description": "String Temperature (DCM) Value Bytes 430-431",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41481",
+                    "description": "String Temperature (DCM) Value Bytes 432-433",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41482",
+                    "description": "String Temperature (DCM) Value Bytes 434-435",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41483",
+                    "description": "String Temperature (DCM) Value Bytes 436-437",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41484",
+                    "description": "String Temperature (DCM) Value Bytes 438-439",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41485",
+                    "description": "String Temperature (DCM) Value Bytes 440-441",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41486",
+                    "description": "String Temperature (DCM) Value Bytes 442-443",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41487",
+                    "description": "String Temperature (DCM) Value Bytes 444-445",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41488",
+                    "description": "String Temperature (DCM) Value Bytes 446-447",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41489",
+                    "description": "String Temperature (DCM) Value Bytes 448-449",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41490",
+                    "description": "String Temperature (DCM) Value Bytes 450-451",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41491",
+                    "description": "String Temperature (DCM) Value Bytes 452-453",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41492",
+                    "description": "String Temperature (DCM) Value Bytes 454-455",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41493",
+                    "description": "String Temperature (DCM) Value Bytes 456-457",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41494",
+                    "description": "String Temperature (DCM) Value Bytes 458-459",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41495",
+                    "description": "String Temperature (DCM) Value Bytes 460-461",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41496",
+                    "description": "String Temperature (DCM) Value Bytes 462-463",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41497",
+                    "description": "String Temperature (DCM) Value Bytes 464-465",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41498",
+                    "description": "String Temperature (DCM) Value Bytes 466-467",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41499",
+                    "description": "String Temperature (DCM) Value Bytes 468-469",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41500",
+                    "description": "String Temperature (DCM) Value Bytes 470-471",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41501",
+                    "description": "String Temperature (DCM) Value Bytes 472-473",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41502",
+                    "description": "String Temperature (DCM) Value Bytes 474-475",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41503",
+                    "description": "String Temperature (DCM) Value Bytes 476-477",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41504",
+                    "description": "String Temperature (DCM) Value Bytes 478-479",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41505",
+                    "description": "String Temperature (DCM) Value Bytes 480-481",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41506",
+                    "description": "String Temperature (DCM) Value Bytes 482-483",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41507",
+                    "description": "String Temperature (DCM) Value Bytes 484-485",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41508",
+                    "description": "String Temperature (DCM) Value Bytes 486-487",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41509",
+                    "description": "String Temperature (DCM) Value Bytes 488-489",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41510",
+                    "description": "String Temperature (DCM) Value Bytes 490-491",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41511",
+                    "description": "String Temperature (DCM) Value Bytes 492-493",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41512",
+                    "description": "String Temperature (DCM) Value Bytes 494-495",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41513",
+                    "description": "String Temperature (DCM) Value Bytes 496-497",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41514",
+                    "description": "String Temperature (DCM) Value Bytes 498-499",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41515",
+                    "description": "String Temperature (DCM) Value Bytes 500-501",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41516",
+                    "description": "String Temperature (DCM) Value Bytes 502-503",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41517",
+                    "description": "String Temperature (DCM) Value Bytes 504-505",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41518",
+                    "description": "String Temperature (DCM) Value Bytes 506-507",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41519",
+                    "description": "String Temperature (DCM) Value Bytes 508-509",
+                    "dataValue": ""
+                },
+                {
+                    "recordType": 3,
+                    "address": "41520",
+                    "description": "String Temperature (DCM) Value Bytes 510-511",
+                    "dataValue": ""
+                }
+            ]
+        }
+    ]
+}

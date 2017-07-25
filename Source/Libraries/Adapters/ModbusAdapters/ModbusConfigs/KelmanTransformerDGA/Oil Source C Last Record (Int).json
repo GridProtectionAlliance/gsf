@@ -1,0 +1,304 @@
+{
+    "sequences": [
+        {
+            "records": [
+                {
+                    "description": "Record Date and Time (UTC) Unix Format Low",
+                    "address": "6197",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time (UTC) Unix Format High",
+                    "address": "6198",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Record Date and Time (UTC) Unix Format",
+                    "address": "Int32(HR6197,HR6198)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Oil Source C Record Number",
+                    "address": "6199",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Record Oil Source",
+                    "address": "6200",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Record Date (UTC/Local): Years",
+                    "address": "6201",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Record Date (UTC/Local): Monts, Days",
+                    "address": "6202",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Record Date (UTC/Local): Hours, Minutes",
+                    "address": "6203",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C PGA Firmware Version",
+                    "address": "6204",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Host Firmware Version",
+                    "address": "6205",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Gas Conc. Level Alarm Status",
+                    "address": "6206",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Gas ROC Alarm Status",
+                    "address": "6207",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Transfix Status",
+                    "address": "6208",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Measurement Flags",
+                    "address": "6209",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C PGA State (If Error Occured)",
+                    "address": "6210",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes Low",
+                    "address": "6211",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes High",
+                    "address": "6212",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "PGA Error Codes",
+                    "address": "Single(HR6211,HR6212)",
+                    "dataValue": "",
+                    "recordType": 4
+                },
+                {
+                    "description": "Measurement Duration",
+                    "address": "6213",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Ratio Alarm Status",
+                    "address": "6214",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Hydrogen Conc. (PPM)",
+                    "address": "6215",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Carbon Dioxide Conc. (PPM)",
+                    "address": "6216",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Carbon Monoxide Conc. (PPM)",
+                    "address": "6217",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ethylene Conc. (PPM)",
+                    "address": "6218",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ethane Conc. (PPM)",
+                    "address": "6219",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Methane Conc. (PPM)",
+                    "address": "6220",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Acetylene Conc. (PPM)",
+                    "address": "6221",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Water Conc. (PPM)",
+                    "address": "6222",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Oxygen Conc. (PPM)",
+                    "address": "6223",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Total Disolved Combustible Gas Conc. (PPM)",
+                    "address": "6224",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Nitrogen Conc. (PPM)",
+                    "address": "6225",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C TDG (Total Dissolved Gas) Conc. (PPM)",
+                    "address": "6226",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Oil Pressure (.1 kPa)",
+                    "address": "6227",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Oil Temperature (.1 C)",
+                    "address": "6228",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Ambient Temperature (.1 C)",
+                    "address": "6229",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Normalisation Temperature (C)",
+                    "address": "6230",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Analogue Input 1 (Transformer Load)",
+                    "address": "6231",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Analogue Input 2",
+                    "address": "6232",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Analogue Input 3",
+                    "address": "6233",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Analogue Input 4",
+                    "address": "6234",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Analogue Input 5",
+                    "address": "6235",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Analogue Input 6",
+                    "address": "6236",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Spare Registers",
+                    "address": "6237",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C ESHL (Estimated Safe Handling Limit) (%)",
+                    "address": "6238",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Relative Saturation (.1 %)",
+                    "address": "6239",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C TDH (Total Dissolved Hydrocarbons) (PPM)",
+                    "address": "6240",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Total Dissolved Gas Conc. (10 PPM)",
+                    "address": "6241",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C Nitrogen Conc. (10 PPM)",
+                    "address": "6242",
+                    "dataValue": "",
+                    "recordType": 3
+                },
+                {
+                    "description": "Oil Source C TDG (Total Dissolved Gas (10 PPM)",
+                    "address": "6243",
+                    "dataValue": "",
+                    "recordType": 3
+                }
+            ],
+            "name": "Oil Source C Last Record (Int) 1",
+            "type": 0
+        }
+    ]
+}

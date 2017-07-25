@@ -134,7 +134,7 @@ namespace GSF.Web.Model
         /// </summary>
         /// <param name="resourceName">Resource to include.</param>
         /// <returns>Resource as an encoded string.</returns>
-        public IEncodedString IncludeResouce(string resourceName)
+        public IEncodedString IncludeResource(string resourceName)
         {
             if (string.IsNullOrEmpty(resourceName))
                 return new RawString("");
