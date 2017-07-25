@@ -63,6 +63,15 @@
   <ItemGroup>
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="UserControls\DeviceStatusUserControl.xaml.cs">
+      <DependentUpon>DeviceStatusUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\ModbusConfigUserControl.xaml.cs">
+      <DependentUpon>ModbusConfigUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\WebBrowserUserControl.xaml.cs">
+      <DependentUpon>WebBrowserUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\CompletenessReportUserControl.xaml.cs">
       <DependentUpon>CompletenessReportUserControl.xaml</DependentUpon>
     </Compile>
@@ -232,6 +241,18 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Resources\StyleResource.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\DeviceStatusUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\ModbusConfigUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\WebBrowserUserControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
