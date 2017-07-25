@@ -19,19 +19,46 @@
 //  01/15/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
+//******************************************************************************************************
+//  To use in an ASP.NET destination project, include a Users.cshtml view with following content:
+//
+//  @using GSF.Web
+//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection?.ToString())}
+//  @Html.RenderResource("ModbusAdapters.Status.cshtml")
+//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection?.ToString())}
+//
+//******************************************************************************************************
+//  To use in a self-hosted web project, include a Users.cshtml view with following content:
+//
+//  @using GSF.Web.Model
+//  @using <MyAppNameSpace>.Model
+//  @inherits ExtendedTemplateBase<AppModel>
+//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
+//  @{Layout = "Layout.cshtml";}
+//  @Html.RenderResource("ModbusAdapters.Status.cshtml")
+//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
+//
 //*****************************************************************************************************@
-@*
-    WARNING:
-      This file is overwritten at runtime from embedded resource in ModbusAdapters.dll, see Startup.cs.
-      Modifications to this file should be saved to ModbusAdapters assembly code found in GSF.
-*@
+@using System.Net.Http
 @using GSF
+@using GSF.Web
 @using GSF.Web.Model
-@using {Namespace}.Model
-@inherits ExtendedTemplateBase<AppModel>
+@using ModbusAdapters.Model
+@inherits ExtendedTemplateBase
 @{
-    Layout = "Layout.cshtml";
+    // Layout will depend on rendering environment, so do not specify one
     ViewBag.Title = "Status";
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+    string parameter;
+
+    parameters.TryGetValue("ShowMenu", out parameter);
+
+    if (string.IsNullOrEmpty(parameter)) {
+        parameter = "true";
+    }
+
+    ViewBag.ShowMenu = parameter.ParseBoolean();
 }
 @section StyleSheets {
     <style>
@@ -383,3 +410,7 @@
         </div>
     </div>
 </div>
+@{
+    ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
+    ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
+}
