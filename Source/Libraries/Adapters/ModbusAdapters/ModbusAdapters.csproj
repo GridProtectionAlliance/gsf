@@ -38,6 +38,10 @@
       <HintPath>..\..\..\Dependencies\NuGet\NModbus4.2.1.0\lib\net40\NModbus4.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="RazorEngine, Version=3.7.7.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\NuGet\RazorEngine.3.7.7\lib\net45\RazorEngine.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -53,6 +57,7 @@
     <Compile Include="ModbusOperations.cs" />
     <Compile Include="ModbusPoller.cs" />
     <Compile Include="Model\ProgressUpdate.cs" />
+    <Compile Include="Model\SignalType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

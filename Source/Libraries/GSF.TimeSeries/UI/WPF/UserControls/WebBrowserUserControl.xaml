@@ -19,5 +19,5 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <WebBrowser Name="m_browser" Height="632" />
+    <WebBrowser Name="m_browser" Height="632" Navigated="WebBrowser_Navigated" />
 </UserControl>
