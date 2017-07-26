@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
-namespace OGE.Core.Security.CertificateGenerator
+namespace GSF.Security.CertificateGenerator
 {
     public partial class FormCertificateGenerator : Form
     {

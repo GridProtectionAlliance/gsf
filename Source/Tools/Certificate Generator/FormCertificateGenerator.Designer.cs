@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace OGE.Core.Security.CertificateGenerator
+namespace GSF.Security.CertificateGenerator
 {
     partial class FormCertificateGenerator
     {

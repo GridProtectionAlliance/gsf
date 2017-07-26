@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using OGE.Core.Security.CertificateGenerator;
+using GSF.Security.CertificateGenerator;
 
 namespace Certificate_Generator
 {

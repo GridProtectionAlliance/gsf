@@ -443,6 +443,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusAdapters", "Libraries
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StringExtensionsTest", "Tools\StringExtensionsTest\StringExtensionsTest.csproj", "{82061A6B-EA5A-4EC2-9351-3B3CED4859C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certificate Generator", "Tools\Certificate Generator\Certificate Generator.csproj", "{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{5ce3d6f4-d38d-4f71-acb6-79681cfe47df}*SharedItemsImports = 13
@@ -1526,6 +1528,18 @@ Global
 		{82061A6B-EA5A-4EC2-9351-3B3CED4859C6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{82061A6B-EA5A-4EC2-9351-3B3CED4859C6}.Release|x86.ActiveCfg = Release|Any CPU
 		{82061A6B-EA5A-4EC2-9351-3B3CED4859C6}.Release|x86.Build.0 = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Debug|x86.Build.0 = Debug|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Mono|x86.ActiveCfg = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Mono|x86.Build.0 = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Release|x86.ActiveCfg = Release|Any CPU
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1662,6 +1676,7 @@ Global
 		{CED3845C-90C3-4064-A5D2-F03D7828B901} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{074BC7DC-9B65-4E47-87E3-D61DEF3B3C40} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{82061A6B-EA5A-4EC2-9351-3B3CED4859C6} = {B48642A1-1163-4E1D-948A-50EE19DCD38D}
+		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18} = {1B63485E-46C7-4185-B968-216A02396B88}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi

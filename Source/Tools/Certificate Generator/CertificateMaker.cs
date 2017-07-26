@@ -37,7 +37,7 @@ using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
-namespace OGE.Core.Security.CertificateGenerator
+namespace GSF.Security.CertificateGenerator
 {
     //http://stackoverflow.com/questions/3770233/is-it-possible-to-programmatically-generate-an-x509-certificate-using-only-c/3771913#3771913
     //http://stackoverflow.com/questions/22230745/generate-self-signed-certificate-on-the-fly
