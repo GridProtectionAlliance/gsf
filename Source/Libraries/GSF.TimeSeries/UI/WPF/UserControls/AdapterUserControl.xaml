@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:p="clr-namespace:GSF.TimeSeries.UI.Properties"
              xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:tsf="clr-namespace:GSF.TimeSeries.UI"
@@ -55,7 +56,7 @@
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">
-                <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Text="{x:Static p:Resources.AdapterUserControl_NameLabel}" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:p="clr-namespace:GSF.TimeSeries.Transport.UI.Properties"
              xmlns:vm="clr-namespace:GSF.TimeSeries.Transport.UI.ViewModels"
              Background="Transparent"
              Unloaded="InternalSubscriptionUserControl_Unloaded">
@@ -37,7 +38,7 @@
 
                 <Label Grid.Row="0" Grid.Column="0" Content="Acronym" />
                 <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=PublisherAcronym}" CharacterCasing="Upper" />
-                <Label Grid.Row="0" Grid.Column="2" Content="Name" />
+                <Label Grid.Row="0" Grid.Column="2" Content="{x:Static p:Resources.InternalSubscriptionUserControl_NameLabel}" />
                 <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=PublisherName}" />
 
                 <Label Grid.Row="1" Grid.Column="0" Content="Hostname" />

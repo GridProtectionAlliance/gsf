@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GSF.TimeSeries.UI.Properties {
+namespace GSF.PhasorProtocols.UI.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace GSF.TimeSeries.UI.Properties {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GSF.TimeSeries.UI.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GSF.PhasorProtocols.UI.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -63,9 +63,9 @@ namespace GSF.TimeSeries.UI.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
-        public static string AdapterUserControl_NameLabel {
+        public static string DeviceUserControl_NameLabel {
             get {
-                return ResourceManager.GetString("AdapterUserControl_NameLabel", resourceCulture);
+                return ResourceManager.GetString("DeviceUserControl_NameLabel", resourceCulture);
             }
         }
     }
