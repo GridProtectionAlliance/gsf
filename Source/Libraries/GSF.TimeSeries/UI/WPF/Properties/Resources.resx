@@ -117,7 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AdapterUserControl_AssemblyNameDataGridColumn" xml:space="preserve">
+    <value>Assembly Name</value>
+  </data>
+  <data name="AdapterUserControl_BrowseButtonTooltip" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="AdapterUserControl_ConnectionStringGroupBox" xml:space="preserve">
+    <value>Connection String</value>
+  </data>
+  <data name="AdapterUserControl_ConnectionStringLabel" xml:space="preserve">
+    <value>Connection String</value>
+  </data>
+  <data name="AdapterUserControl_CustomConfigurationWizardButton" xml:space="preserve">
+    <value>Click here for adapter's custom configuration wizard!</value>
+  </data>
+  <data name="AdapterUserControl_DefaultButton" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="AdapterUserControl_EnabledCheckBox" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="AdapterUserControl_EnabledDataGridColumn" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="AdapterUserControl_InitializeButton" xml:space="preserve">
+    <value>Initialize</value>
+  </data>
+  <data name="AdapterUserControl_LoadOrderLabel" xml:space="preserve">
+    <value>Load Order</value>
+  </data>
+  <data name="AdapterUserControl_NameDataGridColumn" xml:space="preserve">
+    <value>Name</value>
+  </data>
   <data name="AdapterUserControl_NameLabel" xml:space="preserve">
     <value>Name</value>
+  </data>
+  <data name="AdapterUserControl_ParametersLabel" xml:space="preserve">
+    <value>Parameters</value>
+  </data>
+  <data name="AdapterUserControl_RuntimeIDLabel" xml:space="preserve">
+    <value>Runtime ID</value>
+  </data>
+  <data name="AdapterUserControl_SearchDirectoryLabel" xml:space="preserve">
+    <value>Search Directory</value>
+  </data>
+  <data name="AdapterUserControl_TypeLabel" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="AdapterUserControl_TypeNameDataGridColumn" xml:space="preserve">
+    <value>Type Name</value>
+  </data>
+  <data name="AdapterUserControl_ValueLabel" xml:space="preserve">
+    <value>Value</value>
   </data>
 </root>

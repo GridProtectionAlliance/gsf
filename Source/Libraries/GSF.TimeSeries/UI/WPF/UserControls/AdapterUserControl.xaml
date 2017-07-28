@@ -62,7 +62,7 @@
             <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>
 
             <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
-                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Text="{x:Static p:Resources.AdapterUserControl_LoadOrderLabel}" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
@@ -78,10 +78,10 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Search Directory" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static p:Resources.AdapterUserControl_SearchDirectoryLabel}" />
                     <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Orientation="Horizontal">
                         <TextBox Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="525" />
-                        <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
+                        <Button Click="Browse_Click" Width="Auto" ToolTip="{x:Static p:Resources.AdapterUserControl_BrowseButtonTooltip}">
                             <Button.Template>
                                 <ControlTemplate>
                                     <Image Source="/GSF.TimeSeries.UI;component/images/Folder.png" Height="24" Width="24" />
@@ -90,7 +90,7 @@
                         </Button>
                     </StackPanel>
                     
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static p:Resources.AdapterUserControl_TypeLabel}" />
                     <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}"
                               HorizontalContentAlignment="Left" Width="560" SelectedIndex="{Binding Mode=TwoWay, Path=AdapterTypeSelectedIndex}">
                         <ComboBox.ItemTemplate>
@@ -107,7 +107,7 @@
                     </ComboBox>
                 </Grid>
             </GroupBox>
-            <GroupBox Grid.Row="3" Grid.ColumnSpan="4" Header="Connection String">
+            <GroupBox Grid.Row="3" Grid.ColumnSpan="4" Header="{x:Static p:Resources.AdapterUserControl_ConnectionStringGroupBox}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -124,7 +124,7 @@
                     
                     <Button Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Width="Auto" FontSize="16" FontWeight="Bold" Foreground="Blue"
                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}"
-                            Visibility="{Binding CustomConfigurationButtonVisibility}" Click="ButtonOpenCustomConfiguration_Click">
+                            Visibility="{Binding CustomConfigurationButtonVisibility}" Content="{x:Static p:Resources.AdapterUserControl_CustomConfigurationWizardButton}" Click="ButtonOpenCustomConfiguration_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -134,10 +134,9 @@
                                 </StackPanel>
                             </ControlTemplate>
                         </Button.Template>
-                        Click here for adapter's custom configuration wizard!
                     </Button>
 
-                    <TextBlock Text="Parameters" VerticalAlignment="Top" Grid.Row="1" Grid.Column="0" />
+                    <TextBlock Text="{x:Static p:Resources.AdapterUserControl_ParametersLabel}" VerticalAlignment="Top" Grid.Row="1" Grid.Column="0" />
 
                     <ListBox Grid.Row="1" Grid.Column="1" Width="{StaticResource XLargeItemSize}" Height="{StaticResource XSmallItemSize}" HorizontalContentAlignment="Stretch"
                              Name="ParameterListBox" ItemsSource="{Binding Source={StaticResource ParameterList}}" SelectedItem="{Binding Path=SelectedParameter}"
@@ -157,8 +156,8 @@
                     </ListBox>
 
                     <StackPanel Grid.Row="1" Grid.Column="2" Margin="10,5,0,0">
-                        <TextBlock Name="ParameterValueTextBlock" Margin="0" Text="Value" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <Button Content="Default" Margin="0" Padding="2" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
+                        <TextBlock Name="ParameterValueTextBlock" Margin="0" Text="{x:Static p:Resources.AdapterUserControl_ValueLabel}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                        <Button Content="{x:Static p:Resources.AdapterUserControl_DefaultButton}" Margin="0" Padding="2" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.Column="3" DataContext="{Binding ElementName=ParameterListBox, Path=SelectedItem}">
                         <StackPanel.Resources>
@@ -212,18 +211,18 @@
                         </StackPanel>
                     </StackPanel>
                     
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Connection String" VerticalAlignment="Top" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static p:Resources.AdapterUserControl_ConnectionStringLabel}" VerticalAlignment="Top" />
                     <TextBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="3" Width="560" Height="{StaticResource XSmallItemSize}" HorizontalAlignment="Stretch"
                              Text="{tsfBinding:Column Path=ConnectionString}" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Visible" />
                 </Grid>
             </GroupBox>
-            <TextBlock Text="Runtime ID" Grid.Row="4" Grid.Column="0" />
+            <TextBlock Text="{x:Static p:Resources.AdapterUserControl_RuntimeIDLabel}" Grid.Row="4" Grid.Column="0" />
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1">
                 <TextBlock Text="{tsfBinding:Column Path=DataContext.RuntimeID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
-                <Button Content="Initialize" Command="{Binding Path=DataContext.InitializeCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" 
+                <Button Content="{x:Static p:Resources.AdapterUserControl_InitializeButton}" Command="{Binding Path=DataContext.InitializeCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" 
                         IsEnabled="{Binding Path=DataContext.IsNewRecord, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource NotConverter}}"/>
             </StackPanel>
-            <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+            <CheckBox Content="{x:Static p:Resources.AdapterUserControl_EnabledCheckBox}" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
         </Grid>
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
@@ -232,10 +231,10 @@
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown" Sorting="DataGrid_Sorting"
                       SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{tsfBinding:Column Path=AdapterName}"/>
-                <sdk:DataGridTextColumn Header="Assembly Name" Width="*" Binding="{tsfBinding:Column Path=AssemblyName}" />
-                <sdk:DataGridTextColumn Header="Type Name" Width="2*" Binding="{tsfBinding:Column Path=TypeName}" />
-                <sdk:DataGridTemplateColumn Header="Enabled" Width="*" SortMemberPath="Enabled" >
+                <sdk:DataGridTextColumn Header="{x:Static p:Resources.AdapterUserControl_NameDataGridColumn}" Width="*" Binding="{tsfBinding:Column Path=AdapterName}"/>
+                <sdk:DataGridTextColumn Header="{x:Static p:Resources.AdapterUserControl_AssemblyNameDataGridColumn}" Width="*" Binding="{tsfBinding:Column Path=AssemblyName}" />
+                <sdk:DataGridTextColumn Header="{x:Static p:Resources.AdapterUserControl_TypeNameDataGridColumn}" Width="2*" Binding="{tsfBinding:Column Path=TypeName}" />
+                <sdk:DataGridTemplateColumn Header="{x:Static p:Resources.AdapterUserControl_EnabledDataGridColumn}" Width="*" SortMemberPath="Enabled" >
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" Margin="0" HorizontalAlignment="Center" Click="DataGridEnabledCheckBox_Click" />

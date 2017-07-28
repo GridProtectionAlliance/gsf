@@ -61,11 +61,164 @@ namespace GSF.TimeSeries.UI.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly Name.
+        /// </summary>
+        public static string AdapterUserControl_AssemblyNameDataGridColumn {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_AssemblyNameDataGridColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse....
+        /// </summary>
+        public static string AdapterUserControl_BrowseButtonTooltip {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_BrowseButtonTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection String.
+        /// </summary>
+        public static string AdapterUserControl_ConnectionStringGroupBox {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_ConnectionStringGroupBox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection String.
+        /// </summary>
+        public static string AdapterUserControl_ConnectionStringLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_ConnectionStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click here for adapter&apos;s custom configuration wizard!.
+        /// </summary>
+        public static string AdapterUserControl_CustomConfigurationWizardButton {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_CustomConfigurationWizardButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string AdapterUserControl_DefaultButton {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_DefaultButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enabled.
+        /// </summary>
+        public static string AdapterUserControl_EnabledCheckBox {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_EnabledCheckBox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enabled.
+        /// </summary>
+        public static string AdapterUserControl_EnabledDataGridColumn {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_EnabledDataGridColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Initialize.
+        /// </summary>
+        public static string AdapterUserControl_InitializeButton {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_InitializeButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load Order.
+        /// </summary>
+        public static string AdapterUserControl_LoadOrderLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_LoadOrderLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string AdapterUserControl_NameDataGridColumn {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_NameDataGridColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
         public static string AdapterUserControl_NameLabel {
             get {
                 return ResourceManager.GetString("AdapterUserControl_NameLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parameters.
+        /// </summary>
+        public static string AdapterUserControl_ParametersLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_ParametersLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Runtime ID.
+        /// </summary>
+        public static string AdapterUserControl_RuntimeIDLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_RuntimeIDLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search Directory.
+        /// </summary>
+        public static string AdapterUserControl_SearchDirectoryLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_SearchDirectoryLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type.
+        /// </summary>
+        public static string AdapterUserControl_TypeLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_TypeLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type Name.
+        /// </summary>
+        public static string AdapterUserControl_TypeNameDataGridColumn {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_TypeNameDataGridColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string AdapterUserControl_ValueLabel {
+            get {
+                return ResourceManager.GetString("AdapterUserControl_ValueLabel", resourceCulture);
             }
         }
     }
