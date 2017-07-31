@@ -36,7 +36,7 @@ namespace GSF.TimeSeries.UI.UserControls
         public ModbusConfigUserControl()
         {
             InitializeComponent();
-            AddChild(new WebBrowserUserControl("ModbusConfig.cshtml?ShowMenu=false"));
+            AddChild(new WebBrowserUserControl("ModbusConfig.cshtml?ShowMenu=false&HideLogo=true"));
         }
     }
 }
