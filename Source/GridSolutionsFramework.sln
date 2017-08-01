@@ -443,7 +443,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusAdapters", "Libraries
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StringExtensionsTest", "Tools\StringExtensionsTest\StringExtensionsTest.csproj", "{82061A6B-EA5A-4EC2-9351-3B3CED4859C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certificate Generator", "Tools\Certificate Generator\Certificate Generator.csproj", "{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateGenerator", "Tools\Certificate Generator\CertificateGenerator.csproj", "{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
