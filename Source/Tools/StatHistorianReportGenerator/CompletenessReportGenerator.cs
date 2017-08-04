@@ -432,7 +432,7 @@ namespace StatHistorianReportGenerator
         {
             FontProp font = new FontProp(fontDefinition, 0.0D);
             font.rSizePoint = 14.0D;
-            page.AddCB_MM(verticalMillimeters + font.rSizeMM, new RepString(font, m_reportDate.ToLongDateString()));
+            page.AddCB_MM(verticalMillimeters + font.rSizeMM, new RepString(font, m_reportDate.ToLongDateString() + " UTC"));
             return 1.8D * font.rSizeMM;
         }
 
