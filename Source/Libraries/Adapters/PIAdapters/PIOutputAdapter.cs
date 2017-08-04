@@ -67,6 +67,7 @@ namespace PIAdapters
         private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
         private readonly ConcurrentDictionary<Guid, string> m_tagMap;       // Tag name to measurement Guid lookup
         private readonly HashSet<MeasurementKey> m_pendingMappings;         // List of pending measurement mappings
+        private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
         private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
         private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
         private long m_processedMappings;                                   // Total number of mappings processed so far
@@ -237,6 +238,16 @@ namespace PIAdapters
         }
 
         /// <summary>
+        /// Gets or sets the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived."), DefaultValue(0.0D)]
+        public double MaximumPointResolution
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Returns the detailed status of the data output source.
         /// </summary>
         public override string Status
@@ -252,6 +263,8 @@ namespace PIAdapters
                 status.AppendFormat("       Connected to server: {0}", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
                 status.AppendLine();
                 status.AppendFormat("         Using compression: {0}", UseCompression);
+                status.AppendLine();
+                status.AppendFormat("  Maximum point resolution: {0:N3} seconds{1}", MaximumPointResolution, MaximumPointResolution <= 0.0D ? " - all data will be archived" : "");
                 status.AppendLine();
                 status.AppendFormat("    Meta-data sync enabled: {0}", RunMetadataSync);
                 status.AppendLine();
@@ -371,7 +384,8 @@ namespace PIAdapters
 
             Dictionary<string, string> settings = Settings;
             string setting;
-            int intValue;
+            int intVal;
+            double doubleVal;
 
             if (!settings.TryGetValue(nameof(ServerName), out setting))
                 throw new InvalidOperationException($"The \"{nameof(ServerName)}\" setting is required for PI connections.");
@@ -381,17 +395,17 @@ namespace PIAdapters
             UserName = settings.TryGetValue(nameof(UserName), out setting) ? setting : null;
             Password = settings.TryGetValue(nameof(Password), out setting) ? setting : null;
 
-            if (!settings.TryGetValue(nameof(ConnectTimeout), out setting) || !int.TryParse(setting, out intValue))
-                intValue = PIConnection.DefaultConnectTimeout;
+            if (!settings.TryGetValue(nameof(ConnectTimeout), out setting) || !int.TryParse(setting, out intVal))
+                intVal = PIConnection.DefaultConnectTimeout;
 
-            ConnectTimeout = intValue;
+            ConnectTimeout = intVal;
 
             UseCompression = !settings.TryGetValue(nameof(UseCompression), out setting) || setting.ParseBoolean();
 
-            if (!settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) || !int.TryParse(setting, out intValue))
-                intValue = 0;
+            if (!settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) || !int.TryParse(setting, out intVal))
+                intVal = 0;
 
-            TagNamePrefixRemoveCount = intValue;
+            TagNamePrefixRemoveCount = intVal;
 
             if (settings.TryGetValue(nameof(RunMetadataSync), out setting))
                 RunMetadataSync = setting.ParseBoolean();
@@ -409,6 +423,12 @@ namespace PIAdapters
                 setting = Name + "_TagMap.cache";
 
             TagMapCacheFileName = FilePath.GetAbsolutePath(setting);
+
+            if (settings.TryGetValue(nameof(MaximumPointResolution), out setting) && double.TryParse(setting, out doubleVal) && doubleVal > 0.0D)
+                MaximumPointResolution = doubleVal;
+
+            if (MaximumPointResolution > 0.0D)
+                m_lastArchiveTimes = new Dictionary<Guid, Ticks>();
         }
 
         /// <summary>
@@ -530,12 +550,20 @@ namespace PIAdapters
                 {
                     try
                     {
+                        // Verify maximum per point archive resolution
+                        if ((object)m_lastArchiveTimes != null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(measurement.Key.SignalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
+                            continue;
+
                         // Queue up insert operations for parallel processing
                         m_archiveQueues[point.ID % m_archiveQueues.Length].Add(
                             new AFValue((float)measurement.AdjustedValue, new AFTime(new DateTime(measurement.Timestamp, DateTimeKind.Utc)))
                             {
                                 PIPoint = point
                             });
+
+
+                        if ((object)m_lastArchiveTimes != null)
+                            m_lastArchiveTimes[measurement.Key.SignalID] = measurement.Timestamp;
                     }
                     catch (Exception ex)
                     {
