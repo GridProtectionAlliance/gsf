@@ -290,7 +290,7 @@ namespace eDNAAdapters
         [DefaultValue(Default.WriteTimeout)]
         public int WriteTimeout { get; set; } = Default.WriteTimeout;
 
-+-        /// <summary>
+        /// <summary>
         /// Gets or sets flag that determines if each bit of digital words are expanded to individual points. Set to False to treat words as analog values.
         /// </summary>
         [ConnectionStringParameter]
