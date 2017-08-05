@@ -534,7 +534,7 @@ namespace eDNAAdapters
 
             m_processedMappings = 0;
             m_processedMeasurements = 0;
-            m_totalProcessingTime = 0;
+            m_totalProcessingTime = Ticks.PerSecond;
 
             lock (m_pendingMappings)
                 m_pendingMappings.Clear();
@@ -711,11 +711,15 @@ namespace eDNAAdapters
             // Commit new records
             if (addedRecords)
             {
+                Ticks startTime = DateTime.UtcNow.Ticks;
+
                 int result = ExecuteConnectionOperation(() => 
                     LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_REC));
 
                 if (result != 0)
                     throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
+
+                Interlocked.Add(ref m_totalProcessingTime, DateTime.UtcNow.Ticks - startTime);
             }
         }
 
