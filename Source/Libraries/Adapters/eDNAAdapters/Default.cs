@@ -42,7 +42,7 @@ namespace eDNAAdapters
         public const bool AutoCreateTags = true;
         public const bool AutoUpdateTags = true;
         public const int TagNamePrefixRemoveCount = 0;
-        public const string PointIDMapCacheFileName = "";
+        public const string PointMapCacheFileName = "";
         public const string DigitalSetString = "ON";
         public const string DigitalClearedString = "OFF";
         public const bool ValidateINIFileExists = false;
