@@ -133,8 +133,7 @@ namespace eDNAAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the name of the eDNA primary server for the adapter's connection.")]
-        [DefaultValue(Default.PrimaryServer)]
-        public string PrimaryServer { get; set; } = Default.PrimaryServer;
+        public string PrimaryServer { get; set; }
 
         /// <summary>
         /// Gets or sets the eDNA primary port for the adapter's connection.
@@ -165,16 +164,14 @@ namespace eDNAAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the eDNA site for the adapter's connection.")]
-        [DefaultValue(Default.Site)]
-        public string Site { get; set; } = Default.Site;
+        public string Site { get; set; }
 
         /// <summary>
         /// Gets or sets the eDNA service for the adapter's connection.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the eDNA service for the adapter's connection.")]
-        [DefaultValue(Default.Service)]
-        public string Service { get; set; } = Default.Service;
+        public string Service { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if eDNA client API should acknowledge all process errors or protocol errors.
@@ -442,6 +439,8 @@ namespace eDNAAdapters
 
             if (settings.TryGetValue(nameof(PrimaryServer), out setting) && !string.IsNullOrWhiteSpace(setting))
                 PrimaryServer = setting;
+            else
+                throw new ArgumentException($"Required connection string parameter \"{nameof(PrimaryServer)}\" is not defined - cannot initialize adapter.");
 
             if (settings.TryGetValue(nameof(PrimaryPort), out setting) && ushort.TryParse(setting, out ushortVal))
                 PrimaryPort = ushortVal;
@@ -454,9 +453,13 @@ namespace eDNAAdapters
 
             if (settings.TryGetValue(nameof(Site), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Site = setting;
+            else
+                throw new ArgumentException($"Required connection string parameter \"{nameof(Site)}\" is not defined - cannot initialize adapter.");
 
             if (settings.TryGetValue(nameof(Service), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Service = setting;
+            else
+                throw new ArgumentException($"Required connection string parameter \"{nameof(Service)}\" is not defined - cannot initialize adapter.");
 
             if (settings.TryGetValue(nameof(AcknowledgeDataPackets), out setting) && !string.IsNullOrWhiteSpace(setting))
                 AcknowledgeDataPackets = setting.ParseBoolean();
@@ -976,9 +979,9 @@ namespace eDNAAdapters
                                 {
                                     // Add new meta-data record
                                     result = ExecuteConnectionOperation(() => 
-                                        LinkMX.eDnaMxAddConfigRec(m_connection, tagName, key.SignalID.ToString(), measurementRow["Description"].ToString(),
+                                        LinkMX.eDnaMxAddConfigRec(m_connection, tagName, key.SignalID.ToString(), measurementRow["Description"].ToNonNullString(),
                                         units, pointType, false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, pointID, null));
+                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, "", ""));
                                 }
                                 else
                                 {
@@ -986,9 +989,9 @@ namespace eDNAAdapters
 
                                     // Edit existing meta-data record
                                     result = ExecuteConnectionOperation(() => 
-                                        LinkMX.eDnaMxAddConfigRecChannelNum(m_connection, channelNumber, tagName, key.SignalID.ToString(), measurementRow["Description"].ToString(),
+                                        LinkMX.eDnaMxAddConfigRecChannelNum(m_connection, channelNumber, tagName, key.SignalID.ToString(), measurementRow["Description"].ToNonNullString(),
                                         units, pointType, false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, pointID, null));
+                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, pointID, ""));
                                 }
 
                                 if (result != 0)

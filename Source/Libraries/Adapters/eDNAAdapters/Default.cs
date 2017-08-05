@@ -28,12 +28,9 @@ namespace eDNAAdapters
     {
         public const string PointIDFormat = "{0}.{1}.{2}";
         public const string IniFilePathFormat = @"{0}\InStep\DNASYS.ini";
-        public const string PrimaryServer = "localhost";
-        public const ushort PrimaryPort = 8001;
+        public const ushort PrimaryPort = 8000;
         public const string SecondaryServer = "";
         public const ushort SecondaryPort = 0;
-        public const string Site = "EDNA";
-        public const string Service = "UNIV";
         public const string LocalCacheFileName = "";
         public const bool ClearCacheOnStartup = false;
         public const bool AcknowledgeDataPackets = true;
