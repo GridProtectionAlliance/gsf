@@ -297,7 +297,7 @@ namespace eDNAAdapters
         /// Gets or sets the timeout, in milliseconds, for writing data to eDNA connection. A value of -1 will wait indefinitely.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("timeout, in milliseconds, for writing data to eDNA connection. A value of -1 will wait indefinitely.")]
+        [Description("Defines the timeout, in milliseconds, for writing data to eDNA connection. A value of -1 will wait indefinitely.")]
         [DefaultValue(Default.WriteTimeout)]
         public int WriteTimeout { get; set; } = Default.WriteTimeout;
 
@@ -802,14 +802,14 @@ namespace eDNAAdapters
             try
             {
                 // Two ways to find points here:
-                //   1. If syncing meta-data for the adapter, look for the signal ID in the extended description field
-                //   2. If points are manually maintained, look for the point tag (or alternate tag) in the long ID field
+                //   1. If syncing meta-data for the adapter, look for the signal ID in the extended ID field
+                //   2. If points are manually maintained, look for the point tag (or alternate tag) in the description field
                 bool foundPoint = false;
 
                 if (RunMetadataSync)
                 {
                     // Attempt lookup by Guid based signal ID
-                    pointID = QueryPointIDForSignalID(signalID); // extended description field search
+                    pointID = QueryPointIDForSignalID(signalID); // extended ID field search
                     foundPoint = !string.IsNullOrWhiteSpace(pointID);
                 }
 
@@ -828,7 +828,7 @@ namespace eDNAAdapters
                             tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                         // Attempt lookup by tag name
-                        pointID = QueryPointIDForTagName(tagName); // long ID field search
+                        pointID = QueryPointIDForTagName(tagName); // description field search
 
                         if (string.IsNullOrWhiteSpace(pointID))
                         {
@@ -991,13 +991,13 @@ namespace eDNAAdapters
 
                                 // Add new or update meta-data record, time-series library mapping is as follows:
                                 //        PointID = Measurement.PointID
-                                //         LongID = Measurement.PointTag (or Measurement.AlternateTag if defined)
-                                //           Desc = Measurement.Description
-                                //   ExtendedDesc = Measurement.SignalID
+                                //           Desc = Measurement.PointTag (or Measurement.AlternateTag if defined)
+                                //     ExtendedID = Measurement.SignalID
                                 int result = ExecuteConnectionOperation(() => 
-                                    LinkMX.eDnaMxAddConfigRec(m_connection, key.ID.ToString(), tagName, measurementRow["Description"].ToNonNullString(),
-                                    units, pointType, false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                    false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.Source, key.SignalID.ToString()));
+                                    LinkMX.eDnaMxAddConfigRec(m_connection, key.ID.ToString(), key.ToString(), tagName, units, pointType,
+                                        false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
+                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.SignalID.ToString(),
+                                        measurementRow["Description"].ToNonNullString()));
 
                                 if (result != 0)
                                     throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
@@ -1095,6 +1095,9 @@ namespace eDNAAdapters
 
             int spanSinceLastFlush = (int)(DateTime.UtcNow.Ticks - m_lastPointIDMapFlushTime).ToMilliseconds();
 
+            if (spanSinceLastFlush < 0)
+                spanSinceLastFlush = 0;
+
             // Don't flush file more than once per second
             if (spanSinceLastFlush < 1000)
                 Thread.Sleep(1000 - spanSinceLastFlush);
@@ -1165,22 +1168,22 @@ namespace eDNAAdapters
             }
         }
 
-        // Lookup eDNA point ID using point tag name (i.e., long ID)
+        // Lookup eDNA point ID using point tag name (store in description field)
         private string QueryPointIDForTagName(string tagName)
         {
-            return Metadata.Query(new Metadata() { LongID = tagName }).FirstOrDefault()?.ShortID;
+            return Metadata.Query(new Metadata() { Description = tagName }).FirstOrDefault()?.ShortID;
         }
 
-        // Lookup eDNA point ID using signal ID (i.e., extended description)
+        // Lookup eDNA point ID using signal ID (i.e., extended ID)
         private string QueryPointIDForSignalID(Guid signalID)
         {
-            return Metadata.Query(new Metadata() { ExtendedDescription = signalID.ToString() }).FirstOrDefault()?.ShortID;
+            return Metadata.Query(new Metadata() { ExtendedID = signalID.ToString() }).FirstOrDefault()?.ShortID;
         }
 
-        // Lookup tag name (i.e., long ID) in eDNA meta-data using signal ID (i.e., extended description)
+        // Lookup tag name (stored in description field) in eDNA meta-data using signal ID (i.e., extended ID)
         private string QueryTagNameForSignalID(Guid signalID)
         {
-            return Metadata.Query(new Metadata() { ExtendedDescription = signalID.ToString() }).FirstOrDefault()?.LongID;
+            return Metadata.Query(new Metadata() { ExtendedID = signalID.ToString() }).FirstOrDefault()?.Description;
         }
 
         private string GetAdjustedTagName(string tagName)
