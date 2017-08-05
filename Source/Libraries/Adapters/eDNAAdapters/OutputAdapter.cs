@@ -294,6 +294,14 @@ namespace eDNAAdapters
         public int ConnectionMonitoringInterval { get; set; } = Default.ConnectionMonitoringInterval;
 
         /// <summary>
+        /// Gets or sets the timeout, in milliseconds, for writing data to eDNA connection. A value of -1 will wait indefinitely.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("timeout, in milliseconds, for writing data to eDNA connection. A value of -1 will wait indefinitely.")]
+        [DefaultValue(Default.WriteTimeout)]
+        public int WriteTimeout { get; set; } = Default.WriteTimeout;
+
+        /// <summary>
         /// Gets the detailed status of the eDNA output adapter.
         /// </summary>
         public override string Status
@@ -304,7 +312,7 @@ namespace eDNAAdapters
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendFormat("       eDNA primary server: {0}:{1}", PrimaryServer, PrimaryPort);
+                status.AppendFormat("       eDNA primary server: {0}:{1}", PrimaryServer ?? "[undefined]", PrimaryPort);
                 status.AppendLine();
                 if (!string.IsNullOrWhiteSpace(SecondaryServer))
                 {
@@ -317,7 +325,9 @@ namespace eDNAAdapters
                 status.AppendLine();
                 status.AppendFormat("       Connected to server: {0}", m_connection > 0U ? "No" : $"Yes, handle = {m_connection}");
                 status.AppendLine();
-                status.AppendFormat("       Monitoring interval: {0:N0}ms", ConnectionMonitoringInterval);
+                status.AppendFormat("       Monitoring interval: {0:N0}ms{1}", ConnectionMonitoringInterval, ConnectionMonitoringInterval <= 0 ? " - monitoring disabled" : "");
+                status.AppendLine();
+                status.AppendFormat("             Write timeout: {0:N0}ms{1}", WriteTimeout, WriteTimeout == Timeout.Infinite ? " - no timeout defined" : "");
                 status.AppendLine();
                 status.AppendFormat("  Maximum point resolution: {0:N3} seconds{1}", MaximumPointResolution, MaximumPointResolution <= 0.0D ? " - all data will be archived" : "");
                 status.AppendLine();
@@ -440,7 +450,7 @@ namespace eDNAAdapters
             if (settings.TryGetValue(nameof(PrimaryServer), out setting) && !string.IsNullOrWhiteSpace(setting))
                 PrimaryServer = setting;
             else
-                throw new ArgumentException($"Required connection string parameter \"{nameof(PrimaryServer)}\" is not defined - cannot initialize adapter.");
+                throw new ArgumentException($"Cannot initialize adapter: required connection string parameter \"{nameof(PrimaryServer)}\" is not defined.");
 
             if (settings.TryGetValue(nameof(PrimaryPort), out setting) && ushort.TryParse(setting, out ushortVal))
                 PrimaryPort = ushortVal;
@@ -454,12 +464,12 @@ namespace eDNAAdapters
             if (settings.TryGetValue(nameof(Site), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Site = setting;
             else
-                throw new ArgumentException($"Required connection string parameter \"{nameof(Site)}\" is not defined - cannot initialize adapter.");
+                throw new ArgumentException($"Cannot initialize adapter: required connection string parameter \"{nameof(Site)}\" is not defined.");
 
             if (settings.TryGetValue(nameof(Service), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Service = setting;
             else
-                throw new ArgumentException($"Required connection string parameter \"{nameof(Service)}\" is not defined - cannot initialize adapter.");
+                throw new ArgumentException($"Cannot initialize adapter: required connection string parameter \"{nameof(Service)}\" is not defined.");
 
             if (settings.TryGetValue(nameof(AcknowledgeDataPackets), out setting) && !string.IsNullOrWhiteSpace(setting))
                 AcknowledgeDataPackets = setting.ParseBoolean();
@@ -520,6 +530,11 @@ namespace eDNAAdapters
 
             if (settings.TryGetValue(nameof(ConnectionMonitoringInterval), out setting) && int.TryParse(setting, out intVal) && intVal >= 0)
                 ConnectionMonitoringInterval = intVal;
+
+            if (settings.TryGetValue(nameof(WriteTimeout), out setting) && int.TryParse(setting, out intVal) && intVal >= -1)
+                WriteTimeout = intVal;
+
+            InternalProcessQueue.ProcessTimeout = WriteTimeout;
         }
 
         /// <summary>
@@ -670,7 +685,7 @@ namespace eDNAAdapters
                 }
                 else
                 {
-                    // Have a valid mapping, archive the data to eDNA service
+                    // Valid mapping exists, archive the data to eDNA service
                     Ticks startTime = DateTime.UtcNow.Ticks;
 
                     try
@@ -679,7 +694,7 @@ namespace eDNAAdapters
                         if ((object)m_lastArchiveTimes != null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(signalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
                             continue;
 
-                        // Separate seconds from milliseconds and convert seconds to have a Unix relative base, i.e., midnight 1/1/1970
+                        // Separate seconds from milliseconds and convert seconds to have a Unix base value, i.e., midnight 1/1/1970
                         Ticks baselinedTicks = measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second);
                         int seconds = (int)new UnixTimeTag(baselinedTicks).Value;
                         ushort milliseconds = (ushort)(measurement.Timestamp - baselinedTicks).ToMilliseconds();
@@ -689,7 +704,7 @@ namespace eDNAAdapters
                             LinkMX.eDnaMxAddRec(m_connection, pointID, seconds, milliseconds, measurement.StateFlags.MapToStatus(), measurement.AdjustedValue));
 
                         if (result != 0)
-                            OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{pointID}\": {(LinkMXReturnStatus)result}", result));
+                            OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, pointID)}\": {(LinkMXReturnStatus)result}", result));
 
                         if ((object)m_lastArchiveTimes != null)
                             m_lastArchiveTimes[signalID] = measurement.Timestamp;
@@ -787,15 +802,15 @@ namespace eDNAAdapters
             try
             {
                 // Two ways to find points here:
-                //   1. if running meta-data sync for the adapter, look for the signal ID in the long ID field
-                //   2. if points are being manually maintained, look for either the point tag or alternate tag in the short ID field
+                //   1. If syncing meta-data for the adapter, look for the signal ID in the extended description field
+                //   2. If points are manually maintained, look for the point tag (or alternate tag) in the long ID field
                 bool foundPoint = false;
 
                 if (RunMetadataSync)
                 {
                     // Attempt lookup by Guid based signal ID
-                    pointID = QueryPointIDForSignalID(signalID); // LongID search
-                    foundPoint = (object)pointID != null;
+                    pointID = QueryPointIDForSignalID(signalID); // extended description field search
+                    foundPoint = !string.IsNullOrWhiteSpace(pointID);
                 }
 
                 if (!foundPoint)
@@ -813,10 +828,11 @@ namespace eDNAAdapters
                             tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                         // Attempt lookup by tag name
-                        pointID = QueryPointIDForTagName(tagName); // ShortID search
+                        pointID = QueryPointIDForTagName(tagName); // long ID field search
 
-                        if ((object)pointID == null)
+                        if (string.IsNullOrWhiteSpace(pointID))
                         {
+                            // If meta-data mapping is in progress, suppress error message (we're working on it)
                             if (!m_refreshingMetadata)
                                 OnStatusMessage(MessageLevel.Warning, $"No eDNA points found for tag \"{tagName}\". Data will not be archived for measurement.");
                         }
@@ -905,7 +921,7 @@ namespace eDNAAdapters
                         if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && dataType != DataType.Digital)
                             tagName = measurementRow["AlternateTag"].ToString().Trim();
 
-                        // It's unlikley that no tag name is defined for measurement, but if so move on to the next one
+                        // It's unlikely that no tag name is defined for measurement, but if so move on to the next one
                         if (string.IsNullOrWhiteSpace(tagName))
                         {
                             m_pointIDMap.TryRemove(signalID, out pointID);
@@ -942,7 +958,7 @@ namespace eDNAAdapters
                             latestUpdateTime = updateTime;
 
                         // Attempt to create new eDNA point if it doesn't exist, or update it if measurement meta-data was updated or tag name doesn't match
-                        if (AutoCreateTags && (object)pointID == null || AutoUpdateTags && (updateTime > m_lastMetadataRefresh || !(QueryTagNameForSignalID(signalID)?.Equals(tagName, StringComparison.InvariantCultureIgnoreCase) ?? false)))
+                        if (AutoCreateTags && string.IsNullOrWhiteSpace(pointID) || AutoUpdateTags && (updateTime > m_lastMetadataRefresh || !(QueryTagNameForSignalID(signalID)?.Equals(tagName, StringComparison.InvariantCultureIgnoreCase) ?? false)))
                         {
                             try
                             {
@@ -973,26 +989,15 @@ namespace eDNAAdapters
                                     }
                                 }
 
-                                int result;
-
-                                if ((object)pointID == null)
-                                {
-                                    // Add new meta-data record
-                                    result = ExecuteConnectionOperation(() => 
-                                        LinkMX.eDnaMxAddConfigRec(m_connection, tagName, key.SignalID.ToString(), measurementRow["Description"].ToNonNullString(),
-                                        units, pointType, false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, "", ""));
-                                }
-                                else
-                                {
-                                    int channelNumber = int.Parse(pointID.Substring(pointID.LastIndexOf('.') + 1));
-
-                                    // Edit existing meta-data record
-                                    result = ExecuteConnectionOperation(() => 
-                                        LinkMX.eDnaMxAddConfigRecChannelNum(m_connection, channelNumber, tagName, key.SignalID.ToString(), measurementRow["Description"].ToNonNullString(),
-                                        units, pointType, false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, pointID, ""));
-                                }
+                                // Add new or update meta-data record, time-series library mapping is as follows:
+                                //        PointID = Measurement.PointID
+                                //         LongID = Measurement.PointTag (or Measurement.AlternateTag if defined)
+                                //           Desc = Measurement.Description
+                                //   ExtendedDesc = Measurement.SignalID
+                                int result = ExecuteConnectionOperation(() => 
+                                    LinkMX.eDnaMxAddConfigRec(m_connection, key.ID.ToString(), tagName, measurementRow["Description"].ToNonNullString(),
+                                    units, pointType, false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
+                                    false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.Source, key.SignalID.ToString()));
 
                                 if (result != 0)
                                     throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
@@ -1005,7 +1010,7 @@ namespace eDNAAdapters
                             }
                             catch (Exception ex)
                             {
-                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to add or update eDNA meta-data \"{tagName}\" for measurement \"{key}\": {ex.Message}", ex));
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to add or update eDNA meta-data{(string.IsNullOrWhiteSpace(pointID) ? "" : $" \"{string.Format(Default.PointIDFormat, Site, Service, pointID)}\"")} for measurement \"[{key}]: {tagName}\": {ex.Message}", ex));
                             }
                         }
 
@@ -1160,75 +1165,22 @@ namespace eDNAAdapters
             }
         }
 
-        // Lookup eDNA point ID using point tag name (i.e., short ID)
+        // Lookup eDNA point ID using point tag name (i.e., long ID)
         private string QueryPointIDForTagName(string tagName)
         {
-            string shortID;
-            return QueryPointID("shortID", tagName, out shortID);
+            return Metadata.Query(new Metadata() { LongID = tagName }).FirstOrDefault()?.ShortID;
         }
 
-        // Lookup eDNA point ID using signal ID (i.e., long ID)
+        // Lookup eDNA point ID using signal ID (i.e., extended description)
         private string QueryPointIDForSignalID(Guid signalID)
         {
-            string pointID, shortID;
-            m_pointIDMap.TryGetValue(signalID, out pointID);
-            return pointID ?? QueryPointID("longID", signalID.ToString(), out shortID);
+            return Metadata.Query(new Metadata() { ExtendedDescription = signalID.ToString() }).FirstOrDefault()?.ShortID;
         }
 
-        // Lookup tag name in eDNA meta-data using signal ID (i.e., long ID)
+        // Lookup tag name (i.e., long ID) in eDNA meta-data using signal ID (i.e., extended description)
         private string QueryTagNameForSignalID(Guid signalID)
         {
-            string shortID, pointID = QueryPointID("longID", signalID.ToString(), out shortID);
-            return (object)pointID == null || pointID == "*" ? null : shortID;
-        }
-
-        private string QueryPointID(string searchKey, string value, out string shortID)
-        {
-            string pointID = null;
-            string error;
-            int key;
-
-            string longID = searchKey.Equals("longID", StringComparison.OrdinalIgnoreCase) ? value : "*";   // Used to store Guid based SignalID
-            shortID = searchKey.Equals("shortID", StringComparison.OrdinalIgnoreCase) ? value : "*";        // Used to store PointTag (or AlternateTag)
-
-            int result = Configuration.EzSimpleFindPoints(Site, Service, shortID, longID, 
-                "*", "*", "*", "*", "*", "*", "*", "*", "*", "*", "*", "*", "*", "*", "*",
-                -1, out key);
-
-            if (result == 0)
-            {
-                if (Configuration.EzSimpleFindPointsSize(key) > 0)
-                {
-                    int channelNumber;
-                    string site, service, extendedID, description, extendedDescription, pointType, units,
-                           referenceField01, referenceField02, referenceField03, referenceField04, referenceField05,
-                           referenceField06, referenceField07, referenceField08, referenceField09, referenceField10;
-
-                    result = Configuration.EzSimpleFindPointsRec(key, 0,
-                        out site, out service, out shortID, out longID, out extendedID,out description, out extendedDescription, out pointType, out units,
-                        out referenceField01, out referenceField02, out referenceField03, out referenceField04, out referenceField05, out referenceField06,
-                        out referenceField07, out referenceField08, out referenceField09, out referenceField10, out channelNumber);
-
-                    if (result == 0)
-                    {
-                        pointID = string.Format(Default.PointIDFormat, site, service, channelNumber);
-                    }
-                    else
-                    {
-                        Configuration.EzSimpleFindPointsGetLastError(out error);
-                        OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to read pointID meta-data for \"{searchKey}\"=\"{value}\": {error}", result));
-                    }
-                }
-
-                Configuration.EzFindPointsRemoveKey(key);
-            }
-            else
-            {
-                Configuration.EzSimpleFindPointsGetLastError(out error);
-                OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to lookup pointID meta-data searching for \"{searchKey}\"=\"{value}\": {error}", result));
-            }
-
-            return pointID;
+            return Metadata.Query(new Metadata() { ExtendedDescription = signalID.ToString() }).FirstOrDefault()?.LongID;
         }
 
         private string GetAdjustedTagName(string tagName)
@@ -1272,7 +1224,7 @@ namespace eDNAAdapters
 
             if (reconnect)
             {
-                OnStatusMessage(MessageLevel.Warning, "Detected no active connections to eDNA service, restarting connection cycle...");
+                OnStatusMessage(MessageLevel.Warning, "Detected no active socket connections to eDNA service, restarting connection cycle...");
                 Start();
             }
         }

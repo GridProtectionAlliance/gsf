@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System.Threading;
+
 namespace eDNAAdapters
 {
     // Define default values for eDNA adapters
@@ -46,5 +48,6 @@ namespace eDNAAdapters
         public const bool ValidateINIFileExists = false;
         public const double MaximumPointResolution = 0.0D;
         public const int ConnectionMonitoringInterval = 1000;
+        public const int WriteTimeout = Timeout.Infinite;
     }
 }
