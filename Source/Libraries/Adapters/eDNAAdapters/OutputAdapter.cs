@@ -1258,16 +1258,16 @@ namespace eDNAAdapters
                 // Verify connection is up at socket level, API is not always accurate
                 Func<string, IPAddress> parseIP = host => string.IsNullOrWhiteSpace(host) ? IPAddress.None : IPAddress.Parse(host);
 
-                IPAddress primary = parseIP(PrimaryServer);
-                IPAddress secondary = parseIP(SecondaryServer);
+                IPAddress primaryIP = parseIP(PrimaryServer);
+                IPAddress secondaryIP = parseIP(SecondaryServer);
 
                 Func<TcpConnectionInformation, IPAddress, int, bool> isEstablished = (connection, address, port) =>
                     connection.RemoteEndPoint.Address.Equals(address) &&
                     connection.RemoteEndPoint.Port == (int)port &&
                     connection.State == TcpState.Established;
 
-                reconnect = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(connection => 
-                    isEstablished(connection, primary, PrimaryPort) || isEstablished(connection, secondary, SecondaryPort));
+                reconnect = !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(connection => 
+                    isEstablished(connection, primaryIP, PrimaryPort) || isEstablished(connection, secondaryIP, SecondaryPort));
             }
 
             if (reconnect)
