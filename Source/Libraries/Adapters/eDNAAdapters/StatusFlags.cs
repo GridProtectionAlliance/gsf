@@ -249,7 +249,7 @@ namespace eDNAAdapters
         /// <param name="type">Data type of measurement.</param>
         /// <param name="value">Data value, determines if digital value is set.</param>
         /// <returns>eDNA status mapped from <see cref="MeasurementStateFlags"/>.</returns>
-        public static short MapToStatus(this MeasurementStateFlags stateFlags, DataType type, double value)
+        public static short MapToStatus(this MeasurementStateFlags stateFlags, DataType type = DataType.Analog, double value = 0.0D)
         {
             return (short)stateFlags.MapToStatusFlags(type, value);
         }
@@ -261,7 +261,7 @@ namespace eDNAAdapters
         /// <param name="type">Data type of measurement.</param>
         /// <param name="value">Data value, determines if digital value is set.</param>
         /// <returns><see cref="StatusFlags"/> mapped from <see cref="MeasurementStateFlags"/>.</returns>
-        public static StatusFlags MapToStatusFlags(this MeasurementStateFlags stateFlags, DataType type, double value)
+        public static StatusFlags MapToStatusFlags(this MeasurementStateFlags stateFlags, DataType type = DataType.Analog, double value = 0.0D)
         {
             StatusFlags status = StatusFlags.RTSTAT_UNUSED;
 

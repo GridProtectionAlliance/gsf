@@ -290,6 +290,14 @@ namespace eDNAAdapters
         [DefaultValue(Default.WriteTimeout)]
         public int WriteTimeout { get; set; } = Default.WriteTimeout;
 
++-        /// <summary>
+        /// Gets or sets flag that determines if each bit of digital words are expanded to individual points. Set to False to treat words as analog values.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if each bit of digital words are expanded to individual points. Set to False to treat words as analog values.")]
+        [DefaultValue(Default.ExpandDigitalWordBits)]
+        public bool ExpandDigitalWordBits { get; set; } = Default.ExpandDigitalWordBits;
+
         /// <summary>
         /// Gets the detailed status of the eDNA output adapter.
         /// </summary>
@@ -319,6 +327,8 @@ namespace eDNAAdapters
                 status.AppendFormat("       Monitoring interval: {0:N0}ms{1}", ConnectionMonitoringInterval, ConnectionMonitoringInterval <= 0 ? " - monitoring disabled" : "");
                 status.AppendLine();
                 status.AppendFormat("             Write timeout: {0}", WriteTimeout == Timeout.Infinite ? "No timeout defined" : $"{WriteTimeout:N0}ms");
+                status.AppendLine();
+                status.AppendFormat("  Expand digital word bits: {0}", ExpandDigitalWordBits);
                 status.AppendLine();
                 status.AppendFormat("  Maximum point resolution: {0:N3} seconds{1}", MaximumPointResolution, MaximumPointResolution <= 0.0D ? " - all data will be archived" : "");
                 status.AppendLine();
@@ -693,13 +703,33 @@ namespace eDNAAdapters
                     int seconds = (int)new UnixTimeTag(baselinedTicks).Value;
                     ushort milliseconds = (ushort)(measurement.Timestamp - baselinedTicks).ToMilliseconds();
                     double value = measurement.AdjustedValue;
+                    int result;
 
                     // Queue measurement record to eDNA
-                    int result = ExecuteConnectionOperation(() =>
-                        LinkMX.eDnaMxAddRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(point.Type, value), value));
+                    if (point.Type == DataType.Digital)
+                    {
+                        ushort word = (ushort)value;
 
-                    if (result != 0)
-                        OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
+                        for (ushort i = 0; i < 16; i++)
+                        {
+                            ushort bit = (ushort)BitExtensions.BitVal(i);
+                            double digital = (word & bit) > 0 ? 1.0D : 0.0D;
+
+                            result = ExecuteConnectionOperation(() =>
+                                LinkMX.eDnaMxAddRec(m_connection, $"{point.ID}-{i}", seconds, milliseconds, measurement.StateFlags.MapToStatus(point.Type, digital), digital));
+
+                            if (result != 0)
+                                OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" bit {i} to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
+                        }
+                    }
+                    else
+                    {
+                        result = ExecuteConnectionOperation(() =>
+                            LinkMX.eDnaMxAddRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(), value));
+
+                        if (result != 0)
+                            OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
+                    }
 
                     if ((object)m_lastArchiveTimes != null)
                         m_lastArchiveTimes[signalID] = measurement.Timestamp;
@@ -952,10 +982,15 @@ namespace eDNAAdapters
                         {
                             try
                             {
+                                // If digital words are not being expanded as bits, treat them as analogs
+                                if (dataType == DataType.Digital && !ExpandDigitalWordBits)
+                                    dataType = DataType.Digital;
+
                                 string units = "";
                                 string pointType = dataType == DataType.Digital ? "DI" : "AI";
                                 string digitalSet = dataType == DataType.Digital ? DigitalSetString : "";
                                 string digitalCleared = dataType == DataType.Digital ? DigitalClearedString : "";
+                                int result, values = dataType == DataType.Digital ? 16 : 1;
 
                                 if (measurements.Columns.Contains("EngineeringUnits"))
                                     units = measurementRow["EngineeringUnits"].ToNonNullString();
@@ -979,18 +1014,23 @@ namespace eDNAAdapters
                                     }
                                 }
 
-                                // Add new or update meta-data record, time-series library mapping is as follows:
-                                //        PointID = Measurement.PointID
-                                //           Desc = Measurement.PointTag (or Measurement.AlternateTag if defined)
-                                //     ExtendedID = Measurement.SignalID
-                                int result = ExecuteConnectionOperation(() =>
-                                    LinkMX.eDnaMxAddConfigRec(m_connection, key.ID.ToString(), key.ToString(), tagName, units, pointType,
-                                        false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                        false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.SignalID.ToString(),
-                                        measurementRow["Description"].ToNonNullString()));
+                                for (int i = 0; i < values; i++)
+                                {
+                                    string pointID = $"{key.ID.ToString()}{(dataType == DataType.Digital ? "-{i}" : "")}";
 
-                                if (result != 0)
-                                    throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
+                                    // Add new or update meta-data record, time-series library mapping is as follows:
+                                    //        PointID = Measurement.PointID
+                                    //           Desc = Measurement.PointTag (or Measurement.AlternateTag if defined)
+                                    //     ExtendedID = Measurement.SignalID
+                                    result = ExecuteConnectionOperation(() =>
+                                        LinkMX.eDnaMxAddConfigRec(m_connection, pointID, key.ToString(), tagName, units, pointType,
+                                            false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
+                                            false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.SignalID.ToString(),
+                                            measurementRow["Description"].ToNonNullString()));
+
+                                    if (result != 0)
+                                        throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
+                                }
 
                                 result = ExecuteConnectionOperation(() =>
                                     LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_CONFIGURATION_REC));
