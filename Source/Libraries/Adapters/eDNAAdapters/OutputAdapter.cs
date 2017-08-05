@@ -55,6 +55,7 @@ namespace eDNAAdapters
         #region [ Members ]
 
         // Nested Types
+        [Serializable]
         private class Point
         {
             public string ID;
@@ -73,7 +74,6 @@ namespace eDNAAdapters
         private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
         private long m_processedMappings;                                   // Total number of mappings processed so far
         private long m_processedMeasurements;                               // Total number of measurements processed so far
-        private long m_totalProcessingTime;                                 // Total point processing time 
         private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
         private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
         private Ticks m_lastPointMapFlushTime;                              // Last time of point map file flush
@@ -88,6 +88,7 @@ namespace eDNAAdapters
         /// </summary>
         public OutputAdapter()
         {
+            m_connection = uint.MaxValue;
             m_connectionMonitor = new Timer();
             m_connectionMonitor.Enabled = false;
             m_connectionMonitor.AutoReset = true;
@@ -302,20 +303,22 @@ namespace eDNAAdapters
                 status.AppendLine();
                 status.AppendFormat("       eDNA primary server: {0}:{1}", PrimaryServer ?? "[undefined]", PrimaryPort);
                 status.AppendLine();
+
                 if (!string.IsNullOrWhiteSpace(SecondaryServer))
                 {
                     status.AppendFormat("     eDNA secondary server: {0}:{1}", SecondaryServer, SecondaryPort);
                     status.AppendLine();
                 }
+
                 status.AppendFormat("                 eDNA site: {0}", Site);
                 status.AppendLine();
                 status.AppendFormat("              eDNA service: {0}", Service);
                 status.AppendLine();
-                status.AppendFormat("       Connected to server: {0}", m_connection > 0U ? "No" : $"Yes, handle = {m_connection}");
+                status.AppendFormat("       Connected to server: {0}", m_connection == uint.MaxValue ? "No" : $"Yes, handle = {m_connection}");
                 status.AppendLine();
                 status.AppendFormat("       Monitoring interval: {0:N0}ms{1}", ConnectionMonitoringInterval, ConnectionMonitoringInterval <= 0 ? " - monitoring disabled" : "");
                 status.AppendLine();
-                status.AppendFormat("             Write timeout: {0:N0}ms{1}", WriteTimeout, WriteTimeout == Timeout.Infinite ? " - no timeout defined" : "");
+                status.AppendFormat("             Write timeout: {0}", WriteTimeout == Timeout.Infinite ? "No timeout defined" : $"{WriteTimeout:N0}ms");
                 status.AppendLine();
                 status.AppendFormat("  Maximum point resolution: {0:N3} seconds{1}", MaximumPointResolution, MaximumPointResolution <= 0.0D ? " - all data will be archived" : "");
                 status.AppendLine();
@@ -371,7 +374,7 @@ namespace eDNAAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("    Points archived/second: {0:#,##0.00}", Interlocked.Read(ref m_processedMeasurements) / (Interlocked.Read(ref m_totalProcessingTime) / (double)Ticks.PerSecond));
+                status.AppendFormat("    Points archived/second: {0:#,##0.00}", Interlocked.Read(ref m_processedMeasurements) / RunTime);
                 status.AppendLine();
 
                 return status.ToString();
@@ -534,7 +537,6 @@ namespace eDNAAdapters
 
             m_processedMappings = 0;
             m_processedMeasurements = 0;
-            m_totalProcessingTime = Ticks.PerSecond;
 
             lock (m_pendingMappings)
                 m_pendingMappings.Clear();
@@ -583,8 +585,16 @@ namespace eDNAAdapters
                 m_connectionMonitor.Interval = ConnectionMonitoringInterval;
                 m_connectionMonitor.Start();
             }
+        }
 
-            // Kick off meta-data refresh
+        /// <summary>
+        /// Called when data output source connection is established.
+        /// </summary>
+        protected override void OnConnected()
+        {
+            base.OnConnected();
+
+            // Refresh meta-data once connected
             RefreshMetadata();
         }
 
@@ -601,10 +611,10 @@ namespace eDNAAdapters
 
             m_connectionMonitor.Stop();
 
-            if (m_connection > 0U)
+            if (m_connection < uint.MaxValue)
                 LinkMX.eDnaMxUniversalCloseSocketSoft(m_connection);
 
-            m_connection = 0U;
+            m_connection = uint.MaxValue;
         }
 
         // Make sure API operations against connection handle are handled synchronously
@@ -621,7 +631,7 @@ namespace eDNAAdapters
         /// <param name="measurements">Measurements to queue</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            if ((object)measurements == null || measurements.Length <= 0 || m_connection == 0U)
+            if ((object)measurements == null || measurements.Length <= 0 || m_connection == uint.MaxValue)
                 return;
 
             bool addedRecords = false;
@@ -674,52 +684,39 @@ namespace eDNAAdapters
                 else
                 {
                     // Valid mapping exists, archive the data to eDNA service
-                    Ticks startTime = DateTime.UtcNow.Ticks;
+                    // Verify maximum per point archive resolution
+                    if ((object)m_lastArchiveTimes != null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(signalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
+                        continue;
 
-                    try
-                    {
-                        // Verify maximum per point archive resolution
-                        if ((object)m_lastArchiveTimes != null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(signalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
-                            continue;
+                    // Separate seconds from milliseconds and convert seconds to have a Unix base value, i.e., midnight 1/1/1970
+                    Ticks baselinedTicks = measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second);
+                    int seconds = (int)new UnixTimeTag(baselinedTicks).Value;
+                    ushort milliseconds = (ushort)(measurement.Timestamp - baselinedTicks).ToMilliseconds();
+                    double value = measurement.AdjustedValue;
 
-                        // Separate seconds from milliseconds and convert seconds to have a Unix base value, i.e., midnight 1/1/1970
-                        Ticks baselinedTicks = measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second);
-                        int seconds = (int)new UnixTimeTag(baselinedTicks).Value;
-                        ushort milliseconds = (ushort)(measurement.Timestamp - baselinedTicks).ToMilliseconds();
-                        double value = measurement.AdjustedValue;
+                    // Queue measurement record to eDNA
+                    int result = ExecuteConnectionOperation(() =>
+                        LinkMX.eDnaMxAddRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(point.Type, value), value));
 
-                        // Queue measurement record to eDNA
-                        int result = ExecuteConnectionOperation(() => 
-                            LinkMX.eDnaMxAddRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(point.Type, value), value));
+                    if (result != 0)
+                        OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
 
-                        if (result != 0)
-                            OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
+                    if ((object)m_lastArchiveTimes != null)
+                        m_lastArchiveTimes[signalID] = measurement.Timestamp;
 
-                        if ((object)m_lastArchiveTimes != null)
-                            m_lastArchiveTimes[signalID] = measurement.Timestamp;
-
-                        Interlocked.Increment(ref m_processedMeasurements);
-                        addedRecords = true;
-                    }
-                    finally
-                    {
-                        Interlocked.Add(ref m_totalProcessingTime, DateTime.UtcNow.Ticks - startTime);
-                    }
+                    Interlocked.Increment(ref m_processedMeasurements);
+                    addedRecords = true;
                 }
             }
 
             // Commit new records
             if (addedRecords)
             {
-                Ticks startTime = DateTime.UtcNow.Ticks;
-
-                int result = ExecuteConnectionOperation(() => 
+                int result = ExecuteConnectionOperation(() =>
                     LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_REC));
 
                 if (result != 0)
                     throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
-
-                Interlocked.Add(ref m_totalProcessingTime, DateTime.UtcNow.Ticks - startTime);
             }
         }
 
@@ -845,7 +842,7 @@ namespace eDNAAdapters
         /// </summary>
         protected override void ExecuteMetadataRefresh()
         {
-            if (!Initialized || m_connection == 0U)
+            if (!Initialized || m_connection == uint.MaxValue)
                 return;
 
             MeasurementKey[] inputMeasurements = InputMeasurementKeys;
@@ -986,7 +983,7 @@ namespace eDNAAdapters
                                 //        PointID = Measurement.PointID
                                 //           Desc = Measurement.PointTag (or Measurement.AlternateTag if defined)
                                 //     ExtendedID = Measurement.SignalID
-                                int result = ExecuteConnectionOperation(() => 
+                                int result = ExecuteConnectionOperation(() =>
                                     LinkMX.eDnaMxAddConfigRec(m_connection, key.ID.ToString(), key.ToString(), tagName, units, pointType,
                                         false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
                                         false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.SignalID.ToString(),
@@ -995,7 +992,7 @@ namespace eDNAAdapters
                                 if (result != 0)
                                     throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
 
-                                result = ExecuteConnectionOperation(() => 
+                                result = ExecuteConnectionOperation(() =>
                                     LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_CONFIGURATION_REC));
 
                                 if (result != 0)
@@ -1064,7 +1061,18 @@ namespace eDNAAdapters
                 {
                     using (FileStream pointMapCache = File.Open(PointMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        m_pointMap.Merge(true, Serialization.Deserialize<Dictionary<Guid, Point>>(pointMapCache, GSF.SerializationFormat.Binary));
+                        Dictionary<Guid, Point> pointMap = Serialization.Deserialize<Dictionary<Guid, Point>>(pointMapCache, GSF.SerializationFormat.Binary);
+                        Guid[] signalIDs = m_pointMap.Select(kvp => kvp.Key).ToArray();
+                        Point point;
+
+                        foreach (Guid signalID in signalIDs)
+                        {
+                            if (!pointMap.TryGetValue(signalID, out point))
+                                m_pointMap.TryRemove(signalID, out point);
+                        }
+
+                        foreach (KeyValuePair<Guid, Point> kvp in pointMap)
+                            m_pointMap[kvp.Key] = kvp.Value;
 
                         OnStatusMessage(MessageLevel.Info, $"Loaded {m_pointMap.Count:N0} mappings from point map cache.");
 
@@ -1224,7 +1232,7 @@ namespace eDNAAdapters
                     connection.RemoteEndPoint.Port == (int)port &&
                     connection.State == TcpState.Established;
 
-                reconnect = !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(connection => 
+                reconnect = !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(connection =>
                     isEstablished(connection, primaryIP, PrimaryPort) || isEstablished(connection, secondaryIP, SecondaryPort));
             }
 
