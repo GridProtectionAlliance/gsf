@@ -1102,20 +1102,15 @@ namespace eDNAAdapters
                 {
                     using (FileStream pointMapCache = File.Open(PointMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
+                        // Deserialize last point map for quicker startup
                         Dictionary<Guid, Point> pointMap = Serialization.Deserialize<Dictionary<Guid, Point>>(pointMapCache, GSF.SerializationFormat.Binary);
                         Guid[] signalIDs = m_pointMap.Select(kvp => kvp.Key).ToArray();
-                        Point point;
 
-                        foreach (Guid signalID in signalIDs)
-                        {
-                            if (!pointMap.TryGetValue(signalID, out point))
-                                m_pointMap.TryRemove(signalID, out point);
-                        }
-
+                        // Copy cached set to active point map
                         foreach (KeyValuePair<Guid, Point> kvp in pointMap)
                             m_pointMap[kvp.Key] = kvp.Value;
 
-                        OnStatusMessage(MessageLevel.Info, $"Loaded {m_pointMap.Count:N0} mappings from point map cache.");
+                        OnStatusMessage(MessageLevel.Info, $"Loaded {pointMap.Count:N0} mappings from point map cache.");
 
                         // Use last write time of file as the last meta-data refresh time - rough value is OK
                         if (m_lastMetadataRefresh == DateTime.MinValue)
@@ -1151,6 +1146,8 @@ namespace eDNAAdapters
                 {
                     using (FileStream pointMapCache = File.Create(PointMapCacheFileName))
                         Serialization.Serialize(m_pointMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), GSF.SerializationFormat.Binary, pointMapCache);
+
+                    OnStatusMessage(MessageLevel.Info, $"Saved {m_pointMap.Count:N0} mappings to point map cache.");
                 }
                 catch (Exception ex)
                 {
