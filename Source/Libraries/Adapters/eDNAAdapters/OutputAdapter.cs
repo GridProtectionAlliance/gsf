@@ -716,7 +716,7 @@ namespace eDNAAdapters
                             double digital = (word & bit) > 0 ? 1.0D : 0.0D;
 
                             result = ExecuteConnectionOperation(() =>
-                                LinkMX.eDnaMxAddRec(m_connection, $"{point.ID}-{i}", seconds, milliseconds, measurement.StateFlags.MapToStatus(point.Type, digital), digital));
+                                LinkMX.eDnaMxAddRec(m_connection, $"D{point.ID}-{i}", seconds, milliseconds, measurement.StateFlags.MapToStatus(point.Type, digital), digital));
 
                             if (result != 0)
                                 OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" bit {i} to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
@@ -984,7 +984,7 @@ namespace eDNAAdapters
                             {
                                 // If digital words are not being expanded as bits, treat them as analogs
                                 if (dataType == DataType.Digital && !ExpandDigitalWordBits)
-                                    dataType = DataType.Digital;
+                                    dataType = DataType.Analog;
 
                                 string units = "";
                                 string pointType = dataType == DataType.Digital ? "DI" : "AI";
@@ -1016,7 +1016,8 @@ namespace eDNAAdapters
 
                                 for (int i = 0; i < values; i++)
                                 {
-                                    string pointID = $"{key.ID.ToString()}{(dataType == DataType.Digital ? "-{i}" : "")}";
+                                    string pointID = dataType == DataType.Digital ? $"D{key.ID}-{i}" : key.ID.ToString();
+                                    string description = $"{(dataType == DataType.Digital ? $"Bit {i} of " : "")}{measurementRow["Description"]}";
 
                                     // Add new or update meta-data record, time-series library mapping is as follows:
                                     //        PointID = Measurement.PointID
@@ -1026,7 +1027,7 @@ namespace eDNAAdapters
                                         LinkMX.eDnaMxAddConfigRec(m_connection, pointID, key.ToString(), tagName, units, pointType,
                                             false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
                                             false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.SignalID.ToString(),
-                                            measurementRow["Description"].ToNonNullString()));
+                                            description));
 
                                     if (result != 0)
                                         throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
