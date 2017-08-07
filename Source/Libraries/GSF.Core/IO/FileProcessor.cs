@@ -386,9 +386,10 @@ namespace GSF.IO
                         {
                             EnumerableWrapper fileWrapper = new EnumerableWrapper(Directory.EnumerateFiles(directory), cancellationToken);
                             EnumerableWrapper directoryWrapper = new EnumerableWrapper(Directory.EnumerateDirectories(directory), cancellationToken);
-                            m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-                            LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(directoryWrapper));
+
                             ActivateThread();
+                            m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
+                            EnumerateNextDirectory(directoryWrapper);
                         });
                         break;
                 }
@@ -463,8 +464,8 @@ namespace GSF.IO
                 {
                     // If an error occurs, dispose of the
                     // wrapper and then move to the next wrapper
-                    wrapper.Dispose();
                     EnumerateNextWrapper();
+                    wrapper.Dispose();
                     throw;
                 }
 
@@ -523,6 +524,8 @@ namespace GSF.IO
                 }
                 catch
                 {
+                    LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(wrapper));
+
                     // If an exception occurs, dispose of the file
                     // wrapper and directory wrapper, then continue
                     // enumeration with the current directory wrapper
@@ -531,8 +534,6 @@ namespace GSF.IO
 
                     if ((object)directoryWrapper != null)
                         directoryWrapper.Dispose();
-
-                    LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(wrapper));
 
                     throw;
                 }
@@ -596,8 +597,8 @@ namespace GSF.IO
                     // dispose of the wrapper and move to the next wrapper
                     if (!wrapper.LastMove)
                     {
-                        wrapper.Dispose();
                         EnumerateNextWrapper();
+                        wrapper.Dispose();
                     }
                 }
             }
@@ -1542,6 +1543,6 @@ namespace GSF.IO
             });
         }
 
-#endregion
+        #endregion
     }
 }
