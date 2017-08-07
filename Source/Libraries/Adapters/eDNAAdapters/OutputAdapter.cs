@@ -33,6 +33,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -42,6 +43,7 @@ using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using InStep.eDNA.EzDNAApiNet;
+using SerializationFormat = GSF.SerializationFormat;
 using Timer = System.Timers.Timer;
 
 namespace eDNAAdapters
@@ -713,25 +715,26 @@ namespace eDNAAdapters
                     {
                         ushort word = (ushort)value;
 
-                        for (ushort i = 0; i < 16; i++)
+                        for (int i = 0; i < 16; i++)
                         {
                             ushort bit = (ushort)BitExtensions.BitVal(i);
                             bool digitalIsSet = (word & bit) > 0;
 
+                            // ReSharper disable once AccessToModifiedClosure
                             result = ExecuteConnectionOperation(() =>
-                                LinkMX.eDnaMxAddRec(m_connection, $"D{point.ID}-{i}", seconds, milliseconds, measurement.StateFlags.MapToStatus(DataType.Digital, digitalIsSet), digitalIsSet ? 1.0D : 0.0D));
+                                LinkMX.eDnaMxAddExtIdRec(m_connection, $"D{point.ID}-{i}", seconds, milliseconds, measurement.StateFlags.MapToStatus(DataType.Digital, digitalIsSet), digitalIsSet ? 1.0D : 0.0D));
 
                             if (result != 0)
-                                OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" bit {i} to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
+                                OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" bit {i} to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": LinkMX.eDnaMxAddExtIdRec Exception: {(LinkMXReturnStatus)result}", result));
                         }
                     }
                     else
                     {
                         result = ExecuteConnectionOperation(() =>
-                            LinkMX.eDnaMxAddRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(), value));
+                            LinkMX.eDnaMxAddExtIdRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(), value));
 
                         if (result != 0)
-                            OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": {(LinkMXReturnStatus)result}", result));
+                            OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": LinkMX.eDnaMxAddExtIdRec Exception: {(LinkMXReturnStatus)result}", result));
                     }
 
                     if ((object)m_lastArchiveTimes != null)
@@ -749,7 +752,7 @@ namespace eDNAAdapters
                     LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_REC));
 
                 if (result != 0)
-                    throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
+                    throw new EzDNAApiNetException($"LinkMX.eDnaMxFlushUniversalRecord Exception: {(LinkMXReturnStatus)result}", result);
             }
         }
 
@@ -825,14 +828,14 @@ namespace eDNAAdapters
             try
             {
                 // Two ways to find points here:
-                //   1. If syncing meta-data for the adapter, look for the signal ID in the extended ID field
-                //   2. If points are manually maintained, look for the point tag (or alternate tag) in the description field
+                //   1. If syncing meta-data for the adapter, look for the signal ID in reference field 10
+                //   2. If points are manually maintained, look for the point tag (or alternate tag) in reference field 01
                 bool foundPoint = false;
 
                 if (RunMetadataSync)
                 {
                     // Attempt lookup by Guid based signal ID
-                    point = QueryPointForSignalID(signalID); // extended ID field search
+                    point = QueryPointForSignalID(signalID); // reference field 10 search
                     foundPoint = (object)point != null;
                 }
 
@@ -851,7 +854,7 @@ namespace eDNAAdapters
                             tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                         // Attempt lookup by tag name
-                        point = QueryPointForTagName(tagName); // description field search
+                        point = QueryPointForTagName(tagName); // reference field 01 search
 
                         if ((object)point == null)
                         {
@@ -933,17 +936,17 @@ namespace eDNAAdapters
                         }
 
                         // Get matching measurement row
-                        DataRow measurementRow = rows[0];
+                        DataRow row = rows[0];
 
                         // Define data type for field
-                        DataType dataType = measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase) ? DataType.Digital : DataType.Analog;
+                        DataType dataType = row["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase) ? DataType.Digital : DataType.Analog;
 
                         // Get point tag-name as defined in meta-data, adjusting as needed per TagNamePrefixRemoveCount
-                        string tagName = GetAdjustedTagName(measurementRow["PointTag"].ToNonNullString().Trim());
+                        string tagName = GetAdjustedTagName(row["PointTag"].ToNonNullString().Trim());
 
                         // Use alternate tag if one is defined - note that digitals are an exception since they typically use this field for special labeling
-                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && dataType != DataType.Digital)
-                            tagName = measurementRow["AlternateTag"].ToString().Trim();
+                        if (!string.IsNullOrWhiteSpace(row["AlternateTag"].ToString()) && dataType != DataType.Digital)
+                            tagName = row["AlternateTag"].ToString().Trim();
 
                         // It's unlikely that no tag name is defined for measurement, but if so move on to the next one
                         if (string.IsNullOrWhiteSpace(tagName))
@@ -961,7 +964,7 @@ namespace eDNAAdapters
                             // See if ActiveMeasurements contains updated on column
                             if (measurements.Columns.Contains("UpdatedOn"))
                             {
-                                updateTime = Convert.ToDateTime(measurementRow["UpdatedOn"]);
+                                updateTime = Convert.ToDateTime(row["UpdatedOn"]);
                             }
                             else
                             {
@@ -1001,13 +1004,13 @@ namespace eDNAAdapters
                                 int result, values = dataType == DataType.Digital ? 16 : 1;
 
                                 if (measurements.Columns.Contains("EngineeringUnits"))
-                                    units = measurementRow["EngineeringUnits"].ToNonNullString();
+                                    units = row["EngineeringUnits"].ToNonNullString();
 
                                 if (dataType == DataType.Digital)
                                 {
                                     if (measurements.Columns.Contains("DigitalSetString"))
                                     {
-                                        string value = measurementRow["DigitalSetString"].ToString();
+                                        string value = row["DigitalSetString"].ToString();
 
                                         if (!string.IsNullOrWhiteSpace(value))
                                             digitalSet = value;
@@ -1015,38 +1018,65 @@ namespace eDNAAdapters
 
                                     if (measurements.Columns.Contains("DigitalClearedString"))
                                     {
-                                        string value = measurementRow["DigitalClearedString"].ToString();
+                                        string value = row["DigitalClearedString"].ToString();
 
                                         if (!string.IsNullOrWhiteSpace(value))
                                             digitalCleared = value;
                                     }
                                 }
 
+                                // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
                                 for (int i = 0; i < values; i++)
                                 {
-                                    string pointID = dataType == DataType.Digital ? $"D{key.ID}-{i}" : key.ID.ToString();
-                                    string description = $"{tagName}{(dataType == DataType.Digital ? $"-{i}" : "")}";
-                                    string extendedDescription = $"{(dataType == DataType.Digital ? $"Bit {i} of " : "")}{measurementRow["Description"]}";
+                                    string pointID = key.ID.ToString();                                 // 8 chars   < truncated point ID
+                                    string longID = key.Source;                                         // 60 chars  < truncated measurement key source
+                                    string description = tagName;                                       // 24 chars  < truncated tag name
+                                    string extendedID = key.ID.ToString();                              // 128 chars < reliable point ID
+                                    string extendedDescription = $"{row["Description"]}";               // 224 chars < truncated description
+                                    string referenceField01 = tagName;                                  // 250 chars < reliable tag name
+                                    string referenceField02 = $"{row["SignalReference"]}";              // 250 chars < reliable signal reference
+                                    string referenceField03 = $"{row["SignalType"]}";                   // 250 chars < reliable signal type acronym
+                                    string referenceField04 = $"{row["Device"]}";                       // 250 chars < reliable device acronym
+                                    string referenceField05 = $"{row["DeviceID"]}";                     // 250 chars < reliable device ID
+                                    string referenceField06 = $"{row["Longitude"]},{row["Latitude"]}";  // 250 chars < reliable long,lat
+                                    string referenceField07 = $"{row["Company"]}";                      // 250 chars < reliable company acronym
+                                    string referenceField08 = $"{row["Protocol"]}";                     // 250 chars < reliable protocol acronym
+                                    string referenceField09 = key.Source;                               // 250 chars < reliable measurement key source
+                                    string referenceField10 = key.SignalID.ToString();                  // 250 chars < reliable signal ID (primary Guid)
 
-                                    // Add new or update meta-data record, time-series library mapping is as follows:
-                                    //        PointID = Measurement.PointID -- Updates are keyed from this value
-                                    //           Desc = Measurement.PointTag (or Measurement.AlternateTag if defined)
-                                    //     ExtendedID = Measurement.SignalID
+                                    if (dataType == DataType.Digital)
+                                    {
+                                        pointID = extendedID = $"D{pointID}-{i}";                   // Format digital point ID as "D<pointID>-<bitN>"
+                                        description = referenceField01 = $"{description}-{i}";      // Suffix digital tag name with "-<bitN>"
+                                        extendedDescription = $"Bit {i} of {extendedDescription}";  // Prefix digital description with bit number info
+                                    }
+
+                                    // Add new or update meta-data record, critical time-series library (TSL) mappings are as follows:
+                                    //     ExtendedID = Measurement.PointID (used as primary eDNA tag identifier)
+                                    //     RefField01 = Measurement.PointTag (or Measurement.AlternateTag if defined)
+                                    //     RefField10 = Measurement.SignalID (used as primary TSL tag identifier)
+                                    //     RefField09:ExtendedID = MeasurementKey (Source:ID)
                                     result = ExecuteConnectionOperation(() =>
-                                        LinkMX.eDnaMxAddConfigRec(m_connection, pointID, key.ToString(), description, units, pointType,
-                                            false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                            false, 0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, key.SignalID.ToString(),
-                                            extendedDescription));
+                                        LinkMX.eDnaMxAddConfigRec(m_connection, pointID, longID, description, units, pointType, false, 0,
+                                            digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
+                                            false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, extendedID, extendedDescription));
 
                                     if (result != 0)
-                                        throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
+                                        throw new EzDNAApiNetException($"LinkMX.eDnaMxAddConfigRec Exception: {(LinkMXReturnStatus)result}", result);
+
+                                    result = LinkMX.eDnaMxAddConfigReferenceFields(m_connection, pointID, longID, extendedID,
+                                        referenceField01, referenceField02, referenceField03, referenceField04, referenceField05,
+                                        referenceField06, referenceField07, referenceField08, referenceField09, referenceField10);
+
+                                    if (result != 0)
+                                        throw new EzDNAApiNetException($"LinkMX.eDnaMxAddConfigReferenceFields Exception: {(LinkMXReturnStatus)result}", result);
                                 }
 
                                 result = ExecuteConnectionOperation(() =>
                                     LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_CONFIGURATION_REC));
 
                                 if (result != 0)
-                                    throw new EzDNAApiNetException($"{(LinkMXReturnStatus)result}", result);
+                                    throw new EzDNAApiNetException($"LinkMX.eDnaMxFlushUniversalRecord Exception: {(LinkMXReturnStatus)result}", result);
                             }
                             catch (Exception ex)
                             {
@@ -1119,8 +1149,7 @@ namespace eDNAAdapters
                     using (FileStream pointMapCache = File.Open(PointMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         // Deserialize last point map for quicker startup
-                        Dictionary<Guid, Point> pointMap = Serialization.Deserialize<Dictionary<Guid, Point>>(pointMapCache, GSF.SerializationFormat.Binary);
-                        Guid[] signalIDs = m_pointMap.Select(kvp => kvp.Key).ToArray();
+                        Dictionary<Guid, Point> pointMap = Serialization.Deserialize<Dictionary<Guid, Point>>(pointMapCache, SerializationFormat.Binary);
 
                         // Copy cached set to active point map
                         foreach (KeyValuePair<Guid, Point> kvp in pointMap)
@@ -1161,7 +1190,7 @@ namespace eDNAAdapters
                 try
                 {
                     using (FileStream pointMapCache = File.Create(PointMapCacheFileName))
-                        Serialization.Serialize(m_pointMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), GSF.SerializationFormat.Binary, pointMapCache);
+                        Serialization.Serialize(m_pointMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), SerializationFormat.Binary, pointMapCache);
 
                     OnStatusMessage(MessageLevel.Info, $"Saved {m_pointMap.Count:N0} mappings to point map cache.");
                 }
@@ -1223,14 +1252,14 @@ namespace eDNAAdapters
             }
         }
 
-        // Lookup eDNA point using point tag name (store in description field)
+        // Lookup eDNA point using point tag name (i.e., reference field 01)
         private Point QueryPointForTagName(string tagName)
         {
-            Metadata record = Metadata.Query(new Metadata() { Description = tagName }).FirstOrDefault();
+            Metadata record = Metadata.Query(new Metadata { ReferenceField01 = tagName }).FirstOrDefault();
 
             if ((object)record != null)
             {
-                Point point = new Point() { ID = record.ShortID, Type = DeriveDataType(record) };
+                Point point = new Point { ID = record.ExtendedID, Type = DeriveDataType(record) };
                 point.ID = DerivePointID(point);
                 return point;
             }
@@ -1238,14 +1267,14 @@ namespace eDNAAdapters
             return null;
         }
 
-        // Lookup eDNA point using signal ID (i.e., extended ID)
+        // Lookup eDNA point using signal ID (i.e., reference field 10)
         private Point QueryPointForSignalID(Guid signalID)
         {
-            Metadata record = Metadata.Query(new Metadata() { ExtendedID = signalID.ToString() }).FirstOrDefault();
+            Metadata record = Metadata.Query(new Metadata { ReferenceField10 = signalID.ToString() }).FirstOrDefault();
 
             if ((object)record != null)
             {
-                Point point = new Point() { ID = record.ShortID, Type = DeriveDataType(record) };
+                Point point = new Point { ID = record.ExtendedID, Type = DeriveDataType(record) };
                 point.ID = DerivePointID(point);
                 return point;
             }
@@ -1259,7 +1288,7 @@ namespace eDNAAdapters
             return record.PointType == "AI" || !ExpandDigitalWordBits ? DataType.Analog : DataType.Digital;
         }
 
-        // Get point ID number, digitals are formatted as "D<pointID>-<bitNo>"
+        // Get point ID number, digitals are formatted as "D<pointID>-<bitN>"
         private string DerivePointID(Point point)
         {
             string pointID = point.ID;
@@ -1274,7 +1303,7 @@ namespace eDNAAdapters
         // Lookup tag name (stored in description field) in eDNA meta-data using signal ID (i.e., extended ID)
         private string QueryTagNameForSignalID(Guid signalID)
         {
-            Metadata record = Metadata.Query(new Metadata() { ExtendedID = signalID.ToString() }).FirstOrDefault();
+            Metadata record = Metadata.Query(new Metadata { ExtendedID = signalID.ToString() }).FirstOrDefault();
 
             if ((object)record != null)
             {
@@ -1310,7 +1339,7 @@ namespace eDNAAdapters
             return tagName;
         }
 
-        private void m_connectionMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_connectionMonitor_Elapsed(object sender, ElapsedEventArgs e)
         {
             bool reconnect = true;
 
@@ -1324,7 +1353,7 @@ namespace eDNAAdapters
 
                 Func<TcpConnectionInformation, IPAddress, int, bool> isEstablished = (connection, address, port) =>
                     connection.RemoteEndPoint.Address.Equals(address) &&
-                    connection.RemoteEndPoint.Port == (int)port &&
+                    connection.RemoteEndPoint.Port == port &&
                     connection.State == TcpState.Established;
 
                 reconnect = !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(connection =>

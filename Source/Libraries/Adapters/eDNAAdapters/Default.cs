@@ -34,7 +34,7 @@ namespace eDNAAdapters
         public const string SecondaryServer = "";
         public const ushort SecondaryPort = 0;
         public const string LocalCacheFileName = "";
-        public const bool ClearCacheOnStartup = false;
+        public const bool ClearCacheOnStartup = true;
         public const bool AcknowledgeDataPackets = true;
         public const bool EnableQueuing = true;
         public const bool EnableCaching = true;
