@@ -1151,9 +1151,9 @@ namespace eDNAAdapters
             if (spanSinceLastFlush < 0)
                 spanSinceLastFlush = 0;
 
-            // Don't flush file more than once per second
-            if (spanSinceLastFlush < 1000)
-                Thread.Sleep(1000 - spanSinceLastFlush);
+            // Don't flush file more than once per 5 seconds
+            if (spanSinceLastFlush < 5000)
+                Thread.Sleep(5000 - spanSinceLastFlush);
 
             // Cache point map for faster future eDNA adapter startup
             lock (m_savePointMapCache)
