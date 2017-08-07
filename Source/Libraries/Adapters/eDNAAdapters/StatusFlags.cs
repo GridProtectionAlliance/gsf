@@ -247,11 +247,11 @@ namespace eDNAAdapters
         /// </summary>
         /// <param name="stateFlags">Flags to map.</param>
         /// <param name="type">Data type of measurement.</param>
-        /// <param name="value">Data value, determines if digital value is set.</param>
+        /// <param name="digitalSet">Flag that determines if digital value is set.</param>
         /// <returns>eDNA status mapped from <see cref="MeasurementStateFlags"/>.</returns>
-        public static short MapToStatus(this MeasurementStateFlags stateFlags, DataType type = DataType.Analog, double value = 0.0D)
+        public static short MapToStatus(this MeasurementStateFlags stateFlags, DataType type = DataType.Analog, bool digitalSet = false)
         {
-            return (short)stateFlags.MapToStatusFlags(type, value);
+            return (short)stateFlags.MapToStatusFlags(type, digitalSet);
         }
 
         /// <summary>
@@ -259,9 +259,9 @@ namespace eDNAAdapters
         /// </summary>
         /// <param name="stateFlags">Flags to map.</param>
         /// <param name="type">Data type of measurement.</param>
-        /// <param name="value">Data value, determines if digital value is set.</param>
+        /// <param name="digitalSet">Flag that determines if digital value is set.</param>
         /// <returns><see cref="StatusFlags"/> mapped from <see cref="MeasurementStateFlags"/>.</returns>
-        public static StatusFlags MapToStatusFlags(this MeasurementStateFlags stateFlags, DataType type = DataType.Analog, double value = 0.0D)
+        public static StatusFlags MapToStatusFlags(this MeasurementStateFlags stateFlags, DataType type = DataType.Analog, bool digitalSet = false)
         {
             StatusFlags status = StatusFlags.RTSTAT_UNUSED;
 
@@ -317,7 +317,7 @@ namespace eDNAAdapters
             else if (type == DataType.Digital)
             {
                 // Point is digital
-                if (value != 0.0D)
+                if (digitalSet)
                 {
                     if (stateFlags == MeasurementStateFlags.Normal)
                     {
