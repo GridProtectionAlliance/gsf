@@ -60,6 +60,7 @@
       <DocumentationSource sourceFile="..\..\Libraries\Adapters\PIAdapters\PIAdapters.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\Adapters\GrafanaAdapters\GrafanaAdapters.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\Adapters\Kafka\KafkaAdapters.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\Adapters\eDNAAdapters\eDNAAdapters.csproj" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
     <HelpFileFormat>Website</HelpFileFormat>
@@ -89,10 +90,42 @@
         <component id="API Token Resolution">{@TokenFiles}
 <replace elements="/*//token" item="string(.)" /></component>
       </ComponentConfig>
-<ComponentConfig id="Syntax Component" enabled="True"><component id="Syntax Component"><syntax input="/document/reference" output="/document/syntax" renderReferenceLinks="true" /><generators>
+      <ComponentConfig id="Syntax Component" enabled="True">
+        <component id="Syntax Component">
+          <syntax input="/document/reference" output="/document/syntax" renderReferenceLinks="true" />
+          <generators>
     {@SyntaxFilters}
-</generators><containerElement name="codeSnippetGroup" addNoExampleTabs="true" includeOnSingleSnippets="false" groupingEnabled="{@CodeSnippetGrouping}" /><configurations><generator id="C#" /><generator id="Visual Basic"><includeLineContinuation value="false" /></generator><generator id="Visual Basic Usage"><includeLineContinuation value="false" /></generator><generator id="Managed C++" /><generator id="F#" /><generator id="J#" /><generator id="JScript" /><generator id="JavaScript" /><generator id="XAML Usage" /><generator id="ASP.NET" /><generator id="X#" /></configurations></component></ComponentConfig>
-<ComponentConfig id="Code Block Component" enabled="True"><component id="Code Block Component"><basePath value="{@HtmlEncProjectFolder}" /><outputPaths>{@HelpFormatOutputPaths}</outputPaths><allowMissingSource value="false" /><removeRegionMarkers value="false" /><colorizer syntaxFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xml" styleFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xsl" stylesheet="{@SHFBFolder}PresentationStyles\Colorizer\highlight.css" scriptFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.js" disabled="{@DisableCodeBlockComponent}" language="cs" tabSize="0" numberLines="false" outlining="false" keepSeeTags="false" defaultTitle="true" /></component></ComponentConfig></ComponentConfigurations>
+</generators>
+          <containerElement name="codeSnippetGroup" addNoExampleTabs="true" includeOnSingleSnippets="false" groupingEnabled="{@CodeSnippetGrouping}" />
+          <configurations>
+            <generator id="C#" />
+            <generator id="Visual Basic">
+              <includeLineContinuation value="false" />
+            </generator>
+            <generator id="Visual Basic Usage">
+              <includeLineContinuation value="false" />
+            </generator>
+            <generator id="Managed C++" />
+            <generator id="F#" />
+            <generator id="J#" />
+            <generator id="JScript" />
+            <generator id="JavaScript" />
+            <generator id="XAML Usage" />
+            <generator id="ASP.NET" />
+            <generator id="X#" />
+          </configurations>
+        </component>
+      </ComponentConfig>
+      <ComponentConfig id="Code Block Component" enabled="True">
+        <component id="Code Block Component">
+          <basePath value="{@HtmlEncProjectFolder}" />
+          <outputPaths>{@HelpFormatOutputPaths}</outputPaths>
+          <allowMissingSource value="false" />
+          <removeRegionMarkers value="false" />
+          <colorizer syntaxFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xml" styleFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.xsl" stylesheet="{@SHFBFolder}PresentationStyles\Colorizer\highlight.css" scriptFile="{@SHFBFolder}PresentationStyles\Colorizer\highlight.js" disabled="{@DisableCodeBlockComponent}" language="cs" tabSize="0" numberLines="false" outlining="false" keepSeeTags="false" defaultTitle="true" />
+        </component>
+      </ComponentConfig>
+    </ComponentConfigurations>
     <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
     <HelpFileVersion>2.0.0.0</HelpFileVersion>
     <RootNamespaceTitle>TSL Adapter Namespaces</RootNamespaceTitle>
