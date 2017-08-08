@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using InStep.eDNA.EzDNAApiNet;
 
@@ -139,61 +140,99 @@ namespace eDNAAdapters
 
         #region [ Static ]
 
+        // Static Fields
+        private static object s_configOperationLock = new object();
+
         // Static Methods
 
         /// <summary>
         /// Queries eDNA meta-data for values defined in <paramref name="search"/> values.
         /// </summary>
         /// <param name="search"><see cref="Metadata"/> values to search.</param>
+        /// <param name="match">Optional predicate delegate that defines the valid conditions of the elements being searched.</param>
         /// <returns>Values that match search criteria.</returns>
-        public static IEnumerable<Metadata> Query(Metadata search)
+        /// <remarks>
+        /// Searches on reference fields require use of <paramref name="match"/> predicate function since the eDNA
+        /// function to search meta-data, i.e., Configuration.EzSimpleFindPoints, ignores reference field values.
+        /// </remarks>
+        public static IEnumerable<Metadata> Query(Metadata search, Func<Metadata, bool> match = null)
         {
-            // Execute search
-            int key, result = Configuration.EzSimpleFindPoints(search.Site, search.Service, search.ShortID, search.LongID,
-                search.ExtendedID, search.Description, search.ExtendedDescription, search.PointType, search.Units,
-                search.ReferenceField01, search.ReferenceField02, search.ReferenceField03, search.ReferenceField04,
-                search.ReferenceField05, search.ReferenceField06, search.ReferenceField07, search.ReferenceField08,
-                search.ReferenceField09, search.ReferenceField10, search.ChannelNumber, out key);
+            string error;
+            int key, result;
 
-            if (result != 0)
+            lock (s_configOperationLock)
             {
-                string error;
-                Configuration.EzSimpleFindPointsGetLastError(out error);
-                throw new EzDNAApiNetException($"Failed to execute eDNA meta-data query: {error}", result);
+                // Execute search - search on reference fields will return all records :(
+                result = Configuration.EzSimpleFindPoints(search.Site, search.Service, search.ShortID, search.LongID,
+                    search.ExtendedID, search.Description, search.ExtendedDescription, search.PointType, search.Units,
+                    search.ReferenceField01, search.ReferenceField02, search.ReferenceField03, search.ReferenceField04,
+                    search.ReferenceField05, search.ReferenceField06, search.ReferenceField07, search.ReferenceField08,
+                    search.ReferenceField09, search.ReferenceField10, search.ChannelNumber, out key);
+
+                if (result != 0)
+                {
+                    Configuration.EzSimpleFindPointsGetLastError(out error);
+                    throw new EzDNAApiNetException($"Failed to execute eDNA meta-data query: {error}", result);
+                }
             }
 
             try
             {
+                int count;
+
                 // Get search result count
-                int count = Configuration.EzSimpleFindPointsSize(key);
+                lock (s_configOperationLock)
+                    count = Configuration.EzSimpleFindPointsSize(key);
 
                 for (int i = 0; i < count; i++)
                 {
                     // Create new meta-data record to hold result
                     Metadata record = new Metadata();
 
-                    // Query meta-data record values
-                    result = Configuration.EzSimpleFindPointsRec(key, i, out record.Site, out record.Service, out record.ShortID,
-                        out record.LongID, out record.ExtendedID, out record.Description, out record.ExtendedDescription,
-                        out record.PointType, out record.Units, out record.ReferenceField01, out record.ReferenceField02,
-                        out record.ReferenceField03, out record.ReferenceField04, out record.ReferenceField05,
-                        out record.ReferenceField06, out record.ReferenceField07, out record.ReferenceField08,
-                        out record.ReferenceField09, out record.ReferenceField10, out record.ChannelNumber);
-
-                    if (result != 0)
+                    lock (s_configOperationLock)
                     {
-                        string error;
-                        Configuration.EzSimpleFindPointsGetLastError(out error);
-                        throw new EzDNAApiNetException($"Failed to read eDNA meta-data record {i} for key {key}: {error}", result);
+                        // Query meta-data record values - reference fields are not returned :(
+                        result = Configuration.EzSimpleFindPointsRec(key, i, out record.Site, out record.Service, out record.ShortID,
+                            out record.LongID, out record.ExtendedID, out record.Description, out record.ExtendedDescription,
+                            out record.PointType, out record.Units, out record.ReferenceField01, out record.ReferenceField02,
+                            out record.ReferenceField03, out record.ReferenceField04, out record.ReferenceField05,
+                            out record.ReferenceField06, out record.ReferenceField07, out record.ReferenceField08,
+                            out record.ReferenceField09, out record.ReferenceField10, out record.ChannelNumber);
+
+                        if (result != 0)
+                        {
+                            Configuration.EzSimpleFindPointsGetLastError(out error);
+                            throw new EzDNAApiNetException($"Failed to read eDNA meta-data record {i} for key {key}: {error}", result);
+                        }
                     }
 
-                    yield return record;
+                    string pointID = string.Format(Default.PointIDFormat, record.Site, record.Service, record.ExtendedID);
+
+                    lock (s_configOperationLock)
+                    {
+                        // OK, now really read reference fields :p
+                        result = Configuration.ReadCMRecordsRefFields(pointID, out record.ReferenceField01, out record.ReferenceField02,
+                            out record.ReferenceField03, out record.ReferenceField04, out record.ReferenceField05,
+                            out record.ReferenceField06, out record.ReferenceField07, out record.ReferenceField08,
+                            out record.ReferenceField09, out record.ReferenceField10, 0);
+
+                        if (result != 0)
+                        {
+                            Configuration.EzSimpleFindPointsGetLastError(out error);
+                            throw new EzDNAApiNetException($"Failed to read reference field based meta-data for \"{pointID}\" for key {key}: {error}", result);
+                        }
+                    }
+
+                    // If specified, only return for matched evaluation - all matching records returned if delegate is undefined
+                    if (match?.Invoke(record) ?? true)
+                        yield return record;
                 }
             }
             finally
             {
                 // Close search handle
-                Configuration.EzFindPointsRemoveKey(key);
+                lock (s_configOperationLock)
+                    Configuration.EzFindPointsRemoveKey(key);
             }
         }
 
