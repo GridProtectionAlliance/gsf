@@ -575,12 +575,10 @@ namespace eDNAAdapters
             m_mapRequestQueue.Clear();
             m_mapRequestQueue.Start();
 
-            string connectionInfo = $"{PrimaryServer}:{PrimaryPort}{(string.IsNullOrWhiteSpace(SecondaryServer) ? "" : $" / {SecondaryServer}:{SecondaryPort}")}";
-
             // Initialize connection eDNA client API
-            string cacheFileName = FilePath.GetFileName(LocalCacheFileName);
-            string cachePath = FilePath.GetDirectoryName(LocalCacheFileName);
             int result = ConnectToDNAService(out m_connection, EnableCaching);
+
+            string connectionInfo = $"{PrimaryServer}:{PrimaryPort}{(string.IsNullOrWhiteSpace(SecondaryServer) ? "" : $" / {SecondaryServer}:{SecondaryPort}")}";
 
             switch (result)
             {
@@ -1154,7 +1152,7 @@ namespace eDNAAdapters
             }
             finally
             {
-                if (m_connection < uint.MaxValue)
+                if (connection < uint.MaxValue)
                     LinkMX.eDnaMxUniversalCloseSocketSoft(m_connection);
             }
         }

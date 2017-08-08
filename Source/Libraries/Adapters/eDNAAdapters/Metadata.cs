@@ -141,7 +141,7 @@ namespace eDNAAdapters
         #region [ Static ]
 
         // Static Fields
-        private static object s_configOperationLock = new object();
+        private static readonly object s_configOperationLock = new object();
 
         // Static Methods
 
