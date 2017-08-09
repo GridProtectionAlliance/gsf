@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using InStep.eDNA.EzDNAApiNet;
 
 namespace eDNAAdapters
@@ -150,12 +151,14 @@ namespace eDNAAdapters
         /// </summary>
         /// <param name="search"><see cref="Metadata"/> values to search.</param>
         /// <param name="match">Optional predicate delegate that defines the valid conditions of the elements being searched.</param>
+        /// <param name="cacheKey">Delegate that acquires the key for the <paramref name="cache"/>, if used.</param>
+        /// <param name="cache">Cache of encountered elements keyed with <paramref name="cacheKey"/>.</param>
         /// <returns>Values that match search criteria.</returns>
         /// <remarks>
         /// Searches on reference fields require use of <paramref name="match"/> predicate function since the eDNA
         /// function to search meta-data, i.e., Configuration.EzSimpleFindPoints, ignores reference field values.
         /// </remarks>
-        public static IEnumerable<Metadata> Query(Metadata search, Func<Metadata, bool> match = null)
+        public static IEnumerable<Metadata> Query(Metadata search, Func<Metadata, bool> match = null, Func<Metadata, string> cacheKey = null, ConcurrentDictionary<string, Metadata> cache = null)
         {
             string error;
             int key, result;
@@ -221,6 +224,15 @@ namespace eDNAAdapters
                             Configuration.EzSimpleFindPointsGetLastError(out error);
                             throw new EzDNAApiNetException($"Failed to read reference field based meta-data for \"{pointID}\" for key {key}: {error}", result);
                         }
+                    }
+
+                    // If cache is defined, save record if newly encountered
+                    if ((object)cacheKey != null && (object)cache != null)
+                    {
+                        string keyVal = cacheKey(record);
+
+                        if (!cache.ContainsKey(keyVal))
+                            cache[cacheKey(record)] = record;
                     }
 
                     // If specified, only return for matched evaluation - all matching records returned if delegate is undefined

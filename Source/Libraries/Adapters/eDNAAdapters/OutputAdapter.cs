@@ -64,20 +64,21 @@ namespace eDNAAdapters
         }
 
         // Fields        
-        private uint m_connection;                                          // eDNA server connection handle
-        private readonly Timer m_connectionMonitor;                         // eDNA server connection monitor
-        private readonly ConcurrentDictionary<Guid, Point> m_pointMap;      // Measurement signal ID to point cache map
-        private readonly ProcessQueue<Guid> m_mapRequestQueue;              // Requested measurement to eDNA point mapping queue
-        private readonly LongSynchronizedOperation m_savePointMapCache;     // Save point map cache operation
-        private readonly HashSet<Guid> m_pendingMappings;                   // List of pending measurement mappings
-        private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
-        private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
-        private long m_processedMappings;                                   // Total number of mappings processed so far
-        private long m_processedMeasurements;                               // Total number of measurements processed so far
-        private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
-        private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
-        private Ticks m_lastPointMapFlushTime;                              // Last time of point map file flush
-        private bool m_disposed;                                            // Flag that determines if class is disposed
+        private uint m_connection;                                                  // eDNA server connection handle
+        private readonly Timer m_connectionMonitor;                                 // eDNA server connection monitor
+        private readonly ConcurrentDictionary<Guid, Point> m_pointMap;              // Measurement signal ID to point cache map
+        private readonly ConcurrentDictionary<string, Metadata> m_metadataCache;    // Meta-data lookup cache
+        private readonly ProcessQueue<Guid> m_mapRequestQueue;                      // Requested measurement to eDNA point mapping queue
+        private readonly LongSynchronizedOperation m_savePointMapCache;             // Save point map cache operation
+        private readonly HashSet<Guid> m_pendingMappings;                           // List of pending measurement mappings
+        private Dictionary<Guid, Ticks> m_lastArchiveTimes;                         // Cache of last point archive times
+        private DateTime m_lastMetadataRefresh;                                     // Tracks time of last meta-data refresh
+        private long m_processedMappings;                                           // Total number of mappings processed so far
+        private long m_processedMeasurements;                                       // Total number of measurements processed so far
+        private volatile bool m_refreshingMetadata;                                 // Flag that determines if meta-data is currently refreshing
+        private double m_metadataRefreshProgress;                                   // Current meta-data refresh progress
+        private Ticks m_lastPointMapFlushTime;                                      // Last time of point map file flush
+        private bool m_disposed;                                                    // Flag that determines if class is disposed
 
         #endregion
 
@@ -94,6 +95,7 @@ namespace eDNAAdapters
             m_connectionMonitor.AutoReset = true;
             m_connectionMonitor.Elapsed += m_connectionMonitor_Elapsed;
             m_pointMap = new ConcurrentDictionary<Guid, Point>();
+            m_metadataCache = new ConcurrentDictionary<string, Metadata>(StringComparer.OrdinalIgnoreCase);
             m_mapRequestQueue = ProcessQueue<Guid>.CreateRealTimeQueue(EstablishPointMappings);
             m_mapRequestQueue.ProcessException += m_mapRequestQueue_ProcessException;
             m_savePointMapCache = new LongSynchronizedOperation(SavePointMapCache, ex => OnProcessException(MessageLevel.Warning, ex));
@@ -897,6 +899,9 @@ namespace eDNAAdapters
                 // For first runs, don't report archived points until eDNA meta-data has been established
                 MeasurementReportingInterval = 0;
 
+                // Clear existing metadata cache
+                m_metadataCache.Clear();
+
                 // Attempt to load point map from existing cache, if any
                 LoadPointMapCache();
 
@@ -1284,10 +1289,13 @@ namespace eDNAAdapters
         // Lookup eDNA point using point tag name (i.e., reference field 01)
         private Point QueryPointForTagName(string tagName)
         {
-            Metadata record = Metadata.Query(
-                new Metadata { Site = Site, Service = Service, ReferenceField01 = tagName },
-                match => match.ReferenceField01.Equals(tagName, StringComparison.OrdinalIgnoreCase)
-            ).FirstOrDefault();
+            Func<Metadata, bool> predicate = metadata => metadata.ReferenceField01.Equals(tagName, StringComparison.OrdinalIgnoreCase);
+
+            // Check in-memory cache first
+            Metadata record = m_metadataCache.Values.FirstOrDefault(predicate);
+
+            if ((object)record == null)
+                record = Metadata.Query(new Metadata { Site = Site, Service = Service, ReferenceField01 = tagName }, predicate).FirstOrDefault();
 
             if ((object)record != null)
             {
@@ -1302,10 +1310,16 @@ namespace eDNAAdapters
         // Lookup eDNA point using signal ID (i.e., reference field 10)
         private Point QueryPointForSignalID(Guid signalID)
         {
-            Metadata record = Metadata.Query(
-                new Metadata { Site = Site, Service = Service, ReferenceField10 = signalID.ToString() },
-                match => match.ReferenceField10.Equals(signalID.ToString(), StringComparison.OrdinalIgnoreCase)
-            ).FirstOrDefault();
+            Metadata record;
+            string id = signalID.ToString();
+
+            // Check in-memory cache first
+            if (!m_metadataCache.TryGetValue(id, out record))
+                record = Metadata.Query(
+                    new Metadata { Site = Site, Service = Service, ReferenceField10 = id },
+                    metadata => metadata.ReferenceField10.Equals(id, StringComparison.OrdinalIgnoreCase),
+                    metadata => metadata.ReferenceField10, m_metadataCache
+                ).FirstOrDefault();
 
             if ((object)record != null)
             {
@@ -1338,10 +1352,16 @@ namespace eDNAAdapters
         // Lookup tag name (stored in description field) in eDNA meta-data using signal ID (i.e., reference field 10)
         private string QueryTagNameForSignalID(Guid signalID)
         {
-            Metadata record = Metadata.Query(
-                new Metadata { Site = Site, Service = Service, ReferenceField10 = signalID.ToString() },
-                match => match.ReferenceField10.Equals(signalID.ToString(), StringComparison.OrdinalIgnoreCase)
-            ).FirstOrDefault();
+            Metadata record;
+            string id = signalID.ToString();
+
+            // Check in-memory cache first
+            if (!m_metadataCache.TryGetValue(id, out record))
+                record = Metadata.Query(
+                    new Metadata { Site = Site, Service = Service, ReferenceField10 = id },
+                    metadata => metadata.ReferenceField10.Equals(id, StringComparison.OrdinalIgnoreCase),
+                    metadata => metadata.ReferenceField10, m_metadataCache
+                ).FirstOrDefault();
 
             if ((object)record != null)
             {
