@@ -217,7 +217,7 @@ namespace eDNAAdapters
                         }
                     }
 
-                    string pointID = string.Format(Default.PointIDFormat, record.Site, record.Service, record.ExtendedID);
+                    string pointID = string.Format(Default.PointIDFormat, record.Site, record.Service, record.ShortID);
 
                     lock (s_configOperationLock)
                     {

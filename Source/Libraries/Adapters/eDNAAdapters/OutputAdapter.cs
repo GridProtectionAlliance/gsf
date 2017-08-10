@@ -724,6 +724,10 @@ namespace eDNAAdapters
                     return;
                 }
 
+                // This meta-data "load" is performed out-of-band with the meta-data "save" operation that
+                // follows to reduce read-write contention with the eDNA database service
+                Dictionary<Guid, Metadata> metadataCache = QueryMetaDataForInputs(inputMeasurements, measurements);
+
                 // Connect to eDNA separately for meta-data refresh, this way meta-data refresh does not contend with time-series data updates
                 int result = ConnectToDNAService(out connection);
 
@@ -746,10 +750,6 @@ namespace eDNAAdapters
 
                 if (m_pointMap.Count > 0)
                     MeasurementReportingInterval = previousMeasurementReportingInterval;
-
-                // This meta-data "load" is performed out-of-band with the meta-data "save" operation that
-                // follows to reduce read-write contention with the eDNA database service
-                Dictionary<Guid, Metadata> metadataCache = QueryMetaDataForInputs(inputMeasurements, measurements);
 
                 // Refresh initial point mappings (much of the meta-data may already exist)
                 RefreshPointMap(metadataCache, inputMeasurements);
@@ -979,6 +979,10 @@ namespace eDNAAdapters
                 // Restore original measurement reporting interval
                 MeasurementReportingInterval = previousMeasurementReportingInterval;
             }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed during meta-data refresh: {ex.Message}"));
+            }
             finally
             {
                 if (connection < uint.MaxValue)
@@ -1129,7 +1133,7 @@ namespace eDNAAdapters
                     }
                 }
 
-                if (count++ % 100 == 0)
+                if (count++ % 500 == 0)
                     OnStatusMessage(MessageLevel.Info, $"Queried {count:N0} eDNA \"{Site}.{Service}\" meta-data records, {metadataCache.Count:N0} matches, {count / (double)total:0.00%} complete...");
             }
 
@@ -1185,60 +1189,6 @@ namespace eDNAAdapters
                 else
                     OnStatusMessage(MessageLevel.Warning, "No eDNA tags were mapped to measurements - no point map exists so no points will be archived.");
             }
-        }
-
-        // Get point ID number, digitals are formatted as "D<pointID>-<bitN>"
-        private string DerivePointID(string pointID, DataType type)
-        {
-            if (type == DataType.Analog)
-                return pointID;
-
-            int index = pointID.LastIndexOf('-');
-            return pointID.Substring(1, index - 1);
-        }
-
-        private Point DerivePointFromMetadata(Metadata record)
-        {
-            if ((object)record != null)
-            {
-                DataType type = record.DataType;
-                string extendedID  = DerivePointID(record.ExtendedID, type);
-                uint id;
-
-                if (uint.TryParse(extendedID, out id))
-                    return new Point(id, type);
-            }
-
-            return null;
-        }
-
-        // Lookup eDNA point using point tag name (i.e., reference field 01)
-        private Point QueryPointForTagName(Dictionary<Guid, Metadata> metadataCache, string tagName, bool requeryForCacheMiss = false)
-        {
-            Func<Metadata, bool> predicate = metadata => metadata.ReferenceField01.Equals(tagName, StringComparison.OrdinalIgnoreCase);
-
-            // Check in-memory cache first
-            Metadata record = metadataCache.Values.FirstOrDefault(predicate);
-
-            if ((object)record == null && requeryForCacheMiss)
-                record = Metadata.Query(new Metadata { Site = Site, Service = Service, ReferenceField01 = tagName }, predicate).FirstOrDefault();
-
-            return DerivePointFromMetadata(record);
-        }
-
-        // Lookup eDNA point using signal ID (i.e., reference field 10)
-        private Point QueryPointForSignalID(Dictionary<Guid, Metadata> metadataCache, Guid signalID, bool requeryForCacheMiss = false)
-        {
-            Metadata record;
-
-            // Check in-memory cache first
-            if (!metadataCache.TryGetValue(signalID, out record) && requeryForCacheMiss)
-                record = Metadata.Query(
-                    new Metadata { Site = Site, Service = Service, ReferenceField10 = signalID.ToString() },
-                    metadata => metadata.ReferenceField10.Equals(signalID.ToString(), StringComparison.OrdinalIgnoreCase)
-                ).FirstOrDefault();
-
-            return DerivePointFromMetadata(record);
         }
 
         private string GetAdjustedTagName(string tagName)
