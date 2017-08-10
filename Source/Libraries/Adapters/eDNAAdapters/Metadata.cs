@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using InStep.eDNA.EzDNAApiNet;
 
 namespace eDNAAdapters
@@ -137,6 +136,11 @@ namespace eDNAAdapters
         /// </summary>
         public string ReferenceField10 = "*";
 
+        /// <summary>
+        /// Gets derived data type based on <see cref="PointType"/>.
+        /// </summary>
+        public DataType DataType => PointType == "DI" ? DataType.Digital : DataType.Analog;
+
         #endregion
 
         #region [ Static ]
@@ -151,21 +155,25 @@ namespace eDNAAdapters
         /// </summary>
         /// <param name="search"><see cref="Metadata"/> values to search.</param>
         /// <param name="match">Optional predicate delegate that defines the valid conditions of the elements being searched.</param>
-        /// <param name="cacheKey">Delegate that acquires the key for the <paramref name="cache"/>, if used.</param>
-        /// <param name="cache">Cache of encountered elements keyed with <paramref name="cacheKey"/>.</param>
         /// <returns>Values that match search criteria.</returns>
         /// <remarks>
+        /// <para>
         /// Searches on reference fields require use of <paramref name="match"/> predicate function since the eDNA
         /// function to search meta-data, i.e., Configuration.EzSimpleFindPoints, ignores reference field values.
+        /// </para>
+        /// <para>
+        /// Since meta-data lookups on non-key fields are a linear O(n) operation, consider a strategy that will scan
+        /// and cache the full meta-data when use case demands multiple search operations or complete meta-data set.
+        /// </para>
         /// </remarks>
-        public static IEnumerable<Metadata> Query(Metadata search, Func<Metadata, bool> match = null, Func<Metadata, string> cacheKey = null, ConcurrentDictionary<string, Metadata> cache = null)
+        public static IEnumerable<Metadata> Query(Metadata search, Func<Metadata, bool> match = null)
         {
             string error;
             int key, result;
 
             lock (s_configOperationLock)
             {
-                // Execute search - search on reference fields will return all records :(
+                // Execute search - reference field value search is ignored and will return all records :(
                 result = Configuration.EzSimpleFindPoints(search.Site, search.Service, search.ShortID, search.LongID,
                     search.ExtendedID, search.Description, search.ExtendedDescription, search.PointType, search.Units,
                     search.ReferenceField01, search.ReferenceField02, search.ReferenceField03, search.ReferenceField04,
@@ -226,15 +234,6 @@ namespace eDNAAdapters
                         }
                     }
 
-                    // If cache is defined, save record if newly encountered
-                    if ((object)cacheKey != null && (object)cache != null)
-                    {
-                        string keyVal = cacheKey(record);
-
-                        if (!cache.ContainsKey(keyVal))
-                            cache[cacheKey(record)] = record;
-                    }
-
                     // If specified, only return for matched evaluation - all matching records returned if delegate is undefined
                     if (match?.Invoke(record) ?? true)
                         yield return record;
@@ -246,6 +245,23 @@ namespace eDNAAdapters
                 lock (s_configOperationLock)
                     Configuration.EzFindPointsRemoveKey(key);
             }
+        }
+
+        /// <summary>
+        /// Gets total meta-data records.
+        /// </summary>
+        /// <param name="site">Site.</param>
+        /// <param name="service">Service.</param>
+        /// <returns>Total meta-data records.</returns>
+        public static int Count(string site, string service)
+        {
+            string serviceType;
+            int result, count, maxCount;
+
+            lock (s_configOperationLock)
+                result = Configuration.GetCMRecCnts($"{site}.{service}", out serviceType, out count, out maxCount);
+
+            return result == 0 ? count : 0;
         }
 
         #endregion
