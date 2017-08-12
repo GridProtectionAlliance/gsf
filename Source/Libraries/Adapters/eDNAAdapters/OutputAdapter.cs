@@ -204,7 +204,7 @@ namespace eDNAAdapters
         /// Gets or sets the filename to be used for point map cache.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the path and filename to be used for the eDNA client API cache. Leave blank for cache name to target host working directory and be same as adapter name with a \"_eDNA.cache\" extension.")]
+        [Description("Defines the path and filename to be used for the eDNA client API cache. Leave blank for cache name to target host working directory and be same as adapter name extension.")]
         [DefaultValue(Default.LocalCacheFileName)]
         public string LocalCacheFileName { get; set; } = Default.LocalCacheFileName;
 
@@ -479,7 +479,7 @@ namespace eDNAAdapters
                 EnableCaching = setting.ParseBoolean();
 
             if (!settings.TryGetValue(nameof(LocalCacheFileName), out setting) || string.IsNullOrWhiteSpace(setting))
-                setting = $"{Name}_eDNA.cache";
+                setting = Name;
 
             LocalCacheFileName = FilePath.GetAbsolutePath(setting);
 
@@ -538,17 +538,18 @@ namespace eDNAAdapters
                 ExpandDigitalWordBits = setting.ParseBoolean();
         }
 
-        private int ConnectToDNAService(out uint connection, bool enableCache = false)
+        private int ConnectToDNAService(out uint connection, string cacheSuffix)
         {
-            string cacheFileName = FilePath.GetFileName(LocalCacheFileName);
-            string cachePath = FilePath.GetDirectoryName(LocalCacheFileName);
+            string fileName = $"{LocalCacheFileName}{cacheSuffix}";
+            string cacheFileName = FilePath.GetFileName(fileName);
+            string cachePath = FilePath.GetDirectoryName(fileName);
 
-            int result = LinkMX.eDnaMxUniversalInitialize(out connection, AcknowledgeDataPackets, EnableQueuing, enableCache, int.MaxValue, cacheFileName, cachePath);
+            int result = LinkMX.eDnaMxUniversalInitialize(out connection, AcknowledgeDataPackets, EnableQueuing, EnableCaching, int.MaxValue, cacheFileName, cachePath);
 
             if (result != 0)
                 throw new EzDNAApiNetException($"Failed to initialize connection to eDNA Universal Service: {(LinkMXReturnStatus)result}", result);
 
-            if (enableCache && ClearCacheOnStartup)
+            if (EnableCaching && ClearCacheOnStartup)
             {
                 result = LinkMX.eDnaMxDeleteCacheFiles(connection);
 
@@ -567,7 +568,7 @@ namespace eDNAAdapters
             m_processedMeasurements = 0;
 
             // Initialize connection eDNA client API
-            int result = ConnectToDNAService(out m_connection, EnableCaching);
+            int result = ConnectToDNAService(out m_connection, "_eDNAData.cache");
 
             string connectionInfo = $"{PrimaryServer}:{PrimaryPort}{(string.IsNullOrWhiteSpace(SecondaryServer) ? "" : $" / {SecondaryServer}:{SecondaryPort}")}";
 
@@ -731,7 +732,7 @@ namespace eDNAAdapters
                 Dictionary<Guid, Metadata> metadataCache = QueryMetaDataForInputs(inputMeasurements, measurements);
 
                 // Connect to eDNA separately for meta-data refresh, this way meta-data refresh does not contend with time-series data updates
-                int result = ConnectToDNAService(out connection);
+                int result = ConnectToDNAService(out connection, "_eDNAMeta.cache");
 
                 if (result < 0 || result > 2)
                 {
