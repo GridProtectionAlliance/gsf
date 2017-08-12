@@ -59,8 +59,10 @@ namespace eDNAAdapters
         [Serializable]
         private class Point
         {
+            private static RadixCodec Base36 = RadixCodec.Radix36;
+
             /// <summary>
-            /// Base-64 encoded string of point ID value.
+            /// Base-36 encoded string of point ID value.
             /// </summary>
             public readonly string ID;
 
@@ -71,15 +73,15 @@ namespace eDNAAdapters
 
             public Point(uint id, DataType type)
             {
-                // Encode ID value to base-64 string removing fixed "==" padding characters
-                ID = Convert.ToBase64String(BitConverter.GetBytes(id)).Substring(0, 6);
+                // Encode ID value to base-36 string
+                ID = Base36.Encode(id);
                 Type = type;
             }
 
             /// <summary>
-            /// Point ID integer value decoded from base-64 string.
+            /// Point ID integer value decoded from base-36 string.
             /// </summary>
-            public uint IDValue => BitConverter.ToUInt32(Convert.FromBase64String($"{ID}=="), 0);
+            public uint IDValue => Base36.Decode<uint>(ID);
         }
 
         // Fields        
@@ -660,7 +662,7 @@ namespace eDNAAdapters
                         ushort bit = (ushort)BitExtensions.BitVal(i);
                         bool digitalIsSet = (word & bit) > 0;
                         
-                        result = LinkMX.eDnaMxAddRec(m_connection, $"D{point.ID}{(byte)i:x}", seconds, milliseconds, measurement.StateFlags.MapToStatus(DataType.Digital, digitalIsSet), digitalIsSet ? 1.0D : 0.0D);
+                        result = LinkMX.eDnaMxAddRec(m_connection, $"{point.ID}-{(byte)i:x}", seconds, milliseconds, measurement.StateFlags.MapToStatus(DataType.Digital, digitalIsSet), digitalIsSet ? 1.0D : 0.0D);
 
                         if (result != 0)
                             OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" bit {i} to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": LinkMX.eDnaMxAddRec Exception: {(LinkMXReturnStatus)result}", result));
@@ -886,7 +888,7 @@ namespace eDNAAdapters
                                 // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
                                 for (int i = 0; i < values; i++)
                                 {
-                                    string pointID = point.ID;                                          // 8 chars   < reliable base-64 encoded point ID
+                                    string pointID = point.ID;                                          // 8 chars   < reliable base-36 encoded point ID
                                     string longID = key.Source;                                         // 60 chars  < truncated measurement key source
                                     string description = tagName;                                       // 24 chars  < truncated tag name
                                     string extendedID = key.ID.ToString();                              // 128 chars < reliable point ID (not encoded)
@@ -904,8 +906,8 @@ namespace eDNAAdapters
 
                                     if (dataType == DataType.Digital)
                                     {
-                                        // Digital point ID using 'D' prefix, 6 character base-64 encoded ID value and hex bit suffix is exactly 8 bytes:
-                                        pointID = $"D{pointID}{(byte)i:x}";                         // Format digital encoded point ID as "D<base64ID><bitNhex>"
+                                        // Digital point ID with max 6 character base-36 encoded ID value, dash and hex bit suffix is no more than 8 bytes:
+                                        pointID = $"{pointID}-{(byte)i:x}";                         // Format digital encoded point ID as "<base36ID>-<bitNhex>"
                                         extendedID = $"D{key.ID}-{i}";                              // Format digital non encoded point ID as "D<pointID>-<bitN>"
                                         description = referenceField01 = $"{description}-{i}";      // Suffix digital tag name with "-<bitN>"
                                         extendedDescription = $"Bit {i} of {extendedDescription}";  // Prefix digital description with bit number info
