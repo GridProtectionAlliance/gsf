@@ -84,8 +84,13 @@ namespace eDNAAdapters
             public uint IDValue => Base36.Decode<uint>(ID);
         }
 
+        // Constants
+        private const string DataCacheSuffix = "_eDNAData.cache";
+        private const string MetaCacheSuffix = "_eDANMeta.cache";
+
         // Fields        
-        private uint m_connection;                                          // eDNA server connection handle
+        private uint m_dataConnection;                                      // eDNA server connection handle for data
+        private uint m_metaConnection;                                      // eDNA server connection handle for meta-data
         private readonly Timer m_connectionMonitor;                         // eDNA server connection monitor, optional
         private readonly ConcurrentDictionary<Guid, Point> m_pointMap;      // Persisted measurement signal ID to point map
         private readonly LongSynchronizedOperation m_savePointMapCache;     // Save point map cache operation
@@ -106,7 +111,8 @@ namespace eDNAAdapters
         /// </summary>
         public OutputAdapter()
         {
-            m_connection = uint.MaxValue;
+            m_dataConnection = uint.MaxValue;
+            m_metaConnection = uint.MaxValue;
             m_connectionMonitor = new Timer();
             m_connectionMonitor.Enabled = false;
             m_connectionMonitor.AutoReset = true;
@@ -204,7 +210,7 @@ namespace eDNAAdapters
         /// Gets or sets the filename to be used for point map cache.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the path and filename to be used for the eDNA client API cache. Leave blank for cache name to target host working directory and be same as adapter name extension.")]
+        [Description("Defines the path and filename to be used for the eDNA client API cache. Leave blank for cache name to target host working directory and be same as adapter name.")]
         [DefaultValue(Default.LocalCacheFileName)]
         public string LocalCacheFileName { get; set; } = Default.LocalCacheFileName;
 
@@ -336,7 +342,7 @@ namespace eDNAAdapters
                 status.AppendLine();
                 status.AppendFormat("              eDNA service: {0}", Service);
                 status.AppendLine();
-                status.AppendFormat("       Connected to server: {0}", m_connection == uint.MaxValue ? "No" : $"Yes, handle = {m_connection}");
+                status.AppendFormat("       Connected to server: {0}", m_dataConnection == uint.MaxValue ? "No" : $"Yes, handle = {m_dataConnection}");
                 status.AppendLine();
                 status.AppendFormat("       Monitoring interval: {0:N0}ms{1}", ConnectionMonitoringInterval, ConnectionMonitoringInterval <= 0 ? " - monitoring disabled" : "");
                 status.AppendLine();
@@ -383,6 +389,8 @@ namespace eDNAAdapters
 
                 if (RunMetadataSync)
                 {
+                    status.AppendFormat("      Meta-data connection: {0}", m_metaConnection == uint.MaxValue ? "Not connected" : $"Active, handle = {m_metaConnection}");
+                    status.AppendLine();
                     status.AppendFormat("    Meta-data sync process: {0}, {1:0.00%} complete", m_refreshingMetadata ? "Active" : "Idle", m_metadataRefreshProgress);
                     status.AppendLine();
                 }
@@ -568,20 +576,20 @@ namespace eDNAAdapters
             m_processedMeasurements = 0;
 
             // Initialize connection eDNA client API
-            int result = ConnectToDNAService(out m_connection, "_eDNAData.cache");
+            int result = ConnectToDNAService(out m_dataConnection, DataCacheSuffix);
 
             string connectionInfo = $"{PrimaryServer}:{PrimaryPort}{(string.IsNullOrWhiteSpace(SecondaryServer) ? "" : $" / {SecondaryServer}:{SecondaryPort}")}";
 
             switch (result)
             {
                 case 0:
-                    OnStatusMessage(MessageLevel.Info, $"Connected to eDNA service on {connectionInfo} - connection handle = {m_connection}");
+                    OnStatusMessage(MessageLevel.Info, $"Connected to eDNA service on {connectionInfo} - connection handle = {m_dataConnection}");
                     break;
                 case 1:
-                    OnStatusMessage(MessageLevel.Info, $"Connected to primary eDNA service on {PrimaryServer}:{PrimaryPort} - connection handle = {m_connection}");
+                    OnStatusMessage(MessageLevel.Info, $"Connected to primary eDNA service on {PrimaryServer}:{PrimaryPort} - connection handle = {m_dataConnection}");
                     break;
                 case 2:
-                    OnStatusMessage(MessageLevel.Info, $"Connected to secondary eDNA service on {SecondaryServer}:{SecondaryPort} - connection handle = {m_connection}");
+                    OnStatusMessage(MessageLevel.Info, $"Connected to secondary eDNA service on {SecondaryServer}:{SecondaryPort} - connection handle = {m_dataConnection}");
                     break;
                 default:
                     throw new EzDNAApiNetException($"Failed to connect to eDNA service on {connectionInfo}: {(LinkMXReturnStatus)result}", result);
@@ -612,10 +620,14 @@ namespace eDNAAdapters
         {
             m_connectionMonitor.Stop();
 
-            if (m_connection < uint.MaxValue)
-                LinkMX.eDnaMxUniversalCloseSocketSoft(m_connection);
+            if (m_dataConnection < uint.MaxValue)
+                LinkMX.eDnaMxUniversalCloseSocketSoft(m_dataConnection);
 
-            m_connection = uint.MaxValue;
+            if (m_metaConnection < uint.MaxValue)
+                LinkMX.eDnaMxUniversalCloseSocketSoft(m_metaConnection);
+
+            m_dataConnection = uint.MaxValue;
+            m_metaConnection = uint.MaxValue;
         }
 
         /// <summary>
@@ -624,7 +636,7 @@ namespace eDNAAdapters
         /// <param name="measurements">Measurements to queue</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            if ((object)measurements == null || measurements.Length <= 0 || m_connection == uint.MaxValue)
+            if ((object)measurements == null || measurements.Length <= 0 || m_dataConnection == uint.MaxValue)
                 return;
 
             bool addedRecords = false;
@@ -663,7 +675,7 @@ namespace eDNAAdapters
                         ushort bit = (ushort)BitExtensions.BitVal(i);
                         bool digitalIsSet = (word & bit) > 0;
                         
-                        result = LinkMX.eDnaMxAddRec(m_connection, $"{point.ID}-{(byte)i:x}", seconds, milliseconds, measurement.StateFlags.MapToStatus(DataType.Digital, digitalIsSet), digitalIsSet ? 1.0D : 0.0D);
+                        result = LinkMX.eDnaMxAddRec(m_dataConnection, $"{point.ID}-{(byte)i:x}", seconds, milliseconds, measurement.StateFlags.MapToStatus(DataType.Digital, digitalIsSet), digitalIsSet ? 1.0D : 0.0D);
 
                         if (result != 0)
                             OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" bit {i} to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": LinkMX.eDnaMxAddRec Exception: {(LinkMXReturnStatus)result}", result));
@@ -671,7 +683,7 @@ namespace eDNAAdapters
                 }
                 else
                 {
-                    result = LinkMX.eDnaMxAddRec(m_connection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(), value);
+                    result = LinkMX.eDnaMxAddRec(m_dataConnection, point.ID, seconds, milliseconds, measurement.StateFlags.MapToStatus(), value);
 
                     if (result != 0)
                         OnProcessException(MessageLevel.Warning, new EzDNAApiNetException($"Failed to write measurement \"{measurement.Key}\" to eDNA point \"{string.Format(Default.PointIDFormat, Site, Service, point.ID)}\": LinkMX.eDnaMxAddRec Exception: {(LinkMXReturnStatus)result}", result));
@@ -687,7 +699,7 @@ namespace eDNAAdapters
             // Commit new records
             if (addedRecords)
             {
-                result = LinkMX.eDnaMxFlushUniversalRecord(m_connection, (int)LinkMXConstants.SET_REC);
+                result = LinkMX.eDnaMxFlushUniversalRecord(m_dataConnection, (int)LinkMXConstants.SET_REC);
 
                 if (result != 0)
                     throw new EzDNAApiNetException($"LinkMX.eDnaMxFlushUniversalRecord Exception: {(LinkMXReturnStatus)result}", result);
@@ -701,8 +713,6 @@ namespace eDNAAdapters
         {
             if (!Initialized)
                 return;
-
-            uint connection = uint.MaxValue;
 
             try
             {
@@ -730,14 +740,20 @@ namespace eDNAAdapters
                 // This meta-data "load" is performed out-of-band with the meta-data "save" operation that
                 // follows to reduce read-write contention with the eDNA database service
                 Dictionary<Guid, Metadata> metadataCache = QueryMetaDataForInputs(inputMeasurements, measurements);
+                int result;
 
-                // Connect to eDNA separately for meta-data refresh, this way meta-data refresh does not contend with time-series data updates
-                int result = ConnectToDNAService(out connection, "_eDNAMeta.cache");
-
-                if (result < 0 || result > 2)
+                // Connect to eDNA separately for meta-data refresh, this way meta-data refresh does not contend
+                // with time-series data updates. Have to maintain this connection as long as main connection is
+                // active because closing this connection will also close the main connection :p
+                if (m_metaConnection == uint.MaxValue)
                 {
-                    connection = uint.MaxValue;
-                    throw new EzDNAApiNetException($"Failed to connect to eDNA service for meta-data refresh: {(LinkMXReturnStatus)result}", result);
+                    result = ConnectToDNAService(out m_metaConnection, MetaCacheSuffix);
+
+                    if (result < 0 || result > 2)
+                    {
+                        m_metaConnection = uint.MaxValue;
+                        throw new EzDNAApiNetException($"Failed to connect to eDNA service for meta-data refresh: {(LinkMXReturnStatus)result}", result);
+                    }
                 }
 
                 int previousMeasurementReportingInterval = MeasurementReportingInterval;
@@ -919,27 +935,27 @@ namespace eDNAAdapters
                                     //   ReferenceField01 = Measurement.PointTag (or Measurement.AlternateTag if defined)
                                     //   ReferenceField10 = Measurement.SignalID (used as primary TSL tag identifier)
                                     //   ReferenceField09:ExtendedID = MeasurementKey (Source:ID)
-                                    result = LinkMX.eDnaMxAddConfigRec(connection, pointID, longID, description, units, pointType, false, 0,
-                                        digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D,
-                                        false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, extendedID, extendedDescription);
+                                    result = LinkMX.eDnaMxAddConfigRec(m_metaConnection, pointID, longID, description, units, pointType,
+                                        false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D, false,
+                                        0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, extendedID, extendedDescription);
 
                                     if (result != 0)
                                         throw new EzDNAApiNetException($"LinkMX.eDnaMxAddConfigRec Exception: {(LinkMXReturnStatus)result}", result);
 
-                                    result = LinkMX.eDnaMxFlushUniversalRecord(connection, (int)LinkMXConstants.SET_CONFIGURATION_REC);
+                                    result = LinkMX.eDnaMxFlushUniversalRecord(m_metaConnection, (int)LinkMXConstants.SET_CONFIGURATION_REC);
 
                                     if (result != 0)
                                         throw new EzDNAApiNetException($"LinkMX.eDnaMxFlushUniversalRecord Exception: {(LinkMXReturnStatus)result}", result);
 
                                     // Update configuration reference fields that hold reliable meta-data mappings
-                                    result = LinkMX.eDnaMxAddConfigReferenceFields(connection, pointID, longID, extendedID,
+                                    result = LinkMX.eDnaMxAddConfigReferenceFields(m_metaConnection, pointID, longID, extendedID,
                                         referenceField01, referenceField02, referenceField03, referenceField04, referenceField05,
                                         referenceField06, referenceField07, referenceField08, referenceField09, referenceField10);
 
                                     if (result != 0)
                                         throw new EzDNAApiNetException($"LinkMX.eDnaMxAddConfigReferenceFields Exception: {(LinkMXReturnStatus)result}", result);
 
-                                    result = LinkMX.eDnaMxFlushUniversalRecord(connection, (int)LinkMXConstants.SET_CONFIGURATION_REF_FIELDS);
+                                    result = LinkMX.eDnaMxFlushUniversalRecord(m_metaConnection, (int)LinkMXConstants.SET_CONFIGURATION_REF_FIELDS);
 
                                     if (result != 0)
                                         throw new EzDNAApiNetException($"LinkMX.eDnaMxFlushUniversalRecord Exception: {(LinkMXReturnStatus)result}", result);
@@ -985,11 +1001,6 @@ namespace eDNAAdapters
             catch (Exception ex)
             {
                 OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed during meta-data refresh: {ex.Message}"));
-            }
-            finally
-            {
-                if (connection < uint.MaxValue)
-                    LinkMX.eDnaMxUniversalCloseSocketSoft(m_connection);
             }
         }
 
@@ -1216,7 +1227,7 @@ namespace eDNAAdapters
         {
             bool reconnect = true;
 
-            if (LinkMX.ISeDnaMxUniversalConnected(m_connection))
+            if (LinkMX.ISeDnaMxUniversalConnected(m_dataConnection))
             {
                 // Verify connection is up at socket level, API is not always accurate
                 Func<string, IPAddress> parseIP = host => string.IsNullOrWhiteSpace(host) ? IPAddress.None : IPAddress.Parse(host);
