@@ -365,7 +365,7 @@ namespace eDNAAdapters
                 {
                     status.AppendFormat(" Clearing cache on startup: {0}", ClearCacheOnStartup);
                     status.AppendLine();
-                    status.AppendFormat("          Local cache file: {0}", FilePath.TrimFileName(LocalCacheFileName.ToNonNullString("[undefined]"), 51));
+                    status.AppendFormat("          Local cache file: {0}", FilePath.TrimFileName($"{LocalCacheFileName}{DataCacheSuffix}", 51));
                     status.AppendLine();
                 }
 
@@ -389,7 +389,7 @@ namespace eDNAAdapters
 
                 if (RunMetadataSync)
                 {
-                    status.AppendFormat("      Meta-data connection: {0}", m_metaConnection == uint.MaxValue ? "Not connected" : $"Active, handle = {m_metaConnection}");
+                    status.AppendFormat("      Meta-data connection: {0}", m_metaConnection == uint.MaxValue ? "Not connected" : $"Established, handle = {m_metaConnection}");
                     status.AppendLine();
                     status.AppendFormat("    Meta-data sync process: {0}, {1:0.00%} complete", m_refreshingMetadata ? "Active" : "Idle", m_metadataRefreshProgress);
                     status.AppendLine();
@@ -908,7 +908,7 @@ namespace eDNAAdapters
                                     string pointID = point.ID;                                          // 8 chars   < reliable base-36 encoded point ID
                                     string longID = key.Source;                                         // 60 chars  < truncated measurement key source
                                     string description = tagName;                                       // 24 chars  < truncated tag name
-                                    string extendedID = key.ID.ToString();                              // 128 chars < reliable point ID (not encoded)
+                                    string extendedID = $"A{key.ID}";                                   // 128 chars < reliable point ID (not encoded)
                                     string extendedDescription = $"{row["Description"]}";               // 224 chars < truncated description
                                     string referenceField01 = tagName;                                  // 250 chars < reliable tag name
                                     string referenceField02 = $"{row["SignalReference"]}";              // 250 chars < reliable signal reference
@@ -1094,12 +1094,10 @@ namespace eDNAAdapters
 
             OnStatusMessage(MessageLevel.Info, $"Querying {total:N0} eDNA \"{Site}.{Service}\" meta-data records for matching inputs...");
 
-            metadataCache.Clear();
-
             Ticks startTime = DateTime.UtcNow.Ticks;
 
-            // Scan all meta-data for records that match adapter inputs. A full scan is necessary because reliable
-            // meta-data mappings can only be stored in non-key fields and API functions perform an O(n) operation
+            // Scan all meta-data for records that match adapter inputs. A full scan is necessary because key TSL
+            // meta-data mappings are stored in non-key reference fields and API functions perform an O(n) operation
             // for lookups into non-key fields - so one full scan is better than a full scan per adapter input
             foreach (Metadata record in Metadata.Query(new Metadata { Site = Site, Service = Service }))
             {
@@ -1147,7 +1145,7 @@ namespace eDNAAdapters
                     }
                 }
 
-                if (count++ % 500 == 0)
+                if (count++ % 500 == 0 && count > 1)
                     OnStatusMessage(MessageLevel.Info, $"Queried {count:N0} eDNA \"{Site}.{Service}\" meta-data records, {metadataCache.Count:N0} matches, {count / (double)total:0.00%} complete...");
             }
 
