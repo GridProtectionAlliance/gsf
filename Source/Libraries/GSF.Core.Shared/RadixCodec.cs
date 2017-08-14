@@ -458,6 +458,8 @@ namespace GSF
         #region [ Static ]
 
         // Static Fields
+        private static RadixCodec s_radix2;
+        private static RadixCodec s_radix8;
         private static RadixCodec s_radix16;
         private static RadixCodec s_radix32;
         private static RadixCodec s_radix36;
@@ -465,6 +467,32 @@ namespace GSF
         private static RadixCodec s_radix86;
 
         // Static Properties
+
+        /// <summary>
+        /// Gets a radix-2 value (binary) encoding.
+        /// </summary>
+        /// <remarks>
+        /// int.MaxValue encodes to "1111111111111111111111111111111", 31 characters
+        /// int.MinValue encodes to "-10000000000000000000000000000000", 33 characters
+        /// uint.MaxValue encodes to "11111111111111111111111111111111", 32 characters
+        /// long.MaxValue encodes to "111111111111111111111111111111111111111111111111111111111111111", 63 characters
+        /// long.MinValue encodes to "-1000000000000000000000000000000000000000000000000000000000000000", 65 characters
+        /// ulong.MaxValue encodes to "1111111111111111111111111111111111111111111111111111111111111111", 64 characters
+        /// </remarks>                                                            12
+        public static RadixCodec Radix2 = s_radix2 ?? (s_radix2 = new RadixCodec("01", false));
+
+        /// <summary>
+        /// Gets a radix-8 value (octal) encoding.
+        /// </summary>
+        /// <remarks>
+        /// int.MaxValue encodes to "17777777777", 11 characters
+        /// int.MinValue encodes to "-20000000000", 12 characters
+        /// uint.MaxValue encodes to "37777777777", 11 characters
+        /// long.MaxValue encodes to "777777777777777777777", 21 characters
+        /// long.MinValue encodes to "-1000000000000000000000", 23 characters
+        /// ulong.MaxValue encodes to "1777777777777777777777", 22 characters
+        /// </remarks>                                                            12345678
+        public static RadixCodec Radix8 = s_radix8 ?? (s_radix8 = new RadixCodec("01234567", false));
 
         /// <summary>
         /// Gets a radix-16 value (hex) encoding.
@@ -527,7 +555,7 @@ namespace GSF
         /// uint.MaxValue encodes to "1qu4dh", 6 characters
         /// long.MaxValue encodes to "1X2qL^UmlIt", 11 characters
         /// long.MinValue encodes to "-1X2qL^UmlIu", 12 characters
-        /// ulong.MaxValue encodes to "2&5Sh]zLIbZ", 11 characters
+        /// ulong.MaxValue encodes to "2&amp;5Sh]zLIbZ", 11 characters
         /// </remarks>                                                               1234567890123456789012345678901234567890123456789012345678901234567890123456
         public static RadixCodec Radix86 = s_radix86 ?? (s_radix86 = new RadixCodec("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&*+;=?@[]^", true));
 
