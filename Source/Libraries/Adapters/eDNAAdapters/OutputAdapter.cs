@@ -86,7 +86,7 @@ namespace eDNAAdapters
 
         // Constants
         private const string DataCacheSuffix = "_eDNAData.cache";
-        private const string MetaCacheSuffix = "_eDANMeta.cache";
+        private const string MetaCacheSuffix = "_eDNAMeta.cache";
 
         // Fields        
         private uint m_dataConnection;                                      // eDNA server connection handle for data
@@ -970,7 +970,7 @@ namespace eDNAAdapters
                         processed++;
                         m_metadataRefreshProgress = processed / (double)total;
 
-                        if (processed % 100 == 0)
+                        if (processed % 500 == 0)
                             OnStatusMessage(MessageLevel.Info, $"Updated {processed:N0} eDNA tags and associated meta-data, {m_metadataRefreshProgress:0.00%} complete...");
 
                         // Queue up a save operation for point map cache
