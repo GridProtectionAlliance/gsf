@@ -1090,7 +1090,7 @@ namespace eDNAAdapters
             Dictionary<Guid, Metadata> metadataCache = new Dictionary<Guid, Metadata>();
 
             // Get meta-data count
-            int count = 0, total = Metadata.Count(Site, Service);
+            int count = 0, total = Metadata.Count(Site, Service).NotZero(inputMeasurements.Length);
 
             OnStatusMessage(MessageLevel.Info, $"Querying {total:N0} eDNA \"{Site}.{Service}\" meta-data records for matching inputs...");
 
@@ -1099,7 +1099,7 @@ namespace eDNAAdapters
             // Scan all meta-data for records that match adapter inputs. A full scan is needed because some key TSL
             // meta-data mappings are stored in non-key reference fields and API functions perform an O(n) operation
             // for lookups into non-key fields - so one full scan is better than a full scan per adapter input
-            foreach (Metadata record in Metadata.Query(new Metadata { Site = Site, Service = Service }))
+            foreach (Metadata record in Metadata.Query(new Metadata(/* search all */)))
             {
                 Guid signalID;
                 bool foundMatch = false;
