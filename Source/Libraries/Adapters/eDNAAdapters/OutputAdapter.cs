@@ -906,7 +906,7 @@ namespace eDNAAdapters
                                 for (int i = 0; i < values; i++)
                                 {
                                     string pointID = point.ID;                                          // 8 chars   < reliable base-36 encoded point ID
-                                    string longID = key.Source;                                         // 60 chars  < truncated measurement key source
+                                    string longID = signalID.ToString();                                // 60 chars  < reliable signal ID (primary Guid)
                                     string description = tagName;                                       // 24 chars  < truncated tag name
                                     string extendedID = $"A{key.ID}";                                   // 128 chars < reliable point ID (not encoded)
                                     string extendedDescription = $"{row["Description"]}";               // 224 chars < truncated description
@@ -914,12 +914,12 @@ namespace eDNAAdapters
                                     string referenceField02 = $"{row["SignalReference"]}";              // 250 chars < reliable signal reference
                                     string referenceField03 = $"{row["SignalType"]}";                   // 250 chars < reliable signal type acronym
                                     string referenceField04 = $"{row["Device"]}";                       // 250 chars < reliable device acronym
-                                    string referenceField05 = $"{row["DeviceID"]}";                     // 250 chars < reliable device ID
+                                    string referenceField05 = $"{key}";                                 // 250 chars < reliable measurement key (Source:ID)
                                     string referenceField06 = $"{row["Latitude"]},{row["Longitude"]}";  // 250 chars < reliable lat,long
                                     string referenceField07 = $"{row["Company"]}";                      // 250 chars < reliable company acronym
                                     string referenceField08 = $"{row["Protocol"]}";                     // 250 chars < reliable protocol acronym
-                                    string referenceField09 = key.Source;                               // 250 chars < reliable measurement key source
-                                    string referenceField10 = signalID.ToString();                      // 250 chars < reliable signal ID (primary Guid)
+                                    string referenceField09 = metadata?.ReferenceField09 ?? "";         // 250 chars < spare reference 1
+                                    string referenceField10 = metadata?.ReferenceField10 ?? "";         // 250 chars < spare reference 2
 
                                     if (dataType == DataType.Digital)
                                     {
@@ -931,10 +931,10 @@ namespace eDNAAdapters
                                     }
 
                                     // Add new or update meta-data record, critical time-series library (TSL) mappings are as follows:
-                                    //   ExtendedID = Measurement.PointID (used as primary eDNA tag identifier)
+                                    //   LongID = Measurement.SignalID (used as primary TSL tag identifier)
+                                    //   ExtendedID = "A{Measurement.PointID}" or "D{Measurement.PointID}-{bitN}"
                                     //   ReferenceField01 = Measurement.PointTag (or Measurement.AlternateTag if defined)
-                                    //   ReferenceField10 = Measurement.SignalID (used as primary TSL tag identifier)
-                                    //   ReferenceField09:ExtendedID = MeasurementKey (Source:ID)
+                                    //   ReferenceField05 = MeasurementKey (Source:ID)
                                     result = LinkMX.eDnaMxAddConfigRec(m_metaConnection, pointID, longID, description, units, pointType,
                                         false, 0, digitalSet, digitalCleared, false, 0.0D, false, 0.0D, false, 0.0D, false, 0.0D, false,
                                         0.0D, false, 0.0D, true, false, 1, 0, int.MaxValue, 0.0D, 0, extendedID, extendedDescription);
@@ -1096,7 +1096,7 @@ namespace eDNAAdapters
 
             Ticks startTime = DateTime.UtcNow.Ticks;
 
-            // Scan all meta-data for records that match adapter inputs. A full scan is necessary because key TSL
+            // Scan all meta-data for records that match adapter inputs. A full scan is needed because some key TSL
             // meta-data mappings are stored in non-key reference fields and API functions perform an O(n) operation
             // for lookups into non-key fields - so one full scan is better than a full scan per adapter input
             foreach (Metadata record in Metadata.Query(new Metadata { Site = Site, Service = Service }))
@@ -1104,8 +1104,8 @@ namespace eDNAAdapters
                 Guid signalID;
                 bool foundMatch = false;
 
-                // ReferenceField10 = Measurement.SignalID (used as primary TSL tag identifier)
-                if (!string.IsNullOrWhiteSpace(record.ReferenceField10) && Guid.TryParse(record.ReferenceField10, out signalID))
+                // LongID = Measurement.SignalID (used as primary TSL tag identifier)
+                if (!string.IsNullOrWhiteSpace(record.LongID) && Guid.TryParse(record.LongID, out signalID))
                 {
                     // See if an input exists that matches this meta-data record
                     if (inputMeasurements.Any(key => key.SignalID == signalID))
