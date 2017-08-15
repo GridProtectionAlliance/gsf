@@ -59,7 +59,7 @@ namespace eDNAAdapters
         [Serializable]
         private class Point
         {
-            private static RadixCodec Base36 = RadixCodec.Radix36;
+            private static readonly RadixCodec Base36 = RadixCodec.Radix36;
 
             /// <summary>
             /// Base-36 encoded string of point ID value.
@@ -1090,7 +1090,11 @@ namespace eDNAAdapters
             Dictionary<Guid, Metadata> metadataCache = new Dictionary<Guid, Metadata>();
 
             // Get meta-data count
-            int count = 0, total = Metadata.Count(Site, Service).NotZero(inputMeasurements.Length);
+            int count = 0, total = Metadata.Count(Site, Service);
+
+            // Fall back on measurement count if meta-data API returns zero
+            if (total < 0)
+                total = inputMeasurements.Length;
 
             OnStatusMessage(MessageLevel.Info, $"Querying {total:N0} eDNA \"{Site}.{Service}\" meta-data records for matching inputs...");
 
