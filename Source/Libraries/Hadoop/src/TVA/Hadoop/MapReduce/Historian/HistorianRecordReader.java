@@ -271,7 +271,7 @@ import TVA.Hadoop.MapReduce.Historian.File.ArchiveFile.Reader;
  */
 public class HistorianRecordReader extends RecordReader<LongWritable, StandardPointFile> {
 
-	private static final Log LOG = LogFactory.getLog("TVA.Hadoop.MapReduce.Historian.HistorianRecordReader");
+	private static final Log LOG = LogFactory.getLog("TVA.Hadoop.MapReduce.HistOne.HistorianRecordReader");
 	
 	private long start;
 	private long end;
