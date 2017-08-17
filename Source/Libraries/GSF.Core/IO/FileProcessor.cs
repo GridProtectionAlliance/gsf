@@ -354,8 +354,8 @@ namespace GSF.IO
                         m_sequentialEnumerationThread.Push(() =>
                         {
                             // Create the enumerable wrappers for file and directory enumeration
-                            EnumerableWrapper fileWrapper = new EnumerableWrapper(Directory.EnumerateFiles(directory), cancellationToken);
-                            EnumerableWrapper directoryWrapper = new EnumerableWrapper(Directory.EnumerateDirectories(directory), cancellationToken);
+                            EnumerableWrapper fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), cancellationToken);
+                            EnumerableWrapper directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), cancellationToken);
 
                             if (m_isActive.Value)
                             {
@@ -384,11 +384,12 @@ namespace GSF.IO
                     case FileEnumerationStrategy.ParallelSubdirectories:
                         m_fileProcessor.m_threadScheduler.CreateThread().Push(() =>
                         {
-                            EnumerableWrapper fileWrapper = new EnumerableWrapper(Directory.EnumerateFiles(directory), cancellationToken);
-                            EnumerableWrapper directoryWrapper = new EnumerableWrapper(Directory.EnumerateDirectories(directory), cancellationToken);
-                            m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-                            LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(directoryWrapper));
+                            EnumerableWrapper fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), cancellationToken);
+                            EnumerableWrapper directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), cancellationToken);
+
                             ActivateThread();
+                            m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
+                            EnumerateNextDirectory(directoryWrapper);
                         });
                         break;
                 }
@@ -463,8 +464,8 @@ namespace GSF.IO
                 {
                     // If an error occurs, dispose of the
                     // wrapper and then move to the next wrapper
-                    wrapper.Dispose();
                     EnumerateNextWrapper();
+                    wrapper.Dispose();
                     throw;
                 }
 
@@ -477,8 +478,8 @@ namespace GSF.IO
                         case FileEnumerationStrategy.Sequential:
                         case FileEnumerationStrategy.ParallelWatchDirectories:
                             // Create the fileWrapper and directoryWrapper objects
-                            fileWrapper = new EnumerableWrapper(Directory.EnumerateFiles(directory), wrapper.CancellationToken);
-                            directoryWrapper = new EnumerableWrapper(Directory.EnumerateDirectories(directory), wrapper.CancellationToken);
+                            fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), wrapper.CancellationToken);
+                            directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), wrapper.CancellationToken);
 
                             // Push the current directory wrapper onto the stack
                             m_wrapperStack.Value.Push(() => EnumerateNextDirectory(wrapper));
@@ -493,8 +494,8 @@ namespace GSF.IO
                         // ParallelSubdirectories strategy spawns new threads for subdirectories
                         case FileEnumerationStrategy.ParallelSubdirectories:
                             // Create the fileWrapper and directoryWrapper objects
-                            fileWrapper = new EnumerableWrapper(Directory.EnumerateFiles(directory), wrapper.CancellationToken);
-                            directoryWrapper = new EnumerableWrapper(Directory.EnumerateDirectories(directory), wrapper.CancellationToken);
+                            fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), wrapper.CancellationToken);
+                            directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), wrapper.CancellationToken);
 
                             // Create a new thread, push the file wrapper onto the new thread's
                             // stack, then enumerate the directory wrapper on the new thread
@@ -523,6 +524,8 @@ namespace GSF.IO
                 }
                 catch
                 {
+                    LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(wrapper));
+
                     // If an exception occurs, dispose of the file
                     // wrapper and directory wrapper, then continue
                     // enumeration with the current directory wrapper
@@ -531,8 +534,6 @@ namespace GSF.IO
 
                     if ((object)directoryWrapper != null)
                         directoryWrapper.Dispose();
-
-                    LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(wrapper));
 
                     throw;
                 }
@@ -596,8 +597,8 @@ namespace GSF.IO
                     // dispose of the wrapper and move to the next wrapper
                     if (!wrapper.LastMove)
                     {
-                        wrapper.Dispose();
                         EnumerateNextWrapper();
+                        wrapper.Dispose();
                     }
                 }
             }
@@ -674,6 +675,22 @@ namespace GSF.IO
                 }));
             }
 
+            // Returns an object to enumerate subdirectories under a given path
+            private IEnumerable<string> EnumerateDirectories(string path)
+            {
+                return m_fileProcessor.m_orderedEnumeration
+                    ? Directory.EnumerateFiles(path).OrderBy(dir => dir)
+                    : Directory.EnumerateFiles(path);
+            }
+
+            // Returns an object to enumerate files under a given path
+            private IEnumerable<string> EnumerateFiles(string path)
+            {
+                return m_fileProcessor.m_orderedEnumeration
+                    ? Directory.EnumerateDirectories(path).OrderBy(file => file)
+                    : Directory.EnumerateDirectories(path);
+            }
+
             #endregion
         }
 
@@ -732,6 +749,7 @@ namespace GSF.IO
         private int m_internalBufferSize;
         private int m_maxFragmentation;
         private FileEnumerationStrategy m_enumerationStrategy;
+        private bool m_orderedEnumeration;
 
         private readonly object m_fileWatchersLock;
         private readonly List<SafeFileWatcher> m_fileWatchers;
@@ -938,6 +956,22 @@ namespace GSF.IO
             set
             {
                 m_enumerationStrategy = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the file enumeration process
+        /// should sort files and directories before raising events for enumerated files.
+        /// </summary>
+        public bool OrderedEnumeration
+        {
+            get
+            {
+                return m_orderedEnumeration;
+            }
+            set
+            {
+                m_orderedEnumeration = value;
             }
         }
 
@@ -1542,6 +1576,6 @@ namespace GSF.IO
             });
         }
 
-#endregion
+        #endregion
     }
 }

@@ -12,6 +12,10 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  08/11/2017 - Song Zhang (ISO New England)
+//       Replaced method FSDataInputStream.read with FSDataInputStream.readFully to 
+//       solve the problem of reading less data from stream. ref.
+//       http://docs.oracle.com/javase/6/docs/api/java/io/DataInput.html#readFully(byte[])
 //
 //*******************************************************************************************************
 
@@ -295,7 +299,7 @@ public class ArchiveFileAllocationTable {
 			foo.order(ByteOrder.LITTLE_ENDIAN);
 			
 			this._hdfs_input_stream.seek(header_offset);
-			this._hdfs_input_stream.read(buf);
+			this._hdfs_input_stream.readFully(buf);
 			
 			this._PointsRecieved = foo.getInt(0);
 			this._PointsArchived = foo.getInt(4);
@@ -329,7 +333,7 @@ public class ArchiveFileAllocationTable {
 		
 		for ( int x = 0; x < this._EventBlockCount; x++ ) {
 			
-			this._hdfs_input_stream.read(bufBlockMapPtr); // read 12 bytes into the buffer
+			this._hdfs_input_stream.readFully(bufBlockMapPtr); // read 12 bytes into the buffer
 			int iID = MapPtrBuffer.getInt( 0 );
 			double firstTimeStamp = MapPtrBuffer.getDouble( 4 );
 			this._BlockMap.AddBlockPointer( iID, firstTimeStamp );
