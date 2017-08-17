@@ -3,7 +3,7 @@
 =========================================================================================================
 
 Grid Solutions Framework (https://github.com/GridProtectionAlliance/gsf)
-Copyright © 2012-2017, Grid Protection Alliance, Inc.
+Copyright Â© 2012-2017, Grid Protection Alliance, Inc.
 
 This product includes software developed at the Grid Protection Alliance, Inc.
 (http://www.gridprotectionalliance.org/)
@@ -89,8 +89,8 @@ This includes, specifically, the following:
         this library. If you modify	this library, you must extend this exception to your version
         of the library.
 
-	With this linking exception, the Grid Solutions Framework uses the ZeroMQ binary as a dependency yet
-	remains an MIT licensed repository. Full GNU Lesser General Public License text included below.
+    With this linking exception, the Grid Solutions Framework uses the ZeroMQ binary as a dependency yet
+    remains an MIT licensed repository. Full GNU Lesser General Public License text included below.
 
 =========================================================================================================
 
@@ -122,7 +122,7 @@ This includes, but may not be limited to, the following:
 The PQDIF components of this software were developed under contract to the
 Electric Power Research Institute (http://www.epri.com/):
 
-Copyright © 2012 Electric Power Research Institute, Inc. 
+Copyright Â© 2012 Electric Power Research Institute, Inc. 
 
 The embodiments of this Program and supporting materials may be ordered from:
  
@@ -137,7 +137,7 @@ THIS NOTICE MAY NOT BE REMOVED FROM THE PROGRAM BY ANY USER THEREOF.
 =========================================================================================================
 
 Tennessee Valley Authority, 2009
-No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
+No copyright is claimed pursuant to 17 USC Â§ 105.  All Other Rights Reserved.
 
 /*                           TENNESSEE VALLEY AUTHORITY OPEN SOURCE AGREEMENT
  *
@@ -168,7 +168,7 @@ No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
  * 
  * F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  * structure of either the Original Software or Subject Software, and includes derivative works, as that
- * term is defined in the Copyright Statute, 17 USC § 101. However, the act of including Subject Software
+ * term is defined in the Copyright Statute, 17 USC Â§ 101. However, the act of including Subject Software
  * as part of a Larger Work does not in and of itself constitute a Modification.
  * 
  * G. "Original Software" means the computer software first released under this Agreement by Government
@@ -245,7 +245,7 @@ No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
  * B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  * Software:
  * 
- * No copyright is claimed pursuant to 17 USC § 105. All Other Rights Reserved.
+ * No copyright is claimed pursuant to 17 USC Â§ 105. All Other Rights Reserved.
  * 
  * C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  * must identify itself as the originator of its Modification in a manner that reasonably allows
