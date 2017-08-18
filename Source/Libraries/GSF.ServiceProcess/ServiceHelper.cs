@@ -435,6 +435,16 @@ namespace GSF.ServiceProcess
             {
                 int index = filterID;
 
+                // Determine whether to remove all filters
+                if (index < 0)
+                {
+                    m_filter.TypeInclusionFilters.Clear();
+                    m_filter.TypeExclusionFilters.Clear();
+                    m_filter.PatternInclusionFilters.Clear();
+                    m_filter.PatternExclusionFilters.Clear();
+                    return;
+                }
+
                 // Attempt to remove a filter from the list of type inclusion filters
                 if (index < m_filter.TypeInclusionFilters.Count)
                 {
@@ -4096,7 +4106,7 @@ namespace GSF.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.Append("                  -Exclude <FilterDefinition> |");
                 helpMessage.AppendLine();
-                helpMessage.Append("                  -Remove <ID> } ... ]");
+                helpMessage.Append("                  -Remove { <ID> | All } } ... ]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("       Filter -?");
@@ -4121,7 +4131,7 @@ namespace GSF.ServiceProcess
                 helpMessage.Append("Defines a filter matching messages to be suppressed");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -Remove".PadRight(20));
-                helpMessage.Append("Removes a filter");
+                helpMessage.Append("Removes filters");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
@@ -4158,13 +4168,22 @@ namespace GSF.ServiceProcess
                     if (i + 1 >= args.Length)
                         throw new FormatException("Malformed expression - Missing ID argument in 'Filter -Remove <ID>' command. Type 'Filter -?' to get help with this command.");
 
-                    // Check for parsing errors in the filter ID
-                    if (!int.TryParse(args[i + 1], out filterID))
-                        throw new FormatException("Malformed expression - ID argument supplied to 'Filter -Remove <ID>' must be an integer. Type 'Filter -?' to get help with this command.");
+                    if (args[i + 1].Equals("All", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add a negative number to the list of IDs to remove
+                        // to indicate that all IDs need to be removed
+                        removalIDs.Add(-1);
+                    }
+                    else
+                    {
+                        // Check for parsing errors in the filter ID
+                        if (!int.TryParse(args[i + 1], out filterID))
+                            throw new FormatException("Malformed expression - ID argument supplied to 'Filter -Remove <ID>' must be an integer. Type 'Filter -?' to get help with this command.");
 
-                    // Add the ID to the list of filter IDs to be removed from the client's filter
-                    if (i + 1 < args.Length && int.TryParse(args[i + 1], out filterID))
-                        removalIDs.Add(filterID);
+                        // Add the ID to the list of filter IDs to be removed from the client's filter
+                        if (i + 1 < args.Length)
+                            removalIDs.Add(filterID);
+                    }
 
                     i += 2;
                 }
