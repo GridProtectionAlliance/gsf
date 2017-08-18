@@ -679,16 +679,16 @@ namespace GSF.IO
             private IEnumerable<string> EnumerateDirectories(string path)
             {
                 return m_fileProcessor.m_orderedEnumeration
-                    ? Directory.EnumerateFiles(path).OrderBy(dir => dir)
-                    : Directory.EnumerateFiles(path);
+                    ? Directory.EnumerateDirectories(path).OrderBy(dir => dir)
+                    : Directory.EnumerateDirectories(path);
             }
 
             // Returns an object to enumerate files under a given path
             private IEnumerable<string> EnumerateFiles(string path)
             {
                 return m_fileProcessor.m_orderedEnumeration
-                    ? Directory.EnumerateDirectories(path).OrderBy(file => file)
-                    : Directory.EnumerateDirectories(path);
+                    ? Directory.EnumerateFiles(path).OrderBy(file => file)
+                    : Directory.EnumerateFiles(path);
             }
 
             #endregion
