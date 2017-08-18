@@ -40,6 +40,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -1937,10 +1938,17 @@ namespace GSF.TimeSeries
             }
             else
             {
+                IPrincipal principal = Thread.CurrentPrincipal;
+
                 Thread invocationThread = new Thread(() =>
                 {
                     IAdapter adapter = null;
                     string command = null;
+
+                    // NOTE: Only necessary for Mono deployments
+                    // Set thread principal to the principal
+                    // of the thread that spawned it
+                    Thread.CurrentPrincipal = principal;
 
                     // See if specific ID for an adapter was requested
                     if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
@@ -2900,10 +2908,17 @@ namespace GSF.TimeSeries
                     return;
                 }
 
+                IPrincipal currentPrincipal = Thread.CurrentPrincipal;
+
                 m_reloadConfigQueue.Add(Tuple.Create(GetReloadConfigType(requestInfo), new Action<bool>(success =>
                 {
                     if (success)
                     {
+                        // NOTE: This is necessary if invoking the Invoke command,
+                        // otherwise the command could be invoked using a different
+                        // security princpal with a different set of permissions
+                        Thread.CurrentPrincipal = currentPrincipal;
+
                         if (invoking && (object)invokeHandler != null)
                             invokeHandler.HandlerMethod(invokeInfo);
                         else
