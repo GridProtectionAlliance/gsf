@@ -195,9 +195,13 @@
       <DependentUpon>SecurityService.svc</DependentUpon>
     </Compile>
     <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
+    <Compile Include="Security\AddChallengeOnUnauthorizedResult.cs" />
+    <Compile Include="Security\AuthenticateControllerAttribute.cs" />
+    <Compile Include="Security\AuthenticationFailureResult.cs" />
     <Compile Include="Security\AuthorizationCache.cs" />
     <Compile Include="Security\AuthorizeControllerRoleAttribute.cs" />
     <Compile Include="Security\AuthorizeHubRoleAttribute.cs" />
+    <Compile Include="Security\HttpAuthenticationChallengeContextExtensions.cs" />
     <Compile Include="Security\NamespaceDoc.cs" />
     <Compile Include="Security\SecurityHub.cs" />
     <Compile Include="Model\RazorView.cs" />
