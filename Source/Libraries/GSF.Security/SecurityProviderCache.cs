@@ -347,7 +347,7 @@ namespace GSF.Security
                     if (DateTime.UtcNow.Subtract(cache.CacheCreationTime).TotalMinutes > s_userCacheTimeout)
                     {
                         if ((object)cache.Provider != null && (object)cache.Provider.UserData != null)
-                            cache.Provider.UserData.Initialize();
+                            cache.Provider.UserData.IsAuthenticated = false;
 
                         s_cache.Remove(cacheKey);
                     }
