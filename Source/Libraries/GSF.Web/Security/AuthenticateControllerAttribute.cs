@@ -133,7 +133,7 @@ namespace GSF.Web.Security
                     if (principal.Identity.IsAuthenticated || SecurityProviderCache.CurrentProvider.Authenticate(password))
                         context.Principal = principal;
                     else
-                        context.ErrorResult = new AuthenticationFailureResult("Invalid username or password", request);
+                        context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request);
                 }
                 else
                 {

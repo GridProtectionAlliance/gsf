@@ -101,11 +101,11 @@ namespace GSF.Web.Security
 
             // Setup the principal
             Thread.CurrentPrincipal = user;
-            SecurityProviderCache.ValidateCurrentProvider();
+            SecurityProviderCache.ValidateCurrentProvider(userName);
             user = Thread.CurrentPrincipal;
 
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
+            if (!user.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
                 throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
 
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))

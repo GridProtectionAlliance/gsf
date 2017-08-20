@@ -104,16 +104,16 @@ namespace GSF.Web.Security
         /// <param name="filterContext">The filter context.</param>
         public void OnAuthorization(AuthorizationContext filterContext)
         {
-            SecurityProviderCache.ValidateCurrentProvider();
+            // Get current user name
+            string userName = Thread.CurrentPrincipal.Identity.Name;
+
+            SecurityProviderCache.ValidateCurrentProvider(userName);
 
             // Setup the principal
             filterContext.HttpContext.User = Thread.CurrentPrincipal;
 
-            // Get current user name
-            string userName = Thread.CurrentPrincipal.Identity.Name;
-
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
                 throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
 
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => filterContext.HttpContext.User.IsInRole(role)))
