@@ -103,6 +103,14 @@ namespace GSF.Web.Security
         // Client-side script functionality
 
         #region [ Security Functions ]
+        
+        /// <summary>
+        /// Resets the current provider cache.
+        /// </summary>
+        public void Logout()
+        {
+            SecurityProviderCache.CurrentProvider = null;
+        }
 
         /// <summary>
         /// Finds the specified user account record.
