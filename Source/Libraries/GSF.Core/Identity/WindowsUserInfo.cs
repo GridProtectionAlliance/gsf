@@ -127,13 +127,13 @@ namespace GSF.Identity
                     {
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
-                        WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        IPrincipal principal = Thread.CurrentPrincipal;
 
                         exists =
-                            (object)windowsPrincipal != null &&
+                            (object)principal != null &&
                             !string.IsNullOrEmpty(m_parent.LoginID) &&
-                            windowsPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) &&
-                            windowsPrincipal.Identity.IsAuthenticated;
+                            principal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) &&
+                            principal.Identity.IsAuthenticated;
                     }
                 }
 
