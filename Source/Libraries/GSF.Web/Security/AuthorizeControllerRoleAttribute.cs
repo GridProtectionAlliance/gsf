@@ -109,25 +109,32 @@ namespace GSF.Web.Security
 
             SecurityProviderCache.ValidateCurrentProvider(userName);
 
-            // Setup the principal
-            filterContext.HttpContext.User = Thread.CurrentPrincipal;
-
             // Verify that the current thread principal has been authenticated.
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
-                throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
-
-            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => filterContext.HttpContext.User.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
-
-            // Make sure current user ID is cached
-            if (!AuthorizationCache.UserIDs.ContainsKey(userName))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                {
-                    Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
+                filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+                filterContext.HttpContext.User = null;
+            }
+            else if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role)))
+            {
+                filterContext.Result = new HttpUnauthorizedResult($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+                filterContext.HttpContext.User = null;
+            }
+            else
+            {
+                // Setup the principal
+                filterContext.HttpContext.User = Thread.CurrentPrincipal;
 
-                    if ((object)userID != null)
-                        AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
+                // Make sure current user ID is cached
+                if (!AuthorizationCache.UserIDs.ContainsKey(userName))
+                {
+                    using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                    {
+                        Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
+
+                        if ((object)userID != null)
+                            AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
+                    }
                 }
             }
         }

@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Text;
 using GSF;
 using GSF.Communication;
+using System.Diagnostics;
 
 //using GSF.EMAX;
 
@@ -52,6 +53,116 @@ namespace LibraryTester
 
             Common.IsDefaultValue(true);            // Call to load GSF.Core
             Transport.GetDefaultIPStack();          // Call to load GSF.Communications
+
+            byte[] bytes = { 1, 2, 3, 4, 5, 6, 7, 8 };
+            ulong value = BitConverter.ToUInt64(bytes, 0);
+
+            Debug.WriteLine(Convert.ToBase64String(bytes));
+
+            RadixCodec codec = RadixCodec.Radix64;
+            string radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            codec = RadixCodec.Radix16;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            codec = RadixCodec.Radix32;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            codec = RadixCodec.Radix36;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            value = uint.MaxValue;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            value = uint.MinValue;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            value = uint.MaxValue / 2;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            value = ulong.MaxValue;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            value = ulong.MinValue;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            value = ulong.MaxValue / 2;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length = {radix.Length}");
+
+            long lvalue = long.MaxValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = -1L;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = long.MinValue + 1;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = long.MinValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = long.MaxValue / 2;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            codec = RadixCodec.Radix86;
+            lvalue = long.MaxValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = -1L;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = long.MinValue + 1;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = long.MinValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            lvalue = long.MaxValue / 2;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
+
+            value = ulong.MaxValue;
+
+            codec = RadixCodec.Radix16;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length(16) = {radix.Length}");
+
+            codec = RadixCodec.Radix32;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length(32) = {radix.Length}");
+
+            codec = RadixCodec.Radix36;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length(36) = {radix.Length}");
+
+            codec = RadixCodec.Radix64;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length(64) = {radix.Length}");
+
+            codec = RadixCodec.Radix86;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length(86) = {radix.Length}");
+
+
 
             Action<List<int>> showCount = list => Console.WriteLine(list?.Count.ToString("N0") ?? "Calculating...");
 
