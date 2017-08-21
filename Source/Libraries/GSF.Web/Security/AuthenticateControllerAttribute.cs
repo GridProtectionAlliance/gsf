@@ -104,11 +104,19 @@ namespace GSF.Web.Security
         {
             HttpRequestMessage request = context.Request;
             AuthenticationHeaderValue authorization = request.Headers.Authorization;
+            string value;
 
             if (authorization?.Scheme != "Basic")
             {
                 // No authentication was attempted for this authentication method, do not set principal,
                 // which would indicate success, nor ErrorResult, which would indicate an error
+                return;
+            }
+
+            if (request.QueryParameters().TryGetValue("logout", out value) && value.ParseBoolean())
+            {
+                // Logout was requested, set ErrorResult
+                context.ErrorResult = new AuthenticationFailureResult("Logout requested", request);
                 return;
             }
 
