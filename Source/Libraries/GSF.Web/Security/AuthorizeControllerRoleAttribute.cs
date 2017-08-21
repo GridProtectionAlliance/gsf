@@ -124,18 +124,6 @@ namespace GSF.Web.Security
             {
                 // Setup the principal
                 filterContext.HttpContext.User = Thread.CurrentPrincipal;
-
-                // Make sure current user ID is cached
-                if (!AuthorizationCache.UserIDs.ContainsKey(userName))
-                {
-                    using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                    {
-                        Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
-
-                        if ((object)userID != null)
-                            AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
-                    }
-                }
             }
         }
 

@@ -111,18 +111,6 @@ namespace GSF.Web.Security
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
                 throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
-            // Make sure current user ID is cached
-            if (!AuthorizationCache.UserIDs.ContainsKey(userName))
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                {
-                    Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
-
-                    if ((object)userID != null)
-                        AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
-                }
-            }
-
             return true;
         }
 
