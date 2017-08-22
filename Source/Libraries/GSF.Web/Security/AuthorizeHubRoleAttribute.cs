@@ -28,7 +28,6 @@ using System.Security.Principal;
 using System.Threading;
 using GSF.Collections;
 using GSF.Data;
-using GSF.Identity;
 using GSF.Security;
 using Microsoft.AspNet.SignalR;
 

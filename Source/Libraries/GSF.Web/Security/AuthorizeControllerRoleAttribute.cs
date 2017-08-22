@@ -28,7 +28,6 @@ using System.Threading;
 using System.Web.Mvc;
 using GSF.Collections;
 using GSF.Data;
-using GSF.Identity;
 using GSF.Security;
 
 namespace GSF.Web.Security
