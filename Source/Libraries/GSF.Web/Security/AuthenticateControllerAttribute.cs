@@ -90,6 +90,11 @@ namespace GSF.Web.Security
             }
         }
 
+        /// <summary>
+        /// Gets or sets settings category to use for loading data context for security info.
+        /// </summary>
+        public string SettingsCategory { get; set; } = "securityProvider";
+
         #endregion
 
         #region [ Methods ]
@@ -139,9 +144,14 @@ namespace GSF.Web.Security
 
                     // Authenticate user, if not already authenticated
                     if (principal.Identity.IsAuthenticated || SecurityProviderCache.CurrentProvider.Authenticate(password))
+                    {
                         context.Principal = principal;
+                        ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+                    }
                     else
-                        context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request);
+                    {
+                        context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request);                        
+                    }
                 }
                 else
                 {

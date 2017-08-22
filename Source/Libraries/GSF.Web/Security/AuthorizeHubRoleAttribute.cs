@@ -110,6 +110,8 @@ namespace GSF.Web.Security
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
                 throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
+            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+
             return true;
         }
 

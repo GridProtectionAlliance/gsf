@@ -123,6 +123,7 @@ namespace GSF.Web.Security
             {
                 // Setup the principal
                 filterContext.HttpContext.User = Thread.CurrentPrincipal;
+                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
             }
         }
 
