@@ -30,6 +30,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -226,6 +227,17 @@ namespace GSF.Web
                     $"{forwardSpacing}{(lineAndLength.Item2 > minLength ? lineAndLength.Item1.Substring(minLength) : lineAndLength.Item1)}" :
                     lineAndLength.Item1.ToNonNullNorEmptyString())
                 .ToDelimitedString(Environment.NewLine);
+        }
+
+        /// <summary>
+        /// Adds basic authentication header to an <see cref="HttpClient"/>
+        /// </summary>
+        /// <param name="client"><see cref="HttpClient"/> instance to add authentication header.</param>
+        /// <param name="userName">User name for basic authentication.</param>
+        /// <param name="password">Password for basic authentication.</param>
+        public static void AddBasicAuthenticationHeader(this HttpClient client, string userName, string password)
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{userName}:{password}")));
         }
 
         /// <summary>
