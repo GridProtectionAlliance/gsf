@@ -95,6 +95,9 @@ namespace GSF.Web.Security
         /// </returns>
         protected override bool UserAuthorized(IPrincipal user)
         {
+            if ((object)user == null)
+                return false;
+
             // Get current user name
             string userName = user.Identity.Name;
 

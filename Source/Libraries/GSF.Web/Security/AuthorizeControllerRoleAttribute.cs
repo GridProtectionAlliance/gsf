@@ -103,6 +103,13 @@ namespace GSF.Web.Security
         /// <param name="filterContext">The filter context.</param>
         public void OnAuthorization(AuthorizationContext filterContext)
         {
+            if ((object)Thread.CurrentPrincipal == null || (object)Thread.CurrentPrincipal.Identity == null)
+            {
+                filterContext.Result = new HttpUnauthorizedResult($"Access is denied - current user is undefined");
+                filterContext.HttpContext.User = null;
+                return;
+            }
+            
             // Get current user name
             string userName = Thread.CurrentPrincipal.Identity.Name;
 
