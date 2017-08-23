@@ -95,6 +95,48 @@ function getBool(val) {
     return !isNaN(num) ? !!num : !!String(val).toLowerCase().replace(false, "");
 }
 
+function getParameterByName(name, url) {
+    if (!url)
+        url = window.location.href;
+
+    name = name.replace(/[\[\]]/g, "\\$&");
+
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+
+    if (!results)
+        return null;
+
+    if (!results[2])
+        return "";
+
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function clearCachedCredentials(securedUrl, successCallback) {
+    if (isIE) {
+        document.execCommand("ClearAuthenticationCache", "false");
+                
+        if (successCallback)
+            successCallback(true);
+    } else {
+        var request = new XMLHttpRequest();
+
+        request.open("GET", securedUrl, true);
+
+        // Send in an invalid set of credentials, i.e., base64 encoded _logout:_logout:
+        request.setRequestHeader("Authorization", "Basic X2xvZ291dDpfbG9nb3V0");
+
+        if (successCallback)
+            request.onreadystatechange = function() {
+                if (this.readyState == XMLHttpRequest.DONE)
+                    successCallback(this.status == 401);
+            };
+
+        request.send();
+    }
+}
+
 // Number functions
 Number.prototype.truncate = function() {
     if (typeof Math.trunc != "function")
