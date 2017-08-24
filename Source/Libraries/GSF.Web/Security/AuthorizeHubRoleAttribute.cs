@@ -93,19 +93,31 @@ namespace GSF.Web.Security
 
         #region [ Methods ]
 
-        // This is for hub 
+        /// <summary>
+        /// Determines whether client is authorized to connect to <see cref="IHub" />.
+        /// </summary>
+        /// <param name="hubDescriptor">Description of the hub client is attempting to connect to.</param>
+        /// <param name="request">The (re)connect request from the client.</param>
+        /// <returns><c>true</c> if the caller is authorized to connect to the hub; otherwise, <c>false</c>.</returns>
         public override bool AuthorizeHubConnection(HubDescriptor hubDescriptor, IRequest request)
         {
             string sessionID = SessionHandler.GetSessionIDFromCookie(request, SessionToken);
-            Guid.TryParse(sessionID, out m_sessionID);            
+
+            Guid.TryParse(sessionID, out m_sessionID);
 
             return base.AuthorizeHubConnection(hubDescriptor, request);
         }
 
-        // This is for method
+        /// <summary>
+        /// Determines whether client is authorized to invoke the <see cref="IHub" /> method.
+        /// </summary>
+        /// <param name="hubIncomingInvokerContext">An <see cref="IHubIncomingInvokerContext" /> providing details regarding the <see cref="IHub" /> method invocation.</param>
+        /// <param name="appliesToMethod">Indicates whether the interface instance is an attribute applied directly to a method.</param>
+        /// <returns><c>true</c> if the caller is authorized to invoke the <see cref="IHub" /> method; otherwise, <c>false</c>.</returns>
         public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)
         {
-            string sessionID = SessionHandler.GetSessionIDFromCookie(hubIncomingInvokerContext.Hub.Context.Request, SessionToken);
+            string sessionID = SessionHandler.GetSessionIDFromCookie(hubIncomingInvokerContext.Hub?.Context.Request, SessionToken);
+
             Guid.TryParse(sessionID, out m_sessionID);
 
             return base.AuthorizeHubMethodInvocation(hubIncomingInvokerContext, appliesToMethod);
@@ -120,29 +132,27 @@ namespace GSF.Web.Security
         /// </returns>
         protected override bool UserAuthorized(IPrincipal user)
         {
-            if (AuthenticateControllerAttribute.TryGetPrincipal(m_sessionID, out user))
-            {
-                // Get current user name
-                string userName = user.Identity.Name;
+            if (!AuthenticateControllerAttribute.TryGetPrincipal(m_sessionID, out user))
+                return false;
 
-                // Setup the principal
-                Thread.CurrentPrincipal = user;
-                SecurityProviderCache.ValidateCurrentProvider(userName);
-                user = Thread.CurrentPrincipal;
+            // Get current user name
+            string userName = user.Identity.Name;
 
-                // Verify that the current thread principal has been authenticated.
-                if (!user.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
-                    throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+            // Setup the principal
+            Thread.CurrentPrincipal = user;
+            SecurityProviderCache.ValidateCurrentProvider(userName);
+            user = Thread.CurrentPrincipal;
 
-                if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
-                    throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+            // Verify that the current thread principal has been authenticated.
+            if (!user.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
+                throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
 
-                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
+                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
-                return true;
-            }
+            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
 
-            return false;
+            return true;
         }
 
         #endregion
