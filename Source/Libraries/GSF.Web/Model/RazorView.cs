@@ -22,14 +22,19 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Web;
 using GSF.Collections;
+using GSF.Configuration;
 using GSF.Data;
+using GSF.Web.Security;
 using RazorEngine.Templating;
+using Timer = System.Timers.Timer;
 
 // ReSharper disable StaticMemberInGenericType
 namespace GSF.Web.Model
@@ -41,15 +46,27 @@ namespace GSF.Web.Model
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default value for <see cref="SessionTimeout"/>.
+        /// </summary>
+        public const double DefaultSessionTimeout = 20.0D;
+
+        /// <summary>
+        /// Default value for <see cref="SessionMonitorInterval"/>.
+        /// </summary>
+        public const double DefaultSessionMonitorInterval = 60000.0D;
+
         // Fields
         private readonly IRazorEngine m_razorEngine;
-
         private readonly DynamicViewBag m_viewBag = new DynamicViewBag();
         private Dictionary<string, string> m_parameters;
 
         #endregion
 
         #region [ Constructors ]
+
         /// <summary>
         /// Creates a new <see cref="RazorView"/>.
         /// </summary>
@@ -71,7 +88,8 @@ namespace GSF.Web.Model
         /// <param name="pagedViewModelHubType">Type of SignalR hub for views based on paged view model, if any.</param>
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null)
+        /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
+        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null, string sessionToken = null)
         {
             m_razorEngine = razorEngine;
             TemplateName = templateName;
@@ -90,42 +108,27 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets or sets name of template file.
         /// </summary>
-        public string TemplateName
-        {
-            get; set;
-        }
+        public string TemplateName { get; set; }
 
         /// <summary>
         /// Gets or sets reference to model to use when rendering template.
         /// </summary>
-        public object Model
-        {
-            get; set;
-        }
+        public object Model { get; set; }
 
         /// <summary>
         /// Gets or sets type of <see cref="Model"/>.
         /// </summary>
-        public Type ModelType
-        {
-            get; set;
-        }
+        public Type ModelType { get; set; }
 
         /// <summary>
         /// Gets or sets type of data model for views based on paged view model.
         /// </summary>
-        public Type PagedViewModelDataType
-        {
-            get; set;
-        }
+        public Type PagedViewModelDataType { get; set; }
 
         /// <summary>
         /// Gets or sets type of SignalR hub for views based on paged view model.
         /// </summary>
-        public Type PagedViewModelHubType
-        {
-            get; set;
-        }
+        public Type PagedViewModelHubType { get; set; }
 
         /// <summary>
         /// Gets reference to view bag used when rendering template.
@@ -164,19 +167,12 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets or sets database connection to provide to <see cref="DataContext"/>, if any.
         /// </summary>
-        public AdoDataConnection Database
-        {
-            get;
-            set;
-        }
+        public AdoDataConnection Database { get; set; }
 
         /// <summary>
         /// Gets or sets delegate used to handle exceptions.
         /// </summary>
-        public Action<Exception> ExceptionHandler
-        {
-            get; set;
-        }
+        public Action<Exception> ExceptionHandler { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="IRazorEngine"/> to use for the <see cref="DataContext"/> provided to the view; defaults to <c>null</c>.
@@ -187,11 +183,12 @@ namespace GSF.Web.Model
         /// to generate template based HTML input fields for a view. The default HTML input templates are defined
         /// as embedded resources in GSF.Web.
         /// </remarks>
-        public IRazorEngine DataContextEngine
-        {
-            get;
-            set;
-        }
+        public IRazorEngine DataContextEngine { get; set; }
+
+        /// <summary>
+        /// Gets or sets the token used for identifying the session ID in cookie headers.
+        /// </summary>
+        public string SessionToken { get; set; }
 
         #endregion
 
@@ -217,9 +214,10 @@ namespace GSF.Web.Model
         /// Compiles and executes view template for specified request message and post data.
         /// </summary>
         /// <param name="request">HTTP request message.</param>
+        /// <param name="response">HTTP response message.</param>
         /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <returns>Rendered result.</returns>
-        public string Execute(HttpRequestMessage request, bool isPost)
+        public string Execute(HttpRequestMessage request, HttpResponseMessage response, bool isPost)
         {
             using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
@@ -228,7 +226,30 @@ namespace GSF.Web.Model
 
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", request);
+                m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
+
+                // See if a client session identifier has been defined for this execution request
+                Guid sessionID;
+                
+                if (SessionHandler.TryGetSessionID(request, SessionToken, out sessionID))
+                {
+                    Tuple<DynamicViewBag, Ticks> session;
+                    DynamicViewBag sessionState;
+
+                    // Make sure session state is restored for this request, creating it if necessary
+                    if (!s_sessionCache.TryGetValue(sessionID, out session) || (object)session?.Item1 == null)
+                        sessionState = new DynamicViewBag();
+                    else
+                        sessionState = session.Item1;
+
+                    // Update the last access time for the session state
+                    s_sessionCache[sessionID] = new Tuple<DynamicViewBag, Ticks>(sessionState, DateTime.UtcNow.Ticks);
+                    s_sessionCacheMonitor.Enabled = true;
+
+                    // Provide session state to view
+                    m_viewBag.AddValue("Session", sessionState);
+                }
 
                 return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
@@ -238,14 +259,79 @@ namespace GSF.Web.Model
         /// Asynchronously compiles and executes view template for specified request message and post data.
         /// </summary>
         /// <param name="request">HTTP request message.</param>
+        /// <param name="response">HTTP response message.</param>
         /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <returns>Task that will provide rendered result.</returns>
-        public Task<string> ExecuteAsync(HttpRequestMessage request, bool isPost, CancellationToken cancellationToken)
+        public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, bool isPost, CancellationToken cancellationToken)
         {
-            return Task.Run(() => Execute(request, isPost), cancellationToken);
+            return Task.Run(() => Execute(request, response, isPost), cancellationToken);
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Events
+
+        /// <summary>
+        /// Raised when a client session is being expired.
+        /// </summary>
+        public static event EventHandler<EventArgs<Guid, DynamicViewBag>> SessionExpired;
+
+        // Static Fields
+        private static readonly Timer s_sessionCacheMonitor;
+        private static readonly ConcurrentDictionary<Guid, Tuple<DynamicViewBag, Ticks>> s_sessionCache;
+
+        // Static Constructor
+        static RazorView()
+        {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
+            settings.Add("SessionTimeout", DefaultSessionTimeout, "The timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.");
+            settings.Add("SessionMonitorInterval", DefaultSessionMonitorInterval, "The interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.");
+
+            SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
+            SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
+
+            s_sessionCacheMonitor = new Timer(SessionMonitorInterval);
+            s_sessionCacheMonitor.Elapsed += s_sessionCacheMonitor_Elapsed;
+            s_sessionCacheMonitor.Enabled = false;
+            s_sessionCache = new ConcurrentDictionary<Guid, Tuple<DynamicViewBag, Ticks>>();
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.
+        /// </summary>
+        public static double SessionTimeout { get; }
+
+        /// <summary>
+        /// Gets interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.
+        /// </summary>
+        public static double SessionMonitorInterval { get; }
+
+        // Static Methods
+        private static void s_sessionCacheMonitor_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            foreach (KeyValuePair<Guid, Tuple<DynamicViewBag, Ticks>> clientSession in s_sessionCache)
+            {
+                Guid sessionID = clientSession.Key;
+                Ticks lastAccessTime = clientSession.Value.Item2;
+
+                // Check for expired client sessions
+                if ((DateTime.UtcNow.Ticks - lastAccessTime).ToMinutes() > SessionTimeout)
+                {
+                    Tuple<DynamicViewBag, Ticks> session;
+
+                    if (s_sessionCache.TryRemove(sessionID, out session))
+                        SessionExpired?.Invoke(null, new EventArgs<Guid, DynamicViewBag>(sessionID, session.Item1));
+                }
+            }
+
+            s_sessionCacheMonitor.Enabled = s_sessionCache.Count > 0;
+        }
+
+        #endregion    
     }
 }

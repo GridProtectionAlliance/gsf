@@ -205,6 +205,7 @@
     <Compile Include="Security\NamespaceDoc.cs" />
     <Compile Include="Security\SecurityHub.cs" />
     <Compile Include="Model\RazorView.cs" />
+    <Compile Include="Security\SessionHandler.cs" />
     <Compile Include="UI\ClientSideExtensions.cs" />
     <Compile Include="WebExtensions.cs" />
   </ItemGroup>

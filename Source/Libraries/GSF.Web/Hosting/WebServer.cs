@@ -42,6 +42,7 @@ using GSF.IO;
 using GSF.IO.Checksums;
 using GSF.Reflection;
 using GSF.Web.Model;
+using GSF.Web.Security;
 using Microsoft.Ajax.Utilities;
 
 namespace GSF.Web.Hosting
@@ -172,6 +173,11 @@ namespace GSF.Web.Hosting
         /// </remarks>
         public ConcurrentDictionary<string, Tuple<Type, Type>> PagedViewModelTypes => m_pagedViewModelTypes;
 
+        /// <summary>
+        /// Gets or sets the token used for identifying the session ID in cookie headers.
+        /// </summary>
+        public string SessionToken { get; set; }
+
         #endregion
 
         #region [ Methods ]
@@ -232,12 +238,12 @@ namespace GSF.Web.Hosting
             {
                 case ".cshtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost, cancellationToken);
+                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, SessionToken).ExecuteAsync(request, response, isPost, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost, cancellationToken);
+                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, SessionToken).ExecuteAsync(request, response, isPost, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":
@@ -521,13 +527,15 @@ namespace GSF.Web.Hosting
                     settings.Add("MinifyJavascript", "true", "Determines if minification should be applied to rendered Javascript files.");
                     settings.Add("MinifyStyleSheets", "true", "Determines if minification should be applied to rendered CSS files.");
                     settings.Add("UseMinifyInDebug", "false", "Determines if minification should be applied when running a Debug build.");
+                    settings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
 
                     return new WebServer(FilePath.GetAbsolutePath(settings["WebRootPath"].Value), razorEngineCS, razorEngineVB)
                     {
                         ClientCacheEnabled = settings["ClientCacheEnabled"].Value.ParseBoolean(),
                         MinifyJavascript = settings["MinifyJavascript"].Value.ParseBoolean(),
                         MinifyStyleSheets = settings["MinifyStyleSheets"].Value.ParseBoolean(),
-                        UseMinifyInDebug = settings["UseMinifyInDebug"].Value.ParseBoolean()
+                        UseMinifyInDebug = settings["UseMinifyInDebug"].Value.ParseBoolean(),
+                        SessionToken = settings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken)
                     };
                 });
             }
