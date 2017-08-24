@@ -26,10 +26,11 @@ using System.Linq;
 using System.Security;
 using System.Security.Principal;
 using System.Threading;
+using Microsoft.AspNet.SignalR;
+using Microsoft.AspNet.SignalR.Hubs;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Security;
-using Microsoft.AspNet.SignalR;
 
 namespace GSF.Web.Security
 {
@@ -43,6 +44,7 @@ namespace GSF.Web.Security
 
         // Fields
         private string[] m_allowedRoles;
+        private Guid m_sessionID;
 
         #endregion
 
@@ -82,9 +84,32 @@ namespace GSF.Web.Security
         /// </summary>
         public string[] AllowedRoles => m_allowedRoles ?? (m_allowedRoles = Roles?.Split(',').Select(role => role.Trim()).Where(role => !string.IsNullOrEmpty(role)).ToArray() ?? new string[0]);
 
+        /// <summary>
+        /// Gets or sets the token used for identifying the session ID in cookie headers.
+        /// </summary>
+        public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
+
         #endregion
 
         #region [ Methods ]
+
+        // This is for hub 
+        public override bool AuthorizeHubConnection(HubDescriptor hubDescriptor, IRequest request)
+        {
+            string sessionID = SessionHandler.GetSessionIDFromCookie(request, SessionToken);
+            Guid.TryParse(sessionID, out m_sessionID);            
+
+            return base.AuthorizeHubConnection(hubDescriptor, request);
+        }
+
+        // This is for method
+        public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)
+        {
+            string sessionID = SessionHandler.GetSessionIDFromCookie(hubIncomingInvokerContext.Hub.Context.Request, SessionToken);
+            Guid.TryParse(sessionID, out m_sessionID);
+
+            return base.AuthorizeHubMethodInvocation(hubIncomingInvokerContext, appliesToMethod);
+        }
 
         /// <summary>
         /// Provides an entry point for custom authorization checks.
@@ -95,27 +120,29 @@ namespace GSF.Web.Security
         /// </returns>
         protected override bool UserAuthorized(IPrincipal user)
         {
-            if ((object)user == null)
-                return false;
+            if (AuthenticateControllerAttribute.TryGetPrincipal(m_sessionID, out user))
+            {
+                // Get current user name
+                string userName = user.Identity.Name;
 
-            // Get current user name
-            string userName = user.Identity.Name;
+                // Setup the principal
+                Thread.CurrentPrincipal = user;
+                SecurityProviderCache.ValidateCurrentProvider(userName);
+                user = Thread.CurrentPrincipal;
 
-            // Setup the principal
-            Thread.CurrentPrincipal = user;
-            SecurityProviderCache.ValidateCurrentProvider(userName);
-            user = Thread.CurrentPrincipal;
+                // Verify that the current thread principal has been authenticated.
+                if (!user.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
+                    throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
 
-            // Verify that the current thread principal has been authenticated.
-            if (!user.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
-                throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+                if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
+                    throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
-            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
 
-            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+                return true;
+            }
 
-            return true;
+            return false;
         }
 
         #endregion

@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Principal;
@@ -30,6 +32,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Filters;
+using GSF.Configuration;
 using GSF.Security;
 
 namespace GSF.Web.Security
@@ -95,6 +98,16 @@ namespace GSF.Web.Security
         /// </summary>
         public string SettingsCategory { get; set; } = "securityProvider";
 
+        /// <summary>
+        /// Gets or sets the token used for identifying the session ID in cookie headers.
+        /// </summary>
+        public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
+
+        /// <summary>
+        /// Gets or sets the login page used as a redirect location when authentication fails.
+        /// </summary>
+        public string LoginPage { get; set; } = "/Login.cshtml";
+
         #endregion
 
         #region [ Methods ]
@@ -110,17 +123,64 @@ namespace GSF.Web.Security
             HttpRequestMessage request = context.Request;
             AuthenticationHeaderValue authorization = request.Headers.Authorization;
 
-            if (authorization?.Scheme != "Basic")
+            // Do nothing if anonymous access is requested
+            if (authorization?.Scheme == null)
+                return;
+
+            Guid sessionID;
+            bool hasSession = SessionHandler.TryGetSessionID(request, SessionToken, out sessionID);
+            string authorizationParameter = null;
+
+            // Try to retrieve any existing authorization
+            if (hasSession)
+                s_authorizationCache.TryGetValue(sessionID, out authorizationParameter);
+
+            if (authorization.Scheme != "Basic" && string.IsNullOrEmpty(authorizationParameter))
             {
-                // No authentication was attempted for this authentication method, do not set principal,
-                // which would indicate success, nor ErrorResult, which would indicate an error
+                // Check if user was already previously validated with pass-through authentication
+                if (authorizationParameter == "")
+                    return;
+
+                // Assuming pass-through authentication - make sure user is defined in security provider, authenticated and has a role
+                string identityName = context.Principal?.Identity?.Name;
+
+                if (!string.IsNullOrEmpty(identityName))
+                {
+                    SecurityProviderCache.ValidateCurrentProvider(identityName);
+                    SecurityIdentity identity = Thread.CurrentPrincipal.Identity as SecurityIdentity;
+
+                    if ((object)identity != null)
+                    {
+                        UserData userData = identity.Provider?.UserData;
+
+                        if ((object)userData != null && userData.IsAuthenticated && userData.Roles.Count > 0)
+                        {
+                            // User is valid, do not set principal, which would indicate success, nor ErrorResult,
+                            // which would indicate an error
+                            authorizationParameter = "";
+
+                            if (hasSession)
+                                s_authorizationCache[sessionID] = authorizationParameter;
+
+                            return;
+                        }
+                    }
+                }
+
+                // Not a valid user for current security provider, provide an obscure error message
+                context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Redirect, LoginPage);
                 return;
             }
+            else
+            {
+                if (string.IsNullOrEmpty(authorizationParameter))
+                    authorizationParameter = authorization.Parameter;
+            }
 
-            if (string.IsNullOrEmpty(authorization.Parameter))
+            if (string.IsNullOrEmpty(authorizationParameter))
             {
                 // No authorization credentials were provided, set ErrorResult
-                context.ErrorResult = new AuthenticationFailureResult("Missing credentials", request);
+                context.ErrorResult = new AuthenticationFailureResult("Missing credentials", request, HttpStatusCode.Redirect, LoginPage);
                 return;
             }
 
@@ -128,7 +188,7 @@ namespace GSF.Web.Security
             {
                 string userName, password;
 
-                if (TryParseCredentials(authorization.Parameter, out userName, out password))
+                if (TryParseCredentials(authorizationParameter, out userName, out password))
                 {
                     // Setup the security principal
                     SecurityProviderCache.ValidateCurrentProvider(userName);
@@ -138,20 +198,55 @@ namespace GSF.Web.Security
                     if (principal.Identity.IsAuthenticated || SecurityProviderCache.CurrentProvider.Authenticate(password))
                     {
                         context.Principal = principal;
+
+                        if (hasSession)
+                            s_authorizationCache[sessionID] = authorizationParameter;
+
                         ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
                     }
                     else
                     {
+                        // Authentication was attempted but failed, set ErrorResult - don't redirect, need a 401 status code
                         context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request);                        
                     }
                 }
                 else
                 {
-                    // Authentication was attempted but failed, set ErrorResult
-                    context.ErrorResult = new AuthenticationFailureResult("Invalid credentials", request);
+                    // Unable to parse authorization parameter
+                    context.ErrorResult = new AuthenticationFailureResult("Invalid credentials", request, HttpStatusCode.Redirect, LoginPage);
                 }
             },
             cancellationToken);
+        }
+
+        /// <summary>
+        /// Attempt to authorize and provide current principal for specified <paramref name="sessionID"/>.
+        /// </summary>
+        /// <param name="sessionID">Session ID to user.</param>
+        /// <param name="principal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
+        /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
+        public static bool TryGetPrincipal(Guid sessionID, out IPrincipal principal)
+        {
+            string authorizationParameter = null;
+
+            if (s_authorizationCache.TryGetValue(sessionID, out authorizationParameter))
+            {
+                string userName, password;
+
+                if (TryParseCredentials(authorizationParameter, out userName, out password))
+                {
+                    // Setup the security principal
+                    SecurityProviderCache.ValidateCurrentProvider(userName);
+                    principal = Thread.CurrentPrincipal;
+
+                    // Authenticate user, if not already authenticated
+                    if (principal.Identity.IsAuthenticated || SecurityProviderCache.CurrentProvider.Authenticate(password))
+                        return true;
+                }
+            }
+
+            principal = null;
+            return false;
         }
 
         /// <summary>
@@ -176,7 +271,30 @@ namespace GSF.Web.Security
 
         #region [ Static ]
 
+        // Static Fields
+        private static readonly ConcurrentDictionary<Guid, string> s_authorizationCache;
+
+        // Static Constructor
+        static AuthenticateControllerAttribute()
+        {
+            s_authorizationCache = new ConcurrentDictionary<Guid, string>();
+
+            // Attach to razor view session expiration event so any cached authorizations can also be cleared
+            Model.RazorView.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
+        }
+
         // Static Methods
+
+        /// <summary>
+        /// Clears any cached authorizations for the specified <paramref name="sessionID"/>.
+        /// </summary>
+        /// <param name="sessionID">Identifier of session authorization to clear.</param>
+        /// <returns><c>true</c> if session authorization was found and cleared; otherwise, <c>false</c>.</returns>
+        public static bool ClearAuthorizationCache(Guid sessionID)
+        {
+            string authorizationParameter;
+            return s_authorizationCache.TryRemove(sessionID, out authorizationParameter);
+        }
 
         private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)
         {

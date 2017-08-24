@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -41,10 +42,14 @@ namespace GSF.Web.Security
         /// </summary>
         /// <param name="reasonPhrase">Phrase that describes reason for authorization failure.</param>
         /// <param name="requestMessage">HTTP request message to use as the source of the response.</param>
-        public AuthenticationFailureResult(string reasonPhrase, HttpRequestMessage requestMessage)
+        /// <param name="statusCode">HTTP status code to return for authorization failure.</param>
+        /// <param name="redirectLocation">HTTP redirect location, if used.</param>
+        public AuthenticationFailureResult(string reasonPhrase, HttpRequestMessage requestMessage, HttpStatusCode statusCode = HttpStatusCode.Unauthorized, string redirectLocation = null)
         {
             ReasonPhrase = reasonPhrase;
             RequestMessage = requestMessage;
+            StatusCode = statusCode;
+            RedirectLocation = redirectLocation;
         }
 
         #endregion
@@ -61,6 +66,16 @@ namespace GSF.Web.Security
         /// </summary>
         public HttpRequestMessage RequestMessage { get; }
 
+        /// <summary>
+        /// Gets the HTTP status code to return for authorization failure.
+        /// </summary>
+        public HttpStatusCode StatusCode { get; }
+
+        /// <summary>
+        /// Gets the HTTP redirect location, if used.
+        /// </summary>
+        public string RedirectLocation { get; private set; }
+
         #endregion
 
         #region [ Methods ]
@@ -72,11 +87,21 @@ namespace GSF.Web.Security
         /// <returns>Response message result of execution.</returns>
         public Task<HttpResponseMessage> ExecuteAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            HttpResponseMessage response = new HttpResponseMessage(StatusCode)
             {
                 ReasonPhrase = ReasonPhrase,
-                RequestMessage = RequestMessage
-            });
+                RequestMessage = RequestMessage,
+            };
+
+            if (!string.IsNullOrWhiteSpace(RedirectLocation))
+            {
+                if (!RedirectLocation.EndsWith("/"))
+                    RedirectLocation += "/";
+
+                response.Headers.Location = new Uri($"{RequestMessage.RequestUri.GetLeftPart(UriPartial.Authority)}{RedirectLocation}");
+            }
+
+            return Task.FromResult(response);
         }
 
         #endregion

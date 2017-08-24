@@ -27,6 +27,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNet.SignalR;
 
 namespace GSF.Web.Security
 {
@@ -138,6 +139,24 @@ namespace GSF.Web.Security
         {
             CookieHeaderValue cookie = request.Headers.GetCookies(sessionToken).FirstOrDefault();
             string sessionID = cookie?[sessionToken ?? DefaultSessionToken].Value;
+            Guid result;
+
+            // Validate session ID format
+            if (!Guid.TryParse(sessionID, out result))
+                sessionID = null;
+
+            return sessionID;
+        }
+
+        /// <summary>
+        /// Gets the session ID string as defined in the SignalR cookie header values.
+        /// </summary>
+        /// <param name="request">The target SignalR request.</param>
+        /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
+        /// <returns>Session ID string, if defined; otherwise, <c>null</c>.</returns>
+        public static string GetSessionIDFromCookie(IRequest request, string sessionToken)
+        {           
+            string sessionID = request?.Cookies?[sessionToken ?? DefaultSessionToken].Value;
             Guid result;
 
             // Validate session ID format
