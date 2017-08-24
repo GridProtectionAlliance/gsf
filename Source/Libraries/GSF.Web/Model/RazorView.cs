@@ -312,22 +312,35 @@ namespace GSF.Web.Model
         public static double SessionMonitorInterval { get; }
 
         // Static Methods
+
+        /// <summary>
+        /// Clears any cached session for the specified <paramref name="sessionID"/>.
+        /// </summary>
+        /// <param name="sessionID">Identifier of session to clear.</param>
+        /// <returns><c>true</c> if session was found and cleared; otherwise, <c>false</c>.</returns>
+        public static bool ClearSessionCache(Guid sessionID)
+        {
+            Tuple<DynamicViewBag, Ticks> session;
+
+            if (s_sessionCache.TryRemove(sessionID, out session))
+            {
+                SessionExpired?.Invoke(null, new EventArgs<Guid, DynamicViewBag>(sessionID, session.Item1));
+                return true;
+            }
+
+            return false;
+        }
+
         private static void s_sessionCacheMonitor_Elapsed(object sender, ElapsedEventArgs e)
         {
+            // Check for expired client sessions
             foreach (KeyValuePair<Guid, Tuple<DynamicViewBag, Ticks>> clientSession in s_sessionCache)
             {
-                Guid sessionID = clientSession.Key;
                 Ticks lastAccessTime = clientSession.Value.Item2;
 
-                // Check for expired client sessions
                 if ((DateTime.UtcNow.Ticks - lastAccessTime).ToMinutes() > SessionTimeout)
-                {
-                    Tuple<DynamicViewBag, Ticks> session;
-
-                    if (s_sessionCache.TryRemove(sessionID, out session))
-                        SessionExpired?.Invoke(null, new EventArgs<Guid, DynamicViewBag>(sessionID, session.Item1));
-                }
-            }
+                    ClearSessionCache(clientSession.Key);
+             }
 
             s_sessionCacheMonitor.Enabled = s_sessionCache.Count > 0;
         }

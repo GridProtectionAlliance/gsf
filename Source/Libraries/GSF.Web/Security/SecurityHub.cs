@@ -110,6 +110,13 @@ namespace GSF.Web.Security
         public void Logout()
         {
             SecurityProviderCache.CurrentProvider = null;
+
+            // TODO: Given session ID (provide as parameter?)
+            Guid sessionID = Guid.Empty;
+
+            // Clear any cached session state for user (this also clears any cached authorizations)
+            RazorView.ClearSessionCache(sessionID);
+
         }
 
         /// <summary>
