@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  RoleBasedSecurityAttribute.cs - Gbtc
+//  AuthorizeControllerRoleAttribute.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -27,7 +27,6 @@ using System.Security;
 using System.Threading;
 using System.Web.Mvc;
 using GSF.Collections;
-using GSF.Data;
 using GSF.Security;
 
 namespace GSF.Web.Security
@@ -57,8 +56,6 @@ namespace GSF.Web.Security
         public AuthorizeControllerRoleAttribute()
         {
             AllowedRoles = new string[0];
-            SettingsCategory = "securityProvider";
-            SecurityExceptionViewName = "SecurityError";
         }
 
         /// <summary>
@@ -68,9 +65,6 @@ namespace GSF.Web.Security
         {
             AllowedRoles = allowedRoles?.Split(',').Select(role => role.Trim()).
                 Where(role => !string.IsNullOrEmpty(role)).ToArray() ?? new string[0];
-
-            SettingsCategory = "securityProvider";
-            SecurityExceptionViewName = "SecurityError";
         }
 
         #endregion
@@ -78,20 +72,14 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets settings category to use for loading data context for security info.
+        /// Gets or sets settings category used to lookup security connection for user data context.
         /// </summary>
-        public string SettingsCategory
-        {
-            get; set;
-        }
+        public string SecuritySettingsCategory { get; set; } = "securityProvider";
 
         /// <summary>
         /// Gets or sets view name to show for security exceptions.
         /// </summary>
-        public string SecurityExceptionViewName
-        {
-            get; set;
-        }
+        public string SecurityExceptionViewName { get; set; } = "SecurityError";
 
         #endregion
 
@@ -105,7 +93,7 @@ namespace GSF.Web.Security
         {
             if ((object)Thread.CurrentPrincipal == null || (object)Thread.CurrentPrincipal.Identity == null)
             {
-                filterContext.Result = new HttpUnauthorizedResult($"Access is denied - current user is undefined");
+                filterContext.Result = new HttpUnauthorizedResult("Access is denied - current user is undefined");
                 filterContext.HttpContext.User = null;
                 return;
             }
@@ -130,7 +118,7 @@ namespace GSF.Web.Security
             {
                 // Setup the principal
                 filterContext.HttpContext.User = Thread.CurrentPrincipal;
-                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SecuritySettingsCategory));
             }
         }
 

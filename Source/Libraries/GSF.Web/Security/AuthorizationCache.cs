@@ -45,8 +45,8 @@ namespace GSF.Web.Security
         /// Caches authorized user.
         /// </summary>
         /// <param name="userName">User name to cache.</param>
-        /// <param name="settingsCategory">Settings category for user data context connection.</param>
-        public static void CacheAuthorization(string userName, string settingsCategory)
+        /// <param name="securitySettingsCategory">Settings category used to lookup security connection for user data context.</param>
+        public static void CacheAuthorization(string userName, string securitySettingsCategory)
         {
             // Make sure current user ID is cached
             if (UserIDs.ContainsKey(userName))
@@ -54,7 +54,7 @@ namespace GSF.Web.Security
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(settingsCategory))
+                using (AdoDataConnection connection = new AdoDataConnection(securitySettingsCategory))
                 {
                     Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
 

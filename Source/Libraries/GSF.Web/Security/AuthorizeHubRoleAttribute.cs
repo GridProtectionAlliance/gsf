@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AuthorizeHubRole.cs - Gbtc
+//  AuthorizeHubRoleAttribute.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -29,7 +29,7 @@ using System.Threading;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using GSF.Collections;
-using GSF.Data;
+using GSF.Configuration;
 using GSF.Security;
 
 namespace GSF.Web.Security
@@ -45,6 +45,8 @@ namespace GSF.Web.Security
         // Fields
         private string[] m_allowedRoles;
         private Guid m_sessionID;
+        private string m_sessionToken = SessionHandler.DefaultSessionToken;
+        private bool m_sessionTokenAssigned;
 
         #endregion
 
@@ -55,7 +57,6 @@ namespace GSF.Web.Security
         /// </summary>
         public AuthorizeHubRoleAttribute()
         {
-            SettingsCategory = "securityProvider";
         }
 
         /// <summary>
@@ -64,7 +65,6 @@ namespace GSF.Web.Security
         public AuthorizeHubRoleAttribute(string allowedRoles)
         {
             Roles = allowedRoles;
-            SettingsCategory = "securityProvider";
         }
 
         #endregion
@@ -72,12 +72,16 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets settings category to use for loading data context for security info.
+        /// Gets or sets settings category used to load configured settings. When defined,
+        /// <see cref="SessionToken"/> will be loaded from the configuration file settings
+        /// when not otherwise explicitly defined.
         /// </summary>
-        public string SettingsCategory
-        {
-            get; set;
-        }
+        public string SettingsCategory { get; set; } = "systemSettings";
+
+        /// <summary>
+        /// Gets or sets settings category used to lookup security connection for user data context.
+        /// </summary>
+        public string SecuritySettingsCategory { get; set; } = "securityProvider";
 
         /// <summary>
         /// Gets the allowed <see cref="AuthorizeAttribute.Roles"/> as a string array.
@@ -87,7 +91,18 @@ namespace GSF.Web.Security
         /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
         /// </summary>
-        public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
+        public string SessionToken
+        {
+            get
+            {
+                return m_sessionToken;
+            }
+            set
+            {
+                m_sessionToken = value;
+                m_sessionTokenAssigned = true;
+            }
+        }
 
         #endregion
 
@@ -101,6 +116,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if the caller is authorized to connect to the hub; otherwise, <c>false</c>.</returns>
         public override bool AuthorizeHubConnection(HubDescriptor hubDescriptor, IRequest request)
         {
+            LoadConfiguredSettings();
             m_sessionID = SessionHandler.GetSessionIDFromCookie(request, SessionToken);
             return base.AuthorizeHubConnection(hubDescriptor, request);
         }
@@ -113,6 +129,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if the caller is authorized to invoke the <see cref="IHub" /> method; otherwise, <c>false</c>.</returns>
         public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)
         {
+            LoadConfiguredSettings();
             m_sessionID = SessionHandler.GetSessionIDFromCookie(hubIncomingInvokerContext.Hub?.Context.Request, SessionToken);
             return base.AuthorizeHubMethodInvocation(hubIncomingInvokerContext, appliesToMethod);
         }
@@ -144,9 +161,23 @@ namespace GSF.Web.Security
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
                 throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
-            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SecuritySettingsCategory));
 
             return true;
+        }
+
+        private void LoadConfiguredSettings()
+        {
+            // Load configured settings, if not explicitly defined
+            if (string.IsNullOrWhiteSpace(SettingsCategory) || m_sessionTokenAssigned)
+                return;
+
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings[SettingsCategory];
+
+            systemSettings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
+
+            if (!m_sessionTokenAssigned)
+                SessionToken = systemSettings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken);
         }
 
         #endregion

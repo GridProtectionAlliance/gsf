@@ -45,8 +45,19 @@ namespace GSF.Web.Security
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default value for <see cref="LoginPage"/>.
+        /// </summary>
+        public const string DefaultLoginPage = "/Login.cshtml";
+
         // Fields
         private string m_realm;
+        private string m_sessionToken = SessionHandler.DefaultSessionToken;
+        private string m_loginPage = DefaultLoginPage;
+        private bool m_sessionTokenAssigned;
+        private bool m_loginPageAssigned;
 
         #endregion
 
@@ -94,19 +105,48 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Gets or sets settings category to use for loading data context for security info.
+        /// Gets or sets settings category used to load configured settings. When defined,
+        /// <see cref="SessionToken"/> and <see cref="LoginPage"/> will be loaded from the
+        /// configuration file settings when not otherwise explicitly defined.
         /// </summary>
-        public string SettingsCategory { get; set; } = "securityProvider";
+        public string SettingsCategory { get; set; } = "systemSettings";
+
+        /// <summary>
+        /// Gets or sets settings category used to lookup security connection for user data context.
+        /// </summary>
+        public string SecuritySettingsCategory { get; set; } = "securityProvider";
 
         /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
         /// </summary>
-        public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
+        public string SessionToken
+        {
+            get
+            {
+                return m_sessionToken;
+            }
+            set
+            {
+                m_sessionToken = value;
+                m_sessionTokenAssigned = true;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the login page used as a redirect location when authentication fails.
         /// </summary>
-        public string LoginPage { get; set; } = "/Login.cshtml";
+        public string LoginPage
+        {
+            get
+            {
+                return m_loginPage;
+            }
+            set
+            {
+                m_loginPage = value;
+                m_loginPageAssigned = true;
+            }
+        }
 
         #endregion
 
@@ -126,6 +166,8 @@ namespace GSF.Web.Security
             // Do nothing if anonymous access is requested
             if (authorization?.Scheme == null)
                 return;
+
+            LoadConfiguredSettings();
 
             Guid sessionID;
             bool hasSession = SessionHandler.TryGetSessionID(request, SessionToken, out sessionID);
@@ -171,11 +213,9 @@ namespace GSF.Web.Security
                 context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Redirect, LoginPage);
                 return;
             }
-            else
-            {
-                if (string.IsNullOrEmpty(authorizationParameter))
-                    authorizationParameter = authorization.Parameter;
-            }
+
+            if (string.IsNullOrEmpty(authorizationParameter))
+                authorizationParameter = authorization.Parameter;
 
             if (string.IsNullOrEmpty(authorizationParameter))
             {
@@ -202,7 +242,7 @@ namespace GSF.Web.Security
                         if (hasSession)
                             s_authorizationCache[sessionID] = authorizationParameter;
 
-                        ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SettingsCategory));
+                        ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SecuritySettingsCategory));
                     }
                     else
                     {
@@ -227,7 +267,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
         public static bool TryGetPrincipal(Guid sessionID, out IPrincipal principal)
         {
-            string authorizationParameter = null;
+            string authorizationParameter;
 
             if (s_authorizationCache.TryGetValue(sessionID, out authorizationParameter))
             {
@@ -265,6 +305,24 @@ namespace GSF.Web.Security
             context.ChallengeWith("Basic", parameter);
 
             return Task.FromResult(0);
+        }
+
+        private void LoadConfiguredSettings()
+        {
+            // Load configured settings, if not explicitly defined
+            if (string.IsNullOrWhiteSpace(SettingsCategory) || m_sessionTokenAssigned && m_loginPageAssigned)
+                return;
+
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings[SettingsCategory];
+
+            systemSettings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
+            systemSettings.Add("LoginPage", DefaultLoginPage, "Defines the login page, relative path, used as a redirect location when authentication fails.");
+
+            if (!m_sessionTokenAssigned)
+                SessionToken = systemSettings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken);
+
+            if (!m_loginPageAssigned)
+                LoginPage = systemSettings["LoginPage"].ValueAs(DefaultLoginPage);
         }
 
         #endregion
