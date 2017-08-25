@@ -107,6 +107,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Resets the current provider cache.
         /// </summary>
+        /// <returns><c>true</c> if session was cleared; otherwise, <c>false</c>.</returns>
         public bool Logout(string sessionID)
         {
             Guid parsedSessionID;
@@ -120,9 +121,7 @@ namespace GSF.Web.Security
                 SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
 
             // Clear any cached session state for user (this also clears any cached authorizations)
-            RazorView.ClearSessionCache(parsedSessionID);
-
-            return true;
+            return RazorView.ClearSessionCache(parsedSessionID);
         }
 
         /// <summary>
