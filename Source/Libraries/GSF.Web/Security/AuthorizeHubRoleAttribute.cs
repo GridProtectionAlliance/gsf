@@ -148,6 +148,8 @@ namespace GSF.Web.Security
             if (!AuthenticateControllerAttribute.TryGetPrincipal(m_sessionID, out securityPrincipal))
                 return false;
 
+            Thread.CurrentPrincipal = securityPrincipal;
+
             string username = securityPrincipal.Identity.Name;
 
             // Verify that the current thread principal has been authenticated.
