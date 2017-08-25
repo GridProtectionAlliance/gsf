@@ -101,10 +101,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if the caller is authorized to connect to the hub; otherwise, <c>false</c>.</returns>
         public override bool AuthorizeHubConnection(HubDescriptor hubDescriptor, IRequest request)
         {
-            string sessionID = SessionHandler.GetSessionIDFromCookie(request, SessionToken);
-
-            Guid.TryParse(sessionID, out m_sessionID);
-
+            m_sessionID = SessionHandler.GetSessionIDFromCookie(request, SessionToken);
             return base.AuthorizeHubConnection(hubDescriptor, request);
         }
 
@@ -116,10 +113,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if the caller is authorized to invoke the <see cref="IHub" /> method; otherwise, <c>false</c>.</returns>
         public override bool AuthorizeHubMethodInvocation(IHubIncomingInvokerContext hubIncomingInvokerContext, bool appliesToMethod)
         {
-            string sessionID = SessionHandler.GetSessionIDFromCookie(hubIncomingInvokerContext.Hub?.Context.Request, SessionToken);
-
-            Guid.TryParse(sessionID, out m_sessionID);
-
+            m_sessionID = SessionHandler.GetSessionIDFromCookie(hubIncomingInvokerContext.Hub?.Context.Request, SessionToken);
             return base.AuthorizeHubMethodInvocation(hubIncomingInvokerContext, appliesToMethod);
         }
 

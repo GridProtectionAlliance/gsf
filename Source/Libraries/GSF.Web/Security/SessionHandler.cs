@@ -130,38 +130,34 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Gets the session ID string as defined in the request cookie header values.
+        /// Gets the session ID Guid as defined in the request cookie header values.
         /// </summary>
         /// <param name="request">The target HTTP request message.</param>
         /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
         /// <returns>Session ID string, if defined; otherwise, <c>null</c>.</returns>
-        public static string GetSessionIDFromCookie(HttpRequestMessage request, string sessionToken)
+        public static Guid GetSessionIDFromCookie(HttpRequestMessage request, string sessionToken)
         {
             CookieHeaderValue cookie = request.Headers.GetCookies(sessionToken).FirstOrDefault();
-            string sessionID = cookie?[sessionToken ?? DefaultSessionToken].Value;
-            Guid result;
+            string value = cookie?[sessionToken ?? DefaultSessionToken].Value;
+            Guid sessionID;
 
-            // Validate session ID format
-            if (!Guid.TryParse(sessionID, out result))
-                sessionID = null;
+            Guid.TryParse(value, out sessionID);
 
             return sessionID;
         }
 
         /// <summary>
-        /// Gets the session ID string as defined in the SignalR cookie header values.
+        /// Gets the session ID Guid as defined in the SignalR cookie header values.
         /// </summary>
         /// <param name="request">The target SignalR request.</param>
         /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
         /// <returns>Session ID string, if defined; otherwise, <c>null</c>.</returns>
-        public static string GetSessionIDFromCookie(IRequest request, string sessionToken)
+        public static Guid GetSessionIDFromCookie(IRequest request, string sessionToken)
         {           
-            string sessionID = request?.Cookies?[sessionToken ?? DefaultSessionToken].Value;
-            Guid result;
+            string value = request?.Cookies?[sessionToken ?? DefaultSessionToken].Value;
+            Guid sessionID;
 
-            // Validate session ID format
-            if (!Guid.TryParse(sessionID, out result))
-                sessionID = null;
+            Guid.TryParse(value, out sessionID);
 
             return sessionID;
         }
