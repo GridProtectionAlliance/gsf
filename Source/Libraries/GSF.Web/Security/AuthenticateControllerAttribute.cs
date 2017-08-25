@@ -250,7 +250,7 @@ namespace GSF.Web.Security
                     else
                     {
                         // Authentication was attempted but failed, set ErrorResult - don't redirect, need a 401 status code
-                        context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request);                        
+                        context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Unauthorized);
                     }
                 }
                 else

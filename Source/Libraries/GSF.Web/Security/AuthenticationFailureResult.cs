@@ -44,7 +44,7 @@ namespace GSF.Web.Security
         /// <param name="requestMessage">HTTP request message to use as the source of the response.</param>
         /// <param name="statusCode">HTTP status code to return for authorization failure.</param>
         /// <param name="redirectLocation">HTTP redirect location, if used.</param>
-        public AuthenticationFailureResult(string reasonPhrase, HttpRequestMessage requestMessage, HttpStatusCode statusCode = HttpStatusCode.Unauthorized, string redirectLocation = null)
+        public AuthenticationFailureResult(string reasonPhrase, HttpRequestMessage requestMessage, HttpStatusCode statusCode, string redirectLocation = null)
         {
             ReasonPhrase = reasonPhrase;
             RequestMessage = requestMessage;
@@ -95,8 +95,8 @@ namespace GSF.Web.Security
 
             if (!string.IsNullOrWhiteSpace(RedirectLocation))
             {
-                if (!RedirectLocation.EndsWith("/"))
-                    RedirectLocation += "/";
+                if (!RedirectLocation.StartsWith("/"))
+                    RedirectLocation = $"/{RedirectLocation}";
 
                 response.Headers.Location = new Uri($"{RequestMessage.RequestUri.GetLeftPart(UriPartial.Authority)}{RedirectLocation}");
             }
