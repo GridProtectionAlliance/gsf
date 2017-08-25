@@ -188,6 +188,21 @@ namespace GSF.Windows
             }
         }
 
+        /// <summary>
+        /// Gets or sets the security principal used to test authentication and role membership.
+        /// </summary>
+        public SecurityPrincipal SecurityPrincipal
+        {
+            get
+            {
+                return (SecurityPrincipal)GetValue(SecurityPrincipalProperty);
+            }
+            set
+            {
+                SetValue(SecurityPrincipalProperty, value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -218,34 +233,30 @@ namespace GSF.Windows
                 !SecurityProviderUtility.IsResourceSecurable(resource)))
                 return;
 
-            // Setup thread principal to current windows principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is SecurityPrincipal))
-                Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-            // Setup the security provider for role-based security, if needed
             try
             {
-                SecurityProviderCache.ValidateCurrentProvider();
+                // Setup the security provider for role-based security
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(WindowsIdentity.GetCurrent().Name);
+                securityProvider.PassthroughPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+                securityProvider.Authenticate();
+
+                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                SecurityPrincipal = new SecurityPrincipal(securityIdentity);
             }
             catch (Exception ex)
             {
                 ShowSecurityDialog(DisplayType.AccessDenied, "Error loading security provider: " + ex.Message);
-            }
-
-            ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
-
-            if ((object)provider == null)
-            {
-                ShowSecurityDialog(DisplayType.AccessDenied, "Cannot authenticate users: Failed to load security provider, please check configuration.");
                 return;
             }
 
-            // Verify that the current thread principal has been authenticated
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
+            // Verify that the security principal has been authenticated
+            if (!SecurityPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
             {
+                ISecurityProvider securityProvider = SecurityPrincipal.Identity.Provider;
+
                 // See if user's password has expired
-                if (provider.UserData.IsDefined && provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
-                    ShowSecurityDialog(DisplayType.ChangePassword, string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));
+                if (securityProvider.UserData.IsDefined && securityProvider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                    ShowSecurityDialog(DisplayType.ChangePassword, string.Format("Your password has expired. {0} You must change your password to continue.", securityProvider.AuthenticationFailureReason));
                 else
                     ShowSecurityDialog(DisplayType.Login);
             }
@@ -265,18 +276,19 @@ namespace GSF.Windows
         private bool IsResourceAccessible(string resource)
         {
             if (ResourceAccessiblity == ResourceAccessiblityMode.AlwaysIncluded)
-                return Thread.CurrentPrincipal.IsInRole(IncludedRoles);
+                return SecurityPrincipal.IsInRole(IncludedRoles);
 
-            return SecurityProviderUtility.IsResourceAccessible(resource);
+            return SecurityProviderUtility.IsResourceAccessible(resource, SecurityPrincipal);
         }
 
         private void ShowSecurityDialog(DisplayType displayType, string errorMessage = null)
         {
             SecurityPortal securityDialog = new SecurityPortal(displayType);
+            ISecurityProvider securityProvider = SecurityPrincipal.Identity.Provider;
 
             // Show authentication failure reason if one was defined and user didn't force another message
-            if ((object)errorMessage == null && (object)SecurityProviderCache.CurrentProvider != null)
-                errorMessage = SecurityProviderCache.CurrentProvider.AuthenticationFailureReason;
+            if ((object)errorMessage == null && (object)securityProvider != null)
+                errorMessage = securityProvider.AuthenticationFailureReason;
 
             if (!string.IsNullOrWhiteSpace(errorMessage))
             {
@@ -324,6 +336,12 @@ namespace GSF.Windows
         /// </summary>
         /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
         public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
+
+        /// <summary>
+        /// Identifies the <see cref="SecurityPrincipal"/> dependency property.
+        /// </summary>
+        /// <returns>identifier for the <see cref="SecurityPrincipal"/> dependency property.</returns>
+        public static readonly DependencyProperty SecurityPrincipalProperty = DependencyProperty.Register("SecurityPrincipal", typeof(SecurityPrincipal), typeof(SecureWindow), new PropertyMetadata("*"));
 
         #endregion
     }

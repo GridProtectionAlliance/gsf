@@ -140,11 +140,6 @@ namespace GSF.Web.Model
         public AdoDataConnection Connection => m_connection ?? (m_connection = new AdoDataConnection(m_settingsCategory));
 
         /// <summary>
-        /// Gets reference to user specific security provider instance.
-        /// </summary>
-        public AdoSecurityProvider SecurityProvider => SecurityProviderCache.CurrentProvider as AdoSecurityProvider;
-
-        /// <summary>
         /// Gets validation pattern and error message for rendered fields, if any.
         /// </summary>
         public Dictionary<string, Tuple<string, string>> FieldValidationParameters => m_fieldValidationParameters;
@@ -428,13 +423,17 @@ namespace GSF.Web.Model
         /// <summary>
         /// Determines if user is in a specific role or list of roles (comma separated).
         /// </summary>
+        /// <param name="securityPrincipal">Principal that provides role-based security.</param>
         /// <param name="role">Role or comma separated list of roles.</param>
         /// <returns><c>true</c> if user is in <paramref name="role"/>(s); otherwise, <c>false</c>.</returns>
         /// <remarks>
         /// Set to * for any role.
         /// </remarks>
-        public bool UserIsInRole(string role)
+        public bool UserIsInRole(SecurityPrincipal securityPrincipal, string role)
         {
+            if ((object)securityPrincipal == null)
+                return false;
+
             if (string.IsNullOrWhiteSpace(role))
                 return false;
 
@@ -443,9 +442,10 @@ namespace GSF.Web.Model
             string[] roles = role.Split(',').Where(value => !string.IsNullOrWhiteSpace(value)).ToArray();
 
             if (roles.Length > 1)
-                return UserIsInRole(roles);
+                return UserIsInRole(securityPrincipal, roles);
 
-            List<string> userRoles = SecurityProvider?.UserData?.Roles ?? new List<string>();
+            ISecurityProvider securityProvider = securityPrincipal.Identity.Provider;
+            List<string> userRoles = securityProvider.UserData.Roles ?? new List<string>();
 
             if (role.Equals("*") && userRoles.Count > 0)
                 return true;
@@ -460,23 +460,28 @@ namespace GSF.Web.Model
         /// <summary>
         /// Determines if user is in one of the provided of roles.
         /// </summary>
+        /// <param name="securityPrincipal">Security principal that provides role-based security.</param>
         /// <param name="roles">List of role names.</param>
         /// <returns><c>true</c> if user is in one of the <paramref name="roles"/>; otherwise, <c>false</c>.</returns>
-        public bool UserIsInRole(string[] roles)
+        public bool UserIsInRole(SecurityPrincipal securityPrincipal, string[] roles)
         {
-            return roles.Any(UserIsInRole);
+            return roles.Any(role => UserIsInRole(securityPrincipal, role));
         }
 
         /// <summary>
         /// Determines if user is in a specific group or list of groups (comma separated).
         /// </summary>
+        /// <param name="securityPrincipal">Security principal that provides role-based security.</param>
         /// <param name="group">Group or comma separated list of groups.</param>
         /// <returns><c>true</c> if user is in <paramref name="group"/>(s); otherwise, <c>false</c>.</returns>
         /// <remarks>
         /// Set to * for any group.
         /// </remarks>
-        public bool UserIsInGroup(string group)
+        public bool UserIsInGroup(SecurityPrincipal securityPrincipal, string group)
         {
+            if ((object)securityPrincipal == null)
+                return false;
+
             if (string.IsNullOrWhiteSpace(group))
                 return false;
 
@@ -485,9 +490,10 @@ namespace GSF.Web.Model
             string[] groups = group.Split(',').Where(value => !string.IsNullOrWhiteSpace(value)).ToArray();
 
             if (groups.Length > 1)
-                return UserIsInGroup(groups);
+                return UserIsInGroup(securityPrincipal, groups);
 
-            List<string> userGroups = SecurityProvider?.UserData?.Groups ?? new List<string>();
+            ISecurityProvider securityProvider = securityPrincipal.Identity.Provider;
+            List<string> userGroups = securityProvider?.UserData?.Groups ?? new List<string>();
 
             if (group.Equals("*") && userGroups.Count > 0)
                 return true;
@@ -502,11 +508,12 @@ namespace GSF.Web.Model
         /// <summary>
         /// Determines if user is in one of the provided of groups.
         /// </summary>
+        /// <param name="securityPrincipal">Security principal that provides role-based security.</param>
         /// <param name="groups">List of group names.</param>
         /// <returns><c>true</c> if user is in one of the <paramref name="groups"/>; otherwise, <c>false</c>.</returns>
-        public bool UserIsInGroup(string[] groups)
+        public bool UserIsInGroup(SecurityPrincipal securityPrincipal, string[] groups)
         {
-            return groups.Any(UserIsInGroup);
+            return groups.Any(group => UserIsInGroup(securityPrincipal, group));
         }
 
         /// <summary>
@@ -572,6 +579,7 @@ namespace GSF.Web.Model
         /// </remarks>
         public void ConfigureView(RequestContext requestContext, dynamic viewBag)
         {
+            viewBag.Add("SecurityPrincipal", requestContext.HttpContext.User);
             ConfigureView(requestContext.RouteData.Values["id"] as string, viewBag);
         }
 
@@ -638,13 +646,10 @@ namespace GSF.Web.Model
             if (viewBag.DeleteRoles == null)
                 viewBag.DeleteRoles = viewBag.EditRoles;
 
-            // Ensure that the user's roles have been properly initialized
-            SecurityProviderCache.ValidateCurrentProvider();
-
             // Check current allowed roles for user
-            viewBag.CanEdit = UserIsInRole(viewBag.EditRoles);
-            viewBag.CanAddNew = UserIsInRole(viewBag.AddNewRoles);
-            viewBag.CanDelete = UserIsInRole(viewBag.DeleteRoles);
+            viewBag.CanEdit = UserIsInRole(viewBag.SecurityPrincipal, viewBag.EditRoles);
+            viewBag.CanAddNew = UserIsInRole(viewBag.SecurityPrincipal, viewBag.AddNewRoles);
+            viewBag.CanDelete = UserIsInRole(viewBag.SecurityPrincipal, viewBag.DeleteRoles);
         }
 
         /// <summary>

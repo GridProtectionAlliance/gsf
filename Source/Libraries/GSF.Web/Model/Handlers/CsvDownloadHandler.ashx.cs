@@ -112,9 +112,10 @@ namespace GSF.Web.Model.Handlers
         /// <param name="context">An <see cref="HttpContext" /> object that provides references to the intrinsic server objects (for example, Request, Response, Session, and Server) used to service HTTP requests.</param>
         public void ProcessRequest(HttpContext context)
         {
-            HttpResponse response = HttpContext.Current.Response;
+            HttpResponse response = context.Response;
             HttpResponseCancellationToken cancellationToken = new HttpResponseCancellationToken(response);
             NameValueCollection requestParameters = context.Request.QueryString;
+            SecurityPrincipal securityPrincipal = context.User as SecurityPrincipal;
 
             response.ClearContent();
             response.Clear();
@@ -124,7 +125,7 @@ namespace GSF.Web.Model.Handlers
 
             try
             {
-                CopyModelAsCsvToStream(requestParameters, response.OutputStream, response.Flush, cancellationToken);
+                CopyModelAsCsvToStream(securityPrincipal, requestParameters, response.OutputStream, response.Flush, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -151,7 +152,8 @@ namespace GSF.Web.Model.Handlers
             {
                 try
                 {
-                    CopyModelAsCsvToStream(requestParameters, stream, null, cancellationToken);
+                    SecurityPrincipal securityPrincipal = request.GetRequestContext().Principal as SecurityPrincipal;
+                    CopyModelAsCsvToStream(securityPrincipal, requestParameters, stream, null, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -177,10 +179,8 @@ namespace GSF.Web.Model.Handlers
 #endif
         }
 
-        private void CopyModelAsCsvToStream(NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)
+        private void CopyModelAsCsvToStream(SecurityPrincipal securityPrincipal, NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)
         {
-            SecurityProviderCache.ValidateCurrentProvider();
-
             string modelName = requestParameters["ModelName"];
             string hubName = requestParameters["HubName"];
             string connectionID = requestParameters["ConnectionID"];
@@ -262,8 +262,8 @@ namespace GSF.Web.Model.Handlers
             DataContext dataContext = hub.DataContext;
 
             // Validate current user has access to requested data
-            if (!dataContext.UserIsInRole(queryRoles))
-                throw new SecurityException($"Cannot download CSV data: access is denied for user \"{Thread.CurrentPrincipal.Identity?.Name ?? "Undefined"}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
+            if (!dataContext.UserIsInRole(securityPrincipal, queryRoles))
+                throw new SecurityException($"Cannot download CSV data: access is denied for user \"{securityPrincipal?.Identity.Name ?? "Undefined"}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
 
             const int TargetBufferSize = 524288;
 

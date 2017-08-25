@@ -261,7 +261,13 @@ namespace GSF.ServiceModel
             if (SecurityProviderUtility.IsResourceSecurable(resource))
             {
                 // Initialize the security principal from caller's windows identity if uninitialized.
-                SecurityProviderCache.ValidateCurrentProvider();
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(Thread.CurrentPrincipal.Identity.Name);
+                securityProvider.PassthroughPrincipal = Thread.CurrentPrincipal;
+                securityProvider.Authenticate();
+
+                // Set up the security principal to provide role-based security.
+                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                Thread.CurrentPrincipal = new SecurityPrincipal(securityIdentity);
 
                 // Setup the principal to be attached to the thread on which WCF service will execute.
                 evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
@@ -271,7 +277,7 @@ namespace GSF.ServiceModel
                     throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
 
                 // Perform a top-level permission check on the resource being accessed.
-                if (!SecurityProviderUtility.IsResourceAccessible(resource))
+                if (!SecurityProviderUtility.IsResourceAccessible(resource, Thread.CurrentPrincipal))
                     throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
 
                 return true;
@@ -279,6 +285,7 @@ namespace GSF.ServiceModel
 
             // Setup the principal to be attached to the thread on which WCF service will execute.
             evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
+
             return true;
         }
 

@@ -65,7 +65,8 @@ namespace GSF.ServiceProcess
         private readonly ApplicationType m_clientType;
         private readonly string m_clientName;
         private IPrincipal m_clientUser;
-        private readonly string m_clientUserCredentials;
+        private readonly string m_clientUsername;
+        private readonly SecureString m_clientPassword;
         private readonly string m_machineName;
         private DateTime m_connectedAt;
 
@@ -102,12 +103,9 @@ namespace GSF.ServiceProcess
             else
                 m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.CurrentUserID), new string[] { });
 
-            // TODO: Must validate that SSL is enabled before sending unencrypted username/password across the wire.
             // Initialize user credentials.
-            if ((object)parent == null || string.IsNullOrEmpty(parent.Username) || string.IsNullOrEmpty(parent.Password))
-                m_clientUserCredentials = string.Empty;
-            else
-                m_clientUserCredentials = $"{parent.Username}:{parent.Password}";
+            if ((object)parent != null && !string.IsNullOrEmpty(parent.Username) && parent.Password != null && parent.Password.Length > 0)
+                m_clientPassword = parent.SecurePassword;
 
             // Initialize client application name.
             if (m_clientType == ApplicationType.Web)
@@ -134,26 +132,28 @@ namespace GSF.ServiceProcess
             m_clientID = info.GetOrDefault("clientID", Guid.Empty);
             m_clientType = info.GetOrDefault("clientType", ApplicationType.Unknown);
             m_clientName = info.GetOrDefault("clientName", "__undefined");
-            m_clientUserCredentials = info.GetOrDefault("clientUserCredentials", "");
 
-            string clientUserName = null;
+            string clientUserCredentials = info.GetOrDefault("clientUserCredentials", "");
 
-            if (!string.IsNullOrEmpty(m_clientUserCredentials))
+            if (!string.IsNullOrEmpty(clientUserCredentials))
             {
-                string[] parts = m_clientUserCredentials.Split(':');
+                string[] parts = clientUserCredentials.Split(':');
 
                 if (parts.Length == 2)
-                    clientUserName = parts[0].Trim();
+                {
+                    if (!string.IsNullOrEmpty(parts[0]))
+                        m_clientUsername = parts[0].Trim();
 
-                if (string.IsNullOrEmpty(clientUserName))
-                    clientUserName = null;
+                    if (!string.IsNullOrEmpty(parts[1]))
+                        m_clientPassword = parts[1].ToSecureString();
+                }
             }
 
             // Initialize user principal.
             if (m_clientType == ApplicationType.Web)
-                m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.RemoteUserID), new string[] { });
+                m_clientUser = new GenericPrincipal(new GenericIdentity(m_clientUsername ?? UserInfo.RemoteUserID), new string[] { });
             else
-                m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.CurrentUserID), new string[] { });
+                m_clientUser = new GenericPrincipal(new GenericIdentity(m_clientUsername ?? UserInfo.CurrentUserID), new string[] { });
 
             m_machineName = info.GetOrDefault("machineName", "__unknown");
             m_connectedAt = info.GetOrDefault("connectedAt", DateTime.UtcNow);
@@ -194,9 +194,24 @@ namespace GSF.ServiceProcess
         public IPrincipal ClientUser => m_clientUser;
 
         /// <summary>
+        /// Gets the username portion of the credentials supplied by the client.
+        /// </summary>
+        public string ClientUsername => m_clientUsername;
+
+        /// <summary>
+        /// Gets the password portion of the credentials supplied by the client.
+        /// </summary>
+        public string ClientPassword => m_clientPassword.ToUnsecureString();
+
+        /// <summary>
+        /// Gets the <see cref="ClientPassword"/> in a <see cref="SecureString"/>.
+        /// </summary>
+        public SecureString SecureClientPassword => m_clientPassword;
+
+        /// <summary>
         /// Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="ClientUser"/> is not available.
         /// </summary>
-        public string ClientUserCredentials => m_clientUserCredentials;
+        public string ClientUserCredentials => $"{m_clientUsername}:{m_clientPassword.ToUnsecureString()}";
 
         /// <summary>
         /// Gets the name of the machine running the remote client application.
@@ -246,7 +261,7 @@ namespace GSF.ServiceProcess
             info.AddValue("clientID", m_clientID);
             info.AddValue("clientType", m_clientType, typeof(ApplicationType));
             info.AddValue("clientName", m_clientName);
-            info.AddValue("clientUserCredentials", m_clientUserCredentials);
+            info.AddValue("clientUserCredentials", ClientUserCredentials);
             info.AddValue("machineName", m_machineName);
             info.AddValue("connectedAt", m_connectedAt);
         }

@@ -101,12 +101,13 @@ namespace GSF.Web.Security
             // Get current user name
             string userName = Thread.CurrentPrincipal.Identity.Name;
 
-            SecurityProviderCache.ValidateCurrentProvider(userName);
+            //SecurityProviderCache.ValidateCurrentProvider(userName);
 
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
             {
-                filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+                //filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+                filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user '{userName}':");
                 filterContext.HttpContext.User = null;
             }
             else if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role)))

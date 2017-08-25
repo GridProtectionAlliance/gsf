@@ -144,6 +144,15 @@ namespace GSF.Windows
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the security principal used for role-based authorization.
+        /// </summary>
+        public SecurityPrincipal SecurityPrincipal
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Gets or sets flag that indicates if there was a failure during provider initialization.
         /// </summary>
         public bool ProviderFailure
@@ -343,7 +352,7 @@ namespace GSF.Windows
         {
             UserInfo userInfo;
             WindowsImpersonationContext impersonationContext = null;
-            ISecurityProvider provider;
+            ISecurityProvider securityProvider;
 
             try
             {
@@ -370,23 +379,25 @@ namespace GSF.Windows
                 }
 
                 // Initialize the security provider
-                provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
+                securityProvider = SecurityProviderCache.CreateProvider(TextBoxUserName.Text);
+                securityProvider.SecurePassword = TextBoxPassword.SecurePassword;
 
                 // Attempt to authenticate user
-                if (provider.Authenticate(TextBoxPassword.Password))
+                if (securityProvider.Authenticate())
                 {
-                    // Setup security provider for subsequent uses
-                    SecurityProviderCache.CurrentProvider = provider;
+                    // Setup security principal for subsequent uses
+                    SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                    SecurityPrincipal = new SecurityPrincipal(securityIdentity);
                     ClearErrorMessage();
                     ExitSuccess = true;
                 }
                 else
                 {
                     // Verify their password hasn't expired
-                    if (provider.UserData.IsDefined && provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                    if (securityProvider.UserData.IsDefined && securityProvider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     {
                         // Display password expired message
-                        DisplayErrorMessage(string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));
+                        DisplayErrorMessage(string.Format("Your password has expired. {0} You must change your password to continue.", securityProvider.AuthenticationFailureReason));
                         m_displayType = DisplayType.ChangePassword;
                         ManageScreenVisualization();
                         TextBoxPassword.Password = "";
@@ -394,7 +405,7 @@ namespace GSF.Windows
                     else
                     {
                         // Display login failure message
-                        DisplayErrorMessage("The username or password is invalid. " + provider.AuthenticationFailureReason);
+                        DisplayErrorMessage("The username or password is invalid. " + securityProvider.AuthenticationFailureReason);
 
                         if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
                             TextBoxUserName.Focus();
@@ -439,28 +450,30 @@ namespace GSF.Windows
                 if (TextBoxNewPassword.Password != TextBoxConfirmPassword.Password)
                     throw new Exception("New password and confirm password should be same.");
 
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(TextBoxChangePasswordUserName.Text);
+                securityProvider.SecurePassword = TextBoxNewPassword.SecurePassword;
 
-                if (provider.CanChangePassword)
+                if (securityProvider.CanChangePassword)
                 {
                     // Attempt to change password
-                    if (provider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
-                        provider.Authenticate(TextBoxNewPassword.Password))
+                    if (securityProvider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
+                        securityProvider.Authenticate())
                     {
                         // Password changed and authenticated successfully
                         DisplayErrorMessage("Password changed successfully.");
 
-                        // Setup security provider for subsequent uses
-                        SecurityProviderCache.CurrentProvider = provider;
+                        // Setup security principal for subsequent uses
+                        SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                        SecurityPrincipal = new SecurityPrincipal(securityIdentity);
                         ClearErrorMessage();
                         ExitSuccess = true;
                     }
                     else
                     {
                         // Show why password change failed
-                        if (!ShowFailureReason(provider))
+                        if (!ShowFailureReason(securityProvider))
                         {
-                            if (!provider.UserData.IsAuthenticated)
+                            if (!securityProvider.IsUserAuthenticated)
                                 DisplayErrorMessage("Authentication was not successful.");
                             else
                                 DisplayErrorMessage("Password change was not successful.");

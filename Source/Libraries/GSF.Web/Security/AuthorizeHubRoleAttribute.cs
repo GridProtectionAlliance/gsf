@@ -143,25 +143,21 @@ namespace GSF.Web.Security
         /// </returns>
         protected override bool UserAuthorized(IPrincipal user)
         {
-            if (!AuthenticateControllerAttribute.TryGetPrincipal(m_sessionID, out user))
+            SecurityPrincipal securityPrincipal;
+
+            if (!AuthenticateControllerAttribute.TryGetPrincipal(m_sessionID, out securityPrincipal))
                 return false;
 
-            // Get current user name
-            string userName = user.Identity.Name;
-
-            // Setup the principal
-            Thread.CurrentPrincipal = user;
-            SecurityProviderCache.ValidateCurrentProvider(userName);
-            user = Thread.CurrentPrincipal;
+            string username = securityPrincipal.Identity.Name;
 
             // Verify that the current thread principal has been authenticated.
-            if (!user.Identity.IsAuthenticated && !SecurityProviderCache.ReauthenticateCurrentPrincipal())
-                throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+            if (!securityPrincipal.Identity.IsAuthenticated)
+                throw new SecurityException($"Authentication failed for user '{username}': {securityPrincipal.Identity.Provider.AuthenticationFailureReason}");
 
-            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => securityPrincipal.IsInRole(role)))
+                throw new SecurityException($"Access is denied for user '{username}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
-            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SecuritySettingsCategory));
+            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(username, SecuritySettingsCategory));
 
             return true;
         }

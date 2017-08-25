@@ -82,18 +82,6 @@ namespace GSF.TimeSeries.UI
         private static bool s_retryServiceConnection;
         private static LinkedList<Tuple<string, Type, object[]>> s_pageHistory;
         private static LinkedListNode<Tuple<string, Type, object[]>> s_currentPage;
-        private static Timer s_principalRefreshTimer;
-
-        // Static Constructor
-
-        static CommonFunctions()
-        {
-            s_principalRefreshTimer = new Timer();
-            s_principalRefreshTimer.AutoReset = false;
-            s_principalRefreshTimer.Interval = 1000;
-            s_principalRefreshTimer.Elapsed += PrincipalRefreshTimer_Elapsed;
-            s_principalRefreshTimer.Start();
-        }
 
         // Static Properties
 
@@ -104,26 +92,11 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                if ((object)s_currentPrincipal == null)
-                    s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
-
                 return s_currentPrincipal;
             }
             set
             {
-                if ((object)value == null || (object)value.Identity == null || string.IsNullOrEmpty(value.Identity.Name))
-                    return;
-
-                ISecurityProvider cachedProvider;
-                ISecurityProvider provider;
-
-                if (SecurityProviderCache.TryGetCachedProvider(value.Identity.Name, out cachedProvider))
-                {
-                    provider = SecurityProviderUtility.CreateProvider(value.Identity.Name);
-                    provider.UserData.Clone(cachedProvider.UserData);
-                    provider.Password = cachedProvider.Password;
-                    s_currentPrincipal = new SecurityPrincipal(new SecurityIdentity(provider));
-                }
+                s_currentPrincipal = value;
             }
         }
 
@@ -140,12 +113,13 @@ namespace GSF.TimeSeries.UI
             get
             {
                 SecurityPrincipal currentPrincipal = CurrentPrincipal;
-                ISecurityProvider securityProvider;
+                ISecurityProvider securityProvider = currentPrincipal.Identity.Provider;
 
-                if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
-                    securityProvider = SecurityProviderCache.CurrentProvider;
-
-                return ((object)s_currentPage != null) && ((object)s_currentPage.Next != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any();
+                return
+                    ((object)s_currentPage != null) &&
+                    ((object)s_currentPage.Next != null) &&
+                    currentPrincipal.Identity.IsAuthenticated &&
+                    securityProvider.UserData.Roles.Any();
             }
         }
 
@@ -157,12 +131,13 @@ namespace GSF.TimeSeries.UI
             get
             {
                 SecurityPrincipal currentPrincipal = CurrentPrincipal;
-                ISecurityProvider securityProvider;
+                ISecurityProvider securityProvider = currentPrincipal.Identity.Provider; ;
 
-                if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
-                    securityProvider = SecurityProviderCache.CurrentProvider;
-
-                return ((object)s_currentPage != null) && ((object)s_currentPage.Previous != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any();
+                return
+                    ((object)s_currentPage != null) &&
+                    ((object)s_currentPage.Previous != null) &&
+                    currentPrincipal.Identity.IsAuthenticated &&
+                    securityProvider.UserData.Roles.Any();
             }
         }
 
@@ -594,8 +569,7 @@ namespace GSF.TimeSeries.UI
         public static void ConnectWindowsServiceClient(bool overwrite = false)
         {
             TlsClient remotingClient;
-            ISecurityProvider provider;
-            UserData userData;
+            ISecurityProvider securityProvider;
 
             if (overwrite)
             {
@@ -617,20 +591,14 @@ namespace GSF.TimeSeries.UI
                     {
                         s_windowsServiceClient = new WindowsServiceClient(connectionString);
 
-                        if (SecurityProviderCache.TryGetCachedProvider(CurrentPrincipal.Identity.Name, out provider))
-                        {
-                            userData = provider.UserData;
+                        securityProvider = s_currentPrincipal.Identity.Provider;
+                        s_windowsServiceClient.Helper.Username = securityProvider.UserData.LoginID;
+                        s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(securityProvider.Password);
 
-                            if ((object)userData != null)
-                            {
-                                s_windowsServiceClient.Helper.Username = userData.LoginID;
-                                s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(provider.Password);
-                                remotingClient = s_windowsServiceClient.Helper.RemotingClient as TlsClient;
+                        remotingClient = s_windowsServiceClient.Helper.RemotingClient as TlsClient;
 
-                                if ((object)remotingClient != null && (object)provider.SecurePassword != null && provider.SecurePassword.Length > 0)
-                                    remotingClient.NetworkCredential = new NetworkCredential(userData.LoginID, provider.SecurePassword);
-                            }
-                        }
+                        if ((object)remotingClient != null && (object)securityProvider.SecurePassword != null && securityProvider.SecurePassword.Length > 0)
+                            remotingClient.NetworkCredential = new NetworkCredential(securityProvider.UserData.LoginID, securityProvider.SecurePassword);
 
                         s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
                         s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
@@ -742,14 +710,12 @@ namespace GSF.TimeSeries.UI
                         // but only when transport is secured
                         if (!s_windowsServiceClient.Authenticated && s_windowsServiceClient.Helper.RemotingClient is TlsClient)
                         {
-                            ISecurityProvider provider;
+                            ISecurityProvider provider = s_currentPrincipal.Identity.Provider;
 
-                            if ((object)CurrentPrincipal != null && (object)CurrentPrincipal.Identity != null &&
-                                SecurityProviderCache.TryGetCachedProvider(CurrentPrincipal.Identity.Name, out provider) &&
-                                !string.IsNullOrEmpty(provider.Password))
+                            if (provider.SecurePassword.Length > 0)
                             {
                                 s_windowsServiceClient.Helper.Disconnect();
-                                s_windowsServiceClient.Helper.Password = provider.Password;
+                                s_windowsServiceClient.Helper.SecurePassword = provider.SecurePassword;
                                 s_windowsServiceClient.Helper.Connect();
                             }
                         }
@@ -914,7 +880,7 @@ namespace GSF.TimeSeries.UI
         {
             try
             {
-                ISecurityProvider securityProvider = SecurityProviderCache.CurrentProvider;
+                ISecurityProvider securityProvider = s_currentPrincipal.Identity.Provider;
                 string applicationName;
 
                 if ((object)securityProvider != null)
@@ -1208,65 +1174,6 @@ namespace GSF.TimeSeries.UI
                     }
                 }
             }
-        }
-
-        private static void PrincipalRefreshTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
-        {
-            UserInfo userInfo;
-            ISecurityProvider provider;
-            WindowsImpersonationContext impersonationContext;
-
-            if ((object)s_currentPrincipal != null)
-            {
-                // If user is no longer authenticated, provider session may have expired so provider session will
-                // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
-                if (!SecurityProviderCache.TryGetCachedProvider(s_currentPrincipal.Identity.Name, out provider))
-                {
-                    impersonationContext = null;
-
-                    try
-                    {
-                        // Determine whether we need to try impersonating the user
-                        userInfo = new UserInfo(CurrentUser);
-
-                        // If the application is unable to access the domain, possibly because the local user
-                        // running the application does not have access to domain objects, it's possible that
-                        // the user logging in does have access to the domain. So we attempt to impersonate the
-                        // user logging in to allow authentication to proceed
-                        if (!userInfo.DomainRespondsForUser && TryImpersonate(userInfo.LoginID, GetCurrentUserPassword(), out impersonationContext))
-                        {
-                            try
-                            {
-                                // Working around a known issue - DirectorySearcher will often throw
-                                // an exception the first time it is used after impersonating another
-                                // user so we get that out of the way here
-                                userInfo.Initialize();
-                            }
-                            catch (InitializationException)
-                            {
-                                // Exception is expected so we ignore it
-                            }
-                        }
-
-                        Thread.CurrentPrincipal = s_currentPrincipal;
-                        SecurityProviderCache.ReauthenticateCurrentPrincipal();
-                        CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
-                    }
-                    finally
-                    {
-                        if ((object)impersonationContext != null)
-                        {
-                            impersonationContext.Undo();
-                            impersonationContext.Dispose();
-                        }
-                    }
-
-                    // Rights may have changed -- notify for revalidation of menu commands
-                    Application.Current.Dispatcher.BeginInvoke(new Action(OnCurrentPrincipalRefreshed));
-                }
-            }
-
-            s_principalRefreshTimer.Start();
         }
 
         private static string GetCurrentUserPassword()

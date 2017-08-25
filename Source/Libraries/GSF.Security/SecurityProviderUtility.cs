@@ -38,6 +38,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
@@ -72,6 +75,8 @@ namespace GSF.Security
         private static readonly string s_notificationSmtpServer;
         private static readonly string s_notificationSenderEmail;
 
+        private static Func<string, ISecurityProvider> s_providerFactory;
+
         // Static Constructor
         static SecurityProviderUtility()
         {
@@ -91,6 +96,16 @@ namespace GSF.Security
             s_notificationSenderEmail = settings["NotificationSenderEmail"].ValueAsString();
         }
 
+        // Static Properties
+
+        private static Func<string, ISecurityProvider> ProviderFactory
+        {
+            get
+            {
+                return s_providerFactory ?? (s_providerFactory = CreateSecurityProviderFactory());
+            }
+        }
+
         // Static Methods
 
         /// <summary>
@@ -100,7 +115,7 @@ namespace GSF.Security
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
         public static ISecurityProvider CreateProvider(string username)
         {
-            // Initialize the username.
+            // Initialize the username
             if (string.IsNullOrEmpty(username))
                 username = Thread.CurrentPrincipal.Identity.Name;
 
@@ -109,17 +124,39 @@ namespace GSF.Security
             if (username.StartsWith("NT AUTHORITY\\", StringComparison.OrdinalIgnoreCase))
                 username = Environment.UserDomainName + "\\" + Environment.UserName;
 
-            // Instantiate the provider.
+            // Instantiate the provider
             // ReSharper disable once AssignNullToNotNullAttribute
-            ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;
+            ISecurityProvider provider = ProviderFactory(username);
 
-            if ((object)provider == null)
-                throw new InvalidOperationException(string.Format("Failed to acquire security provider from '{0}'. Specified class does not implement ISecurityProvider.", s_providerType));
+            // Initialize the provider
+            provider.LoadSettings();
 
-            // Initialize the provider.
-            provider.Initialize();
+            if (provider.CanRefreshData)
+                provider.RefreshData();
 
-            // Return initialized provider.
+            // Return initialized provider
+            return provider;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ISecurityProvider"/> based on the settings in the config file.
+        /// </summary>
+        /// <param name="userData">Object that contains data about the user to be used by the security provider.</param>
+        /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
+        public static ISecurityProvider CreateProvider(UserData userData)
+        {
+            // Initialize the username
+            string username = userData.Username;
+
+            // Instantiate the provider
+            // ReSharper disable once AssignNullToNotNullAttribute
+            ISecurityProvider provider = ProviderFactory(username);
+
+            // Initialize the provider
+            provider.LoadSettings();
+            provider.UserData.Clone(userData);
+
+            // Return initialized provider
             return provider;
         }
 
@@ -155,8 +192,9 @@ namespace GSF.Security
         /// the specified <paramref name="resource"/> based on settings in the config file.
         /// </summary>
         /// <param name="resource">Name of the resource to be checked.</param>
+        /// <param name="principal">The principal providing the security context for the user.</param>
         /// <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
-        public static bool IsResourceAccessible(string resource)
+        public static bool IsResourceAccessible(string resource, IPrincipal principal)
         {
             // Check if the resource has a role-based access restriction on it.
             foreach (KeyValuePair<string, string> inclusion in s_includedResources)
@@ -170,7 +208,7 @@ namespace GSF.Security
                             return true;
 
                         // Check resource role requirements against user's role subscription.
-                        return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
+                        return principal.IsInRole(inclusion.Value);
                     }
                 }
             }
@@ -227,6 +265,25 @@ namespace GSF.Security
         public static void SendNotification(string recipient, string subject, string body)
         {
             Mail.Send(s_notificationSenderEmail, recipient, subject, body, false, s_notificationSmtpServer);
+        }
+
+        private static Func<string, ISecurityProvider> CreateSecurityProviderFactory()
+        {
+            Type providerType = Type.GetType(s_providerType);
+
+            if ((object)providerType == null)
+                throw new InvalidOperationException("The default security provider type defined by the system does not exist.");
+
+            ConstructorInfo constructor = Type.GetType(s_providerType).GetConstructor(new Type[] { typeof(string) });
+
+            if ((object)constructor == null)
+                throw new InvalidOperationException("The default security provider type does not define a constructor with the appropriate signature.");
+
+            ParameterExpression parameterExpression = Expression.Parameter(typeof(string));
+            NewExpression newExpression = Expression.New(constructor, parameterExpression);
+            LambdaExpression lambdaExpression = Expression.Lambda(typeof(Func<string, ISecurityProvider>), newExpression, parameterExpression);
+
+            return (Func<string, ISecurityProvider>)lambdaExpression.Compile();
         }
 
         #endregion

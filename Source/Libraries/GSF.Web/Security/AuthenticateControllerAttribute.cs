@@ -170,43 +170,42 @@ namespace GSF.Web.Security
             LoadConfiguredSettings();
 
             Guid sessionID;
+            SecurityPrincipal cachedPrincipal;
             bool hasSession = SessionHandler.TryGetSessionID(request, SessionToken, out sessionID);
             string authorizationParameter = null;
 
             // Try to retrieve any existing authorization
-            if (hasSession)
-                s_authorizationCache.TryGetValue(sessionID, out authorizationParameter);
+            if (hasSession && s_authorizationCache.TryGetValue(sessionID, out cachedPrincipal) && cachedPrincipal.Identity.IsAuthenticated)
+                return;
 
-            if (authorization.Scheme != "Basic" && string.IsNullOrEmpty(authorizationParameter))
+            if (authorization.Scheme != "Basic")
             {
-                // Check if user was already previously validated with pass-through authentication
-                if (authorizationParameter == "")
-                    return;
-
                 // Assuming pass-through authentication - make sure user is defined in security provider, authenticated and has a role
-                string identityName = context.Principal?.Identity?.Name;
+                SecurityPrincipal securityPrincipal = context.Principal as SecurityPrincipal;
 
-                if (!string.IsNullOrEmpty(identityName))
+                if ((object)securityPrincipal == null)
                 {
-                    SecurityProviderCache.ValidateCurrentProvider(identityName);
-                    SecurityIdentity identity = Thread.CurrentPrincipal.Identity as SecurityIdentity;
+                    string username = context.Principal?.Identity.Name;
 
-                    if ((object)identity != null)
+                    if (!string.IsNullOrEmpty(username))
                     {
-                        UserData userData = identity.Provider?.UserData;
+                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+                        securityProvider.PassthroughPrincipal = context.Principal;
+                        securityProvider.Authenticate();
 
-                        if ((object)userData != null && userData.IsAuthenticated && userData.Roles.Count > 0)
-                        {
-                            // User is valid, do not set principal, which would indicate success, nor ErrorResult,
-                            // which would indicate an error
-                            authorizationParameter = "";
-
-                            if (hasSession)
-                                s_authorizationCache[sessionID] = authorizationParameter;
-
-                            return;
-                        }
+                        SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                        securityPrincipal = new SecurityPrincipal(securityIdentity);
                     }
+                }
+
+                if ((object)securityPrincipal != null && securityPrincipal.Identity.IsAuthenticated && securityPrincipal.Identity.Provider.UserData.Roles.Count > 0)
+                {
+                    // User is valid, do not set principal, which would indicate success, nor ErrorResult,
+                    // which would indicate an error
+                    if (hasSession)
+                        s_authorizationCache[sessionID] = securityPrincipal;
+
+                    return;
                 }
 
                 // Not a valid user for current security provider, provide an obscure error message
@@ -226,23 +225,27 @@ namespace GSF.Web.Security
 
             await Task.Run(() =>
             {
-                string userName, password;
+                string username, password;
 
-                if (TryParseCredentials(authorizationParameter, out userName, out password))
+                if (TryParseCredentials(authorizationParameter, out username, out password))
                 {
                     // Setup the security principal
-                    SecurityProviderCache.ValidateCurrentProvider(userName);
-                    IPrincipal principal = Thread.CurrentPrincipal;
+                    ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+                    securityProvider.Password = password;
+                    securityProvider.Authenticate();
+
+                    SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                    SecurityPrincipal securityPrincipal = new SecurityPrincipal(securityIdentity);
 
                     // Authenticate user, if not already authenticated
-                    if (principal.Identity.IsAuthenticated || SecurityProviderCache.CurrentProvider.Authenticate(password))
+                    if (securityPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Count > 0)
                     {
-                        context.Principal = principal;
+                        context.Principal = securityPrincipal;
 
                         if (hasSession)
-                            s_authorizationCache[sessionID] = authorizationParameter;
+                            s_authorizationCache[sessionID] = securityPrincipal;
 
-                        ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SecuritySettingsCategory));
+                        ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(username, SecuritySettingsCategory));
                     }
                     else
                     {
@@ -263,29 +266,14 @@ namespace GSF.Web.Security
         /// Attempt to authorize and provide current principal for specified <paramref name="sessionID"/>.
         /// </summary>
         /// <param name="sessionID">Session ID to user.</param>
-        /// <param name="principal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
+        /// <param name="securityPrincipal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
         /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
-        public static bool TryGetPrincipal(Guid sessionID, out IPrincipal principal)
+        public static bool TryGetPrincipal(Guid sessionID, out SecurityPrincipal securityPrincipal)
         {
-            string authorizationParameter;
+            if (s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
+                return true;
 
-            if (s_authorizationCache.TryGetValue(sessionID, out authorizationParameter))
-            {
-                string userName, password;
-
-                if (TryParseCredentials(authorizationParameter, out userName, out password))
-                {
-                    // Setup the security principal
-                    SecurityProviderCache.ValidateCurrentProvider(userName);
-                    principal = Thread.CurrentPrincipal;
-
-                    // Authenticate user, if not already authenticated
-                    if (principal.Identity.IsAuthenticated || SecurityProviderCache.CurrentProvider.Authenticate(password))
-                        return true;
-                }
-            }
-
-            principal = null;
+            securityPrincipal = null;
             return false;
         }
 
@@ -330,12 +318,12 @@ namespace GSF.Web.Security
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConcurrentDictionary<Guid, string> s_authorizationCache;
+        private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
 
         // Static Constructor
         static AuthenticateControllerAttribute()
         {
-            s_authorizationCache = new ConcurrentDictionary<Guid, string>();
+            s_authorizationCache = new ConcurrentDictionary<Guid, SecurityPrincipal>();
 
             // Attach to razor view session expiration event so any cached authorizations can also be cleared
             Model.RazorView.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
@@ -350,8 +338,8 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if session authorization was found and cleared; otherwise, <c>false</c>.</returns>
         public static bool ClearAuthorizationCache(Guid sessionID)
         {
-            string authorizationParameter;
-            return s_authorizationCache.TryRemove(sessionID, out authorizationParameter);
+            SecurityPrincipal securityPrincipal;
+            return s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
         }
 
         private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)

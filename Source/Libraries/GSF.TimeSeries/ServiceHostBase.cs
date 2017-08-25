@@ -2887,7 +2887,7 @@ namespace GSF.TimeSeries
                     if (m_serviceHelper.SecureRemoteInteractions)
                     {
                         // Validate current client principal
-                        if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
+                        if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource, requestInfo.Sender.ClientUser))
                             throw new SecurityException($"Access to '{resource}' is denied");
                     }
 

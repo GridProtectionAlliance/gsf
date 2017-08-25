@@ -2308,7 +2308,7 @@ namespace GSF.ServiceProcess
             }
         }
 
-        private bool TrySetCurrentThreadPrincipal(ClientInfo client)
+        private WindowsPrincipal TryGetWindowsPrincipal(ClientInfo client)
         {
             if ((object)client == null)
                 throw new ArgumentNullException(nameof(client));
@@ -2328,47 +2328,10 @@ namespace GSF.ServiceProcess
             if ((object)m_tryGetClientPrincipalFunction != null && m_tryGetClientPrincipalFunction(client.ClientID, out clientPrincipal))
             {
                 if ((object)clientPrincipal != null)
-                    Thread.CurrentPrincipal = clientPrincipal;
-                else if ((object)client.ClientUser != null)
-                    Thread.CurrentPrincipal = client.ClientUser;
-
-                return true;
+                    return clientPrincipal;
             }
 
-            return false;
-        }
-
-        private bool VerifySecurity(ClientInfo client)
-        {
-            if ((object)client == null)
-                throw new ArgumentNullException(nameof(client));
-
-            // Set current thread principal to remote client's user principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal) && (object)client.ClientUser != null)
-                Thread.CurrentPrincipal = client.ClientUser;
-
-            // Retrieve previously initialized security provider of the remote client's user.
-            SecurityProviderCache.ValidateCurrentProvider();
-
-            // Initialize security provider for the remote client's user from specified credentials.
-            if ((!Thread.CurrentPrincipal.Identity.IsAuthenticated || (object)client.ClientUser == null) && !string.IsNullOrEmpty(client.ClientUserCredentials))
-            {
-                string[] credentialParts = client.ClientUserCredentials.Split(':');
-
-                if (credentialParts.Length == 2)
-                {
-                    ISecurityProvider provider = SecurityProviderUtility.CreateProvider(credentialParts[0]);
-
-                    if (provider.Authenticate(credentialParts[1]))
-                        SecurityProviderCache.CurrentProvider = provider;
-                }
-            }
-
-            // Save the initialized security provider of remote client's user for subsequent uses.
-            if (client.ClientUser != Thread.CurrentPrincipal)
-                client.SetClientUser(Thread.CurrentPrincipal);
-
-            return (object)client.ClientUser != null && client.ClientUser.Identity.IsAuthenticated;
+            return null;
         }
 
         // Curtail response message size if needed
@@ -2548,39 +2511,35 @@ namespace GSF.ServiceProcess
 
                 try
                 {
-                    if ((object)client != null)
-                    {
-                        client.ClientID = e.Argument1;
-                        client.ConnectedAt = DateTime.UtcNow;
-
-                        if (TrySetCurrentThreadPrincipal(client))
-                        {
-                            // Engage security for the remote client connection if configured.
-                            if (!m_secureRemoteInteractions || VerifySecurity(client))
-                            {
-                                lock (m_remoteClients)
-                                {
-                                    m_remoteClients.Add(client);
-                                }
-
-                                SendAuthenticationSuccessResponse(client.ClientID);
-                                UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
-                            }
-                            else
-                            {
-                                throw new SecurityException($"Failed to authenticate '{client.ClientName}' - thread principal identity was '{Thread.CurrentPrincipal.Identity.Name}'");
-                            }
-                        }
-                        else
-                        {
-                            throw new SecurityException($"Failed to retrieve client principal from the socket connection: remote client '{client.ClientID}' not found");
-                        }
-                    }
-                    else
-                    {
-                        // Required client information is missing.
+                    if ((object)client == null)
                         throw new SecurityException("Remote client failed to transmit the required information");
+
+                    client.ClientID = e.Argument1;
+                    client.ConnectedAt = DateTime.UtcNow;
+
+                    if (m_secureRemoteInteractions)
+                    {
+                        // Create a new security provider to authenticate the user for this client connection
+                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(client.ClientUsername);
+                        securityProvider.PassthroughPrincipal = TryGetWindowsPrincipal(client);
+                        securityProvider.SecurePassword = client.SecureClientPassword;
+
+                        if (!securityProvider.Authenticate())
+                            throw new SecurityException($"Authentication failed for user '{client.ClientUsername}'.");
+
+                        // Create the security principal to provide role-based authentication lookups
+                        SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                        SecurityPrincipal securityPrincipal = new SecurityPrincipal(securityIdentity);
+                        client.SetClientUser(securityPrincipal);
                     }
+
+                    lock (m_remoteClients)
+                    {
+                        m_remoteClients.Add(client);
+                    }
+
+                    SendAuthenticationSuccessResponse(client.ClientID);
+                    UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
                 }
                 catch (Exception ex)
                 {
@@ -2631,23 +2590,14 @@ namespace GSF.ServiceProcess
                             // Check if remote client has permission to invoke the requested command.
                             if (m_secureRemoteInteractions)
                             {
-                                // Validate current client principal
-                                if (TrySetCurrentThreadPrincipal(client))
+                                if (!client.ClientUser.Identity.IsAuthenticated)
                                 {
-                                    if (VerifySecurity(requestInfo.Sender))
-                                    {
-                                        if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
-                                            throw new SecurityException($"Access to '{requestInfo.Request.Command}' is denied");
-                                    }
-                                    else
-                                    {
-                                        throw new SecurityException($"Failed to authenticate '{Thread.CurrentPrincipal.Identity.Name}'");
-                                    }
+                                    DisconnectClient(client.ClientID);
+                                    throw new SecurityException($"Authentication failure for client '{client.ClientUsername}'.");
                                 }
-                                else
-                                {
-                                    throw new SecurityException($"Failed to retrieve client principal from the socket connection: remote client '{client.ClientID}' not found");
-                                }
+
+                                if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource, client.ClientUser))
+                                    throw new SecurityException($"Access to '{requestInfo.Request.Command}' is denied");
                             }
 
                             // Notify the consumer about the incoming request from client.
@@ -3200,7 +3150,7 @@ namespace GSF.ServiceProcess
                 {
                     foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                     {
-                        if (m_secureRemoteInteractions && SecurityProviderUtility.IsResourceSecurable(handler.Command) && !SecurityProviderUtility.IsResourceAccessible(handler.Command))
+                        if (m_secureRemoteInteractions && SecurityProviderUtility.IsResourceSecurable(handler.Command) && !SecurityProviderUtility.IsResourceAccessible(handler.Command, requestInfo.Sender.ClientUser))
                             continue;
 
                         if (!handler.IsAdvertised && !showAdvancedHelp)

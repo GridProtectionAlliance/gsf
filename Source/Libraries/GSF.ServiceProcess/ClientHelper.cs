@@ -60,6 +60,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Security;
 
 namespace GSF.ServiceProcess
 {
@@ -163,7 +164,7 @@ namespace GSF.ServiceProcess
         // Fields
         private ClientBase m_remotingClient;
         private string m_username;
-        private string m_password;
+        private SecureString m_password;
         private string m_statusMessageFilter;
         private SerializationFormat m_serializationFormat;
         private bool m_persistSettings;
@@ -183,7 +184,7 @@ namespace GSF.ServiceProcess
         public ClientHelper()
         {
             m_username = DefaultUsername;
-            m_password = DefaultPassword;
+            m_password = DefaultPassword.ToSecureString();
             m_persistSettings = DefaultPersistSettings;
             m_statusMessageFilter = DefaultStatusMessageFilter;
             m_settingsCategory = DefaultSettingsCategory;
@@ -272,6 +273,25 @@ namespace GSF.ServiceProcess
         DefaultValue(DefaultPassword),
         Description("Password of the ClientHelper's user to be used for authenticating with the ServiceHelper.")]
         public string Password
+        {
+            get
+            {
+                return m_password.ToUnsecureString();
+            }
+            set
+            {
+                if ((object)value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                m_password = value.ToSecureString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password of the <see cref="ClientHelper"/>'s user to be used for authenticating with the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being specified is null.</exception>
+        public SecureString SecurePassword
         {
             get
             {
@@ -512,7 +532,7 @@ namespace GSF.ServiceProcess
                 settings.Add(nameof(StatusMessageFilter), m_statusMessageFilter, "Command used to negotiate status message filter when client connects to the ServiceHelper.");
 
                 Username = settings[nameof(Username)].ValueAs(m_username);
-                Password = settings[nameof(Password)].ValueAs(m_password);
+                Password = settings[nameof(Password)].Value;
                 SerializationFormat = settings[nameof(SerializationFormat)].ValueAs(m_serializationFormat);
                 StatusMessageFilter = settings[nameof(StatusMessageFilter)].ValueAs(m_statusMessageFilter);
             }

@@ -40,6 +40,7 @@
 using System;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Web;
 using System.Web.UI;
 using GSF.Configuration;
@@ -94,6 +95,18 @@ namespace GSF.Web.Embedded
         private const string EmbeddedStyleSheet = "GSF.Web.Embedded.Styles.SecurityPortal.css";
         private const string DefaultCompanyLink = "http://www.gridprotectionalliance.org/";
         private const string DefaultFooterText = "© Grid Protection Alliance. All rights reserved.";
+
+        #endregion
+
+        #region [ Properties ]
+
+        private ISecurityProvider CurrentProvider
+        {
+            get
+            {
+                return (Thread.CurrentPrincipal as SecurityPrincipal)?.Identity.Provider;
+            }
+        }
 
         #endregion
 
@@ -204,7 +217,7 @@ namespace GSF.Web.Embedded
                     MessageLabel.Text = string.Empty;
                 }
             }
-            else if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || (object)SecurityProviderCache.CurrentProvider == null || !User.Identity.IsAuthenticated)
+            else if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || (object)CurrentProvider == null || !User.Identity.IsAuthenticated)
             {
                 // Show login.
                 Page.Title = StaticPageTitle + " :: Login";
@@ -246,18 +259,20 @@ namespace GSF.Web.Embedded
 
                 if (!Page.IsPostBack)
                 {
-                    ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
+                    ISecurityProvider provider = CurrentProvider;
                     ShowUserData(provider);
 
-                    if (!provider.CanUpdateData)
-                    {
-                        AccountUserFirstName.Enabled = false;
-                        AccountUserLastName.Enabled = false;
-                        AccountUserEmailAddress.Enabled = false;
-                        AccountUserPhoneNumber.Enabled = false;
-                        AccountUserSecurityAnswer.Enabled = false;
-                        UpdateButton.Enabled = false;
-                    }
+                    // The UpdateData() method was never implemented in
+                    // any security provider so it has been removed
+                    //if (!provider.CanUpdateData)
+                    //{
+                    //    AccountUserFirstName.Enabled = false;
+                    //    AccountUserLastName.Enabled = false;
+                    //    AccountUserEmailAddress.Enabled = false;
+                    //    AccountUserPhoneNumber.Enabled = false;
+                    //    AccountUserSecurityAnswer.Enabled = false;
+                    //    UpdateButton.Enabled = false;
+                    //}
                 }
             }
         }
@@ -272,12 +287,15 @@ namespace GSF.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(LoginUsername.Text);
+                ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(LoginUsername.Text);
+                securityProvider.Password = LoginPassword.Text;
 
-                if (provider.Authenticate(LoginPassword.Text))
+                if (securityProvider.Authenticate())
                 {
                     // Credentials were authenticated successfully.
-                    SecurityProviderCache.CurrentProvider = provider;
+                    SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                    Thread.CurrentPrincipal = new SecurityPrincipal(securityIdentity);
+
                     if (RememberUsername.Checked)
                     {
                         Response.Cookies[CookieName][UsernameKey] = LoginUsername.Text;
@@ -295,11 +313,11 @@ namespace GSF.Web.Embedded
                 else
                 {
                     // Check why authentication failed.
-                    if (provider.UserData.PasswordChangeDateTime != DateTime.MinValue &&
-                        provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                    if (securityProvider.UserData.PasswordChangeDateTime != DateTime.MinValue &&
+                        securityProvider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     {
                         // User must change password.
-                        if (provider.CanChangePassword)
+                        if (securityProvider.CanChangePassword)
                             Response.Redirect(GetRedirectUrl(PasswordChangeStatusCode), false);
                         else
                             ShowMessage("Account password has expired.", true);
@@ -307,7 +325,7 @@ namespace GSF.Web.Embedded
                     else
                     {
                         // Show why login failed.
-                        if (!ShowFailureReason(provider))
+                        if (!ShowFailureReason(securityProvider))
                             ShowMessage("Authentication was not successful.", true);
                     }
                 }
@@ -340,20 +358,22 @@ namespace GSF.Web.Embedded
 
             try
             {
-                provider = SecurityProviderCache.CurrentProvider;
+                provider = CurrentProvider;
 
-                if (provider.CanUpdateData)
-                {
-                    provider.UserData.FirstName = AccountUserFirstName.Text;
-                    provider.UserData.LastName = AccountUserLastName.Text;
-                    provider.UserData.EmailAddress = AccountUserEmailAddress.Text;
-                    provider.UserData.PhoneNumber = AccountUserPhoneNumber.Text;
-                    provider.UserData.SecurityAnswer = AccountUserSecurityAnswer.Text;
-                    provider.UpdateData();
+                // The UpdateData() method was never implemented in
+                // any security provider so it has been removed
+                //if (provider.CanUpdateData)
+                //{
+                //    provider.UserData.FirstName = AccountUserFirstName.Text;
+                //    provider.UserData.LastName = AccountUserLastName.Text;
+                //    provider.UserData.EmailAddress = AccountUserEmailAddress.Text;
+                //    provider.UserData.PhoneNumber = AccountUserPhoneNumber.Text;
+                //    provider.UserData.SecurityAnswer = AccountUserSecurityAnswer.Text;
+                //    provider.UpdateData();
 
-                    ShowMessage("Information has been updated successfully!", false);
-                }
-                else
+                //    ShowMessage("Information has been updated successfully!", false);
+                //}
+                //else
                 {
                     ShowMessage("Account does not support updating of information.", true);
                 }
@@ -385,31 +405,34 @@ namespace GSF.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ChangePasswordUsername.Text);
+                ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(ChangePasswordUsername.Text);
 
-                if (provider.CanChangePassword)
+                if (securityProvider.CanChangePassword)
                 {
                     // Attempt to change password.
-                    if (provider.ChangePassword(ChangePasswordOldPassword.Text, ChangePasswordNewPassword.Text))
+                    if (securityProvider.ChangePassword(ChangePasswordOldPassword.Text, ChangePasswordNewPassword.Text))
                     {
+                        securityProvider.Password = ChangePasswordNewPassword.Text;
+
                         // Password changed successfully.
-                        if (provider.Authenticate(ChangePasswordNewPassword.Text))
+                        if (securityProvider.Authenticate())
                         {
                             // Password authenticated successfully.
-                            SecurityProviderCache.CurrentProvider = provider;
+                            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                            Thread.CurrentPrincipal = new SecurityPrincipal(securityIdentity);
                             Response.Redirect(GetReferrerUrl(), false);
                         }
                         else
                         {
                             // Show why authentication failed.
-                            if (!ShowFailureReason(provider))
+                            if (!ShowFailureReason(securityProvider))
                                 ShowMessage("Authentication was not successful.", true);
                         }
                     }
                     else
                     {
                         // Show why password change failed.
-                        if (!ShowFailureReason(provider))
+                        if (!ShowFailureReason(securityProvider))
                             ShowMessage("Password change was not successful.", true);
                     }
                 }

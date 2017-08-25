@@ -83,7 +83,7 @@ namespace GSF.Windows.Forms
     /// <seealso cref="ISecurityProvider"/>
     public partial class SecureForm : Form
     {
-        #region [ Methods ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecureForm"/> class.
@@ -94,40 +94,62 @@ namespace GSF.Windows.Forms
             InitializeComponent();
         }
 
+        #endregion
+
+        #region [ Properties ]
+
+        public SecurityPrincipal SecurityPrincipal
+        {
+            get;
+            private set;
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns>Name of the resource being accessed.</returns>
         protected virtual string GetResourceName()
         {
-            return this.Name;
+            return Name;
         }
 
         private void SecureForm_Load(object sender, EventArgs e)
         {
-            // Don't proceed if the form is opened in design mode.
+            // Don't proceed if the form is opened in design mode
             if (DesignMode)
                 return;
 
-            // Check if the resource is excluded from being secured.
+            // Check if the resource is excluded from being secured
             string resource = GetResourceName();
+
             if (!SecurityProviderUtility.IsResourceSecurable(resource))
                 return;
 
-            // Setup thread principal to current windows principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
-                Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            // Set up security provider for passthrough authentication
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(WindowsIdentity.GetCurrent().Name);
+            securityProvider.PassthroughPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            securityProvider.Authenticate();
 
-            // Setup the security provider for role-based security.
-            SecurityProviderCache.ValidateCurrentProvider();
+            // Setup the security principal for role-based security
+            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            SecurityPrincipal = new SecurityPrincipal(securityIdentity);
 
-            // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-                throw new SecurityException($"Authentication failed for user '{Thread.CurrentPrincipal.Identity.Name}'");
+            // Verify that the current thread principal has been authenticated
+            if (!SecurityPrincipal.Identity.IsAuthenticated)
+                throw new SecurityException($"Authentication failed for user '{SecurityPrincipal.Identity.Name}'");
 
-            // Perform a top-level permission check on the resource being accessed.
-            if (!SecurityProviderUtility.IsResourceAccessible(resource))
+            // Perform a top-level permission check on the resource being accessed
+            if (!SecurityProviderUtility.IsResourceAccessible(resource, SecurityPrincipal))
                 throw new SecurityException($"Access to '{resource}' is denied");
+
+            // Set up the current thread principal
+            // NOTE: Provided for backwards compatibility;
+            //       recommended to use the SecurityPrincipal instead
+            Thread.CurrentPrincipal = SecurityPrincipal;
         }
 
         #endregion

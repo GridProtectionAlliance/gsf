@@ -228,6 +228,7 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("Request", request);
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
+                m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
 
                 // See if a client session identifier has been defined for this execution request
                 Guid sessionID;

@@ -67,7 +67,18 @@ namespace GSF.Security
         /// <summary>
         /// Gets the <see cref="SecurityIdentity"/> object of the user.
         /// </summary>
-        public IIdentity Identity
+        public SecurityIdentity Identity
+        {
+            get
+            {
+                return m_identity;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IIdentity"/> object of the user.
+        /// </summary>
+        IIdentity IPrincipal.Identity
         {
             get
             {
@@ -86,7 +97,7 @@ namespace GSF.Security
         /// <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
         public bool IsInRole(string roles)
         {
-            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.UserData.IsAuthenticated ||
+            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.IsUserAuthenticated ||
                 m_identity.Provider.UserData.IsDisabled || m_identity.Provider.UserData.IsLockedOut)
             {
                 // No need to check user roles.

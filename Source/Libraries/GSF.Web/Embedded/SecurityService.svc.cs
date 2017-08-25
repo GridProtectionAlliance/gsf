@@ -32,6 +32,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.ServiceModel.Activation;
+using System.Threading;
 using GSF.Security;
 using GSF.ServiceModel;
 
@@ -111,15 +112,36 @@ namespace GSF.Web.Embedded
     [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class SecurityService : SelfHostingService, ISecurityService
     {
+        private ISecurityProvider CurrentProvider
+        {
+            get
+            {
+                return (Thread.CurrentPrincipal as SecurityPrincipal)?.Identity.Provider;
+            }
+        }
+
+        private void ValidateCurrentProvider()
+        {
+            if (CurrentProvider == null)
+            {
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(Thread.CurrentPrincipal.Identity.Name);
+                securityProvider.PassthroughPrincipal = Thread.CurrentPrincipal;
+                securityProvider.Authenticate();
+
+                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                Thread.CurrentPrincipal = new SecurityPrincipal(securityIdentity);
+            }
+        }
+
         /// <summary>
         /// Returns information about the current user. 
         /// </summary>
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
         public UserData GetUserData()
         {
-            SecurityProviderCache.ValidateCurrentProvider();
+            ValidateCurrentProvider();
 
-            return SecurityProviderCache.CurrentProvider.UserData;
+            return CurrentProvider.UserData;
         }
 
         /// <summary>
@@ -128,12 +150,12 @@ namespace GSF.Web.Embedded
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
         public UserData RefreshUserData()
         {
-            SecurityProviderCache.ValidateCurrentProvider();
+            ValidateCurrentProvider();
 
-            if (SecurityProviderCache.CurrentProvider.CanRefreshData)
-                SecurityProviderCache.CurrentProvider.RefreshData();
+            if (CurrentProvider.CanRefreshData)
+                CurrentProvider.RefreshData();
 
-            return SecurityProviderCache.CurrentProvider.UserData;
+            return CurrentProvider.UserData;
         }
 
         /// <summary>
@@ -144,12 +166,16 @@ namespace GSF.Web.Embedded
         /// <returns>An <see cref="UserData"/> object of the user.</returns>
         public UserData Authenticate(string username, string password)
         {
-            ISecurityProvider provider = SecurityProviderUtility.CreateProvider(username);
+            ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(username);
+            securityProvider.Password = password;
 
-            if (provider.Authenticate(password))
-                SecurityProviderCache.CurrentProvider = provider;
+            if (securityProvider.Authenticate())
+            {
+                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                Thread.CurrentPrincipal = new SecurityPrincipal(securityIdentity);
+            }
 
-            return provider.UserData;
+            return securityProvider.UserData;
         }
 
         /// <summary>
@@ -159,12 +185,12 @@ namespace GSF.Web.Embedded
         /// <returns>true if password is reset, otherwise false.</returns>
         public bool ResetPassword(string securityAnswer)
         {
-            SecurityProviderCache.ValidateCurrentProvider();
+            ValidateCurrentProvider();
 
-            if (!SecurityProviderCache.CurrentProvider.CanResetPassword)
+            if (!CurrentProvider.CanResetPassword)
                 return false;
 
-            return SecurityProviderCache.CurrentProvider.ResetPassword(securityAnswer);
+            return CurrentProvider.ResetPassword(securityAnswer);
         }
 
         /// <summary>
@@ -175,12 +201,12 @@ namespace GSF.Web.Embedded
         /// <returns>true if the password is changed, otherwise false.</returns>
         public bool ChangePassword(string oldPassword, string newPassword)
         {
-            SecurityProviderCache.ValidateCurrentProvider();
+            ValidateCurrentProvider();
 
-            if (!SecurityProviderCache.CurrentProvider.CanChangePassword)
+            if (!CurrentProvider.CanChangePassword)
                 return false;
 
-            return SecurityProviderCache.CurrentProvider.ChangePassword(oldPassword, newPassword);
+            return CurrentProvider.ChangePassword(oldPassword, newPassword);
         }
     }
 }
