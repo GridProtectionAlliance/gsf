@@ -221,6 +221,9 @@ namespace GSF.Web.Model
         {
             using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
+                // Need to add the security principal to the view bag before configuring the view
+                m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
+
                 if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
                     dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
 
@@ -228,7 +231,6 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("Request", request);
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
-                m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
 
                 // See if a client session identifier has been defined for this execution request
                 Guid sessionID;

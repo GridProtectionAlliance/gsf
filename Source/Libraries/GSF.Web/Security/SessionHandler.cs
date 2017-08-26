@@ -28,6 +28,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR;
+using Microsoft.Owin;
 
 namespace GSF.Web.Security
 {
@@ -147,13 +148,29 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
+        /// Gets the session ID Guid as defined in the Owin cookie header values.
+        /// </summary>
+        /// <param name="request">The target Owin request.</param>
+        /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
+        /// <returns>Session ID string, if defined; otherwise, <c>null</c>.</returns>
+        public static Guid GetSessionIDFromCookie(IOwinRequest request, string sessionToken)
+        {
+            string value = request?.Cookies?[sessionToken ?? DefaultSessionToken];
+            Guid sessionID;
+
+            Guid.TryParse(value, out sessionID);
+
+            return sessionID;
+        }
+
+        /// <summary>
         /// Gets the session ID Guid as defined in the SignalR cookie header values.
         /// </summary>
         /// <param name="request">The target SignalR request.</param>
         /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
         /// <returns>Session ID string, if defined; otherwise, <c>null</c>.</returns>
         public static Guid GetSessionIDFromCookie(IRequest request, string sessionToken)
-        {           
+        {
             string value = request?.Cookies?[sessionToken ?? DefaultSessionToken].Value;
             Guid sessionID;
 
