@@ -115,5 +115,42 @@ namespace GSF.Security
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Gets the reason phrase to return for an unauthorized response.
+        /// </summary>
+        /// <param name="securityPrincipal">Security principal being authenticated, can be <c>null</c>.</param>
+        /// <param name="authorizationScheme">Authentication scheme in use.</param>
+        /// <param name="useProviderReason"><c>true</c> to use detailed response from security provider.</param>
+        /// <returns>Reason phrase to return for an unauthorized response.</returns>
+        /// <remarks>
+        /// Detailed provider response should normally only be used for diagnostics, a more obscure reason is considered
+        /// more secure since it limits knowledge about the successful elements of an authentication attempt.
+        /// </remarks>
+        public static string GetFailureReasonPhrase(SecurityPrincipal securityPrincipal, string authorizationScheme = "Basic", bool useProviderReason = false)
+        {
+            if ((object)securityPrincipal == null)
+                return "Invalid user name or password";
+
+            if (useProviderReason)
+            {
+                // The security provider should be able to provide a reason for the failure
+                string failureReason = securityPrincipal.Identity.Provider?.AuthenticationFailureReason;
+
+                if (!string.IsNullOrEmpty(failureReason))
+                    return failureReason;
+            }
+
+            if (authorizationScheme == "Basic")
+                return "Invalid user name or password";
+
+            return "Missing credentials";
+        }
+
+        #endregion
     }
 }

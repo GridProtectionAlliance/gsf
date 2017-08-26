@@ -22,12 +22,9 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Filters;
@@ -44,17 +41,8 @@ namespace GSF.Web.Security
     {
         #region [ Members ]
 
-        // Constants
-
-        /// <summary>
-        /// Default value for <see cref="LoginPage"/>.
-        /// </summary>
-        public const string DefaultLoginPage = "/Login.cshtml";
-
         // Fields
-        private string m_realm;
-        private string m_sessionToken = SessionHandler.DefaultSessionToken;
-        private string m_loginPage = DefaultLoginPage;
+        private readonly AuthenticationOptions m_authenticationOptions = new AuthenticationOptions();
         private bool m_sessionTokenAssigned;
         private bool m_loginPageAssigned;
 
@@ -84,22 +72,12 @@ namespace GSF.Web.Security
         {
             get
             {
-                return m_realm;
+                return m_authenticationOptions.Realm;
             }
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    m_realm = null;
-                    return;
-                }
-
-                // Verify that Realm does not contain a quote character unless properly
-                // escaped, i.e., preceded by a backslash that is not itself escaped
-                if (value.Length != Regex.Replace(value, @"\\\\""|(?<!\\)\""", "").Length)
-                    throw new FormatException($"Realm value \"{value}\" contains an embedded quote that is not properly escaped.");
-
-                m_realm = value;
+                // AuthenticationOptions class validates Realm format
+                m_authenticationOptions.Realm = value;
             }
         }
 
@@ -122,11 +100,11 @@ namespace GSF.Web.Security
         {
             get
             {
-                return m_sessionToken;
+                return m_authenticationOptions.SessionToken;
             }
             set
             {
-                m_sessionToken = value;
+                m_authenticationOptions.SessionToken = value;
                 m_sessionTokenAssigned = true;
             }
         }
@@ -138,11 +116,11 @@ namespace GSF.Web.Security
         {
             get
             {
-                return m_loginPage;
+                return m_authenticationOptions.LoginPage;
             }
             set
             {
-                m_loginPage = value;
+                m_authenticationOptions.LoginPage = value;
                 m_loginPageAssigned = true;
             }
         }
@@ -157,123 +135,45 @@ namespace GSF.Web.Security
         /// <returns>A Task that will perform authentication.</returns>
         /// <param name="context">The authentication context.</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-        public async Task AuthenticateAsync(HttpAuthenticationContext context, CancellationToken cancellationToken)
+        public Task AuthenticateAsync(HttpAuthenticationContext context, CancellationToken cancellationToken)
         {
             HttpRequestMessage request = context.Request;
             AuthenticationHeaderValue authorization = request.Headers.Authorization;
 
             // Do nothing if anonymous access is requested
             if (authorization?.Scheme == null)
-                return;
+                return Task.FromResult(0);
 
             LoadConfiguredSettings();
 
-            Guid sessionID;
-            SecurityPrincipal cachedPrincipal;
-            bool hasSession = SessionHandler.TryGetSessionID(request, SessionToken, out sessionID);
-            string authorizationParameter = null;
-
             // Try to retrieve any existing authorization
-            if (hasSession && s_authorizationCache.TryGetValue(sessionID, out cachedPrincipal) && cachedPrincipal.Identity.IsAuthenticated)
-                return;
+            SecurityPrincipal securityPrincipal = context.Principal as SecurityPrincipal;
 
-            if (authorization.Scheme != "Basic")
+            if ((object)securityPrincipal == null)
             {
-                // Assuming pass-through authentication - make sure user is defined in security provider, authenticated and has a role
-                SecurityPrincipal securityPrincipal = context.Principal as SecurityPrincipal;
+                Guid sessionID;
 
-                if ((object)securityPrincipal == null)
-                {
-                    string username = context.Principal?.Identity.Name;
-
-                    if (!string.IsNullOrEmpty(username))
-                    {
-                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
-                        securityProvider.PassthroughPrincipal = context.Principal;
-                        securityProvider.Authenticate();
-
-                        SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
-                        securityPrincipal = new SecurityPrincipal(securityIdentity);
-                    }
-                }
-
-                if ((object)securityPrincipal != null && securityPrincipal.Identity.IsAuthenticated && securityPrincipal.Identity.Provider.UserData.Roles.Count > 0)
-                {
-                    // User is valid, do not set principal, which would indicate success, nor ErrorResult,
-                    // which would indicate an error
-                    if (hasSession)
-                        s_authorizationCache[sessionID] = securityPrincipal;
-
-                    return;
-                }
-
-                // Not a valid user for current security provider, provide an obscure error message
-                context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Redirect, LoginPage);
-                return;
+                if (SessionHandler.TryGetSessionID(request, SessionToken, out sessionID))
+                    AuthenticationHandler.TryGetPrincipal(sessionID, out securityPrincipal);
             }
 
-            if (string.IsNullOrEmpty(authorizationParameter))
-                authorizationParameter = authorization.Parameter;
+            if (securityPrincipal?.Identity.IsAuthenticated ?? false)
+                return Task.FromResult(0);
 
-            if (string.IsNullOrEmpty(authorizationParameter))
+            string result;
+
+            // In cases where authentication is being tested, such as a login page, a 401 (Unauthorized) is desired
+            // instead of a redirect which could cause a cyclic redirection loop - to prevent these situations
+            // a URL parameter can be specified to request the desired behavior, i.e., "?AuthFailRedirect=false"
+            if (request.QueryParameters().TryGetValue("AuthFailRedirect", out result) && !result.ParseBoolean())
             {
-                // No authorization credentials were provided, set ErrorResult
-                context.ErrorResult = new AuthenticationFailureResult("Missing credentials", request, HttpStatusCode.Redirect, LoginPage);
-                return;
+                context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Unauthorized);
+                return Task.FromResult(0);
             }
 
-            await Task.Run(() =>
-            {
-                string username, password;
-
-                if (TryParseCredentials(authorizationParameter, out username, out password))
-                {
-                    // Setup the security principal
-                    ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
-                    securityProvider.Password = password;
-                    securityProvider.Authenticate();
-
-                    SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
-                    SecurityPrincipal securityPrincipal = new SecurityPrincipal(securityIdentity);
-
-                    // Authenticate user, if not already authenticated
-                    if (securityPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Count > 0)
-                    {
-                        context.Principal = securityPrincipal;
-
-                        if (hasSession)
-                            s_authorizationCache[sessionID] = securityPrincipal;
-
-                        ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(username, SecuritySettingsCategory));
-                    }
-                    else
-                    {
-                        // Authentication was attempted but failed, set ErrorResult - don't redirect, need a 401 status code
-                        context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Unauthorized);
-                    }
-                }
-                else
-                {
-                    // Unable to parse authorization parameter
-                    context.ErrorResult = new AuthenticationFailureResult("Invalid credentials", request, HttpStatusCode.Redirect, LoginPage);
-                }
-            },
-            cancellationToken);
-        }
-
-        /// <summary>
-        /// Attempt to authorize and provide current principal for specified <paramref name="sessionID"/>.
-        /// </summary>
-        /// <param name="sessionID">Session ID to user.</param>
-        /// <param name="securityPrincipal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
-        /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
-        public static bool TryGetPrincipal(Guid sessionID, out SecurityPrincipal securityPrincipal)
-        {
-            if (s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
-                return true;
-
-            securityPrincipal = null;
-            return false;
+            // Not a valid user for current security provider, provide an obscure error message
+            context.ErrorResult = new AuthenticationFailureResult("Invalid user name or password", request, HttpStatusCode.Redirect, LoginPage);
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -300,16 +200,29 @@ namespace GSF.Web.Security
             if (string.IsNullOrWhiteSpace(SettingsCategory) || m_sessionTokenAssigned && m_loginPageAssigned)
                 return;
 
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings[SettingsCategory];
+            if (!s_loadedConfiguredSettings)
+            {
+                try
+                {
+                    CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings[SettingsCategory];
 
-            systemSettings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
-            systemSettings.Add("LoginPage", DefaultLoginPage, "Defines the login page, relative path, used as a redirect location when authentication fails.");
+                    systemSettings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
+                    systemSettings.Add("LoginPage", AuthenticationOptions.DefaultLoginPage, "Defines the login page, relative path, used as a redirect location when authentication fails.");
+
+                    s_configuredSessionToken = systemSettings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken);
+                    s_configuredLoginPage = systemSettings["LoginPage"].ValueAs(AuthenticationOptions.DefaultLoginPage);
+                }
+                finally
+                {
+                    s_loadedConfiguredSettings = true;
+                }
+            }
 
             if (!m_sessionTokenAssigned)
-                SessionToken = systemSettings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken);
+                SessionToken = s_configuredSessionToken;
 
             if (!m_loginPageAssigned)
-                LoginPage = systemSettings["LoginPage"].ValueAs(DefaultLoginPage);
+                LoginPage = s_configuredLoginPage;
         }
 
         #endregion
@@ -317,83 +230,9 @@ namespace GSF.Web.Security
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
-
-        // Static Constructor
-        static AuthenticateControllerAttribute()
-        {
-            s_authorizationCache = new ConcurrentDictionary<Guid, SecurityPrincipal>();
-
-            // Attach to razor view session expiration event so any cached authorizations can also be cleared
-            Model.RazorView.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
-        }
-
-        // Static Methods
-
-        /// <summary>
-        /// Clears any cached authorizations for the specified <paramref name="sessionID"/>.
-        /// </summary>
-        /// <param name="sessionID">Identifier of session authorization to clear.</param>
-        /// <returns><c>true</c> if session authorization was found and cleared; otherwise, <c>false</c>.</returns>
-        public static bool ClearAuthorizationCache(Guid sessionID)
-        {
-            SecurityPrincipal securityPrincipal;
-            return s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
-        }
-
-        private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)
-        {
-            byte[] credentialBytes;
-
-            userName = null;
-            password = null;
-
-            try
-            {
-                credentialBytes = Convert.FromBase64String(authorizationParameter);
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
-
-            // The currently approved HTTP 1.1 specification says characters here are ISO-8859-1.
-            // However, the current draft updated specification for HTTP 1.1 indicates this
-            // encoding is infrequently used in practice and defines behavior only for ASCII.
-
-            // Make a writable copy of the ASCII encoding to enable setting the decoder fall-back
-            Encoding encoding = Encoding.ASCII.Clone() as Encoding;
-
-            if ((object)encoding == null)
-                return false;
-
-            // Fail on invalid bytes rather than silently replacing and continuing
-            encoding.DecoderFallback = DecoderFallback.ExceptionFallback;
-
-            string credentials;
-
-            try
-            {
-                credentials = encoding.GetString(credentialBytes);
-            }
-            catch (DecoderFallbackException)
-            {
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(credentials))
-                return false;
-
-            int index = credentials.IndexOf(':');
-
-            if (index == -1)
-                return false;
-
-            userName = credentials.Substring(0, index);
-            password = credentials.Substring(index + 1);
-
-            return true;
-        }
+        private static string s_configuredSessionToken;
+        private static string s_configuredLoginPage;
+        private static bool s_loadedConfiguredSettings;
 
         #endregion
     }

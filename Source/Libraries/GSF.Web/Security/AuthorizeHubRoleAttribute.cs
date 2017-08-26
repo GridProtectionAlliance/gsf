@@ -23,10 +23,8 @@
 
 using System;
 using System.Linq;
-using System.Security;
 using System.Security.Principal;
 using System.Threading;
-using GSF.Collections;
 using GSF.Security;
 using Microsoft.AspNet.SignalR;
 
@@ -92,20 +90,16 @@ namespace GSF.Web.Security
             SecurityPrincipal securityPrincipal = user as SecurityPrincipal;
 
             if ((object)securityPrincipal == null)
-                throw new SecurityException($"Authentication failed for user '{user?.Identity.Name}'");
-
-            Thread.CurrentPrincipal = securityPrincipal;
-
-            string username = securityPrincipal.Identity.Name;
+                return false;
 
             // Verify that the current thread principal has been authenticated.
-            if (securityPrincipal?.Identity.IsAuthenticated != true)
-                throw new SecurityException($"Authentication failed for user '{username}': {securityPrincipal.Identity.Provider.AuthenticationFailureReason}");
+            if (!securityPrincipal.Identity.IsAuthenticated)
+                return false;
 
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => securityPrincipal.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{username}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+                return false;
 
-            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(username, SecuritySettingsCategory));
+            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(securityPrincipal.Identity.Name, SecuritySettingsCategory));
 
             return true;
         }

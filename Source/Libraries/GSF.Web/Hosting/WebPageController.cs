@@ -30,12 +30,14 @@ using System.Web.Http;
 using System.Web.Http.Dependencies;
 using GSF.Data;
 using GSF.Web.Model;
+using GSF.Web.Security;
 
 namespace GSF.Web.Hosting
 {
     /// <summary>
     /// Defines a mini-web server with Razor support using the self-hosted API controller.
     /// </summary>
+    [AuthenticateController]
     public class WebPageController : ApiController
     {
         #region [ Members ]

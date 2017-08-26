@@ -91,35 +91,32 @@ namespace GSF.Web.Security
         /// <param name="filterContext">The filter context.</param>
         public void OnAuthorization(AuthorizationContext filterContext)
         {
-            if ((object)Thread.CurrentPrincipal == null || (object)Thread.CurrentPrincipal.Identity == null)
+            SecurityPrincipal securityPrincipal = filterContext.HttpContext.User as SecurityPrincipal;
+
+            if ((object)securityPrincipal == null || (object)securityPrincipal.Identity == null)
             {
-                filterContext.Result = new HttpUnauthorizedResult("Access is denied - current user is undefined");
+                filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user \"{filterContext.HttpContext.User?.Identity.Name}\".");
                 filterContext.HttpContext.User = null;
                 return;
             }
             
             // Get current user name
-            string userName = Thread.CurrentPrincipal.Identity.Name;
-
-            //SecurityProviderCache.ValidateCurrentProvider(userName);
+            string username = securityPrincipal.Identity.Name;
 
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
+            if (!securityPrincipal.Identity.IsAuthenticated)
             {
-                //filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
-                filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user '{userName}':");
+                filterContext.Result = new HttpUnauthorizedResult($"User \"{username}\" is not authenticated.");
                 filterContext.HttpContext.User = null;
             }
-            else if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role)))
+            else if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => securityPrincipal.IsInRole(role)))
             {
-                filterContext.Result = new HttpUnauthorizedResult($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+                filterContext.Result = new HttpUnauthorizedResult($"Access is denied for user \"{username}\": minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
                 filterContext.HttpContext.User = null;
             }
             else
             {
-                // Setup the principal
-                filterContext.HttpContext.User = Thread.CurrentPrincipal;
-                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(userName, SecuritySettingsCategory));
+                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(username, SecuritySettingsCategory));
             }
         }
 

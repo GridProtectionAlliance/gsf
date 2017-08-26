@@ -33,6 +33,13 @@ namespace GSF.Web.Security
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default value for <see cref="LoginPage"/>.
+        /// </summary>
+        public const string DefaultLoginPage = "/Login.cshtml";
+
         // Fields
         private string m_realm;
 
@@ -55,12 +62,12 @@ namespace GSF.Web.Security
         /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
         /// </summary>
-        public string SessionToken { get; set; }
+        public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
 
         /// <summary>
         /// Gets or sets the login page used as a redirect location when authentication fails.
         /// </summary>
-        public string LoginPage { get; set; }
+        public string LoginPage { get; set; } = DefaultLoginPage;
 
         /// <summary>
         /// Gets or sets the case-sensitive identifier that defines the protection space for this authentication.

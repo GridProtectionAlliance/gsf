@@ -107,21 +107,22 @@ namespace GSF.Web.Security
         /// <summary>
         /// Resets the current provider cache.
         /// </summary>
+        /// <param name="cookieSessionID">Session ID as it appears in the cookie header value.</param>
         /// <returns><c>true</c> if session was cleared; otherwise, <c>false</c>.</returns>
-        public bool Logout(string sessionID)
+        public bool Logout(string cookieSessionID)
         {
-            Guid parsedSessionID;
+            Guid sessionID;
             SecurityPrincipal securityPrincipal;
 
-            if (!Guid.TryParse(sessionID, out parsedSessionID))
+            if (!Guid.TryParse(cookieSessionID, out sessionID))
                 return false;
 
             // Flush any cached information that has been saved for this user
-            if (AuthenticateControllerAttribute.TryGetPrincipal(parsedSessionID, out securityPrincipal))
+            if (AuthenticationHandler.TryGetPrincipal(sessionID, out securityPrincipal))
                 SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
 
             // Clear any cached session state for user (this also clears any cached authorizations)
-            return RazorView.ClearSessionCache(parsedSessionID);
+            return RazorView.ClearSessionCache(sessionID);
         }
 
         /// <summary>

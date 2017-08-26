@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/25/2017 - Stephen C. Wills
 //       Generated original version of source code.
+//  08/26/2017 - J. Ritchie Carroll
+//       Updated handling for anonymous requests and added principal lookup function for a session ID
 //
 //******************************************************************************************************
 
@@ -26,17 +28,17 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GSF.Security;
 using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.Infrastructure;
 
 namespace GSF.Web.Security
 {
     /// <summary>
     /// Handles authentication using the configured <see cref="ISecurityProvider"/> implementation in the Owin pipeline.
     /// </summary>
-    public class AuthenticationHandler : Microsoft.Owin.Security.Infrastructure.AuthenticationHandler<AuthenticationOptions>
+    public class AuthenticationHandler : AuthenticationHandler<AuthenticationOptions>
     {
         #region [ Properties ]
 
@@ -47,10 +49,7 @@ namespace GSF.Web.Security
             {
                 string[] authorization = Request.Headers["Authorization"]?.Split(' ');
 
-                if ((object)authorization == null)
-                    return null;
-
-                if (authorization.Length == 0)
+                if ((object)authorization == null || authorization.Length == 0)
                     return null;
 
                 return authorization[0];
@@ -64,10 +63,7 @@ namespace GSF.Web.Security
             {
                 string[] authorization = Request.Headers["Authorization"]?.Split(' ');
 
-                if ((object)authorization == null)
-                    return null;
-
-                if (authorization.Length < 2)
+                if ((object)authorization == null || authorization.Length < 2)
                     return null;
 
                 return authorization[1];
@@ -89,16 +85,15 @@ namespace GSF.Web.Security
         #region [ Methods ]
 
         /// <summary>
-        /// The core authentication logic which must be provided by the handler. Will be
-        /// invoked at most once per request. Do not call directly, call the wrapping Authenticate
-        /// method instead.
+        /// The core authentication logic which must be provided by the handler. Will be invoked at most
+        /// once per request. Do not call directly, call the wrapping Authenticate method instead.
         /// </summary>
         /// <returns>The ticket data provided by the authentication logic</returns>
         protected override Task<AuthenticationTicket> AuthenticateCoreAsync()
         {
             return Task.Run(() =>
             {
-                SecurityPrincipal securityPrincipal = null;
+                SecurityPrincipal securityPrincipal;
 
                 // Attempt to read the session ID from the HTTP cookies
                 Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
@@ -106,30 +101,40 @@ namespace GSF.Web.Security
                 // Attempt to retrieve the user's credentials that were cached to the user's session
                 if (!s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
                 {
-                    // Pick the appropriate authentication logic based
-                    // on the authorization type in the HTTP headers
-                    if (AuthorizationType == "Basic")
-                        securityPrincipal = AuthenticateBasic();
-                    else
-                        securityPrincipal = AuthenticatePassthrough();
+                    // Undefined authorization type is for anonymous resource
+                    if (!string.IsNullOrEmpty(AuthorizationType))
+                    {
+                        // Pick the appropriate authentication logic based
+                        // on the authorization type in the HTTP headers
+                        if (AuthorizationType == "Basic")
+                            securityPrincipal = AuthenticateBasic();
+                        else
+                            securityPrincipal = AuthenticatePassthrough();
 
-                    // Attempt to cache the security principal to the session
-                    if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                        s_authorizationCache[sessionID] = securityPrincipal;
+                        // Attempt to cache the security principal to the session
+                        if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
+                            s_authorizationCache[sessionID] = securityPrincipal;
+                    }
                 }
 
                 // If the user fails to authenticate, adjust the HTTP response
-                if (securityPrincipal?.Identity.IsAuthenticated != true)
+                if (!string.IsNullOrEmpty(AuthorizationType) && securityPrincipal?.Identity.IsAuthenticated != true)
                 {
-                    Context.Response.ReasonPhrase = GetReasonPhrase(securityPrincipal);
+                    // Main objective here is to establish security principal, even so
+                    // we establish a default unauthorized response as a placeholder,
+                    // however, further activity in the Owin pipeline for the current
+                    // request will typically create its own response overwriting this
+                    // one - as a result, further authentication mechanisms that can
+                    // check the now established security principal will be required
+                    Context.Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationType);
                     Context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
                     if ((object)securityPrincipal == null && AuthorizationType == "Basic")
                         Context.Response.Redirect(Options.LoginPage);
                 }
 
-                // Set the principal of the IOwinRequest so
-                // that it can be propagated across the system
+                // Set the principal of the IOwinRequest so that it
+                // can be propagated through the Owin pipeline
                 Request.User = securityPrincipal ?? AnonymousPrincipal;
 
                 return (AuthenticationTicket)null;
@@ -176,7 +181,7 @@ namespace GSF.Web.Security
             return new SecurityPrincipal(securityIdentity);
         }
 
-        // Applies authentication for requests using Windows passthrough authentication.
+        // Applies authentication for requests using Windows pass-through authentication.
         private SecurityPrincipal AuthenticatePassthrough()
         {
             string username = Request.User?.Identity.Name;
@@ -184,10 +189,10 @@ namespace GSF.Web.Security
             if ((object)username == null)
                 return null;
 
-            // Get the principal used for verifying the user's passthrough authentication
+            // Get the principal used for verifying the user's pass-through authentication
             IPrincipal passthroughPrincipal = Request.User;
 
-            // Create the security provider that will verify the user's passthrough authentication
+            // Create the security provider that will verify the user's pass-through authentication
             ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
             securityProvider.PassthroughPrincipal = passthroughPrincipal;
             securityProvider.Authenticate();
@@ -195,32 +200,6 @@ namespace GSF.Web.Security
             // Return the security principal that will be used for role-based authorization
             SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
             return new SecurityPrincipal(securityIdentity);
-        }
-
-        // Determines the reason phrase to return in the HTTP failure response.
-        private string GetReasonPhrase(SecurityPrincipal securityPrincipal)
-        {
-            if ((object)securityPrincipal == null)
-            {
-                // Indicates either the credentials could not be
-                // parsed or passthrough authentication failed
-                return "Invalid user name or password";
-            }
-            else
-            {
-                // The security provider should be able to provide a reason for the failure
-                string failureReason = securityPrincipal.Identity.Provider.AuthenticationFailureReason;
-
-                if (!string.IsNullOrEmpty(failureReason))
-                    return failureReason;
-
-                // If no reason was provided by the security provider,
-                // return a generic error message based on the authorization type
-                if (AuthorizationType == "Basic")
-                    return "Invalid credentials";
-                else
-                    return "Missing credentials";
-            }
         }
 
         #endregion
@@ -240,6 +219,17 @@ namespace GSF.Web.Security
         }
 
         // Static Methods
+
+        /// <summary>
+        /// Attempt to get current security principal for specified <paramref name="sessionID"/>.
+        /// </summary>
+        /// <param name="sessionID">Session ID to user.</param>
+        /// <param name="securityPrincipal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
+        /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
+        public static bool TryGetPrincipal(Guid sessionID, out SecurityPrincipal securityPrincipal)
+        {
+            return s_authorizationCache.TryGetValue(sessionID, out securityPrincipal);
+        }
 
         /// <summary>
         /// Clears any cached authorizations for the specified <paramref name="sessionID"/>.
