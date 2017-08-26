@@ -21,9 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Text.RegularExpressions;
-
 namespace GSF.Web.Security
 {
     /// <summary>
@@ -36,12 +33,14 @@ namespace GSF.Web.Security
         // Constants
 
         /// <summary>
+        /// Default value for <see cref="AnonymousResources"/>.
+        /// </summary>
+        public const string DefaultAnonymousResources = "/Login.cshtml,/favicon.ico";
+
+        /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
         public const string DefaultLoginPage = "/Login.cshtml";
-
-        // Fields
-        private string m_realm;
 
         #endregion
 
@@ -60,6 +59,12 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets the paths to the resources on the web
+        /// server that can be provided without checking credentials.
+        /// </summary>
+        public string[] AnonymousResources { get; set; } = DefaultAnonymousResources.Split(',');
+
+        /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
         /// </summary>
         public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
@@ -68,47 +73,6 @@ namespace GSF.Web.Security
         /// Gets or sets the login page used as a redirect location when authentication fails.
         /// </summary>
         public string LoginPage { get; set; } = DefaultLoginPage;
-
-        /// <summary>
-        /// Gets or sets the case-sensitive identifier that defines the protection space for this authentication.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The "realm" authentication parameter is reserved for use by authentication schemes that wish to
-        /// indicate a scope of protection.
-        /// </para>
-        /// <para>
-        /// A protection space is defined by the canonical root URI (the scheme and authority components of the
-        /// effective request URI) of the server being accessed, in combination with the realm value if present.
-        /// These realms allow the protected resources on a server to be partitioned into a set of protection
-        /// spaces, each with its own authentication scheme and/or authorization database. The realm value is a
-        /// string, generally assigned by the origin server, that can have additional semantics specific to the
-        /// authentication scheme. Note that a response can have multiple challenges with the same auth-scheme
-        /// but with different realms.
-        /// </para>
-        /// </remarks>
-        public string Realm
-        {
-            get
-            {
-                return m_realm;
-            }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    m_realm = null;
-                    return;
-                }
-
-                // Verify that Realm does not contain a quote character unless properly
-                // escaped, i.e., preceded by a backslash that is not itself escaped
-                if (value.Length != Regex.Replace(value, @"\\\\""|(?<!\\)\""", "").Length)
-                    throw new FormatException($"Realm value \"{value}\" contains an embedded quote that is not properly escaped.");
-
-                m_realm = value;
-            }
-        }
 
         #endregion
     }

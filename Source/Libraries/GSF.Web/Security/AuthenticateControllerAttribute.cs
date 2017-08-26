@@ -51,37 +51,6 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the case-sensitive identifier that defines the protection space for this authentication.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The "realm" authentication parameter is reserved for use by authentication schemes that wish to
-        /// indicate a scope of protection.
-        /// </para>
-        /// <para>
-        /// A protection space is defined by the canonical root URI (the scheme and authority components of the
-        /// effective request URI) of the server being accessed, in combination with the realm value if present.
-        /// These realms allow the protected resources on a server to be partitioned into a set of protection
-        /// spaces, each with its own authentication scheme and/or authorization database. The realm value is a
-        /// string, generally assigned by the origin server, that can have additional semantics specific to the
-        /// authentication scheme. Note that a response can have multiple challenges with the same auth-scheme
-        /// but with different realms.
-        /// </para>
-        /// </remarks>
-        public string Realm
-        {
-            get
-            {
-                return m_authenticationOptions.Realm;
-            }
-            set
-            {
-                // AuthenticationOptions class validates Realm format
-                m_authenticationOptions.Realm = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets settings category used to load configured settings. When defined,
         /// <see cref="SessionToken"/> and <see cref="LoginPage"/> will be loaded from the
         /// configuration file settings when not otherwise explicitly defined.
@@ -184,13 +153,6 @@ namespace GSF.Web.Security
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         public Task ChallengeAsync(HttpAuthenticationChallengeContext context, CancellationToken cancellationToken)
         {
-            string parameter = null;
-
-            if (!string.IsNullOrWhiteSpace(Realm))
-                parameter = "realm=\"" + Realm + "\"";
-
-            context.ChallengeWith("Basic", parameter);
-
             return Task.FromResult(0);
         }
 

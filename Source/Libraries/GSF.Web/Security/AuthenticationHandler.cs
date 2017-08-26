@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
@@ -95,42 +96,42 @@ namespace GSF.Web.Security
             {
                 SecurityPrincipal securityPrincipal;
 
+                // No authentication required for anonymous resources
+                if (IsAnonymousResource(Request.Path.Value))
+                    return null;
+
                 // Attempt to read the session ID from the HTTP cookies
                 Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
 
                 // Attempt to retrieve the user's credentials that were cached to the user's session
-                if (!s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
+                if (s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
                 {
-                    // Undefined authorization type is for anonymous resource
-                    if (!string.IsNullOrEmpty(AuthorizationType))
-                    {
-                        // Pick the appropriate authentication logic based
-                        // on the authorization type in the HTTP headers
-                        if (AuthorizationType == "Basic")
-                            securityPrincipal = AuthenticateBasic();
-                        else
-                            securityPrincipal = AuthenticatePassthrough();
+                    bool useCachedCredentials =
+                        (object)Request.User == null ||
+                        Request.User.Identity.Name == securityPrincipal.Identity.Name ||
+                        AuthorizationType != "Basic";
 
-                        // Attempt to cache the security principal to the session
-                        if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                            s_authorizationCache[sessionID] = securityPrincipal;
+                    if (!useCachedCredentials)
+                    {
+                        // Explicit login attempts as a different user
+                        // cause credentials to be flushed from the session
+                        s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
+                        securityPrincipal = null;
                     }
                 }
 
-                // If the user fails to authenticate, adjust the HTTP response
-                if (!string.IsNullOrEmpty(AuthorizationType) && securityPrincipal?.Identity.IsAuthenticated != true)
+                if ((object)securityPrincipal == null)
                 {
-                    // Main objective here is to establish security principal, even so
-                    // we establish a default unauthorized response as a placeholder,
-                    // however, further activity in the Owin pipeline for the current
-                    // request will typically create its own response overwriting this
-                    // one - as a result, further authentication mechanisms that can
-                    // check the now established security principal will be required
-                    Context.Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationType);
-                    Context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    // Pick the appropriate authentication logic based
+                    // on the authorization type in the HTTP headers
+                    if (AuthorizationType == "Basic")
+                        securityPrincipal = AuthenticateBasic();
+                    else
+                        securityPrincipal = AuthenticatePassthrough();
 
-                    if ((object)securityPrincipal == null && AuthorizationType == "Basic")
-                        Context.Response.Redirect(Options.LoginPage);
+                    // Attempt to cache the security principal to the session
+                    if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
+                        s_authorizationCache[sessionID] = securityPrincipal;
                 }
 
                 // Set the principal of the IOwinRequest so that it
@@ -142,24 +143,40 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Override this method to deal with 401 challenge concerns, if an authentication
-        /// scheme in question deals an authentication interaction as part of its request
-        /// flow. (like adding a response header, or changing the 401 result to 302 of a
-        /// login page or external sign-in location.)
+        /// Called once by common code after initialization. If an authentication middleware
+        /// responds directly to specifically known paths it must override this virtual,
+        /// compare the request path to it's known paths, provide any response information
+        /// as appropriate, and true to stop further processing.
         /// </summary>
-        protected override Task ApplyResponseChallengeAsync()
+        /// <returns>
+        /// Returning false will cause the common code to call the next middleware in line.
+        /// Returning true will cause the common code to begin the async completion journey
+        /// without calling the rest of the middleware pipeline.
+        /// </returns>
+        public override Task<bool> InvokeAsync()
         {
-            string realm = null;
-
-            if (Response.StatusCode == (int)HttpStatusCode.Unauthorized)
+            return Task.Run(() =>
             {
-                if (!string.IsNullOrWhiteSpace(Options.Realm))
-                    realm = " realm=\"" + Options.Realm + "\"";
+                SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
 
-                Request.Headers["WWW-Authenticate"] = "Basic" + realm;
-            }
+                // If the user fails to authenticate, adjust the HTTP response
+                if (!IsAnonymousResource(Request.Path.Value) && securityPrincipal?.Identity.IsAuthenticated != true)
+                {
+                    string authFailRedirect = Request.Query["AuthFailRedirect"] ?? "True";
 
-            return base.ApplyResponseChallengeAsync();
+                    // Determine whether the authentication failure should redirect to login page
+                    if (authFailRedirect.ParseBoolean())
+                        Response.Redirect(Options.LoginPage);
+                    else
+                        Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+
+                    Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationType);
+
+                    return true;
+                }
+
+                return false;
+            });
         }
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
@@ -200,6 +217,12 @@ namespace GSF.Web.Security
             // Return the security principal that will be used for role-based authorization
             SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
             return new SecurityPrincipal(securityIdentity);
+        }
+
+        // Determines whether the given resource is an anonymous resource.
+        private bool IsAnonymousResource(string path)
+        {
+            return Options.AnonymousResources.Any(resource => path.StartsWith(resource, StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion
