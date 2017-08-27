@@ -280,9 +280,6 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
                 m_password = value.ToSecureString();
             }
         }
