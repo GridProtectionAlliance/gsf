@@ -2512,7 +2512,7 @@ namespace GSF.ServiceProcess
                 try
                 {
                     if ((object)client == null)
-                        throw new SecurityException("Remote client failed to transmit the required information");
+                        throw new SecurityException("Remote client failed to transmit the required information.");
 
                     client.ClientID = e.Argument1;
                     client.ConnectedAt = DateTime.UtcNow;
@@ -2520,8 +2520,14 @@ namespace GSF.ServiceProcess
                     if (m_secureRemoteInteractions)
                     {
                         // Create a new security provider to authenticate the user for this client connection
-                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(client.ClientUsername);
-                        securityProvider.PassthroughPrincipal = TryGetWindowsPrincipal(client);
+                        WindowsPrincipal windowsPrincipal = TryGetWindowsPrincipal(client);
+                        string username = client.ClientUsername ?? windowsPrincipal?.Identity.Name;
+
+                        if ((object)username == null)
+                            throw new SecurityException($"Authentication failed for client: unable to determine user name.");
+
+                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+                        securityProvider.PassthroughPrincipal = windowsPrincipal;
                         securityProvider.SecurePassword = client.SecureClientPassword;
 
                         if (!securityProvider.Authenticate())

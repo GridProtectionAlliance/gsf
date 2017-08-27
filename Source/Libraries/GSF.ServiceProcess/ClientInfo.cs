@@ -88,20 +88,18 @@ namespace GSF.ServiceProcess
         /// <param name="parent">An <see cref="ClientHelper"/> object.</param>
         public ClientInfo(ClientHelper parent)
         {
-            string clientUserName = null;
-
             // Initialize member variables.
             m_clientType = Common.GetApplicationType();
             m_machineName = Environment.MachineName;
 
             if ((object)parent != null)
-                clientUserName = parent.Username;
+                m_clientUsername = parent.Username;
 
             // Initialize user principal.
             if (m_clientType == ApplicationType.Web)
-                m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.RemoteUserID), new string[] { });
+                m_clientUser = new GenericPrincipal(new GenericIdentity(m_clientUsername ?? UserInfo.RemoteUserID), new string[] { });
             else
-                m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.CurrentUserID), new string[] { });
+                m_clientUser = new GenericPrincipal(new GenericIdentity(m_clientUsername ?? UserInfo.CurrentUserID), new string[] { });
 
             // Initialize user credentials.
             if ((object)parent != null && !string.IsNullOrEmpty(parent.Username) && parent.Password != null && parent.Password.Length > 0)
