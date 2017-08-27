@@ -156,6 +156,7 @@
     <Compile Include="Embedded\ISecurityService.cs" />
     <Compile Include="Hosting\WebPageController.cs" />
     <Compile Include="Hosting\WebServer.cs" />
+    <Compile Include="Hosting\WebServerOptions.cs" />
     <Compile Include="Hubs\DataContextHubClient.cs" />
     <Compile Include="Hubs\DataContextOperations.cs" />
     <Compile Include="Hubs\HubClientBase.cs" />
@@ -196,15 +197,12 @@
     </Compile>
     <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
     <Compile Include="Security\AddChallengeOnUnauthorizedResult.cs" />
-    <Compile Include="Security\AuthenticateControllerAttribute.cs" />
-    <Compile Include="Security\AuthenticationFailureResult.cs" />
     <Compile Include="Security\AuthenticationHandler.cs" />
     <Compile Include="Security\AuthenticationMiddleware.cs" />
     <Compile Include="Security\AuthenticationOptions.cs" />
     <Compile Include="Security\AuthorizationCache.cs" />
     <Compile Include="Security\AuthorizeControllerRoleAttribute.cs" />
     <Compile Include="Security\AuthorizeHubRoleAttribute.cs" />
-    <Compile Include="Security\HttpAuthenticationChallengeContextExtensions.cs" />
     <Compile Include="Security\NamespaceDoc.cs" />
     <Compile Include="Security\SecurityHub.cs" />
     <Compile Include="Model\RazorView.cs" />

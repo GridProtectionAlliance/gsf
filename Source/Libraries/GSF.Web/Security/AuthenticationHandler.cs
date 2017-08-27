@@ -25,11 +25,12 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using GSF.Reflection;
 using GSF.Security;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Infrastructure;
@@ -43,35 +44,21 @@ namespace GSF.Web.Security
     {
         #region [ Properties ]
 
-        // Reads the authorization type from the HTTP headers.
-        private string AuthorizationType
+        // Reads the authorization header value from the request
+        private AuthenticationHeaderValue AuthorizationHeader
         {
             get
             {
-                string[] authorization = Request.Headers["Authorization"]?.Split(' ');
-
-                if ((object)authorization == null || authorization.Length == 0)
-                    return null;
-
-                return authorization[0];
-            }
-        }
-
-        // Reads the authorization credentials from the HTTP headers.
-        private string AuthorizationCredentials
-        {
-            get
-            {
-                string[] authorization = Request.Headers["Authorization"]?.Split(' ');
+                string[] authorization = Request.Headers["Authorization"]?.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if ((object)authorization == null || authorization.Length < 2)
                     return null;
 
-                return authorization[1];
+                return new AuthenticationHeaderValue(authorization[0], authorization[1]);
             }
         }
 
-        // Gets a principal that represents an unauthenticated anonymous user.
+        // Gets a principal that represents an unauthenticated anonymous user
         private IPrincipal AnonymousPrincipal
         {
             get
@@ -97,19 +84,20 @@ namespace GSF.Web.Security
                 SecurityPrincipal securityPrincipal;
 
                 // No authentication required for anonymous resources
-                if (IsAnonymousResource(Request.Path.Value))
+                if (Options.IsAnonymousResource(Request.Path.Value))
                     return null;
 
                 // Attempt to read the session ID from the HTTP cookies
                 Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
+                AuthenticationHeaderValue authorization = AuthorizationHeader;
 
                 // Attempt to retrieve the user's credentials that were cached to the user's session
                 if (s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
                 {
                     bool useCachedCredentials =
                         (object)Request.User == null ||
-                        Request.User.Identity.Name == securityPrincipal.Identity.Name ||
-                        AuthorizationType != "Basic";
+                        Request.User.Identity.Name.Equals(securityPrincipal.Identity.Name, StringComparison.OrdinalIgnoreCase) ||
+                        authorization?.Scheme != "Basic";
 
                     if (!useCachedCredentials)
                     {
@@ -124,8 +112,8 @@ namespace GSF.Web.Security
                 {
                     // Pick the appropriate authentication logic based
                     // on the authorization type in the HTTP headers
-                    if (AuthorizationType == "Basic")
-                        securityPrincipal = AuthenticateBasic();
+                    if (authorization?.Scheme == "Basic")
+                        securityPrincipal = AuthenticateBasic(authorization?.Parameter);
                     else
                         securityPrincipal = AuthenticatePassthrough();
 
@@ -143,49 +131,48 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Called once by common code after initialization. If an authentication middleware
+        /// Called once by common code after initialization. If an authentication middle-ware
         /// responds directly to specifically known paths it must override this virtual,
         /// compare the request path to it's known paths, provide any response information
         /// as appropriate, and true to stop further processing.
         /// </summary>
         /// <returns>
-        /// Returning false will cause the common code to call the next middleware in line.
+        /// Returning false will cause the common code to call the next middle-ware in line.
         /// Returning true will cause the common code to begin the async completion journey
-        /// without calling the rest of the middleware pipeline.
+        /// without calling the rest of the middle-ware pipeline.
         /// </returns>
         public override Task<bool> InvokeAsync()
         {
             return Task.Run(() =>
             {
                 SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
+                string urlPath = Request.Path.Value;
 
-                // If the user fails to authenticate, adjust the HTTP response
-                if (!IsAnonymousResource(Request.Path.Value) && securityPrincipal?.Identity.IsAuthenticated != true)
-                {
-                    string authFailRedirect = Request.Query["AuthFailRedirect"] ?? "True";
+                // If request is for an anonymous resource or user is properly authenticated, allow
+                // request to propagate through the Owin pipeline; otherwise, adjust the HTTP response
+                if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
+                    return false;
 
-                    // Determine whether the authentication failure should redirect to login page
-                    if (authFailRedirect.ParseBoolean())
-                        Response.Redirect(Options.LoginPage);
-                    else
-                        Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                // Check configured options that define if a resource should redirect to the login
+                // page upon authentication failure or simply return an unauthorized (401) response
+                if (Options.IsAuthFailureRedirectResource(urlPath))
+                    Response.Redirect(Options.LoginPage);
+                else
+                    Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                    Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationType);
+                Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, AssemblyInfo.EntryAssembly.Debuggable);
 
-                    return true;
-                }
-
-                return false;
+                return true;
             });
         }
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
-        private SecurityPrincipal AuthenticateBasic()
+        private SecurityPrincipal AuthenticateBasic(string credentials)
         {
             string username, password;
 
             // Get the user's credentials from the HTTP headers
-            if (!TryParseCredentials(AuthorizationCredentials, out username, out password))
+            if (!TryParseCredentials(credentials, out username, out password))
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
@@ -217,12 +204,6 @@ namespace GSF.Web.Security
             // Return the security principal that will be used for role-based authorization
             SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
             return new SecurityPrincipal(securityIdentity);
-        }
-
-        // Determines whether the given resource is an anonymous resource.
-        private bool IsAnonymousResource(string path)
-        {
-            return Options.AnonymousResources.Any(resource => path.StartsWith(resource, StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion

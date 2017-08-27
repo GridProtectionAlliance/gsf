@@ -32,6 +32,7 @@ using System.Web;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Web.Hosting;
 using GSF.Web.Security;
 using RazorEngine.Templating;
 using Timer = System.Timers.Timer;
@@ -88,8 +89,8 @@ namespace GSF.Web.Model
         /// <param name="pagedViewModelHubType">Type of SignalR hub for views based on paged view model, if any.</param>
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        /// <param name="sessionToken">Token used for identifying the session ID in cookie headers.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null, string sessionToken = null)
+        /// <param name="webServerOptions">Web server options currently in use.</param>
+        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null, WebServerOptions webServerOptions = null)
         {
             m_razorEngine = razorEngine;
             TemplateName = templateName;
@@ -99,6 +100,7 @@ namespace GSF.Web.Model
             PagedViewModelHubType = pagedViewModelHubType;
             Database = database;
             ExceptionHandler = exceptionHandler;
+            WebServerOptions = webServerOptions;
         }
 
         #endregion
@@ -186,9 +188,9 @@ namespace GSF.Web.Model
         public IRazorEngine DataContextEngine { get; set; }
 
         /// <summary>
-        /// Gets or sets the token used for identifying the session ID in cookie headers.
+        /// Gets or sets the web server options currently in use.
         /// </summary>
-        public string SessionToken { get; set; }
+        public WebServerOptions WebServerOptions { get; set; }
 
         #endregion
 
@@ -231,11 +233,12 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("Request", request);
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
+                m_viewBag.AddValue("WebServerOptions", WebServerOptions);
 
                 // See if a client session identifier has been defined for this execution request
                 Guid sessionID;
                 
-                if (SessionHandler.TryGetSessionID(request, SessionToken, out sessionID))
+                if (SessionHandler.TryGetSessionID(request, WebServerOptions?.SessionToken, out sessionID))
                 {
                     Tuple<DynamicViewBag, Ticks> session;
                     DynamicViewBag sessionState;

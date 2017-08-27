@@ -21,6 +21,10 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+
 namespace GSF.Web.Security
 {
     /// <summary>
@@ -33,14 +37,28 @@ namespace GSF.Web.Security
         // Constants
 
         /// <summary>
-        /// Default value for <see cref="AnonymousResources"/>.
+        /// Default value for <see cref="AuthFailureRedirectResourceExpression"/>.
         /// </summary>
-        public const string DefaultAnonymousResources = "/Login.cshtml,/favicon.ico";
+        public const string DefaultAuthFailureRedirectResourceExpression = @"^/.+\.cshtml$|^/.+\.vbhtml$";
+
+        /// <summary>
+        /// Default value for <see cref="AnonymousResourceExpression"/>.
+        /// </summary>
+        public const string DefaultAnonymousResourceExpression = "^/$|^/Login.cshtml$|^/favicon.ico$";
 
         /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
         public const string DefaultLoginPage = "/Login.cshtml";
+
+        // Fields
+        private readonly ConcurrentDictionary<string, bool> m_authFailureRedirectResourceCache;
+        private readonly ConcurrentDictionary<string, bool> m_anonymousResourceCache;
+        private string m_authFailureRedirectResourceExpression;
+        private string m_anonymousResourceExpression;
+        private Regex m_authFailureRedirectResources;
+        private Regex m_anonymousResources;
+        private string m_realm;
 
         #endregion
 
@@ -49,9 +67,12 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
-        public AuthenticationOptions()
-            : base("x-gsf-auth")
+        public AuthenticationOptions() : base("x-gsf-auth")
         {
+            m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            m_authFailureRedirectResourceExpression = DefaultAuthFailureRedirectResourceExpression;
+            m_anonymousResourceExpression = DefaultAnonymousResourceExpression;
         }
 
         #endregion
@@ -59,10 +80,38 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the paths to the resources on the web
-        /// server that can be provided without checking credentials.
+        /// Gets or sets the expression that will match paths for the resources on the web server
+        /// that should redirect to the <see cref="LoginPage"/> when authentication fails.
         /// </summary>
-        public string[] AnonymousResources { get; set; } = DefaultAnonymousResources.Split(',');
+        public string AuthFailureRedirectResourceExpression
+        {
+            get
+            {
+                return m_authFailureRedirectResourceExpression;
+            }
+            set
+            {
+                m_authFailureRedirectResourceExpression = value;
+                m_authFailureRedirectResources = new Regex(m_authFailureRedirectResourceExpression, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the expression that will match paths for the resources on the web server
+        /// that can be provided without checking credentials.
+        /// </summary>
+        public string AnonymousResourceExpression
+        {
+            get
+            {
+                return m_anonymousResourceExpression;
+            }
+            set
+            {
+                m_anonymousResourceExpression = value;
+                m_anonymousResources = new Regex(m_anonymousResourceExpression, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
@@ -73,6 +122,71 @@ namespace GSF.Web.Security
         /// Gets or sets the login page used as a redirect location when authentication fails.
         /// </summary>
         public string LoginPage { get; set; } = DefaultLoginPage;
+
+        /// <summary>
+        /// Gets or sets the case-sensitive identifier that defines the protection space for this authentication.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The "realm" authentication parameter is reserved for use by authentication schemes that wish to
+        /// indicate a scope of protection.
+        /// </para>
+        /// <para>
+        /// A protection space is defined by the canonical root URI (the scheme and authority components of the
+        /// effective request URI) of the server being accessed, in combination with the realm value if present.
+        /// These realms allow the protected resources on a server to be partitioned into a set of protection
+        /// spaces, each with its own authentication scheme and/or authorization database. The realm value is a
+        /// string, generally assigned by the origin server, that can have additional semantics specific to the
+        /// authentication scheme. Note that a response can have multiple challenges with the same auth-scheme
+        /// but with different realms.
+        /// </para>
+        /// </remarks>
+        public string Realm
+        {
+            get
+            {
+                return m_realm;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    m_realm = null;
+                    return;
+                }
+
+                // Verify that Realm does not contain a quote character unless properly
+                // escaped, i.e., preceded by a backslash that is not itself escaped
+                if (value.Length != Regex.Replace(value, @"\\\\""|(?<!\\)\""", "").Length)
+                    throw new FormatException($"Realm value \"{value}\" contains an embedded quote that is not properly escaped.");
+
+                m_realm = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Determines whether the given resource is an authentication failure redirect resource.
+        /// </summary>
+        /// <param name="urlPath">Path to check as an anonymous resource.</param>
+        /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
+        public bool IsAuthFailureRedirectResource(string urlPath)
+        {
+            return m_authFailureRedirectResourceCache.GetOrAdd(urlPath, m_authFailureRedirectResources.IsMatch);
+        }
+
+        /// <summary>
+        /// Determines whether the given resource is an anonymous resource.
+        /// </summary>
+        /// <param name="urlPath">Path to check as an anonymous resource.</param>
+        /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
+        public bool IsAnonymousResource(string urlPath)
+        {
+            return m_anonymousResourceCache.GetOrAdd(urlPath, m_anonymousResources.IsMatch);
+        }
 
         #endregion
     }

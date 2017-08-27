@@ -27,6 +27,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.Http;
 using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
 
@@ -180,5 +181,22 @@ namespace GSF.Web.Security
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Represents <see cref="HttpConfiguration"/> extension functions for GSF authentication middle-ware.
+    /// </summary>
+    public static class HttpConfigurationExtensions
+    {
+        /// <summary>
+        /// Adds session management to the HTTP configuration message handlers to enable GSF role-base security.
+        /// </summary>
+        /// <param name="httpConfig">Target <see cref="HttpConfiguration"/> instance.</param>
+        /// <param name="options">Authentication options.</param>
+        public static void EnableSessions(this HttpConfiguration httpConfig, AuthenticationOptions options)
+        {
+            if (!httpConfig.MessageHandlers.Any(handler => handler is SessionHandler))
+                httpConfig.MessageHandlers.Add(new SessionHandler(options.SessionToken));
+        }
     }
 }
