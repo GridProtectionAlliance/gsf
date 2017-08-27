@@ -71,8 +71,9 @@ namespace GSF.Web.Security
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-            m_authFailureRedirectResourceExpression = DefaultAuthFailureRedirectResourceExpression;
-            m_anonymousResourceExpression = DefaultAnonymousResourceExpression;
+
+            AuthFailureRedirectResourceExpression = DefaultAuthFailureRedirectResourceExpression;
+            AnonymousResourceExpression = DefaultAnonymousResourceExpression;
         }
 
         #endregion
