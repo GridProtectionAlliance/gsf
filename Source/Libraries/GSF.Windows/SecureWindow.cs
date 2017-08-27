@@ -311,6 +311,8 @@ namespace GSF.Windows
                     this.Close();
                 }
             }
+
+            SecurityPrincipal = securityDialog.SecurityPrincipal;
         }
 
         #endregion
@@ -341,7 +343,7 @@ namespace GSF.Windows
         /// Identifies the <see cref="SecurityPrincipal"/> dependency property.
         /// </summary>
         /// <returns>identifier for the <see cref="SecurityPrincipal"/> dependency property.</returns>
-        public static readonly DependencyProperty SecurityPrincipalProperty = DependencyProperty.Register("SecurityPrincipal", typeof(SecurityPrincipal), typeof(SecureWindow), new PropertyMetadata("*"));
+        public static readonly DependencyProperty SecurityPrincipalProperty = DependencyProperty.Register("SecurityPrincipal", typeof(SecurityPrincipal), typeof(SecureWindow));
 
         #endregion
     }
