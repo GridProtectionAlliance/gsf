@@ -67,7 +67,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
-        public AuthenticationOptions() : base("x-gsf-auth")
+        public AuthenticationOptions() : base(SessionHandler.DefaultSessionToken)
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);

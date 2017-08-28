@@ -45,7 +45,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Default value for <see cref="SessionToken"/>;
         /// </summary>
-        public const string DefaultSessionToken = "session";
+        public const string DefaultSessionToken = "x-gsf-auth";
 
         #endregion
 

@@ -83,6 +83,9 @@ namespace GSF.Web.Security
             {
                 SecurityPrincipal securityPrincipal;
 
+                // Track original principal
+                Context.Environment["OriginalPrincipal"] = Request.User;
+
                 // No authentication required for anonymous resources
                 if (Options.IsAnonymousResource(Request.Path.Value))
                     return null;
@@ -156,10 +159,25 @@ namespace GSF.Web.Security
                 // Check configured options that define if a resource should redirect to the login
                 // page upon authentication failure or simply return an unauthorized (401) response
                 if (Options.IsAuthFailureRedirectResource(urlPath))
-                    Response.Redirect(Options.LoginPage);
+                {
+                    Response.Redirect(Options.LoginPage);                    
+                }
                 else
-                    Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                {
+                    string currentIdentity = securityPrincipal?.Identity?.Name ?? "anonymous";
+                    object value;
 
+                    if (Context.Environment.TryGetValue("OriginalPrincipal", out value))
+                    {
+                        IPrincipal originalPrincpal = value as IPrincipal;
+
+                        if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
+                            currentIdentity = originalPrincpal.Identity.Name;
+                    }
+
+                    Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
+                    Response.StatusCode = (int)HttpStatusCode.Unauthorized;                    
+                }
                 Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, AssemblyInfo.EntryAssembly.Debuggable);
 
                 return true;

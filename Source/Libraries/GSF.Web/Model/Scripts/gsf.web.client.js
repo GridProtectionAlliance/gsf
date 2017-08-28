@@ -129,8 +129,8 @@ function clearCachedCredentials(securedUrl, successCallback) {
 
         if (successCallback)
             request.onreadystatechange = function() {
-                if (this.readyState == XMLHttpRequest.DONE)
-                    successCallback(this.status == 401);
+                if (this.readyState === XMLHttpRequest.DONE)
+                    successCallback(this.status === 401);
             };
 
         request.send();
@@ -405,6 +405,10 @@ Dictionary.fromObservableDictionary = function(observableDictionary) {
 // String functions
 function isEmpty(str) {
     return !str || String(str).length === 0;
+}
+
+String.prototype.trimLeft = String.prototype.trimLeft || function () {
+    return this.replace(/^\s+/,"");
 }
 
 String.prototype.truncate = function(limit) {

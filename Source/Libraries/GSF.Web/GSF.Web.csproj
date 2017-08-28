@@ -196,7 +196,6 @@
       <DependentUpon>SecurityService.svc</DependentUpon>
     </Compile>
     <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
-    <Compile Include="Security\AddChallengeOnUnauthorizedResult.cs" />
     <Compile Include="Security\AuthenticationHandler.cs" />
     <Compile Include="Security\AuthenticationMiddleware.cs" />
     <Compile Include="Security\AuthenticationOptions.cs" />
