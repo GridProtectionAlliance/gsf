@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  08/26/2017 - J. Ritchie Carroll
 //       Updated handling for anonymous requests and added principal lookup function for a session ID
+//  08/28/2017 - J. Ritchie Carroll
+//       Improved NTLM pass-through authentication and unauthorized user handling
 //
 //******************************************************************************************************
 
@@ -84,7 +86,8 @@ namespace GSF.Web.Security
                 SecurityPrincipal securityPrincipal;
 
                 // Track original principal
-                Context.Environment["OriginalPrincipal"] = Request.User;
+                Request.Environment["OriginalPrincipal"] = Request.User;
+                Request.Environment["AuthenticationOptions"] = Options.Readonly;
 
                 // No authentication required for anonymous resources
                 if (Options.IsAnonymousResource(Request.Path.Value))
@@ -146,41 +149,55 @@ namespace GSF.Web.Security
         /// </returns>
         public override Task<bool> InvokeAsync()
         {
+            // Use Cases:
+            //
+            //  (1) Access resource marked as anonymous - let pipeline continue
+            //  (2) Access resource as authenticated user - let pipeline continue
+            //  --- remaining use cases are unauthorized ---
+            //  (3) Access AuthTest resource with Basic scheme - respond with 401 and abort pipeline
+            //  (4) Access AuthTest resource with NTLM scheme and supported browser - respond with 401 and abort pipeline
+            //  (5) Access AuthTest resource with NTLM scheme and unsupported browser - respond with 403 and abort pipeline
+            //  (6) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
+            //  (7) Access all other resources - respond with 401 and abort pipeline
+            //
+            //  Unauthorized response logic:
+            //      if use case == 5, respond with 403
+            //      else if use case == 6, respond with 302
+            //      else respond with 401
             return Task.Run(() =>
             {
                 SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
                 string urlPath = Request.Path.Value;
 
                 // If request is for an anonymous resource or user is properly authenticated, allow
-                // request to propagate through the Owin pipeline; otherwise, adjust the HTTP response
+                // request to propagate through the Owin pipeline
                 if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
-                    return false;
+                    return false; // Let pipeline continue
 
-                // Check configured options that define if a resource should redirect to the login
-                // page upon authentication failure or simply return an unauthorized (401) response
-                if (Options.IsAuthFailureRedirectResource(urlPath))
-                {
-                    Response.Redirect(Options.LoginPage);                    
-                }
+                // Abort pipeline with appropriate response
+                if (urlPath.Equals(Options.AuthTestPage) && AuthorizationHeader?.Scheme !="Basic" && !Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]))
+                    Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                else if (Options.IsAuthFailureRedirectResource(urlPath))
+                    Response.Redirect(Options.LoginPage);
                 else
+                    Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+
+                // Add current identity to unauthorized response header
+                string currentIdentity = securityPrincipal?.Identity?.Name ?? "anonymous";
+                object value;
+
+                if (Request.Environment.TryGetValue("OriginalPrincipal", out value))
                 {
-                    string currentIdentity = securityPrincipal?.Identity?.Name ?? "anonymous";
-                    object value;
+                    IPrincipal originalPrincpal = value as IPrincipal;
 
-                    if (Context.Environment.TryGetValue("OriginalPrincipal", out value))
-                    {
-                        IPrincipal originalPrincpal = value as IPrincipal;
-
-                        if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
-                            currentIdentity = originalPrincpal.Identity.Name;
-                    }
-
-                    Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
-                    Response.StatusCode = (int)HttpStatusCode.Unauthorized;                    
+                    if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
+                        currentIdentity = originalPrincpal.Identity.Name;
                 }
-                Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, AssemblyInfo.EntryAssembly.Debuggable);
 
-                return true;
+                Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
+                Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, AssemblyInfo.EntryAssembly.Debuggable);
+                
+                return true; // Abort pipeline
             });
         }
 

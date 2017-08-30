@@ -119,7 +119,7 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets options in use for this <see cref="WebServer"/>.
         /// </summary>
-        public WebServerOptions Options => m_options.Clone();
+        public ReadonlyWebServerOptions Options => m_options.Readonly;
 
         /// <summary>
         /// Gets the C# Razor engine instance used by this <see cref="WebServer"/>.
@@ -428,6 +428,7 @@ namespace GSF.Web.Hosting
                 <html>
                 <head>
                     <title>Authentication Test</title>
+                    <link rel=""shortcut icon"" href=""@GSF/Web/Common/Images/Icons/favicon.ico"" />
                 </head>
                 <body>
                     {(int)response.StatusCode} ({response.StatusCode}) for user
@@ -512,7 +513,7 @@ namespace GSF.Web.Hosting
                     settings.Add("MinifyStyleSheets", WebServerOptions.DefaultMinifyStyleSheets, "Determines if minification should be applied to rendered CSS files.");
                     settings.Add("UseMinifyInDebug", WebServerOptions.DefaultUseMinifyInDebug, "Determines if minification should be applied when running a Debug build.");
                     settings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
-                    settings.Add("AuthTestPage", WebServerOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
+                    settings.Add("AuthTestPage", AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
 
                     WebServerOptions options = new WebServerOptions
                     {
@@ -522,7 +523,7 @@ namespace GSF.Web.Hosting
                         MinifyStyleSheets = settings["MinifyStyleSheets"].ValueAsBoolean(WebServerOptions.DefaultMinifyStyleSheets),
                         UseMinifyInDebug = settings["UseMinifyInDebug"].ValueAsBoolean(WebServerOptions.DefaultUseMinifyInDebug),
                         SessionToken = settings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken),
-                        AuthTestPage = settings["AuthTestPage"].ValueAs(WebServerOptions.DefaultAuthTestPage)
+                        AuthTestPage = settings["AuthTestPage"].ValueAs(AuthenticationOptions.DefaultAuthTestPage)
                     };
 
                     return new WebServer(options, razorEngineCS, razorEngineVB);

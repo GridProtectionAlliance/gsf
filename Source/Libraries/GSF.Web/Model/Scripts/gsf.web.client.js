@@ -101,8 +101,7 @@ function getParameterByName(name, url) {
 
     name = name.replace(/[\[\]]/g, "\\$&");
 
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
+    const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
 
     if (!results)
         return null;
@@ -120,20 +119,22 @@ function clearCachedCredentials(securedUrl, successCallback) {
         if (successCallback)
             successCallback(true);
     } else {
-        var request = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
 
-        request.open("GET", securedUrl, true);
+        xhr.open("GET", securedUrl, true);
+
+        xhr.setRequestHeader("Content-type", "application/json");
 
         // Send in an invalid set of credentials, i.e., base64 encoded _logout:_logout:
-        request.setRequestHeader("Authorization", "Basic X2xvZ291dDpfbG9nb3V0");
+        xhr.setRequestHeader("Authorization", "Basic X2xvZ291dDpfbG9nb3V0");
 
         if (successCallback)
-            request.onreadystatechange = function() {
+            xhr.onreadystatechange = function() {
                 if (this.readyState === XMLHttpRequest.DONE)
                     successCallback(this.status === 401);
             };
 
-        request.send();
+        xhr.send();
     }
 }
 

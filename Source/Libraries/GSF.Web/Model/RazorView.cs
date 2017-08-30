@@ -34,6 +34,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
+using Microsoft.Owin;
 using RazorEngine.Templating;
 using Timer = System.Timers.Timer;
 
@@ -90,7 +91,7 @@ namespace GSF.Web.Model
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
         /// <param name="webServerOptions">Web server options currently in use.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null, WebServerOptions webServerOptions = null)
+        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null, ReadonlyWebServerOptions webServerOptions = null)
         {
             m_razorEngine = razorEngine;
             TemplateName = templateName;
@@ -190,7 +191,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets or sets the web server options currently in use.
         /// </summary>
-        public WebServerOptions WebServerOptions { get; set; }
+        public ReadonlyWebServerOptions WebServerOptions { get; set; }
 
         #endregion
 
@@ -234,6 +235,7 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
                 m_viewBag.AddValue("WebServerOptions", WebServerOptions);
+                m_viewBag.AddValue("AuthenticationOptions", GetAuthenticationOptions(request));
 
                 // See if a client session identifier has been defined for this execution request
                 Guid sessionID;
@@ -272,6 +274,21 @@ namespace GSF.Web.Model
         public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, bool isPost, CancellationToken cancellationToken)
         {
             return Task.Run(() => Execute(request, response, isPost), cancellationToken);
+        }
+
+        private ReadonlyAuthenticationOptions GetAuthenticationOptions(HttpRequestMessage request)
+        {
+            object value;
+
+            if (request.Properties.TryGetValue("MS_OwinContext", out value))
+            {
+                IOwinContext context = value as IOwinContext;
+
+                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
+                    return value as ReadonlyAuthenticationOptions;
+            }
+
+            return null;
         }
 
         #endregion

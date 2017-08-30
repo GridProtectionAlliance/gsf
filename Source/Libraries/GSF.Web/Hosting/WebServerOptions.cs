@@ -59,17 +59,15 @@ namespace GSF.Web.Hosting
         /// </summary>
         public const bool DefaultUseMinifyInDebug = false;
 
-        /// <summary>
-        /// Default value for <see cref="AuthTestPage"/>.
-        /// </summary>
-        public const string DefaultAuthTestPage = "AuthTest";
+        // Fields
+        private string m_authTestPage;
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets root path defined for this <see cref="WebServer"/>.
+        /// Gets or sets root path defined for this <see cref="WebServer"/>.
         /// </summary>
         public string WebRootPath { get; set; } = DefaultWebRootPath;
 
@@ -101,29 +99,97 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets or sets the page name used to test user authorization.
         /// </summary>
-        public string AuthTestPage { get; set; } = DefaultAuthTestPage;
+        /// <remarks>
+        /// Page name for web server use will not be prefixed with slash. Any slash
+        /// prefix will automatically be removed during value assignment.
+        /// </remarks>
+        public string AuthTestPage
+        {
+            get
+            {
+                if ((object)m_authTestPage == null)
+                    AuthTestPage = AuthenticationOptions.DefaultAuthTestPage;
+
+                return m_authTestPage;
+            }
+            set
+            {
+                m_authTestPage = value;
+
+                // Remove any slash prefix for WebServer use
+                if (!string.IsNullOrEmpty(m_authTestPage) && m_authTestPage.StartsWith("/"))
+                    m_authTestPage = m_authTestPage.Length > 1 ? m_authTestPage.Substring(1) : "";
+            }
+        }
+
+        /// <summary>
+        /// Gets an immutable version of the web server options.
+        /// </summary>
+        public ReadonlyWebServerOptions Readonly => new ReadonlyWebServerOptions(this);
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Represents an immutable version of <see cref="WebServerOptions"/>.
+    /// </summary>
+    public class ReadonlyWebServerOptions
+    {
+        #region [ Members ]
+
+        // Fields
+        private readonly WebServerOptions m_webServerOptions;
 
         #endregion
 
-        #region [ Methods ]
+        #region [ Constructors ]
+
+        internal ReadonlyWebServerOptions(WebServerOptions webServerOptions)
+        {
+            m_webServerOptions = webServerOptions;
+        }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
-        /// Creates a copy of this <see cref="WebServerOptions"/> instance.
+        /// Gets root path defined for this <see cref="WebServer"/>.
         /// </summary>
-        /// <returns>Copy of this <see cref="WebServerOptions"/> instance.</returns>
-        public WebServerOptions Clone()
-        {
-            return new WebServerOptions
-            {
-                WebRootPath = WebRootPath,
-                ClientCacheEnabled = ClientCacheEnabled,
-                MinifyJavascript = MinifyJavascript,
-                MinifyStyleSheets = MinifyStyleSheets,
-                UseMinifyInDebug = UseMinifyInDebug,
-                SessionToken = SessionToken,
-                AuthTestPage = AuthTestPage
-            };
-        }
+        public string WebRootPath => m_webServerOptions.WebRootPath;
+
+        /// <summary>
+        /// Gets flag that determines if cache control is enabled for browser clients; default to <c>true</c>.
+        /// </summary>
+        public bool ClientCacheEnabled => m_webServerOptions.ClientCacheEnabled;
+
+        /// <summary>
+        /// Gets value that determines if minification should be applied to rendered Javascript files.
+        /// </summary>
+        public bool MinifyJavascript => m_webServerOptions.MinifyJavascript;
+
+        /// <summary>
+        /// Gets value that determines if minification should be applied to rendered CSS files.
+        /// </summary>
+        public bool MinifyStyleSheets => m_webServerOptions.MinifyStyleSheets;
+
+        /// <summary>
+        /// Gets value that determines if minification should be applied when running a Debug build.
+        /// </summary>
+        public bool UseMinifyInDebug => m_webServerOptions.UseMinifyInDebug;
+
+        /// <summary>
+        /// Gets the token used for identifying the session ID in cookie headers.
+        /// </summary>
+        public string SessionToken => m_webServerOptions.SessionToken;
+
+        /// <summary>
+        /// Gets the page name used to test user authorization.
+        /// </summary>
+        /// <remarks>
+        /// Page name for web server use will not be prefixed with slash.
+        /// </remarks>
+        public string AuthTestPage => m_webServerOptions.AuthTestPage;
 
         #endregion
     }
