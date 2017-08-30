@@ -42,7 +42,7 @@
         ViewBag.PageControlScripts = new StringBuilder();
     }
 
-    bool includeScripts = false;
+    bool includeScripts = true;
 
     if (ViewBag.IncludeScripts != null) {
         includeScripts = (bool)ViewBag.IncludeScripts;
@@ -64,10 +64,12 @@
     <script src=""/@GSF/Web/Shared/Scripts/knockout.js""></script>
     <script src=""/@GSF/Web/Shared/Scripts/knockout.mapping.js""></script>
     <script src=""/@GSF/Web/Shared/Scripts/knockout.validation.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/knockout.reactor.min.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/knockout.reactor.js""></script>
     <script src=""/@GSF/Web/Shared/Scripts/knockout.observableDictionary.js""></script>
     <script src=""/@GSF/Web/Shared/Scripts/js.cookie.js""></script>
     <script src=""/@GSF/Web/Shared/Scripts/gsf.web.knockout.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/bootstrap-toolkit.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/bootstrap-datepicker.js""></script>
     <script src=""/@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
     ");
     }

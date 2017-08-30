@@ -261,8 +261,33 @@
     <None Include="GSF.Web.nuspec" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.eot" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.ttf" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff2" />
+    <EmbeddedResource Include="Shared\Content\Fonts\FontAwesome.otf" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_2e83ff_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_333333_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_454545_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_888888_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_cd0a0a_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_ffffff_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.svg" />
+    <EmbeddedResource Include="Shared\Scripts\jquery-ui.js" />
+    <EmbeddedResource Include="Shared\Scripts\primeui.js" />
+    <EmbeddedResource Include="Shared\Content\font-awesome.css" />
+    <EmbeddedResource Include="Shared\Content\jquery-ui.css" />
+    <EmbeddedResource Include="Shared\Content\primeui-theme.css" />
+    <EmbeddedResource Include="Shared\Content\primeui.css" />
+    <EmbeddedResource Include="Shared\Content\Images\loadingbar.gif" />
+    <EmbeddedResource Include="Shared\Content\Images\password-meter.png" />
+    <EmbeddedResource Include="Shared\Content\Images\rating.png" />
+    <Content Include="Shared\Content\Readme.txt" />
+    <Content Include="Shared\Scripts\angular.js" />
     <EmbeddedResource Include="Shared\Scripts\knockout.mapping.js" />
     <EmbeddedResource Include="Shared\Scripts\gsf.web.client.js" />
     <EmbeddedResource Include="Shared\Scripts\gsf.web.knockout.js" />
@@ -318,6 +343,9 @@
     <EmbeddedResource Include="Shared\Images\StatusLights\Small\magentalight.png" />
     <EmbeddedResource Include="Shared\Images\StatusLights\Small\redlight.png" />
     <EmbeddedResource Include="Shared\Images\StatusLights\Small\yellowlight.png" />
+    <EmbeddedResource Include="Model\Scripts\bootstrap-datepicker.js" />
+    <EmbeddedResource Include="Model\Scripts\bootstrap-toolkit.js" />
+    <Content Include="Model\Scripts\ObsoleteFiles.txt" />
     <Content Include="Shared\Readme.txt" />
     <EmbeddedResource Include="Shared\Scripts\bootstrap.js" />
     <EmbeddedResource Include="Shared\Scripts\jquery.js" />

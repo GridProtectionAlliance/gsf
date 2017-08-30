@@ -1,0 +1,10 @@
+﻿!WARNING: The location for the following resources have been moved!
+  New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use these new locations:
+
+           /@GSF/Web/Model/Scripts/angular1.5.8.js => /@GSF/Web/Shared/Scripts/angular.js
+         /@GSF/Web/Model/Scripts/gsf.web.client.js => /@GSF/Web/Shared/Scripts/gsf.web.client.js
+       /@GSF/Web/Model/Scripts/gsf.web.knockout.js => /@GSF/Web/Shared/Scripts/gsf.web.knockout.js
+        /@GSF/Web/Model/Scripts/gsf.web.primeui.js => /@GSF/Web/Shared/Scripts/gsf.web.primeui.js
+              /@GSF/Web/Model/Scripts/js.cookie.js => /@GSF/Web/Shared/Scripts/js.cookie.js
+             /@GSF/Web/Model/Scripts/ko.reactor.js => /@GSF/Web/Shared/Scripts/knockout.reactor.js
+/@GSF/Web/Model/Scripts/ko.observableDictionary.js => /@GSF/Web/Shared/Scripts/knockout.obeservableDictionary.js

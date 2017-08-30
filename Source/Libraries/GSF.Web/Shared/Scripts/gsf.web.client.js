@@ -786,25 +786,25 @@ $.fn.disable = function() {
 
 $.fn.visible = function() {
     return this.each(function() {
-        this.css("visibility", "visible");
+        $(this).css("visibility", "visible");
     });
 }
 
 $.fn.invisible = function() {
     return this.each(function() {
-        this.css("visibility", "hidden");
+        $(this).css("visibility", "hidden");
     });
 }
 
 $.fn.readCookie = function(name) {
-    this.val(Cookies.get(name));
+    $(this).val(Cookies.get(name));
 }
 
 $.fn.writeCookie = function(name, expiration) {
     if (expiration) // Date or number of days
-        Cookies.set(name, this.val(), { expires: expiration });
+        Cookies.set(name, $(this).val(), { expires: expiration });
     else
-        Cookies.set(name, this.val());
+        Cookies.set(name, $(this).val());
 }
 
 $.fn.removeCookie = function(name) {
