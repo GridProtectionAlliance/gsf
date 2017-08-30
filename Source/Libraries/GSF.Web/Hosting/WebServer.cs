@@ -428,7 +428,7 @@ namespace GSF.Web.Hosting
                 <html>
                 <head>
                     <title>Authentication Test</title>
-                    <link rel=""shortcut icon"" href=""@GSF/Web/Common/Images/Icons/favicon.ico"" />
+                    <link rel=""shortcut icon"" href=""@GSF/Web/Shared/Images/Icons/favicon.ico"" />
                 </head>
                 <body>
                     {(int)response.StatusCode} ({response.StatusCode}) for user
