@@ -364,6 +364,13 @@ namespace GSF.Data.Model
         object LoadRecord(DataRow row);
 
         /// <summary>
+        /// Converts the given collection of <paramref name="records"/> into a <see cref="DataTable"/>.
+        /// </summary>
+        /// <param name="records">The collection of records to be inserted into the data table.</param>
+        /// <returns>A data table containing data from the given records.</returns>
+        DataTable ToDataTable(IEnumerable records);
+
+        /// <summary>
         /// Deletes the record referenced by the specified <paramref name="primaryKeys"/>.
         /// </summary>
         /// <param name="primaryKeys">Primary keys values of the record to load.</param>
