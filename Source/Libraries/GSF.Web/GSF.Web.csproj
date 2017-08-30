@@ -266,6 +266,7 @@
     <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff" />
     <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff2" />
     <EmbeddedResource Include="Shared\Content\Fonts\FontAwesome.otf" />
+    <EmbeddedResource Include="Security\Views\Login.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />

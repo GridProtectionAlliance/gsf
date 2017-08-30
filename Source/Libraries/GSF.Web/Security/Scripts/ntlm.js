@@ -249,7 +249,7 @@ Ntlm.authenticate = function(url) {
     request.open('GET', url, false);
     request.setRequestHeader('Authorization', 'NTLM ' + msg3.toBase64());
     request.send(null);
-    return request.status == 200;
+    return request;
 };
 
 /*

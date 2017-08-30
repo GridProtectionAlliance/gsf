@@ -29,13 +29,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
-using GSF.Reflection;
-using GSF.Security;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Infrastructure;
+using GSF.Reflection;
+using GSF.Security;
 
 namespace GSF.Web.Security
 {
@@ -154,15 +155,13 @@ namespace GSF.Web.Security
             //  (1) Access resource marked as anonymous - let pipeline continue
             //  (2) Access resource as authenticated user - let pipeline continue
             //  --- remaining use cases are unauthorized ---
-            //  (3) Access AuthTest resource with Basic scheme - respond with 401 and abort pipeline
-            //  (4) Access AuthTest resource with NTLM scheme and supported browser - respond with 401 and abort pipeline
-            //  (5) Access AuthTest resource with NTLM scheme and unsupported browser - respond with 403 and abort pipeline
-            //  (6) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
-            //  (7) Access all other resources - respond with 401 and abort pipeline
+            //  (3) Access AuthTest with Basic scheme with unsupported browser or requesting to clear credentials - respond with 403 and abort pipeline
+            //  (4) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
+            //  (5) Access all other resources - respond with 401 and abort pipeline
             //
             //  Unauthorized response logic:
-            //      if use case == 5, respond with 403
-            //      else if use case == 6, respond with 302
+            //      if use case == 3, respond with 403 (prevents browser prompt for credentials)
+            //      else if use case == 4, respond with 302 (go back home)
             //      else respond with 401
             return Task.Run(() =>
             {
@@ -175,7 +174,7 @@ namespace GSF.Web.Security
                     return false; // Let pipeline continue
 
                 // Abort pipeline with appropriate response
-                if (urlPath.Equals(Options.AuthTestPage) && AuthorizationHeader?.Scheme !="Basic" && !Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]))
+                if (urlPath.Equals(Options.AuthTestPage) && RequestIsForbidden())
                     Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 else if (Options.IsAuthFailureRedirectResource(urlPath))
                     Response.Redirect(Options.LoginPage);
@@ -199,6 +198,14 @@ namespace GSF.Web.Security
                 
                 return true; // Abort pipeline
             });
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool RequestIsForbidden()
+        {
+            return AuthorizationHeader?.Scheme == "Basic" &&
+                (!Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]) ||
+                (Request.QueryString.Value?.Contains(Options.ClearCredentialsParameter) ?? false));
         }
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.

@@ -1,0 +1,398 @@
+﻿@*******************************************************************************************************
+//  Login.cshtml - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  08/22/2017 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Net.Http
+@using GSF.Web
+@using GSF.Web.Model
+@using GSF.Web.Security
+@using GSF.Web.Shared
+@inherits ExtendedTemplateBase
+@{
+    HttpRequestMessage request = ViewBag.Request;
+
+    string sessionToken = SessionHandler.DefaultSessionToken;
+    string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
+    string loginPage = AuthenticationOptions.DefaultLoginPage;
+    string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
+    string supportsPassthrough = "false";
+    string loginHeader = "";
+
+    ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
+
+    if ((object)options != null) {
+        sessionToken = options.SessionToken;
+
+        if (!string.IsNullOrWhiteSpace(options.AuthTestPage)) {
+            authTestPage = options.AuthTestPage;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.LoginPage)) {
+            loginPage = options.LoginPage;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ClearCredentialsParameter)) {
+            clearCredentials = options.ClearCredentialsParameter;
+        }
+
+        supportsPassthrough = options.IsPassThroughAuthSupportedBrowser(request.Headers.UserAgent.ToString()).ToString().ToLowerInvariant();
+        loginHeader = options.LoginHeader;
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <link href="@(Resources.Root)/Shared/Content/bootstrap.css" rel="stylesheet">
+    @Raw(Resources.HeaderIcons)
+    <style>
+        body {
+            padding-top: 30px;
+        }
+
+        table {
+            border-radius: 5px;
+            width: 50%;
+            margin: 0px auto;
+            float: none;
+        }
+        
+        .panel-red {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+
+        .pre-cache {
+            position: absolute;
+            left: -999em;
+            visibility: hidden
+        }
+
+        .glyphicon-spin {
+            -webkit-animation: spin 1.25s infinite linear;
+            -moz-animation: spin 1.25s infinite linear;
+            -o-animation: spin 1.25s infinite linear;
+            animation: spin 1.25s infinite linear;
+        }
+        
+        @@-moz-keyframes spin {
+          0% {
+            -moz-transform: rotate(0deg);
+          }
+          100% {
+            -moz-transform: rotate(359deg);
+          }
+        }
+
+        @@-webkit-keyframes spin {
+          0% {
+            -webkit-transform: rotate(0deg);
+          }
+          100% {
+            -webkit-transform: rotate(359deg);
+          }
+        }
+
+        @@-o-keyframes spin {
+          0% {
+            -o-transform: rotate(0deg);
+          }
+          100% {
+            -o-transform: rotate(359deg);
+          }
+        }
+
+        @@keyframes spin {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+          100% {
+            -webkit-transform: rotate(359deg);
+            transform: rotate(359deg);
+          }
+        }
+    </style>
+</head>
+<body role="document">
+    <span class="glyphicon glyphicon-refresh pre-cache"></span>
+    <div class="container theme-showcase" role="main" id="bodyContainer">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                @Raw(loginHeader)
+                <div class="panel panel-default">
+                    <div class="panel-heading text-center">
+                        <h4><span id="response">Checking authentication...</span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin"></span></h4>
+                    </div>
+                    <div class="panel-body" id="credentialsForm" style="display: none">
+                        <form role="form">                            <div class="form-group">
+                                <label for="username">User name:</label>
+                                <input type="text" class="form-control" id="username" />
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password:</label>
+                                <input type="password" class="form-control" id="password" />
+                            </div>
+                            <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
+                        </form>
+                    </div>
+                    <div class="panel-body" id="reloginForm" style="display: none">
+                        <button type="button" class="btn btn-primary pull-right" id="returnToLogin">Return to Login</button>
+                    </div>
+                    <div class="panel-footer panel-red text-center" id="responsePanel" style="display: none">
+                        <h5 id="message"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="@(Resources.Root)/Shared/Scripts/jquery.js"></script>
+    <script src="@(Resources.Root)/Shared/Scripts/bootstrap.js"></script>
+    <script src="@(Resources.Root)/Shared/Scripts/js.cookie.js"></script>
+    <script src="@(Resources.Root)/Shared/Scripts/gsf.web.client.js"></script>
+    <script src="@(Resources.Root)/Security/Scripts/core.js"></script>
+    <script src="@(Resources.Root)/Security/Scripts/sha256.js"></script>
+    <script src="@(Resources.Root)/Security/Scripts/enc-base64.js"></script>
+    <script src="@(Resources.Root)/Security/Scripts/ntlm.js"></script>
+    <script>
+        const homePage = "/Index.cshtml";
+        const securePage = "@authTestPage";
+        const clearCredentialsPage = securePage + "?@clearCredentials";
+        const supportsPassThroughAuth = @supportsPassthrough;
+
+        function hashPassword(password) {
+            return CryptoJS.SHA256(password + "0").toString(CryptoJS.enc.Base64);
+        }
+
+        function loginComplete(success, response) {
+            if (success) {
+                $("#response").text("Authentication succeeded, loading main page...");
+
+                setTimeout(function() {
+                    window.location = homePage;
+                }, 500);
+            }
+            else {
+                $("#response").text("Enter Credentials:");
+                $("#workingIcon").hide();
+                $("#credentialsForm").show();
+
+                if (response) {
+                    $("#message").text(response);
+                    $("#responsePanel").show();
+                }
+
+                $("#username").focus();
+                $("#username").select();
+                $("#login").enable();
+            }
+        }
+
+        function logoutComplete(success) {
+            $("#workingIcon").hide();
+            $("#reloginForm").show();
+
+            if (getBool(getParameterByName("sessionCleared"))) {
+                if (success) {
+                    $("#response").text("Logout Succeeded");
+                }
+                else {
+                    $("#response").text("Partial Logout - Session Only");
+                    $("#message").text("Client session cache cleared but failed to clear browser cached credentials");
+                    $("#responsePanel").show();
+                }
+            }
+            else {
+
+                if (success) {
+                    $("#response").text("Partial Logout - Browser Credentials Only");
+                    $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
+                }
+                else {
+                    $("#response").text("Failed to Logout");
+                    $("#message").text("Failed to clear client session cache and failed to clear browser cached credentials");
+                }
+
+                $("#responsePanel").show();
+            }
+        }
+
+        function loginFailed(response) {
+            let message;
+
+            // Treating 403 like a 401, just using this to prevent
+            // browser from requesting credentials
+            if (response.status === 403)
+                response.status = 401;
+
+            if (response.status === 0)
+                message = "Connection refused - check web server";
+            else
+                message = response.statusText + " (" + response.status + ")";
+
+            loginComplete(false, "Login attempt failed: " + message);
+        }
+
+        function authenticate(username, password) {
+            $.ajax({
+                url: securePage,
+                username: username,
+                password: password,
+                withCredentials: true,
+                complete: function(xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginFailed(xhr.statusCode());
+                            break;
+                    }
+                },
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+                }
+            });
+        }
+
+        function login(username, password) {
+            $("#workingIcon").show();
+
+            if (username) {
+                // Attempt authentication with specifed user name and password
+                $("#response").text("Attempting authentication...");
+
+                const isDomainUser = username.indexOf("\\") > -1;
+
+                if (isDomainUser) {
+                    // Login is for domain user with NTLM support
+                    const parts = username.split("\\");
+
+                    Ntlm.setCredentials(parts[0], parts[1], password);
+                    const response = Ntlm.authenticate(securePage);
+
+                    if (response.status === 200)
+                        loginComplete(true);
+                    else
+                        loginFailed(response);
+                }
+                else {
+                    // Login is for database user
+                    authenticate(username, hashPassword(password));
+                }
+            }
+            else {
+                // When no user name is provided, attempt pass-through authenitcation
+                $("#response").text("Checking authentication...");
+
+                // If credential entry is requested, show login screen
+                if (getBool(getParameterByName("requestCredentials"))) {
+                    loginComplete(false);
+                    return;
+                }
+
+                // Check if browser supports pass-through authentication
+                if (!supportsPassThroughAuth) {
+                    loginComplete(false, "Pass-through authentication not enabled for this browser. Contact system administrator to enable.");
+                    return;
+                }
+
+                // Test pass-through authentication
+                const sessionID = Cookies.get("@sessionToken");
+
+                clearCachedCredentials(clearCredentialsPage, function() {
+                    $.ajax({
+                        url: securePage,
+                        contentType: "application/json",
+                        withCredentials: true,
+                        headers: { "Cookie" : "@sessionToken=" + sessionID },
+                        complete: function(xhr) {
+                            switch (xhr.status) {
+                                case 200:
+                                    loginComplete(true);
+                                    break;
+                                default:
+                                    loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
+                                    break;
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        function logout() {
+            // Attempt to clear any credentials cached by browser
+            clearCachedCredentials(clearCredentialsPage, function(success) {
+                logoutComplete(success);
+            });
+        }
+
+        // Select all text when entering input field
+        $("input").on("click", function() {
+            $(this).select();
+        });
+
+        $("input").keypress(function() {
+            $("#responsePanel").hide();
+        });
+
+        $("#login").click(function(event) {
+            event.preventDefault();
+
+            const username = $("#username").val();
+            const password = $("#password").val();
+
+            $("#login").disable();
+            $("#responsePanel").hide();
+
+            login(username, password);
+        });
+
+        $("#returnToLogin").click(function() {
+            window.location = "@loginPage.JavaScriptEncode()";
+        });
+
+        // Make enter key auto-click login
+        $("#username").keyup(function(event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $("#password").keyup(function(event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $(function() {
+            if (getParameterByName("logout") != null)
+                logout();
+            else
+                login();
+        });
+    </script>
+</body>
+</html>

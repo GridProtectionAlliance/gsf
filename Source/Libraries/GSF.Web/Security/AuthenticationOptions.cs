@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace GSF.Web.Security
@@ -39,12 +40,12 @@ namespace GSF.Web.Security
         /// <summary>
         /// Default value for <see cref="AuthFailureRedirectResourceExpression"/>.
         /// </summary>
-        public const string DefaultAuthFailureRedirectResourceExpression = @"^/.+\.cshtml$|^/.+\.vbhtml$";
+        public const string DefaultAuthFailureRedirectResourceExpression = @"^/$|^/.+\.cshtml$|^/.+\.vbhtml$";
 
         /// <summary>
         /// Default value for <see cref="AnonymousResourceExpression"/>.
         /// </summary>
-        public const string DefaultAnonymousResourceExpression = "^/$|^/Login.cshtml$|^/favicon.ico$";
+        public const string DefaultAnonymousResourceExpression = "^/@|^/favicon.ico$";
 
         /// <summary>
         /// Default value for <see cref="PassThroughAuthSupportedBrowserExpression"/>.
@@ -54,12 +55,22 @@ namespace GSF.Web.Security
         /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
-        public const string DefaultLoginPage = "/Login.cshtml";
+        public const string DefaultLoginPage = "/@GSF/Web/Security/Views/Login.cshtml";
 
         /// <summary>
         /// Default value for <see cref="AuthTestPage"/>.
         /// </summary>
         public const string DefaultAuthTestPage = "/AuthTest";
+
+        /// <summary>
+        /// Default value for <see cref="AuthenticationSchemes"/>.
+        /// </summary>
+        public const AuthenticationSchemes DefaultAuthenticationSchemes = AuthenticationSchemes.Ntlm | AuthenticationSchemes.Basic;
+
+        /// <summary>
+        /// Default value for <see cref="ClearCredentialsParameter"/>.
+        /// </summary>
+        public const string DefaultClearCredentialsParameter = "clearcredentials";
 
         // Fields
         private readonly ConcurrentDictionary<string, bool> m_authFailureRedirectResourceCache;
@@ -158,6 +169,17 @@ namespace GSF.Web.Security
         public string AuthTestPage { get; set; } = DefaultAuthTestPage;
 
         /// <summary>
+        /// Gets or sets the authentication schemes to use when testing authentication with the <see cref="AuthTestPage"/>.
+        /// </summary>
+        public AuthenticationSchemes AuthenticationSchemes { get; set; } = DefaultAuthenticationSchemes;
+
+        /// <summary>
+        /// Gets or sets the parameter name for the <see cref="AuthTestPage"/> that forces it to use Basic authentication
+        /// so that any cached browser credentials can be cleared.
+        /// </summary>
+        public string ClearCredentialsParameter { get; set; } = DefaultClearCredentialsParameter;
+
+        /// <summary>
         /// Gets or sets the case-sensitive identifier that defines the protection space for this authentication.
         /// </summary>
         /// <remarks>
@@ -197,6 +219,11 @@ namespace GSF.Web.Security
                 m_realm = value;
             }
         }
+
+        /// <summary>
+        /// Gets or sets any custom header to be displayed on the <see cref="LoginPage"/>.
+        /// </summary>
+        public string LoginHeader { get; set; }
 
         /// <summary>
         /// Gets an immutable version of the authentication options.
@@ -306,9 +333,25 @@ namespace GSF.Web.Security
         public string AuthTestPage => m_authenticationOptions.AuthTestPage;
 
         /// <summary>
+        /// Gets the authentication schemes to use when testing authentication with the <see cref="AuthTestPage"/>.
+        /// </summary>
+        public AuthenticationSchemes AuthenticationSchemes => m_authenticationOptions.AuthenticationSchemes;
+
+        /// <summary>
+        /// Gets the parameter name for the <see cref="AuthTestPage"/> that forces it to use Basic authentication
+        /// so that any cached browser credentials can be cleared.
+        /// </summary>
+        public string ClearCredentialsParameter => m_authenticationOptions.ClearCredentialsParameter;
+
+        /// <summary>
         /// Gets the case-sensitive identifier that defines the protection space for this authentication.
         /// </summary>
         public string Realm => m_authenticationOptions.Realm;
+
+        /// <summary>
+        /// Gets any custom header to be displayed on the <see cref="LoginPage"/>.
+        /// </summary>
+        public string LoginHeader => m_authenticationOptions.LoginHeader;
 
         #endregion
 

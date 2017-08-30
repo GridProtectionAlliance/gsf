@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Net;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Infrastructure;
 using GSF.Security;
@@ -66,7 +67,31 @@ namespace GSF.Web.Security
         /// <returns><see cref="IAppBuilder"/> instance.</returns>
         public static IAppBuilder UseAuthentication(this IAppBuilder app, AuthenticationOptions options)
         {
+            HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
+            listener.AuthenticationSchemeSelectorDelegate = request => AuthenticationSchemeSelector(request, options);
+            listener.Realm = options.Realm;
+
             return app.Use<AuthenticationMiddleware>(options);
+        }
+
+        // Scheme selector
+        private static AuthenticationSchemes AuthenticationSchemeSelector(HttpListenerRequest request, AuthenticationOptions options)
+        {
+            // Only change authentication scheme when requesting the authorization test page
+            if (request.Url.AbsolutePath.Equals(options.AuthTestPage))
+            {
+                // Use configured authentication schemes unless parameter to clear credentials cache is specified
+                if (request.QueryString.GetValues(options.ClearCredentialsParameter) == null)
+                    return options.AuthenticationSchemes;
+
+                // Credentials are cleared by passing in an invalid username and password
+                // to the browser using basic authentication
+                return AuthenticationSchemes.Basic;
+            }
+
+            // All requests to web server are treated as anonymous so as to not establish any extra
+            // expectations for the browser - the AuthenticationHandler fully manages the security
+            return AuthenticationSchemes.Anonymous;
         }
     }
 }
