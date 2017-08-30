@@ -1,9 +1,4 @@
-﻿/******************************************************************************************************\
-  !WARNING: The location for this resource has been moved!
-    New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use this new location
-\******************************************************************************************************/
-
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  gsf.web.client.js - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
@@ -30,6 +25,10 @@
 
 // Grid Solutions Framework Core Web Client Script Functions
 "use strict";
+
+if (typeof jQuery === "undefined") {
+  throw new Error("gsf.web.client script requires jQuery - make sure jquery.js is loaded first");
+}
 
 const isIE = detectIE();
 var textMetrics;
@@ -773,6 +772,45 @@ function formatDate(date, format, utc) {
 };
 
 // jQuery extensions
+$.fn.enable = function() {
+    return this.each(function() {
+        this.disabled = false;
+    });
+}
+
+$.fn.disable = function() {
+    return this.each(function() {
+        this.disabled = true;
+    });
+}
+
+$.fn.visible = function() {
+    return this.each(function() {
+        this.css("visibility", "visible");
+    });
+}
+
+$.fn.invisible = function() {
+    return this.each(function() {
+        this.css("visibility", "hidden");
+    });
+}
+
+$.fn.readCookie = function(name) {
+    this.val(Cookies.get(name));
+}
+
+$.fn.writeCookie = function(name, expiration) {
+    if (expiration) // Date or number of days
+        Cookies.set(name, this.val(), { expires: expiration });
+    else
+        Cookies.set(name, this.val());
+}
+
+$.fn.removeCookie = function(name) {
+    Cookies.remove(name);
+}
+
 $.fn.paddingHeight = function() {
     return this.outerHeight(true) - this.height();
 }
@@ -833,14 +871,6 @@ $.fn.truncateToWidth = function(text, rows) {
     }
 
     return text;
-}
-
-$.fn.visible = function() {
-    return this.css("visibility", "visible");
-}
-
-$.fn.invisible = function() {
-    return this.css("visibility", "hidden");
 }
 
 // The following target arrays of promises

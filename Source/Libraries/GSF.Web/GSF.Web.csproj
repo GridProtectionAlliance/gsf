@@ -263,6 +263,13 @@
     <None Include="PostBuildSetup.bat" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Scripts\knockout.mapping.js" />
+    <EmbeddedResource Include="Shared\Scripts\gsf.web.client.js" />
+    <EmbeddedResource Include="Shared\Scripts\gsf.web.knockout.js" />
+    <EmbeddedResource Include="Shared\Scripts\gsf.web.primeui.js" />
+    <EmbeddedResource Include="Shared\Scripts\js.cookie.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.reactor.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.observableDictionary.js" />
     <EmbeddedResource Include="Security\Scripts\core.js" />
     <EmbeddedResource Include="Security\Scripts\enc-base64.js" />
     <EmbeddedResource Include="Security\Scripts\ntlm.js" />

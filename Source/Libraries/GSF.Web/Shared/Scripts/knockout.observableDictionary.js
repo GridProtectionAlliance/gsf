@@ -1,9 +1,4 @@
-﻿/******************************************************************************************************\
-  !WARNING: The location for this resource has been moved!
-    New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use this new location
-\******************************************************************************************************/
-
-// Knockout Observable Dictionary
+﻿// Knockout Observable Dictionary
 // (c) James Foster
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 

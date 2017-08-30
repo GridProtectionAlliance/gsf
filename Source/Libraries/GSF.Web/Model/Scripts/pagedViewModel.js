@@ -25,6 +25,22 @@
 // Paged view model base class scripts
 "use strict";
 
+if (typeof jQuery === "undefined") {
+  throw new Error("pageViewModel script requires jQuery - make sure jquery.js is loaded first");
+}
+
+if (typeof Cookies.get === "undefined") {
+  throw new Error("pageViewModel script requires js.cookie - make sure js.cookie.js is loaded first");
+}
+
+if (typeof ko === "undefined") {
+  throw new Error("pageViewModel script requires knockout - make sure knockout.js is loaded first");
+}
+
+if (typeof Dictionary === "undefined") {
+  throw new Error("pageViewModel script requires gsf.web.client - make sure gsf.web.client.js is loaded first");
+}
+
 var RecordMode = {
     View: 0,
     Edit: 1,
