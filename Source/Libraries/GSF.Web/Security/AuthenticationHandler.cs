@@ -32,11 +32,13 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Infrastructure;
 using GSF.Reflection;
 using GSF.Security;
+using Microsoft.SqlServer.Server;
 
 namespace GSF.Web.Security
 {
@@ -174,7 +176,7 @@ namespace GSF.Web.Security
                     return false; // Let pipeline continue
 
                 // Abort pipeline with appropriate response
-                if (urlPath.Equals(Options.AuthTestPage) && RequestIsForbidden())
+                if (urlPath.Equals(Options.AuthTestPage))
                     Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 else if (Options.IsAuthFailureRedirectResource(urlPath))
                     Response.Redirect(Options.LoginPage);
@@ -190,7 +192,7 @@ namespace GSF.Web.Security
                     IPrincipal originalPrincpal = value as IPrincipal;
 
                     if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
-                        currentIdentity = originalPrincpal.Identity.Name;
+                        currentIdentity = AdjustedUserName(originalPrincpal.Identity.Name);
                 }
 
                 Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
@@ -200,13 +202,47 @@ namespace GSF.Web.Security
             });
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool RequestIsForbidden()
+        private string AdjustedUserName(string username)
         {
-            return AuthorizationHeader?.Scheme == "Basic" &&
-                (!Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]) ||
-                (Request.QueryString.Value?.Contains(Options.ClearCredentialsParameter) ?? false));
+            int index = username.IndexOf('\\');
+
+            if (index < 1)
+                return username;
+
+            string[] parts = username.Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length != 2)
+                return username;
+
+            if (parts[0].Trim().Equals(Environment.MachineName))
+                return parts[1].Trim();
+
+            return username;
         }
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private bool NotIE()
+        //{
+        //    Regex expression = new Regex(@"^.+\(Windows.+(MSIE |Trident/)$", RegexOptions.Compiled | RegexOptions.Singleline);
+        //    return !expression.IsMatch(Request.Headers["User-Agent"]);
+        //}
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private bool RequestIsForbidden()
+        //{
+        //    if (AuthorizationHeader?.Scheme != "Basic")
+        //        return false;
+
+        //    if (!Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]))
+        //        return true;
+
+        //    string value = Request.Query[Options.ClearCredentialsParameter];
+
+        //    if (!string.IsNullOrEmpty(value))
+        //        return value.ParseBoolean();
+
+        //    return false;
+        //}
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
         private SecurityPrincipal AuthenticateBasic(string credentials)

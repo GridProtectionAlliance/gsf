@@ -180,7 +180,7 @@
     <script>
         const homePage = "/Index.cshtml";
         const securePage = "@authTestPage";
-        const clearCredentialsPage = securePage + "?@clearCredentials";
+        const clearCredentialsPage = securePage + "?@clearCredentials=true";
         const supportsPassThroughAuth = @supportsPassthrough;
 
         function hashPassword(password) {
@@ -256,28 +256,6 @@
             loginComplete(false, "Login attempt failed: " + message);
         }
 
-        function authenticate(username, password) {
-            $.ajax({
-                url: securePage,
-                username: username,
-                password: password,
-                withCredentials: true,
-                complete: function(xhr) {
-                    switch (xhr.status) {
-                        case 200:
-                            loginComplete(true);
-                            break;
-                        default:
-                            loginFailed(xhr.statusCode());
-                            break;
-                    }
-                },
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
-                }
-            });
-        }
-
         function login(username, password) {
             $("#workingIcon").show();
 
@@ -285,9 +263,7 @@
                 // Attempt authentication with specifed user name and password
                 $("#response").text("Attempting authentication...");
 
-                const isDomainUser = username.indexOf("\\") > -1;
-
-                if (isDomainUser) {
+                if (username.indexOf("\\") > 0) {
                     // Login is for domain user with NTLM support
                     const parts = username.split("\\");
 
@@ -301,7 +277,25 @@
                 }
                 else {
                     // Login is for database user
-                    authenticate(username, hashPassword(password));
+                    $.ajax({
+                        url: securePage,
+                        username: username,
+                        password: password,
+                        withCredentials: true,
+                        complete: function(xhr) {
+                            switch (xhr.status) {
+                                case 200:
+                                    loginComplete(true);
+                                    break;
+                                default:
+                                    loginFailed(xhr.statusCode());
+                                    break;
+                            }
+                        },
+                        beforeSend: function(xhr) {
+                            xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+                        }
+                    });
                 }
             }
             else {
@@ -314,32 +308,27 @@
                     return;
                 }
 
-                // Check if browser supports pass-through authentication
-                if (!supportsPassThroughAuth) {
-                    loginComplete(false, "Pass-through authentication not enabled for this browser. Contact system administrator to enable.");
-                    return;
-                }
+                //// Check if browser supports pass-through authentication
+                //if (!supportsPassThroughAuth) {
+                //    loginComplete(false, "Pass-through authentication not enabled for this browser. Contact system administrator to enable.");
+                //    return;
+                //}
 
                 // Test pass-through authentication
-                const sessionID = Cookies.get("@sessionToken");
-
-                clearCachedCredentials(clearCredentialsPage, function() {
-                    $.ajax({
-                        url: securePage,
-                        contentType: "application/json",
-                        withCredentials: true,
-                        headers: { "Cookie" : "@sessionToken=" + sessionID },
-                        complete: function(xhr) {
-                            switch (xhr.status) {
-                                case 200:
-                                    loginComplete(true);
-                                    break;
-                                default:
-                                    loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
-                                    break;
-                            }
+                $.ajax({
+                    url: securePage,
+                    contentType: "application/json",
+                    withCredentials: true,
+                    complete: function(xhr) {
+                        switch (xhr.status) {
+                            case 200:
+                                loginComplete(true);
+                                break;
+                            default:
+                                loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
+                                break;
                         }
-                    });
+                    }
                 });
             }
         }

@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Linq;
 using System.Net;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Infrastructure;
@@ -81,12 +82,15 @@ namespace GSF.Web.Security
             if (request.Url.AbsolutePath.Equals(options.AuthTestPage))
             {
                 // Use configured authentication schemes unless parameter to clear credentials cache is specified
-                if (request.QueryString.GetValues(options.ClearCredentialsParameter) == null)
-                    return options.AuthenticationSchemes;
+                string[] values = request.QueryString.GetValues(options.ClearCredentialsParameter);
+                bool clearCredentials = false;
+
+                if ((object)values != null && values.Length > 0)
+                    clearCredentials = values[0].ParseBoolean();
 
                 // Credentials are cleared by passing in an invalid username and password
                 // to the browser using basic authentication
-                return AuthenticationSchemes.Basic;
+                return clearCredentials ? AuthenticationSchemes.Basic : options.AuthenticationSchemes;
             }
 
             // All requests to web server are treated as anonymous so as to not establish any extra
