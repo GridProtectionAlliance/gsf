@@ -260,19 +260,6 @@ namespace GSF.Web.Security
             return m_anonymousResourceCache.GetOrAdd(urlPath, m_anonymousResources.IsMatch);
         }
 
-        /// <summary>
-        /// Determines whether the given browser user-agent header string supports pass-through authentication.
-        /// </summary>
-        /// <param name="userAgent">Browser user-agent to check for pass-through authentication support.</param>
-        /// <returns><c>true</c> if user-agent indicates pass-through authentication support; otherwise, <c>false</c>.</returns>
-        public bool IsPassThroughAuthSupportedBrowser(string userAgent)
-        {
-            if ((object)m_passThroughAuthSupportedBrowserExpression == null)
-                PassThroughAuthSupportedBrowserExpression = DefaultPassThroughAuthSupportedBrowserExpression;
-
-            return m_passThroughAuthSupportedBrowserCache.GetOrAdd(userAgent, m_passThroughAuthSupportedBrowsers.IsMatch);
-        }
-
         #endregion
     }
 
@@ -370,13 +357,6 @@ namespace GSF.Web.Security
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAnonymousResource(string urlPath) => m_authenticationOptions.IsAnonymousResource(urlPath);
-
-        /// <summary>
-        /// Determines whether the given browser user-agent header string supports pass-through authentication.
-        /// </summary>
-        /// <param name="userAgent">Browser user-agent to check for pass-through authentication support.</param>
-        /// <returns><c>true</c> if user-agent indicates pass-through authentication support; otherwise, <c>false</c>.</returns>
-        public bool IsPassThroughAuthSupportedBrowser(string userAgent) => m_authenticationOptions.IsPassThroughAuthSupportedBrowser(userAgent);
 
         #endregion
     }
