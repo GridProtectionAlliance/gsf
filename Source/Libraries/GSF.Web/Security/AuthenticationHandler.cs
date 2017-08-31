@@ -157,7 +157,7 @@ namespace GSF.Web.Security
             //  (1) Access resource marked as anonymous - let pipeline continue
             //  (2) Access resource as authenticated user - let pipeline continue
             //  --- remaining use cases are unauthorized ---
-            //  (3) Access AuthTest with Basic scheme with unsupported browser or requesting to clear credentials - respond with 403 and abort pipeline
+            //  (3) Access AuthTest with Basic scheme or unsupported browser - respond with 403 and abort pipeline
             //  (4) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
             //  (5) Access all other resources - respond with 401 and abort pipeline
             //
@@ -176,7 +176,7 @@ namespace GSF.Web.Security
                     return false; // Let pipeline continue
 
                 // Abort pipeline with appropriate response
-                if (urlPath.Equals(Options.AuthTestPage))
+                if (urlPath.Equals(Options.AuthTestPage) && RequestIsForbidden())
                     Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 else if (Options.IsAuthFailureRedirectResource(urlPath))
                     Response.Redirect(Options.LoginPage);
@@ -202,6 +202,16 @@ namespace GSF.Web.Security
             });
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool RequestIsForbidden()
+        {
+            if (AuthorizationHeader?.Scheme == "Basic")
+                return true;
+
+            return !Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string AdjustedUserName(string username)
         {
             int index = username.IndexOf('\\');
@@ -214,35 +224,8 @@ namespace GSF.Web.Security
             if (parts.Length != 2)
                 return username;
 
-            if (parts[0].Trim().Equals(Environment.MachineName))
-                return parts[1].Trim();
-
-            return username;
+            return parts[0].Trim().Equals(Environment.MachineName) ? parts[1].Trim() : username;
         }
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private bool NotIE()
-        //{
-        //    Regex expression = new Regex(@"^.+\(Windows.+(MSIE |Trident/)$", RegexOptions.Compiled | RegexOptions.Singleline);
-        //    return !expression.IsMatch(Request.Headers["User-Agent"]);
-        //}
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private bool RequestIsForbidden()
-        //{
-        //    if (AuthorizationHeader?.Scheme != "Basic")
-        //        return false;
-
-        //    if (!Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]))
-        //        return true;
-
-        //    string value = Request.Query[Options.ClearCredentialsParameter];
-
-        //    if (!string.IsNullOrEmpty(value))
-        //        return value.ParseBoolean();
-
-        //    return false;
-        //}
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
         private SecurityPrincipal AuthenticateBasic(string credentials)
