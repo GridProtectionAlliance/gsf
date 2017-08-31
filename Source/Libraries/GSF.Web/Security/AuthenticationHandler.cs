@@ -32,13 +32,11 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.Infrastructure;
 using GSF.Reflection;
 using GSF.Security;
-using Microsoft.SqlServer.Server;
+using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.Infrastructure;
 
 namespace GSF.Web.Security
 {
@@ -176,15 +174,21 @@ namespace GSF.Web.Security
                     return false; // Let pipeline continue
 
                 // Abort pipeline with appropriate response
-                if (urlPath.Equals(Options.AuthTestPage) && RequestIsForbidden())
-                    Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                else if (Options.IsAuthFailureRedirectResource(urlPath))
-                    Response.Redirect(Options.LoginPage);
+                if (Options.IsAuthFailureRedirectResource(urlPath))
+                {
+                    string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
+                    byte[] pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
+                    string base64Path = Convert.ToBase64String(pathBytes);
+                    string encodedPath = WebUtility.UrlEncode(base64Path);
+                    Response.Redirect($"{Options.LoginPage}?redir={encodedPath}");
+                }
                 else
+                {
                     Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                }
 
                 // Add current identity to unauthorized response header
-                string currentIdentity = securityPrincipal?.Identity?.Name ?? "anonymous";
+                string currentIdentity = securityPrincipal?.Identity.Name ?? "anonymous";
                 object value;
 
                 if (Request.Environment.TryGetValue("OriginalPrincipal", out value))
@@ -200,15 +204,6 @@ namespace GSF.Web.Security
                 
                 return true; // Abort pipeline
             });
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool RequestIsForbidden()
-        {
-            if (AuthorizationHeader?.Scheme == "Basic")
-                return true;
-
-            return !Options.IsPassThroughAuthSupportedBrowser(Request.Headers["User-Agent"]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
