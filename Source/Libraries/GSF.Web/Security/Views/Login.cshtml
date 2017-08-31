@@ -20,7 +20,9 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System.Net
 @using System.Net.Http
+@using System.Text
 @using GSF.Web
 @using GSF.Web.Model
 @using GSF.Web.Security
@@ -30,11 +32,24 @@
     HttpRequestMessage request = ViewBag.Request;
 
     string sessionToken = SessionHandler.DefaultSessionToken;
+
+    string redirectPage;
     string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
     string loginPage = AuthenticationOptions.DefaultLoginPage;
+
     string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
-    string supportsPassthrough = "false";
     string loginHeader = "";
+
+    if (request.QueryParameters().TryGetValue("redir", out redirectPage))
+    {
+        string base64Path = WebUtility.UrlDecode(redirectPage);
+        byte[] pathBytes = Convert.FromBase64String(base64Path);
+        redirectPage = Encoding.UTF8.GetString(pathBytes);
+    }
+    else
+    {
+        redirectPage = "/";
+    }
 
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
@@ -53,7 +68,6 @@
             clearCredentials = options.ClearCredentialsParameter;
         }
 
-        supportsPassthrough = options.IsPassThroughAuthSupportedBrowser(request.Headers.UserAgent.ToString()).ToString().ToLowerInvariant();
         loginHeader = options.LoginHeader;
     }
 }
@@ -145,9 +159,9 @@
                 @Raw(loginHeader)
                 <div class="panel panel-default">
                     <div class="panel-heading text-center">
-                        <h4><span id="response">Checking authentication...</span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin"></span></h4>
+                        <h4><span id="response">Enter credentials:</span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin" style="display: none"></span></h4>
                     </div>
-                    <div class="panel-body" id="credentialsForm" style="display: none">
+                    <div class="panel-body" id="credentialsForm">
                         <form role="form">                            <div class="form-group">
                                 <label for="username">User name:</label>
                                 <input type="text" class="form-control" id="username" />
@@ -155,6 +169,10 @@
                             <div class="form-group">
                                 <label for="password">Password:</label>
                                 <input type="password" class="form-control" id="password" />
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="form-check-input" id="ntlm" />
+                                <label for="ntlm">Windows Integrated Authentication</label>
                             </div>
                             <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
                         </form>
@@ -178,10 +196,19 @@
     <script src="@(Resources.Root)/Security/Scripts/enc-base64.js"></script>
     <script src="@(Resources.Root)/Security/Scripts/ntlm.js"></script>
     <script>
-        const homePage = "/Index.cshtml";
+        const redirectPage = "@redirectPage";
         const securePage = "@authTestPage";
         const clearCredentialsPage = securePage + "?@clearCredentials=true";
-        const supportsPassThroughAuth = @supportsPassthrough;
+
+        function loadSettings() {
+            $("#username").val(localStorage.getItem("username"));
+            $("#ntlm").prop("checked", localStorage.getItem("ntlm") === "true").change();
+        }
+
+        function saveSettings() {
+            localStorage.setItem("username", $("#username").val());
+            localStorage.setItem("ntlm", $("#ntlm").prop("checked"));
+        }
 
         function hashPassword(password) {
             return CryptoJS.SHA256(password + "0").toString(CryptoJS.enc.Base64);
@@ -192,7 +219,7 @@
                 $("#response").text("Authentication succeeded, loading main page...");
 
                 setTimeout(function() {
-                    window.location = homePage;
+                    window.location = redirectPage;
                 }, 500);
             }
             else {
@@ -243,11 +270,6 @@
         function loginFailed(response) {
             let message;
 
-            // Treating 403 like a 401, just using this to prevent
-            // browser from requesting credentials
-            if (response.status === 403)
-                response.status = 401;
-
             if (response.status === 0)
                 message = "Connection refused - check web server";
             else
@@ -268,7 +290,7 @@
                     const parts = username.split("\\");
 
                     Ntlm.setCredentials(parts[0], parts[1], password);
-                    const response = Ntlm.authenticate(securePage);
+                    const response = Ntlm.authenticate(securePage + "?scheme=NTLM");
 
                     if (response.status === 200)
                         loginComplete(true);
@@ -279,8 +301,6 @@
                     // Login is for database user
                     $.ajax({
                         url: securePage,
-                        username: username,
-                        password: password,
                         complete: function(xhr) {
                             switch (xhr.status) {
                                 case 200:
@@ -307,17 +327,9 @@
                     return;
                 }
 
-                //// Check if browser supports pass-through authentication
-                //if (!supportsPassThroughAuth) {
-                //    loginComplete(false, "Pass-through authentication not enabled for this browser. Contact system administrator to enable.");
-                //    return;
-                //}
-
                 // Test pass-through authentication
                 $.ajax({
-                    url: securePage,
-                    contentType: "application/json",
-                    withCredentials: true,
+                    url: securePage + "?scheme=NTLM",
                     complete: function(xhr) {
                         switch (xhr.status) {
                             case 200:
@@ -333,6 +345,10 @@
         }
 
         function logout() {
+            $("#response").text("Logging out...");
+            $("#workingIcon").show();
+            $("#credentialsForm").hide();
+
             // Attempt to clear any credentials cached by browser
             clearCachedCredentials(clearCredentialsPage, function(success) {
                 logoutComplete(success);
@@ -351,13 +367,26 @@
         $("#login").click(function(event) {
             event.preventDefault();
 
-            const username = $("#username").val();
-            const password = $("#password").val();
-
             $("#login").disable();
             $("#responsePanel").hide();
 
-            login(username, password);
+            if ($("#ntlm").prop("checked")) {
+                login();
+            } else {
+                const username = $("#username").val();
+                const password = $("#password").val();
+                login(username, password);
+            }
+        });
+
+        $("#ntlm").change(function () {
+            if (this.checked) {
+                $("#username").disable();
+                $("#password").disable();
+            } else {
+                $("#username").enable();
+                $("#password").enable();
+            }
         });
 
         $("#returnToLogin").click(function() {
@@ -375,11 +404,22 @@
                 $("#login").click();
         });
 
-        $(function() {
-            if (getParameterByName("logout") != null)
+        $("#ntlm").keyup(function (event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $(function () {
+            if (getParameterByName("logout") != null) {
                 logout();
-            else
-                login();
+                return;
+            }
+
+            $(window).unload(saveSettings);
+            loadSettings();
+
+            $("#username").focus();
+            $("#username").select();
         });
     </script>
 </body>

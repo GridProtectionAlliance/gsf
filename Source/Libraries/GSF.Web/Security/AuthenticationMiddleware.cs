@@ -21,11 +21,12 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Linq;
 using System.Net;
+using GSF.Security;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Infrastructure;
-using GSF.Security;
 using Owin;
 
 namespace GSF.Web.Security
@@ -81,16 +82,11 @@ namespace GSF.Web.Security
             // Only change authentication scheme when requesting the authorization test page
             if (request.Url.AbsolutePath.Equals(options.AuthTestPage))
             {
-                // Use configured authentication schemes unless parameter to clear credentials cache is specified
-                string[] values = request.QueryString.GetValues(options.ClearCredentialsParameter);
-                bool clearCredentials = false;
+                string scheme = request.QueryString.GetValues("scheme")?.FirstOrDefault();
+                AuthenticationSchemes authenticationScheme;
 
-                if ((object)values != null && values.Length > 0)
-                    clearCredentials = values[0].ParseBoolean();
-
-                // Credentials are cleared by passing in an invalid username and password
-                // to the browser using basic authentication
-                return clearCredentials ? AuthenticationSchemes.Basic : options.AuthenticationSchemes;
+                if (Enum.TryParse(scheme, true, out authenticationScheme))
+                    return options.AuthenticationSchemes & authenticationScheme;
             }
 
             // All requests to web server are treated as anonymous so as to not establish any extra
