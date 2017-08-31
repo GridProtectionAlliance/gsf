@@ -99,7 +99,7 @@ namespace GSF.Web.Security
             HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
             // Store session ID in response message cookie
-            response.Headers.AddCookies(new [] { new CookieHeaderValue(SessionToken, sessionID) });
+            response.Headers.AddCookies(new [] { new CookieHeaderValue(SessionToken, sessionID) { Path = "/" } });
 
             return response;
         }
