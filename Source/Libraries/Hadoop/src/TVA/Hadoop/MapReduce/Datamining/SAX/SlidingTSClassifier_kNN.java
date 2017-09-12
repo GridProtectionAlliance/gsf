@@ -2,7 +2,8 @@ package TVA.Hadoop.MapReduce.Datamining.SAX;
 
 
 
-import edu.hawaii.jmotif.lib.ts.TSException;
+//import edu.hawaii.jmotif.lib.ts.TSException;
+import edu.hawaii.jmotif.datatype.TSException;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -18,22 +19,27 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
+//import org.apache.hadoop.mapred.FileInputFormat;
+//import org.apache.hadoop.mapred.FileOutputFormat;
+//import org.apache.hadoop.mapred.JobClient;
+//import org.apache.hadoop.mapred.JobConf;
+//import org.apache.hadoop.mapred.MapReduceBase;
+//import org.apache.hadoop.mapred.Mapper;
+//import org.apache.hadoop.mapred.OutputCollector;
+//import org.apache.hadoop.mapred.Reducer;
+//import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.mapred.Partitioner;
+//import org.apache.hadoop.mapred.Partitioner;
+import org.apache.hadoop.mapreduce.Partitioner;
 
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -45,24 +51,30 @@ import TVA.Hadoop.MapReduce.Datamining.Weka.WekaUtils;
 import TVA.Hadoop.MapReduce.Historian.HistorianInputFormat;
 import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
 
+/**
+ * Map Reduce application for use with hadoop which slides a window along a time series dataset looking for a particular pattern.
+ * @author Josh Patterson
+ * @revised 09/12/2017 Song Zhang (ISO New England) - refactor code to use up-to-date Hadoop APIs
+ * @version 0.2.0
+ */
 public class SlidingTSClassifier_kNN extends Configured implements Tool {
 
 		  
 		  /**
 		   * Partition based on the first part of the pair.
 		   */
-		  public static class FirstPartitioner implements Partitioner<TimeSeriesKey,StandardPointFile>{
+		  public static class FirstPartitioner extends Partitioner<TimeSeriesKey,StandardPointFile>{
 			  
 		    @Override
 		    public int getPartition(TimeSeriesKey key, StandardPointFile value, int numPartitions) {
 		      return Math.abs( key.getPointID() * 127) % numPartitions;
 		    }
 
-			@Override
-			public void configure(JobConf arg0) {
+			//@Override
+			//public void configure(JobConf arg0) {
 				// TODO Auto-generated method stub
 				
-			}
+			//}
 		  }
 		  
 
@@ -206,19 +218,21 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 		
 		
 		
-		 public static class MapClass extends MapReduceBase implements Mapper<LongWritable, StandardPointFile, TimeSeriesKey, StandardPointFile> {
+		 public static class MapClass extends Mapper<LongWritable, StandardPointFile, TimeSeriesKey, StandardPointFile> {
 		    
-			static enum ExCounter { DISCARDED, MAPPED };
-			private JobConf configuration;
+			//static enum ExCounter { DISCARDED, MAPPED };
+			//private JobConf configuration;
+                        private Configuration configuration;
 			private int iPointTypeID;
 		    private final TimeSeriesKey key = new TimeSeriesKey();
 
 			
 		    @Override
-		    public void configure(JobConf job) {
+		    //public void configure(JobConf job) {
+                    protected void setup(Context context) throws IOException, InterruptedException {     //member method configure has been deprecated
 		    	
-		    	System.out.println("Map.configure();");
-		    	this.configuration = job;
+		    	System.out.println("Map.setup();");
+		    	this.configuration = context.getConfiguration();
 		    	
 		    	System.out.println( "gov.tva.mapreduce.ClassifyAnomoly.pointTypeID: " + this.configuration.get( "gov.tva.mapreduce.ClassifyAnomoly.pointTypeID", "-1" ) );
 		    
@@ -227,13 +241,13 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 		    }
 		    
 
-		    public void map(LongWritable key, StandardPointFile value, OutputCollector<TimeSeriesKey, StandardPointFile> output, Reporter reporter) throws IOException {
+		    public void map(LongWritable key, StandardPointFile value, Context context) throws IOException, InterruptedException {
 
 		    	if ( this.iPointTypeID == value.iPointID ) {
-		    		
+
 		    		this.key.set( value.iPointID, value.GetCalendar().getTimeInMillis() );
 		    		
-		    		output.collect( this.key, value );
+		    		context.write( this.key, value );
 		    		
 		    	} // if
 		    	
@@ -249,15 +263,17 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 		  * Reducer needs to load up the classifier
 		  * then 
 		  */
-			public static class Reduce_SlidingWindow extends MapReduceBase implements Reducer<TimeSeriesKey, StandardPointFile, Text, LongWritable> {
+			public static class Reduce_SlidingWindow extends Reducer<TimeSeriesKey, StandardPointFile, Text, LongWritable> {
 
-			    private JobConf configuration;
+			    //private JobConf configuration;
+                            private Configuration configuration;
 			    
 			    @Override
-			    public void configure(JobConf job) {
+			    //public void configure(JobConf job) {
+                            protected void setup(Context context) throws IOException, InterruptedException {
 			    
 			    	System.out.println("Reduce.configure();");
-			    	this.configuration = job;
+			    	this.configuration = context.getConfiguration();
 
 			    	System.out.println( "gov.tva.mapreduce.ClassifyAnomoly.windowSize: " + this.configuration.get( "gov.tva.mapreduce.ClassifyAnomoly.windowSize", "-1" ) );
 			    	System.out.println( "gov.tva.mapreduce.ClassifyAnomoly.windowStepSize: " + this.configuration.get( "gov.tva.mapreduce.ClassifyAnomoly.windowStepSize", "-1" ) );
@@ -274,12 +290,12 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 			    	
 			    } // configure()		
 				
-				 public void reduce(TimeSeriesKey key, Iterator<StandardPointFile> values, OutputCollector<Text, LongWritable> output, Reporter reporter) throws IOException {
+				 public void reduce(TimeSeriesKey key, Iterable<StandardPointFile> values, Context context) throws IOException, InterruptedException {
 
 
 				    	int count = 0;
 				    	int iBucketWindowsProcessed = 0;
-				       	StandardPointFile next_point;
+				       	//StandardPointFile next_point;
 	 	
 				       	
 
@@ -381,9 +397,10 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 			    		
 			    		
 			    		//while () 
-				    	while (values.hasNext()) {
+				    	//while (values.hasNext()) {
+                                        for (StandardPointFile p_val : values) {
 
-			        		while ( sliding_window.WindowIsFull() == false && values.hasNext() ) {
+			        		/*while ( sliding_window.WindowIsFull() == false && values.hasNext() ) {
 				        						    		
 				        		next_point = values.next();
 //				        		lCurr = next_point.GetCalendar().getTimeInMillis();
@@ -401,9 +418,15 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 				        		count++;
 				    			
 		        			
-			        		}
+			        		}*/
+                                                
+                                                // keep adding points to the sliding window until it's full
+                                                if ( !sliding_window.WindowIsFull() ) {
+                                                    sliding_window.AddPoint( p_val );
+                                                }
 			        		
-			        		if ( sliding_window.WindowIsFull() ) {
+			        		//if ( sliding_window.WindowIsFull() ) {
+                                                else {
 			        			// process the window
 			        			
 			        			// 1. generate instance
@@ -448,7 +471,7 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 										
 										if ( iNNClassValue == 1) {
 											iOscillationsFound++;
-											output.collect( new Text("1"), new LongWritable( oWindow.getFirst().GetCalendar().getTimeInMillis() ) );
+											context.write( new Text("1"), new LongWritable( oWindow.getFirst().GetCalendar().getTimeInMillis() ) );
 										}
 										
 							
@@ -468,7 +491,7 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 			        		}
 			        		
 			        		
-				    	} // while				    		
+				    	} // for loop				    		
 			    		
 				    	
 				    	
@@ -487,7 +510,8 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 		
 		
 	 static int printUsage() {
-	   System.out.println("SlidingTSClassifier_kNN [-m <maps>] [-r <reduces>] <input> <output>");
+	   //System.out.println("SlidingTSClassifier_kNN [-m <maps>] [-r <reduces>] <input> <output>");
+           System.out.println("SlidingTSClassifier_kNN [-r <reduces>] <input> <output>");  //the number of map tasks is not user-defined any more
 	   ToolRunner.printGenericCommandUsage(System.out);
 	   return -1;
 	 }
@@ -500,34 +524,27 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 	  */
 	 public int run(String[] args) throws Exception {
 		  
-	   JobConf conf = new JobConf( getConf(), SlidingTSClassifier_kNN.class );
-	   conf.setJobName( "SlidingTSClassifier_kNN" );
+	   //JobConf conf = new JobConf( getConf(), SlidingTSClassifier_kNN.class );
+           Configuration conf = getConf();
+	   //conf.setJobName( "SlidingTSClassifier_kNN" );
 	   
-	   conf.setMapOutputKeyClass( TimeSeriesKey.class );
-	   conf.setMapOutputValueClass( StandardPointFile.class );
+	   //conf.setMapOutputKeyClass( TimeSeriesKey.class );
+	   //conf.setMapOutputValueClass( StandardPointFile.class );
 
-	   conf.setMapperClass( MapClass.class );        
-	   conf.setReducerClass( Reduce_SlidingWindow.class );
+	   //conf.setMapperClass( MapClass.class );        
+	   //conf.setReducerClass( Reduce_SlidingWindow.class );
 	 
 	   // group and partition by the first int in the pair
-	   conf.setPartitionerClass(FirstPartitioner.class);
-	   conf.setOutputKeyComparatorClass(KeyComparator.class);
-	   conf.setOutputValueGroupingComparator(ValueGroupingComparator.class);
+	   //conf.setPartitionerClass(FirstPartitioner.class);
+	   //conf.setOutputKeyComparatorClass(KeyComparator.class);
+	   //conf.setOutputValueGroupingComparator(ValueGroupingComparator.class);
 	   
-	   conf.setInputFormat( HistorianInputFormat.class );
+	   //conf.setInputFormat( HistorianInputFormat.class );
 	   
 	   List<String> other_args = new ArrayList<String>();
 	   for(int i=0; i < args.length; ++i) {
 	     try {
-	       if ("-m".equals(args[i])) {
-	       	
-	         conf.setNumMapTasks(Integer.parseInt(args[++i]));
-	         
-	       } else if ("-r".equals(args[i])) {
-	       	
-	         conf.setNumReduceTasks(Integer.parseInt(args[++i]));
-
-	       } else if ("-windowSize".equals(args[i])) {
+               if ("-windowSize".equals(args[i])) {
 	       
 	       	conf.set("gov.tva.mapreduce.ClassifyAnomoly.windowSize", args[++i] );
 	       	
@@ -569,6 +586,30 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 	       return printUsage();
 	     }
 	   }
+
+           Job job = Job.getInstance(conf, "SlidingTSClassifier_kNN");
+           job.setJarByClass( SlidingTSClassifier_kNN.class );
+           job.setMapOutputKeyClass( TimeSeriesKey.class );
+           job.setMapOutputValueClass( StandardPointFile.class );
+           job.setMapperClass( MapClass.class );
+           job.setReducerClass( Reduce_SlidingWindow.class );
+           job.setPartitionerClass(FirstPartitioner.class);
+           job.setSortComparatorClass(KeyComparator.class);
+           job.setGroupingComparatorClass(ValueGroupingComparator.class);
+           job.setInputFormatClass(HistorianInputFormat.class);
+
+           List<String> paths = new ArrayList<String>();
+           for (int i = 0; i < other_args.size(); ++i) {
+              try {
+                 if ("-r".equals(other_args.get(i))) {
+                    job.setNumReduceTasks(Integer.parseInt(other_args.get(++i)));
+                 }
+                 else {
+                    paths.add(other_args.get(i));
+                 }
+              }
+           }
+
 	   // Make sure there are exactly 2 parameters left.
 	   if (other_args.size() != 2) {
 	     System.out.println("ERROR: Wrong number of parameters: " +
@@ -576,12 +617,14 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 	     return printUsage();
 	   }
 	   
-	   FileInputFormat.setInputPaths( conf, other_args.get(0) );
-	   FileOutputFormat.setOutputPath( conf, new Path(other_args.get(1)) );
+	   FileInputFormat.setInputPaths( job, paths.get(0) );
+	   FileOutputFormat.setOutputPath( job, new Path(path.get(1)) );
 	       
-	   JobClient.runJob(conf);
+	   //JobClient.runJob(conf);
 	   
-	   return 0;
+	   //return 0;
+
+           return job.waitForCompletion(true) ? 0 : 1;
 	 }
 	 
 	 
