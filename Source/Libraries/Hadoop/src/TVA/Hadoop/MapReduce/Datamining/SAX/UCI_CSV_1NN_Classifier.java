@@ -1,8 +1,10 @@
 package TVA.Hadoop.MapReduce.Datamining.SAX;
 
 
-import edu.hawaii.jmotif.lib.ts.TSException;
-import edu.hawaii.jmotif.lib.ts.Timeseries;
+//import edu.hawaii.jmotif.lib.ts.TSException;
+import edu.hawaii.jmotif.datatype.TSException;
+//import edu.hawaii.jmotif.lib.ts.Timeseries;
+import edu.hawaii.jmotif.datatype.Timeseries;
 import edu.hawaii.jmotif.logic.sax.SAXFactory;
 import edu.hawaii.jmotif.logic.sax.alphabet.Alphabet;
 import edu.hawaii.jmotif.logic.sax.alphabet.NormalAlphabet;
@@ -26,17 +28,24 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
+//import org.apache.hadoop.mapred.FileInputFormat;
+//import org.apache.hadoop.mapred.FileOutputFormat;
+//import org.apache.hadoop.mapred.JobClient;
+//import org.apache.hadoop.mapred.JobConf;
+//import org.apache.hadoop.mapred.MapReduceBase;
+//import org.apache.hadoop.mapred.Mapper;
+//import org.apache.hadoop.mapred.OutputCollector;
+//import org.apache.hadoop.mapred.Reducer;
+//import org.apache.hadoop.mapred.Reporter;
+//import org.apache.hadoop.mapred.TextInputFormat;
+//import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -55,20 +64,20 @@ public class UCI_CSV_1NN_Classifier extends Configured implements Tool {
  
 
 
-	 public static class MapClass extends MapReduceBase implements Mapper<LongWritable, Text, IntWritable, Text> {
+	 public static class MapClass extends Mapper<LongWritable, Text, IntWritable, Text> {
 	    
-		static enum ExCounter { DISCARDED, MAPPED };
+		//static enum ExCounter { DISCARDED, MAPPED };
 	    
 		
 		// we need to seperate out points into time buckets here
-public void map(LongWritable key, Text value, OutputCollector<IntWritable, Text> output, Reporter reporter) throws IOException {
+public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
 	String line = value.toString();
 	String classID = line.split(",")[21];
 	int iClassID = Integer.decode(classID);
 	
-	output.collect( new IntWritable( 0 ), value );
-	reporter.incrCounter( ExCounter.MAPPED, 1 );
+	context.write( new IntWritable( 0 ), value );
+	//reporter.incrCounter( ExCounter.MAPPED, 1 );
 	
 } // map method
   
@@ -97,10 +106,10 @@ public void map(LongWritable key, Text value, OutputCollector<IntWritable, Text>
   
   
 	 
-  public static class Reduce extends MapReduceBase implements Reducer<IntWritable, Text, IntWritable, IntWritable> {
+  public static class Reduce extends Reducer<IntWritable, Text, IntWritable, IntWritable> {
 
 	  
-	    public void reduce(IntWritable key, Iterator<Text> values, OutputCollector<IntWritable, IntWritable> output, Reporter reporter) throws IOException {
+	    public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
 	    	int iTotalInstances = 0;
 	    	int iNumberRight = 0;
@@ -148,7 +157,7 @@ ArrayList<SAXInstance> arSAXTrainingInstances = null;
 
 try {
 	
-	arSAXTrainingInstances = WekaUtils.LoadTrainingInstancesCSV_FromHDFS( "/user/output/jpatterson/test_instances/hdfs_waveform_test_c200.csv", iDimensionality, iCardinality, 21 );
+	arSAXTrainingInstances = WekaUtils.LoadTrainingInstancesCSV_FromHDFS( "/user/output/jpatterson/test_instances/hdfs_waveform_test_c200.csv", iDimensionality, iCardinality, 21 );  //hard-coded, should be refactored later
 	
 } catch (NumberFormatException e1) {
 	// TODO Auto-generated catch block
@@ -209,11 +218,11 @@ Instances oWekaTestInstances = new Instances( "Test", fvWekaAttributes, 200 );
 	
 	
 	
-while (values.hasNext()) {
-
+//while (values.hasNext()) {
+for (Text strCsvLine : values) {
 	
 
-	Text strCsvLine = values.next();
+	//Text strCsvLine = values.next();
 	
 	String strLine = String.copyValueOf( strCsvLine.toString().toCharArray() );
 	
@@ -319,7 +328,8 @@ System.out.println( "BallTree > [Reduce] > count: " + iTotalInstances );
   
   
 static int printUsage() {
-  System.out.println("CSVTest [-m <maps>] [-r <reduces>] <input> <output>");
+  //System.out.println("CSVTest [-m <maps>] [-r <reduces>] <input> <output>");
+  System.out.println("CSVTest [-m <maps>] [-r <reduces>] <input> <output>"); // number of map tasks is not determined by users any more
   ToolRunner.printGenericCommandUsage(System.out);
   return -1;
 }
@@ -334,25 +344,32 @@ static int printUsage() {
  */
 public int run(String[] args) throws Exception {
   
-  JobConf conf = new JobConf( getConf(), UCI_CSV_1NN_Classifier.class );
-  conf.setJobName("UCI_CSV_1NN_Classifier");
+  //JobConf conf = new JobConf( getConf(), UCI_CSV_1NN_Classifier.class );
+  //conf.setJobName("UCI_CSV_1NN_Classifier");
   
-  conf.setMapOutputKeyClass(IntWritable.class);
-  conf.setMapOutputValueClass(Text.class);
+  //conf.setMapOutputKeyClass(IntWritable.class);
+  //conf.setMapOutputValueClass(Text.class);
 
-  conf.setMapperClass( MapClass.class );        
-  conf.setReducerClass( Reduce.class ); //Reduce_Evaluate.class ); //Reduce.class);
+  //conf.setMapperClass( MapClass.class );        
+  //conf.setReducerClass( Reduce.class ); //Reduce_Evaluate.class ); //Reduce.class);
       
-  conf.setInputFormat(TextInputFormat.class);
-  conf.setOutputFormat(TextOutputFormat.class);
+  //conf.setInputFormat(TextInputFormat.class);
+  //conf.setOutputFormat(TextOutputFormat.class);
+  Configuration conf = getConf();
   
+  Job job = Job.getInstance(conf, "UCI_CSV_1NN_Classifier");
+  job.setJarByClass( UCI_CSV_1NN_Classifier.class );
+  job.setMapOutputKeyClass( IntWritable.class );
+  job.setMapOutputValueClass( Text.class );
+  job.setMapperClass( MapClass.class );
+  job.setReducerClass( Reduce.class);
+  job.setInputFormatClass(TextInputFormat.class);
+  job.setOutputFormatClass(TextOutputFormat.class);
   
   List<String> other_args = new ArrayList<String>();
   for(int i=0; i < args.length; ++i) {
     try {
-      if ("-m".equals(args[i])) {
-    conf.setNumMapTasks(Integer.parseInt(args[++i]));
-  } else if ("-r".equals(args[i])) {
+    if ("-r".equals(args[i])) {
     conf.setNumReduceTasks(Integer.parseInt(args[++i]));
   } else {
     other_args.add(args[i]);
@@ -373,12 +390,14 @@ public int run(String[] args) throws Exception {
         return printUsage();
       }
       
-      FileInputFormat.setInputPaths( conf, other_args.get(0) );
-      FileOutputFormat.setOutputPath( conf, new Path(other_args.get(1)) );
+      FileInputFormat.setInputPaths( job, other_args.get(0) );
+      FileOutputFormat.setOutputPath( job, new Path(other_args.get(1)) );
           
-      JobClient.runJob(conf);
+      //JobClient.runJob(conf);
       
-      return 0;
+      //return 0;
+      
+      return job.waitForCompletion(true) ? 0 : 1;
     }
     
     
