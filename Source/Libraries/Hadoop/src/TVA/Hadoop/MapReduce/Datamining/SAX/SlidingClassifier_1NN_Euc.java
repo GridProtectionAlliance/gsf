@@ -351,7 +351,8 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
 	
 	
  static int printUsage() {
-   System.out.println("ClassifyAnomoly_1NN_EUC [-m <maps>] [-r <reduces>] <input> <output>");
+   //System.out.println("ClassifyAnomoly_1NN_EUC [-m <maps>] [-r <reduces>] <input> <output>");
+   System.out.println("ClassifyAnomoly_1NN_EUC [-r <reduces>] <input> <output>");  //number of map tasks is not determined by users since Hadoop 2.0
    ToolRunner.printGenericCommandUsage(System.out);
    return -1;
  }
