@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AuthorizeHubRole.cs - Gbtc
+//  AuthorizeHubRoleAttribute.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,12 +23,8 @@
 
 using System;
 using System.Linq;
-using System.Security;
 using System.Security.Principal;
 using System.Threading;
-using GSF.Collections;
-using GSF.Data;
-using GSF.Identity;
 using GSF.Security;
 using Microsoft.AspNet.SignalR;
 
@@ -54,7 +50,6 @@ namespace GSF.Web.Security
         /// </summary>
         public AuthorizeHubRoleAttribute()
         {
-            SettingsCategory = "securityProvider";
         }
 
         /// <summary>
@@ -63,7 +58,6 @@ namespace GSF.Web.Security
         public AuthorizeHubRoleAttribute(string allowedRoles)
         {
             Roles = allowedRoles;
-            SettingsCategory = "securityProvider";
         }
 
         #endregion
@@ -71,12 +65,9 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets settings category to use for loading data context for security info.
+        /// Gets or sets settings category used to lookup security connection for user data context.
         /// </summary>
-        public string SettingsCategory
-        {
-            get; set;
-        }
+        public string SecuritySettingsCategory { get; set; } = "securityProvider";
 
         /// <summary>
         /// Gets the allowed <see cref="AuthorizeAttribute.Roles"/> as a string array.
@@ -96,32 +87,19 @@ namespace GSF.Web.Security
         /// </returns>
         protected override bool UserAuthorized(IPrincipal user)
         {
-            // Get current user name
-            string userName = user.Identity.Name;
+            SecurityPrincipal securityPrincipal = user as SecurityPrincipal;
 
-            // Setup the principal
-            Thread.CurrentPrincipal = user;
-            SecurityProviderCache.ValidateCurrentProvider();
-            user = Thread.CurrentPrincipal;
+            if ((object)securityPrincipal == null)
+                return false;
 
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-                throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
+            if (!securityPrincipal.Identity.IsAuthenticated)
+                return false;
 
-            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => user.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => securityPrincipal.IsInRole(role)))
+                return false;
 
-            // Make sure current user ID is cached
-            if (!AuthorizationCache.UserIDs.ContainsKey(userName))
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                {
-                    Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
-
-                    if ((object)userID != null)
-                        AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
-                }
-            }
+            ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(securityPrincipal.Identity.Name, SecuritySettingsCategory));
 
             return true;
         }

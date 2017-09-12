@@ -12,6 +12,11 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  08/15/2017 - Song Zhang (ISO New England)
+//       Replaced the old hadoop packages (org.apache.hadoop.mapred.*) with the new ones (org.apache.hadoop.
+//       mapreduce.*)
+//       Replaced the implementation of the old RecordReader interface (Hadoop v1.x API) with the
+//       new one (Hadoop v2.x API). Some of the methods do not exist anymore 
 //
 //*******************************************************************************************************
 
@@ -234,7 +239,10 @@ package TVA.Hadoop.MapReduce.Historian;
 
 import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -261,7 +269,7 @@ import TVA.Hadoop.MapReduce.Historian.File.ArchiveFile.Reader;
  * @author jpatter0
  *
  */
-public class HistorianRecordReader implements RecordReader<LongWritable, StandardPointFile> {
+public class HistorianRecordReader extends RecordReader<LongWritable, StandardPointFile> {
 
 	private static final Log LOG = LogFactory.getLog("TVA.Hadoop.MapReduce.Historian.HistorianRecordReader");
 	
@@ -270,51 +278,61 @@ public class HistorianRecordReader implements RecordReader<LongWritable, Standar
 	protected Configuration conf;
 	private FileSplit _FileSplit;
 	private Reader _ArchiveFileReaderInput;
+    private LongWritable key = new LongWritable();
+    private StandardPointFile value = new StandardPointFile();
 
 	/**
 	 * Constructor
 	 * Sets up ArchiveFile.Reader to know how to read the file format inside the split
 	 * Gets the start and end of the split
 	 */
-	public HistorianRecordReader(Configuration conf_job, FileSplit split) throws IOException {
-		
-		this.conf = conf_job;
-		this._FileSplit = split;
-		
-		Path path = split.getPath();
-		FileSystem fs = path.getFileSystem( conf_job );
-		
-		LOG.info("HistorianRecordReader> Split Path: " + path );
-		
-		this._ArchiveFileReaderInput = new ArchiveFile.Reader( fs, path, split.getStart(), split.getLength(), conf_job, false );
-		this.end = split.getStart() + split.getLength();
-		this.start = this._ArchiveFileReaderInput.getPosition();
-		
-		LOG.info( "Split: " + this._FileSplit.getStart() + " to " + this.end );
-		
-		// We need to call init at first to heuristically align the read head at the start of the next DatAware block inside our split
-		this._ArchiveFileReaderInput.init();
-		        
+        // 08/15/2017 Song Zhang - input arguments are different from what they are in Hadoop 1.x APIs
+	public HistorianRecordReader(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
+		   FileSplit split = (FileSplit) genericSplit;
+		   Configuration conf_job = context.getConfiguration();
+		   this.conf = conf_job;
+		   this._FileSplit = split;
+
+		   Path path = split.getPath();
+		   FileSystem fs = path.getFileSystem( conf_job );
+
+		   LOG.info("HistorianRecordReader> Split Path: " + path );
+
+		   this._ArchiveFileReaderInput = new ArchiveFile.Reader( fs, path, split.getStart(), split.getLength(), conf_job, false );
+		   this.end = split.getStart() + split.getLength();
+		   this.start = this._ArchiveFileReaderInput.getPosition();
+
+		   LOG.info( "Split: " + this._FileSplit.getStart() + " to " + this.end );
+
+			// We need to call init at first to heuristically align the read head at the start of the next DatAware block inside our split
+		   this._ArchiveFileReaderInput.init();
 	}
-  
+
+	@Override
+	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
+		   // no-op
+	}
+   
+    /*
 	public LongWritable createKey() {
 		return new LongWritable();
 	}
   
 	public StandardPointFile createValue() {
 		return new StandardPointFile();
-	}
+	}*/
 
 	/**
 	 * Try and read the next key from the underlying split
 	 * @return Boolean indicating whether the operation was successful or not.
 	 */
-	public synchronized boolean next(LongWritable key, StandardPointFile value) throws IOException {
+    @Override
+	public boolean nextKeyValue() throws IOException {
 	  
 		boolean bKeyRead = this._ArchiveFileReaderInput.next( key );
-  
+                key.set(_ArchiveFileReaderInput.getPosition());
 		if (bKeyRead) {
-			this._ArchiveFileReaderInput.getCurrentValue(value);
+			value = this._ArchiveFileReaderInput.getCurrentValue(value);
 			return true;
 		} else {
 			return false;
@@ -325,7 +343,8 @@ public class HistorianRecordReader implements RecordReader<LongWritable, Standar
 	/**
 	 * Get the progress of the current reader.
 	 */
-	public float getProgress() throws IOException {
+    @Override
+	public float getProgress() throws IOException, InterruptedException {
 		
 		if (end == start) {
 			return 0.0f;
@@ -338,21 +357,36 @@ public class HistorianRecordReader implements RecordReader<LongWritable, Standar
 	/**
 	 * Get the position in the file split of the current reader.
 	 */
+    /*  08/15/2017 Song Zhang - getPos does not exist in RecordReader interface any more
 	public  synchronized long getPos() throws IOException {
 
 		return _ArchiveFileReaderInput.getPosition();
 		
 	}
+    */
 
 	/**
 	 * Close the current reader.
 	 */
-	public synchronized void close() throws IOException {
+    @Override
+	public void close() throws IOException {
 		
 		if (_ArchiveFileReaderInput != null) {
 			_ArchiveFileReaderInput.close();
 		}
 		
+	}
+        
+        //08/15/2017 Song Zhang - add getCurrentKey and getCurrentValue to replace the old API createKey and createValue
+	@Override
+	public StandardPointFile getCurrentValue() throws IOException, InterruptedException {
+		   return value;
+	}
+
+	@Override
+	public LongWritable getCurrentKey() throws IOException, InterruptedException {
+		   return key;
+
 	}
 
 }

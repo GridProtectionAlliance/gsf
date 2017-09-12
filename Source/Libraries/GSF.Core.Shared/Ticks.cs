@@ -213,6 +213,45 @@ namespace GSF
         #region [ Methods ]
 
         /// <summary>
+        /// Gets the <see cref="Ticks"/> value in equivalent number of days.
+        /// </summary>
+        /// <returns>Value of <see cref="Ticks"/> in days.</returns>
+        /// <remarks>
+        /// If <see cref="Ticks"/> value represents an instant in time, returned value will represent the number of days
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public double ToDays()
+        {
+            return ToSeconds() / Time.SecondsPerDay;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Ticks"/> value in equivalent number of hours.
+        /// </summary>
+        /// <returns>Value of <see cref="Ticks"/> in hours.</returns>
+        /// <remarks>
+        /// If <see cref="Ticks"/> value represents an instant in time, returned value will represent the number of hours
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public double ToHours()
+        {
+            return ToSeconds() / Time.SecondsPerHour;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Ticks"/> value in equivalent number of minutes.
+        /// </summary>
+        /// <returns>Value of <see cref="Ticks"/> in minutes.</returns>
+        /// <remarks>
+        /// If <see cref="Ticks"/> value represents an instant in time, returned value will represent the number of minutes
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public double ToMinutes()
+        {
+            return ToSeconds() / Time.SecondsPerMinute;
+        }
+
+        /// <summary>
         /// Gets the <see cref="Ticks"/> value in equivalent number of seconds.
         /// </summary>
         /// <returns>Value of <see cref="Ticks"/> in seconds.</returns>

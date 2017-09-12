@@ -12,6 +12,11 @@
 //	     Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  08/16/2017 - Song Zhang (ISO New England)
+//       Replaced all the old packages (org.apache.hadoop.mapred.*) with the new ones (org.apache.hadoop.
+//       mapreduce.*)
+//       Replaced the old API getRecordReader with new API createRecordReader defined in class org.apache.
+//       hadoop.mapreduce.InputFormat<K,V>
 //
 //*******************************************************************************************************
 
@@ -234,28 +239,35 @@ package TVA.Hadoop.MapReduce.Historian;
 
 import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapred.*;
-
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.JobContext;
 import TVA.Hadoop.MapReduce.Historian.HistorianRecordReader;
 import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Custom InputFormat class for reading DatAware .d files that store smartgrid PMU data
  * @author jpatter0
+ * @modified szhang 08/15/2017 - use Hadoop 2.x API
  *
  */
-public class HistorianInputFormat extends FileInputFormat<LongWritable, StandardPointFile> implements JobConfigurable {
+public class HistorianInputFormat extends FileInputFormat {
 	
-	public void configure(JobConf conf) {
-	
-	}
-
-	public RecordReader<LongWritable, StandardPointFile> getRecordReader( InputSplit genericSplit, JobConf job, Reporter reporter ) throws IOException {
+        @Override
+	public RecordReader<LongWritable, StandardPointFile> createRecordReader( InputSplit genericSplit, TaskAttemptContext context) throws IOException {
 	    
-		reporter.setStatus( genericSplit.toString() );
-	
-		return new HistorianRecordReader( job, (FileSplit)genericSplit );
+		return new HistorianRecordReader(genericSplit, context);
 	    
 	}
+       @Override
+       protected boolean isSplitable(JobContext context, Path file) {
+               CompressionCodec codec = new CompressionCodecFactory(context.getConfiguration()).getCodec(file);
+               return codec == null;
+       }
 
 }

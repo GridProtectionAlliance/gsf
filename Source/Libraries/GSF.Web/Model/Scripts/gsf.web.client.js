@@ -1,4 +1,9 @@
-﻿//******************************************************************************************************
+﻿/******************************************************************************************************\
+  !WARNING: The location for this resource has been moved!
+    New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use this new location
+\******************************************************************************************************/
+
+//******************************************************************************************************
 //  gsf.web.client.js - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
@@ -93,6 +98,49 @@ function isBool(val) {
 function getBool(val) {
     const num = +val;
     return !isNaN(num) ? !!num : !!String(val).toLowerCase().replace(false, "");
+}
+
+function getParameterByName(name, url) {
+    if (!url)
+        url = window.location.href;
+
+    name = name.replace(/[\[\]]/g, "\\$&");
+
+    const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
+
+    if (!results)
+        return null;
+
+    if (!results[2])
+        return "";
+
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function clearCachedCredentials(securedUrl, successCallback) {
+    if (isIE) {
+        document.execCommand("ClearAuthenticationCache", "false");
+                
+        if (successCallback)
+            successCallback(true);
+    } else {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("GET", securedUrl, true);
+
+        xhr.setRequestHeader("Content-type", "application/json");
+
+        // Send in an invalid set of credentials, i.e., base64 encoded _logout:_logout:
+        xhr.setRequestHeader("Authorization", "Basic X2xvZ291dDpfbG9nb3V0");
+
+        if (successCallback)
+            xhr.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE)
+                    successCallback(this.status === 401);
+            };
+
+        xhr.send();
+    }
 }
 
 // Number functions
@@ -363,6 +411,10 @@ Dictionary.fromObservableDictionary = function(observableDictionary) {
 // String functions
 function isEmpty(str) {
     return !str || String(str).length === 0;
+}
+
+String.prototype.trimLeft = String.prototype.trimLeft || function () {
+    return this.replace(/^\s+/,"");
 }
 
 String.prototype.truncate = function(limit) {

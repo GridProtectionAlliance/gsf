@@ -42,6 +42,7 @@ using GSF.IO;
 using GSF.IO.Checksums;
 using GSF.Reflection;
 using GSF.Web.Model;
+using GSF.Web.Security;
 using Microsoft.Ajax.Utilities;
 
 namespace GSF.Web.Hosting
@@ -66,13 +67,10 @@ namespace GSF.Web.Hosting
         public event EventHandler<EventArgs<string>> StatusMessage;
 
         // Fields
-        private readonly string m_webRootPath;
+        private readonly WebServerOptions m_options;
         private readonly bool m_releaseMode;
-        private readonly IRazorEngine m_razorEngineCS;
-        private readonly IRazorEngine m_razorEngineVB;
         private readonly ConcurrentDictionary<string, long> m_etagCache;
         private readonly ConcurrentDictionary<string, Type> m_handlerTypeCache;
-        private readonly ConcurrentDictionary<string, Tuple<Type, Type>> m_pagedViewModelTypes;
         private readonly SafeFileWatcher m_fileWatcher;
         private bool m_disposed;
 
@@ -83,20 +81,27 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Creates a new <see cref="WebServer"/>.
         /// </summary>
-        /// <param name="webRootPath">Root path for web server; defaults to template path for <paramref name="razorEngineCS"/>.</param>
+        /// <param name="options">Web server options to use; set to <c>null</c> for defaults.</param>
         /// <param name="razorEngineCS">Razor engine instance for .cshtml templates; uses default instance if not provided.</param>
         /// <param name="razorEngineVB">Razor engine instance for .vbhtml templates; uses default instance if not provided.</param>
-        public WebServer(string webRootPath = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
+        public WebServer(WebServerOptions options = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
         {
             m_releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
-            m_razorEngineCS = razorEngineCS ?? (m_releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
-            m_razorEngineVB = razorEngineVB ?? (m_releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
-            m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
+
+            if ((object)options == null)
+                options = new WebServerOptions();
+
+            m_options = options;
+            RazorEngineCS = razorEngineCS ?? (m_releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
+            RazorEngineVB = razorEngineVB ?? (m_releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
+            PagedViewModelTypes = new ConcurrentDictionary<string, Tuple<Type, Type>>(StringComparer.InvariantCultureIgnoreCase);
             m_etagCache = new ConcurrentDictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
             m_handlerTypeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
-            m_pagedViewModelTypes = new ConcurrentDictionary<string, Tuple<Type, Type>>(StringComparer.InvariantCultureIgnoreCase);
 
-            m_fileWatcher = new SafeFileWatcher(m_webRootPath)
+            // Validate web root path
+            m_options.WebRootPath = FilePath.AddPathSuffix(m_options.WebRootPath ?? RazorEngineCS.TemplatePath);
+
+            m_fileWatcher = new SafeFileWatcher(m_options.WebRootPath)
             {
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true
@@ -105,8 +110,6 @@ namespace GSF.Web.Hosting
             m_fileWatcher.Changed += m_fileWatcher_FileChange;
             m_fileWatcher.Deleted += m_fileWatcher_FileChange;
             m_fileWatcher.Renamed += m_fileWatcher_FileChange;
-
-            ClientCacheEnabled = true;
         }
 
         #endregion
@@ -114,55 +117,19 @@ namespace GSF.Web.Hosting
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets flag that determines if cache control is enabled for browser clients; default to <c>true</c>.
+        /// Gets options in use for this <see cref="WebServer"/>.
         /// </summary>
-        public bool ClientCacheEnabled
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets value that determines if minification should be applied to rendered Javascript files.
-        /// </summary>
-        public bool MinifyJavascript
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets value that determines if minification should be applied to rendered CSS files.
-        /// </summary>
-        public bool MinifyStyleSheets
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets value that determines if minification should be applied when running a Debug build.
-        /// </summary>
-        public bool UseMinifyInDebug
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets root path defined for this <see cref="WebServer"/>.
-        /// </summary>
-        public string WebRootPath => m_webRootPath;
+        public ReadonlyWebServerOptions Options => m_options.Readonly;
 
         /// <summary>
         /// Gets the C# Razor engine instance used by this <see cref="WebServer"/>.
         /// </summary>
-        public IRazorEngine RazorEngineCS => m_razorEngineCS;
+        public IRazorEngine RazorEngineCS { get; }
 
         /// <summary>
         /// Gets the Visual Basic Razor engine instance used by this <see cref="WebServer"/>.
         /// </summary>
-        public IRazorEngine RazorEngineVB => m_razorEngineVB;
+        public IRazorEngine RazorEngineVB { get; }
 
         /// <summary>
         /// Defines associated page view model types and data hub types for Razor pages, if any.
@@ -170,7 +137,7 @@ namespace GSF.Web.Hosting
         /// <remarks>
         /// This dictionary associates Razor views based on a paged view model with associated <see cref="Type"/> values.
         /// </remarks>
-        public ConcurrentDictionary<string, Tuple<Type, Type>> PagedViewModelTypes => m_pagedViewModelTypes;
+        public ConcurrentDictionary<string, Tuple<Type, Type>> PagedViewModelTypes { get; }
 
         #endregion
 
@@ -200,7 +167,7 @@ namespace GSF.Web.Hosting
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_disposed = true; // Prevent duplicate dispose.
                 }
             }
         }
@@ -228,16 +195,19 @@ namespace GSF.Web.Hosting
 
             response.RequestMessage = request;
 
+            if (pageName.Equals(m_options.AuthTestPage, StringComparison.OrdinalIgnoreCase))
+                return CreateAuthTestResponse(request, response);
+
             switch (fileExtension)
             {
                 case ".cshtml":
-                    m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost, cancellationToken);
+                    PagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
+                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : RazorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, Options).ExecuteAsync(request, response, isPost, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
-                    m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost, cancellationToken);
+                    PagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
+                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : RazorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, Options).ExecuteAsync(request, response, isPost, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":
@@ -246,7 +216,7 @@ namespace GSF.Web.Hosting
                 default:
                     string fileName = GetResourceFileName(pageName, embeddedResource);
 
-                    if (ClientCacheEnabled)
+                    if (m_options.ClientCacheEnabled)
                     {
                         long responseHash;
 
@@ -358,7 +328,7 @@ namespace GSF.Web.Hosting
             if ((object)handler == null)
                 throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{handlerType?.FullName}\" - make sure class implements IHostedHttpHandler interface.");
 
-            if (ClientCacheEnabled && handler.UseClientCache)
+            if (m_options.ClientCacheEnabled && handler.UseClientCache)
             {
                 if (PublishResponseContent(request, response, handler.GetContentHash(request)))
                     await handler.ProcessRequestAsync(request, response, cancellationToken);
@@ -372,7 +342,7 @@ namespace GSF.Web.Hosting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetResourceFileName(string pageName, bool embeddedResource)
         {
-            return embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+            return embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_options.WebRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -386,7 +356,7 @@ namespace GSF.Web.Hosting
         {
             Stream stream = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
 
-            if (!(m_releaseMode || UseMinifyInDebug) || !(MinifyJavascript || MinifyStyleSheets))
+            if (!(m_releaseMode || m_options.UseMinifyInDebug) || !(m_options.MinifyJavascript || m_options.MinifyStyleSheets))
                 return stream;
 
             string extension = FilePath.GetExtension(fileName).Trim().ToLowerInvariant();
@@ -400,23 +370,23 @@ namespace GSF.Web.Hosting
             switch (extension)
             {
                 case ".js":
-                    if (MinifyJavascript)
+                    if (m_options.MinifyJavascript)
                     {
                         await Task.Run(async () =>
                         {
                             using (StreamReader reader = new StreamReader(stream))
                                 minimizedStream = await minifier.MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
-                        }, cancellationToken);                        
+                        }, cancellationToken);
                     }
                     break;
                 case ".css":
-                    if (MinifyStyleSheets)
+                    if (m_options.MinifyStyleSheets)
                     {
                         await Task.Run(async () =>
                         {
                             using (StreamReader reader = new StreamReader(stream))
                                 minimizedStream = await minifier.MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
-                        }, cancellationToken);                        
+                        }, cancellationToken);
                     }
                     break;
             }
@@ -427,7 +397,7 @@ namespace GSF.Web.Hosting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool PublishResponseContent(HttpRequestMessage request, HttpResponseMessage response, long responseHash)
         {
-            if (!ClientCacheEnabled)
+            if (!m_options.ClientCacheEnabled)
                 return true;
 
             // See if client's version of cached resource is up to date
@@ -450,6 +420,26 @@ namespace GSF.Web.Hosting
 
             response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
             return true;
+        }
+
+        private HttpResponseMessage CreateAuthTestResponse(HttpRequestMessage request, HttpResponseMessage response)
+        {
+            response.Content = new StringContent($@"
+                <html>
+                <head>
+                    <title>Authentication Test</title>
+                    <link rel=""shortcut icon"" href=""@GSF/Web/Shared/Images/Icons/favicon.ico"" />
+                </head>
+                <body>
+                    {(int)response.StatusCode} ({response.StatusCode}) for user
+                    {request.GetRequestContext().Principal?.Identity.Name ?? "Undefined"}
+                </body>
+                </html>
+            ");
+
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
+
+            return response;
         }
 
         private void OnExecutionException(Exception exception)
@@ -514,21 +504,29 @@ namespace GSF.Web.Hosting
 
                 return s_configuredServers.GetOrAdd(settingsCategory, category =>
                 {
-                    // Get configured template path
+                    // Get configured web server settings
                     CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[category];
-                    settings.Add("WebRootPath", "wwwroot", "The root path for the hosted web server files. Location will be relative to install folder if full path is not specified.");
-                    settings.Add("ClientCacheEnabled", "true", "Determines if cache control is enabled for web server when rendering content to browser clients.");
-                    settings.Add("MinifyJavascript", "true", "Determines if minification should be applied to rendered Javascript files.");
-                    settings.Add("MinifyStyleSheets", "true", "Determines if minification should be applied to rendered CSS files.");
-                    settings.Add("UseMinifyInDebug", "false", "Determines if minification should be applied when running a Debug build.");
 
-                    return new WebServer(FilePath.GetAbsolutePath(settings["WebRootPath"].Value), razorEngineCS, razorEngineVB)
+                    settings.Add("WebRootPath", WebServerOptions.DefaultWebRootPath, "The root path for the hosted web server files. Location will be relative to install folder if full path is not specified.");
+                    settings.Add("ClientCacheEnabled", WebServerOptions.DefaultClientCacheEnabled, "Determines if cache control is enabled for web server when rendering content to browser clients.");
+                    settings.Add("MinifyJavascript", WebServerOptions.DefaultMinifyJavascript, "Determines if minification should be applied to rendered Javascript files.");
+                    settings.Add("MinifyStyleSheets", WebServerOptions.DefaultMinifyStyleSheets, "Determines if minification should be applied to rendered CSS files.");
+                    settings.Add("UseMinifyInDebug", WebServerOptions.DefaultUseMinifyInDebug, "Determines if minification should be applied when running a Debug build.");
+                    settings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
+                    settings.Add("AuthTestPage", AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
+
+                    WebServerOptions options = new WebServerOptions
                     {
-                        ClientCacheEnabled = settings["ClientCacheEnabled"].Value.ParseBoolean(),
-                        MinifyJavascript = settings["MinifyJavascript"].Value.ParseBoolean(),
-                        MinifyStyleSheets = settings["MinifyStyleSheets"].Value.ParseBoolean(),
-                        UseMinifyInDebug = settings["UseMinifyInDebug"].Value.ParseBoolean()
+                        WebRootPath = settings["WebRootPath"].ValueAs(WebServerOptions.DefaultWebRootPath),
+                        ClientCacheEnabled = settings["ClientCacheEnabled"].ValueAsBoolean(WebServerOptions.DefaultClientCacheEnabled),
+                        MinifyJavascript = settings["MinifyJavascript"].ValueAsBoolean(WebServerOptions.DefaultMinifyJavascript),
+                        MinifyStyleSheets = settings["MinifyStyleSheets"].ValueAsBoolean(WebServerOptions.DefaultMinifyStyleSheets),
+                        UseMinifyInDebug = settings["UseMinifyInDebug"].ValueAsBoolean(WebServerOptions.DefaultUseMinifyInDebug),
+                        SessionToken = settings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken),
+                        AuthTestPage = settings["AuthTestPage"].ValueAs(AuthenticationOptions.DefaultAuthTestPage)
                     };
+
+                    return new WebServer(options, razorEngineCS, razorEngineVB);
                 });
             }
         }

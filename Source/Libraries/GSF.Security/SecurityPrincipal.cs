@@ -67,7 +67,18 @@ namespace GSF.Security
         /// <summary>
         /// Gets the <see cref="SecurityIdentity"/> object of the user.
         /// </summary>
-        public IIdentity Identity
+        public SecurityIdentity Identity
+        {
+            get
+            {
+                return m_identity;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IIdentity"/> object of the user.
+        /// </summary>
+        IIdentity IPrincipal.Identity
         {
             get
             {
@@ -86,7 +97,7 @@ namespace GSF.Security
         /// <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
         public bool IsInRole(string roles)
         {
-            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.UserData.IsAuthenticated ||
+            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.IsUserAuthenticated ||
                 m_identity.Provider.UserData.IsDisabled || m_identity.Provider.UserData.IsLockedOut)
             {
                 // No need to check user roles.
@@ -101,6 +112,43 @@ namespace GSF.Security
             }
 
             return false;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Gets the reason phrase to return for an unauthorized response.
+        /// </summary>
+        /// <param name="securityPrincipal">Security principal being authenticated, can be <c>null</c>.</param>
+        /// <param name="authorizationScheme">Authentication scheme in use.</param>
+        /// <param name="useProviderReason"><c>true</c> to use detailed response from security provider.</param>
+        /// <returns>Reason phrase to return for an unauthorized response.</returns>
+        /// <remarks>
+        /// Detailed provider response should normally only be used for diagnostics, a more obscure reason is considered
+        /// more secure since it limits knowledge about the successful elements of an authentication attempt.
+        /// </remarks>
+        public static string GetFailureReasonPhrase(SecurityPrincipal securityPrincipal, string authorizationScheme = "Basic", bool useProviderReason = false)
+        {
+            if ((object)securityPrincipal == null)
+                return "Invalid user name or password";
+
+            if (useProviderReason)
+            {
+                // The security provider should be able to provide a reason for the failure
+                string failureReason = securityPrincipal.Identity.Provider?.AuthenticationFailureReason;
+
+                if (!string.IsNullOrEmpty(failureReason))
+                    return failureReason;
+            }
+
+            if (authorizationScheme == "Basic")
+                return "Invalid user name or password";
+
+            return "Missing credentials";
         }
 
         #endregion

@@ -103,6 +103,27 @@ namespace GSF.Web.Security
         // Client-side script functionality
 
         #region [ Security Functions ]
+        
+        /// <summary>
+        /// Resets the current provider cache.
+        /// </summary>
+        /// <param name="cookieSessionID">Session ID as it appears in the cookie header value.</param>
+        /// <returns><c>true</c> if session was cleared; otherwise, <c>false</c>.</returns>
+        public bool Logout(string cookieSessionID)
+        {
+            Guid sessionID;
+            SecurityPrincipal securityPrincipal;
+
+            if (!Guid.TryParse(cookieSessionID, out sessionID))
+                return false;
+
+            // Flush any cached information that has been saved for this user
+            if (AuthenticationHandler.TryGetPrincipal(sessionID, out securityPrincipal))
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
+
+            // Clear any cached session state for user (this also clears any cached authorizations)
+            return RazorView.ClearSessionCache(sessionID);
+        }
 
         /// <summary>
         /// Finds the specified user account record.

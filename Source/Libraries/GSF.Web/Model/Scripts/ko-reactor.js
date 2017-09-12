@@ -1,3 +1,8 @@
+/******************************************************************************************************\
+  !WARNING: The location for this resource has been moved!
+    New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use this new location
+\******************************************************************************************************/
+
 // Deep observer plugin for Knockout http://knockoutjs.com/
 // (c) Ziad Jeeroburkhan
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)

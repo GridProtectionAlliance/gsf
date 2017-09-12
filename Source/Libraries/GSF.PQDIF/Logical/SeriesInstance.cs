@@ -105,7 +105,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalStructure.GetScalarByTag(SeriesScaleTag);
+                return m_physicalStructure.GetScalarByTag(SeriesScaleTag)
+                    ?? SeriesShareSeries?.SeriesScale;
             }
             set
             {
@@ -123,7 +124,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalStructure.GetScalarByTag(SeriesOffsetTag);
+                return m_physicalStructure.GetScalarByTag(SeriesOffsetTag)
+                    ?? SeriesShareSeries?.SeriesOffset;
             }
             set
             {

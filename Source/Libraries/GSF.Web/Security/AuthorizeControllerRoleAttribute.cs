@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  RoleBasedSecurityAttribute.cs - Gbtc
+//  AuthorizeControllerRoleAttribute.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -27,8 +27,6 @@ using System.Security;
 using System.Threading;
 using System.Web.Mvc;
 using GSF.Collections;
-using GSF.Data;
-using GSF.Identity;
 using GSF.Security;
 
 namespace GSF.Web.Security
@@ -58,8 +56,6 @@ namespace GSF.Web.Security
         public AuthorizeControllerRoleAttribute()
         {
             AllowedRoles = new string[0];
-            SettingsCategory = "securityProvider";
-            SecurityExceptionViewName = "SecurityError";
         }
 
         /// <summary>
@@ -69,9 +65,6 @@ namespace GSF.Web.Security
         {
             AllowedRoles = allowedRoles?.Split(',').Select(role => role.Trim()).
                 Where(role => !string.IsNullOrEmpty(role)).ToArray() ?? new string[0];
-
-            SettingsCategory = "securityProvider";
-            SecurityExceptionViewName = "SecurityError";
         }
 
         #endregion
@@ -79,20 +72,14 @@ namespace GSF.Web.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets settings category to use for loading data context for security info.
+        /// Gets or sets settings category used to lookup security connection for user data context.
         /// </summary>
-        public string SettingsCategory
-        {
-            get; set;
-        }
+        public string SecuritySettingsCategory { get; set; } = "securityProvider";
 
         /// <summary>
         /// Gets or sets view name to show for security exceptions.
         /// </summary>
-        public string SecurityExceptionViewName
-        {
-            get; set;
-        }
+        public string SecurityExceptionViewName { get; set; } = "SecurityError";
 
         #endregion
 
@@ -104,31 +91,32 @@ namespace GSF.Web.Security
         /// <param name="filterContext">The filter context.</param>
         public void OnAuthorization(AuthorizationContext filterContext)
         {
-            SecurityProviderCache.ValidateCurrentProvider();
+            SecurityPrincipal securityPrincipal = filterContext.HttpContext.User as SecurityPrincipal;
 
-            // Setup the principal
-            filterContext.HttpContext.User = Thread.CurrentPrincipal;
-
+            if ((object)securityPrincipal == null || (object)securityPrincipal.Identity == null)
+            {
+                filterContext.Result = new HttpUnauthorizedResult($"Authentication failed for user \"{filterContext.HttpContext.User?.Identity.Name}\".");
+                filterContext.HttpContext.User = null;
+                return;
+            }
+            
             // Get current user name
-            string userName = Thread.CurrentPrincipal.Identity.Name;
+            string username = securityPrincipal.Identity.Name;
 
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-                throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
-
-            if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => filterContext.HttpContext.User.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
-
-            // Make sure current user ID is cached
-            if (!AuthorizationCache.UserIDs.ContainsKey(userName))
+            if (!securityPrincipal.Identity.IsAuthenticated)
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                {
-                    Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
-
-                    if ((object)userID != null)
-                        AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
-                }
+                filterContext.Result = new HttpUnauthorizedResult($"User \"{username}\" is not authenticated.");
+                filterContext.HttpContext.User = null;
+            }
+            else if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => securityPrincipal.IsInRole(role)))
+            {
+                filterContext.Result = new HttpUnauthorizedResult($"Access is denied for user \"{username}\": minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+                filterContext.HttpContext.User = null;
+            }
+            else
+            {
+                ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(username, SecuritySettingsCategory));
             }
         }
 

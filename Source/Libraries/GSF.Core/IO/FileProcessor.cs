@@ -669,7 +669,10 @@ namespace GSF.IO
                 m_fileProcessor.m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
                 {
                     foreach (string file in files)
+                    {
+                        m_fileProcessor.m_touchedFiles.Remove(file);
                         m_fileProcessor.m_processedFiles.Remove(file);
+                    }
 
                     m_cleanProcessedFilesOperation.RunIfPending();
                 }));
@@ -679,16 +682,16 @@ namespace GSF.IO
             private IEnumerable<string> EnumerateDirectories(string path)
             {
                 return m_fileProcessor.m_orderedEnumeration
-                    ? Directory.EnumerateFiles(path).OrderBy(dir => dir)
-                    : Directory.EnumerateFiles(path);
+                    ? Directory.EnumerateDirectories(path).OrderBy(dir => dir)
+                    : Directory.EnumerateDirectories(path);
             }
 
             // Returns an object to enumerate files under a given path
             private IEnumerable<string> EnumerateFiles(string path)
             {
                 return m_fileProcessor.m_orderedEnumeration
-                    ? Directory.EnumerateDirectories(path).OrderBy(file => file)
-                    : Directory.EnumerateDirectories(path);
+                    ? Directory.EnumerateFiles(path).OrderBy(file => file)
+                    : Directory.EnumerateFiles(path);
             }
 
             #endregion
@@ -1143,6 +1146,30 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Determines if the given file matches the file processor's filter.
+        /// </summary>
+        /// <param name="filePath">The path to the file to be tested against the filter.</param>
+        /// <returns>True if the file matches the filter; false otherwise.</returns>
+        public bool MatchesFilter(string filePath)
+        {
+            string[] filters = m_filter.Split(Path.PathSeparator);
+
+            if (!FilePath.IsFilePatternMatch(filters, filePath, true))
+                return false;
+
+            try
+            {
+                return m_filterMethod(filePath);
+            }
+            catch (Exception ex)
+            {
+                string message = $"An exception occurred while attempting to execute user-defined filter: {ex.Message}";
+                OnError(new Exception(message, ex));
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Stops all enumeration operations that are currently running.
         /// </summary>
         public void StopEnumeration()
@@ -1197,26 +1224,6 @@ namespace GSF.IO
                 {
                     m_disposed = true; // Prevent duplicate dispose.
                 }
-            }
-        }
-
-        // Determines if the given file matches the file processor's filter.
-        private bool MatchesFilter(string filePath)
-        {
-            string[] filters = m_filter.Split(Path.PathSeparator);
-
-            if (!FilePath.IsFilePatternMatch(filters, filePath, true))
-                return false;
-
-            try
-            {
-                return m_filterMethod(filePath);
-            }
-            catch (Exception ex)
-            {
-                string message = $"An exception occurred while attempting to execute user-defined filter: {ex.Message}";
-                OnError(new Exception(message, ex));
-                return false;
             }
         }
         

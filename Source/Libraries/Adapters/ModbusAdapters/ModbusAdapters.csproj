@@ -29,6 +29,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <OutputPath>..\..\..\..\Build\Output\Mono\Libraries\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -65,6 +74,10 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\GSF.Security\GSF.Security.csproj">
+      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
+      <Name>GSF.Security</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
@@ -80,9 +93,6 @@
     <EmbeddedResource Include="Scripts\MapViewModel.js" />
     <EmbeddedResource Include="Scripts\RecordViewModel.js" />
     <EmbeddedResource Include="Scripts\SequenceViewModel.js" />
-    <EmbeddedResource Include="Scripts\knockout-3.4.0.js" />
-    <EmbeddedResource Include="Scripts\knockout.mapping-latest.js" />
-    <EmbeddedResource Include="Scripts\knockout.validation.js" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 1.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 2.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\Global Information\Battery 3.json" />

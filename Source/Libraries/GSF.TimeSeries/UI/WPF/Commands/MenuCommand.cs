@@ -145,12 +145,8 @@ namespace GSF.TimeSeries.UI.Commands
         public bool CanExecute(object parameter)
         {
             SecurityPrincipal currentPrincipal = CommonFunctions.CurrentPrincipal;
-            ISecurityProvider securityProvider;
 
-            if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
-                securityProvider = SecurityProviderCache.CurrentProvider;
-
-            return ((object)securityProvider != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any() &&
+            return currentPrincipal.Identity.IsAuthenticated &&
                 (string.IsNullOrEmpty(Roles) || Roles == "*" || currentPrincipal.IsInRole(Roles));
         }
 

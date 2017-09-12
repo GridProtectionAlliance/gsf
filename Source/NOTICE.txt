@@ -2,8 +2,8 @@
 ==                      NOTICE file for the Grid Solutions Framework distribution                      ==
 =========================================================================================================
 
-Grid Solutions Framework (http://gsf.codeplex.com/)
-Copyright © 2012-2015, Grid Protection Alliance, Inc.
+Grid Solutions Framework (https://github.com/GridProtectionAlliance/gsf)
+Copyright Â© 2012-2017, Grid Protection Alliance, Inc.
 
 This product includes software developed at the Grid Protection Alliance, Inc.
 (http://www.gridprotectionalliance.org/)
@@ -27,6 +27,9 @@ This includes, but may not be limited to, the following:
         Copyright (c) 2010, 2011 Green Energy Corp.
         Copyright (c) 2013 Automatak LLC
 
+* CertificateGenerator project that internally includes code from the Bouncy Castle libraries which
+	    includes bzip2 code based on work done by Keiron Liddle, Aftex Software
+
 =========================================================================================================
 
 Portions of this software, where noted in the source file header, were implemented using source code
@@ -36,8 +39,36 @@ This includes, but may not be limited to, the following:
 * WaveSubscriptionDemo project derived from NAudioWpfDemo app in NAudio (http://naudio.codeplex.com/):
         Copyright (c) Mark Heath 2008
 
-* GSF.Diagnostics logging classes use portions of the DotNetZip library (https://dotnetzip.codeplex.com/)
-        Copyright (c) 2009-2010 Dino Chiesa
+* GSF.Diagnostics logging internally use portions of DotNetZip library (https://dotnetzip.codeplex.com/)
+        Copyright (c) 2009-2011 Dino Chiesa and Microsoft Corporation
+        Copyright (c) 2009-2011 Dino Chiesa
+
+=========================================================================================================
+
+Portions of this software were implemented using source code that was licensed using an adaptation of the
+MIT X11 License: https://opensource.org/licenses/mit-license.php.
+This includes, but may not be limited to, the following:
+
+* CertificateGenerator project that internally includes code from the Bouncy Castle libraries:
+
+	Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+	associated documentation files (the "Software"), to deal in the Software without restriction,
+	including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+	and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+	subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or substantial
+	portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+	LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+	IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+	WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	Contributors: https://www.bouncycastle.org/csharp/contributors.html
 
 =========================================================================================================
 
@@ -48,15 +79,18 @@ This includes, specifically, the following:
 * GSF.Communications project references the clrzmq4 library for ZeroMQ implementation support:
     Source code for the clrzmq4 project can be found here: https://github.com/zeromq/clrzmq4.
     
-    Note that ZeroMQ (http://zeromq.org) also includes a static linking exception:
+    Note that ZeroMQ (http://zeromq.org) implementations include a static linking exception:
 
-    The copyright holders give you permission to link this library with independent modules to
-    produce	an executable, regardless of the license terms of these independent modules, and
-    to copy and	distribute the resulting executable under terms of your choice, provided that
-    you also meet, for each linked independent module, the terms and conditions of the license
-    of that module. An independent module is a module which is not derived from or based on
-    this library. If you modify	this library, you must extend this exception to your version
-    of the library.
+        The copyright holders give you permission to link this library with independent modules to
+        produce	an executable, regardless of the license terms of these independent modules, and
+        to copy and	distribute the resulting executable under terms of your choice, provided that
+        you also meet, for each linked independent module, the terms and conditions of the license
+        of that module. An independent module is a module which is not derived from or based on
+        this library. If you modify	this library, you must extend this exception to your version
+        of the library.
+
+    With this linking exception, the Grid Solutions Framework uses the ZeroMQ binary as a dependency yet
+    remains an MIT licensed repository. Full GNU Lesser General Public License text included below.
 
 =========================================================================================================
 
@@ -88,7 +122,7 @@ This includes, but may not be limited to, the following:
 The PQDIF components of this software were developed under contract to the
 Electric Power Research Institute (http://www.epri.com/):
 
-Copyright © 2012 Electric Power Research Institute, Inc. 
+Copyright Â© 2012 Electric Power Research Institute, Inc. 
 
 The embodiments of this Program and supporting materials may be ordered from:
  
@@ -103,7 +137,7 @@ THIS NOTICE MAY NOT BE REMOVED FROM THE PROGRAM BY ANY USER THEREOF.
 =========================================================================================================
 
 Tennessee Valley Authority, 2009
-No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
+No copyright is claimed pursuant to 17 USC Â§ 105.  All Other Rights Reserved.
 
 /*                           TENNESSEE VALLEY AUTHORITY OPEN SOURCE AGREEMENT
  *
@@ -134,7 +168,7 @@ No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
  * 
  * F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  * structure of either the Original Software or Subject Software, and includes derivative works, as that
- * term is defined in the Copyright Statute, 17 USC § 101. However, the act of including Subject Software
+ * term is defined in the Copyright Statute, 17 USC Â§ 101. However, the act of including Subject Software
  * as part of a Larger Work does not in and of itself constitute a Modification.
  * 
  * G. "Original Software" means the computer software first released under this Agreement by Government
@@ -211,7 +245,7 @@ No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
  * B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  * Software:
  * 
- * No copyright is claimed pursuant to 17 USC § 105. All Other Rights Reserved.
+ * No copyright is claimed pursuant to 17 USC Â§ 105. All Other Rights Reserved.
  * 
  * C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  * must identify itself as the originator of its Modification in a manner that reasonably allows

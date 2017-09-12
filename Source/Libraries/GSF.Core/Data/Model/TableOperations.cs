@@ -1024,6 +1024,36 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Converts the given collection of <paramref name="records"/> into a <see cref="DataTable"/>.
+        /// </summary>
+        /// <param name="records">The collection of records to be inserted into the data table.</param>
+        /// <returns>A data table containing data from the given records.</returns>
+        public DataTable ToDataTable(IEnumerable<T> records)
+        {
+            DataTable dataTable = new DataTable(s_tableName);
+
+            foreach (PropertyInfo property in s_properties.Values)
+                dataTable.Columns.Add(new DataColumn(s_fieldNames[property.Name]));
+
+            foreach (T record in records)
+            {
+                DataRow row = dataTable.NewRow();
+
+                foreach (PropertyInfo property in s_properties.Values)
+                    row[s_fieldNames[property.Name]] = property.GetValue(record);
+
+                dataTable.Rows.Add(row);
+            }
+
+            return dataTable;
+        }
+
+        DataTable ITableOperations.ToDataTable(IEnumerable records)
+        {
+            return ToDataTable(records.Cast<T>());
+        }
+
+        /// <summary>
         /// Deletes the record referenced by the specified <paramref name="primaryKeys"/>.
         /// </summary>
         /// <param name="primaryKeys">Primary keys values of the record to load.</param>

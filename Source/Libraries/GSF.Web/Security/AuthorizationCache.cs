@@ -23,6 +23,9 @@
 
 using System;
 using System.Collections.Concurrent;
+using GSF.Data;
+using GSF.Diagnostics;
+using GSF.Identity;
 
 namespace GSF.Web.Security
 {
@@ -35,5 +38,34 @@ namespace GSF.Web.Security
         /// Gets the current user ID cache.
         /// </summary>
         public static readonly ConcurrentDictionary<string, Guid> UserIDs = new ConcurrentDictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+
+        private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(AuthorizationCache), MessageClass.Framework);
+
+        /// <summary>
+        /// Caches authorized user.
+        /// </summary>
+        /// <param name="userName">User name to cache.</param>
+        /// <param name="securitySettingsCategory">Settings category used to lookup security connection for user data context.</param>
+        public static void CacheAuthorization(string userName, string securitySettingsCategory)
+        {
+            // Make sure current user ID is cached
+            if (UserIDs.ContainsKey(userName))
+                return;
+
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(securitySettingsCategory))
+                {
+                    Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
+
+                    if ((object)userID != null)
+                        UserIDs.TryAdd(userName, userID.GetValueOrDefault());
+                }
+            }
+            catch (Exception ex)
+            {
+                s_log.Publish(MessageLevel.Warning, "Authorization Cache Exception", exception: ex);
+            }
+        }
     }
 }

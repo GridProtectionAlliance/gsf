@@ -43,7 +43,6 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Security.Principal;
-using System.Threading;
 using GSF.Configuration;
 using GSF.Identity;
 
@@ -144,7 +143,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         public LdapSecurityProvider(string username)
-            : this(username, true, false, false, true)
+            : this(username, true, false, true)
         {
         }
 
@@ -153,11 +152,10 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
-        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
-        protected LdapSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
-            : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
+        protected LdapSecurityProvider(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
+            : base(username, canRefreshData, canResetPassword, canChangePassword)
         {
             m_enableOfflineCaching = DefaultEnableOfflineCaching;
             m_cacheRetryDelayInterval = DefaultCacheRetryDelayInterval;
@@ -235,16 +233,6 @@ namespace GSF.Security
         #region [ Not Supported ]
 
         /// <summary>
-        /// Updates the <see cref="UserData"/> in the backend data store.
-        /// </summary>
-        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
-        /// <exception cref="NotSupportedException">Always</exception>
-        public override bool UpdateData()
-        {
-            throw new NotSupportedException();
-        }
-
-        /// <summary>
         /// Resets user password in the backend data store.
         /// </summary>
         /// <param name="securityAnswer">Answer to the user's security question.</param>
@@ -300,23 +288,23 @@ namespace GSF.Security
         /// <summary>
         /// Authenticates the user.
         /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
-        public override bool Authenticate(string password)
+        public override bool Authenticate()
         {
-            // Check prerequisites.
-            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut ||
-                (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
+            // Check prerequisites
+            bool isValid =
+                (UserData.IsDefined && !UserData.IsDisabled && !UserData.IsLockedOut) &&
+                (UserData.PasswordChangeDateTime == DateTime.MinValue || UserData.PasswordChangeDateTime > DateTime.UtcNow);
+
+            if (!isValid)
                 return false;
 
-            Password = password;
-
-            if (string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(Password))
             {
-                // Validate with current thread principal.
-                m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                // Validate with passthrough credentials
+                m_windowsPrincipal = PassthroughPrincipal as WindowsPrincipal;
 
-                UserData.IsAuthenticated =
+                IsUserAuthenticated =
                     (object)m_windowsPrincipal != null &&
                     ((!string.IsNullOrEmpty(UserData.LoginID) && m_windowsPrincipal.Identity.Name.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase)) ||
                     (!string.IsNullOrEmpty(UserData.Username) && m_windowsPrincipal.Identity.Name.Equals(UserData.Username, StringComparison.OrdinalIgnoreCase))) &&
@@ -324,13 +312,13 @@ namespace GSF.Security
             }
             else
             {
-                // Validate by performing network logon.
+                // Validate by performing network logon
                 string[] userParts = UserData.LoginID.Split('\\');
-                m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
-                UserData.IsAuthenticated = (object)m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+                m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], Password) as WindowsPrincipal;
+                IsUserAuthenticated = (object)m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
             }
 
-            return UserData.IsAuthenticated;
+            return IsUserAuthenticated;
         }
 
         /// <summary>
@@ -340,21 +328,24 @@ namespace GSF.Security
         public override bool RefreshData()
         {
             // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
-            bool result = RefreshData(UserData.Roles, ProviderID);
+            UserData userData = new UserData(UserData.Username);
+            bool result = RefreshData(userData, userData.Roles, ProviderID);
 
             if (result)
             {
                 string[] parts;
 
                 // Remove domain name prefixes from user group names (again to match WindowIdentity principal implementation)
-                for (int i = 0; i < UserData.Roles.Count; i++)
+                for (int i = 0; i < userData.Roles.Count; i++)
                 {
-                    parts = UserData.Roles[i].Split('\\');
+                    parts = userData.Roles[i].Split('\\');
 
                     if (parts.Length == 2)
-                        UserData.Roles[i] = parts[1];
+                        userData.Roles[i] = parts[1];
                 }
             }
+            
+            UserData = userData;
 
             return result;
         }
@@ -362,19 +353,20 @@ namespace GSF.Security
         /// <summary>
         /// Refreshes the <see cref="UserData"/> from the backend data store loading user groups into desired collection.
         /// </summary>
+        /// <param name="userData">The structure for the data being refreshed.</param>
         /// <param name="groupCollection">Target collection for user groups.</param>
         /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        protected virtual bool RefreshData(List<string> groupCollection, int providerID)
+        protected virtual bool RefreshData(UserData userData, List<string> groupCollection, int providerID)
         {
             if ((object)groupCollection == null)
                 throw new ArgumentNullException(nameof(groupCollection));
 
-            if (string.IsNullOrEmpty(UserData.Username))
+            if (string.IsNullOrEmpty(userData.Username))
                 return false;
 
             // Initialize user data
-            UserData.Initialize();
+            userData.Initialize();
 
             // Populate user data
             UserInfo user = null;
@@ -397,43 +389,43 @@ namespace GSF.Security
                 string ldapPath = GetLdapPath();
 
                 if (string.IsNullOrEmpty(ldapPath))
-                    user = new UserInfo(UserData.Username);
+                    user = new UserInfo(userData.Username);
                 else
-                    user = new UserInfo(UserData.Username, ldapPath);
+                    user = new UserInfo(userData.Username, ldapPath);
 
                 // Make sure to load privileged user credentials from config file if present.
                 user.PersistSettings = true;
 
                 // Attempt to determine if user exists (this will initialize user object if not initialized already)
-                UserData.IsDefined = user.Exists;
-                UserData.LoginID = user.LoginID;
+                userData.IsDefined = user.Exists;
+                userData.LoginID = user.LoginID;
 
-                if (UserData.IsDefined)
+                if (userData.IsDefined)
                 {
                     // Fill in user information from domain data if it is available
                     if (user.DomainRespondsForUser)
                     {
                         // Copy relevant user information
-                        UserData.FirstName = user.FirstName;
-                        UserData.LastName = user.LastName;
-                        UserData.CompanyName = user.Company;
-                        UserData.PhoneNumber = user.Telephone;
-                        UserData.EmailAddress = user.Email;
+                        userData.FirstName = user.FirstName;
+                        userData.LastName = user.LastName;
+                        userData.CompanyName = user.Company;
+                        userData.PhoneNumber = user.Telephone;
+                        userData.EmailAddress = user.Email;
 
                         try
                         {
-                            UserData.IsLockedOut = user.AccountIsLockedOut;
-                            UserData.IsDisabled = user.AccountIsDisabled;
+                            userData.IsLockedOut = user.AccountIsLockedOut;
+                            userData.IsDisabled = user.AccountIsDisabled;
                         }
                         catch (SecurityException)
                         {
                             // AD may restrict information on account availability, if so, have to make a safe assumption:
-                            UserData.IsLockedOut = true;
-                            UserData.IsDisabled = true;
+                            userData.IsLockedOut = true;
+                            userData.IsDisabled = true;
                         }
 
-                        UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
-                        UserData.AccountCreatedDateTime = user.AccountCreationDate;
+                        userData.PasswordChangeDateTime = user.NextPasswordChangeDate;
+                        userData.AccountCreatedDateTime = user.AccountCreationDate;
 
                         // Assign all groups the user is a member of
                         foreach (string groupName in user.Groups)
@@ -445,7 +437,7 @@ namespace GSF.Security
                         if ((object)userDataCache != null)
                         {
                             // Cache user data so that information can be loaded later if domain is unavailable
-                            userDataCache[UserData.LoginID] = UserData;
+                            userDataCache[userData.LoginID] = userData;
 
                             // Wait for pending serialization since cache is scoped locally to this method and will be disposed before exit
                             userDataCache.WaitForSave();
@@ -456,35 +448,35 @@ namespace GSF.Security
                         // Attempt to load previously cached user information when domain is offline
                         UserData cachedUserData;
 
-                        if ((object)userDataCache != null && userDataCache.TryGetUserData(UserData.LoginID, out cachedUserData))
+                        if ((object)userDataCache != null && userDataCache.TryGetUserData(userData.LoginID, out cachedUserData))
                         {
                             // Copy relevant cached user information
-                            UserData.FirstName = cachedUserData.FirstName;
-                            UserData.LastName = cachedUserData.LastName;
-                            UserData.CompanyName = cachedUserData.CompanyName;
-                            UserData.PhoneNumber = cachedUserData.PhoneNumber;
-                            UserData.EmailAddress = cachedUserData.EmailAddress;
-                            UserData.IsLockedOut = cachedUserData.IsLockedOut;
-                            UserData.IsDisabled = cachedUserData.IsDisabled;
-                            UserData.Roles.AddRange(cachedUserData.Roles);
-                            UserData.Groups.AddRange(cachedUserData.Groups);
+                            userData.FirstName = cachedUserData.FirstName;
+                            userData.LastName = cachedUserData.LastName;
+                            userData.CompanyName = cachedUserData.CompanyName;
+                            userData.PhoneNumber = cachedUserData.PhoneNumber;
+                            userData.EmailAddress = cachedUserData.EmailAddress;
+                            userData.IsLockedOut = cachedUserData.IsLockedOut;
+                            userData.IsDisabled = cachedUserData.IsDisabled;
+                            userData.Roles.AddRange(cachedUserData.Roles);
+                            userData.Groups.AddRange(cachedUserData.Groups);
 
                             // If domain is offline, a password change cannot be initiated
-                            UserData.PasswordChangeDateTime = DateTime.MaxValue;
-                            UserData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
+                            userData.PasswordChangeDateTime = DateTime.MaxValue;
+                            userData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
                         }
                         else
                         {
                             // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
-                            UserData.IsLockedOut = false;
-                            UserData.IsDisabled = false;
-                            UserData.PasswordChangeDateTime = DateTime.MaxValue;
-                            UserData.AccountCreatedDateTime = DateTime.MinValue;
+                            userData.IsLockedOut = false;
+                            userData.IsDisabled = false;
+                            userData.PasswordChangeDateTime = DateTime.MaxValue;
+                            userData.AccountCreatedDateTime = DateTime.MinValue;
                         }
                     }
                 }
 
-                return UserData.IsDefined;
+                return userData.IsDefined;
             }
             finally
             {

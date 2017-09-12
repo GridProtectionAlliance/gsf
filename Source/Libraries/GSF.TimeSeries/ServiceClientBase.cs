@@ -338,7 +338,8 @@ namespace GSF.TimeSeries
                             }
                             catch
                             {
-                                // Even if this fails, we can still pass along user credentials
+                                // Even if this fails, we can still pass along default credentials
+                                SetNetworkCredential(null);
                             }
 
                             Connect(username.ToString(), password.ToString());

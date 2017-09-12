@@ -145,6 +145,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Shared\Resources.cs" />
     <Compile Include="Embedded\EmbeddedResourceProvider.cs" />
     <Compile Include="Embedded\NamespaceDoc.cs" />
     <Compile Include="Hosting\EmbeddedResourceFileAttribute.cs" />
@@ -156,6 +157,7 @@
     <Compile Include="Embedded\ISecurityService.cs" />
     <Compile Include="Hosting\WebPageController.cs" />
     <Compile Include="Hosting\WebServer.cs" />
+    <Compile Include="Hosting\WebServerOptions.cs" />
     <Compile Include="Hubs\DataContextHubClient.cs" />
     <Compile Include="Hubs\DataContextOperations.cs" />
     <Compile Include="Hubs\HubClientBase.cs" />
@@ -195,12 +197,16 @@
       <DependentUpon>SecurityService.svc</DependentUpon>
     </Compile>
     <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
+    <Compile Include="Security\AuthenticationHandler.cs" />
+    <Compile Include="Security\AuthenticationMiddleware.cs" />
+    <Compile Include="Security\AuthenticationOptions.cs" />
     <Compile Include="Security\AuthorizationCache.cs" />
     <Compile Include="Security\AuthorizeControllerRoleAttribute.cs" />
     <Compile Include="Security\AuthorizeHubRoleAttribute.cs" />
     <Compile Include="Security\NamespaceDoc.cs" />
     <Compile Include="Security\SecurityHub.cs" />
     <Compile Include="Model\RazorView.cs" />
+    <Compile Include="Security\SessionHandler.cs" />
     <Compile Include="UI\ClientSideExtensions.cs" />
     <Compile Include="WebExtensions.cs" />
   </ItemGroup>
@@ -248,11 +254,106 @@
     <EmbeddedResource Include="Security\Views\Users.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.eot" />
+    <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.ttf" />
+    <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.woff" />
+    <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.woff2" />
     <None Include="GSF.Web.nuspec" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.eot" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.ttf" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff2" />
+    <EmbeddedResource Include="Shared\Content\Fonts\FontAwesome.otf" />
+    <EmbeddedResource Include="Security\Views\Login.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_2e83ff_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_333333_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_454545_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_888888_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_cd0a0a_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_ffffff_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.svg" />
+    <EmbeddedResource Include="Shared\Scripts\jquery-ui.js" />
+    <EmbeddedResource Include="Shared\Scripts\primeui.js" />
+    <EmbeddedResource Include="Shared\Content\font-awesome.css" />
+    <EmbeddedResource Include="Shared\Content\jquery-ui.css" />
+    <EmbeddedResource Include="Shared\Content\primeui-theme.css" />
+    <EmbeddedResource Include="Shared\Content\primeui.css" />
+    <EmbeddedResource Include="Shared\Content\Images\loadingbar.gif" />
+    <EmbeddedResource Include="Shared\Content\Images\password-meter.png" />
+    <EmbeddedResource Include="Shared\Content\Images\rating.png" />
+    <Content Include="Shared\Content\Readme.txt" />
+    <Content Include="Shared\Scripts\angular.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.mapping.js" />
+    <EmbeddedResource Include="Shared\Scripts\gsf.web.client.js" />
+    <EmbeddedResource Include="Shared\Scripts\gsf.web.knockout.js" />
+    <EmbeddedResource Include="Shared\Scripts\gsf.web.primeui.js" />
+    <EmbeddedResource Include="Shared\Scripts\js.cookie.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.reactor.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.observableDictionary.js" />
+    <EmbeddedResource Include="Security\Scripts\core.js" />
+    <EmbeddedResource Include="Security\Scripts\enc-base64.js" />
+    <EmbeddedResource Include="Security\Scripts\ntlm.js" />
+    <EmbeddedResource Include="Security\Scripts\sha256.js" />
+    <EmbeddedResource Include="Shared\Content\bootstrap.css" />
+    <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.svg" />
+    <EmbeddedResource Include="Shared\Images\gpa-lock.png" />
+    <EmbeddedResource Include="Shared\Images\gpa-smalllock.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-114x114.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-120x120.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-144x144.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-152x152.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-57x57.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-60x60.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-72x72.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\apple-touch-icon-76x76.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\favicon-128.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\favicon-16x16.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\favicon-196x196.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\favicon-32x32.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\favicon-96x96.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\favicon.ico" />
+    <EmbeddedResource Include="Shared\Images\Icons\mstile-144x144.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\mstile-150x150.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\mstile-310x150.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\mstile-310x310.png" />
+    <EmbeddedResource Include="Shared\Images\Icons\mstile-70x70.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\green.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\grey.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\amberlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\blacklight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\bluelight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\disabledlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\greenlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\greylight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\magentalight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\redlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Large\yellowlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\red.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\amberlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\blacklight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\bluelight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\disabledlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\greenlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\greylight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\magentalight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\redlight.png" />
+    <EmbeddedResource Include="Shared\Images\StatusLights\Small\yellowlight.png" />
+    <EmbeddedResource Include="Model\Scripts\bootstrap-datepicker.js" />
+    <EmbeddedResource Include="Model\Scripts\bootstrap-toolkit.js" />
+    <Content Include="Model\Scripts\ObsoleteFiles.txt" />
+    <Content Include="Shared\Readme.txt" />
+    <EmbeddedResource Include="Shared\Scripts\bootstrap.js" />
+    <EmbeddedResource Include="Shared\Scripts\jquery.js" />
+    <EmbeddedResource Include="Shared\Scripts\jquery.signalR.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.js" />
+    <EmbeddedResource Include="Shared\Scripts\knockout.validation.js" />
+    <EmbeddedResource Include="Shared\Scripts\moment.js" />
     <Content Include="Model\Scripts\angular1.5.8.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -30,6 +30,7 @@
 
 using System.Diagnostics;
 using System.Security;
+using System.Security.Principal;
 using GSF.Configuration;
 
 namespace GSF.Security
@@ -46,7 +47,7 @@ namespace GSF.Security
     /// <summary>
     /// Defines a provider of role-based security in applications.
     /// </summary>
-    public interface ISecurityProvider : ISupportLifecycle, IPersistSettings
+    public interface ISecurityProvider : IPersistSettings
     {
         #region [ Properties ]
 
@@ -63,6 +64,15 @@ namespace GSF.Security
         /// Gets or sets the connection string to be used for connection to the backend security data store.
         /// </summary>
         string ConnectionString
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the principal used for passthrough authentication.
+        /// </summary>
+        IPrincipal PassthroughPrincipal
         {
             get;
             set;
@@ -95,17 +105,18 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
+        /// Gets the flag that indicates whether the user was
+        /// authenticated during the last authentication attempt.
         /// </summary>
-        bool CanRefreshData
+        bool IsUserAuthenticated
         {
             get;
         }
 
         /// <summary>
-        /// Gets a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
+        /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
         /// </summary>
-        bool CanUpdateData
+        bool CanRefreshData
         {
             get;
         }
@@ -153,21 +164,14 @@ namespace GSF.Security
         /// <summary>
         /// Authenticates the user.
         /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
-        bool Authenticate(string password);
+        bool Authenticate();
 
         /// <summary>
         /// Refreshes the <see cref="UserData"/> from the backend data store.
         /// </summary>
         /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
         bool RefreshData();
-
-        /// <summary>
-        /// Updates the <see cref="UserData"/> in the backend data store.
-        /// </summary>
-        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
-        bool UpdateData();
 
         /// <summary>
         /// Resets user password in the backend data store.

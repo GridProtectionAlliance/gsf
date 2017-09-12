@@ -42,6 +42,12 @@
         ViewBag.PageControlScripts = new StringBuilder();
     }
 
+    bool includeScripts = true;
+
+    if (ViewBag.IncludeScripts != null) {
+        includeScripts = (bool)ViewBag.IncludeScripts;
+    }
+
     // Setup page control scripts
     StringBuilder pageControlScripts = ViewBag.PageControlScripts;
 
@@ -53,22 +59,22 @@
         ViewBag.RecordsTitle ?? "Records"
     );
 
-    pageControlScripts.Append(string.Format(@"
-    <script src=""{0}""></script>
-    <script src=""{1}""></script>
-    <script src=""{2}""></script>
-    ",
-        Url.Content("~/Scripts/knockout-3.4.0.js"),
-        Url.Content("~/Scripts/knockout.mapping-latest.js"),
-        Url.Content("~/Scripts/knockout.validation.min.js"))
-    );
+    if (includeScripts) {
+        pageControlScripts.Append(@"
+    <script src=""/@GSF/Web/Shared/Scripts/knockout.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/knockout.mapping.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/knockout.validation.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/knockout.reactor.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/knockout.observableDictionary.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/js.cookie.js""></script>
+    <script src=""/@GSF/Web/Shared/Scripts/gsf.web.knockout.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/bootstrap-toolkit.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/bootstrap-datepicker.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
+    ");
+    }
 
     pageControlScripts.Append(@"
-    <script src=""/@GSF/Web/Model/Scripts/ko-reactor.min.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/ko.observableDictionary.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/js.cookie.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/gsf.web.knockout.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
     <script>
         $(function() {
             $(""#clearSortOrder"").click(function() {

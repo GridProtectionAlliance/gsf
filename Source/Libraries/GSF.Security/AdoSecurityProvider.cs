@@ -209,7 +209,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         public AdoSecurityProvider(string username)
-            : this(username, true, false, false, true)
+            : this(username, true, false, true)
         {
         }
 
@@ -218,11 +218,10 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
-        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
-        protected AdoSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
-            : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
+        protected AdoSecurityProvider(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
+            : base(username, canRefreshData, canResetPassword, canChangePassword)
         {
             base.ConnectionString = "Eval(systemSettings.ConnectionString)";
 
@@ -233,22 +232,6 @@ namespace GSF.Security
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether <see cref="SecurityProviderBase.UpdateData"/> operation is supported.
-        /// </summary>
-        public override bool CanUpdateData
-        {
-            get
-            {
-                // Data update supported on external user accounts.
-                if (UserData.IsDefined && UserData.IsExternal)
-                    return true;
-
-                // Data update not supported on internal user accounts.
-                return false;
-            }
-        }
 
         /// <summary>
         /// Gets last exception reported by the <see cref="AdoSecurityProvider"/>.
@@ -301,8 +284,10 @@ namespace GSF.Security
 
             try
             {
+                UserData userData = new UserData(UserData.Username);
+
                 // Initialize user data.
-                UserData.Initialize();
+                userData.Initialize();
 
                 // We'll retrieve all the data we need about a user.
                 //   Table1: Information about the user.
@@ -352,7 +337,7 @@ namespace GSF.Security
 
                 DataRow userAccount = null;
                 Guid userAccountID = Guid.Empty;
-                string userSID = UserInfo.UserNameToSID(UserData.Username);
+                string userSID = UserInfo.UserNameToSID(userData.Username);
 
                 // Filter user account data for the current user.
                 DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(userSID)}'");
@@ -360,70 +345,70 @@ namespace GSF.Security
                 // If SID based lookup failed, try lookup by user name.  Note that is critical that SID based lookup
                 // take precedence over name based lookup for proper cross-platform authentication.
                 if (userAccounts.Length == 0)
-                    userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(UserData.Username)}'");
+                    userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(userData.Username)}'");
 
                 if (userAccounts.Length == 0)
                 {
                     // User doesn't exist in the database, however, user may exist in an NT authentication group which
                     // may have an explicit role assignment. To test for this case we make the assumption that this is
                     // a Windows authenticated user and test for rights within groups
-                    UserData.IsDefined = true;
-                    UserData.IsExternal = false;
+                    userData.IsDefined = true;
+                    userData.IsExternal = false;
                 }
                 else
                 {
                     userAccount = userAccounts[0];
-                    UserData.IsDefined = true;
-                    UserData.IsExternal = !Convert.ToBoolean(userAccount["UseADAuthentication"]);
+                    userData.IsDefined = true;
+                    userData.IsExternal = !Convert.ToBoolean(userAccount["UseADAuthentication"]);
                     userAccountID = Guid.Parse(Convert.ToString(userAccount["ID"]));
                 }
 
-                if (UserData.IsExternal && (object)userAccount != null)
+                if (userData.IsExternal && (object)userAccount != null)
                 {
                     // Load database user details
-                    if (string.IsNullOrEmpty(UserData.LoginID))
-                        UserData.LoginID = UserData.Username;
+                    if (string.IsNullOrEmpty(userData.LoginID))
+                        userData.LoginID = userData.Username;
 
                     if (!Convert.IsDBNull(userAccount["Password"]))
-                        UserData.Password = Convert.ToString(userAccount["Password"]);
+                        userData.Password = Convert.ToString(userAccount["Password"]);
 
                     if (!Convert.IsDBNull(userAccount["FirstName"]))
-                        UserData.FirstName = Convert.ToString(userAccount["FirstName"]);
+                        userData.FirstName = Convert.ToString(userAccount["FirstName"]);
 
                     if (!Convert.IsDBNull(userAccount["LastName"]))
-                        UserData.LastName = Convert.ToString(userAccount["LastName"]);
+                        userData.LastName = Convert.ToString(userAccount["LastName"]);
 
                     if (!Convert.IsDBNull(userAccount["Phone"]))
-                        UserData.PhoneNumber = Convert.ToString(userAccount["Phone"]);
+                        userData.PhoneNumber = Convert.ToString(userAccount["Phone"]);
 
                     if (!Convert.IsDBNull(userAccount["Email"]))
-                        UserData.EmailAddress = Convert.ToString(userAccount["Email"]);
+                        userData.EmailAddress = Convert.ToString(userAccount["Email"]);
 
                     if (!Convert.IsDBNull(userAccount["ChangePasswordOn"]))
-                        UserData.PasswordChangeDateTime = Convert.ToDateTime(userAccount["ChangePasswordOn"]);
+                        userData.PasswordChangeDateTime = Convert.ToDateTime(userAccount["ChangePasswordOn"]);
 
                     if (!Convert.IsDBNull(userAccount["CreatedOn"]))
-                        UserData.AccountCreatedDateTime = Convert.ToDateTime(userAccount["CreatedOn"]);
+                        userData.AccountCreatedDateTime = Convert.ToDateTime(userAccount["CreatedOn"]);
 
                     // For possible future use:
                     //if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
-                    //    UserData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
+                    //    userData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
                     //if (!Convert.IsDBNull(userDataRow["UserSecurityQuestion"]))
-                    //    UserData.SecurityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
+                    //    userData.SecurityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
                     //if (!Convert.IsDBNull(userDataRow["UserSecurityAnswer"]))
-                    //    UserData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
+                    //    userData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
                 }
                 else
                 {
                     // Load implicitly assigned groups - this happens via user's NT/AD groups that get loaded into the
                     // user data group collection. When database group definitions are defined with the same name as
                     // their NT/AD equivalents, this will allow automatic external group management.
-                    base.RefreshData(UserData.Groups, ProviderID);
+                    base.RefreshData(userData, userData.Groups, ProviderID);
                 }
 
                 // Administrator can lock out NT/AD user as well as database-only user via database
-                if (!UserData.IsLockedOut && (object)userAccount != null && !Convert.IsDBNull(userAccount["LockedOut"]))
-                    UserData.IsLockedOut = Convert.ToBoolean(userAccount["LockedOut"]);
+                if (!userData.IsLockedOut && (object)userAccount != null && !Convert.IsDBNull(userAccount["LockedOut"]))
+                    userData.IsLockedOut = Convert.ToBoolean(userAccount["LockedOut"]);
 
                 // At this point an NT/AD based user will have a list of groups that is known to be available to the user. A database
                 // user will have no groups defined yet. The next step will be to load any explicitly assigned groups the user is a
@@ -468,8 +453,8 @@ namespace GSF.Security
                         // the function to work for database group names as well.
                         string groupName = UserInfo.SIDToAccountName(Convert.ToString(securityGroup["Name"]));
 
-                        if (!UserData.Groups.Contains(groupName, StringComparer.OrdinalIgnoreCase))
-                            UserData.Groups.Add(groupName);
+                        if (!userData.Groups.Contains(groupName, StringComparer.OrdinalIgnoreCase))
+                            userData.Groups.Add(groupName);
                     }
                 }
 
@@ -479,7 +464,7 @@ namespace GSF.Security
                 // effective roles. For example, if a user is in a group that is in the "Administrator" role and the user has
                 // an explicit role assignment for the "Viewer" role - the user will be in the "Viewer" role only. This allows
                 // individual users to have overridden role assignments even though they may also be part of a group.
-                UserData.Roles.Clear();
+                userData.Roles.Clear();
 
                 // Filter explicitly assigned application roles for current user - this will return an empty set if no
                 // explicitly defined roles exist for the user -or- user doesn't exist in the database.
@@ -494,7 +479,7 @@ namespace GSF.Security
                     // Filter implicitly assigned application roles for each of the user's database and NT/AD groups. Note that
                     // even if user is not defined in the database, an NT/AD group they are a member of may be associated with
                     // a role - this allows the user to get a role assignment based on this group.
-                    foreach (string groupName in UserData.Groups)
+                    foreach (string groupName in userData.Groups)
                     {
                         // Convert NT/AD group names back to SIDs for lookup in the database
                         string groupSID = UserInfo.GroupNameToSID(groupName);
@@ -547,9 +532,11 @@ namespace GSF.Security
                     // Found application role by ID, add role name to user roles if not already defined
                     string roleName = Convert.ToString(applicationRole["Name"]);
 
-                    if (!string.IsNullOrEmpty(roleName) && !UserData.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
-                        UserData.Roles.Add(roleName);
+                    if (!string.IsNullOrEmpty(roleName) && !userData.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
+                        userData.Roles.Add(roleName);
                 }
+
+                UserData = userData;
 
                 // Cache last user roles
                 ThreadPool.QueueUserWorkItem(CacheLastUserRoles);
@@ -567,14 +554,13 @@ namespace GSF.Security
         /// <summary>
         /// Authenticates the user.
         /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
-        public override bool Authenticate(string password)
+        public override bool Authenticate()
         {
             Exception authenticationException = null;
 
             // Reset authenticated state and failure reason
-            UserData.IsAuthenticated = false;
+            bool isAuthenticated = false;
             AuthenticationFailureReason = null;
             m_successfulPassThroughAuthentication = false;
 
@@ -609,16 +595,14 @@ namespace GSF.Security
                     {
                         // Authenticate against active directory (via LDAP base class) - in context of ADO security
                         // provisions, you are only authenticated if you are in a role!
-                        UserData.IsAuthenticated = base.Authenticate(password);
+                        isAuthenticated = base.Authenticate();
                     }
                     else
                     {
-                        Password = password;
-
                         // Authenticate against backend data store
-                        UserData.IsAuthenticated =
-                            UserData.Password == password ||
-                            UserData.Password == SecurityProviderUtility.EncryptPassword(password);
+                        isAuthenticated =
+                            UserData.Password == Password ||
+                            UserData.Password == SecurityProviderUtility.EncryptPassword(Password);
                     }
                 }
                 catch (Exception ex)
@@ -627,23 +611,22 @@ namespace GSF.Security
                 }
             }
 
-            // Determine if user succeeded with pass-through authentication
-            m_successfulPassThroughAuthentication = (string.IsNullOrWhiteSpace(password) && UserData.IsAuthenticated);
+            // Update the UserData object with new authentication state
+            IsUserAuthenticated = isAuthenticated;
 
-            // Log user authentication result if provider has completed initialization sequence or
-            // was successfully authenticated via pass-through authentication
-            if (Initialized || m_successfulPassThroughAuthentication)
+            // Determine if user succeeded with pass-through authentication
+            m_successfulPassThroughAuthentication = (string.IsNullOrWhiteSpace(Password) && IsUserAuthenticated);
+
+            try
             {
-                try
-                {
-                    // Writing data will fail for read-only databases
-                    LogAuthenticationAttempt(UserData.IsAuthenticated);
-                }
-                catch (Exception ex)
-                {
-                    // All we can do is track last exception in this case
-                    m_lastException = ex;
-                }
+                // Log user authentication result
+                LogAuthenticationAttempt(IsUserAuthenticated);
+            }
+            catch (Exception ex)
+            {
+                // Writing data will fail for read-only databases;
+                // all we can do is track last exception in this case
+                m_lastException = ex;
             }
 
             // If an exception occurred during authentication, rethrow it after logging authentication attempt
@@ -654,7 +637,7 @@ namespace GSF.Security
                 throw authenticationException;
             }
 
-            return UserData.IsAuthenticated;
+            return IsUserAuthenticated;
         }
 
         /// <summary>
@@ -681,9 +664,7 @@ namespace GSF.Security
                     return base.ChangePassword(oldPassword, newPassword);
 
                 // Verify old password.
-                UserData.PasswordChangeDateTime = DateTime.MinValue;
-
-                if (!Authenticate(oldPassword))
+                if (oldPassword != UserData.Password && SecurityProviderUtility.EncryptPassword(oldPassword) != UserData.Password)
                     return false;
 
                 // Verify new password.

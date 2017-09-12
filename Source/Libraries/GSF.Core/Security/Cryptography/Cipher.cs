@@ -669,6 +669,10 @@ namespace GSF.Security.Cryptography
         {
             string hash;
 
+            // Null password should produce a null hash
+            if ((object)password == null)
+                return null;
+
             // Suffix password with category ID (key size) since same password may be in use for different category IDs
             password += categoryID.ToString();
 

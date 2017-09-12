@@ -30,6 +30,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -39,6 +40,7 @@ using GSF.Web.Model;
 using Newtonsoft.Json;
 using RazorEngine.Templating;
 using HtmlHelper = System.Web.Mvc.HtmlHelper;
+using System.Threading;
 
 namespace GSF.Web
 {
@@ -229,6 +231,17 @@ namespace GSF.Web
         }
 
         /// <summary>
+        /// Adds basic authentication header to an <see cref="HttpClient"/>
+        /// </summary>
+        /// <param name="client"><see cref="HttpClient"/> instance to add authentication header.</param>
+        /// <param name="userName">User name for basic authentication.</param>
+        /// <param name="password">Password for basic authentication.</param>
+        public static void AddBasicAuthenticationHeader(this HttpClient client, string userName, string password)
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{userName}:{password}")));
+        }
+
+        /// <summary>
         /// Gets query parameters for current request message
         /// </summary>
         /// <param name="request"></param>
@@ -246,7 +259,7 @@ namespace GSF.Web
         public static PostData GetPostData(this HttpRequestMessage request)
         {
             // Providing non-async version to simplify processing within Razor script
-            Task<PostData> getPostDataTask = GetPostDataAsync(request);
+            Task<PostData> getPostDataTask = GetPostDataAsync(request, CancellationToken.None);
 
             getPostDataTask.ContinueWith(task =>
             {
@@ -262,11 +275,14 @@ namespace GSF.Web
         /// Asynchronously gets a collection of uploaded post data from an <see cref="HttpRequestMessage"/>.
         /// </summary>
         /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains form data and/or uploaded files.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>Parsed post data.</returns>
-        public static async Task<PostData> GetPostDataAsync(this HttpRequestMessage request)
+        public static async Task<PostData> GetPostDataAsync(this HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            PostDataStreamProvider provider = await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider());
-            return provider.PostData;
+            if ((object)request?.Content?.Headers?.ContentDisposition == null)
+                return new PostData();
+
+            return (await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider(), cancellationToken)).PostData;
         }
 
         /// <summary>

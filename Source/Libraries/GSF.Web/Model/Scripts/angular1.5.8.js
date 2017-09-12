@@ -1,3 +1,8 @@
+/******************************************************************************************************\
+  !WARNING: The location for this resource has been moved!
+    New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use this new location
+\******************************************************************************************************/
+
 /**
  * @license AngularJS v1.5.8
  * (c) 2010-2016 Google, Inc. http://angularjs.org

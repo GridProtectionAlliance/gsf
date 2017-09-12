@@ -1,4 +1,9 @@
-﻿/*!
+﻿/******************************************************************************************************\
+  !WARNING: The location for this resource has been moved!
+    New resource path is "/@GSF/Web/Shared/Scripts/", please update scripts to use this new location
+\******************************************************************************************************/
+
+/*!
  * JavaScript Cookie v2.1.0
  * https://github.com/js-cookie/js-cookie
  *

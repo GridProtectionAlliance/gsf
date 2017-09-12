@@ -79,7 +79,7 @@ namespace GSF.Security
         {
             get
             {
-                return m_provider.UserData.IsAuthenticated;
+                return m_provider.IsUserAuthenticated;
             }
         }
 

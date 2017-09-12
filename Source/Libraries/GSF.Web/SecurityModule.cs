@@ -54,6 +54,7 @@ using System.Web;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Web.SessionState;
+using System.Threading;
 
 namespace GSF.Web
 {
@@ -301,14 +302,26 @@ namespace GSF.Web
             if (!IsAccessSecured(resource))
                 return;
 
-            SecurityProviderCache.ValidateCurrentProvider();
+            SecurityPrincipal securityPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+
+            if ((object)securityPrincipal == null)
+            {
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(Thread.CurrentPrincipal.Identity.Name);
+                securityProvider.PassthroughPrincipal = Thread.CurrentPrincipal;
+                securityProvider.Authenticate();
+
+                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                securityPrincipal = new SecurityPrincipal(securityIdentity);
+
+                Thread.CurrentPrincipal = securityPrincipal;
+            }
 
             if (!m_application.User.Identity.IsAuthenticated)
                 // Failed to authenticate user.
                 Redirect(HttpStatusCode.Unauthorized);
 
             if (IsAccessRestricted() || 
-                !SecurityProviderUtility.IsResourceAccessible(resource))
+                !SecurityProviderUtility.IsResourceAccessible(resource, securityPrincipal))
                 // User does not have access to the resource.
                 Redirect(HttpStatusCode.Forbidden);
         }

@@ -44,6 +44,7 @@ using System;
 using System.Configuration;
 using System.Diagnostics;
 using System.Security;
+using System.Security.Principal;
 using GSF.Configuration;
 
 namespace GSF.Security
@@ -181,19 +182,17 @@ namespace GSF.Security
         // Fields
         private string m_applicationName;
         private string m_connectionString;
+        private IPrincipal m_passthroughPrincipal;
         private SecureString m_securePassword;
         private string m_authenticationFailureReason;
         private string m_settingsCategory;
-        private readonly UserData m_userData;
+        private UserData m_userData;
+        private bool m_isUserAuthenticated;
         private bool m_persistSettings;
         private readonly bool m_canRefreshData;
-        private readonly bool m_canUpdateData;
         private readonly bool m_canResetPassword;
         private readonly bool m_canChangePassword;
         private LogEventFunctionSignature m_logEvent;
-        private bool m_enabled;
-        private bool m_initialized;
-        private bool m_disposed;
 
         #endregion
 
@@ -204,15 +203,13 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
-        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
-        protected SecurityProviderBase(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
+        protected SecurityProviderBase(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
         {
             // Initialize member variables.
             m_userData = new UserData(username);
             m_canRefreshData = canRefreshData;
-            m_canUpdateData = canUpdateData;
             m_canResetPassword = canResetPassword;
             m_canChangePassword = canChangePassword;
             m_applicationName = DefaultApplicationName;
@@ -220,14 +217,6 @@ namespace GSF.Security
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_logEvent = EventLog.WriteEntry;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the security provider is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~SecurityProviderBase()
-        {
-            Dispose(false);
         }
 
         #endregion
@@ -261,6 +250,21 @@ namespace GSF.Security
             set
             {
                 m_connectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the principal used for passthrough authentication.
+        /// </summary>
+        public IPrincipal PassthroughPrincipal
+        {
+            get
+            {
+                return m_passthroughPrincipal;
+            }
+            set
+            {
+                m_passthroughPrincipal = value;
             }
         }
 
@@ -353,32 +357,6 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the security provider is currently enabled.
-        /// </summary>
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets a flag that indicates whether the object has been disposed.
-        /// </summary>
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
-
-        /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
         public virtual UserData UserData
@@ -386,6 +364,26 @@ namespace GSF.Security
             get
             {
                 return m_userData;
+            }
+            protected set
+            {
+                m_userData = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag that indicates whether the user was
+        /// authenticated during the last authentication attempt.
+        /// </summary>
+        public virtual bool IsUserAuthenticated
+        {
+            get
+            {
+                return m_isUserAuthenticated;
+            }
+            protected set
+            {
+                m_isUserAuthenticated = value;
             }
         }
 
@@ -397,17 +395,6 @@ namespace GSF.Security
             get
             {
                 return m_canRefreshData;
-            }
-        }
-
-        /// <summary>
-        /// Geta a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
-        /// </summary>
-        public virtual bool CanUpdateData
-        {
-            get
-            {
-                return m_canUpdateData;
             }
         }
 
@@ -448,18 +435,6 @@ namespace GSF.Security
             }
         }
 
-        /// <summary>
-        /// Gets current intialization state.
-        /// </summary>
-        protected bool Initialized
-        {
-            get
-            {
-                return m_initialized;
-            }
-
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -469,21 +444,14 @@ namespace GSF.Security
         /// <summary>
         /// When overridden in a derived class, authenticates the user.
         /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
-        public abstract bool Authenticate(string password);
+        public abstract bool Authenticate();
 
         /// <summary>
         /// When overridden in a derived class, refreshes the <see cref="UserData"/> from the backend datastore.
         /// </summary>
         /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
         public abstract bool RefreshData();
-
-        /// <summary>
-        /// When overridden in a derived class, updates the <see cref="UserData"/> in the backend datastore.
-        /// </summary>
-        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
-        public abstract bool UpdateData();
 
         /// <summary>
         /// When overridden in a derived class, resets user password in the backend datastore.
@@ -501,33 +469,6 @@ namespace GSF.Security
         public abstract bool ChangePassword(string oldPassword, string newPassword);
 
         #endregion
-
-        /// <summary>
-        /// Releases all the resources used by the security provider.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Initializes the security provider.
-        /// </summary>
-        public virtual void Initialize()
-        {
-            if (!m_initialized)
-            {
-                LoadSettings();             // Load settings from config file.
-
-                if (CanRefreshData)
-                    RefreshData();          // Load user data from data store.
-
-                Authenticate(string.Empty); // Authenticate user credentials.
-
-                m_initialized = true;       // Initialize only once.
-            }
-        }
 
         /// <summary>
         /// Saves security provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
@@ -582,36 +523,6 @@ namespace GSF.Security
         {
             // Most providers will not perform any kind of translation on role names.
             return role;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the security provider and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.	
-                    if (disposing)
-                    {
-                        // Disposes of secure password.
-                        SecurePassword = null;
-
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-
-                    if ((object)Disposed != null)
-                        Disposed(this, EventArgs.Empty);
-                }
-            }
         }
 
         #endregion

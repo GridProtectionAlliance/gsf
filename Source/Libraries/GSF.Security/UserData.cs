@@ -243,19 +243,9 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets a boolean value indicating whether or not the user has been authenticated.
-        /// </summary>
-        [XmlElement, DataMember(Order = 15)]
-        public bool IsAuthenticated
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets a read-only list of all the groups the user belongs to.
         /// </summary>
-        [XmlArray, XmlArrayItem("Group"), DataMember(Order = 16)]
+        [XmlArray, XmlArrayItem("Group"), DataMember(Order = 15)]
         public List<string> Groups
         {
             get;
@@ -265,7 +255,7 @@ namespace GSF.Security
         /// <summary>
         /// Gets a read-only list of all the roles assigned to the user.
         /// </summary>
-        [XmlArray, XmlArrayItem("Role"), DataMember(Order = 17)]
+        [XmlArray, XmlArrayItem("Role"), DataMember(Order = 16)]
         public List<string> Roles
         {
             get;
@@ -295,7 +285,6 @@ namespace GSF.Security
             IsExternal = false;
             IsDisabled = false;
             IsLockedOut = false;
-            IsAuthenticated = false;
             Groups.Clear();
             Roles.Clear();
         }
@@ -322,7 +311,6 @@ namespace GSF.Security
             IsExternal = userData.IsExternal;
             IsDisabled = userData.IsDisabled;
             IsLockedOut = userData.IsLockedOut;
-            IsAuthenticated = userData.IsAuthenticated;
             Groups = new List<string>(userData.Groups);
             Roles = new List<string>(userData.Roles);
         }
