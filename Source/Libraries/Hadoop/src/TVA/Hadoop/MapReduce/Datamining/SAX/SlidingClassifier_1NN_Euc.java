@@ -1,6 +1,7 @@
 package TVA.Hadoop.MapReduce.Datamining.SAX;
 
-import edu.hawaii.jmotif.lib.ts.TSException;
+//import edu.hawaii.jmotif.lib.ts.TSException;
+import edu.hawaii.jmotif.datatype.TSException;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -17,15 +18,20 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
+//import org.apache.hadoop.mapred.FileInputFormat;
+//import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+//import org.apache.hadoop.mapred.JobClient;
+//import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.Job;
+//import org.apache.hadoop.mapred.MapReduceBase;
+//import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapreduce.Mapper;
+//import org.apache.hadoop.mapred.OutputCollector;
+//import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapreduce.Reducer;
+//import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -43,22 +49,23 @@ import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
  * Map Reduce application for use with hadoop which slides a window along a time series dataset looking for a particular pattern.
  * 
  * @author Josh Patterson
- * @version 0.1.0
+ ^ @revised 09/12/2017 Song Zhang - refactor code to use the up-to-date Hadoop APIs
+ * @version 0.2.0
  */
 public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
 
 
-	 public static class MapClass extends MapReduceBase implements Mapper<LongWritable, StandardPointFile, Text, StandardPointFile> {
+	 public static class MapClass extends Mapper<LongWritable, StandardPointFile, Context context> {
 	    
-		static enum ExCounter { DISCARDED, MAPPED };
-		private JobConf configuration;
+		//static enum ExCounter { DISCARDED, MAPPED };
+		//private JobConf configuration;
 		private int iPointTypeID;
 		
-	    @Override
-	    public void configure(JobConf job) {
+	    @Override         //member method configuration has been deprecated
+	    protected void setup(Context context) throws IOException, InterruptedException {
 	    	
-	    	System.out.println("Map.configure();");
-	    	this.configuration = job;
+	    	System.out.println("Map.setup();");
+	    	this.configuration = context.getConfiguration();
 	    	
 	    	System.out.println( "gov.tva.mapreduce.ClassifyAnomoly.pointTypeID: " + this.configuration.get( "gov.tva.mapreduce.ClassifyAnomoly.pointTypeID", "-1" ) );
 	    
@@ -83,11 +90,11 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
 		}			
 				
 		// we need to separate out points into time buckets here
-	    public void map(LongWritable key, StandardPointFile value, OutputCollector<Text, StandardPointFile> output, Reporter reporter) throws IOException {
+	    public void map(LongWritable key, StandardPointFile value, Context context) throws IOException {
 
 	    	if ( this.iPointTypeID == value.iPointID ) {
 	    		
-	    		output.collect( new Text( CalculateIndexRowKeyString( value.iPointID, value.GetCalendar().getTimeInMillis() ) ), value);
+	    		context.write( new Text( CalculateIndexRowKeyString( value.iPointID, value.GetCalendar().getTimeInMillis() ) ), value);
 	    		
 	    	} // if
 	    	
@@ -99,15 +106,16 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
   * Reducer needs to load up the classifier
   * then 
   */
-	public static class Reduce extends MapReduceBase implements Reducer<Text, StandardPointFile, Text, IntWritable> {
+	public static class Reduce extends Reducer<Text, StandardPointFile, Text, IntWritable> {
 
-	    private JobConf configuration;
+	    //private JobConf configuration;
+            private Configuration configuration;
 	    
 	    @Override
-	    public void configure(JobConf job) {
+	    protected void setup(Context context) throws IOException, InterruptedException {
 	    
-	    	System.out.println("Reduce.configure();");
-	    	this.configuration = job;
+	    	System.out.println("Reduce.setup();");
+	    	this.configuration = context.getConfiguration();
 
 	    	System.out.println( "gov.tva.mapreduce.ClassifyAnomoly.windowSize: " + this.configuration.get( "gov.tva.mapreduce.ClassifyAnomoly.windowSize", "-1" ) );
 	    	System.out.println( "gov.tva.mapreduce.ClassifyAnomoly.windowStepSize: " + this.configuration.get( "gov.tva.mapreduce.ClassifyAnomoly.windowStepSize", "-1" ) );
@@ -124,7 +132,7 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
 	    	
 	    } // configure()		
 		
-		 public void reduce(Text key, Iterator<StandardPointFile> values, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
+		 public void reduce(Text key, Iterable<StandardPointFile> values, Context context) throws IOException, InterruptedException {
 
 
 		    	int count = 0;
@@ -231,19 +239,20 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
 		    	
 		    	BucketSlidingWindow windowBucket = new BucketSlidingWindow( iWindowSizeInMS, iWindowStepSizeInMS );
 		    	
-		    	while (values.hasNext()) {
+		    	//while (values.hasNext()) {
+                        for (StandardPointFile p_val : values) { 
 
 		        		
-	        		next_point = values.next();
+	        		//next_point = values.next();
 	        		
-	        		StandardPointFile p_copy = new StandardPointFile();
-	        			p_copy.Flags = next_point.Flags;
-	        			p_copy.iPointID = next_point.iPointID;
-	        			p_copy.iTimeTag = next_point.iTimeTag;
-	        			p_copy.Value = next_point.Value;
+	        		//StandardPointFile p_copy = new StandardPointFile();
+	        		//	p_copy.Flags = next_point.Flags;
+	        		//	p_copy.iPointID = next_point.iPointID;
+	        		//	p_copy.iTimeTag = next_point.iTimeTag;
+	        		//	p_copy.Value = next_point.Value;
 		    	
 	        			
-	        			windowBucket.AddPoint(p_copy);
+	        			windowBucket.AddPoint(p_val);
 	        			
 		    	} // while			 
 			 
@@ -354,29 +363,22 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
   */
  public int run(String[] args) throws Exception {
 	  
-   JobConf conf = new JobConf( getConf(), SlidingClassifier_1NN_Euc.class );
-   conf.setJobName("SlidingClassifier_1NN_Euc");
+   //JobConf conf = new JobConf( getConf(), SlidingClassifier_1NN_Euc.class );
+   Configuration conf = getConf();
+   //conf.setJobName("SlidingClassifier_1NN_Euc");
    
-   conf.setMapOutputKeyClass(Text.class);
-   conf.setMapOutputValueClass(StandardPointFile.class);
+   //conf.setMapOutputKeyClass(Text.class);
+   //conf.setMapOutputValueClass(StandardPointFile.class);
 
-   conf.setMapperClass(MapClass.class);        
-   conf.setReducerClass(Reduce.class);
+   //conf.setMapperClass(MapClass.class);        
+   //conf.setReducerClass(Reduce.class);
    
-   conf.setInputFormat( HistorianInputFormat.class );
+   //conf.setInputFormat( HistorianInputFormat.class );
    
    List<String> other_args = new ArrayList<String>();
    for(int i=0; i < args.length; ++i) {
      try {
-       if ("-m".equals(args[i])) {
-       	
-         conf.setNumMapTasks(Integer.parseInt(args[++i]));
-         
-       } else if ("-r".equals(args[i])) {
-       	
-         conf.setNumReduceTasks(Integer.parseInt(args[++i]));
-
-       } else if ("-windowSize".equals(args[i])) {
+       if ("-windowSize".equals(args[i])) {
        
        	conf.set("gov.tva.mapreduce.ClassifyAnomoly.windowSize", args[++i] );
        	
@@ -418,6 +420,28 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
        return printUsage();
      }
    }
+
+   Job job = Job.getInstance(conf, "SlidingClassifier_1NN_Euc");
+   job.setJarByClass(SlidingClassifier_1NN_Euc.class);
+   job.setMapOutputKeyClass(Text.class);
+   job.setMapOutputValueClass(StandardPointFile.class);
+   job.setMapperClass(MapClass.class);
+   job.setReducerClass(Reduce.class);
+   job.setInputFormatClass(HistorianInputFormat.class);
+
+
+   List<String> paths = new ArrayList<String>();
+   for (int i = 0; i < other_args.size(); ++i) {
+     try {
+        if ("-r".equals(other_args.get(i))) {
+           job.setNumReduceTasks(Integer.parseInt(other_args.get(++i)));
+        }
+        else {
+           paths.add(other_args.get(i));
+        }
+     }
+   }
+
    // Make sure there are exactly 2 parameters left.
    if (other_args.size() != 2) {
      System.out.println("ERROR: Wrong number of parameters: " +
@@ -425,12 +449,14 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
      return printUsage();
    }
    
-   FileInputFormat.setInputPaths( conf, other_args.get(0) );
-   FileOutputFormat.setOutputPath( conf, new Path(other_args.get(1)) );
+   FileInputFormat.setInputPaths( job, paths.get(0) );
+   FileOutputFormat.setOutputPath( job, new Path(paths.get(1)) );
        
-   JobClient.runJob(conf);
+   //JobClient.runJob(conf);
    
-   return 0;
+   //return 0;
+   
+   return job.waitForCompletion(true) ? 0 : 1;
  }
  
  
