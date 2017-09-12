@@ -59,6 +59,7 @@ public class SlidingClassifier_1NN_Euc extends Configured implements Tool {
 	    
 		//static enum ExCounter { DISCARDED, MAPPED };
 		//private JobConf configuration;
+                private Configuration configuration;
 		private int iPointTypeID;
 		
 	    @Override         //member method configuration has been deprecated
