@@ -225,6 +225,16 @@ namespace GSF.Web.Model
         /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
         public Task PreCompile(Action<Exception> exceptionHandler = null)
         {
+            return PreCompile(null, exceptionHandler);
+        }
+
+        /// <summary>
+        /// Kicks off a task to pre-compile Razor templates.
+        /// </summary>
+        /// <param name="modelType">The type of the model used for the application.</param>
+        /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
+        public Task PreCompile(Type modelType, Action<Exception> exceptionHandler = null)
+        {
             return Task.Run(() =>
             {
                 TLanguage languageType = new TLanguage();
@@ -235,7 +245,7 @@ namespace GSF.Web.Model
                     {
                         try
                         {
-                            m_engineService.Compile(fileName.Substring(TemplatePath.Length));
+                            m_engineService.Compile(fileName, modelType);
                         }
                         catch (Exception ex)
                         {
@@ -253,7 +263,7 @@ namespace GSF.Web.Model
                     {
                         try
                         {
-                            m_engineService.Compile(FilePath.GetFileName(fileName));
+                            m_engineService.Compile(FilePath.GetFileName(fileName), modelType);
                         }
                         catch (Exception ex)
                         {
