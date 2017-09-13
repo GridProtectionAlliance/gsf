@@ -57,6 +57,14 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.neighboursearch.BallTree;
 
+/**
+ * Map Reduce application for use with hadoop which maps all the data to a single key and simply iterates all of the (key,value) pairs to look for a particular pattern.
+ * @author Josh Patterson (commented by Song Zhang)
+ * @revised 09/12/2017 Song Zhang (ISO New England) - refactor code to use up-to-date Hadoop APIs
+ * @version 0.2.0
+ */
+
+
 public class UCI_CSV_1NN_Classifier extends Configured implements Tool {
 	
     private final static IntWritable one = new IntWritable(1);
@@ -83,29 +91,7 @@ public void map(LongWritable key, Text value, Context context) throws IOExceptio
   
  } // inner class	    
  
-  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-  
-  
-  
-  
-  
-  
-  
-  
-	 
+ 
   public static class Reduce extends Reducer<IntWritable, Text, IntWritable, IntWritable> {
 
 	  
