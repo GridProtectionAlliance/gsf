@@ -623,7 +623,11 @@ namespace GrafanaAdapters
         {
             // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders
             // For now, just return a truncated list of tag names
-            return Task.Factory.StartNew(() => { return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray(); });
+            string target = (request.target == "select metric" ? "" : request.target);
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+            });
         }
 
         /// <summary>
