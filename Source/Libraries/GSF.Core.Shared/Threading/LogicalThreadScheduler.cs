@@ -166,6 +166,15 @@ namespace GSF.Threading
         {
             if (thread.TryActivate(priority))
             {
+                // Make sure the thread has an action to be processed because
+                // another thread could have processed all remaining actions and
+                // deactivated the thread right before the call to TryActivate()
+                if (!thread.HasAction)
+                {
+                    thread.Deactivate();
+                    return;
+                }
+
                 Enqueue(thread);
                 ActivatePhysicalThread();
             }
