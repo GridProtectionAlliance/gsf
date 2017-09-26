@@ -754,6 +754,8 @@ namespace GSF.TimeSeries
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
 
             ShutdownHandler.InitiateSafeShutdown();
+
+            Dispose();
         }
 
         private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
