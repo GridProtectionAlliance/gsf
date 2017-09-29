@@ -1655,7 +1655,7 @@ namespace GSF.Data.Model
             if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property))
                 return property.GetValue(record);
 
-            return null;
+            return typeof(T).GetProperty(fieldName)?.GetValue(record);
         }
 
         object ITableOperations.GetFieldValue(object value, string fieldName)
