@@ -279,7 +279,7 @@ namespace GSF.Web
         /// <returns>Parsed post data.</returns>
         public static async Task<PostData> GetPostDataAsync(this HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if ((object)request?.Content?.Headers?.ContentDisposition == null)
+            if ((object)request?.Content == null)
                 return new PostData();
 
             return (await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider(), cancellationToken)).PostData;
