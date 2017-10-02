@@ -51,11 +51,19 @@ namespace GSF.COMTRADE
         /// <param name="includeFracSecDefinition">Determines if the FRACSEC word digital definitions should be included - defaults to <c>true</c>.</param>
         /// <returns>New COMTRADE configuration <see cref="Schema"/>.</returns>
         /// <remarks>
+        /// <para>
         /// This function is primarily intended to create a configuration based on synchrophasor data
         /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
         /// it may be necessary to manually create a schema object for other COMTRADE needs. You can call
         /// the <see cref="Schema.FileImage"/> property to return a string that can be written to a file
         /// that will be the contents of the configuration file.
+        /// </para>
+        /// <para>
+        /// Linear scaling factors for analog channels, i.e., adders and multipliers, will be set to reasonable
+        /// values based on the channel type. These should be adjusted as needed based on actual channel value
+        /// ranges. Note that for <see cref="FileType.Float32"/> the multiplier will be <c>1.0</c> and the adder
+        /// will be <c>0.0</c> for all analog values.
+        /// </para>
         /// </remarks>
         public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, FileType fileType = FileType.Binary, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
         {
@@ -170,7 +178,7 @@ namespace GSF.COMTRADE
                                 PhaseID = "Pm",
                                 Units = record.Units ?? "A",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = 0.05D
+                                Multiplier = fileType == FileType.Float32 ? 1.0D : 0.05D
                             });
                             break;
                         case SignalType.VPHM: // Voltage Magnitude
@@ -181,7 +189,7 @@ namespace GSF.COMTRADE
                                 PhaseID = "Pm",
                                 Units = record.Units ?? "V",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = 5.77362D
+                                Multiplier = fileType == FileType.Float32 ? 1.0D : 5.77362D
                             });
                             break;
                         case SignalType.IPHA: // Current Phase Angle
@@ -193,7 +201,7 @@ namespace GSF.COMTRADE
                                 PhaseID = "Pa",
                                 Units = record.Units ?? "Rads",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = 1.0E-4D
+                                Multiplier = fileType == FileType.Float32 ? 1.0D : 1.0E-4D
                             });
                             break;
                         case SignalType.FREQ: // Frequency
@@ -204,8 +212,8 @@ namespace GSF.COMTRADE
                                 PhaseID = "F",
                                 Units = record.Units ?? "Hz",
                                 CircuitComponent = record.CircuitComponent,
-                                Adder = (double)nominalFrequency,
-                                Multiplier = 0.001D
+                                Adder = fileType == FileType.Float32 ? 0.0D : nominalFrequency,
+                                Multiplier = fileType == FileType.Float32 ? 1.0D : 0.001D
                             });
                             break;
                         case SignalType.DFDT: // Frequency Delta (dF/dt)
@@ -216,7 +224,7 @@ namespace GSF.COMTRADE
                                 PhaseID = "dF",
                                 Units = record.Units ?? "Hz/s",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = 0.01D
+                                Multiplier = fileType == FileType.Float32 ? 1.0D : 0.01D
                             });
                             break;
                         case SignalType.FLAG: // Status flags
@@ -486,7 +494,7 @@ namespace GSF.COMTRADE
         /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>true</c>.</param>
         /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
         /// <remarks>
-        /// This function is primarily intended to write COMTRADE binary data records based on synchrophasor data
+        /// This function is primarily intended to write COMTRADE binary32 data records based on synchrophasor data
         /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
         /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
         /// </remarks>
@@ -512,13 +520,16 @@ namespace GSF.COMTRADE
 
                     output.Write(LittleEndian.GetBytes((uint)value), 0, 4);
                 }
-                else if (isFirstDigital)
+                else
                 {
-                    // Handle automatic injection of IEEE C37.118 FRACSEC digital value if requested
-                    isFirstDigital = false;
+                    if (isFirstDigital)
+                    {
+                        // Handle automatic injection of IEEE C37.118 FRACSEC digital value if requested
+                        isFirstDigital = false;
 
-                    if (injectFracSecValue)
-                        output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+                        if (injectFracSecValue)
+                            output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+                    }
 
                     output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
                 }
@@ -540,7 +551,7 @@ namespace GSF.COMTRADE
         /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>true</c>.</param>
         /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
         /// <remarks>
-        /// This function is primarily intended to write COMTRADE binary data records based on synchrophasor data
+        /// This function is primarily intended to write COMTRADE float32 data records based on synchrophasor data
         /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
         /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
         /// </remarks>
@@ -566,13 +577,16 @@ namespace GSF.COMTRADE
 
                     output.Write(LittleEndian.GetBytes((float)value), 0, 4);
                 }
-                else if (isFirstDigital)
+                else
                 {
-                    // Handle automatic injection of IEEE C37.118 FRACSEC digital value if requested
-                    isFirstDigital = false;
+                    if (isFirstDigital)
+                    {
+                        // Handle automatic injection of IEEE C37.118 FRACSEC digital value if requested
+                        isFirstDigital = false;
 
-                    if (injectFracSecValue)
-                        output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+                        if (injectFracSecValue)
+                            output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+                    }
 
                     output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
                 }
