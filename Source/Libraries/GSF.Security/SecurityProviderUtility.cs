@@ -188,7 +188,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Determines if the current user, as defined by the <see cref="Thread.CurrentPrincipal"/>, has permission to access 
+        /// Determines if the current user, as defined by the <paramref name="principal"/>, has permission to access 
         /// the specified <paramref name="resource"/> based on settings in the config file.
         /// </summary>
         /// <param name="resource">Name of the resource to be checked.</param>

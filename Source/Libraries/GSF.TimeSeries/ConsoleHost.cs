@@ -40,6 +40,7 @@ namespace GSF.TimeSeries
         // Fields
         private readonly ServiceHostBase m_serviceHost;
         private readonly ConsoleColor m_originalForegroundColor;
+        private readonly IPrincipal m_consoleHostPrincipal;
         private readonly Guid m_clientID;
         private readonly object m_displayLock;
 
@@ -55,6 +56,7 @@ namespace GSF.TimeSeries
         {
             m_serviceHost = serviceHost;
             m_originalForegroundColor = System.Console.ForegroundColor;
+            m_consoleHostPrincipal = new GenericPrincipal(new GenericIdentity("ConsoleHost"), new[] { "Administrator" });
             m_clientID = Guid.NewGuid();
             m_displayLock = new object();
         }
@@ -75,10 +77,9 @@ namespace GSF.TimeSeries
 
             try
             {
-                Thread.CurrentPrincipal = new GenericPrincipal(new GenericIdentity(UserInfo.CurrentUserID), new[] { "Administrator" });
                 m_serviceHost.UpdatedStatus += m_serviceHost_UpdatedStatus;
                 m_serviceHost.StartHostedService();
-                m_serviceHost.SendRequest(m_clientID, "Filter -Remove 0");
+                m_serviceHost.SendRequest(m_consoleHostPrincipal, m_clientID, "Filter -Remove 0");
 
                 while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
@@ -102,7 +103,7 @@ namespace GSF.TimeSeries
                                 break;
                             default:
                                 // User wants to send a request to the service. 
-                                m_serviceHost.SendRequest(m_clientID, userInput);
+                                m_serviceHost.SendRequest(m_consoleHostPrincipal, m_clientID, userInput);
 
                                 if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
                                     DisplayHelp();

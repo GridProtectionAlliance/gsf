@@ -1431,7 +1431,7 @@ namespace GSF.TimeSeries
             OnStop();
         }
 
-        internal void SendRequest(Guid clientID, string userInput)
+        internal void SendRequest(IPrincipal principal, Guid clientID, string userInput)
         {
             ClientRequest request = ClientRequest.Parse(userInput);
 
@@ -1440,9 +1440,16 @@ namespace GSF.TimeSeries
                 ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
 
                 if ((object)requestHandler != null)
-                    requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo() { ClientID = clientID }, request));
+                {
+                    ClientInfo clientInfo = new ClientInfo() { ClientID = clientID };
+                    ClientRequestInfo clientRequestInfo = new ClientRequestInfo(clientInfo, request);
+                    clientInfo.SetClientUser(principal);
+                    requestHandler.HandlerMethod(clientRequestInfo);
+                }
                 else
+                {
                     DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
+                }
             }
         }
 
@@ -1940,17 +1947,10 @@ namespace GSF.TimeSeries
             }
             else
             {
-                IPrincipal principal = Thread.CurrentPrincipal;
-
                 Thread invocationThread = new Thread(() =>
                 {
                     IAdapter adapter = null;
                     string command = null;
-
-                    // NOTE: Only necessary for Mono deployments
-                    // Set thread principal to the principal
-                    // of the thread that spawned it
-                    Thread.CurrentPrincipal = principal;
 
                     // See if specific ID for an adapter was requested
                     if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
@@ -1982,7 +1982,7 @@ namespace GSF.TimeSeries
                                 AdapterCommandAttribute commandAttribute;
 
                                 // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                                if (method.TryGetAttribute(out commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role))))
+                                if (method.TryGetAttribute(out commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
                                 {
                                     ParameterInfo[] parameterInfo = method.GetParameters();
                                     object returnValue = null;
@@ -2125,7 +2125,7 @@ namespace GSF.TimeSeries
                             if (method.TryGetAttribute(out commandAttribute))
                             {
                                 // Don't bother displaying commands to users who cannot invoke them
-                                if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role)))
+                                if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
                                     continue;
 
                                 firstParameter = true;
@@ -2910,17 +2910,10 @@ namespace GSF.TimeSeries
                     return;
                 }
 
-                IPrincipal currentPrincipal = Thread.CurrentPrincipal;
-
                 m_reloadConfigQueue.Add(Tuple.Create(GetReloadConfigType(requestInfo), new Action<bool>(success =>
                 {
                     if (success)
                     {
-                        // NOTE: This is necessary if invoking the Invoke command,
-                        // otherwise the command could be invoked using a different
-                        // security princpal with a different set of permissions
-                        Thread.CurrentPrincipal = currentPrincipal;
-
                         if (invoking && (object)invokeHandler != null)
                             invokeHandler.HandlerMethod(invokeInfo);
                         else

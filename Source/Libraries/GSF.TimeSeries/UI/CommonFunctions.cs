@@ -33,7 +33,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Principal;
 using System.Threading;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -46,7 +45,6 @@ using GSF.Identity;
 using GSF.IO;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.UI
 {
@@ -101,9 +99,9 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
+        /// Defines the current user name as defined in the CurrentPrincipal.Identity.
         /// </summary>
-        public static string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
+        public static string CurrentUser = CurrentPrincipal.Identity.Name;
 
         /// <summary>
         /// Gets the flag that indicates whether we can go forward to the next user control in history.
@@ -131,7 +129,7 @@ namespace GSF.TimeSeries.UI
             get
             {
                 SecurityPrincipal currentPrincipal = CurrentPrincipal;
-                ISecurityProvider securityProvider = currentPrincipal.Identity.Provider; ;
+                ISecurityProvider securityProvider = currentPrincipal.Identity.Provider;
 
                 return
                     ((object)s_currentPage != null) &&

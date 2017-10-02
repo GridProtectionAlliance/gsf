@@ -357,7 +357,7 @@ namespace GSF.Identity
                     {
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
-                        WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        WindowsPrincipal windowsPrincipal = m_parent.PassthroughPrincipal as WindowsPrincipal;
 
                         exists =
                             (object)windowsPrincipal != null &&
@@ -473,7 +473,7 @@ namespace GSF.Identity
                         UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
 
-                        if (GetCachedLocalUserPasswordInformation(m_isLocalAccount ? m_parent.UserName : m_parent.LoginID, out userPasswordInfo, out status) == 0)
+                        if (GetCachedLocalUserPasswordInformation(m_parent.PassthroughPrincipal, m_isLocalAccount ? m_parent.UserName : m_parent.LoginID, out userPasswordInfo, out status) == 0)
                         {
                             if (userPasswordInfo.maxDaysForChange >= 99999)
                             {
@@ -532,7 +532,7 @@ namespace GSF.Identity
                     UserPasswordInformation userPasswordInfo;
                     AccountStatus status;
 
-                    if (GetCachedLocalUserPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
+                    if (GetCachedLocalUserPasswordInformation(m_parent.PassthroughPrincipal, m_parent.UserName, out userPasswordInfo, out status) == 0)
                     {
                         userAccountControl = 0;
 
@@ -566,7 +566,7 @@ namespace GSF.Identity
                         UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
 
-                        if (GetCachedLocalUserPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0 && userPasswordInfo.maxDaysForChange < 99999)
+                        if (GetCachedLocalUserPasswordInformation(m_parent.PassthroughPrincipal, m_parent.UserName, out userPasswordInfo, out status) == 0 && userPasswordInfo.maxDaysForChange < 99999)
                             maxPasswordAge = Ticks.FromSeconds(userPasswordInfo.maxDaysForChange * Time.SecondsPerDay);
                     }
                     else
@@ -843,7 +843,7 @@ namespace GSF.Identity
         private UnixIdentity GetUnixIdentity()
         {
             // Attempt to pick up current user or impersonated user principal
-            WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+            WindowsPrincipal principal = m_parent.PassthroughPrincipal as WindowsPrincipal;
             UnixIdentity unixIdentity = null;
 
             if ((object)principal != null)
@@ -923,7 +923,7 @@ namespace GSF.Identity
                     if ((object)unixIdentity == null)
                     {
                         unixIdentity = new UnixIdentity(m_parent.Domain, m_parent.UserName, connection);
-                        Thread.CurrentPrincipal = new WindowsPrincipal(unixIdentity);
+                        m_parent.PassthroughPrincipal = new WindowsPrincipal(unixIdentity);
                     }
                     else
                     {
@@ -1132,10 +1132,6 @@ namespace GSF.Identity
                     }
                 }
             }
-
-            // Set current thread principal to authenticated user principal - this will allow access to
-            // needed LdapConnection information on the current thread...
-            Thread.CurrentPrincipal = principal;
 
             return principal;
         }
@@ -1704,11 +1700,11 @@ namespace GSF.Identity
             return groups.ToArray();
         }
 
-        private static int GetCachedLocalUserPasswordInformation(string userName, out UserPasswordInformation userPasswordInfo, out AccountStatus accountStatus)
+        private static int GetCachedLocalUserPasswordInformation(IPrincipal passthroughPrincipal, string userName, out UserPasswordInformation userPasswordInfo, out AccountStatus accountStatus)
         {
             // Attempt to retrieve Unix user principal identity in case shadow information has already been parsed, in most
             // cases we will have already reduced rights needed to read this information so we pick up pre-parsed info
-            WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+            WindowsPrincipal principal = passthroughPrincipal as WindowsPrincipal;
 
             if ((object)principal != null)
             {

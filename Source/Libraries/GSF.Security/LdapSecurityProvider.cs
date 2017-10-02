@@ -396,6 +396,10 @@ namespace GSF.Security
                 // Make sure to load privileged user credentials from config file if present.
                 user.PersistSettings = true;
 
+                // If the system is currently logged in under a domain account and the system is disconnected from the domain,
+                // UserInfo will need access to the passthrough principal to determine whether the user exists on the domain
+                user.PassthroughPrincipal = PassthroughPrincipal;
+
                 // Attempt to determine if user exists (this will initialize user object if not initialized already)
                 userData.IsDefined = user.Exists;
                 userData.LoginID = user.LoginID;

@@ -127,7 +127,7 @@ namespace GSF.Identity
                     {
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
-                        IPrincipal principal = Thread.CurrentPrincipal;
+                        IPrincipal principal = m_parent.PassthroughPrincipal;
 
                         exists =
                             (object)principal != null &&
@@ -453,8 +453,8 @@ namespace GSF.Identity
                 // See if identity for current thread matches user information login ID - when this is true we can check 
                 // if the current user is authenticated. When a user is authenticated we will also need to validate if
                 // the local groups that contain the local "NT AUTHORITY\Authenticated Users" group.
-                if (Thread.CurrentPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
-                    userIsAuthenticated = Thread.CurrentPrincipal.Identity.IsAuthenticated;
+                if (m_parent.PassthroughPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
+                    userIsAuthenticated = m_parent.PassthroughPrincipal.Identity.IsAuthenticated;
 
                 // Only enumerate groups
                 root.Children.SchemaFilter.Add("Group");

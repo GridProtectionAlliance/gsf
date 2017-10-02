@@ -200,6 +200,7 @@ namespace GSF.Identity
         private readonly string m_userName;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private IPrincipal m_passthroughPrincipal;
         private int m_userAccountControl;
         private bool m_disposed;
 
@@ -351,6 +352,26 @@ namespace GSF.Identity
                     throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the principal used for passthrough authentication.
+        /// </summary>
+        /// <remarks>
+        /// This is necessary to determine whether a domain user exists when the
+        /// computer is disconnected from the domain but still able to authenticate
+        /// using the last seen domain user account.
+        /// </remarks>
+        public IPrincipal PassthroughPrincipal
+        {
+            get
+            {
+                return m_passthroughPrincipal;
+            }
+            set
+            {
+                m_passthroughPrincipal = value;
             }
         }
 
