@@ -869,7 +869,7 @@ namespace eDNAAdapters
                             {
                                 // Create new point if needed
                                 if ((object)point == null || point.Type != dataType)
-                                    point = new Point(key.ID, dataType);
+                                    point = new Point((uint)key.ID, dataType);
 
                                 string units = "";
                                 string pointType = dataType == DataType.Digital ? "DI" : "AI";
@@ -1173,7 +1173,7 @@ namespace eDNAAdapters
                 Metadata metadata;
 
                 if (!m_pointMap.ContainsKey(signalID) && metadataCache.TryGetValue(signalID, out metadata))
-                    m_pointMap[signalID] = new Point(key.ID, metadata.DataType);
+                    m_pointMap[signalID] = new Point((uint)key.ID, metadata.DataType);
 
                 signalIDs.Add(signalID);
             }

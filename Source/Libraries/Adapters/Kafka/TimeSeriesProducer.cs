@@ -423,7 +423,7 @@ namespace KafkaAdapters
                             {
                                 metadata.Records.Add(new MetadataRecord
                                 {
-                                    ID = key.ID,
+                                    ID = (uint)key.ID,
                                     Source = key.Source,
                                     UniqueID = row.Field<object>("SignalID").ToString(),
                                     PointTag = row.Field<string>("PointTag"),
@@ -492,7 +492,7 @@ namespace KafkaAdapters
 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    Message message = new Message { PartitionId = (int)(measurement.Key.ID % Partitions) };
+                    Message message = new Message { PartitionId = (int)(measurement.Key.ID % (ulong)Partitions) };
 
                     if ((object)m_encoding != null)
                         KafkaTextEncode(measurement, message, MetadataVersion);

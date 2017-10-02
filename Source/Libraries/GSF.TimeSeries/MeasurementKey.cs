@@ -41,7 +41,7 @@ namespace GSF.TimeSeries
 
         // Fields
         private readonly Guid m_signalID;
-        private uint m_id;
+        private ulong m_id;
         private string m_source;
         private readonly int m_hashCode;
         private readonly int m_runtimeID;
@@ -51,7 +51,7 @@ namespace GSF.TimeSeries
 
         #region [ Constructors ]
 
-        private MeasurementKey(Guid signalID, uint id, string source)
+        private MeasurementKey(Guid signalID, ulong id, string source)
         {
             m_signalID = signalID;
             m_id = id;
@@ -73,7 +73,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.
         /// </summary>
-        public uint ID => m_id;
+        public ulong ID => m_id;
 
         /// <summary>
         /// Gets or sets the source of this <see cref="MeasurementKey"/>.
@@ -150,7 +150,7 @@ namespace GSF.TimeSeries
 
         // All edits to <see cref="s_idCache"/> as well as the ConcurrentDictionaries in s_keyCache should occur within a lock on s_syncEdits
         private static readonly ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ulong, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<ulong, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
         private static readonly object s_syncEdits = new object();
         private static int s_nextRuntimeID;
 
@@ -180,7 +180,7 @@ namespace GSF.TimeSeries
         public static MeasurementKey CreateOrUpdate(Guid signalID, string value)
         {
             string source;
-            uint id;
+            ulong id;
 
             if (!TrySplit(value, out source, out id))
                 throw new FormatException("The value is not in the correct format for a MeasurementKey value");
@@ -196,7 +196,7 @@ namespace GSF.TimeSeries
         /// <param name="id">Numeric ID of the measurement that this <see cref="MeasurementKey"/> represents.</param>
         /// <exception cref="ArgumentException"><paramref name="signalID"/> cannot be empty.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> cannot be null.</exception>
-        public static MeasurementKey CreateOrUpdate(Guid signalID, string source, uint id)
+        public static MeasurementKey CreateOrUpdate(Guid signalID, string source, ulong id)
         {
             Func<Guid, MeasurementKey> addValueFactory;
             Func<Guid, MeasurementKey, MeasurementKey> updateValueFactory;
@@ -210,13 +210,13 @@ namespace GSF.TimeSeries
             addValueFactory = guid =>
             {
                 // Create a new measurement key and add it to the KeyCache
-                ConcurrentDictionary<uint, MeasurementKey> idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
+                ConcurrentDictionary<ulong, MeasurementKey> idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<ulong, MeasurementKey>());
                 return idLookup[id] = new MeasurementKey(guid, id, source);
             };
 
             updateValueFactory = (guid, key) =>
             {
-                ConcurrentDictionary<uint, MeasurementKey> idLookup;
+                ConcurrentDictionary<ulong, MeasurementKey> idLookup;
 
                 // If existing measurement key is exactly the same as the
                 // one we are trying to create, simply return that key
@@ -227,7 +227,7 @@ namespace GSF.TimeSeries
                 key.m_source = source;
                 key.m_id = id;
 
-                idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
+                idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<ulong, MeasurementKey>());
                 idLookup[id] = key;
 
                 return key;
@@ -280,7 +280,7 @@ namespace GSF.TimeSeries
         /// <returns>True if the measurement key was successfully created or updated, false otherwise.</returns>
         /// <exception cref="ArgumentException"><paramref name="signalID"/> cannot be empty.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> cannot be null.</exception>
-        public static bool TryCreateOrUpdate(Guid signalID, string source, uint id, out MeasurementKey key)
+        public static bool TryCreateOrUpdate(Guid signalID, string source, ulong id, out MeasurementKey key)
         {
             try
             {
@@ -326,9 +326,9 @@ namespace GSF.TimeSeries
         /// If no measurement key is found with the given source and ID,
         /// this method returns <see cref="Undefined"/>.
         /// </remarks>
-        public static MeasurementKey LookUpBySource(string source, uint id)
+        public static MeasurementKey LookUpBySource(string source, ulong id)
         {
-            ConcurrentDictionary<uint, MeasurementKey> idLookup;
+            ConcurrentDictionary<ulong, MeasurementKey> idLookup;
             MeasurementKey key;
 
             if (!s_keyCache.TryGetValue(source, out idLookup))
@@ -354,7 +354,7 @@ namespace GSF.TimeSeries
         public static MeasurementKey LookUpOrCreate(Guid signalID, string value)
         {
             string source;
-            uint id;
+            ulong id;
 
             if (!TrySplit(value, out source, out id))
                 return LookUpOrCreate(signalID, Undefined.Source, Undefined.ID);
@@ -374,7 +374,7 @@ namespace GSF.TimeSeries
         /// If creation succeeds, a new measurement key with matching signal ID, source, and ID.
         /// Otherwise, <see cref="Undefined"/>.
         /// </returns>
-        public static MeasurementKey LookUpOrCreate(Guid signalID, string source, uint id)
+        public static MeasurementKey LookUpOrCreate(Guid signalID, string source, ulong id)
         {
             MeasurementKey key = LookUpBySignalID(signalID);
 
@@ -397,7 +397,7 @@ namespace GSF.TimeSeries
         public static MeasurementKey LookUpOrCreate(string value)
         {
             string source;
-            uint id;
+            ulong id;
 
             if (!TrySplit(value, out source, out id))
                 return Undefined;
@@ -416,7 +416,7 @@ namespace GSF.TimeSeries
         /// If creation succeeds, a new measurement key with matching signal ID, source, and ID.
         /// Otherwise, <see cref="Undefined"/>.
         /// </returns>
-        public static MeasurementKey LookUpOrCreate(string source, uint id)
+        public static MeasurementKey LookUpOrCreate(string source, ulong id)
         {
             MeasurementKey key = LookUpBySource(source, id);
 
@@ -451,7 +451,7 @@ namespace GSF.TimeSeries
         public static bool TryParse(string value, out MeasurementKey key)
         {
             string source;
-            uint id;
+            ulong id;
 
             // Split the input into source and ID
             if (TrySplit(value, out source, out id))
@@ -498,7 +498,7 @@ namespace GSF.TimeSeries
         public static void EstablishDefaultCache(IDbConnection connection, Type adapterType, string measurementTable = "ActiveMeasurement")
         {
             string source;
-            uint id;
+            ulong id;
 
             // Establish default measurement key cache
             foreach (DataRow measurement in connection.RetrieveData(adapterType, $"SELECT ID, SignalID FROM {measurementTable}").Rows)
@@ -513,9 +513,9 @@ namespace GSF.TimeSeries
         /// </summary>
         private static MeasurementKey CreateUndefinedMeasurementKey()
         {
-            MeasurementKey key = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
+            MeasurementKey key = new MeasurementKey(Guid.Empty, ulong.MaxValue, "__");
             // Lock on s_syncEdits is not required since method is only called by the static constructor
-            s_keyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
+            s_keyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<ulong, MeasurementKey>())[ulong.MaxValue] = key;
             return key;
         }
 
@@ -523,7 +523,7 @@ namespace GSF.TimeSeries
         /// Attempts to split the given string representation
         /// of a measurement key into a source and ID pair.
         /// </summary>
-        private static bool TrySplit(string value, out string source, out uint id)
+        private static bool TrySplit(string value, out string source, out ulong id)
         {
             string[] elem;
 
@@ -531,7 +531,7 @@ namespace GSF.TimeSeries
             {
                 elem = value.Split(':');
 
-                if (elem.Length == 2 && uint.TryParse(elem[1].Trim(), out id))
+                if (elem.Length == 2 && ulong.TryParse(elem[1].Trim(), out id))
                 {
                     source = elem[0].Trim();
                     return true;
