@@ -40,16 +40,12 @@ namespace GSF.COMTRADE
 
         // Fields
         private Schema m_schema;
-        private string m_fileName;
         private bool m_disposed;
         private FileStream[] m_fileStreams;
         private StreamReader[] m_fileReaders;
         private int m_streamIndex;
-        private DateTime m_timestamp;
-        private double[] m_values;
         private double[] m_primaryValues;
         private double[] m_secondaryValues;
-        private bool m_inferTimeFromSampleRates;
 
         #endregion
 
@@ -60,7 +56,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public Parser()
         {
-            m_inferTimeFromSampleRates = true;
+            InferTimeFromSampleRates = true;
         }
 
         /// <summary>
@@ -91,16 +87,16 @@ namespace GSF.COMTRADE
                 if ((object)m_schema != null)
                 {
                     if (m_schema.TotalChannels > 0)
-                        m_values = new double[m_schema.TotalChannels];
+                        Values = new double[m_schema.TotalChannels];
                     else
                         throw new InvalidOperationException("Invalid schema: total channels defined in schema is zero.");
 
                     if (m_schema.TotalSampleRates == 0)
-                        m_inferTimeFromSampleRates = false;
+                        InferTimeFromSampleRates = false;
                 }
                 else
                 {
-                    m_values = null;
+                    Values = null;
                 }
             }
         }
@@ -108,54 +104,22 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets COMTRADE data filename. If there are more than one data files in a set, this should be set to first file name in the set, e.g., DATA123.D00.
         /// </summary>
-        public string FileName
-        {
-            get
-            {
-                return m_fileName;
-            }
-            set
-            {
-                m_fileName = value;
-            }
-        }
+        public string FileName { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if time should be inferred from sample rates.
         /// </summary>
-        public bool InferTimeFromSampleRates
-        {
-            get
-            {
-                return m_inferTimeFromSampleRates;
-            }
-            set
-            {
-                m_inferTimeFromSampleRates = value;
-            }
-        }
+        public bool InferTimeFromSampleRates { get; set; }
 
         /// <summary>
         /// Gets timestamp of current record.
         /// </summary>
-        public DateTime Timestamp
-        {
-            get
-            {
-                return m_timestamp;
-            }
-        }
+        public DateTime Timestamp { get; private set; }
 
         /// <summary>
         /// Gets values of current record.
         /// </summary>
-        public double[] Values
-        {
-            get
-            {
-                return m_values;
-            }
-        }
+        public double[] Values { get; private set; }
 
         /// <summary>
         /// Gets values of current record with secondary analog channels scaled to primary values.
@@ -166,11 +130,11 @@ namespace GSF.COMTRADE
             {
                 if ((object)m_primaryValues == null)
                 {
-                    m_primaryValues = new double[m_values.Length];
+                    m_primaryValues = new double[Values.Length];
 
                     for (int i = 0; i < m_primaryValues.Length; i++)
                     {
-                        double value = m_values[i];
+                        double value = Values[i];
 
                         if (i < m_schema.AnalogChannels.Length)
                         {
@@ -195,11 +159,11 @@ namespace GSF.COMTRADE
             {
                 if ((object)m_secondaryValues == null)
                 {
-                    m_secondaryValues = new double[m_values.Length];
+                    m_secondaryValues = new double[Values.Length];
 
                     for (int i = 0; i < m_secondaryValues.Length; i++)
                     {
-                        double value = m_values[i];
+                        double value = Values[i];
 
                         if (i < m_schema.AnalogChannels.Length)
                         {
@@ -214,6 +178,12 @@ namespace GSF.COMTRADE
                 return m_secondaryValues;
             }
         }
+
+        /// <summary>
+        /// Gets or sets flag that determines if schemas that include a time code for a UTC offset
+        /// should apply the adjustment so that timestamps are parsed as UTC.
+        /// </summary>
+        public bool AdjustToUTC { get; set; } = true;
 
         #endregion
 
@@ -255,17 +225,17 @@ namespace GSF.COMTRADE
         /// </summary>
         public void OpenFiles()
         {
-            if (string.IsNullOrWhiteSpace(m_fileName))
+            if (string.IsNullOrWhiteSpace(FileName))
                 throw new InvalidOperationException("First COMTRADE data file name was not specified, cannot open files.");
 
-            if (!File.Exists(m_fileName))
-                throw new FileNotFoundException(string.Format("Specified COMTRADE data file \"{0}\" was not found, cannot open files.", m_fileName));
+            if (!File.Exists(FileName))
+                throw new FileNotFoundException($"Specified COMTRADE data file \"{FileName}\" was not found, cannot open files.");
 
             // Get all data files in the collection
             const string FileRegex = @"(?:\.dat|\.d\d\d)$";
-            string directory = FilePath.GetDirectoryName(m_fileName);
-            string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
-            string extension = FilePath.GetExtension(m_fileName).Substring(0, 2) + "*";
+            string directory = FilePath.GetDirectoryName(FileName);
+            string rootFileName = FilePath.GetFileNameWithoutExtension(FileName);
+            string extension = FilePath.GetExtension(FileName).Substring(0, 2) + "*";
 
             string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension))
                 .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
@@ -276,9 +246,7 @@ namespace GSF.COMTRADE
             m_fileStreams = new FileStream[fileNames.Length];
 
             for (int i = 0; i < fileNames.Length; i++)
-            {
                 m_fileStreams[i] = new FileStream(fileNames[i], FileMode.Open, FileAccess.Read, FileShare.Read);
-            }
 
             m_streamIndex = 0;
         }
@@ -315,10 +283,19 @@ namespace GSF.COMTRADE
             m_primaryValues = null;
             m_secondaryValues = null;
 
-            if (m_schema.FileType == FileType.Ascii)
-                return ReadNextAscii();
-
-            return ReadNextBinary();
+            switch (m_schema.FileType)
+            {
+                case FileType.Ascii:
+                    return ReadNextAscii();
+                case FileType.Binary:
+                    return ReadNextBinary();
+                case FileType.Binary32:
+                    return ReadNextBinary32();
+                case FileType.Float32:
+                    return ReadNextFloat32();
+                default:
+                    return false;
+            }
         }
 
         // Handle ASCII file read
@@ -338,7 +315,7 @@ namespace GSF.COMTRADE
             string[] elems = ((object)line != null) ? line.Split(',') : null;
 
             // See if we have reached the end of this file
-            if ((object)elems == null || elems.Length != m_values.Length + 2)
+            if ((object)elems == null || elems.Length != Values.Length + 2)
             {
                 if (reader.EndOfStream)
                 {
@@ -355,31 +332,38 @@ namespace GSF.COMTRADE
             uint sample = uint.Parse(elems[0]);
 
             // Get timestamp of this record
-            m_timestamp = DateTime.MinValue;
+            Timestamp = DateTime.MinValue;
 
             // If sample rates are defined, this is the preferred method for timestamp resolution
-            if (m_inferTimeFromSampleRates && m_schema.SampleRates.Length > 0)
+            if (InferTimeFromSampleRates && m_schema.SampleRates.Length > 0)
             {
                 // Find rate for given sample
                 SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
 
                 if (sampleRate.Rate > 0.0D)
-                    m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
+                    Timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
             }
 
             // Fall back on specified microsecond time
-            if (m_timestamp == DateTime.MinValue)
-                m_timestamp = new DateTime(Ticks.FromMicroseconds(uint.Parse(elems[1]) * m_schema.TimeFactor) + m_schema.StartTime.Value);
+            if (Timestamp == DateTime.MinValue)
+                Timestamp = new DateTime(Ticks.FromMicroseconds(uint.Parse(elems[1]) * m_schema.TimeFactor) + m_schema.StartTime.Value);
+
+            // Apply timestamp offset to restore UTC timezone
+            if (AdjustToUTC)
+            {
+                TimeOffset offset = Schema.TimeCode ?? new TimeOffset();
+                Timestamp = new DateTime(Timestamp.Ticks + offset.TickOffset, DateTimeKind.Utc);
+            }
 
             // Parse all record values
-            for (int i = 0; i < m_values.Length; i++)
+            for (int i = 0; i < Values.Length; i++)
             {
-                m_values[i] = double.Parse(elems[i + 2]);
+                Values[i] = double.Parse(elems[i + 2]);
 
                 if (i < m_schema.AnalogChannels.Length)
                 {
-                    m_values[i] *= m_schema.AnalogChannels[i].Multiplier;
-                    m_values[i] += m_schema.AnalogChannels[i].Adder;
+                    Values[i] *= m_schema.AnalogChannels[i].Multiplier;
+                    Values[i] += m_schema.AnalogChannels[i].Adder;
                 }
             }
 
@@ -407,38 +391,13 @@ namespace GSF.COMTRADE
 
             if (bytesRead == recordLength)
             {
-                int index = 0;
-
-                // Read sample index
-                uint sample = LittleEndian.ToUInt32(buffer, index);
-                index += 4;
-
-                // Get timestamp of this record
-                m_timestamp = DateTime.MinValue;
-
-                // If sample rates are defined, this is the preferred method for timestamp resolution
-                if (m_inferTimeFromSampleRates && m_schema.SampleRates.Length > 0)
-                {
-                    // Find rate for given sample
-                    SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
-
-                    if (sampleRate.Rate > 0.0D)
-                        m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
-                }
-
-                // Read microsecond timestamp
-                uint microseconds = LittleEndian.ToUInt32(buffer, index);
-                index += 4;
-
-                // Fall back on specified microsecond time
-                if (m_timestamp == DateTime.MinValue)
-                    m_timestamp = new DateTime(Ticks.FromMicroseconds(microseconds * m_schema.TimeFactor) + m_schema.StartTime.Value);
+                int index = ReadTimestamp(buffer);
 
                 // Parse all analog record values
                 for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
                 {
                     // Read next value
-                    m_values[i] = LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
+                    Values[i] = LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
                     index += 2;
                 }
 
@@ -453,10 +412,8 @@ namespace GSF.COMTRADE
                     index += 2;
 
                     // Distribute each bit of digital word through next 16 digital values
-                    for (int j = 0; j < 16 && valueIndex < m_values.Length; j++, valueIndex++)
-                    {
-                        m_values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
-                    }
+                    for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
+                        Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
                 }
             }
             else
@@ -465,6 +422,153 @@ namespace GSF.COMTRADE
             }
 
             return true;
+        }
+
+        // Handle binary32 file read
+        private bool ReadNextBinary32()
+        {
+            FileStream currentFile = m_fileStreams[m_streamIndex];
+            int recordLength = m_schema.Binary32RecordLength;
+            byte[] buffer = new byte[recordLength];
+
+            // Read next record from file
+            int bytesRead = currentFile.Read(buffer, 0, recordLength);
+
+            // See if we have reached the end of this file
+            if (bytesRead == 0)
+            {
+                m_streamIndex++;
+
+                // There is more to read if there is another file
+                return m_streamIndex < m_fileStreams.Length && ReadNext();
+            }
+
+            if (bytesRead == recordLength)
+            {
+                int index = ReadTimestamp(buffer);
+
+                // Parse all analog record values
+                for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
+                {
+                    // Read next value
+                    Values[i] = LittleEndian.ToSingle(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
+                    index += 4;
+                }
+
+                int valueIndex = m_schema.AnalogChannels.Length;
+                int digitalWords = m_schema.DigitalWords;
+                ushort digitalWord;
+
+                for (int i = 0; i < digitalWords; i++)
+                {
+                    // Read next digital word
+                    digitalWord = LittleEndian.ToUInt16(buffer, index);
+                    index += 2;
+
+                    // Distribute each bit of digital word through next 16 digital values
+                    for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
+                        Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+            }
+
+            return true;
+        }
+
+        // Handle float32 file read
+        private bool ReadNextFloat32()
+        {
+            FileStream currentFile = m_fileStreams[m_streamIndex];
+            int recordLength = m_schema.Float32RecordLength;
+            byte[] buffer = new byte[recordLength];
+
+            // Read next record from file
+            int bytesRead = currentFile.Read(buffer, 0, recordLength);
+
+            // See if we have reached the end of this file
+            if (bytesRead == 0)
+            {
+                m_streamIndex++;
+
+                // There is more to read if there is another file
+                return m_streamIndex < m_fileStreams.Length && ReadNext();
+            }
+
+            if (bytesRead == recordLength)
+            {
+                int index = ReadTimestamp(buffer);
+
+                // Parse all analog record values
+                for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
+                {
+                    // Read next value
+                    Values[i] = LittleEndian.ToSingle(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
+                    index += 4;
+                }
+
+                int valueIndex = m_schema.AnalogChannels.Length;
+                int digitalWords = m_schema.DigitalWords;
+                ushort digitalWord;
+
+                for (int i = 0; i < digitalWords; i++)
+                {
+                    // Read next digital word
+                    digitalWord = LittleEndian.ToUInt16(buffer, index);
+                    index += 2;
+
+                    // Distribute each bit of digital word through next 16 digital values
+                    for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
+                        Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+            }
+
+            return true;
+        }
+
+        private int ReadTimestamp(byte[] buffer)
+        {
+            int index = 0;
+            
+            // Read sample index
+            uint sample = LittleEndian.ToUInt32(buffer, index);
+            index += 4;
+
+            // Get timestamp of this record
+            Timestamp = DateTime.MinValue;
+
+            // If sample rates are defined, this is the preferred method for timestamp resolution
+            if (InferTimeFromSampleRates && m_schema.SampleRates.Length > 0)
+            {
+                // Find rate for given sample
+                SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
+
+                if (sampleRate.Rate > 0.0D)
+                    Timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
+            }
+
+            // Read microsecond timestamp
+            uint microseconds = LittleEndian.ToUInt32(buffer, index);
+            index += 4;
+
+            // Fall back on specified microsecond time
+            if (Timestamp == DateTime.MinValue)
+                Timestamp = new DateTime(Ticks.FromMicroseconds(microseconds * m_schema.TimeFactor) + m_schema.StartTime.Value);
+
+            // Apply timestamp offset to restore UTC timezone
+            if (AdjustToUTC)
+            {
+                TimeOffset offset = Schema.TimeCode ?? new TimeOffset();
+                Timestamp = new DateTime(Timestamp.Ticks + offset.TickOffset, DateTimeKind.Utc);
+            }
+
+            return index;
         }
 
         #endregion

@@ -48,6 +48,22 @@ namespace GSF.COMTRADE
         /// Channel is assumed to be an analog if field is <c>false</c>.
         /// </remarks>
         public bool IsDigital;
+
+        /// <summary>
+        /// Defines units to use for channel.
+        /// </summary>
+        /// <remarks>
+        /// Leave <c>null</c> for defaults.
+        /// </remarks>
+        public string Units;
+
+        /// <summary>
+        /// Defines circuit component channel.
+        /// </summary>
+        /// <remarks>
+        /// Leave <c>null</c> for none.
+        /// </remarks>
+        public string CircuitComponent;
     }
 
     /// <summary>
@@ -90,8 +106,8 @@ namespace GSF.COMTRADE
             // as an analog value. Even so they need to sort as a digital.
             s_sortOrder = new Dictionary<SignalType, int>
             {
-                {SignalType.FLAG, index++},  // Status Flags
-                {SignalType.DIGI, index}     // Digital Value
+                { SignalType.FLAG, index++ },  // Status Flags
+                { SignalType.DIGI, index }     // Digital Value
             };
 
             Default = new ChannelMetadataSorter();

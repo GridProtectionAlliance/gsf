@@ -44,7 +44,7 @@ namespace GSF.COMTRADE
         /// <param name="deviceID">Device ID for the schema.</param>
         /// <param name="dataStartTime">Data start time.</param>
         /// <param name="sampleCount">Total data samples (i.e., total number of rows).</param>
-        /// <param name="isBinary">Determines if data file should be binary or ASCII - defaults to <c>true</c> for binary.</param>
+        /// <param name="fileType">Determines the data file type for the schema.</param>
         /// <param name="timeFactor">Time factor to use in schema - defaults to 1000.</param>
         /// <param name="samplingRate">Desired sampling rate - defaults to 33.3333Hz.</param>
         /// <param name="nominalFrequency">Nominal frequency - defaults to 60Hz.</param>
@@ -54,10 +54,10 @@ namespace GSF.COMTRADE
         /// This function is primarily intended to create a configuration based on synchrophasor data
         /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
         /// it may be necessary to manually create a schema object for other COMTRADE needs. You can call
-        /// the <see cref="Schema.FileImage"/> property to return a string that that can be written to a file
+        /// the <see cref="Schema.FileImage"/> property to return a string that can be written to a file
         /// that will be the contents of the configuration file.
         /// </remarks>
-        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
+        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, FileType fileType = FileType.Binary, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
         {
             Schema schema = new Schema();
 
@@ -75,11 +75,12 @@ namespace GSF.COMTRADE
             schema.StartTime = startTime;
             schema.TriggerTime = startTime;
 
-            schema.FileType = isBinary ? FileType.Binary : FileType.Ascii;
+            schema.FileType = fileType;
             schema.TimeFactor = timeFactor;
 
             List<AnalogChannel> analogChannels = new List<AnalogChannel>();
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
+
             int analogIndex = 1;
             int digitalIndex = 1;
 
@@ -167,7 +168,8 @@ namespace GSF.COMTRADE
                                 Index = analogIndex++,
                                 Name = record.Name,
                                 PhaseID = "Pm",
-                                Units = "A",
+                                Units = record.Units ?? "A",
+                                CircuitComponent = record.CircuitComponent,
                                 Multiplier = 0.05D
                             });
                             break;
@@ -177,7 +179,8 @@ namespace GSF.COMTRADE
                                 Index = analogIndex++,
                                 Name = record.Name,
                                 PhaseID = "Pm",
-                                Units = "V",
+                                Units = record.Units ?? "V",
+                                CircuitComponent = record.CircuitComponent,
                                 Multiplier = 5.77362D
                             });
                             break;
@@ -188,7 +191,8 @@ namespace GSF.COMTRADE
                                 Index = analogIndex++,
                                 Name = record.Name,
                                 PhaseID = "Pa",
-                                Units = "Rads",
+                                Units = record.Units ?? "Rads",
+                                CircuitComponent = record.CircuitComponent,
                                 Multiplier = 1.0E-4D
                             });
                             break;
@@ -198,7 +202,8 @@ namespace GSF.COMTRADE
                                 Index = analogIndex++,
                                 Name = record.Name,
                                 PhaseID = "F",
-                                Units = "Hz",
+                                Units = record.Units ?? "Hz",
+                                CircuitComponent = record.CircuitComponent,
                                 Adder = (double)nominalFrequency,
                                 Multiplier = 0.001D
                             });
@@ -209,7 +214,8 @@ namespace GSF.COMTRADE
                                 Index = analogIndex++,
                                 Name = record.Name,
                                 PhaseID = "dF",
-                                Units = "Hz/s",
+                                Units = record.Units ?? "Hz/s",
+                                CircuitComponent = record.CircuitComponent,
                                 Multiplier = 0.01D
                             });
                             break;
@@ -294,7 +300,9 @@ namespace GSF.COMTRADE
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
-                                PhaseID = ""
+                                PhaseID = "",
+                                Units = record.Units,
+                                CircuitComponent = record.CircuitComponent
                             });
                             break;
                     }
@@ -306,6 +314,33 @@ namespace GSF.COMTRADE
             schema.NominalFrequency = nominalFrequency;
 
             return schema;
+        }
+
+        /// <summary>
+        /// Creates a new COMTRADE configuration <see cref="Schema"/>.
+        /// </summary>
+        /// <param name="metadata">Schema <see cref="ChannelMetadata"/> records.</param>
+        /// <param name="stationName">Station name for the schema.</param>
+        /// <param name="deviceID">Device ID for the schema.</param>
+        /// <param name="dataStartTime">Data start time.</param>
+        /// <param name="sampleCount">Total data samples (i.e., total number of rows).</param>
+        /// <param name="isBinary">Determines if data file should be binary or ASCII - defaults to <c>true</c> for binary.</param>
+        /// <param name="timeFactor">Time factor to use in schema - defaults to 1000.</param>
+        /// <param name="samplingRate">Desired sampling rate - defaults to 33.3333Hz.</param>
+        /// <param name="nominalFrequency">Nominal frequency - defaults to 60Hz.</param>
+        /// <param name="includeFracSecDefinition">Determines if the FRACSEC word digital definitions should be included - defaults to <c>true</c>.</param>
+        /// <returns>New COMTRADE configuration <see cref="Schema"/>.</returns>
+        /// <remarks>
+        /// This function is primarily intended to create a configuration based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually create a schema object for other COMTRADE needs. You can call
+        /// the <see cref="Schema.FileImage"/> property to return a string that can be written to a file
+        /// that will be the contents of the configuration file.
+        /// </remarks>
+        [Obsolete("Switch to constructor overload that specifies the enumeration value to use for schema file type - this constructor may be removed from future builds", false)]
+        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
+        {
+            return CreateSchema(metadata, stationName, deviceID, dataStartTime, sampleCount, isBinary ? FileType.Binary : FileType.Ascii, timeFactor, samplingRate, nominalFrequency, includeFracSecDefinition);
         }
 
         /// <summary>
@@ -329,7 +364,6 @@ namespace GSF.COMTRADE
             timestamp -= schema.StartTime.Value;
 
             uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
-            double value;
             StringBuilder line = new StringBuilder();
             bool isFirstDigital = true;
 
@@ -339,7 +373,7 @@ namespace GSF.COMTRADE
 
             for (int i = 0; i < values.Length; i++)
             {
-                value = values[i];
+                double value = values[i];
 
                 if (i < schema.AnalogChannels.Length)
                 {
@@ -410,7 +444,6 @@ namespace GSF.COMTRADE
             timestamp -= schema.StartTime.Value;
 
             uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
-            double value;
             bool isFirstDigital = true;
 
             output.Write(LittleEndian.GetBytes(sample), 0, 4);
@@ -418,7 +451,7 @@ namespace GSF.COMTRADE
 
             for (int i = 0; i < values.Length; i++)
             {
-                value = values[i];
+                double value = values[i];
 
                 if (i < schema.AnalogChannels.Length)
                 {
@@ -435,6 +468,114 @@ namespace GSF.COMTRADE
                 }
 
                 output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
+            }
+
+            // Make sure FRACSEC values are injected
+            if (isFirstDigital && injectFracSecValue)
+                output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+        }
+
+        /// <summary>
+        /// Writes next COMTRADE record in binary32 format.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="timestamp">Record timestamp (implicitly castable as <see cref="DateTime"/>).</param>
+        /// <param name="values">Values to write - 16-bit digitals should exist as a word in an individual double value.</param>
+        /// <param name="sample">User incremented sample index.</param>
+        /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>true</c>.</param>
+        /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
+        /// <remarks>
+        /// This function is primarily intended to write COMTRADE binary data records based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
+        /// </remarks>
+        public static void WriteNextRecordBinary32(Stream output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
+        {
+            // Make timestamp relative to beginning of file
+            timestamp -= schema.StartTime.Value;
+
+            uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
+            bool isFirstDigital = true;
+
+            output.Write(LittleEndian.GetBytes(sample), 0, 4);
+            output.Write(LittleEndian.GetBytes(microseconds), 0, 4);
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                double value = values[i];
+
+                if (i < schema.AnalogChannels.Length)
+                {
+                    value -= schema.AnalogChannels[i].Adder;
+                    value /= schema.AnalogChannels[i].Multiplier;
+
+                    output.Write(LittleEndian.GetBytes((uint)value), 0, 4);
+                }
+                else if (isFirstDigital)
+                {
+                    // Handle automatic injection of IEEE C37.118 FRACSEC digital value if requested
+                    isFirstDigital = false;
+
+                    if (injectFracSecValue)
+                        output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+
+                    output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
+                }
+            }
+
+            // Make sure FRACSEC values are injected
+            if (isFirstDigital && injectFracSecValue)
+                output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+        }
+
+        /// <summary>
+        /// Writes next COMTRADE record in float32 format.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="timestamp">Record timestamp (implicitly castable as <see cref="DateTime"/>).</param>
+        /// <param name="values">Values to write - 16-bit digitals should exist as a word in an individual double value.</param>
+        /// <param name="sample">User incremented sample index.</param>
+        /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>true</c>.</param>
+        /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
+        /// <remarks>
+        /// This function is primarily intended to write COMTRADE binary data records based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
+        /// </remarks>
+        public static void WriteNextRecordFloat32(Stream output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
+        {
+            // Make timestamp relative to beginning of file
+            timestamp -= schema.StartTime.Value;
+
+            uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
+            bool isFirstDigital = true;
+
+            output.Write(LittleEndian.GetBytes(sample), 0, 4);
+            output.Write(LittleEndian.GetBytes(microseconds), 0, 4);
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                double value = values[i];
+
+                if (i < schema.AnalogChannels.Length)
+                {
+                    value -= schema.AnalogChannels[i].Adder;
+                    value /= schema.AnalogChannels[i].Multiplier;
+
+                    output.Write(LittleEndian.GetBytes((float)value), 0, 4);
+                }
+                else if (isFirstDigital)
+                {
+                    // Handle automatic injection of IEEE C37.118 FRACSEC digital value if requested
+                    isFirstDigital = false;
+
+                    if (injectFracSecValue)
+                        output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
+
+                    output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
+                }
             }
 
             // Make sure FRACSEC values are injected

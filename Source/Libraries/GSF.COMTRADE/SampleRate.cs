@@ -61,7 +61,7 @@ namespace GSF.COMTRADE
             string[] parts = lineImage.Split(',');
 
             if (parts.Length != 2)
-                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for sample rate definition: {0} - expected 2\r\nImage = {1}", parts.Length, lineImage));
+                throw new InvalidOperationException($"Unexpected number of line image elements for sample rate definition: {parts.Length} - expected 2{Environment.NewLine}Image = {lineImage}");
 
             Rate = double.Parse(parts[0].Trim());
             EndSample = int.Parse(parts[1].Trim());
@@ -77,7 +77,7 @@ namespace GSF.COMTRADE
         public override string ToString()
         {
             // samp,endsamp
-            return string.Format("{0},{1}", Rate.ToString(CultureInfo.InvariantCulture), EndSample);
+            return $"{Rate.ToString(CultureInfo.InvariantCulture)},{EndSample}";
         }
 
         #endregion

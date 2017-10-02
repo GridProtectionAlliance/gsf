@@ -26,9 +26,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using GSF.Collections;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
+using Newtonsoft.Json;
 
 namespace GSF.COMTRADE
 {
@@ -40,23 +40,14 @@ namespace GSF.COMTRADE
         #region [ Members ]
 
         // Fields
-        private int m_index;
+        private readonly int m_version;
         private string m_stationName;
         private string m_channelName;
         private char m_phaseDesignation;
         private SignalKind m_signalKind;
-        private PhasorType m_phasorType;
         private double m_nominalFrequency;
-        private CoordinateFormat m_coordinateFormat;
         private string m_circuitComponent;
         private string m_units;
-        private double m_multipler;
-        private double m_adder;
-        private double m_skew;
-        private int m_minValue;
-        private int m_maxValue;
-        private double m_primaryRatio;
-        private double m_secondaryRatio;
         private char m_scalingIdentifier;
 
         #endregion
@@ -66,18 +57,20 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Creates a new instance of the <see cref="AnalogChannel"/>.
         /// </summary>
-        public AnalogChannel()
+        /// <param name="version">Target schema version.</param>
+        public AnalogChannel(int version = 1999)
         {
+            m_version = version;
             m_phaseDesignation = char.MinValue;
             m_signalKind = SignalKind.Analog;
-            m_coordinateFormat = CoordinateFormat.Polar;
-            m_multipler = 0.04;
-            m_adder = 0.0;
+            CoordinateFormat = CoordinateFormat.Polar;
+            Multiplier = 0.04D;
+            Adder = 0.0D;
             m_nominalFrequency = 60.0D;
-            m_minValue = -99999;
-            m_maxValue = 99998;
-            m_primaryRatio = 1.0;
-            m_secondaryRatio = 1.0;
+            MinValue = -99999;
+            MaxValue = 99998;
+            PrimaryRatio = 1.0D;
+            SecondaryRatio = 1.0D;
             m_scalingIdentifier = 'P';
         }
 
@@ -85,13 +78,16 @@ namespace GSF.COMTRADE
         /// Creates a new instance of the <see cref="AnalogChannel"/> from an existing line image.
         /// </summary>
         /// <param name="lineImage">Line image to parse.</param>
-        public AnalogChannel(string lineImage)
+        /// <param name="version">Target schema version.</param>
+        public AnalogChannel(string lineImage, int version = 1999)
         {
             // An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
             string[] parts = lineImage.Split(',');
 
-            if(parts.Length == 13)
-            {
+            m_version = version;
+
+            if (parts.Length == 10 || parts.Length == 13)
+            {               
                 Index = int.Parse(parts[0].Trim());
                 Name = parts[1];
                 PhaseID = parts[2];
@@ -100,32 +96,20 @@ namespace GSF.COMTRADE
                 Multiplier = double.Parse(parts[5].Trim());
                 Adder = double.Parse(parts[6].Trim());
                 Skew = double.Parse(parts[7].Trim());
-                MinValue = int.Parse(parts[8].Trim());
-                MaxValue = int.Parse(parts[9].Trim());
-                PrimaryRatio = double.Parse(parts[10].Trim());
-                SecondaryRatio = double.Parse(parts[11].Trim());
-                ScalingIdentifier = parts[12].Trim()[0];
-            }
-            else if(parts.Length == 10)
-            {
-                Index = int.Parse(parts[0].Trim());
-                Name = parts[1];
-                PhaseID = parts[2];
-                CircuitComponent = parts[3];
-                Units = parts[4];
-                Multiplier = double.Parse(parts[5].Trim());
-                Adder = double.Parse(parts[6].Trim());
-                Skew = double.Parse(parts[7].Trim());
-                MinValue = int.Parse(parts[8].Trim());
-                MaxValue = int.Parse(parts[9].Trim());
-                //PrimaryRatio = 1;
-                //SecondaryRatio = 1;
-                //ScalingIdentifier = parts[12].Trim()[0];
+                MinValue = double.Parse(parts[8].Trim());
+                MaxValue = double.Parse(parts[9].Trim());
 
-
+                if (parts.Length == 13)
+                {
+                    PrimaryRatio = double.Parse(parts[10].Trim());
+                    SecondaryRatio = double.Parse(parts[11].Trim());
+                    ScalingIdentifier = parts[12].Trim()[0];
+                }
             }
             else
-                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for analog channel definition: {0} - expected 13\r\nImage = {1}", parts.Length, lineImage));
+            {
+                throw new InvalidOperationException($"Unexpected number of line image elements for analog channel definition: {parts.Length} - expected 10 or 13{Environment.NewLine}Image = {lineImage}");
+            }
 
         }
 
@@ -136,17 +120,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets index of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public int Index
-        {
-            get
-            {
-                return m_index;
-            }
-            set
-            {
-                m_index = value;
-            }
-        }
+        public int Index { get; set; }
 
         /// <summary>
         /// Gets or sets name of this <see cref="AnalogChannel"/> formatted as station_name:channel_name.
@@ -160,7 +134,7 @@ namespace GSF.COMTRADE
                     return null;
 
                 if (!string.IsNullOrEmpty(m_channelName))
-                    return string.Format("{0}:{1}", m_stationName, m_channelName);
+                    return $"{m_stationName}:{m_channelName}";
 
                 return m_stationName;
             }
@@ -222,7 +196,7 @@ namespace GSF.COMTRADE
                     case SignalKind.Magnitude:
                         if (m_phaseDesignation != char.MinValue)
                         {
-                            if (m_coordinateFormat == CoordinateFormat.Rectangular)
+                            if (CoordinateFormat == CoordinateFormat.Rectangular)
                                 return m_phaseDesignation + "r";
 
                             return m_phaseDesignation + "m";
@@ -231,7 +205,7 @@ namespace GSF.COMTRADE
                     case SignalKind.Angle:
                         if (m_phaseDesignation != char.MinValue)
                         {
-                            if (m_coordinateFormat == CoordinateFormat.Rectangular)
+                            if (CoordinateFormat == CoordinateFormat.Rectangular)
                                 return m_phaseDesignation + "i";
 
                             return m_phaseDesignation + "a";
@@ -252,53 +226,53 @@ namespace GSF.COMTRADE
                 if (string.IsNullOrEmpty(value))
                 {
                     m_phaseDesignation = char.MinValue;
-                    this.SignalKind = SignalKind.Analog;
-                    m_coordinateFormat = CoordinateFormat.Polar;
+                    SignalKind = SignalKind.Analog;
+                    CoordinateFormat = CoordinateFormat.Polar;
                 }
                 else
                 {
-                    if (string.Compare(value, "F", true) == 0)
+                    if (string.Compare(value, "F", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         m_phaseDesignation = char.MinValue;
-                        this.SignalKind = SignalKind.Frequency;
-                        m_coordinateFormat = CoordinateFormat.Polar;
+                        SignalKind = SignalKind.Frequency;
+                        CoordinateFormat = CoordinateFormat.Polar;
                     }
-                    else if (string.Compare(value, "df", true) == 0)
+                    else if (string.Compare(value, "df", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         m_phaseDesignation = char.MinValue;
-                        this.SignalKind = SignalKind.DfDt;
-                        m_coordinateFormat = CoordinateFormat.Polar;
+                        SignalKind = SignalKind.DfDt;
+                        CoordinateFormat = CoordinateFormat.Polar;
                     }
                     else if (value.Length > 1)
                     {
-                        this.PhaseDesignation = value[0].ToString();
-                        char component = char.ToLower(value[1]);
+                        PhaseDesignation = value[0].ToString();
+                        char component = char.ToLowerInvariant(value[1]);
 
                         switch (component)
                         {
                             case 'r':
-                                this.SignalKind = SignalKind.Magnitude;
-                                m_coordinateFormat = CoordinateFormat.Rectangular;
+                                SignalKind = SignalKind.Magnitude;
+                                CoordinateFormat = CoordinateFormat.Rectangular;
                                 break;
                             case 'i':
-                                this.SignalKind = SignalKind.Angle;
-                                m_coordinateFormat = CoordinateFormat.Rectangular;
+                                SignalKind = SignalKind.Angle;
+                                CoordinateFormat = CoordinateFormat.Rectangular;
                                 break;
                             case 'm':
-                                this.SignalKind = SignalKind.Magnitude;
-                                m_coordinateFormat = CoordinateFormat.Polar;
+                                SignalKind = SignalKind.Magnitude;
+                                CoordinateFormat = CoordinateFormat.Polar;
                                 break;
                             case 'a':
-                                this.SignalKind = SignalKind.Angle;
-                                m_coordinateFormat = CoordinateFormat.Polar;
+                                SignalKind = SignalKind.Angle;
+                                CoordinateFormat = CoordinateFormat.Polar;
                                 break;
                         }
                     }
                     else
                     {
-                        this.PhaseDesignation = value[0].ToString();
-                        this.SignalKind = SignalKind.Analog;
-                        m_coordinateFormat = CoordinateFormat.Polar;
+                        PhaseDesignation = value[0].ToString();
+                        SignalKind = SignalKind.Analog;
+                        CoordinateFormat = CoordinateFormat.Polar;
                     }
                 }
             }
@@ -366,17 +340,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets phasor type of this <see cref="AnalogChannel"/>, if applicable.
         /// </summary>
-        public PhasorType PhasorType
-        {
-            get
-            {
-                return m_phasorType;
-            }
-            set
-            {
-                m_phasorType = value;
-            }
-        }
+        public PhasorType PhasorType { get; set; }
 
         /// <summary>
         /// Gets or sets nominal frequency of this <see cref="AnalogChannel"/>.
@@ -392,7 +356,7 @@ namespace GSF.COMTRADE
                 m_nominalFrequency = value;
 
                 if (m_signalKind == SignalKind.Frequency)
-                    m_adder = (double)m_nominalFrequency;
+                    Adder = (double)m_nominalFrequency;
             }
         }
 
@@ -416,27 +380,27 @@ namespace GSF.COMTRADE
                 switch (m_signalKind)
                 {
                     case SignalKind.Angle:
-                        m_multipler = 0.006;
-                        m_adder = 0.0;
+                        Multiplier = 0.006D;
+                        Adder = 0.0D;
                         break;
                     case SignalKind.Magnitude:
-                        if (m_phasorType == PhasorType.Current)
-                            m_multipler = 0.4;
+                        if (PhasorType == PhasorType.Current)
+                            Multiplier = 0.4D;
                         else
-                            m_multipler = 0.04;
-                        m_adder = 0.0;
+                            Multiplier = 0.04D;
+                        Adder = 0.0D;
                         break;
                     case SignalKind.Frequency:
-                        m_multipler = 0.001;
-                        m_adder = (double)m_nominalFrequency;
+                        Multiplier = 0.001D;
+                        Adder = m_nominalFrequency;
                         break;
                     case SignalKind.DfDt:
-                        m_multipler = 0.01;
-                        m_adder = 0.0;
+                        Multiplier = 0.01D;
+                        Adder = 0.0D;
                         break;
                     default:
-                        m_multipler = 0.04;
-                        m_adder = 0.0;
+                        Multiplier = 0.04D;
+                        Adder = 0.0D;
                         break;
                 }
             }
@@ -445,17 +409,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets coordinate format of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public CoordinateFormat CoordinateFormat
-        {
-            get
-            {
-                return m_coordinateFormat;
-            }
-            set
-            {
-                m_coordinateFormat = value;
-            }
-        }
+        public CoordinateFormat CoordinateFormat { get; set; }
 
         /// <summary>
         /// Gets or sets circuit component of this <see cref="AnalogChannel"/>.
@@ -489,10 +443,7 @@ namespace GSF.COMTRADE
             }
             set
             {
-                if (!string.IsNullOrWhiteSpace(value))
-                    m_units = value.Trim();
-                else
-                    m_units = "";
+                m_units = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
 
                 if (m_units.Length > 32)
                     m_units = m_units.Substring(0, 32);
@@ -500,112 +451,42 @@ namespace GSF.COMTRADE
         }
 
         /// <summary>
-        /// Gets or sets value multipler of this <see cref="AnalogChannel"/>.
+        /// Gets or sets value multiplier of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public double Multiplier
-        {
-            get
-            {
-                return m_multipler;
-            }
-            set
-            {
-                m_multipler = value;
-            }
-        }
+        public double Multiplier { get; set; }
 
         /// <summary>
         /// Gets or sets adder of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public double Adder
-        {
-            get
-            {
-                return m_adder;
-            }
-            set
-            {
-                m_adder = value;
-            }
-        }
+        public double Adder { get; set; }
 
         /// <summary>
         /// Gets or sets time skew between channels of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public double Skew
-        {
-            get
-            {
-                return m_skew;
-            }
-            set
-            {
-                m_skew = value;
-            }
-        }
+        public double Skew { get; set; }
 
         /// <summary>
         /// Gets or sets minimum unscaled value of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public int MinValue
-        {
-            get
-            {
-                return m_minValue;
-            }
-            set
-            {
-                m_minValue = value;
-            }
-        }
+        public double MinValue { get; set; }
 
         /// <summary>
         /// Gets or sets maximum unscaled value of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public int MaxValue
-        {
-            get
-            {
-                return m_maxValue;
-            }
-            set
-            {
-                m_maxValue = value;
-            }
-        }
+        public double MaxValue { get; set; }
 
         /// <summary>
         /// Gets or sets the channel voltage or current transformer ratio primary factor of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public double PrimaryRatio
-        {
-            get
-            {
-                return m_primaryRatio;
-            }
-            set
-            {
-                m_primaryRatio = value;
-            }
-        }
+        public double PrimaryRatio { get; set; }
 
         /// <summary>
         /// Gets or sets the channel voltage or current transformer ratio secondary factor of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public double SecondaryRatio
-        {
-            get
-            {
-                return m_secondaryRatio;
-            }
-            set
-            {
-                m_secondaryRatio = value;
-            }
-        }
+        public double SecondaryRatio { get; set; }
 
         /// <summary>
-        /// Gets or sets the the primary or secondary data scaling identifer of this <see cref="AnalogChannel"/>.
+        /// Gets or sets the the primary or secondary data scaling identifier of this <see cref="AnalogChannel"/>.
         /// </summary>
         public char ScalingIdentifier
         {
@@ -618,11 +499,17 @@ namespace GSF.COMTRADE
                 value = char.ToUpper(value);
 
                 if (value != 'P' && value != 'S')
-                    throw new ArgumentException(value + " is not a valid primary or secondary data scaling identifer - must be either \'P\' or \'S\'.");
+                    throw new ArgumentException(value + " is not a valid primary or secondary data scaling identifier - must be either \'P\' or \'S\'.");
 
                 m_scalingIdentifier = value;
             }
         }
+
+        /// <summary>
+        /// Gets target schema version.
+        /// </summary>
+        [JsonIgnore]
+        public int Version => m_version;
 
         #endregion
 
@@ -633,24 +520,30 @@ namespace GSF.COMTRADE
         /// </summary>
         public override string ToString()
         {
-            string[] values = new string[13];
+            // An,ch_id,ph,ccbm,uu,a,b,skew,min,max
+            List<string> values = new List<string>
+            {
+                Index.ToString(),
+                Name,
+                PhaseID,
+                CircuitComponent,
+                Units,
+                Multiplier.ToString(CultureInfo.InvariantCulture),
+                Adder.ToString(CultureInfo.InvariantCulture),
+                Skew.ToString(CultureInfo.InvariantCulture),
+                MinValue.ToString(CultureInfo.InvariantCulture),
+                MaxValue.ToString(CultureInfo.InvariantCulture)
+            };
 
-            // An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
-            values[0] = Index.ToString();
-            values[1] = Name;
-            values[2] = PhaseID;
-            values[3] = CircuitComponent;
-            values[4] = Units;
-            values[5] = Multiplier.ToString(CultureInfo.InvariantCulture);
-            values[6] = Adder.ToString(CultureInfo.InvariantCulture);
-            values[7] = Skew.ToString(CultureInfo.InvariantCulture);
-            values[8] = MinValue.ToString();
-            values[9] = MaxValue.ToString();
-            values[10] = PrimaryRatio.ToString(CultureInfo.InvariantCulture);
-            values[11] = SecondaryRatio.ToString(CultureInfo.InvariantCulture);
-            values[12] = ScalingIdentifier.ToString();
+            // ...,primary,secondary,PS
+            if (m_version >= 1999)
+            {
+                values.Add(PrimaryRatio.ToString(CultureInfo.InvariantCulture));
+                values.Add(SecondaryRatio.ToString(CultureInfo.InvariantCulture));
+                values.Add(ScalingIdentifier.ToString());
+            }
 
-            return values.ToDelimitedString(',');
+            return string.Join(",", values);
         }
 
         #endregion

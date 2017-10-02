@@ -417,7 +417,7 @@ namespace COMTRADEConverter
                 string configFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".cfg");
                 StreamWriter configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
 
-                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, isBinary: false);
+                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, fileType: FileType.Ascii);
 
                 configFileWriter.Write(schema.FileImage);
                 configFileWriter.Flush();

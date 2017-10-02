@@ -1115,7 +1115,7 @@ namespace HistorianView
                 "Source=" + m_archiveReaders.First().FileName.Replace(',', '_'),
                 startTime,
                 sampleCount,
-                isBinary,
+                isBinary ? GSF.COMTRADE.FileType.Binary : GSF.COMTRADE.FileType.Ascii,
                 1.0D,
                 m_exportFrameRate,
                 m_exportNominalFrequency);

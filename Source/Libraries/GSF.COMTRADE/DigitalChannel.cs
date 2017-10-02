@@ -24,7 +24,8 @@
 //******************************************************************************************************
 
 using System;
-using GSF.Collections;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace GSF.COMTRADE
 {
@@ -36,12 +37,11 @@ namespace GSF.COMTRADE
         #region [ Members ]
 
         // Fields
-        private int m_index;
+        private readonly int m_version;
         private string m_stationName;
         private string m_channelName;
         private string m_phaseID;
         private string m_circuitComponent;
-        private bool m_normalState;
 
         #endregion
 
@@ -50,21 +50,31 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Creates a new instance of the <see cref="DigitalChannel"/>.
         /// </summary>
-        public DigitalChannel()
+        /// <param name="version">Target schema version.</param>
+        public DigitalChannel(int version = 1999)
         {
+            m_version = version;
         }
 
         /// <summary>
         /// Creates a new instance of the <see cref="DigitalChannel"/> from an existing line image.
         /// </summary>
         /// <param name="lineImage">Line image to parse.</param>
-        public DigitalChannel(string lineImage)
+        /// <param name="version">Target schema version.</param>
+        public DigitalChannel(string lineImage, int version = 1999)
         {
             // Dn,ch_id,ph,ccbm,y
             string[] parts = lineImage.Split(',');
 
+            m_version = version;
 
-            if(parts.Length == 5)
+            if (parts.Length == 3)
+            {
+                Index = int.Parse(parts[0].Trim());
+                Name = parts[1];
+                NormalState = parts[2].Trim().ParseBoolean();
+            }
+            else if (parts.Length == 5)
             {
                 Index = int.Parse(parts[0].Trim());
                 Name = parts[1];
@@ -72,15 +82,10 @@ namespace GSF.COMTRADE
                 CircuitComponent = parts[3];
                 NormalState = parts[4].Trim().ParseBoolean();
             }
-            else if(parts.Length == 3)
-            {
-                Index = int.Parse(parts[0].Trim());
-                Name = parts[1];
-                NormalState = parts[2].Trim().ParseBoolean();
-            }
             else
-                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for digital channel definition: {0} - expected 5\r\nImage = {1}", parts.Length, lineImage));
-
+            {
+                throw new InvalidOperationException($"Unexpected number of line image elements for digital channel definition: {parts.Length} - expected 3 or 5{Environment.NewLine}Image = {lineImage}");
+            }
         }
 
         #endregion
@@ -90,17 +95,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets index of this <see cref="DigitalChannel"/>.
         /// </summary>
-        public int Index
-        {
-            get
-            {
-                return m_index;
-            }
-            set
-            {
-                m_index = value;
-            }
-        }
+        public int Index { get; set; }
 
         /// <summary>
         /// Gets or sets name of this <see cref="DigitalChannel"/> formatted as station_name:channel_name.
@@ -113,7 +108,7 @@ namespace GSF.COMTRADE
                 if (string.IsNullOrWhiteSpace(m_stationName))
                     return m_channelName;
 
-                return string.Format("{0}:{1}", m_stationName, m_channelName);
+                return $"{m_stationName}:{m_channelName}";
             }
             set
             {
@@ -173,10 +168,7 @@ namespace GSF.COMTRADE
             }
             set
             {
-                if (!string.IsNullOrWhiteSpace(value))
-                    m_phaseID = value.Trim();
-                else
-                    m_phaseID = "";
+                m_phaseID = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
 
                 // Even though the COMTRADE standard specifically says this is 2 characters in length, the
                 // sample data in the schema for phasor data has phase IDs with lengths of 3 (e.g., T10)
@@ -209,17 +201,13 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets normal state of this <see cref="DigitalChannel"/>.
         /// </summary>
-        public bool NormalState
-        {
-            get
-            {
-                return m_normalState;
-            }
-            set
-            {
-                m_normalState = value;
-            }
-        }
+        public bool NormalState { get; set; }
+
+        /// <summary>
+        /// Gets target schema version.
+        /// </summary>
+        [JsonIgnore]
+        public int Version => m_version;
 
         #endregion
 
@@ -230,16 +218,32 @@ namespace GSF.COMTRADE
         /// </summary>
         public override string ToString()
         {
-            string[] values = new string[5];
+            List<string> values;
 
-            // Dn,ch_id,ph,ccbm,y
-            values[0] = Index.ToString();
-            values[1] = Name;
-            values[2] = PhaseID;
-            values[3] = CircuitComponent;
-            values[4] = NormalState ? "1" : "0";
+            if (m_version >= 1999)
+            {
+                // Dn,ch_id,ph,ccbm,y
+                values = new List<string>
+                {
+                    Index.ToString(),
+                    Name,
+                    PhaseID,
+                    CircuitComponent,
+                    NormalState ? "1" : "0"
+                };
+            }
+            else
+            {
+                // Dn,ch_id,y
+                values = new List<string>
+                {
+                    Index.ToString(),
+                    Name,
+                    NormalState ? "1" : "0"
+                };
+            }
 
-            return values.ToDelimitedString(',');
+            return string.Join(",", values);
         }
 
         #endregion
