@@ -667,6 +667,9 @@ namespace GSF.Security.Cryptography
         /// </remarks>
         public static string GetPasswordHash(string password, int categoryID = 0)
         {
+            // TODO: Switch to better hashing algorithm:
+            //       https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence#title.2
+
             string hash;
 
             // Null password should produce a null hash
