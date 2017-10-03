@@ -259,7 +259,7 @@ namespace GSF.Units
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(long totalUnits, string unitName, string[] symbolNames = null, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
+        public static string ToScaledString(long totalUnits, string unitName, string[] symbolNames = null, long minimumFactor = Kilo, long maximumFactor = Exa)
         {
             return ToScaledString(totalUnits, 2, unitName, symbolNames, minimumFactor, maximumFactor);
         }
@@ -278,7 +278,7 @@ namespace GSF.Units
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(long totalUnits, string format, string unitName, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
+        public static string ToScaledString(long totalUnits, string format, string unitName, long minimumFactor = Kilo, long maximumFactor = Exa)
         {
             return ToScaledString(totalUnits, format, unitName, s_symbols, -1, minimumFactor, maximumFactor);
         }
@@ -301,7 +301,7 @@ namespace GSF.Units
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
+        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, long minimumFactor = Kilo, long maximumFactor = Exa)
         {
             if (decimalPlaces < 0)
                 throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces cannot be negative");
@@ -327,7 +327,7 @@ namespace GSF.Units
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(long totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
+        public static string ToScaledString(long totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1, long minimumFactor = Kilo, long maximumFactor = Exa)
         {
             StringBuilder image = new StringBuilder();
 

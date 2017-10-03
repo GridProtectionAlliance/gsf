@@ -30,6 +30,7 @@ namespace GSF.Units
     /// </summary>
     public static class UnitExtensions
     {
+
         /// <summary>
         /// Unwraps a set of <see cref="Angle"/> values so a comparable mathematical operation can be applied.
         /// </summary>

@@ -231,7 +231,7 @@ namespace GSF.Units
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(double totalUnits, string unitName, string[] symbolNames = null, double minimumFactor = SI.Yocto, double maximumFactor = SI.Yotta)
+        public static string ToScaledString(double totalUnits, string unitName, string[] symbolNames = null, double minimumFactor = Yocto, double maximumFactor = Yotta)
         {
             return ToScaledString(totalUnits, 2, unitName, symbolNames, minimumFactor, maximumFactor);
         }
@@ -249,7 +249,7 @@ namespace GSF.Units
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(double totalUnits, string format, string unitName, double minimumFactor = SI.Yocto, double maximumFactor = SI.Yotta)
+        public static string ToScaledString(double totalUnits, string format, string unitName, double minimumFactor = Yocto, double maximumFactor = Yotta)
         {
             return ToScaledString(totalUnits, format, unitName, s_symbols, -1, minimumFactor, maximumFactor);
         }
@@ -271,7 +271,7 @@ namespace GSF.Units
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(double totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, double minimumFactor = SI.Yocto, double maximumFactor = SI.Yotta)
+        public static string ToScaledString(double totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, double minimumFactor = Yocto, double maximumFactor = Yotta)
         {
             if (decimalPlaces < 0)
                 throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces cannot be negative");
@@ -297,7 +297,7 @@ namespace GSF.Units
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
-        public static string ToScaledString(double totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1, double minimumFactor = SI.Yocto, double maximumFactor = SI.Yotta)
+        public static string ToScaledString(double totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1, double minimumFactor = Yocto, double maximumFactor = Yotta)
         {
             StringBuilder image = new StringBuilder();
 

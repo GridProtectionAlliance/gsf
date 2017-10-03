@@ -25,7 +25,9 @@
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
-//       Modifiedd Header.
+//       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,34 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents an electromotive force (i.e., voltage) measurement, in volts, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Voltage"/> value.
+    /// </summary>
+    public enum VoltageUnits
+    {
+        /// <summary>
+        /// Voltage units.
+        /// </summary>
+        Volts,
+        /// <summary>
+        /// Abvoltage units.
+        /// </summary>
+        Abvolts,
+        /// <summary>
+        /// Statvoltage units.
+        /// </summary>
+        Statvolts
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents an electromotive force (i.e., voltage) measurement, in volts, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a voltage in volts; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a voltage in volts; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other voltage representations, specifically
     /// abvolt and statvolt. Metric conversions are handled simply by applying the needed <see cref="SI"/>
@@ -88,7 +115,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Voltage : IComparable, IFormattable, IConvertible, IComparable<Voltage>, IComparable<Double>, IEquatable<Voltage>, IEquatable<Double>
+    public struct Voltage : IComparable, IFormattable, IConvertible, IComparable<Voltage>, IComparable<double>, IEquatable<Voltage>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -135,6 +162,26 @@ namespace GSF.Units
             return m_value / StatvoltsFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Voltage"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Voltage"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(VoltageUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case VoltageUnits.Volts:
+                    return m_value;
+                case VoltageUnits.Abvolts:
+                    return ToAbvolts();
+                case VoltageUnits.Statvolts:
+                    return ToStatvolts();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -149,7 +196,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Voltage"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -163,7 +210,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Voltage");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -193,7 +240,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -209,7 +256,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Voltage)
+            if (obj is Voltage)
                 return Equals((Voltage)obj);
 
             return false;
@@ -236,7 +283,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -255,7 +302,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -320,7 +367,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Voltage Parse(string s)
         {
-            return (Voltage)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -344,7 +391,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Voltage Parse(string s, NumberStyles style)
         {
-            return (Voltage)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -364,7 +411,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Voltage Parse(string s, IFormatProvider provider)
         {
-            return (Voltage)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -391,7 +438,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Voltage Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Voltage)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -401,9 +448,9 @@ namespace GSF.Units
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Voltage"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paravolt is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not of the correct format, or represents a number less than <see cref="Voltage.MinValue"/> or greater than <see cref="Voltage.MaxValue"/>.
-        /// This paravolt is passed uninitialized.
+        /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(string s, out Voltage result)
@@ -427,9 +474,9 @@ namespace GSF.Units
         /// </param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Voltage"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paravolt is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not in a format compliant with style, or represents a number less than <see cref="Voltage.MinValue"/> or
-        /// greater than <see cref="Voltage.MaxValue"/>. This paravolt is passed uninitialized.
+        /// greater than <see cref="Voltage.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -535,7 +582,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -578,7 +625,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <(Voltage value1, Voltage value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -589,7 +636,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <=(Voltage value1, Voltage value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -600,7 +647,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >(Voltage value1, Voltage value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -611,7 +658,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >=(Voltage value1, Voltage value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -623,7 +670,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Voltage"/> object.</returns>
-        public static implicit operator Voltage(Double value)
+        public static implicit operator Voltage(double value)
         {
             return new Voltage(value);
         }
@@ -633,7 +680,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Voltage"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Voltage value)
+        public static implicit operator double(Voltage value)
         {
             return value.m_value;
         }
@@ -709,7 +756,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Voltage value1, Voltage value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -721,10 +768,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Voltage"/>. This field is constant.</summary>
-        public static readonly Voltage MaxValue = (Voltage)double.MaxValue;
+        public static readonly Voltage MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Voltage"/>. This field is constant.</summary>
-        public static readonly Voltage MinValue = (Voltage)double.MinValue;
+        public static readonly Voltage MinValue = double.MinValue;
 
         // Static Methods
 
@@ -746,6 +793,27 @@ namespace GSF.Units
         public static Voltage FromStatvolts(double value)
         {
             return new Voltage(value * StatvoltsFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Voltage"/> in volts.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Voltage"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Voltage ConvertFrom(double value, VoltageUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case VoltageUnits.Volts:
+                    return value;
+                case VoltageUnits.Abvolts:
+                    return FromAbvolts(value);
+                case VoltageUnits.Statvolts:
+                    return FromStatvolts(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

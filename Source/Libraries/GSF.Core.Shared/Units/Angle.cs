@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -73,13 +75,50 @@ using GSF.NumericalAnalysis;
 
 namespace GSF.Units
 {
-    /// <summary>Represents an angle, in radians, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for an <see cref="Angle"/> value.
+    /// </summary>
+    public enum AngleUnits
+    {
+        /// <summary>
+        /// Radian angle units.
+        /// </summary>
+        Radians,
+        /// <summary>
+        /// Degree angle units.
+        /// </summary>
+        Degrees,
+        /// <summary>
+        /// Grad angle units, a.k.a., grade, gradian and gon.
+        /// </summary>
+        Grads,
+        /// <summary>
+        /// ArcMinute angle units, a.k.a., minute of arc or MOA.
+        /// </summary>
+        ArcMinutes,
+        /// <summary>
+        /// ArcSecond angle units, a.k.a., second of arc.
+        /// </summary>
+        ArcSeconds,
+        /// <summary>
+        /// AngularMil angle units, a.k.a., mil.
+        /// </summary>
+        AngularMil
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents an angle, in radians, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing an angle in radians; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing an angle in radians; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other angle representations, specifically
-    /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
-    /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
+    /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc or MOA),
+    /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a., mil).
     /// <example>
     /// This example converts degrees to grads:
     /// <code>
@@ -91,7 +130,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<Double>, IEquatable<Angle>, IEquatable<Double>
+    public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<double>, IEquatable<Angle>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -174,6 +213,32 @@ namespace GSF.Units
         }
 
         /// <summary>
+        /// Converts the <see cref="Angle"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Angle"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(AngleUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case AngleUnits.Radians:
+                    return m_value;
+                case AngleUnits.Degrees:
+                    return ToDegrees();
+                case AngleUnits.Grads:
+                    return ToGrads();
+                case AngleUnits.ArcMinutes:
+                    return ToArcMinutes();
+                case AngleUnits.ArcSeconds:
+                    return ToArcSeconds();
+                case AngleUnits.AngularMil:
+                    return ToAngularMil();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
+        /// <summary>
         /// Gets the equivalent angle moved within the range of <paramref name="minValue"/>
         /// and <paramref name="minValue"/> + 2.0 * <see cref="Math.PI"/>.
         /// </summary>
@@ -201,14 +266,14 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Angle"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             if (!(value is double) && !(value is Angle))
                 throw new ArgumentException("Argument must be a Double or an Angle");
 
             double num = (double)value;
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -238,7 +303,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -254,7 +319,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Angle)
+            if (obj is Angle)
                 return Equals((Angle)obj);
 
             return false;
@@ -281,7 +346,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -300,7 +365,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -365,7 +430,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Angle Parse(string s)
         {
-            return (Angle)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -389,7 +454,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Angle Parse(string s, NumberStyles style)
         {
-            return (Angle)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -409,7 +474,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Angle Parse(string s, IFormatProvider provider)
         {
-            return (Angle)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -436,7 +501,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Angle Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Angle)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -580,7 +645,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -623,7 +688,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the operation result.</returns>
         public static bool operator <(Angle value1, Angle value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -634,7 +699,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the operation result.</returns>
         public static bool operator <=(Angle value1, Angle value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -645,7 +710,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the operation result.</returns>
         public static bool operator >(Angle value1, Angle value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -656,7 +721,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the operation result.</returns>
         public static bool operator >=(Angle value1, Angle value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -668,7 +733,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>An <see cref="Angle"/> object.</returns>
-        public static implicit operator Angle(Double value)
+        public static implicit operator Angle(double value)
         {
             return new Angle(value);
         }
@@ -678,7 +743,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">An <see cref="Angle"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Angle value)
+        public static implicit operator double(Angle value)
         {
             return value.m_value;
         }
@@ -754,7 +819,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Angle value1, Angle value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -766,10 +831,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MaxValue = (Angle)double.MaxValue;
+        public static readonly Angle MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MinValue = (Angle)double.MinValue;
+        public static readonly Angle MinValue = double.MinValue;
 
         // Static Methods
 
@@ -821,6 +886,33 @@ namespace GSF.Units
         public static Angle FromAngularMil(double value)
         {
             return new Angle(value * AngularMilFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Angle"/> in radians.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Angle"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Angle ConvertFrom(double value, AngleUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case AngleUnits.Radians:
+                    return value;
+                case AngleUnits.Degrees:
+                    return FromDegrees(value);
+                case AngleUnits.Grads:
+                    return FromGrads(value);
+                case AngleUnits.ArcMinutes:
+                    return FromArcMinutes(value);
+                case AngleUnits.ArcSeconds:
+                    return FromArcSeconds(value);
+                case AngleUnits.AngularMil:
+                    return FromAngularMil(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         /// <summary>

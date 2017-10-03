@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,12 +72,61 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a length measurement, in meters, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Length"/> value.
+    /// </summary>
+    public enum LengthUnits
+    {
+        /// <summary>
+        /// Meter length units.
+        /// </summary>
+        Meters,
+        /// <summary>
+        /// Foot length units.
+        /// </summary>
+        Feet,
+        /// <summary>
+        /// Inch length units.
+        /// </summary>
+        Inches,
+        /// <summary>
+        /// Mile length units.
+        /// </summary>
+        Miles,
+        /// <summary>
+        /// Light-second length units.
+        /// </summary>
+        LightSeconds,
+        /// <summary>
+        /// U.S. survey foot length units.
+        /// </summary>
+        USSurveyFeet,
+        /// <summary>
+        /// U.S. survey mile length units.
+        /// </summary>
+        USSurveyMiles,
+        /// <summary>
+        /// Nautical mile length units.
+        /// </summary>
+        NauticalMiles,
+        /// <summary>
+        /// Yard length units.
+        /// </summary>
+        Yards
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a length measurement, in meters, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a length in meters; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a length in meters; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other length representations, specifically
-    /// inches, feet, yards, miles, US survey feet, US survey miles, light-seconds, and nautical miles.
+    /// inches, feet, yards, miles, U.S. survey feet, U.S. survey miles, light-seconds, and nautical miles.
     /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
     /// <example>
     /// Convert length in meters to kilometers:
@@ -95,7 +146,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Length : IComparable, IFormattable, IConvertible, IComparable<Length>, IComparable<Double>, IEquatable<Length>, IEquatable<Double>
+    public struct Length : IComparable, IFormattable, IConvertible, IComparable<Length>, IComparable<double>, IEquatable<Length>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -208,6 +259,38 @@ namespace GSF.Units
             return m_value / NauticalMilesFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Length"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Length"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(LengthUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case LengthUnits.Meters:
+                    return m_value;
+                case LengthUnits.Feet:
+                    return ToFeet();
+                case LengthUnits.Inches:
+                    return ToInches();
+                case LengthUnits.Miles:
+                    return ToMiles();
+                case LengthUnits.LightSeconds:
+                    return ToLightSeconds();
+                case LengthUnits.USSurveyFeet:
+                    return ToUSSurveyFeet();
+                case LengthUnits.USSurveyMiles:
+                    return ToUSSurveyMiles();
+                case LengthUnits.NauticalMiles:
+                    return ToNauticalMiles();
+                case LengthUnits.Yards:
+                    return ToYards();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -222,7 +305,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Length"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -236,7 +319,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Length");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -266,7 +349,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -282,7 +365,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Length)
+            if (obj is Length)
                 return Equals((Length)obj);
 
             return false;
@@ -309,7 +392,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -328,7 +411,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -393,7 +476,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Length Parse(string s)
         {
-            return (Length)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -417,7 +500,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Length Parse(string s, NumberStyles style)
         {
-            return (Length)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -437,7 +520,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Length Parse(string s, IFormatProvider provider)
         {
-            return (Length)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -464,7 +547,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Length Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Length)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -608,7 +691,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -651,7 +734,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator <(Length value1, Length value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -662,7 +745,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator <=(Length value1, Length value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -673,7 +756,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator >(Length value1, Length value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -684,7 +767,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator >=(Length value1, Length value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -696,7 +779,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Length"/> object.</returns>
-        public static implicit operator Length(Double value)
+        public static implicit operator Length(double value)
         {
             return new Length(value);
         }
@@ -706,7 +789,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Length"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Length value)
+        public static implicit operator double(Length value)
         {
             return value.m_value;
         }
@@ -782,7 +865,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Length value1, Length value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -794,10 +877,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Length"/>. This field is constant.</summary>
-        public static readonly Length MaxValue = (Length)double.MaxValue;
+        public static readonly Length MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Length"/>. This field is constant.</summary>
-        public static readonly Length MinValue = (Length)double.MinValue;
+        public static readonly Length MinValue = double.MinValue;
 
         // Static Methods
 
@@ -879,6 +962,39 @@ namespace GSF.Units
         public static Length FromNauticalMiles(double value)
         {
             return new Length(value * NauticalMilesFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Length"/> in meters.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Length"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Length ConvertFrom(double value, LengthUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case LengthUnits.Meters:
+                    return value;
+                case LengthUnits.Feet:
+                    return FromFeet(value);
+                case LengthUnits.Inches:
+                    return FromInches(value);
+                case LengthUnits.Miles:
+                    return FromMiles(value);
+                case LengthUnits.LightSeconds:
+                    return FromLightSeconds(value);
+                case LengthUnits.USSurveyFeet:
+                    return FromUSSurveyFeet(value);
+                case LengthUnits.USSurveyMiles:
+                    return FromUSSurveyMiles(value);
+                case LengthUnits.NauticalMiles:
+                    return FromNauticalMiles(value);
+                case LengthUnits.Yards:
+                    return FromYards(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

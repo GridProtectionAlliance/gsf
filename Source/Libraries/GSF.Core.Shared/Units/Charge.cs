@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,46 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents an electric charge measurement, in coulombs (i.e., ampere-seconds), as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Charge"/> value.
+    /// </summary>
+    public enum ChargeUnits
+    {
+        /// <summary>
+        /// Coulomb charge units, i.e., ampere-seconds.
+        /// </summary>
+        Coulombs,
+        /// <summary>
+        /// AmpereHour charge units.
+        /// </summary>
+        AmpereHours,
+        /// <summary>
+        /// Abcoulomb charge units, a.k.a., an electromagnetic unit.
+        /// </summary>
+        Abcoulombs,
+        /// <summary>
+        /// Statcoulomb charge units, a.k.a., electrostatic unit or franklin.
+        /// </summary>
+        Statcoulombs,
+        /// <summary>
+        /// Atomic charge units.
+        /// </summary>
+        AtomicUnitsOfCharge,
+        /// <summary>
+        /// Faraday charge units.
+        /// </summary>
+        Faraday
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents an electric charge measurement, in coulombs (i.e., ampere-seconds), as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a charge in coulombs; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a charge in coulombs; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other charge representations, specifically
     /// ampere-hours, abcoulomb (a.k.a., an electromagnetic unit), statcoulomb (a.k.a., electrostatic unit or franklin), atomic unit of charge
@@ -88,7 +127,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Charge : IComparable, IFormattable, IConvertible, IComparable<Charge>, IComparable<Double>, IEquatable<Charge>, IEquatable<Double>
+    public struct Charge : IComparable, IFormattable, IConvertible, IComparable<Charge>, IComparable<double>, IEquatable<Charge>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -168,6 +207,32 @@ namespace GSF.Units
             return m_value / FaradayFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Charge"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Charge"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(ChargeUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case ChargeUnits.Coulombs:
+                    return m_value;
+                case ChargeUnits.AmpereHours:
+                    return ToAmpereHours();
+                case ChargeUnits.Abcoulombs:
+                    return ToAbcoulombs();
+                case ChargeUnits.Statcoulombs:
+                    return ToStatcoulombs();
+                case ChargeUnits.AtomicUnitsOfCharge:
+                    return ToAtomicUnitsOfCharge();
+                case ChargeUnits.Faraday:
+                    return ToFaraday();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -182,7 +247,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Charge"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -195,7 +260,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Charge");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -225,7 +290,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -241,7 +306,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Charge)
+            if (obj is Charge)
                 return Equals((Charge)obj);
 
             return false;
@@ -268,7 +333,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -287,7 +352,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -352,7 +417,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Charge Parse(string s)
         {
-            return (Charge)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -376,7 +441,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Charge Parse(string s, NumberStyles style)
         {
-            return (Charge)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -396,7 +461,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Charge Parse(string s, IFormatProvider provider)
         {
-            return (Charge)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -423,7 +488,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Charge Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Charge)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -433,9 +498,9 @@ namespace GSF.Units
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Charge"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paracoulomb is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not of the correct format, or represents a number less than <see cref="Charge.MinValue"/> or greater than <see cref="Charge.MaxValue"/>.
-        /// This paracoulomb is passed uninitialized.
+        /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(string s, out Charge result)
@@ -459,9 +524,9 @@ namespace GSF.Units
         /// </param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Charge"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paracoulomb is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not in a format compliant with style, or represents a number less than <see cref="Charge.MinValue"/> or
-        /// greater than <see cref="Charge.MaxValue"/>. This paracoulomb is passed uninitialized.
+        /// greater than <see cref="Charge.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -567,7 +632,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -610,7 +675,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <(Charge value1, Charge value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -621,7 +686,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <=(Charge value1, Charge value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -632,7 +697,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >(Charge value1, Charge value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -643,7 +708,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >=(Charge value1, Charge value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -655,7 +720,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Charge"/> value.</returns>
-        public static implicit operator Charge(Double value)
+        public static implicit operator Charge(double value)
         {
             return new Charge(value);
         }
@@ -665,7 +730,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Charge"/> value.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Charge value)
+        public static implicit operator double(Charge value)
         {
             return value.m_value;
         }
@@ -741,7 +806,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Charge value1, Charge value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -753,10 +818,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Charge"/>. This field is constant.</summary>
-        public static readonly Charge MaxValue = (Charge)double.MaxValue;
+        public static readonly Charge MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Charge"/>. This field is constant.</summary>
-        public static readonly Charge MinValue = (Charge)double.MinValue;
+        public static readonly Charge MinValue = double.MinValue;
 
         // Static Methods
 
@@ -808,6 +873,33 @@ namespace GSF.Units
         public static Charge FromFaraday(double value)
         {
             return new Charge(value * FaradayFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Charge"/> in coulombs.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Charge"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Charge ConvertFrom(double value, ChargeUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case ChargeUnits.Coulombs:
+                    return value;
+                case ChargeUnits.AmpereHours:
+                    return FromAmpereHours(value);
+                case ChargeUnits.Abcoulombs:
+                    return FromAbcoulombs(value);
+                case ChargeUnits.Statcoulombs:
+                    return FromStatcoulombs(value);
+                case ChargeUnits.AtomicUnitsOfCharge:
+                    return FromAtomicUnitsOfCharge(value);
+                case ChargeUnits.Faraday:
+                    return FromFaraday(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

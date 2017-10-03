@@ -26,6 +26,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
 #if DNF46
 using System.Numerics;
 #endif
@@ -175,7 +176,7 @@ namespace GSF.Units.EE
         /// <param name="phasor1">Left hand operand.</param>
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>Boolean representing the result of the addition operation.</returns>
-        public static bool operator ==(Phasor phasor1, Phasor phasor2) => (phasor1.Type == phasor2.Type && phasor1.Value == phasor2.Value);
+        public static bool operator ==(Phasor phasor1, Phasor phasor2) => phasor1.Type == phasor2.Type && phasor1.Value == phasor2.Value;
 
         /// <summary>
         /// Compares the two values for inequality.
@@ -269,7 +270,7 @@ namespace GSF.Units.EE
             if (current.Type != PhasorType.Current)
                 throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
 
-            return (voltage.Value.Real * current.Value.Real + voltage.Value.Imaginary * current.Value.Imaginary);
+            return voltage.Value.Real * current.Value.Real + voltage.Value.Imaginary * current.Value.Imaginary;
 
             // Polar version of calculation
             //return voltage.Value.Magnitude * current.Value.Magnitude * Math.Cos(CalculateRelativePhase(voltage, current));
@@ -290,7 +291,7 @@ namespace GSF.Units.EE
             if (current.Type != PhasorType.Current)
                 throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
 
-            return (voltage.Value.Imaginary * current.Value.Real - voltage.Value.Real * current.Value.Imaginary);
+            return voltage.Value.Imaginary * current.Value.Real - voltage.Value.Real * current.Value.Imaginary;
 
             // Polar version of calculation
             //return voltage.Value.Magnitude * current.Value.Magnitude * Math.Sin(CalculateRelativePhase(voltage, current));

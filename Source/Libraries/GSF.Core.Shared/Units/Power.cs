@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,50 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a power measurement, in watts, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Power"/> value.
+    /// </summary>
+    public enum PowerUnits
+    {
+        /// <summary>
+        /// Watt power units.
+        /// </summary>
+        Watts,
+        /// <summary>
+        /// Horsepower units.
+        /// </summary>
+        Horsepower,
+        /// <summary>
+        /// Metric horsepower units.
+        /// </summary>
+        MetricHorsepower,
+        /// <summary>
+        /// Boiler horsepower units.
+        /// </summary>
+        BoilerHorsepower,
+        /// <summary>
+        /// BTU per second power units.
+        /// </summary>
+        BTUPerSecond,
+        /// <summary>
+        /// Calories per second power units.
+        /// </summary>
+        CaloriesPerSecond,
+        /// <summary>
+        /// Liters atmosphere per second power units.
+        /// </summary>
+        LitersAtmospherePerSecond
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a power measurement, in watts, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a power in watts; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a power in watts; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other power representations, specifically
     /// horsepower, metric horsepower, boiler horsepower, BTU per second, calorie per second, and liter-atmosphere
@@ -96,7 +139,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Power : IComparable, IFormattable, IConvertible, IComparable<Power>, IComparable<Double>, IEquatable<Power>, IEquatable<Double>
+    public struct Power : IComparable, IFormattable, IConvertible, IComparable<Power>, IComparable<double>, IEquatable<Power>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -187,6 +230,34 @@ namespace GSF.Units
             return m_value / LitersAtmospherePerSecondFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Power"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Power"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(PowerUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case PowerUnits.Watts:
+                    return m_value;
+                case PowerUnits.Horsepower:
+                    return ToHorsepower();
+                case PowerUnits.MetricHorsepower:
+                    return ToMetricHorsepower();
+                case PowerUnits.BoilerHorsepower:
+                    return ToBoilerHorsepower();
+                case PowerUnits.BTUPerSecond:
+                    return ToBTUPerSecond();
+                case PowerUnits.CaloriesPerSecond:
+                    return ToCaloriesPerSecond();
+                case PowerUnits.LitersAtmospherePerSecond:
+                    return ToLitersAtmospherePerSecond();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -201,7 +272,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Power"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -214,7 +285,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Power");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -244,7 +315,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -260,7 +331,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Power)
+            if (obj is Power)
                 return Equals((Power)obj);
 
             return false;
@@ -287,7 +358,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -306,7 +377,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -371,7 +442,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Power Parse(string s)
         {
-            return (Power)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -395,7 +466,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Power Parse(string s, NumberStyles style)
         {
-            return (Power)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -415,7 +486,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Power Parse(string s, IFormatProvider provider)
         {
-            return (Power)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -442,7 +513,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Power Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Power)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -452,9 +523,9 @@ namespace GSF.Units
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Power"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parawatt is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not of the correct format, or represents a number less than <see cref="Power.MinValue"/> or greater than <see cref="Power.MaxValue"/>.
-        /// This parawatt is passed uninitialized.
+        /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(string s, out Power result)
@@ -478,9 +549,9 @@ namespace GSF.Units
         /// </param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Power"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parawatt is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not in a format compliant with style, or represents a number less than <see cref="Power.MinValue"/> or
-        /// greater than <see cref="Power.MaxValue"/>. This parawatt is passed uninitialized.
+        /// greater than <see cref="Power.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -586,7 +657,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -629,7 +700,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <(Power value1, Power value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -640,7 +711,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <=(Power value1, Power value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -651,7 +722,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >(Power value1, Power value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -662,7 +733,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >=(Power value1, Power value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -674,7 +745,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Power"/> object.</returns>
-        public static implicit operator Power(Double value)
+        public static implicit operator Power(double value)
         {
             return new Power(value);
         }
@@ -684,7 +755,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Power"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Power value)
+        public static implicit operator double(Power value)
         {
             return value.m_value;
         }
@@ -760,7 +831,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Power value1, Power value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -772,10 +843,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Power"/>. This field is constant.</summary>
-        public static readonly Power MaxValue = (Power)double.MaxValue;
+        public static readonly Power MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Power"/>. This field is constant.</summary>
-        public static readonly Power MinValue = (Power)double.MinValue;
+        public static readonly Power MinValue = double.MinValue;
 
         // Static Methods
 
@@ -837,6 +908,35 @@ namespace GSF.Units
         public static Power FromLitersAtmospherePerSecond(double value)
         {
             return new Power(value * LitersAtmospherePerSecondFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Power"/> in watts.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Power"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Power ConvertFrom(double value, PowerUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case PowerUnits.Watts:
+                    return value;
+                case PowerUnits.Horsepower:
+                    return FromHorsepower(value);
+                case PowerUnits.MetricHorsepower:
+                    return FromMetricHorsepower(value);
+                case PowerUnits.BoilerHorsepower:
+                    return FromBoilerHorsepower(value);
+                case PowerUnits.BTUPerSecond:
+                    return FromBTUPerSecond(value);
+                case PowerUnits.CaloriesPerSecond:
+                    return FromCaloriesPerSecond(value);
+                case PowerUnits.LitersAtmospherePerSecond:
+                    return FromLitersAtmospherePerSecond(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

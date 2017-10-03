@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,50 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a mass measurement, in kilograms, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Mass"/> value.
+    /// </summary>
+    public enum MassUnits
+    {
+        /// <summary>
+        /// Kilogram mass units.
+        /// </summary>
+        Kilograms,
+        /// <summary>
+        /// Ounce mass units.
+        /// </summary>
+        Ounces,
+        /// <summary>
+        /// Pound mass units.
+        /// </summary>
+        Pounds,
+        /// <summary>
+        /// Metric pound mass units.
+        /// </summary>
+        MetricPounds,
+        /// <summary>
+        /// Ton mass units.
+        /// </summary>
+        Tons,
+        /// <summary>
+        /// Metric ton mass units.
+        /// </summary>
+        MectricTons,
+        /// <summary>
+        /// Long ton mass units.
+        /// </summary>
+        LongTons
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a mass measurement, in kilograms, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a mass in kilograms; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a mass in kilograms; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other mass representations, specifically
     /// ounces, pounds and tons. Metric conversions are handled simply by applying the needed <see cref="SI"/>
@@ -95,7 +138,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Mass : IComparable, IFormattable, IConvertible, IComparable<Mass>, IComparable<Double>, IEquatable<Mass>, IEquatable<Double>
+    public struct Mass : IComparable, IFormattable, IConvertible, IComparable<Mass>, IComparable<double>, IEquatable<Mass>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -186,6 +229,34 @@ namespace GSF.Units
             return m_value / LongTonsFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Mass"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Mass"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(MassUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case MassUnits.Kilograms:
+                    return m_value;
+                case MassUnits.Ounces:
+                    return ToOunces();
+                case MassUnits.Pounds:
+                    return ToPounds();
+                case MassUnits.MetricPounds:
+                    return ToMetricPounds();
+                case MassUnits.Tons:
+                    return ToTons();
+                case MassUnits.MectricTons:
+                    return ToMetricTons();
+                case MassUnits.LongTons:
+                    return ToLongTons();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -200,7 +271,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Mass"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -214,7 +285,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Mass");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -244,7 +315,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -260,7 +331,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Mass)
+            if (obj is Mass)
                 return Equals((Mass)obj);
 
             return false;
@@ -287,7 +358,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -306,7 +377,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -371,7 +442,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Mass Parse(string s)
         {
-            return (Mass)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -395,7 +466,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Mass Parse(string s, NumberStyles style)
         {
-            return (Mass)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -415,7 +486,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Mass Parse(string s, IFormatProvider provider)
         {
-            return (Mass)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -442,7 +513,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Mass Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Mass)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -452,9 +523,9 @@ namespace GSF.Units
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Mass"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not of the correct format, or represents a number less than <see cref="Mass.MinValue"/> or greater than <see cref="Mass.MaxValue"/>.
-        /// This paraampere is passed uninitialized.
+        /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(string s, out Mass result)
@@ -478,9 +549,9 @@ namespace GSF.Units
         /// </param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Mass"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not in a format compliant with style, or represents a number less than <see cref="Mass.MinValue"/> or
-        /// greater than <see cref="Mass.MaxValue"/>. This paraampere is passed uninitialized.
+        /// greater than <see cref="Mass.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -586,7 +657,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -629,7 +700,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <(Mass value1, Mass value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -640,7 +711,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <=(Mass value1, Mass value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -651,7 +722,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >(Mass value1, Mass value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -662,7 +733,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >=(Mass value1, Mass value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -674,7 +745,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Mass"/> object.</returns>
-        public static implicit operator Mass(Double value)
+        public static implicit operator Mass(double value)
         {
             return new Mass(value);
         }
@@ -684,7 +755,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Mass"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Mass value)
+        public static implicit operator double(Mass value)
         {
             return value.m_value;
         }
@@ -760,7 +831,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Mass value1, Mass value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -772,10 +843,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Mass"/>. This field is constant.</summary>
-        public static readonly Mass MaxValue = (Mass)double.MaxValue;
+        public static readonly Mass MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Mass"/>. This field is constant.</summary>
-        public static readonly Mass MinValue = (Mass)double.MinValue;
+        public static readonly Mass MinValue = double.MinValue;
 
         // Static Methods
 
@@ -837,6 +908,35 @@ namespace GSF.Units
         public static Mass FromLongTons(double value)
         {
             return new Mass(value * LongTonsFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Mass"/> in kilograms.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Mass"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Mass ConvertFrom(double value, MassUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case MassUnits.Kilograms:
+                    return value;
+                case MassUnits.Ounces:
+                    return FromOunces(value);
+                case MassUnits.Pounds:
+                    return FromPounds(value);
+                case MassUnits.MetricPounds:
+                    return FromMetricPounds(value);
+                case MassUnits.Tons:
+                    return FromTons(value);
+                case MassUnits.MectricTons:
+                    return FromMetricTons(value);
+                case MassUnits.LongTons:
+                    return FromLongTons(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

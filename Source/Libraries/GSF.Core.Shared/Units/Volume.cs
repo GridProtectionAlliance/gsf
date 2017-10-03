@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,78 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a volume measurement, in cubic meters, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Volume"/> value.
+    /// </summary>
+    public enum VolumeUnits
+    {
+        /// <summary>
+        /// Cubic meter volume units.
+        /// </summary>
+        CubicMeters,
+        /// <summary>
+        /// Liter volume units.
+        /// </summary>
+        Liters,
+        /// <summary>
+        /// Teaspoon volume units.
+        /// </summary>
+        Teaspoons,
+        /// <summary>
+        /// Metric teaspoon volume units.
+        /// </summary>
+        MetricTeaspoons,
+        /// <summary>
+        /// Tablespoon volume units.
+        /// </summary>
+        Tablespoons,
+        /// <summary>
+        /// Metric tablespoon volume units.
+        /// </summary>
+        MetricTablespoons,
+        /// <summary>
+        /// Cup volume units.
+        /// </summary>
+        Cups,
+        /// <summary>
+        /// Metric cup volume units.
+        /// </summary>
+        MetricCups,
+        /// <summary>
+        /// Fluid ounce volume units.
+        /// </summary>
+        FluidOunces,
+        /// <summary>
+        /// Pint volume units.
+        /// </summary>
+        Pints,
+        /// <summary>
+        /// Quart volume units.
+        /// </summary>
+        Quarts,
+        /// <summary>
+        /// Gallon volume units.
+        /// </summary>
+        Gallons,
+        /// <summary>
+        /// Cubic inch volume units.
+        /// </summary>
+        CubicInches,
+        /// <summary>
+        /// Cubic feet volume units.
+        /// </summary>
+        CubicFeet
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a volume measurement, in cubic meters, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a volume in cubic meters; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a volume in cubic meters; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other volume representations, specifically
     /// liters, teaspoons, tablespoons, cubic inches, fluid ounces, cups, pints, quarts, gallons and cubic feet.
@@ -102,7 +173,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Volume : IComparable, IFormattable, IConvertible, IComparable<Volume>, IComparable<Double>, IEquatable<Volume>, IEquatable<Double>
+    public struct Volume : IComparable, IFormattable, IConvertible, IComparable<Volume>, IComparable<double>, IEquatable<Volume>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -270,6 +341,48 @@ namespace GSF.Units
             return m_value / CubicFeetFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Volume"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Volume"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(VolumeUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case VolumeUnits.CubicMeters:
+                    return m_value;
+                case VolumeUnits.Liters:
+                    return ToLiters();
+                case VolumeUnits.Teaspoons:
+                    return ToTeaspoons();
+                case VolumeUnits.MetricTeaspoons:
+                    return ToMetricTeaspoons();
+                case VolumeUnits.Tablespoons:
+                    return ToTablespoons();
+                case VolumeUnits.MetricTablespoons:
+                    return ToMetricTablespoons();
+                case VolumeUnits.Cups:
+                    return ToCups();
+                case VolumeUnits.MetricCups:
+                    return ToMetricCups();
+                case VolumeUnits.FluidOunces:
+                    return ToFluidOunces();
+                case VolumeUnits.Pints:
+                    return ToPints();
+                case VolumeUnits.Quarts:
+                    return ToQuarts();
+                case VolumeUnits.Gallons:
+                    return ToGallons();
+                case VolumeUnits.CubicInches:
+                    return ToCubicInches();
+                case VolumeUnits.CubicFeet:
+                    return ToCubicFeet();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -284,7 +397,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Volume"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -297,7 +410,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Volume");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -327,7 +440,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -343,7 +456,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Volume)
+            if (obj is Volume)
                 return Equals((Volume)obj);
 
             return false;
@@ -370,7 +483,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -389,7 +502,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -454,7 +567,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Volume Parse(string s)
         {
-            return (Volume)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -478,7 +591,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Volume Parse(string s, NumberStyles style)
         {
-            return (Volume)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -498,7 +611,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Volume Parse(string s, IFormatProvider provider)
         {
-            return (Volume)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -525,7 +638,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Volume Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Volume)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -535,9 +648,9 @@ namespace GSF.Units
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Volume"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not of the correct format, or represents a number less than <see cref="Volume.MinValue"/> or greater than <see cref="Volume.MaxValue"/>.
-        /// This paraampere is passed uninitialized.
+        /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(string s, out Volume result)
@@ -561,9 +674,9 @@ namespace GSF.Units
         /// </param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Volume"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not in a format compliant with style, or represents a number less than <see cref="Volume.MinValue"/> or
-        /// greater than <see cref="Volume.MaxValue"/>. This paraampere is passed uninitialized.
+        /// greater than <see cref="Volume.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -669,7 +782,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -712,7 +825,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <(Volume value1, Volume value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -723,7 +836,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <=(Volume value1, Volume value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -734,7 +847,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >(Volume value1, Volume value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -745,7 +858,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >=(Volume value1, Volume value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -757,7 +870,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Volume"/> object.</returns>
-        public static implicit operator Volume(Double value)
+        public static implicit operator Volume(double value)
         {
             return new Volume(value);
         }
@@ -767,7 +880,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Volume"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Volume value)
+        public static implicit operator double(Volume value)
         {
             return value.m_value;
         }
@@ -843,7 +956,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Volume value1, Volume value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -855,10 +968,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Volume"/>. This field is constant.</summary>
-        public static readonly Volume MaxValue = (Volume)double.MaxValue;
+        public static readonly Volume MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Volume"/>. This field is constant.</summary>
-        public static readonly Volume MinValue = (Volume)double.MinValue;
+        public static readonly Volume MinValue = double.MinValue;
 
         // Static Methods
 
@@ -990,6 +1103,49 @@ namespace GSF.Units
         public static Volume FromCubicFeet(double value)
         {
             return new Volume(value * CubicFeetFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Volume"/> in cubic meters.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Volume"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Volume ConvertFrom(double value, VolumeUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case VolumeUnits.CubicMeters:
+                    return value;
+                case VolumeUnits.Liters:
+                    return FromLiters(value);
+                case VolumeUnits.Teaspoons:
+                    return FromTeaspoons(value);
+                case VolumeUnits.MetricTeaspoons:
+                    return FromMetricTeaspoons(value);
+                case VolumeUnits.Tablespoons:
+                    return FromTablespoons(value);
+                case VolumeUnits.MetricTablespoons:
+                    return FromMetricTablespoons(value);
+                case VolumeUnits.Cups:
+                    return FromCups(value);
+                case VolumeUnits.MetricCups:
+                    return FromMetricCups(value);
+                case VolumeUnits.FluidOunces:
+                    return FromFluidOunces(value);
+                case VolumeUnits.Pints:
+                    return FromPints(value);
+                case VolumeUnits.Quarts:
+                    return FromQuarts(value);
+                case VolumeUnits.Gallons:
+                    return FromGallons(value);
+                case VolumeUnits.CubicInches:
+                    return FromCubicInches(value);
+                case VolumeUnits.CubicFeet:
+                    return FromCubicFeet(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

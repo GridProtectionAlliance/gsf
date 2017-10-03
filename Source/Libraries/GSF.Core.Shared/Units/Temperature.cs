@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,54 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a temperature, in kelvin, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Temperature"/> value.
+    /// </summary>
+    public enum TemperatureUnits
+    {
+        /// <summary>
+        /// Kelvin temperature units.
+        /// </summary>
+        Kelvin,
+        /// <summary>
+        /// Celsius temperature units.
+        /// </summary>
+        Celsius,
+        /// <summary>
+        /// Fahrenheit temperature units.
+        /// </summary>
+        Fahrenheit,
+        /// <summary>
+        /// Newton temperature units.
+        /// </summary>
+        Newton,
+        /// <summary>
+        /// Rankine temperature units.
+        /// </summary>
+        Rankine,
+        /// <summary>
+        /// Delisle temperature units.
+        /// </summary>
+        Delisle,
+        /// <summary>
+        /// Réaumur temperature units.
+        /// </summary>
+        Réaumur,
+        /// <summary>
+        /// Rømer temperature units.
+        /// </summary>
+        Rømer
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a temperature, in Kelvin, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a temperature in kelvin; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a temperature in Kelvin; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other temperature representations, specifically
     /// Celsius, Fahrenheit, Newton, Rankine, Delisle, Réaumur and Rømer.
@@ -87,7 +134,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Temperature : IComparable, IFormattable, IConvertible, IComparable<Temperature>, IComparable<Double>, IEquatable<Temperature>, IEquatable<Double>
+    public struct Temperature : IComparable, IFormattable, IConvertible, IComparable<Temperature>, IComparable<double>, IEquatable<Temperature>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -121,7 +168,7 @@ namespace GSF.Units
         private const double RømerStep = -7.5D;
 
         // Fields
-        private readonly double m_value; // Temperature value stored in kelvin
+        private readonly double m_value; // Temperature value stored in Kelvin
 
         #endregion
 
@@ -130,7 +177,7 @@ namespace GSF.Units
         /// <summary>
         /// Creates a new <see cref="Temperature"/>.
         /// </summary>
-        /// <param name="value">New temperature value in kelvin.</param>
+        /// <param name="value">New temperature value in Kelvin.</param>
         public Temperature(double value)
         {
             m_value = value;
@@ -203,7 +250,38 @@ namespace GSF.Units
             return ToTemperature(RømerFactor, RømerOffset, RømerStep);
         }
 
+        /// <summary>
+        /// Converts the <see cref="Temperature"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Temperature"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(TemperatureUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case TemperatureUnits.Kelvin:
+                    return m_value;
+                case TemperatureUnits.Celsius:
+                    return ToCelsius();
+                case TemperatureUnits.Fahrenheit:
+                    return ToFahrenheit();
+                case TemperatureUnits.Newton:
+                    return ToNewton();
+                case TemperatureUnits.Rankine:
+                    return ToRankine();
+                case TemperatureUnits.Delisle:
+                    return ToDelisle();
+                case TemperatureUnits.Réaumur:
+                    return ToRéaumur();
+                case TemperatureUnits.Rømer:
+                    return ToRømer();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         // Calculate temperature based on value = (K - offset) / factor - step
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Temperature ToTemperature(double factor, double offset, double step)
         {
             return (m_value - offset) / factor - step;
@@ -223,7 +301,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Temperature"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -237,7 +315,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Temperature");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -267,7 +345,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -283,7 +361,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Temperature)
+            if (obj is Temperature)
                 return Equals((Temperature)obj);
 
             return false;
@@ -310,7 +388,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -329,7 +407,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -394,7 +472,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Temperature Parse(string s)
         {
-            return (Temperature)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -418,7 +496,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Temperature Parse(string s, NumberStyles style)
         {
-            return (Temperature)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -438,7 +516,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Temperature Parse(string s, IFormatProvider provider)
         {
-            return (Temperature)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -465,7 +543,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Temperature Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Temperature)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -609,7 +687,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -652,7 +730,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <(Temperature value1, Temperature value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -663,7 +741,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <=(Temperature value1, Temperature value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -674,7 +752,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >(Temperature value1, Temperature value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -685,7 +763,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >=(Temperature value1, Temperature value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -693,21 +771,21 @@ namespace GSF.Units
         #region [ Type Conversion Operators ]
 
         /// <summary>
-        /// Implicitly converts value, represented in kelvin, to a <see cref="Temperature"/>.
+        /// Implicitly converts value, represented in Kelvin, to a <see cref="Temperature"/>.
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Temperature"/> object.</returns>
-        public static implicit operator Temperature(Double value)
+        public static implicit operator Temperature(double value)
         {
             return new Temperature(value);
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Temperature"/>, represented in kelvin, to a <see cref="Double"/>.
+        /// Implicitly converts <see cref="Temperature"/>, represented in Kelvin, to a <see cref="Double"/>.
         /// </summary>
         /// <param name="value">A <see cref="Temperature"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Temperature value)
+        public static implicit operator double(Temperature value)
         {
             return value.m_value;
         }
@@ -783,7 +861,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Temperature value1, Temperature value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -795,10 +873,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of a <see cref="Temperature"/>. This field is constant.</summary>
-        public static readonly Temperature MaxValue = (Temperature)double.MaxValue;
+        public static readonly Temperature MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of a <see cref="Temperature"/>. This field is constant.</summary>
-        public static readonly Temperature MinValue = (Temperature)double.MinValue;
+        public static readonly Temperature MinValue = double.MinValue;
 
         // Static Methods
 
@@ -872,7 +950,39 @@ namespace GSF.Units
             return FromTemperature(value, RømerFactor, RømerOffset, RømerStep);
         }
 
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Temperature"/> in Kelvin.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Temperature"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Temperature ConvertFrom(double value, TemperatureUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case TemperatureUnits.Kelvin:
+                    return value;
+                case TemperatureUnits.Celsius:
+                    return FromCelsius(value);
+                case TemperatureUnits.Fahrenheit:
+                    return FromFahrenheit(value);
+                case TemperatureUnits.Newton:
+                    return FromNewton(value);
+                case TemperatureUnits.Rankine:
+                    return FromRankine(value);
+                case TemperatureUnits.Delisle:
+                    return FromDelisle(value);
+                case TemperatureUnits.Réaumur:
+                    return FromRéaumur(value);
+                case TemperatureUnits.Rømer:
+                    return FromRømer(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
+        }
+
         // Calculate temperature based on K = (value + step) * factor + offset
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Temperature FromTemperature(double value, double factor, double offset, double step)
         {
             return new Temperature((value + step) * factor + offset);

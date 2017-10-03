@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,12 +72,56 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a speed measurement, in meters per second, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Speed"/> value.
+    /// </summary>
+    public enum SpeedUnits
+    {
+        /// <summary>
+        /// Meters per second speed units.
+        /// </summary>
+        MetersPerSecond,
+        /// <summary>
+        /// Miles per hour speed units.
+        /// </summary>
+        MilesPerHour,
+        /// <summary>
+        /// Kilometers per hour speed units.
+        /// </summary>
+        KilometersPerHour,
+        /// <summary>
+        /// Feet per minute speed units.
+        /// </summary>
+        FeetPerMinute,
+        /// <summary>
+        /// Inches per second speed units.
+        /// </summary>
+        InchesPerSecond,
+        /// <summary>
+        /// Knot speed units, international.
+        /// </summary>
+        Knots,
+        /// <summary>
+        /// Mach speed units.
+        /// </summary>
+        /// <remarks>
+        /// As modeled by International Standard Atmosphere, dry air at mean sea level, standard temperature of 15 °C.
+        /// </remarks>
+        Mach
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a speed measurement, in meters per second, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a speed in meters per second; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a speed in meters per second; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other speed representations, specifically
-    /// miles per hour, kilometers per hour, feet per minute, inches per second, knots and mach.
+    /// miles per hour, kilometers per hour, feet per minute, inches per second, knots and Mach.
     /// <example>
     /// This example converts mph to km/h:
     /// <code>
@@ -87,7 +133,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Speed : IComparable, IFormattable, IConvertible, IComparable<Speed>, IComparable<Double>, IEquatable<Speed>, IEquatable<Double>
+    public struct Speed : IComparable, IFormattable, IConvertible, IComparable<Speed>, IComparable<double>, IEquatable<Speed>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -102,7 +148,7 @@ namespace GSF.Units
 
         private const double KnotsFactor = 0.514444D;
 
-        private const double MachFactor = 331.0D;
+        private const double MachFactor = 340.3D; // As modeled by ISA
 
         // Fields
         private readonly double m_value; // Speed value stored in meters per second
@@ -170,12 +216,40 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Gets the <see cref="Speed"/> value in mach.
+        /// Gets the <see cref="Speed"/> value in Mach.
         /// </summary>
-        /// <returns>Value of <see cref="Speed"/> in mach.</returns>
+        /// <returns>Value of <see cref="Speed"/> in Mach.</returns>
         public double ToMach()
         {
             return m_value / MachFactor;
+        }
+
+        /// <summary>
+        /// Converts the <see cref="Speed"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Speed"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(SpeedUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case SpeedUnits.MetersPerSecond:
+                    return m_value;
+                case SpeedUnits.MilesPerHour:
+                    return ToMilesPerHour();
+                case SpeedUnits.KilometersPerHour:
+                    return ToKilometersPerHour();
+                case SpeedUnits.FeetPerMinute:
+                    return ToFeetPerMinute();
+                case SpeedUnits.InchesPerSecond:
+                    return ToInchesPerSecond();
+                case SpeedUnits.Knots:
+                    return ToKnots();
+                case SpeedUnits.Mach:
+                    return ToMach();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
         }
 
         #region [ Numeric Interface Implementations ]
@@ -192,7 +266,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Speed"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -206,7 +280,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or a Speed");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -236,7 +310,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -252,7 +326,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Speed)
+            if (obj is Speed)
                 return Equals((Speed)obj);
 
             return false;
@@ -279,7 +353,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -298,7 +372,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -363,7 +437,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Speed Parse(string s)
         {
-            return (Speed)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -387,7 +461,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Speed Parse(string s, NumberStyles style)
         {
-            return (Speed)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -407,7 +481,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Speed Parse(string s, IFormatProvider provider)
         {
-            return (Speed)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -434,7 +508,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Speed Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Speed)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -578,7 +652,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -621,7 +695,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator <(Speed value1, Speed value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -632,7 +706,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator <=(Speed value1, Speed value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -643,7 +717,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator >(Speed value1, Speed value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -654,7 +728,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> value as the result of the operation.</returns>
         public static bool operator >=(Speed value1, Speed value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -666,7 +740,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Speed"/> object.</returns>
-        public static implicit operator Speed(Double value)
+        public static implicit operator Speed(double value)
         {
             return new Speed(value);
         }
@@ -676,7 +750,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Speed"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Speed value)
+        public static implicit operator double(Speed value)
         {
             return value.m_value;
         }
@@ -752,7 +826,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Speed value1, Speed value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -764,10 +838,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Speed"/>. This field is constant.</summary>
-        public static readonly Speed MaxValue = (Speed)double.MaxValue;
+        public static readonly Speed MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Speed"/>. This field is constant.</summary>
-        public static readonly Speed MinValue = (Speed)double.MinValue;
+        public static readonly Speed MinValue = double.MinValue;
 
         // Static Methods
 
@@ -822,13 +896,42 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in mach.
+        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in Mach.
         /// </summary>
-        /// <param name="value">New <see cref="Speed"/> value in mach.</param>
-        /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in mach.</returns>
+        /// <param name="value">New <see cref="Speed"/> value in Mach.</param>
+        /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in Mach.</returns>
         public static Speed FromMach(double value)
         {
             return new Speed(value * MachFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Speed"/> in meters per second.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Speed"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Speed ConvertFrom(double value, SpeedUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case SpeedUnits.MetersPerSecond:
+                    return value;
+                case SpeedUnits.MilesPerHour:
+                    return FromMilesPerHour(value);
+                case SpeedUnits.KilometersPerHour:
+                    return FromKilometersPerHour(value);
+                case SpeedUnits.FeetPerMinute:
+                    return FromFeetPerMinute(value);
+                case SpeedUnits.InchesPerSecond:
+                    return FromInchesPerSecond(value);
+                case SpeedUnits.Knots:
+                    return FromKnots(value);
+                case SpeedUnits.Mach:
+                    return FromMach(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

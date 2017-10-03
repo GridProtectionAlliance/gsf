@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -72,7 +74,56 @@ using System.Text;
 
 namespace GSF.Units
 {
-    /// <summary>Represents a time measurement, in seconds, as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for a <see cref="Time"/> value.
+    /// </summary>
+    public enum TimeUnits
+    {
+        /// <summary>
+        /// Second time units.
+        /// </summary>
+        Seconds,
+        /// <summary>
+        /// Minute time units.
+        /// </summary>
+        Minutes,
+        /// <summary>
+        /// Hour time units.
+        /// </summary>
+        Hours,
+        /// <summary>
+        /// Day time units.
+        /// </summary>
+        Days,
+        /// <summary>
+        /// Week time units.
+        /// </summary>
+        Weeks,
+        /// <summary>
+        /// Tick time units, 100-nanosecond intervals since 1/1/0001.
+        /// </summary>
+        Ticks,
+        /// <summary>
+        /// Atomic time units.
+        /// </summary>
+        AtomicUnitsOfTime,
+        /// <summary>
+        /// Planck time units.
+        /// </summary>
+        PlanckTime,
+        /// <summary>
+        /// Ke time units, traditional Chinese unit of decimal time.
+        /// </summary>
+        Ke
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a time measurement, in seconds, as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
     /// This class behaves just like a <see cref="double"/> representing a time in seconds; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
@@ -110,7 +161,7 @@ namespace GSF.Units
     /// </remarks>
     // ReSharper disable RedundantNameQualifier
     [Serializable]
-    public struct Time : IComparable, IFormattable, IConvertible, IComparable<Time>, IComparable<TimeSpan>, IComparable<Double>, IEquatable<Time>, IEquatable<TimeSpan>, IEquatable<Double>
+    public struct Time : IComparable, IFormattable, IConvertible, IComparable<Time>, IComparable<TimeSpan>, IComparable<double>, IEquatable<Time>, IEquatable<TimeSpan>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -268,6 +319,42 @@ namespace GSF.Units
         }
 
         /// <summary>
+        /// Converts the <see cref="Time"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Time"/> converted to <paramref name="targetUnits"/>.</returns>
+        /// <remarks>
+        /// When converting to <see cref="TimeUnits.Ticks"/>, precision loss will
+        /// occur for values that are outside the range of -2^52 and 2^52.
+        /// </remarks>
+        public double ConvertTo(TimeUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case TimeUnits.Seconds:
+                    return m_value;
+                case TimeUnits.Minutes:
+                    return ToMinutes();
+                case TimeUnits.Hours:
+                    return ToHours();
+                case TimeUnits.Days:
+                    return ToDays();
+                case TimeUnits.Weeks:
+                    return ToWeeks();
+                case TimeUnits.Ticks:
+                    return ToTicks();
+                case TimeUnits.AtomicUnitsOfTime:
+                    return ToAtomicUnitsOfTime();
+                case TimeUnits.PlanckTime:
+                    return ToPlanckTime();
+                case TimeUnits.Ke:
+                    return ToKe();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
+        /// <summary>
         /// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
         /// minutes and seconds.
         /// </summary>
@@ -351,14 +438,14 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Time"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             if (!(value is double) && !(value is Time) && !(value is DateTime) && !(value is TimeSpan))
                 throw new ArgumentException("Argument must be a Double or a Time");
 
             double num = (Time)value;
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -403,7 +490,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -419,10 +506,10 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Time)
+            if (obj is Time)
                 return Equals((Time)obj);
 
-            else if (obj is TimeSpan)
+            if (obj is TimeSpan)
                 return Equals((TimeSpan)obj);
 
             return false;
@@ -461,7 +548,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -554,7 +641,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Time Parse(string s)
         {
-            return (Time)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -578,7 +665,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Time Parse(string s, NumberStyles style)
         {
-            return (Time)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -598,7 +685,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Time Parse(string s, IFormatProvider provider)
         {
-            return (Time)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -625,7 +712,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Time Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Time)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -769,7 +856,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -812,7 +899,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <(Time value1, Time value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -823,7 +910,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <=(Time value1, Time value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -834,7 +921,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >(Time value1, Time value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -845,7 +932,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >=(Time value1, Time value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -857,7 +944,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>A <see cref="Time"/> object.</returns>
-        public static implicit operator Time(Double value)
+        public static implicit operator Time(double value)
         {
             return new Time(value);
         }
@@ -877,7 +964,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Time"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Time value)
+        public static implicit operator double(Time value)
         {
             return value.m_value;
         }
@@ -963,7 +1050,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Time value1, Time value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -975,10 +1062,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of a <see cref="Time"/>. This field is constant.</summary>
-        public static readonly Time MaxValue = (Time)double.MaxValue;
+        public static readonly Time MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of a <see cref="Time"/>. This field is constant.</summary>
-        public static readonly Time MinValue = (Time)double.MinValue;
+        public static readonly Time MinValue = double.MinValue;
 
         /// <summary>
         /// Standard time names used by <see cref="ToElapsedTimeString"/> method.
@@ -1059,6 +1146,53 @@ namespace GSF.Units
         }
 
         /// <summary>
+        /// Creates a new <see cref="Time"/> value from the specified <paramref name="value"/> in <see cref="Ticks"/>.
+        /// </summary>
+        /// <param name="value">New <see cref="Time"/> value in Ticks.</param>
+        /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in <see cref="Ticks"/>.</returns>
+        public static Time FromTicks(Ticks value)
+        {
+            return value.ToSeconds();
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Time"/> in seconds.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Time"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        /// <remarks>
+        /// When converting from <see cref="TimeUnits.Ticks"/>, precision loss will
+        /// occur for values that are outside the range of -2^52 and 2^52.
+        /// </remarks>
+        public static Time ConvertFrom(double value, TimeUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case TimeUnits.Seconds:
+                    return value;
+                case TimeUnits.Minutes:
+                    return FromMinutes(value);
+                case TimeUnits.Hours:
+                    return FromHours(value);
+                case TimeUnits.Days:
+                    return FromDays(value);
+                case TimeUnits.Weeks:
+                    return FromWeeks(value);
+                case TimeUnits.Ticks:
+                    return FromTicks((long)value);
+                case TimeUnits.AtomicUnitsOfTime:
+                    return FromAtomicUnitsOfTime(value);
+                case TimeUnits.PlanckTime:
+                    return FromPlanckTime(value);
+                case TimeUnits.Ke:
+                    return FromKe(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
+        }
+
+        /// <summary>
         /// Returns the number of seconds in the specified month and year.
         /// </summary>
         /// <param name="year">The year.</param>
@@ -1135,7 +1269,7 @@ namespace GSF.Units
                 throw new ArgumentOutOfRangeException(nameof(minimumSubSecondResolution), "Must be less than or equal to " + SI.Milli);
 
             // Future: setup a language specific load for the default time names array
-            if ((object)timeNames == null || timeNames.Length != TimeNames.Length)
+            if (timeNames == null || timeNames.Length != TimeNames.Length)
                 timeNames = TimeNames;
 
             StringBuilder timeImage = new StringBuilder();
@@ -1159,12 +1293,12 @@ namespace GSF.Units
             }
 
             // Check if remaining number of seconds ranges in days
-            days = (int)(seconds / Time.SecondsPerDay);
+            days = (int)(seconds / SecondsPerDay);
 
             if (days > 0)
             {
                 // Remove whole days from remaining seconds
-                seconds = seconds - days * Time.SecondsPerDay;
+                seconds = seconds - days * SecondsPerDay;
 
                 // Append textual representation of days
                 timeImage.Append(' ');
@@ -1177,12 +1311,12 @@ namespace GSF.Units
             }
 
             // Check if remaining number of seconds ranges in hours
-            hours = (int)(seconds / Time.SecondsPerHour);
+            hours = (int)(seconds / SecondsPerHour);
 
             if (hours > 0)
             {
                 // Remove whole hours from remaining seconds
-                seconds = seconds - hours * Time.SecondsPerHour;
+                seconds = seconds - hours * SecondsPerHour;
 
                 // Append textual representation of hours
                 timeImage.Append(' ');
@@ -1195,12 +1329,12 @@ namespace GSF.Units
             }
 
             // Check if remaining number of seconds ranges in minutes
-            minutes = (int)(seconds / Time.SecondsPerMinute);
+            minutes = (int)(seconds / SecondsPerMinute);
 
             if (minutes > 0)
             {
                 // Remove whole minutes from remaining seconds
-                seconds = seconds - minutes * Time.SecondsPerMinute;
+                seconds = seconds - minutes * SecondsPerMinute;
 
                 // If no fractional seconds were requested and remaining seconds
                 // are approximately 60, add another minute

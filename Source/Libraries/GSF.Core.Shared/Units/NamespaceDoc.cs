@@ -28,7 +28,7 @@ using System.Runtime.CompilerServices;
 namespace GSF.Units
 {
     /// <summary>
-    /// Contains classes used to simplify and standardize standard unit and SI conversions.
+    /// Contains classes used to simplify and standardize common unit and SI conversions.
     /// </summary>
     [CompilerGenerated]
     class NamespaceDoc

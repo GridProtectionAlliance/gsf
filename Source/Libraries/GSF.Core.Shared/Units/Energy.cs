@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  10/03/2017 - J. Ritchie Carroll
+//       Added units enumeration with associated Convert method.
 //
 //******************************************************************************************************
 
@@ -70,9 +72,58 @@ using System.Runtime.CompilerServices;
 
 namespace GSF.Units
 {
-    /// <summary>Represents an energy measurement, in joules (i.e., watt-seconds), as a double-precision floating-point number.</summary>
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the units available for an <see cref="Energy"/> value.
+    /// </summary>
+    public enum EnergyUnits
+    {
+        /// <summary>
+        /// Joule energy units, i.e., watt-seconds.
+        /// </summary>
+        Joules,
+        /// <summary>
+        /// WattHour energy units.
+        /// </summary>
+        WattHours,
+        /// <summary>
+        /// BTU energy units.
+        /// </summary>
+        BTU,
+        /// <summary>
+        /// Celsius heat energy units.
+        /// </summary>
+        CelsiusHeatUnits,
+        /// <summary>
+        /// Liters atmosphere energy units.
+        /// </summary>
+        LitersAtmosphere,
+        /// <summary>
+        /// Calorie energy units.
+        /// </summary>
+        Calories,
+        /// <summary>
+        /// Horsepower-hour energy units.
+        /// </summary>
+        HorsepowerHours,
+        /// <summary>
+        /// Barrels of oil energy units.
+        /// </summary>
+        BarrelsOfOil,
+        /// <summary>
+        /// Tons of coal energy units.
+        /// </summary>
+        TonsOfCoal
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents an energy measurement, in joules (i.e., watt-seconds), as a double-precision floating-point number.
+    /// </summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing an energy in joules; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing an energy in joules; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other energy representations, specifically
     /// watt-hours, BTU, Celsius heat unit, liter-atmosphere, calorie, horsepower-hour, barrel of oil and ton of coal.
@@ -102,7 +153,7 @@ namespace GSF.Units
     /// </example>
     /// </remarks>
     [Serializable]
-    public struct Energy : IComparable, IFormattable, IConvertible, IComparable<Energy>, IComparable<Double>, IEquatable<Energy>, IEquatable<Double>
+    public struct Energy : IComparable, IFormattable, IConvertible, IComparable<Energy>, IComparable<double>, IEquatable<Energy>, IEquatable<double>
     {
         #region [ Members ]
 
@@ -225,6 +276,38 @@ namespace GSF.Units
             return m_value / TonsOfCoalFactor;
         }
 
+        /// <summary>
+        /// Converts the <see cref="Energy"/> to the specified <paramref name="targetUnits"/>.
+        /// </summary>
+        /// <param name="targetUnits">Target units.</param>
+        /// <returns><see cref="Energy"/> converted to <paramref name="targetUnits"/>.</returns>
+        public double ConvertTo(EnergyUnits targetUnits)
+        {
+            switch (targetUnits)
+            {
+                case EnergyUnits.Joules:
+                    return m_value;
+                case EnergyUnits.WattHours:
+                    return ToWattHours();
+                case EnergyUnits.BTU:
+                    return ToBTU();
+                case EnergyUnits.CelsiusHeatUnits:
+                    return ToCelsiusHeatUnits();
+                case EnergyUnits.LitersAtmosphere:
+                    return ToLitersAtmosphere();
+                case EnergyUnits.Calories:
+                    return ToCalories();
+                case EnergyUnits.HorsepowerHours:
+                    return ToHorsepowerHours();
+                case EnergyUnits.BarrelsOfOil:
+                    return ToBarrelsOfOil();
+                case EnergyUnits.TonsOfCoal:
+                    return ToTonsOfCoal();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+            }
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
@@ -239,7 +322,7 @@ namespace GSF.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Energy"/>.</exception>
         public int CompareTo(object value)
         {
-            if ((object)value == null)
+            if (value == null)
                 return 1;
 
             double num;
@@ -253,7 +336,7 @@ namespace GSF.Units
             else
                 throw new ArgumentException("Argument must be a Double or an Energy");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return m_value < num ? -1 : (m_value > num ? 1 : 0);
         }
 
         /// <summary>
@@ -283,7 +366,7 @@ namespace GSF.Units
         /// </returns>
         public int CompareTo(double value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return m_value < value ? -1 : (m_value > value ? 1 : 0);
         }
 
         /// <summary>
@@ -299,7 +382,7 @@ namespace GSF.Units
             if (obj is double)
                 return Equals((double)obj);
 
-            else if (obj is Energy)
+            if (obj is Energy)
                 return Equals((Energy)obj);
 
             return false;
@@ -326,7 +409,7 @@ namespace GSF.Units
         /// </returns>
         public bool Equals(double obj)
         {
-            return (m_value == obj);
+            return m_value == obj;
         }
 
         /// <summary>
@@ -345,7 +428,7 @@ namespace GSF.Units
         /// </summary>
         /// <returns>
         /// The string representation of the value of this instance, consisting of a minus sign if
-        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
+        /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeros.
         /// </returns>
         public override string ToString()
         {
@@ -410,7 +493,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Energy Parse(string s)
         {
-            return (Energy)double.Parse(s);
+            return double.Parse(s);
         }
 
         /// <summary>
@@ -434,7 +517,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Energy Parse(string s, NumberStyles style)
         {
-            return (Energy)double.Parse(s, style);
+            return double.Parse(s, style);
         }
 
         /// <summary>
@@ -454,7 +537,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in the correct format.</exception>
         public static Energy Parse(string s, IFormatProvider provider)
         {
-            return (Energy)double.Parse(s, provider);
+            return double.Parse(s, provider);
         }
 
         /// <summary>
@@ -481,7 +564,7 @@ namespace GSF.Units
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
         public static Energy Parse(string s, NumberStyles style, IFormatProvider provider)
         {
-            return (Energy)double.Parse(s, style, provider);
+            return double.Parse(s, style, provider);
         }
 
         /// <summary>
@@ -491,9 +574,9 @@ namespace GSF.Units
         /// <param name="s">A string containing a number to convert.</param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Energy"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parajoule is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not of the correct format, or represents a number less than <see cref="Energy.MinValue"/> or greater than <see cref="Energy.MaxValue"/>.
-        /// This parajoule is passed uninitialized.
+        /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
         public static bool TryParse(string s, out Energy result)
@@ -517,9 +600,9 @@ namespace GSF.Units
         /// </param>
         /// <param name="result">
         /// When this method returns, contains the <see cref="Energy"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parajoule is null,
+        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
         /// is not in a format compliant with style, or represents a number less than <see cref="Energy.MinValue"/> or
-        /// greater than <see cref="Energy.MaxValue"/>. This parajoule is passed uninitialized.
+        /// greater than <see cref="Energy.MaxValue"/>. This parameter is passed uninitialized.
         /// </param>
         /// <param name="provider">
         /// A <see cref="System.IFormatProvider"/> object that supplies culture-specific formatting information about s.
@@ -625,7 +708,7 @@ namespace GSF.Units
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(m_value, type, provider) ?? Activator.CreateInstance(type);
         }
 
         #endregion
@@ -668,7 +751,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <(Energy value1, Energy value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -679,7 +762,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator <=(Energy value1, Energy value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>
@@ -690,7 +773,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >(Energy value1, Energy value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <summary>
@@ -701,7 +784,7 @@ namespace GSF.Units
         /// <returns>A <see cref="Boolean"/> as the result of the operation.</returns>
         public static bool operator >=(Energy value1, Energy value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.CompareTo(value2) >= 0;
         }
 
         #endregion
@@ -713,7 +796,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">A <see cref="Double"/> value.</param>
         /// <returns>An <see cref="Energy"/> object.</returns>
-        public static implicit operator Energy(Double value)
+        public static implicit operator Energy(double value)
         {
             return new Energy(value);
         }
@@ -723,7 +806,7 @@ namespace GSF.Units
         /// </summary>
         /// <param name="value">An <see cref="Energy"/> object.</param>
         /// <returns>A <see cref="Double"/> value.</returns>
-        public static implicit operator Double(Energy value)
+        public static implicit operator double(Energy value)
         {
             return value.m_value;
         }
@@ -799,7 +882,7 @@ namespace GSF.Units
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Energy value1, Energy value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow(value1.m_value, value2.m_value);
         }
 
         #endregion
@@ -811,10 +894,10 @@ namespace GSF.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Energy"/>. This field is constant.</summary>
-        public static readonly Energy MaxValue = (Energy)double.MaxValue;
+        public static readonly Energy MaxValue = double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Energy"/>. This field is constant.</summary>
-        public static readonly Energy MinValue = (Energy)double.MinValue;
+        public static readonly Energy MinValue = double.MinValue;
 
         // Static Methods
 
@@ -896,6 +979,39 @@ namespace GSF.Units
         public static Energy FromTonOfCoal(double value)
         {
             return new Energy(value * TonsOfCoalFactor);
+        }
+
+        /// <summary>
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Energy"/> in joules.
+        /// </summary>
+        /// <param name="value">Source value.</param>
+        /// <param name="sourceUnits">Source value units.</param>
+        /// <returns>New <see cref="Energy"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        public static Energy ConvertFrom(double value, EnergyUnits sourceUnits)
+        {
+            switch (sourceUnits)
+            {
+                case EnergyUnits.Joules:
+                    return value;
+                case EnergyUnits.WattHours:
+                    return FromWattHours(value);
+                case EnergyUnits.BTU:
+                    return FromBTU(value);
+                case EnergyUnits.CelsiusHeatUnits:
+                    return FromCelsiusHeatUnits(value);
+                case EnergyUnits.LitersAtmosphere:
+                    return FromLitersAtmosphere(value);
+                case EnergyUnits.Calories:
+                    return FromCalories(value);
+                case EnergyUnits.HorsepowerHours:
+                    return FromHorsepowerHours(value);
+                case EnergyUnits.BarrelsOfOil:
+                    return FromBarrelsOfOil(value);
+                case EnergyUnits.TonsOfCoal:
+                    return FromTonOfCoal(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+            }
         }
 
         #endregion

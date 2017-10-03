@@ -141,7 +141,7 @@ namespace GSF.Units.EE
         /// <returns><c>true</c> if the current object is equal to the other parameter; otherwise, <c>false</c>.</returns>
         public bool Equals(SignalReference other)
         {
-            return (string.Compare(Acronym, other.Acronym, StringComparison.OrdinalIgnoreCase) == 0 && Kind == other.Kind && Index == other.Index);
+            return string.Compare(Acronym, other.Acronym, StringComparison.OrdinalIgnoreCase) == 0 && Kind == other.Kind && Index == other.Index;
         }
 
         /// <summary>
