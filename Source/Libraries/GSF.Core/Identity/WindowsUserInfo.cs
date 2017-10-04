@@ -128,12 +128,13 @@ namespace GSF.Identity
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
                         IPrincipal principal = m_parent.PassthroughPrincipal;
+                        IIdentity identity = principal?.Identity ?? WindowsIdentity.GetCurrent();
 
                         exists =
-                            (object)principal != null &&
+                            (object)identity != null &&
                             !string.IsNullOrEmpty(m_parent.LoginID) &&
-                            principal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) &&
-                            principal.Identity.IsAuthenticated;
+                            identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) &&
+                            identity.IsAuthenticated;
                     }
                 }
 
@@ -440,21 +441,13 @@ namespace GSF.Identity
             get
             {
                 List<string> groups = new List<string>();
-                const string authenticatedUsersGroupPath = "WinNT://NT AUTHORITY/Authenticated Users";
 
                 // Get local groups that user is a member of
                 DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
                 string userPath = string.Format("WinNT://{0}/{1}", m_parent.Domain, m_parent.UserName);
                 string groupName;
-                bool userIsAuthenticated = false;
 
                 string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
-
-                // See if identity for current thread matches user information login ID - when this is true we can check 
-                // if the current user is authenticated. When a user is authenticated we will also need to validate if
-                // the local groups that contain the local "NT AUTHORITY\Authenticated Users" group.
-                if (m_parent.PassthroughPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
-                    userIsAuthenticated = m_parent.PassthroughPrincipal.Identity.IsAuthenticated;
 
                 // Only enumerate groups
                 root.Children.SchemaFilter.Add("Group");
@@ -462,8 +455,7 @@ namespace GSF.Identity
                 // Have to scan each local group for the AD user...
                 foreach (DirectoryEntry groupEntry in root.Children)
                 {
-                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }) ||
-                        (userIsAuthenticated && (bool)groupEntry.Invoke("IsMember", new object[] { authenticatedUsersGroupPath })))
+                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
                     {
                         groupName = groupEntry.Name;
 
