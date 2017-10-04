@@ -510,6 +510,8 @@ namespace GSF.COMTRADE
 
                 if (m_units.Length > 32)
                     m_units = m_units.Substring(0, 32);
+
+                m_angleUnit = null;
             }
         }
 
@@ -630,7 +632,7 @@ namespace GSF.COMTRADE
 
         // Static Methods
 
-        // Attempt to parse units as an AngleUnits enum value
+        // Attempt to parse units as an AngleUnit enum value
         private static AngleUnit GetAngleUnit(string units)
         {
             AngleUnit angleUnit;
