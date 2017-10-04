@@ -3,6 +3,8 @@
 
 The Grid Solutions Framework (GSF) is an extensive open source collection of .NET code used by electric power utilities and various open source projects. GSF contains a large variety of code useful for any .NET project consisting of hundreds of class libraries that extend or expand the functionality included in the .NET Framework with a focus on tools and protocol parsers that are useful for the electric power industry.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/oqyrl84ufu7bbhnm?svg=true)](https://ci.appveyor.com/project/ritchiecarroll/gsf)
+
 [Time-series Application Components](http://www.gridprotectionalliance.org/docs/products/gsf/tsl-components-2015.pdf)
 
 Example Components:
