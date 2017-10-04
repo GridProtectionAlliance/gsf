@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Volume"/> value.
     /// </summary>
-    public enum VolumeUnits
+    public enum VolumeUnit
     {
         /// <summary>
         /// Cubic meter volume units.
@@ -342,44 +342,44 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Volume"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Volume"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Volume"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(VolumeUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Volume"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(VolumeUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case VolumeUnits.CubicMeters:
+                case VolumeUnit.CubicMeters:
                     return m_value;
-                case VolumeUnits.Liters:
+                case VolumeUnit.Liters:
                     return ToLiters();
-                case VolumeUnits.Teaspoons:
+                case VolumeUnit.Teaspoons:
                     return ToTeaspoons();
-                case VolumeUnits.MetricTeaspoons:
+                case VolumeUnit.MetricTeaspoons:
                     return ToMetricTeaspoons();
-                case VolumeUnits.Tablespoons:
+                case VolumeUnit.Tablespoons:
                     return ToTablespoons();
-                case VolumeUnits.MetricTablespoons:
+                case VolumeUnit.MetricTablespoons:
                     return ToMetricTablespoons();
-                case VolumeUnits.Cups:
+                case VolumeUnit.Cups:
                     return ToCups();
-                case VolumeUnits.MetricCups:
+                case VolumeUnit.MetricCups:
                     return ToMetricCups();
-                case VolumeUnits.FluidOunces:
+                case VolumeUnit.FluidOunces:
                     return ToFluidOunces();
-                case VolumeUnits.Pints:
+                case VolumeUnit.Pints:
                     return ToPints();
-                case VolumeUnits.Quarts:
+                case VolumeUnit.Quarts:
                     return ToQuarts();
-                case VolumeUnits.Gallons:
+                case VolumeUnit.Gallons:
                     return ToGallons();
-                case VolumeUnits.CubicInches:
+                case VolumeUnit.CubicInches:
                     return ToCubicInches();
-                case VolumeUnits.CubicFeet:
+                case VolumeUnit.CubicFeet:
                     return ToCubicFeet();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -1106,45 +1106,45 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Volume"/> in cubic meters.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Volume"/> in cubic meters.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Volume"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Volume ConvertFrom(double value, VolumeUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Volume"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Volume ConvertFrom(double value, VolumeUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case VolumeUnits.CubicMeters:
+                case VolumeUnit.CubicMeters:
                     return value;
-                case VolumeUnits.Liters:
+                case VolumeUnit.Liters:
                     return FromLiters(value);
-                case VolumeUnits.Teaspoons:
+                case VolumeUnit.Teaspoons:
                     return FromTeaspoons(value);
-                case VolumeUnits.MetricTeaspoons:
+                case VolumeUnit.MetricTeaspoons:
                     return FromMetricTeaspoons(value);
-                case VolumeUnits.Tablespoons:
+                case VolumeUnit.Tablespoons:
                     return FromTablespoons(value);
-                case VolumeUnits.MetricTablespoons:
+                case VolumeUnit.MetricTablespoons:
                     return FromMetricTablespoons(value);
-                case VolumeUnits.Cups:
+                case VolumeUnit.Cups:
                     return FromCups(value);
-                case VolumeUnits.MetricCups:
+                case VolumeUnit.MetricCups:
                     return FromMetricCups(value);
-                case VolumeUnits.FluidOunces:
+                case VolumeUnit.FluidOunces:
                     return FromFluidOunces(value);
-                case VolumeUnits.Pints:
+                case VolumeUnit.Pints:
                     return FromPints(value);
-                case VolumeUnits.Quarts:
+                case VolumeUnit.Quarts:
                     return FromQuarts(value);
-                case VolumeUnits.Gallons:
+                case VolumeUnit.Gallons:
                     return FromGallons(value);
-                case VolumeUnits.CubicInches:
+                case VolumeUnit.CubicInches:
                     return FromCubicInches(value);
-                case VolumeUnits.CubicFeet:
+                case VolumeUnit.CubicFeet:
                     return FromCubicFeet(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

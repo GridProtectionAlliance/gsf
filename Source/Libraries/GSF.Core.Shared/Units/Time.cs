@@ -79,7 +79,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Time"/> value.
     /// </summary>
-    public enum TimeUnits
+    public enum TimeUnit
     {
         /// <summary>
         /// Second time units.
@@ -319,38 +319,38 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Time"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Time"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Time"/> converted to <paramref name="targetUnits"/>.</returns>
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Time"/> converted to <paramref name="targetUnit"/>.</returns>
         /// <remarks>
-        /// When converting to <see cref="TimeUnits.Ticks"/>, precision loss will
+        /// When converting to <see cref="TimeUnit.Ticks"/>, precision loss will
         /// occur for values that are outside the range of -2^52 and 2^52.
         /// </remarks>
-        public double ConvertTo(TimeUnits targetUnits)
+        public double ConvertTo(TimeUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case TimeUnits.Seconds:
+                case TimeUnit.Seconds:
                     return m_value;
-                case TimeUnits.Minutes:
+                case TimeUnit.Minutes:
                     return ToMinutes();
-                case TimeUnits.Hours:
+                case TimeUnit.Hours:
                     return ToHours();
-                case TimeUnits.Days:
+                case TimeUnit.Days:
                     return ToDays();
-                case TimeUnits.Weeks:
+                case TimeUnit.Weeks:
                     return ToWeeks();
-                case TimeUnits.Ticks:
+                case TimeUnit.Ticks:
                     return ToTicks();
-                case TimeUnits.AtomicUnitsOfTime:
+                case TimeUnit.AtomicUnitsOfTime:
                     return ToAtomicUnitsOfTime();
-                case TimeUnits.PlanckTime:
+                case TimeUnit.PlanckTime:
                     return ToPlanckTime();
-                case TimeUnits.Ke:
+                case TimeUnit.Ke:
                     return ToKe();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -1156,39 +1156,39 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Time"/> in seconds.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Time"/> in seconds.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Time"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Time"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
         /// <remarks>
-        /// When converting from <see cref="TimeUnits.Ticks"/>, precision loss will
+        /// When converting from <see cref="TimeUnit.Ticks"/>, precision loss will
         /// occur for values that are outside the range of -2^52 and 2^52.
         /// </remarks>
-        public static Time ConvertFrom(double value, TimeUnits sourceUnits)
+        public static Time ConvertFrom(double value, TimeUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case TimeUnits.Seconds:
+                case TimeUnit.Seconds:
                     return value;
-                case TimeUnits.Minutes:
+                case TimeUnit.Minutes:
                     return FromMinutes(value);
-                case TimeUnits.Hours:
+                case TimeUnit.Hours:
                     return FromHours(value);
-                case TimeUnits.Days:
+                case TimeUnit.Days:
                     return FromDays(value);
-                case TimeUnits.Weeks:
+                case TimeUnit.Weeks:
                     return FromWeeks(value);
-                case TimeUnits.Ticks:
+                case TimeUnit.Ticks:
                     return FromTicks((long)value);
-                case TimeUnits.AtomicUnitsOfTime:
+                case TimeUnit.AtomicUnitsOfTime:
                     return FromAtomicUnitsOfTime(value);
-                case TimeUnits.PlanckTime:
+                case TimeUnit.PlanckTime:
                     return FromPlanckTime(value);
-                case TimeUnits.Ke:
+                case TimeUnit.Ke:
                     return FromKe(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

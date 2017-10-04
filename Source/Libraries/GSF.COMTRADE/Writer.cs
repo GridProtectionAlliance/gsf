@@ -44,6 +44,7 @@ namespace GSF.COMTRADE
         /// <param name="deviceID">Device ID for the schema.</param>
         /// <param name="dataStartTime">Data start time.</param>
         /// <param name="sampleCount">Total data samples (i.e., total number of rows).</param>
+        /// <param name="version">Target schema version - defaults to 1999.</param>
         /// <param name="fileType">Determines the data file type for the schema.</param>
         /// <param name="timeFactor">Time factor to use in schema - defaults to 1000.</param>
         /// <param name="samplingRate">Desired sampling rate - defaults to 33.3333Hz.</param>
@@ -65,16 +66,20 @@ namespace GSF.COMTRADE
         /// will be <c>0.0</c> for all analog values.
         /// </para>
         /// </remarks>
-        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, FileType fileType = FileType.Binary, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
+        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, int version = 1999, FileType fileType = FileType.Binary, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
         {
-            Schema schema = new Schema();
+            Schema schema = new Schema
+            {
+                StationName = stationName,
+                DeviceID = deviceID,
+                Version = version
+            };
 
-            schema.StationName = stationName;
-            schema.DeviceID = deviceID;
-
-            SampleRate samplingFrequency = new SampleRate();
-            samplingFrequency.Rate = samplingRate;
-            samplingFrequency.EndSample = sampleCount;
+            SampleRate samplingFrequency = new SampleRate
+            {
+                Rate = samplingRate,
+                EndSample = sampleCount
+            };
 
             schema.SampleRates = new[] { samplingFrequency };
 
@@ -88,6 +93,7 @@ namespace GSF.COMTRADE
 
             List<AnalogChannel> analogChannels = new List<AnalogChannel>();
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
+            bool targetFloatingPoint = fileType == FileType.Float32;
 
             int analogIndex = 1;
             int digitalIndex = 1;
@@ -102,7 +108,7 @@ namespace GSF.COMTRADE
                 // come as the first set of digitals in the COMTRADE configuration.
                 for (int i = 0; i < 4; i++)
                 {
-                    digitalChannels.Add(new DigitalChannel
+                    digitalChannels.Add(new DigitalChannel(schema.Version)
                     {
                         Index = digitalIndex,
                         Name = "TQ_CNT" + i,
@@ -110,7 +116,7 @@ namespace GSF.COMTRADE
                     });
                 }
 
-                digitalChannels.Add(new DigitalChannel
+                digitalChannels.Add(new DigitalChannel(schema.Version)
                 {
                     Index = digitalIndex,
                     Name = "TQ_LSPND",
@@ -118,21 +124,21 @@ namespace GSF.COMTRADE
                 });
 
 
-                digitalChannels.Add(new DigitalChannel
+                digitalChannels.Add(new DigitalChannel(schema.Version)
                 {
                     Index = digitalIndex,
                     Name = "TQ_LSOCC",
                     PhaseID = "T" + digitalIndex++
                 });
 
-                digitalChannels.Add(new DigitalChannel
+                digitalChannels.Add(new DigitalChannel(schema.Version)
                 {
                     Index = digitalIndex,
                     Name = "TQ_LSDIR",
                     PhaseID = "T" + digitalIndex++
                 });
 
-                digitalChannels.Add(new DigitalChannel
+                digitalChannels.Add(new DigitalChannel(schema.Version)
                 {
                     Index = digitalIndex,
                     Name = "RSV",
@@ -141,7 +147,7 @@ namespace GSF.COMTRADE
 
                 for (int i = 1; i < 9; i++)
                 {
-                    digitalChannels.Add(new DigitalChannel
+                    digitalChannels.Add(new DigitalChannel(schema.Version)
                     {
                         Index = digitalIndex,
                         Name = "RESV" + i,
@@ -158,7 +164,7 @@ namespace GSF.COMTRADE
                     // Every synchrophasor digital is 16-bits
                     for (int i = 0; i < 16; i++)
                     {
-                        digitalChannels.Add(new DigitalChannel
+                        digitalChannels.Add(new DigitalChannel(schema.Version)
                         {
                             Index = digitalIndex++,
                             Name = record.Name,
@@ -171,60 +177,60 @@ namespace GSF.COMTRADE
                     switch (record.SignalType)
                     {
                         case SignalType.IPHM: // Current Magnitude
-                            analogChannels.Add(new AnalogChannel
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
-                                PhaseID = "Pm",
                                 Units = record.Units ?? "A",
+                                PhaseID = "Pm",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = fileType == FileType.Float32 ? 1.0D : 0.05D
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultCurrentMagnitudeMultiplier
                             });
                             break;
                         case SignalType.VPHM: // Voltage Magnitude
-                            analogChannels.Add(new AnalogChannel
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
-                                PhaseID = "Pm",
                                 Units = record.Units ?? "V",
+                                PhaseID = "Pm",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = fileType == FileType.Float32 ? 1.0D : 5.77362D
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultVoltageMagnitudeMultiplier
                             });
                             break;
                         case SignalType.IPHA: // Current Phase Angle
                         case SignalType.VPHA: // Voltage Phase Angle
-                            analogChannels.Add(new AnalogChannel
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
-                                PhaseID = "Pa",
                                 Units = record.Units ?? "Rads",
+                                PhaseID = "Pa",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = fileType == FileType.Float32 ? 1.0D : 1.0E-4D
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultPhaseAngleMultiplier
                             });
                             break;
                         case SignalType.FREQ: // Frequency
-                            analogChannels.Add(new AnalogChannel
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
-                                PhaseID = "F",
                                 Units = record.Units ?? "Hz",
+                                PhaseID = "F",
                                 CircuitComponent = record.CircuitComponent,
-                                Adder = fileType == FileType.Float32 ? 0.0D : nominalFrequency,
-                                Multiplier = fileType == FileType.Float32 ? 1.0D : 0.001D
+                                Adder = targetFloatingPoint ? 0.0D : nominalFrequency,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultFrequencyMultiplier
                             });
                             break;
                         case SignalType.DFDT: // Frequency Delta (dF/dt)
-                            analogChannels.Add(new AnalogChannel
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
-                                PhaseID = "dF",
                                 Units = record.Units ?? "Hz/s",
+                                PhaseID = "dF",
                                 CircuitComponent = record.CircuitComponent,
-                                Multiplier = fileType == FileType.Float32 ? 1.0D : 0.01D
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultDfDtMultiplier
                             });
                             break;
                         case SignalType.FLAG: // Status flags
@@ -233,7 +239,7 @@ namespace GSF.COMTRADE
 
                             for (int i = 1; i < 5; i++)
                             {
-                                digitalChannels.Add(new DigitalChannel
+                                digitalChannels.Add(new DigitalChannel(schema.Version)
                                 {
                                     Index = digitalIndex++,
                                     Name = record.Name + ":TRG" + i,
@@ -243,7 +249,7 @@ namespace GSF.COMTRADE
 
                             for (int i = 1; i < 3; i++)
                             {
-                                digitalChannels.Add(new DigitalChannel
+                                digitalChannels.Add(new DigitalChannel(schema.Version)
                                 {
                                     Index = digitalIndex++,
                                     Name = record.Name + ":UNLK" + i,
@@ -253,7 +259,7 @@ namespace GSF.COMTRADE
 
                             for (int i = 1; i < 5; i++)
                             {
-                                digitalChannels.Add(new DigitalChannel
+                                digitalChannels.Add(new DigitalChannel(schema.Version)
                                 {
                                     Index = digitalIndex++,
                                     Name = record.Name + ":SEC" + i,
@@ -261,42 +267,42 @@ namespace GSF.COMTRADE
                                 });
                             }
 
-                            digitalChannels.Add(new DigitalChannel
+                            digitalChannels.Add(new DigitalChannel(schema.Version)
                             {
                                 Index = digitalIndex++,
                                 Name = record.Name + ":CFGCH",
                                 PhaseID = "S" + statusIndex++.ToString("X")
                             });
 
-                            digitalChannels.Add(new DigitalChannel
+                            digitalChannels.Add(new DigitalChannel(schema.Version)
                             {
                                 Index = digitalIndex++,
                                 Name = record.Name + ":PMUTR",
                                 PhaseID = "S" + statusIndex++.ToString("X")
                             });
 
-                            digitalChannels.Add(new DigitalChannel
+                            digitalChannels.Add(new DigitalChannel(schema.Version)
                             {
                                 Index = digitalIndex++,
                                 Name = record.Name + ":SORT",
                                 PhaseID = "S" + statusIndex++.ToString("X")
                             });
 
-                            digitalChannels.Add(new DigitalChannel
+                            digitalChannels.Add(new DigitalChannel(schema.Version)
                             {
                                 Index = digitalIndex++,
                                 Name = record.Name + ":SYNC",
                                 PhaseID = "S" + statusIndex++.ToString("X")
                             });
 
-                            digitalChannels.Add(new DigitalChannel
+                            digitalChannels.Add(new DigitalChannel(schema.Version)
                             {
                                 Index = digitalIndex++,
                                 Name = record.Name + ":PMUERR",
                                 PhaseID = "S" + statusIndex++.ToString("X")
                             });
 
-                            digitalChannels.Add(new DigitalChannel
+                            digitalChannels.Add(new DigitalChannel(schema.Version)
                             {
                                 Index = digitalIndex++,
                                 Name = record.Name + ":DTVLD",
@@ -304,13 +310,14 @@ namespace GSF.COMTRADE
                             });
                             break;
                         default:     // All other signals assumed to be analog values
-                            analogChannels.Add(new AnalogChannel
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
                             {
                                 Index = analogIndex++,
                                 Name = record.Name,
                                 PhaseID = "",
                                 Units = record.Units,
-                                CircuitComponent = record.CircuitComponent
+                                CircuitComponent = record.CircuitComponent,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultAnalogMultipler
                             });
                             break;
                     }
@@ -345,10 +352,10 @@ namespace GSF.COMTRADE
         /// the <see cref="Schema.FileImage"/> property to return a string that can be written to a file
         /// that will be the contents of the configuration file.
         /// </remarks>
-        [Obsolete("Switch to constructor overload that specifies the enumeration value to use for schema file type - this constructor may be removed from future builds", false)]
+        [Obsolete("Switch to constructor overload that specifies a schema version and enumeration value to use for file type - this constructor may be removed from future builds", false)]
         public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
         {
-            return CreateSchema(metadata, stationName, deviceID, dataStartTime, sampleCount, isBinary ? FileType.Binary : FileType.Ascii, timeFactor, samplingRate, nominalFrequency, includeFracSecDefinition);
+            return CreateSchema(metadata, stationName, deviceID, dataStartTime, sampleCount, 1999, isBinary ? FileType.Binary : FileType.Ascii, timeFactor, samplingRate, nominalFrequency, includeFracSecDefinition);
         }
 
         /// <summary>

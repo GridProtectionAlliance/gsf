@@ -99,7 +99,9 @@ using System.Threading.Tasks;
 
 namespace GSF
 {
-    /// <summary>Defines extension functions related to string manipulation.</summary>
+    /// <summary>
+    /// Defines extension functions related to string manipulation.
+    /// </summary>
     public static partial class StringExtensions
     {
         /// <summary>
@@ -1758,7 +1760,7 @@ namespace GSF
 
             if (AssureParseDouble)
             {
-                double test = 0.0;
+                double test;
                 if (!double.TryParse(value, out test))
                     return "0";
 
@@ -1905,8 +1907,9 @@ namespace GSF
         /// <param name="value">Input string to process.</param>
         /// <param name="testString">The string to find.</param>
         /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for <paramref name="testString"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
         /// <returns>The start (or left most) index of <paramref name="testString"/> within <paramref name="value"/> or (-1) if not found.</returns>
-        public static int IndexOfPrevious(this string value, string testString, int startIndex = 0)
+        public static int IndexOfPrevious(this string value, string testString, int startIndex = 0, bool matchCase = true)
         {
             if (string.IsNullOrEmpty(value))
                 return -1;
@@ -1926,7 +1929,7 @@ namespace GSF
             //this is the fastest way to do this 
             string s = value.Reverse();
             string v = testString.Reverse();
-            int i = s.IndexOf(v, s.Length - startIndex - 1);
+            int i = s.IndexOf(v, s.Length - startIndex - 1, matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
             if (i > -1)
                 return s.Length - i - testString.Length;
@@ -2049,7 +2052,7 @@ namespace GSF
                 return value;
 
             if (quoteChar == ' ')
-                throw new ArgumentOutOfRangeException("quoteChar cannot be space (Character 32).");
+                throw new ArgumentOutOfRangeException(nameof(quoteChar), "quoteChar cannot be space (Character 32).");
 
             string assuredQuote = new string(quoteChar, 3);
             const char marker = (char)2;
@@ -2072,7 +2075,7 @@ namespace GSF
                     int nq = s.IndexOf(quoteChar);
                     int ns = s.IndexOf(' ');
                     if (nq > -1 && ns > -1 && nq > ns)  //allow white spaces between quotes -- but don't strip spaces following quotes
-                        s.Trim();
+                        s = s.Trim();
                     if (s.Length <= 1)
                         return s.Replace(markerString, quoteString);
                 }

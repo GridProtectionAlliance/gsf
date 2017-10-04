@@ -19,10 +19,9 @@
 //  07/01/2017 - F. Russell Robertson
 //       Generated original version of source code.
 //
-//******************************************************************************************************using System;
+//******************************************************************************************************
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace GSF.Parsing
@@ -30,7 +29,7 @@ namespace GSF.Parsing
     /// <summary>
     /// Like the Excel CSV Parser, only better.
     /// </summary>
-    public class StringParser
+    public static class StringParser
     {
         private const char quoteDoubleChar = '\"';
         private const char quoteSingleChar = '\"';
@@ -309,11 +308,11 @@ namespace GSF.Parsing
             }
 
             int count = 1;
-            int indexPos = inString.IndexOf(token, startIndex);
+            int indexPos = inString.IndexOf(token, startIndex, StringComparison.Ordinal);
 
             while (indexPos > -1 && count != occurrenceCount)
             {
-                indexPos = inString.IndexOf(token, indexPos + 1);
+                indexPos = inString.IndexOf(token, indexPos + 1, StringComparison.Ordinal);
                 count++;
             }
             return indexPos;
@@ -493,14 +492,14 @@ namespace GSF.Parsing
                 closeToken = closeToken.ToLower();
             }
 
-            int openTokenIndex = inString.IndexOf(openToken, startIndex);
+            int openTokenIndex = inString.IndexOf(openToken, startIndex, StringComparison.Ordinal);
             if (openTokenIndex < 0)
                 return -1;
 
             if (startIndex + openToken.Length > inString.Length)
                 return -1;
 
-            int closeTokenIndex = inString.IndexOf(closeToken, openTokenIndex + openToken.Length);
+            int closeTokenIndex = inString.IndexOf(closeToken, openTokenIndex + openToken.Length, StringComparison.Ordinal);
             if (closeTokenIndex < 0)
                 return -1;
 
@@ -787,12 +786,13 @@ namespace GSF.Parsing
         }
 
         /// <summary>
-        /// 
+        /// Parses strings and validates they match expected type codes.
         /// </summary>
         /// <param name="parsedStrings"></param>
         /// <param name="expectedTypeCodes"></param>
         /// <param name="values">the returned values from the try parse.</param>
         /// <returns>TRUE if all values parse successfully.</returns>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static bool ParseCheck(string[] parsedStrings, TypeCode[] expectedTypeCodes, out object[] values)
         {
             values = null;

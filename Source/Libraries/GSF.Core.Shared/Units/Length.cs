@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Length"/> value.
     /// </summary>
-    public enum LengthUnits
+    public enum LengthUnit
     {
         /// <summary>
         /// Meter length units.
@@ -260,34 +260,34 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Length"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Length"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Length"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(LengthUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Length"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(LengthUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case LengthUnits.Meters:
+                case LengthUnit.Meters:
                     return m_value;
-                case LengthUnits.Feet:
+                case LengthUnit.Feet:
                     return ToFeet();
-                case LengthUnits.Inches:
+                case LengthUnit.Inches:
                     return ToInches();
-                case LengthUnits.Miles:
+                case LengthUnit.Miles:
                     return ToMiles();
-                case LengthUnits.LightSeconds:
+                case LengthUnit.LightSeconds:
                     return ToLightSeconds();
-                case LengthUnits.USSurveyFeet:
+                case LengthUnit.USSurveyFeet:
                     return ToUSSurveyFeet();
-                case LengthUnits.USSurveyMiles:
+                case LengthUnit.USSurveyMiles:
                     return ToUSSurveyMiles();
-                case LengthUnits.NauticalMiles:
+                case LengthUnit.NauticalMiles:
                     return ToNauticalMiles();
-                case LengthUnits.Yards:
+                case LengthUnit.Yards:
                     return ToYards();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -965,35 +965,35 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Length"/> in meters.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Length"/> in meters.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Length"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Length ConvertFrom(double value, LengthUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Length"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Length ConvertFrom(double value, LengthUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case LengthUnits.Meters:
+                case LengthUnit.Meters:
                     return value;
-                case LengthUnits.Feet:
+                case LengthUnit.Feet:
                     return FromFeet(value);
-                case LengthUnits.Inches:
+                case LengthUnit.Inches:
                     return FromInches(value);
-                case LengthUnits.Miles:
+                case LengthUnit.Miles:
                     return FromMiles(value);
-                case LengthUnits.LightSeconds:
+                case LengthUnit.LightSeconds:
                     return FromLightSeconds(value);
-                case LengthUnits.USSurveyFeet:
+                case LengthUnit.USSurveyFeet:
                     return FromUSSurveyFeet(value);
-                case LengthUnits.USSurveyMiles:
+                case LengthUnit.USSurveyMiles:
                     return FromUSSurveyMiles(value);
-                case LengthUnits.NauticalMiles:
+                case LengthUnit.NauticalMiles:
                     return FromNauticalMiles(value);
-                case LengthUnits.Yards:
+                case LengthUnit.Yards:
                     return FromYards(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

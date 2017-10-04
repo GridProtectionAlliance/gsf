@@ -143,7 +143,7 @@ namespace GSF.COMTRADE
     #endregion
 
     /// <summary>
-    /// Represents the schema for a configuration file in the COMTRADE file standard, IEEE Std C37.111-1999.
+    /// Represents the schema for a configuration file in the COMTRADE file standard, IEEE Std C37.111-1999/2013.
     /// </summary>
     public class Schema
     {
@@ -206,13 +206,11 @@ namespace GSF.COMTRADE
             if (totalChannels != totalAnalogChannels + totalDigitalChannels)
                 throw new InvalidOperationException($"Total defined channels must equal the sum of the total number of analog and digital channel definitions.{Environment.NewLine}Image = {lines[1]}");
 
-            // Parse analog definitions
-            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
+            // Cache analog line image definitions - will parse after file type is known
+            List<string> analogLineImages = new List<string>();
 
             for (int i = 0; i < totalAnalogChannels; i++)
-                analogChannels.Add(new AnalogChannel(lines[lineNumber++], Version));
-
-            AnalogChannels = analogChannels.ToArray();
+                analogLineImages.Add(lines[lineNumber++]);
 
             // Parse digital definitions
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
@@ -247,6 +245,15 @@ namespace GSF.COMTRADE
             FileType fileType;
             Enum.TryParse(lines[lineNumber++], true, out fileType);
             FileType = fileType;
+
+            // Parse analog definitions - we do this after knowing file type to better assign default linear scaling factors
+            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
+            bool targetFloatingPoint = fileType == FileType.Float32;
+
+            for (int i = 0; i < analogLineImages.Count; i++)
+                analogChannels.Add(new AnalogChannel(analogLineImages[i], Version, targetFloatingPoint));
+
+            AnalogChannels = analogChannels.ToArray();
 
             // Parse time factor
             TimeFactor = lines.Length < lineNumber ? double.Parse(lines[lineNumber++]) : 1;

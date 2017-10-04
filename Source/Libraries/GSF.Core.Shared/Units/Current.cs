@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Current"/> value.
     /// </summary>
-    public enum CurrentUnits
+    public enum CurrentUnit
     {
         /// <summary>
         /// Ampere current units.
@@ -163,22 +163,22 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Current"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Current"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Current"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(CurrentUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Current"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(CurrentUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case CurrentUnits.Amperes:
+                case CurrentUnit.Amperes:
                     return m_value;
-                case CurrentUnits.Abamperes:
+                case CurrentUnit.Abamperes:
                     return ToAbamperes();
-                case CurrentUnits.Statamperes:
+                case CurrentUnit.Statamperes:
                     return ToStatamperes();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -796,23 +796,23 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Current"/> in amperes.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Current"/> in amperes.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Current"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Current ConvertFrom(double value, CurrentUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Current"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Current ConvertFrom(double value, CurrentUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case CurrentUnits.Amperes:
+                case CurrentUnit.Amperes:
                     return value;
-                case CurrentUnits.Abamperes:
+                case CurrentUnit.Abamperes:
                     return FromAbamperes(value);
-                case CurrentUnits.Statamperes:
+                case CurrentUnit.Statamperes:
                     return FromStatamperes(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 
