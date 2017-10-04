@@ -39,7 +39,7 @@ namespace GSF.Core.Tests
         [TestMethod]
         public void DataSetSerialization_ValidCase()
         {
-            const int RowCount = ushort.MaxValue * 10;// * 20;
+            const int RowCount = ushort.MaxValue; // * 10;// * 20;
 
             //Act
             StringBuilder results = new StringBuilder();
