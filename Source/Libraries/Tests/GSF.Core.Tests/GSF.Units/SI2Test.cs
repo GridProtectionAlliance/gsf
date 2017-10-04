@@ -430,55 +430,55 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for ToScaledString
-        /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
-        /// and common named representation (e.g., KB, MB, GB, TB, etc.).
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="decimalPlaces">Number of decimal places to display.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
-        /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
-        /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod]
-        public void ToScaledStringDecPlacesUnitNameTest()
-        {
-            long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
-            int decimalPlaces = 3;
-            string unitName = " kibi";
-            string expected = "1.000 K kibi";
-            string actual;
-            actual = SI2.ToScaledString(totalUnits, decimalPlaces, unitName);
-            Assert.AreEqual(expected, actual);
-            // Assert.Inconclusive("Verify the correctness of this test method.");
-        }
+        ///// <summary>
+        ///// A test for ToScaledString
+        ///// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
+        ///// and common named representation (e.g., KB, MB, GB, TB, etc.).
+        ///// </summary>
+        ///// <param name="totalUnits">Total units to represent textually.</param>
+        ///// <param name="decimalPlaces">Number of decimal places to display.</param>
+        ///// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
+        ///// <remarks>
+        ///// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
+        ///// </remarks>
+        ///// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
+        ///// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        //[TestMethod]
+        //public void ToScaledStringDecPlacesUnitNameTest()
+        //{
+        //    long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
+        //    int decimalPlaces = 3;
+        //    string unitName = " kibi";
+        //    string expected = "1.000 K kibi";
+        //    string actual;
+        //    actual = SI2.ToScaledString(totalUnits, decimalPlaces, unitName);
+        //    Assert.AreEqual(expected, actual);
+        //    // Assert.Inconclusive("Verify the correctness of this test method.");
+        //}
 
-        /// <summary>
-        /// A test for ToScaledString
-        /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
-        /// and IEC named representation (e.g., KiB, MiB, GiB, TiB, etc.).
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
-        /// <remarks>
-        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
-        /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
-        /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod]
-        public void ToScaledStringUnitNameTest()
-        {
-            long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
-            string unitName = " kibi";
-            string expected = "1.000 K kibi";
-            string actual;
-            actual = SI2.ToScaledString(totalUnits, unitName);
-            Assert.AreEqual(expected, actual);
-            //Assert.Inconclusive("Verify the correctness of this test method.");
-        }
+        ///// <summary>
+        ///// A test for ToScaledString
+        ///// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
+        ///// and IEC named representation (e.g., KiB, MiB, GiB, TiB, etc.).
+        ///// </summary>
+        ///// <param name="totalUnits">Total units to represent textually.</param>
+        ///// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
+        ///// <remarks>
+        ///// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
+        ///// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
+        ///// </remarks>
+        ///// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        //[TestMethod]
+        //public void ToScaledStringUnitNameTest()
+        //{
+        //    long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
+        //    string unitName = " kibi";
+        //    string expected = "1.000 K kibi";
+        //    string actual;
+        //    actual = SI2.ToScaledString(totalUnits, unitName);
+        //    Assert.AreEqual(expected, actual);
+        //    //Assert.Inconclusive("Verify the correctness of this test method.");
+        //}
 
         /// <summary>
         /// A test for Factors

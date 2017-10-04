@@ -944,116 +944,116 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for FromTemperature
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Celsius.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Celsius.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Celsius.</returns>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void FromTemperatureTest()
-        {
-            // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
-            Assert.Inconclusive("Creation of the private accessor for \'Microsoft.VisualStudio.TestTools.TypesAndSy" +
-            "mbols.Assembly\' failed");
-        }
+        ///// <summary>
+        ///// A test for FromTemperature
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Celsius.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Celsius.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Celsius.</returns>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void FromTemperatureTest()
+        //{
+        //    // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
+        //    Assert.Inconclusive("Creation of the private accessor for \'Microsoft.VisualStudio.TestTools.TypesAndSy" +
+        //    "mbols.Assembly\' failed");
+        //}
 
-        /// <summary>
-        /// A test for FromRømer
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rømer.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
-        [TestMethod]
-        public void FromRømerTest()
-        {
-            double value = 10F;
-            Temperature expected = new Temperature(277.911904761905);
-            Temperature actual;
-            actual = Temperature.FromRømer(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromRømer
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rømer.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
+        //[TestMethod]
+        //public void FromRømerTest()
+        //{
+        //    double value = 10F;
+        //    Temperature expected = new Temperature(277.911904761905);
+        //    Temperature actual;
+        //    actual = Temperature.FromRømer(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for FromRéaumur
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rømer.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
-        [TestMethod]
-        public void FromRéaumurTest()
-        {
-            double value = 10F;
-            Temperature expected = new Temperature(285.65);
-            Temperature actual;
-            actual = Temperature.FromRéaumur(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromRéaumur
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rømer.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
+        //[TestMethod]
+        //public void FromRéaumurTest()
+        //{
+        //    double value = 10F;
+        //    Temperature expected = new Temperature(285.65);
+        //    Temperature actual;
+        //    actual = Temperature.FromRéaumur(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for FromRankine
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rankine.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Rankine.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rankine.</returns>
-        [TestMethod]
-        public void FromRankineTest()
-        {
-            double value = 10F;
-            Temperature expected = new Temperature(5.55555555555556);
-            Temperature actual;
-            actual = Temperature.FromRankine(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromRankine
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Rankine.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Rankine.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rankine.</returns>
+        //[TestMethod]
+        //public void FromRankineTest()
+        //{
+        //    double value = 10F;
+        //    Temperature expected = new Temperature(5.55555555555556);
+        //    Temperature actual;
+        //    actual = Temperature.FromRankine(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for FromNewton
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Newton.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Newton.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Newton.</returns>
-        [TestMethod]
-        public void FromNewtonTest()
-        {
-            double value = 10F;
-            Temperature expected = new Temperature(303.45303030303);
-            Temperature actual;
-            actual = Temperature.FromNewton(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromNewton
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Newton.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Newton.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Newton.</returns>
+        //[TestMethod]
+        //public void FromNewtonTest()
+        //{
+        //    double value = 10F;
+        //    Temperature expected = new Temperature(303.45303030303);
+        //    Temperature actual;
+        //    actual = Temperature.FromNewton(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for FromFahrenheit
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Fahrenheit.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Fahrenheit.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Fahrenheit.</returns>
-        [TestMethod]
-        public void FromFahrenheitTest()
-        {
-            double value = 10F;
-            Temperature expected = new Temperature(260.927777777778);
-            Temperature actual;
-            actual = Temperature.FromFahrenheit(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromFahrenheit
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Fahrenheit.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Fahrenheit.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Fahrenheit.</returns>
+        //[TestMethod]
+        //public void FromFahrenheitTest()
+        //{
+        //    double value = 10F;
+        //    Temperature expected = new Temperature(260.927777777778);
+        //    Temperature actual;
+        //    actual = Temperature.FromFahrenheit(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for FromDelisle
-        /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Delisle.
-        /// </summary>
-        /// <param name="value">New <see cref="Temperature"/> value in Delisle.</param>
-        /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Delisle.</returns>
-        [TestMethod]
-        public void FromDelisleTest()
-        {
-            double value = 10F;
-            Temperature expected = new Temperature(366.483333333333);
-            Temperature actual;
-            actual = Temperature.FromDelisle(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromDelisle
+        ///// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Delisle.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Temperature"/> value in Delisle.</param>
+        ///// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Delisle.</returns>
+        //[TestMethod]
+        //public void FromDelisleTest()
+        //{
+        //    double value = 10F;
+        //    Temperature expected = new Temperature(366.483333333333);
+        //    Temperature actual;
+        //    actual = Temperature.FromDelisle(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for FromCelsius

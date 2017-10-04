@@ -328,21 +328,21 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for FromUSSurveyFeet
-        /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in US survey feet.
-        /// </summary>
-        /// <param name="value">New <see cref="Length"/> value in US survey feet.</param>
-        /// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey feet.</returns>
-        [TestMethod]
-        public void FromUSSurveyFeetTest()
-        {
-            double value = 10F;
-            Length expected = new Length(3.0480061);
-            Length actual;
-            actual = Length.FromUSSurveyFeet(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromUSSurveyFeet
+        ///// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in US survey feet.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Length"/> value in US survey feet.</param>
+        ///// <returns>New <see cref="Length"/> object from the specified <paramref name="value"/> in US survey feet.</returns>
+        //[TestMethod]
+        //public void FromUSSurveyFeetTest()
+        //{
+        //    double value = 10F;
+        //    Length expected = new Length(3.0480061);
+        //    Length actual;
+        //    actual = Length.FromUSSurveyFeet(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for FromUSSurveyMiles
@@ -704,21 +704,21 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToType
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToTypeTest()
-        {
-            IConvertible target = new Length(10F);
-            Type conversionType = target.GetType();
-            IFormatProvider provider = null;
-            object expected = new Length(10F);
-            object actual;
-            actual = target.ToType(conversionType, provider);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToType
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToTypeTest()
+        //{
+        //    IConvertible target = new Length(10F);
+        //    Type conversionType = target.GetType();
+        //    IFormatProvider provider = null;
+        //    object expected = new Length(10F);
+        //    object actual;
+        //    actual = target.ToType(conversionType, provider);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for System.IConvertible.ToUInt16

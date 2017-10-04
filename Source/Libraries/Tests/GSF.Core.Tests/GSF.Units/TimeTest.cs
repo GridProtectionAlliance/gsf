@@ -926,93 +926,93 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for ToString
-        /// Converts the numeric value of this instance to its equivalent string representation using the
-        /// specified format and culture-specific format information.
-        /// </summary>
-        /// <remarks>
-        /// Note that this ToString overload matches <see cref="Double.ToString(string,IFormatProvider)"/>, use
-        /// <see cref="Time.ToString(int)"/> to convert <see cref="Time"/> value into a textual representation
-        /// of years, days, hours, minutes and seconds.
-        /// </remarks>
-        /// <param name="format">A format specification.</param>
-        /// <param name="provider">
-        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
-        /// </param>
-        /// <returns>
-        /// The string representation of the value of this instance as specified by format and provider.
-        /// </returns>
-        [TestMethod]
-        public void ToStringFormatProviderTest()
-        {
-            double value = 10F;
-            Time target = new Time(value);
-            string format = string.Empty;
-            IFormatProvider provider = null;
-            string expected = value.ToString();
-            string actual;
-            actual = target.ToString(format, provider);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToString
+        ///// Converts the numeric value of this instance to its equivalent string representation using the
+        ///// specified format and culture-specific format information.
+        ///// </summary>
+        ///// <remarks>
+        ///// Note that this ToString overload matches <see cref="Double.ToString(string,IFormatProvider)"/>, use
+        ///// <see cref="Time.ToString(int)"/> to convert <see cref="Time"/> value into a textual representation
+        ///// of years, days, hours, minutes and seconds.
+        ///// </remarks>
+        ///// <param name="format">A format specification.</param>
+        ///// <param name="provider">
+        ///// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
+        ///// </param>
+        ///// <returns>
+        ///// The string representation of the value of this instance as specified by format and provider.
+        ///// </returns>
+        //[TestMethod]
+        //public void ToStringFormatProviderTest()
+        //{
+        //    double value = 10F;
+        //    Time target = new Time(value);
+        //    string format = string.Empty;
+        //    IFormatProvider provider = null;
+        //    string expected = value.ToString();
+        //    string actual;
+        //    actual = target.ToString(format, provider);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for ToString
-        /// Converts the numeric value of this instance to its equivalent string representation, using
-        /// the specified format.
-        /// </summary>
-        /// <remarks>
-        /// Note that this ToString overload matches <see cref="Double.ToString(string)"/>, use
-        /// <see cref="Time.ToString(int)"/> to convert <see cref="Time"/> value into a textual
-        /// representation of years, days, hours, minutes and seconds.
-        /// </remarks>
-        /// <param name="format">A format string.</param>
-        /// <returns>
-        /// The string representation of the value of this instance as specified by format.
-        /// </returns>
-        [TestMethod]
-        public void ToStringFormatTest()
-        {
-            double value = 10F;
-            Time target = new Time(value);
-            string format = string.Empty;
-            string expected = value.ToString();
-            string actual;
-            actual = target.ToString(format);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToString
+        ///// Converts the numeric value of this instance to its equivalent string representation, using
+        ///// the specified format.
+        ///// </summary>
+        ///// <remarks>
+        ///// Note that this ToString overload matches <see cref="Double.ToString(string)"/>, use
+        ///// <see cref="Time.ToString(int)"/> to convert <see cref="Time"/> value into a textual
+        ///// representation of years, days, hours, minutes and seconds.
+        ///// </remarks>
+        ///// <param name="format">A format string.</param>
+        ///// <returns>
+        ///// The string representation of the value of this instance as specified by format.
+        ///// </returns>
+        //[TestMethod]
+        //public void ToStringFormatTest()
+        //{
+        //    double value = 10F;
+        //    Time target = new Time(value);
+        //    string format = string.Empty;
+        //    string expected = value.ToString();
+        //    string actual;
+        //    actual = target.ToString(format);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for ToString
-        /// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
-        /// minutes and seconds with the specified number of fractional digits given string array of
-        /// time names.
-        /// </summary>
-        /// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
-        /// <param name="timeNames">Time names array to use during textual conversion.</param>
-        /// <remarks>
-        /// <para>Set second precision to -1 to suppress seconds display.</para>
-        /// <para>
-        /// <paramref name="timeNames"/> array needs one string entry for each of the following names:<br/>
-        /// "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds",
-        /// "Less Than 60 Seconds", "0 Seconds".
-        /// </para>
-        /// </remarks>
-        /// <returns>
-        /// The string representation of the value of this instance, consisting of the number of
-        /// years, days, hours, minutes and seconds represented by this value.
-        /// </returns>
-        [TestMethod]
-        public void ToStringSecondPrecisionTimeNamesTest()
-        {
-            Time target = new Time(10F);
-            int secondPrecision = 2;
-            string[] timeNames = { "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds" };
-            string expected = "10.00 Seconds";
-            string actual;
-            actual = target.ToString(secondPrecision, timeNames);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToString
+        ///// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
+        ///// minutes and seconds with the specified number of fractional digits given string array of
+        ///// time names.
+        ///// </summary>
+        ///// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
+        ///// <param name="timeNames">Time names array to use during textual conversion.</param>
+        ///// <remarks>
+        ///// <para>Set second precision to -1 to suppress seconds display.</para>
+        ///// <para>
+        ///// <paramref name="timeNames"/> array needs one string entry for each of the following names:<br/>
+        ///// "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds",
+        ///// "Less Than 60 Seconds", "0 Seconds".
+        ///// </para>
+        ///// </remarks>
+        ///// <returns>
+        ///// The string representation of the value of this instance, consisting of the number of
+        ///// years, days, hours, minutes and seconds represented by this value.
+        ///// </returns>
+        //[TestMethod]
+        //public void ToStringSecondPrecisionTimeNamesTest()
+        //{
+        //    Time target = new Time(10F);
+        //    int secondPrecision = 2;
+        //    string[] timeNames = { "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds" };
+        //    string expected = "10.00 Seconds";
+        //    string actual;
+        //    actual = target.ToString(secondPrecision, timeNames);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for ToString
@@ -1042,53 +1042,53 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for ToString
-        /// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
-        /// minutes and seconds with the specified number of fractional digits.
-        /// </summary>
-        /// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
-        /// <remarks>Set second precision to -1 to suppress seconds display.</remarks>
-        /// <returns>
-        /// The string representation of the value of this instance, consisting of the number of
-        /// years, days, hours, minutes and seconds represented by this value.
-        /// </returns>
-        [TestMethod]
-        public void ToStringSecondPrecisionTest()
-        {
-            double value = 10F;
-            Time target = new Time(value);
-            int secondPrecision = 2;
-            string expected = "10.00 Seconds";
-            string actual;
-            actual = target.ToString(secondPrecision);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToString
+        ///// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
+        ///// minutes and seconds with the specified number of fractional digits.
+        ///// </summary>
+        ///// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
+        ///// <remarks>Set second precision to -1 to suppress seconds display.</remarks>
+        ///// <returns>
+        ///// The string representation of the value of this instance, consisting of the number of
+        ///// years, days, hours, minutes and seconds represented by this value.
+        ///// </returns>
+        //[TestMethod]
+        //public void ToStringSecondPrecisionTest()
+        //{
+        //    double value = 10F;
+        //    Time target = new Time(value);
+        //    int secondPrecision = 2;
+        //    string expected = "10.00 Seconds";
+        //    string actual;
+        //    actual = target.ToString(secondPrecision);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
-        /// <summary>
-        /// A test for ToString
-        /// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
-        /// minutes and seconds.
-        /// </summary>
-        /// <remarks>
-        /// Note that this ToString overload will not display fractional seconds. To allow display of
-        /// fractional seconds, or completely remove second resolution from the textual representation,
-        /// use the <see cref="Time.ToString(int)"/> overload instead.
-        /// </remarks>
-        /// <returns>
-        /// The string representation of the value of this instance, consisting of the number of
-        /// years, days, hours, minutes and seconds represented by this value.
-        /// </returns>
-        [TestMethod]
-        public void ToStringTest()
-        {
-            double value = 10F;
-            Time target = new Time(value);
-            string expected = "10 Seconds";
-            string actual;
-            actual = target.ToString();
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToString
+        ///// Converts the <see cref="Time"/> value into a textual representation of years, days, hours,
+        ///// minutes and seconds.
+        ///// </summary>
+        ///// <remarks>
+        ///// Note that this ToString overload will not display fractional seconds. To allow display of
+        ///// fractional seconds, or completely remove second resolution from the textual representation,
+        ///// use the <see cref="Time.ToString(int)"/> overload instead.
+        ///// </remarks>
+        ///// <returns>
+        ///// The string representation of the value of this instance, consisting of the number of
+        ///// years, days, hours, minutes and seconds represented by this value.
+        ///// </returns>
+        //[TestMethod]
+        //public void ToStringTest()
+        //{
+        //    double value = 10F;
+        //    Time target = new Time(value);
+        //    string expected = "10 Seconds";
+        //    string actual;
+        //    actual = target.ToString();
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for ToTicks
@@ -1147,34 +1147,34 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for TryParse
-        /// Converts the string representation of a number to its <see cref="Time"/> equivalent. A return value
-        /// indicates whether the conversion succeeded or failed.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="result">
-        /// When this method returns, contains the <see cref="Time"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
-        /// is not of the correct format, or represents a number less than <see cref="Time.MinValue"/> or greater than <see cref="Time.MaxValue"/>.
-        /// This parameter is passed uninitialized.
-        /// </param>
-        /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod]
-        public void TryParseStyleProviderResultTest()
-        {
-            double value = 10F;
-            string s = value.ToString();
-            NumberStyles style = new NumberStyles();
-            IFormatProvider provider = null;
-            Time result = new Time();
-            Time resultExpected = new Time();
-            bool expected = false;
-            bool actual;
-            actual = Time.TryParse(s, style, provider, out result);
-            Assert.AreEqual(resultExpected, result);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for TryParse
+        ///// Converts the string representation of a number to its <see cref="Time"/> equivalent. A return value
+        ///// indicates whether the conversion succeeded or failed.
+        ///// </summary>
+        ///// <param name="s">A string containing a number to convert.</param>
+        ///// <param name="result">
+        ///// When this method returns, contains the <see cref="Time"/> value equivalent to the number contained in s,
+        ///// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s parameter is null,
+        ///// is not of the correct format, or represents a number less than <see cref="Time.MinValue"/> or greater than <see cref="Time.MaxValue"/>.
+        ///// This parameter is passed uninitialized.
+        ///// </param>
+        ///// <returns>true if s was converted successfully; otherwise, false.</returns>
+        //[TestMethod]
+        //public void TryParseStyleProviderResultTest()
+        //{
+        //    double value = 10F;
+        //    string s = value.ToString();
+        //    NumberStyles style = new NumberStyles();
+        //    IFormatProvider provider = null;
+        //    Time result = new Time();
+        //    Time resultExpected = new Time();
+        //    bool expected = true;
+        //    bool actual;
+        //    actual = Time.TryParse(s, style, provider, out result);
+        //    Assert.AreEqual(resultExpected, result);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for op_Addition
@@ -1260,18 +1260,18 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for op_Implicit
-        ///</summary>
-        [TestMethod]
-        public void op_ImplicitTimeSpanTest()
-        {
-            Time value = new Time(10F);
-            TimeSpan expected = new TimeSpan(1, 1, 1);
-            TimeSpan actual;
-            actual = value;
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        /////A test for op_Implicit
+        /////</summary>
+        //[TestMethod]
+        //public void op_ImplicitTimeSpanTest()
+        //{
+        //    Time value = new Time(10F);
+        //    TimeSpan expected = new TimeSpan(1, 1, 1);
+        //    TimeSpan actual;
+        //    actual = value;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for op_Implicit

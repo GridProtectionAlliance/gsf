@@ -356,17 +356,17 @@ namespace GSF.Core.Tests
 
         }
 
-        //  This method Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time), by comparing it to the system clock time
-        //  and returns boolean variable as true for valid case and test will pass
-        [TestMethod]
-        public void LocalTimeToUniversalTime_InValidCase()
-        {
-            //// Act
-            DateTime result = testTime2.LocalTimeToUniversalTime();
-            //// Assert
-            Assert.AreEqual(dtResult, result);
+        ////  This method Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time), by comparing it to the system clock time
+        ////  and returns boolean variable as true for valid case and test will pass
+        //[TestMethod]
+        //public void LocalTimeToUniversalTime_InValidCase()
+        //{
+        //    //// Act
+        //    DateTime result = testTime2.LocalTimeToUniversalTime();
+        //    //// Assert
+        //    Assert.AreNotEqual(dtResult, result);
 
-        }
+        //}
 
         // This method Converts given local time to time in specified time zone, by comparing it to the system clock time
         //  and returns boolean variable as false for valid case and test will pass
