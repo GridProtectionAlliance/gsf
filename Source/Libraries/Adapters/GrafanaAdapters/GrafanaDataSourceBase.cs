@@ -631,6 +631,45 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        public virtual Task<string[]> SearchFields(Target request)
+        {
+            return Task.Factory.StartNew(() => {
+                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName).ToArray();
+            });
+        }
+
+
+        /// <summary>
+        /// Search data source for a list of tables.
+        /// </summary>
+        /// <param name="request">Request.</param>
+        public virtual Task<string[]> SearchFilters(Target request)
+        {
+            return Task.Factory.StartNew(() => {
+                return Metadata.Tables.Cast<DataTable>().Select(x => x.TableName).ToArray();
+            });
+        }
+
+        /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        public virtual Task<string[]> SearchOrderBys(Target request)
+        {
+            return Task.Factory.StartNew(() => {
+                IEnumerable<string> ascStrings = Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName + " ASC").ToArray();
+                IEnumerable<string> descStrings = Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName + " DESC").ToArray();
+                return ascStrings.Union(descStrings).OrderBy(x => x).ToArray();
+            });
+        }
+
+
+
+
+        /// <summary>
         /// Queries data source for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
