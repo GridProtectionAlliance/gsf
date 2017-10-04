@@ -463,25 +463,25 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            Assert.Inconclusive("Can't cast from 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToChar
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToCharTest()
+        //{
+        //    Assert.Inconclusive("Can't cast from 'Double' to 'Char'.");
+        //}
 
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {
-            Assert.Inconclusive("Can't cast from 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToDateTime
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToDateTimeTest()
+        //{
+        //    Assert.Inconclusive("Can't cast from 'Double' to 'Char'.");
+        //}
 
         /// <summary>
         ///A test for System.IConvertible.ToDecimal

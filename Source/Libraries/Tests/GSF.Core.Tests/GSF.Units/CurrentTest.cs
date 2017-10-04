@@ -467,25 +467,25 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToChar
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToCharTest()
+        //{
+        //    Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
+        //}
 
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToDateTime
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToDateTimeTest()
+        //{
+        //    Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
+        //}
 
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
@@ -810,33 +810,33 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for TryParse
-        /// Converts the string representation of a number to its <see cref="Current"/> equivalent. A return value
-        /// indicates whether the conversion succeeded or failed.
-        /// </summary>
-        /// <param name="s">A string containing a number to convert.</param>
-        /// <param name="result">
-        /// When this method returns, contains the <see cref="Current"/> value equivalent to the number contained in s,
-        /// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
-        /// is not of the correct format, or represents a number less than <see cref="Current.MinValue"/> or greater than <see cref="Current.MaxValue"/>.
-        /// This paraampere is passed uninitialized.
-        /// </param>
-        /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod]
-        public void TryParseOutTest()
-        {
-            double value = 10F;
-            string s = value.ToString();
-            Current result = new Current(value);
-            Current resultExpected = new Current(value);
-            bool expected = true;
-            bool actual;
-            actual = Current.TryParse(s, out result);
-            Assert.AreEqual(resultExpected, result);
-            Assert.AreEqual(expected, actual);
-            Assert.Inconclusive("Verify the correctness of this test method.");
-        }
+        ///// <summary>
+        ///// A test for TryParse
+        ///// Converts the string representation of a number to its <see cref="Current"/> equivalent. A return value
+        ///// indicates whether the conversion succeeded or failed.
+        ///// </summary>
+        ///// <param name="s">A string containing a number to convert.</param>
+        ///// <param name="result">
+        ///// When this method returns, contains the <see cref="Current"/> value equivalent to the number contained in s,
+        ///// if the conversion succeeded, or zero if the conversion failed. The conversion fails if the s paraampere is null,
+        ///// is not of the correct format, or represents a number less than <see cref="Current.MinValue"/> or greater than <see cref="Current.MaxValue"/>.
+        ///// This paraampere is passed uninitialized.
+        ///// </param>
+        ///// <returns>true if s was converted successfully; otherwise, false.</returns>
+        //[TestMethod]
+        //public void TryParseOutTest()
+        //{
+        //    double value = 10F;
+        //    string s = value.ToString();
+        //    Current result = new Current(value);
+        //    Current resultExpected = new Current(value);
+        //    bool expected = true;
+        //    bool actual;
+        //    actual = Current.TryParse(s, out result);
+        //    Assert.AreEqual(resultExpected, result);
+        //    Assert.AreEqual(expected, actual);
+        //    Assert.Inconclusive("Verify the correctness of this test method.");
+        //}
 
         /// <summary>
         ///A test for op_Addition

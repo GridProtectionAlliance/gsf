@@ -590,7 +590,7 @@ namespace GSF.Core.Tests
             Charge actual;
             actual = Charge.Parse(s, provider);
             Assert.AreEqual(expected, actual);
-            Assert.Inconclusive("Verify the correctness of this test method.");
+            //Assert.Inconclusive("Verify the correctness of this test method.");
         }
 
         /// <summary>
@@ -614,7 +614,7 @@ namespace GSF.Core.Tests
             Charge actual;
             actual = Charge.Parse(s);
             Assert.AreEqual(expected, actual);
-            Assert.Inconclusive("Verify the correctness of this test method.");
+            //Assert.Inconclusive("Verify the correctness of this test method.");
         }
 
         /// <summary>
@@ -648,40 +648,40 @@ namespace GSF.Core.Tests
             //Assert.Inconclusive("Convertion to byte from Charge is limited use with caution");
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            /*
-            IConvertible target = new Charge(1F);
-            IFormatProvider provider = null;
-            char expected = '\0';
-            char actual;
-            actual = target.ToChar(provider);
-            Assert.AreEqual(expected, actual);
-            */
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
+//        /// <summary>
+//        ///A test for System.IConvertible.ToChar
+//        ///</summary>
+//        [TestMethod]
+//        [DeploymentItem("GSF.Core.dll")]
+//        public void ToCharTest()
+//        {
+//            /*
+//            IConvertible target = new Charge(1F);
+//            IFormatProvider provider = null;
+//            char expected = '\0';
+//            char actual;
+//            actual = target.ToChar(provider);
+//            Assert.AreEqual(expected, actual);
+//            */
+//            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
+//        }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {/*
-IConvertible target = new Charge(10F); // TODO: Initialize to an appropriate value
-IFormatProvider provider = null; // TODO: Initialize to an appropriate value
-DateTime expected = new DateTime(); // TODO: Initialize to an appropriate value
-DateTime actual;
-actual = target.ToDateTime(provider);
-Assert.AreEqual(expected, actual);
-*/
-            Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
-        }
+//        /// <summary>
+//        ///A test for System.IConvertible.ToDateTime
+//        ///</summary>
+//        [TestMethod]
+//        [DeploymentItem("GSF.Core.dll")]
+//        public void ToDateTimeTest()
+//        {/*
+//IConvertible target = new Charge(10F); // TODO: Initialize to an appropriate value
+//IFormatProvider provider = null; // TODO: Initialize to an appropriate value
+//DateTime expected = new DateTime(); // TODO: Initialize to an appropriate value
+//DateTime actual;
+//actual = target.ToDateTime(provider);
+//Assert.AreEqual(expected, actual);
+//*/
+//            Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
+//        }
 
         /// <summary>
         ///A test for System.IConvertible.ToDecimal

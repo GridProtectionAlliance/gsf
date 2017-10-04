@@ -208,32 +208,32 @@ namespace GSF.Core.Tests
             }
         }
 
-        /// <summary>
-        ///A test for OnExecutionException
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void OnExecutionExceptionTest()
-        {
-            // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
-            Assert.Inconclusive("Exception verification implementation needed");
-        }
+        ///// <summary>
+        /////A test for OnExecutionException
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void OnExecutionExceptionTest()
+        //{
+        //    // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
+        //    Assert.Inconclusive("Exception verification implementation needed");
+        //}
 
-        /// <summary>
-        /// A test for OnStatusUpdate
-        /// Raises the <see cref="StatusUpdate"/> event.
-        /// </summary>
-        /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
-        /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
-        /// <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>       
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void OnStatusUpdateTest()
-        {
-            // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
-            Assert.Inconclusive("Creation of the private accessor for \'Microsoft.VisualStudio.TestTools.TypesAndSy" +
-                    "mbols.Assembly\' failed");
-        }
+        ///// <summary>
+        ///// A test for OnStatusUpdate
+        ///// Raises the <see cref="StatusUpdate"/> event.
+        ///// </summary>
+        ///// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
+        ///// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
+        ///// <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>       
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void OnStatusUpdateTest()
+        //{
+        //    // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
+        //    Assert.Inconclusive("Creation of the private accessor for \'Microsoft.VisualStudio.TestTools.TypesAndSy" +
+        //            "mbols.Assembly\' failed");
+        //}
 
         /// <summary>
         /// A test for SaveSettings

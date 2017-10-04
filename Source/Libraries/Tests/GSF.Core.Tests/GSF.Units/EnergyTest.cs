@@ -562,41 +562,41 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            /*
-            IConvertible target = new Energy(10F);
-            IFormatProvider provider = null;
-            char expected = '\0';
-            char actual;
-            actual = target.ToChar(provider);
-            Assert.AreEqual(expected, actual);
-            */
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToChar
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToCharTest()
+        //{
+        //    /*
+        //    IConvertible target = new Energy(10F);
+        //    IFormatProvider provider = null;
+        //    char expected = '\0';
+        //    char actual;
+        //    actual = target.ToChar(provider);
+        //    Assert.AreEqual(expected, actual);
+        //    */
+        //    Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
+        //}
 
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {
-            /*
-            IConvertible target = new Energy(10F);
-            IFormatProvider provider = null;
-            DateTime expected = new DateTime();
-            DateTime actual;
-            actual = target.ToDateTime(provider);
-            Assert.AreEqual(expected, actual);
-            */
-            Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToDateTime
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToDateTimeTest()
+        //{
+        //    /*
+        //    IConvertible target = new Energy(10F);
+        //    IFormatProvider provider = null;
+        //    DateTime expected = new DateTime();
+        //    DateTime actual;
+        //    actual = target.ToDateTime(provider);
+        //    Assert.AreEqual(expected, actual);
+        //    */
+        //    Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
+        //}
 
         /// <summary>
         ///A test for System.IConvertible.ToDecimal

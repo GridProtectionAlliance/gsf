@@ -363,17 +363,17 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for ToTemperature
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToTemperatureTest()
-        {
-            // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
-            Assert.Inconclusive("Creation of the private accessor for \'Microsoft.VisualStudio.TestTools.TypesAndSy" +
-            "mbols.Assembly\' failed");
-        }
+        ///// <summary>
+        /////A test for ToTemperature
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToTemperatureTest()
+        //{
+        //    // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
+        //    Assert.Inconclusive("Creation of the private accessor for \'Microsoft.VisualStudio.TestTools.TypesAndSy" +
+        //    "mbols.Assembly\' failed");
+        //}
 
         /// <summary>
         /// A test for ToString
@@ -740,25 +740,25 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToDateTime
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToDateTimeTest()
+        //{
+        //    Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
+        //}
 
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToChar
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToCharTest()
+        //{
+        //    Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
+        //}
 
         /// <summary>
         ///A test for System.IConvertible.ToByte
