@@ -272,6 +272,8 @@
 
             if (response.status === 0)
                 message = "Connection refused - check web server";
+            else if (response.status === 400)
+                message = "Unauthorized (401)";
             else
                 message = response.statusText + " (" + response.status + ")";
 
