@@ -189,7 +189,6 @@
     </div>
     <script src="@Resources.Root/Shared/Scripts/jquery.js"></script>
     <script src="@Resources.Root/Shared/Scripts/bootstrap.js"></script>
-    <script src="@Resources.Root/Shared/Scripts/js.cookie.js"></script>
     <script src="@Resources.Root/Shared/Scripts/gsf.web.client.js"></script>
     <script src="@Resources.Root/Security/Scripts/core.js"></script>
     <script src="@Resources.Root/Security/Scripts/sha256.js"></script>
@@ -361,7 +360,7 @@
                     authenticateBasic(username, password);
             }
             else {
-                // When no user name is provided, attempt pass-through authenitcation
+                // When no user name is provided, attempt pass-through authentication
                 $("#response").text("Checking authentication...");
 
                 // Test pass-through authentication
