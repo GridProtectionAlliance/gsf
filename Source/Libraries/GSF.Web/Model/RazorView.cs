@@ -235,7 +235,7 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
                 m_viewBag.AddValue("WebServerOptions", WebServerOptions);
-                m_viewBag.AddValue("AuthenticationOptions", GetAuthenticationOptions(request));
+                m_viewBag.AddValue("AuthenticationOptions", ReadonlyAuthenticationOptions.GetAuthenticationOptions(request));
 
                 // See if a client session identifier has been defined for this execution request
                 Guid sessionID;
@@ -274,21 +274,6 @@ namespace GSF.Web.Model
         public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, bool isPost, CancellationToken cancellationToken)
         {
             return Task.Run(() => Execute(request, response, isPost), cancellationToken);
-        }
-
-        private ReadonlyAuthenticationOptions GetAuthenticationOptions(HttpRequestMessage request)
-        {
-            object value;
-
-            if (request.Properties.TryGetValue("MS_OwinContext", out value))
-            {
-                IOwinContext context = value as IOwinContext;
-
-                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
-                    return value as ReadonlyAuthenticationOptions;
-            }
-
-            return null;
         }
 
         #endregion

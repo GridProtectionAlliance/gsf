@@ -24,7 +24,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using Microsoft.Owin;
 
 namespace GSF.Web.Security
 {
@@ -91,7 +93,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
-        public AuthenticationOptions() : base(SessionHandler.DefaultSessionToken)
+        public AuthenticationOptions() : base(SessionHandler.DefaultAuthenticationToken)
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -152,6 +154,11 @@ namespace GSF.Web.Security
                 m_passThroughAuthSupportedBrowsers = new Regex(m_passThroughAuthSupportedBrowserExpression, RegexOptions.Compiled | RegexOptions.Singleline);
             }
         }
+
+        /// <summary>
+        /// Gets or sets the token used for identifying the authentication token in cookie headers.
+        /// </summary>
+        public string AuthenticationToken { get; set; } = SessionHandler.DefaultAuthenticationToken;
 
         /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
@@ -357,6 +364,32 @@ namespace GSF.Web.Security
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAnonymousResource(string urlPath) => m_authenticationOptions.IsAnonymousResource(urlPath);
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Retrieves the authentication options from the given <see cref="HttpRequestMessage"/>.
+        /// </summary>
+        /// <param name="request">The HTTP request.</param>
+        /// <returns>The authentication options.</returns>
+        public static ReadonlyAuthenticationOptions GetAuthenticationOptions(HttpRequestMessage request)
+        {
+            object value;
+
+            if (request.Properties.TryGetValue("MS_OwinContext", out value))
+            {
+                IOwinContext context = value as IOwinContext;
+
+                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
+                    return value as ReadonlyAuthenticationOptions;
+            }
+
+            return null;
+        }
 
         #endregion
     }

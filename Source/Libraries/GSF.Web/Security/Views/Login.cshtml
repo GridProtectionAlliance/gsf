@@ -187,27 +187,66 @@
             </div>
         </div>
     </div>
-    <script src="@(Resources.Root)/Shared/Scripts/jquery.js"></script>
-    <script src="@(Resources.Root)/Shared/Scripts/bootstrap.js"></script>
-    <script src="@(Resources.Root)/Shared/Scripts/js.cookie.js"></script>
-    <script src="@(Resources.Root)/Shared/Scripts/gsf.web.client.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/core.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/sha256.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/enc-base64.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/ntlm.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/jquery.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/bootstrap.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/js.cookie.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/gsf.web.client.js"></script>
+    <script src="@Resources.Root/Security/Scripts/core.js"></script>
+    <script src="@Resources.Root/Security/Scripts/sha256.js"></script>
+    <script src="@Resources.Root/Security/Scripts/enc-base64.js"></script>
+    <script src="@Resources.Root/Security/Scripts/ntlm.js"></script>
     <script>
         const redirectPage = "@redirectPage";
         const securePage = "@authTestPage";
         const clearCredentialsPage = securePage + "?@clearCredentials=true";
 
+        const persistentStorage = (function () {
+            function storageAvailable(type) {
+                try {
+                    var storage = window[type],
+                        x = '__storage_test__';
+                    storage.setItem(x, x);
+                    storage.removeItem(x);
+                    return true;
+                }
+                catch (e) {
+                    return e instanceof DOMException && (
+                        // everything except Firefox
+                        e.code === 22 ||
+                        // Firefox
+                        e.code === 1014 ||
+                        // test name field too, because code might not be present
+                        // everything except Firefox
+                        e.name === 'QuotaExceededError' ||
+                        // Firefox
+                        e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+                        // acknowledge QuotaExceededError only if there's something already stored
+                        storage.length !== 0;
+                }
+            }
+
+            function fakeStorage() {
+                return {
+                    getItem: function () { },
+                    setItem: function () { },
+                    removeItem: function () { }
+                };
+            }
+
+            if (storageAvailable("localStorage"))
+                return localStorage;
+            else
+                return fakeStorage();
+        })();
+
         function loadSettings() {
-            $("#username").val(localStorage.getItem("username"));
-            $("#ntlm").prop("checked", localStorage.getItem("ntlm") === "true").change();
+            $("#username").val(persistentStorage.getItem("username"));
+            $("#ntlm").prop("checked", persistentStorage.getItem("ntlm") === "true").change();
         }
 
         function saveSettings() {
-            localStorage.setItem("username", $("#username").val());
-            localStorage.setItem("ntlm", $("#ntlm").prop("checked"));
+            persistentStorage.setItem("username", $("#username").val());
+            persistentStorage.setItem("ntlm", $("#ntlm").prop("checked"));
         }
 
         function hashPassword(password) {
@@ -217,6 +256,8 @@
         function loginComplete(success, response) {
             if (success) {
                 $("#response").text("Authentication succeeded, loading main page...");
+
+                persistentStorage.setItem("passthrough", "true");
 
                 setTimeout(function() {
                     window.location = redirectPage;
@@ -253,7 +294,6 @@
                 }
             }
             else {
-
                 if (success) {
                     $("#response").text("Partial Logout - Browser Credentials Only");
                     $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
@@ -279,58 +319,63 @@
         }
 
         function login(username, password) {
-            $("#workingIcon").show();
-
-            if (username) {
-                // Attempt authentication with specifed user name and password
-                $("#response").text("Attempting authentication...");
-
-                if (username.indexOf("\\") > 0) {
-                    // Login is for domain user with NTLM support
-                    const parts = username.split("\\");
-
-                    Ntlm.setCredentials(parts[0], parts[1], password);
-                    const response = Ntlm.authenticate(securePage + "?scheme=NTLM");
-
-                    if (response.status === 200)
-                        loginComplete(true);
-                    else
-                        loginFailed(response);
-                }
-                else {
-                    // Login is for database user
-                    $.ajax({
-                        url: securePage,
-                        complete: function(xhr) {
-                            switch (xhr.status) {
-                                case 200:
-                                    loginComplete(true);
-                                    break;
-                                default:
-                                    loginFailed(xhr.statusCode());
-                                    break;
-                            }
-                        },
-                        beforeSend: function(xhr) {
-                            xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+            // Authentication for database user with credentials
+            function authenticateBasic(username, password) {
+                $.ajax({
+                    url: securePage,
+                    complete: function (xhr) {
+                        switch (xhr.status) {
+                            case 200:
+                                loginComplete(true);
+                                break;
+                            default:
+                                loginFailed(xhr.statusCode());
+                                break;
                         }
-                    });
-                }
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+                    }
+                });
             }
-            else {
-                // When no user name is provided, attempt pass-through authenitcation
-                $("#response").text("Checking authentication...");
 
-                // If credential entry is requested, show login screen
-                if (getBool(getParameterByName("requestCredentials"))) {
-                    loginComplete(false);
-                    return;
-                }
+            // Authentication for domain user with NTLM support
+            function authenticateNTLM(username, password) {
+                const parts = username.split("\\");
 
-                // Test pass-through authentication
+                Ntlm.setCredentials(parts[0], parts[1], password);
+                const response = Ntlm.authenticate(securePage + "?scheme=NTLM");
+
+                if (response.status === 200)
+                    loginComplete(true);
+                else
+                    loginFailed(response);
+            }
+
+            // Authentication for database user without
+            // credentials (using authentication token cookie)
+            function passthroughBasic() {
+                $.ajax({
+                    url: securePage,
+                    complete: function (xhr) {
+                        switch (xhr.status) {
+                            case 200:
+                                loginComplete(true);
+                                break;
+                            default:
+                                loginFailed(xhr.statusCode());
+                                break;
+                        }
+                    }
+                });
+            }
+
+            // Authentication for domain user with NTLM
+            // support without credentials (or with browser prompt)
+            function passthroughNTLM() {
                 $.ajax({
                     url: securePage + "?scheme=NTLM",
-                    complete: function(xhr) {
+                    complete: function (xhr) {
                         switch (xhr.status) {
                             case 200:
                                 loginComplete(true);
@@ -342,12 +387,36 @@
                     }
                 });
             }
+
+            $("#workingIcon").show();
+
+            if (username) {
+                // Attempt authentication with specifed user name and password
+                $("#response").text("Attempting authentication...");
+
+                if (username.indexOf("\\") > 0)
+                    authenticateNTLM(username, password);
+                else
+                    authenticateBasic(username, password);
+            }
+            else {
+                // When no user name is provided, attempt pass-through authenitcation
+                $("#response").text("Checking authentication...");
+
+                // Test pass-through authentication
+                if ($("#ntlm").prop("checked"))
+                    passthroughNTLM();
+                else
+                    passthroughBasic();
+            }
         }
 
         function logout() {
             $("#response").text("Logging out...");
             $("#workingIcon").show();
             $("#credentialsForm").hide();
+
+            persistentStorage.removeItem("passthrough");
 
             // Attempt to clear any credentials cached by browser
             clearCachedCredentials(clearCredentialsPage, function(success) {
@@ -417,6 +486,9 @@
 
             $(window).unload(saveSettings);
             loadSettings();
+
+            if (persistentStorage.getItem("passthrough"))
+                login();
 
             $("#username").focus();
             $("#username").select();
