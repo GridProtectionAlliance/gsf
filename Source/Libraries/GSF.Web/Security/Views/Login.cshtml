@@ -79,7 +79,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link href="@(Resources.Root)/Shared/Content/bootstrap.css" rel="stylesheet">
+    <link href="@Resources.Root/Shared/Content/bootstrap.css" rel="stylesheet">
     @Raw(Resources.HeaderIcons)
     <style>
         body {
@@ -199,45 +199,6 @@
         const redirectPage = "@redirectPage";
         const securePage = "@authTestPage";
         const clearCredentialsPage = securePage + "?@clearCredentials=true";
-
-        const persistentStorage = (function () {
-            function storageAvailable(type) {
-                try {
-                    var storage = window[type],
-                        x = '__storage_test__';
-                    storage.setItem(x, x);
-                    storage.removeItem(x);
-                    return true;
-                }
-                catch (e) {
-                    return e instanceof DOMException && (
-                        // everything except Firefox
-                        e.code === 22 ||
-                        // Firefox
-                        e.code === 1014 ||
-                        // test name field too, because code might not be present
-                        // everything except Firefox
-                        e.name === 'QuotaExceededError' ||
-                        // Firefox
-                        e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-                        // acknowledge QuotaExceededError only if there's something already stored
-                        storage.length !== 0;
-                }
-            }
-
-            function fakeStorage() {
-                return {
-                    getItem: function () { },
-                    setItem: function () { },
-                    removeItem: function () { }
-                };
-            }
-
-            if (storageAvailable("localStorage"))
-                return localStorage;
-            else
-                return fakeStorage();
-        })();
 
         function loadSettings() {
             $("#username").val(persistentStorage.getItem("username"));
