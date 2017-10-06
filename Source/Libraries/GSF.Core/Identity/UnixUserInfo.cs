@@ -1654,7 +1654,7 @@ namespace GSF.Identity
             StringBuilder accountName = new StringBuilder(MaxAccountNameLength);
             uint accountID;
 
-            if ((object)side == null)
+            if ((object)sid == null)
                 return null;
 
             if ((IsUserSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalUserName(accountID, accountName) == 0) ||
