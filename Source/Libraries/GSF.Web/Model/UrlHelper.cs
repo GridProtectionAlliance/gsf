@@ -52,7 +52,7 @@ namespace GSF.Web.Model
         /// <returns>A string that contains a content URL.</returns>
         public string Content(string contentPath)
         {
-            if (HttpContext.Current != null)
+            if ((object)HttpContext.Current != null)
                 return VirtualPathUtility.ToAbsolute(contentPath);
 
             if (contentPath.StartsWith("~"))
