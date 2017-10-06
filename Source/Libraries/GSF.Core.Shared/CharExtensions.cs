@@ -33,7 +33,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace GSF
 {
@@ -158,6 +160,55 @@ namespace GSF
                 return (char)(value - 32);
 
             return value;
+        }
+
+        /// <summary>
+        /// Returns true if char is hexadecimal digit.
+        /// </summary>
+        /// <param name="value">The character to be tested.</param>
+        /// <returns>true if char is hexadecimal digit; false otherwise</returns>
+        public static bool IsHex(this char value)
+        {
+            return
+                (value >= '0' && value <= '9') ||
+                (value >= 'A' && value <= 'F') ||
+                (value >= 'a' && value <= 'f');
+        }
+
+        /// <summary>
+        /// Converts a hexadecimal character to the integer equivalent.
+        /// </summary>
+        /// <param name="value">A valid hexadecimal character.</param>
+        /// <returns>The integer equivalent of the given hexadecimal character.</returns>
+        public static int ConvertHexToInt(this char value)
+        {
+            if (!IsHex(value))
+                throw new ArgumentException("Character must be a hexadecimal character.");
+
+            if (value < 58)
+                return (int)(value - 48);
+
+            value = char.ToUpper(value);
+            return (int)(value - 55);
+        }
+
+        /// <summary>
+        /// Converts a hexadecimal character to a 4-bit integer equivalent.
+        /// </summary>
+        /// <param name="value">A valid hexadecimal character.</param>
+        /// <returns>A 4-bit <see cref="BitArray"/> representing the integer equivalent of the given hexadecimal character.</returns>
+        public static BitArray ConvertHexToBitArray(this char value)
+        {
+            if (!IsHex(value))
+                throw new ArgumentException("Character must be a hexadecimal character.");
+
+            BitArray ba = new BitArray(4);
+            byte b = byte.Parse(value.ToString(), NumberStyles.HexNumber);
+
+            for (int j = 0; j < 4; j++)
+                ba.Set(j, (b & (1 << (3 - j))) != 0);
+
+            return ba;
         }
     }
 }

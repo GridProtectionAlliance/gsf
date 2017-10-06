@@ -1,11 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using GSF.COMTRADE;
 using GSF.EMAX;
 using GSF.PQDIF.Logical;
@@ -393,7 +391,7 @@ namespace COMTRADEConverter
 
             ParsedChannel parsedChannel = new ParsedChannel()
             {
-                Name = string.Format("({0}) {1}", report.Command, channel.Name),
+                Name = string.Format(channel.Name),
                 TimeValues = timeSamples,
                 XValues = xValues,
                 YValues = channel.Samples.Cast<object>().ToList()

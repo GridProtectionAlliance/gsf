@@ -29,7 +29,7 @@ namespace StringExtensionsTest
 
             for (int i = 0; i < quoteUnwrapTests.Length; i++)
             {
-                quoteUnwrapTests[i] = quoteUnwrapTests[i].quoteUnwrap(quotes[i]);
+                quoteUnwrapTests[i] = quoteUnwrapTests[i].QuoteUnwrap(quotes[i]);
                 Console.WriteLine(quoteUnwrapTests[i]);
             }
             Console.ReadLine();
