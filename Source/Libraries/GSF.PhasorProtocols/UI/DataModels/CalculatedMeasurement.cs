@@ -40,6 +40,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 
@@ -124,7 +125,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Calculated measurement acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Calculated measurement acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
+        [AcronymValidation]
         public string Acronym
         {
             get

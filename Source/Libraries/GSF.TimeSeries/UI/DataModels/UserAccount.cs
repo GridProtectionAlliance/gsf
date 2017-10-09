@@ -37,6 +37,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.Identity;
 
@@ -193,6 +194,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="UserAccount"/> Email
         /// </summary>
         [StringLength(200, ErrorMessage = "User Account password cannot exceed 200 characters.")]
+        [EmailValidation]
         public string Email
         {
             get

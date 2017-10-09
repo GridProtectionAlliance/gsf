@@ -39,11 +39,16 @@ namespace GSF.ComponentModel.DataAnnotations
         public const string ValidationPattern = @"^[A-Z0-9\-!_\.@#\$]+$";
 
         /// <summary>
+        /// Defines the default error message used when pattern fails validation.
+        /// </summary>
+        public const string DefaultErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.' and '$' are allowed.";
+
+        /// <summary>
         /// Creates a new <see cref="AcronymValidationAttribute"/>.
         /// </summary>
         public AcronymValidationAttribute() : base(ValidationPattern)
         {
-            ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.' and '$' are allowed.";
+            ErrorMessage = DefaultErrorMessage;
         }
     }
 }

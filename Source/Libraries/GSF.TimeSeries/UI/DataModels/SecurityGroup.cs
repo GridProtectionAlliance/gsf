@@ -49,7 +49,7 @@ namespace GSF.TimeSeries.UI.DataModels
     {
         #region [ Members ]
 
-        //Fileds
+        // Fields
         private Guid m_id;
         private string m_name;
         private string m_description;

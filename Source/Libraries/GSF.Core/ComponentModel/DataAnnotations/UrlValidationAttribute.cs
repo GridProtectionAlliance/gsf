@@ -38,11 +38,16 @@ namespace GSF.ComponentModel.DataAnnotations
         public const string ValidationPattern = @"^(?:(?:[a-zA-Z][a-zA-Z0-9.+-]*:\/\/)?[a-zA-Z0-9][a-zA-Z0-9.-]*(?::[0-9]+)?(?:\/[^ ""]*)?|mailto:[a-zA-Z0-9!#$%&'*+-\/=?^_`{|}~][a-zA-Z0-9!#$%&'*+-\/=?^_`{|}~.]*@[a-zA-Z0-9][a-zA-Z0-9.-]*)$";
 
         /// <summary>
+        /// Defines the default error message used when pattern fails validation.
+        /// </summary>
+        public const string DefaultErrorMessage = "Invalid URL.";
+
+        /// <summary>
         /// Creates a new <see cref="UrlValidationAttribute"/>.
         /// </summary>
         public UrlValidationAttribute() : base(ValidationPattern)
         {
-            ErrorMessage = "Invalid URL.";
+            ErrorMessage = DefaultErrorMessage;
         }
     }
 }
