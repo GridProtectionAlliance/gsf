@@ -260,6 +260,7 @@ namespace GSF.ComponentModel
         /// </returns>
         public static bool InitializeType()
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if ((object)typeof(T).GetConstructor(Type.EmptyTypes) != null)
                 return (object)Activator.CreateInstance<T>() != null;
 
