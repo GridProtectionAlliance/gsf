@@ -76,6 +76,11 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets associated COMTRADE schema for this <see cref="Parser"/>.
         /// </summary>
+        /// <remarks>
+        /// Upon assignment, any <see cref="COMTRADE.Schema.FileName"/> value will be used to
+        /// initialize the parser's initial <see cref="FileName"/> property when an associated
+        /// data file that ends with either ".dat" or ".d00" is found to exist.
+        /// </remarks>
         public Schema Schema
         {
             get
@@ -95,6 +100,21 @@ namespace GSF.COMTRADE
 
                     if (m_schema.TotalSampleRates == 0)
                         InferTimeFromSampleRates = false;
+
+                    // If no data file name is already defined, attempt to find initial data file with same
+                    // root file name as schema configuration file but with a ".dat" or ".d00" extension:
+                    if (string.IsNullOrWhiteSpace(FileName) && !string.IsNullOrWhiteSpace(m_schema.FileName))
+                    {
+                        string directory = FilePath.GetDirectoryName(m_schema.FileName);
+                        string rootFileName = FilePath.GetFileNameWithoutExtension(m_schema.FileName);
+                        string dataFile1 = Path.Combine(directory, $"{rootFileName}.dat");
+                        string dataFile2 = Path.Combine(directory, $"{rootFileName}.d00");
+
+                        if (File.Exists(dataFile1))
+                            FileName = dataFile1;
+                        else if (File.Exists(dataFile2))
+                            FileName = dataFile2;
+                    }
                 }
                 else
                 {
@@ -244,10 +264,9 @@ namespace GSF.COMTRADE
             // Get all data files in the collection
             const string FileRegex = @"(?:\.dat|\.d\d\d)$";
             string directory = FilePath.GetDirectoryName(FileName);
-            string rootFileName = FilePath.GetFileNameWithoutExtension(FileName);
-            string extension = FilePath.GetExtension(FileName).Substring(0, 2) + "*";
-
-            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension))
+            string fileNamePattern = $"{FilePath.GetFileNameWithoutExtension(FileName)}.d*";
+            
+            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, fileNamePattern))
                 .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
                 .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
