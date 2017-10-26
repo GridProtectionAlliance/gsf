@@ -660,9 +660,7 @@ namespace GrafanaAdapters
         public virtual Task<string[]> SearchOrderBys(Target request)
         {
             return Task.Factory.StartNew(() => {
-                IEnumerable<string> ascStrings = Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName + " ASC").ToArray();
-                IEnumerable<string> descStrings = Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName + " DESC").ToArray();
-                return ascStrings.Union(descStrings).OrderBy(x => x).ToArray();
+                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName).ToArray();
             });
         }
 
