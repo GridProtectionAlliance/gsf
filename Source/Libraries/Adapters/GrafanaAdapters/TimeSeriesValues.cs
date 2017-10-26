@@ -49,6 +49,11 @@ namespace GrafanaAdapters
         public string target;
 
         /// <summary>
+        /// Defines a Grafana time-series underlying point tag.
+        /// </summary>
+        public string pointtag;
+
+        /// <summary>
         /// Defines a Grafana time-series value data.
         /// </summary>
         /// <remarks>

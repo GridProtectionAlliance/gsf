@@ -728,7 +728,7 @@ namespace GrafanaAdapters
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
-                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target }).ToList();
+                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target, pointtag = valueGroup.RootTarget }).ToList();
 
                 // Process series data in parallel
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
