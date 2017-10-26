@@ -50,11 +50,6 @@ namespace GSF.Web.Security
         public const string DefaultAnonymousResourceExpression = "^/@|^/favicon.ico$";
 
         /// <summary>
-        /// Default value for <see cref="PassThroughAuthSupportedBrowserExpression"/>.
-        /// </summary>
-        public const string DefaultPassThroughAuthSupportedBrowserExpression = @"^(.+\(Windows.+(MSIE |Trident/))|(.+\(Windows.+Chrome/((?! Edge/).)*)$";
-
-        /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
         public const string DefaultLoginPage = "/@GSF/Web/Security/Views/Login.cshtml";
@@ -77,13 +72,10 @@ namespace GSF.Web.Security
         // Fields
         private readonly ConcurrentDictionary<string, bool> m_authFailureRedirectResourceCache;
         private readonly ConcurrentDictionary<string, bool> m_anonymousResourceCache;
-        private readonly ConcurrentDictionary<string, bool> m_passThroughAuthSupportedBrowserCache;
         private string m_authFailureRedirectResourceExpression;
         private string m_anonymousResourceExpression;
-        private string m_passThroughAuthSupportedBrowserExpression;
         private Regex m_authFailureRedirectResources;
         private Regex m_anonymousResources;
-        private Regex m_passThroughAuthSupportedBrowsers;
         private string m_realm;
 
         #endregion
@@ -97,7 +89,6 @@ namespace GSF.Web.Security
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-            m_passThroughAuthSupportedBrowserCache = new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
         }
 
         #endregion
@@ -135,23 +126,6 @@ namespace GSF.Web.Security
             {
                 m_anonymousResourceExpression = value;
                 m_anonymousResources = new Regex(m_anonymousResourceExpression, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets expression that will match user-agent header string for browser clients
-        /// that can support NTLM based pass-through authentication.
-        /// </summary>
-        public string PassThroughAuthSupportedBrowserExpression
-        {
-            get
-            {
-                return m_passThroughAuthSupportedBrowserExpression;
-            }
-            set
-            {
-                m_passThroughAuthSupportedBrowserExpression = value;
-                m_passThroughAuthSupportedBrowsers = new Regex(m_passThroughAuthSupportedBrowserExpression, RegexOptions.Compiled | RegexOptions.Singleline);
             }
         }
 
@@ -304,12 +278,6 @@ namespace GSF.Web.Security
         /// that can be provided without checking credentials.
         /// </summary>
         public string AnonymousResourceExpression => m_authenticationOptions.AnonymousResourceExpression;
-
-        /// <summary>
-        /// Gets expression that will match user-agent header string for browser clients
-        /// that can support NTLM based pass-through authentication.
-        /// </summary>
-        public string PassThroughAuthSupportedBrowserExpression => m_authenticationOptions.PassThroughAuthSupportedBrowserExpression;
 
         /// <summary>
         /// Gets the token used for identifying the session ID in cookie headers.

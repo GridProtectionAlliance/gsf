@@ -1184,7 +1184,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Updates the database with the specified modeled table <paramref name="record"/>,
         /// any model properties marked with <see cref="UpdateValueExpressionAttribute"/> will
-        /// be evaluated any applied before the record is provided to the data source.
+        /// be evaluated and applied before the record is provided to the data source.
         /// </summary>
         /// <param name="record">Record to update.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
@@ -1282,7 +1282,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Updates the database with the specified modeled table <paramref name="record"/>
         /// referenced by the specified SQL filter expression and parameters, any model properties
-        /// marked with <see cref="UpdateValueExpressionAttribute"/> will be evaluated any applied
+        /// marked with <see cref="UpdateValueExpressionAttribute"/> will be evaluated and applied
         /// before the record is provided to the data source.
         /// </summary>
         /// <param name="record">Record to update.</param>
@@ -1334,7 +1334,7 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Updates the database with the specified <paramref name="row"/>, any model properties
-        /// marked with <see cref="UpdateValueExpressionAttribute"/> will be evaluated any applied
+        /// marked with <see cref="UpdateValueExpressionAttribute"/> will be evaluated and applied
         /// before the record is provided to the data source.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
@@ -1352,7 +1352,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Updates the database with the specified <paramref name="row"/> referenced by the
         /// specified SQL filter expression and parameters, any model properties marked with
-        /// <see cref="UpdateValueExpressionAttribute"/> will be evaluated any applied before
+        /// <see cref="UpdateValueExpressionAttribute"/> will be evaluated and applied before
         /// the record is provided to the data source.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>

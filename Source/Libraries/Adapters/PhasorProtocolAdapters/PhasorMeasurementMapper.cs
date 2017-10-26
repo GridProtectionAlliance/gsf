@@ -100,7 +100,7 @@ namespace PhasorProtocolAdapters
 
                     cutOff = Ticks.AlignToSubsecondDistribution(RealTime - LagTicks, FramesPerSecond, TimeResolution);
                     missingFrameCount = (int)Math.Round((cutOff - m_lastFrameTimestamp) / TicksPerFrame);
-                    m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
+                    m_missingData += missingFrameCount > m_redundantFramesPerPacket ? missingFrameCount - m_redundantFramesPerPacket : 0;
                     m_lastFrameTimestamp = cutOff;
 
                     return m_missingData;
@@ -130,7 +130,7 @@ namespace PhasorProtocolAdapters
                 int missingFrameCount;
 
                 missingFrameCount = (int)Math.Round((frame.Timestamp - m_lastFrameTimestamp) / TicksPerFrame);
-                m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
+                m_missingData += missingFrameCount > m_redundantFramesPerPacket ? missingFrameCount - m_redundantFramesPerPacket : 0;
                 m_lastFrameTimestamp = frame.Timestamp;
             }
 
@@ -765,8 +765,8 @@ namespace PhasorProtocolAdapters
                     if ((object)m_frameParser != null && (object)m_frameParser.ConfigurationFrame != null)
                     {
                         // Attempt to lookup by label (if defined), then by ID code
-                        if (((object)m_labelDefinedDevices != null && (object)definedDevice.StationName != null &&
-                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice)) ||
+                        if ((object)m_labelDefinedDevices != null && (object)definedDevice.StationName != null &&
+                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice) ||
                             m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(definedDevice.IDCode, out parsedDevice))
                             stationName = parsedDevice.StationName;
                     }
@@ -1018,7 +1018,7 @@ namespace PhasorProtocolAdapters
             if (settings.TryGetValue("simulateTimestamp", out setting))
                 frameParser.InjectSimulatedTimestamp = setting.ParseBoolean();
             else
-                frameParser.InjectSimulatedTimestamp = (frameParser.TransportProtocol == TransportProtocol.File);
+                frameParser.InjectSimulatedTimestamp = frameParser.TransportProtocol == TransportProtocol.File;
 
             if (settings.TryGetValue("allowedParsingExceptions", out setting))
                 frameParser.AllowedParsingExceptions = int.Parse(setting);
@@ -1168,7 +1168,7 @@ namespace PhasorProtocolAdapters
                     {
                         // Create status display string for expected device
                         deviceStatus.Append("   Device ");
-                        deviceStatus.Append((index++).ToString("00"));
+                        deviceStatus.Append(index++.ToString("00"));
                         deviceStatus.Append(": ");
                         deviceStatus.Append(definedDevice.StationName);
                         deviceStatus.Append(" (");
@@ -1694,8 +1694,8 @@ namespace PhasorProtocolAdapters
                 try
                 {
                     // Lookup device by its label (if needed), then by its ID code
-                    if (((object)m_labelDefinedDevices != null &&
-                        m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out statisticsHelper)) ||
+                    if ((object)m_labelDefinedDevices != null &&
+                        m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out statisticsHelper) ||
                         m_definedDevices.TryGetValue(parsedDevice.IDCode, out statisticsHelper))
                     {
                         definedDevice = statisticsHelper.Device;

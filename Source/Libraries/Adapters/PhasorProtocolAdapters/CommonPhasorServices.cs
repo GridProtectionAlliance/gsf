@@ -984,7 +984,7 @@ namespace PhasorProtocolAdapters
                         // To reduce time required to execute these steps, only first statistic is verified to exist
                         if (!skipOptimization && !firstStatisticExisted)
                         {
-                            firstStatisticExisted = (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference='{signalReference}'")) > 0);
+                            firstStatisticExisted = Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference='{signalReference}'")) > 0;
 
                             // If the first extraneous input statistic doesn't exist, we assume no others do as well
                             if (!firstStatisticExisted)
@@ -1565,7 +1565,7 @@ namespace PhasorProtocolAdapters
             if ((object)inputStream != null)
             {
                 if (inputStream.IsConnected)
-                    statistic = (s_statisticValueCache.GetDifference(inputStream, inputStream.ConnectionAttempts, "ConnectionAttempts") == 0.0D ? 1.0D : 0.0D);
+                    statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.ConnectionAttempts, "ConnectionAttempts") == 0.0D ? 1.0D : 0.0D;
             }
 
             return statistic;
@@ -1588,7 +1588,7 @@ namespace PhasorProtocolAdapters
             if ((object)inputStream != null)
             {
                 double configChanges = s_statisticValueCache.GetDifference(inputStream, inputStream.ConfigurationChanges, "ReceivedConfiguration");
-                statistic = (configChanges > 0 ? 1.0D : 0.0D);
+                statistic = configChanges > 0 ? 1.0D : 0.0D;
             }
 
             return statistic;
@@ -2022,7 +2022,7 @@ namespace PhasorProtocolAdapters
             if ((object)outputStream != null)
             {
                 if (outputStream.Enabled)
-                    statistic = (s_statisticValueCache.GetDifference(outputStream, outputStream.ActiveConnections, "ActiveConnections") == 0.0D ? 1.0D : 0.0D);
+                    statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ActiveConnections, "ActiveConnections") == 0.0D ? 1.0D : 0.0D;
             }
 
             return statistic;

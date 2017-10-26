@@ -325,7 +325,7 @@ namespace GSF.TimeSeries.Transport
                 offset += unicodeBuffer.Length;
 
                 // ID
-                bigEndianBuffer = BigEndian.GetBytes(kvp.Value.ID);
+                bigEndianBuffer = BigEndian.GetBytes((uint)kvp.Value.ID);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
             }

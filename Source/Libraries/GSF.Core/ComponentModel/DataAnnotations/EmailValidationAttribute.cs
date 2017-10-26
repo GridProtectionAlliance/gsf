@@ -38,11 +38,16 @@ namespace GSF.ComponentModel.DataAnnotations
         public const string ValidationPattern = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
 
         /// <summary>
+        /// Defines the default error message used when pattern fails validation.
+        /// </summary>
+        public const string DefaultErrorMessage = "Invalid e-mail address.";
+
+        /// <summary>
         /// Creates a new <see cref="EmailValidationAttribute"/>.
         /// </summary>
         public EmailValidationAttribute() : base(ValidationPattern)
         {
-            ErrorMessage = "Invalid e-mail address.";
+            ErrorMessage = DefaultErrorMessage;
         }
     }
 }

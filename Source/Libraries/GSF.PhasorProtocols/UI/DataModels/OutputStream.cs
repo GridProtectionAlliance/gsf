@@ -37,6 +37,7 @@ using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
@@ -150,7 +151,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Output stream acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Output stream acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
+        [AcronymValidation]
         public string Acronym
         {
             get

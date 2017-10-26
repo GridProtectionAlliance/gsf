@@ -32,6 +32,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using DataType = System.ComponentModel.DataAnnotations.DataType;
 
@@ -132,6 +133,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets the URL.
         /// </summary>
         [DataType(DataType.Url, ErrorMessage = "Vendor device URL is not formatted properly.")]
+        [UrlValidation]
         public string URL
         {
             get

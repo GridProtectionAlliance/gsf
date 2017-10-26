@@ -108,8 +108,8 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Creates a new modeled record instance, applying any modeled default values as specified by a
-        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
-        /// on the model properties.
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> on the
+        /// model properties.
         /// </summary>
         /// <returns>New modeled record instance with any defined default values applied.</returns>
         object NewRecord();
@@ -432,7 +432,9 @@ namespace GSF.Data.Model
         int DeleteRecordWhere(string filterExpression, params object[] parameters);
 
         /// <summary>
-        /// Updates the database with the specified modeled table <paramref name="record"/>.
+        /// Updates the database with the specified modeled table <paramref name="record"/>,
+        /// any model properties marked with <see cref="UpdateValueExpressionAttribute"/> will
+        /// be evaluated and applied before the record is provided to the data source.
         /// </summary>
         /// <param name="record">Record to update.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
@@ -445,7 +447,9 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Updates the database with the specified modeled table <paramref name="record"/>
-        /// referenced by the specified SQL filter expression and parameters.
+        /// referenced by the specified SQL filter expression and parameters, any model properties
+        /// marked with <see cref="UpdateValueExpressionAttribute"/> will be evaluated and applied
+        /// before the record is provided to the data source.
         /// </summary>
         /// <param name="record">Record to update.</param>
         /// <param name="filterExpression">
@@ -482,7 +486,9 @@ namespace GSF.Data.Model
         int UpdateRecordWhere(object record, string filterExpression, params object[] parameters);
 
         /// <summary>
-        /// Updates the database with the specified <paramref name="row"/>.
+        /// Updates the database with the specified <paramref name="row"/>, any model properties
+        /// marked with <see cref="UpdateValueExpressionAttribute"/> will be evaluated and applied
+        /// before the record is provided to the data source.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
@@ -494,8 +500,10 @@ namespace GSF.Data.Model
         int UpdateRecord(DataRow row, RecordRestriction restriction = null);
 
         /// <summary>
-        /// Updates the database with the specified <paramref name="row"/>
-        /// referenced by the specified SQL filter expression and parameters.
+        /// Updates the database with the specified <paramref name="row"/> referenced by the
+        /// specified SQL filter expression and parameters, any model properties marked with
+        /// <see cref="UpdateValueExpressionAttribute"/> will be evaluated and applied before
+        /// the record is provided to the data source.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
         /// <param name="filterExpression">

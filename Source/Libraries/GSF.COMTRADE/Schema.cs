@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.IO;
 using System.Text;
 
@@ -175,6 +176,12 @@ namespace GSF.COMTRADE
         /// <param name="fileName">File name of configuration file to parse.</param>
         public Schema(string fileName)
         {
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException($"Configuration file \"{fileName}\" does not exist.");
+
+            // Cache configuration file name used to create schema
+            FileName = fileName;
+
             string[] lines = File.ReadAllLines(fileName);
             string[] parts;
             int lineNumber = 0;
@@ -288,6 +295,11 @@ namespace GSF.COMTRADE
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the file name used to generate this schema when constructed with one; otherwise, <c>null</c>.
+        /// </summary>
+        public string FileName { get; }
+
+        /// <summary>
         /// Gets or sets free-form station name for this <see cref="Schema"/>.
         /// </summary>
         public string StationName { get; set; }
@@ -350,11 +362,6 @@ namespace GSF.COMTRADE
         }
 
         /// <summary>
-        /// Gets total number of sample rates of this <see cref="Schema"/>.
-        /// </summary>
-        public int TotalSampleRates => m_sampleRates.Length == 1 && m_sampleRates[0].Rate == 0.0D ? 0 : m_sampleRates.Length;
-
-        /// <summary>
         /// Gets or sets sampling rates of this <see cref="Schema"/>. A file of phasor data will normally be made using a single sampling rate, so this will usually be 1.
         /// </summary>
         public SampleRate[] SampleRates
@@ -371,6 +378,21 @@ namespace GSF.COMTRADE
                     m_sampleRates = value;
             }
         }
+
+        /// <summary>
+        /// Gets total number of sample rates of this <see cref="Schema"/>.
+        /// </summary>
+        public int TotalSampleRates => m_sampleRates.Length == 1 && m_sampleRates[0].Rate == 0.0D ? 0 : m_sampleRates.Length;
+
+        /// <summary>
+        /// Gets total number of samples, i.e., rows per timestamp, as reported by the sample rates.
+        /// </summary>
+        public long TotalSamples => m_sampleRates.Max(sampleRate => (long)sampleRate.EndSample);
+
+        /// <summary>
+        /// Gets total number of channels values, i.e., <c>TotalChannels * TotalSamples</c>.
+        /// </summary>
+        public long TotalChannelValues => TotalChannels * TotalSamples;
 
         /// <summary>
         /// Gets or sets start timestamp of this <see cref="Schema"/>.

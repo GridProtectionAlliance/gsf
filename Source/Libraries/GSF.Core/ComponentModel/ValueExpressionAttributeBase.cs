@@ -94,7 +94,7 @@ namespace GSF.ComponentModel
         /// will be zero. Properties will be ordered numerically based on this value.
         /// </para>
         /// <para>
-        /// For any the <see cref="Expression"/> value that references the <c>this</c> keyword,
+        /// For any <see cref="Expression"/> value that references the <c>this</c> keyword,
         /// a positive evaluation order will be required.
         /// </para>
         /// <para>

@@ -36,6 +36,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
@@ -146,7 +147,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "OutputStreamDevice acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "OutputStreamDevice acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
+        [AcronymValidation]
         public string Acronym
         {
             get

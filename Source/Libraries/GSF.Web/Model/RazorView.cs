@@ -230,6 +230,7 @@ namespace GSF.Web.Model
                 if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
                     dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
 
+                m_viewBag.AddValue("Application", s_applicationCache);
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", request);
                 m_viewBag.AddValue("Response", response);
@@ -288,6 +289,7 @@ namespace GSF.Web.Model
         public static event EventHandler<EventArgs<Guid, DynamicViewBag>> SessionExpired;
 
         // Static Fields
+        private static readonly DynamicViewBag s_applicationCache;
         private static readonly Timer s_sessionCacheMonitor;
         private static readonly ConcurrentDictionary<Guid, Tuple<DynamicViewBag, Ticks>> s_sessionCache;
 
@@ -301,6 +303,7 @@ namespace GSF.Web.Model
             SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
             SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
 
+            s_applicationCache = new DynamicViewBag();
             s_sessionCacheMonitor = new Timer(SessionMonitorInterval);
             s_sessionCacheMonitor.Elapsed += s_sessionCacheMonitor_Elapsed;
             s_sessionCacheMonitor.Enabled = false;

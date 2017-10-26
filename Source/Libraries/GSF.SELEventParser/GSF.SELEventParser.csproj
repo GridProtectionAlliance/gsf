@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalogSection.cs" />
+    <Compile Include="ByteSum.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="CommaSeparatedEventReport.cs" />
     <Compile Include="Cycle.cs" />
