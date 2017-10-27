@@ -31,8 +31,6 @@
 @{
     HttpRequestMessage request = ViewBag.Request;
 
-    string sessionToken = SessionHandler.DefaultSessionToken;
-
     string redirectPage;
     string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
     string loginPage = AuthenticationOptions.DefaultLoginPage;
@@ -54,8 +52,6 @@
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
     if ((object)options != null) {
-        sessionToken = options.SessionToken;
-
         if (!string.IsNullOrWhiteSpace(options.AuthTestPage)) {
             authTestPage = options.AuthTestPage;
         }
@@ -68,6 +64,7 @@
             clearCredentials = options.ClearCredentialsParameter;
         }
 
+        // Login header is used set custom logo and application title for page
         loginHeader = options.LoginHeader;
     }
 }
@@ -153,7 +150,7 @@
 </head>
 <body role="document">
     <span class="glyphicon glyphicon-refresh pre-cache"></span>
-    <div class="container theme-showcase" role="main" id="bodyContainer">
+    <div class="container" role="main" id="bodyContainer">
         <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12">
                 @Raw(loginHeader)
@@ -171,7 +168,7 @@
                                 <input type="password" class="form-control" id="password" />
                             </div>
                             <div class="form-group">
-                                <input type="checkbox" class="form-check-input" id="ntlm" />
+                                <input type="checkbox" id="ntlm" />
                                 <label for="ntlm">Windows Integrated Authentication</label>
                             </div>
                             <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
@@ -215,7 +212,7 @@
 
         function loginComplete(success, response) {
             if (success) {
-                $("#response").text("Authentication succeeded, loading main page...");
+                $("#response").text("Authentication succeeded, loading " + (redirectPage === "/" ? "main" : "target") + " page...");
 
                 persistentStorage.setItem("passthrough", "true");
 

@@ -57,6 +57,6 @@ namespace GSF.Web.Shared
             <meta name=""msapplication-square150x150logo"" content=""{Root}/Shared/Images/Icons/mstile-150x150.png"" />
             <meta name=""msapplication-wide310x150logo"" content=""{Root}/Shared/Images/Icons/mstile-310x150.png"" />
             <meta name=""msapplication-square310x310logo"" content=""{Root}/Shared/Images/Icons/mstile-310x310.png""/>
-        ".FixForwardSpacing(0);
+        ".FixForwardSpacing();
     }
 }
