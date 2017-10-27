@@ -293,7 +293,7 @@
                         }
                     },
                     beforeSend: function (xhr) {
-                        xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+                        xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + hashPassword(password)));
                     }
                 });
             }
