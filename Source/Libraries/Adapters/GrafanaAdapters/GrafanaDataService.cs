@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
@@ -31,6 +32,7 @@ using GSF;
 using GSF.Historian;
 using GSF.Historian.DataServices;
 using HistorianAdapters;
+using Newtonsoft.Json;
 
 namespace GrafanaAdapters
 {
@@ -198,6 +200,30 @@ namespace GrafanaAdapters
                 return null;
 
             return await m_dataSource.Query(request, m_cancellationSource.Token);
+        }
+
+
+        /// <summary>
+        /// Queries openHistorian as a Grafana Metadata source.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
+        public Task<string> GetMetadata(Target request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                if (string.IsNullOrWhiteSpace(request.target))
+                    return string.Empty;
+
+                DataTable table = new DataTable();
+                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? new DataRow[0];
+
+                if (rows.Length > 0)
+                    table = rows.CopyToDataTable();
+
+                return JsonConvert.SerializeObject(table);
+            },
+            cancellationToken);
         }
 
         /// <summary>
