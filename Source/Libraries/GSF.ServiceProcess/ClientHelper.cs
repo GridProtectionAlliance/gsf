@@ -495,7 +495,7 @@ namespace GSF.ServiceProcess
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
                 settings[nameof(Username), true].Update(m_username);
-                settings[nameof(Password), true].Update(m_password);
+                settings[nameof(Password), true].Update(Password);
                 settings[nameof(SerializationFormat), true].Update(m_serializationFormat);
                 settings[nameof(StatusMessageFilter), true].Update(m_statusMessageFilter);
 
@@ -524,7 +524,7 @@ namespace GSF.ServiceProcess
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
                 settings.Add(nameof(Username), m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
-                settings.Add(nameof(Password), m_password, "Password to be used for authentication with the service.", true, SettingScope.User);
+                settings.Add(nameof(Password), Password, "Password to be used for authentication with the service.", true, SettingScope.User);
                 settings.Add(nameof(SerializationFormat), m_serializationFormat, "Message serialization format for interactions with service, one of: Xml, Json or Binary. Default is Binary.");
                 settings.Add(nameof(StatusMessageFilter), m_statusMessageFilter, "Command used to negotiate status message filter when client connects to the ServiceHelper.");
 

@@ -447,6 +447,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateGenerator", "Too
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eDNAAdapters", "Libraries\Adapters\eDNAAdapters\eDNAAdapters.csproj", "{1C165FAD-7D51-4D8E-9311-4A3BE266D877}"
 EndProject
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "openHistorianConsole", "..\..\openHistorian\Build\Output\Debug\Applications\openHistorian\openHistorianConsole.exe", "{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Projects\openHistorian\Build\Output\Debug\Applications\openHistorian\openHistorianConsole.exe
+		RemoteMachine = SWILLS-DESK
+		StartingDirectory = C:\Projects\openHistorian\Build\Output\Debug\Applications\openHistorian
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{5ce3d6f4-d38d-4f71-acb6-79681cfe47df}*SharedItemsImports = 13
@@ -1554,6 +1567,12 @@ Global
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877}.Release|x86.ActiveCfg = Release|Any CPU
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877}.Release|x86.Build.0 = Release|Any CPU
+		{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}.Debug|x86.ActiveCfg = Release|Any CPU
+		{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}.Mono|x86.ActiveCfg = Release|Any CPU
+		{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23843C2A-9DE2-455B-8AD4-36FBDC1130FE}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
