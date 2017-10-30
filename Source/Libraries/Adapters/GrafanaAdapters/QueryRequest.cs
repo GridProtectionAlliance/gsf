@@ -64,5 +64,10 @@ namespace GrafanaAdapters
         /// Maximum data points to return.
         /// </summary>
         public int maxDataPoints { get; set; }
+
+        /// <summary>
+        /// Defines options current in play for data source that may affect query.
+        /// </summary>
+        public dynamic options { get; set; }
     }
 }

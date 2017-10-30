@@ -62,7 +62,8 @@ namespace GrafanaAdapters
                 {
                     Target = targetMap[(ulong)dataPoint.HistorianID],
                     Value = dataPoint.Value,
-                    Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond
+                    Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                    Flags = dataPoint.Quality.MeasurementQuality()
                 });
             }
         }

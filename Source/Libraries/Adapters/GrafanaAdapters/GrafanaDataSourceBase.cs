@@ -496,92 +496,6 @@ namespace GrafanaAdapters
         None
     }
 
-    /// <summary>
-    /// Time units for time related functions.
-    /// </summary>
-    public enum TimeUnits
-    {
-        /// <summary>
-        /// Specifies that the time is in ticks, 100-nanoseconds intervals.
-        /// </summary>
-        Ticks,
-        /// <summary>
-        /// Specifies that the time is in nanoseconds.
-        /// </summary>
-        Nanoseconds,
-        /// <summary>
-        /// Specifies that the time is in microseconds.
-        /// </summary>
-        Microseconds,
-        /// <summary>
-        /// Specifies that the time is in milliseconds.
-        /// </summary>
-        Milliseconds,
-        /// <summary>
-        /// Specifies that the time is in seconds.
-        /// </summary>
-        Seconds,
-        /// <summary>
-        /// Specifies that the time is in minutes.
-        /// </summary>
-        Minutes,
-        /// <summary>
-        /// Specifies that the time is in hours.
-        /// </summary>
-        Hours,
-        /// <summary>
-        /// Specifies that the time is in days.
-        /// </summary>
-        Days,
-        /// <summary>
-        /// Specifies that the time is in weeks.
-        /// </summary>
-        Weeks,
-        /// <summary>
-        /// Specifies that the time is in ke, the traditional Chinese unit of decimal time.
-        /// </summary>
-        Ke,
-        /// <summary>
-        /// Specifies that the time is in Planck time.
-        /// </summary>
-        PlanckTime,
-        /// <summary>
-        /// Specifies that the time is in atomic units of time.
-        /// </summary>
-        AtomicUnitsOfTime
-    }
-
-    /// <summary>
-    /// Angle units for wrap and unwrap functions.
-    /// </summary>
-    public enum AngleUnits
-    {
-        /// <summary>
-        /// Specifies that angle is in degrees.
-        /// </summary>
-        Degrees,
-        /// <summary>
-        /// Specifies that angle is in radians.
-        /// </summary>
-        Radians,
-        /// <summary>
-        /// Specifies that angle is in grads.
-        /// </summary>
-        Grads,
-        /// <summary>
-        /// Specifies that angle is in arc minutes.
-        /// </summary>
-        ArcMinutes,
-        /// <summary>
-        /// Specifies that angle is in arc seconds.
-        /// </summary>
-        ArcSeconds,
-        /// <summary>
-        /// Specifies that angle is in angular mil.
-        /// </summary>
-        AngularMil
-    }
-
     #endregion
 
     /// <summary>
@@ -589,6 +503,64 @@ namespace GrafanaAdapters
     /// </summary>
     public abstract class GrafanaDataSourceBase
     {
+        #region [ Members ]
+
+        // Nested Types
+        private class TargetTimeUnit
+        {
+            public TimeUnit Unit;
+
+            public double Factor = double.NaN;
+
+            public static bool TryParse(string value, out TargetTimeUnit targetTimeUnit)
+            {
+                TimeUnit timeUnit;
+
+                if (Enum.TryParse(value, out timeUnit))
+                {
+                    targetTimeUnit = new TargetTimeUnit
+                    {
+                        Unit = timeUnit
+                    };
+
+                    return true;
+                }
+
+                switch (value?.ToLowerInvariant())
+                {
+                    case "milliseconds":
+                        targetTimeUnit = new TargetTimeUnit
+                        {
+                            Unit = TimeUnit.Seconds,
+                            Factor = SI.Milli
+                        };
+
+                        return true;
+                    case "microseconds":
+                        targetTimeUnit = new TargetTimeUnit
+                        {
+                            Unit = TimeUnit.Seconds,
+                            Factor = SI.Micro
+                        };
+
+                        return true;
+                    case "nanoseconds":
+                        targetTimeUnit = new TargetTimeUnit
+                        {
+                            Unit = TimeUnit.Seconds,
+                            Factor = SI.Nano
+                        };
+
+                        return true;
+                }
+
+                targetTimeUnit = null;
+                return false;
+            }
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -621,9 +593,9 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public virtual Task<string[]> Search(Target request)
         {
-            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders
-            // For now, just return a truncated list of tag names
-            string target = (request.target == "select metric" ? "" : request.target);
+            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders - for now, just return a truncated list of tag names:
+            string target = request.target == "select metric" ? "" : request.target;
+
             return Task.Factory.StartNew(() =>
             {
                 return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
@@ -636,11 +608,11 @@ namespace GrafanaAdapters
         /// <param name="request">Table Name.</param>
         public virtual Task<string[]> SearchFields(Target request)
         {
-            return Task.Factory.StartNew(() => {
-                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName).ToArray();
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
             });
         }
-
 
         /// <summary>
         /// Search data source for a list of tables.
@@ -648,8 +620,9 @@ namespace GrafanaAdapters
         /// <param name="request">Request.</param>
         public virtual Task<string[]> SearchFilters(Target request)
         {
-            return Task.Factory.StartNew(() => {
-                return Metadata.Tables.Cast<DataTable>().Select(x => x.TableName).ToArray();
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables.Cast<DataTable>().Select(table => table.TableName).ToArray();
             });
         }
 
@@ -659,13 +632,11 @@ namespace GrafanaAdapters
         /// <param name="request">Table Name.</param>
         public virtual Task<string[]> SearchOrderBys(Target request)
         {
-            return Task.Factory.StartNew(() => {
-                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(x => x.ColumnName).ToArray();
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
             });
         }
-
-
-
 
         /// <summary>
         /// Queries data source for annotations in a time-range (e.g., Alarms).
@@ -719,9 +690,11 @@ namespace GrafanaAdapters
                 if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
+                uint excludedDataFlags = request.options?.excludedDataFlags ?? uint.MinValue; // 0x0000
+                uint includedDataFlags = request.options?.includedDataFlags ?? uint.MaxValue; // 0xFFFF
+
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
 
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
@@ -732,10 +705,26 @@ namespace GrafanaAdapters
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
                     // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation
-                    series.datapoints = valueGroups.First(group => group.Target.Equals(series.target)).Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
+                    IEnumerable<DataSourceValue> values = valueGroups.First(group => group.Target.Equals(series.target)).Source;
+
+                    if (excludedDataFlags > uint.MinValue)
+                        values = values.Where(value => ((uint)value.Flags & excludedDataFlags) == 0);
+
+                    if (includedDataFlags < uint.MaxValue)
+                        values = values.Where(value => ((uint)value.Flags & includedDataFlags) > 0);
+
+                    series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
 
+                #region [ Original "request.maxDataPoints" Implementation ]
+
+                // Grafana provides a "maxDataPoints" property, but implementing it seems to cause an occasional visual distortion when
+                // the max points value comes in too small- at least with the following algorithm - so this has been disabled for now:
+
+                //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
+
                 //// Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
+                
                 //foreach (TimeSeriesValues series in result)
                 //{
                 //    if (series.datapoints.Count > maxDataPoints)
@@ -744,6 +733,8 @@ namespace GrafanaAdapters
                 //        series.datapoints = Enumerable.Range(0, request.maxDataPoints).Select(index => series.datapoints[(int)(index * indexFactor)]).ToList();
                 //    }
                 //}
+
+                #endregion
 
                 return result;
             },
@@ -1489,8 +1480,8 @@ namespace GrafanaAdapters
             double baseTime, timeStep, value, low, high;
             bool normalizeTime, lowInclusive, highInclusive;
             int count;
-            TimeUnits timeUnits;
-            AngleUnits angleUnits;
+            TargetTimeUnit timeUnit;
+            AngleUnit angleUnit;
 
             switch (seriesFunction)
             {
@@ -1763,26 +1754,26 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.TimeDifference:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
-                        timeUnits = TimeUnits.Seconds;
+                    if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
                     }
                     break;
                 case SeriesFunction.Derivative:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
-                        timeUnits = TimeUnits.Seconds;
+                    if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -1790,15 +1781,15 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.TimeIntegration:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
-                        timeUnits = TimeUnits.Hours;
+                    if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Hours };
 
                     result.Value = 0.0D;
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            result.Value += dataValue.Value * ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits);
+                            result.Value += dataValue.Value * ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit);
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -1812,10 +1803,10 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.Interval:
-                    if (parameters.Length == 1 || !Enum.TryParse(parameters[1], true, out timeUnits))
-                        timeUnits = TimeUnits.Seconds;
+                    if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
-                    value = FromTimeUnits(ParseFloat(parameters[0]), timeUnits) / SI.Milli;
+                    value = FromTimeUnits(ParseFloat(parameters[0]), timeUnit) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -1857,137 +1848,49 @@ namespace GrafanaAdapters
                 case SeriesFunction.FilterNaN:
                     bool alsoFilterInifinity = parameters.Length == 0 || parameters[0].Trim().ParseBoolean();
 
-                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || (alsoFilterInifinity && double.IsInfinity(dataValue.Value)))))
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || alsoFilterInifinity && double.IsInfinity(dataValue.Value))))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.UnwrapAngle:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
-                        angleUnits = AngleUnits.Degrees;
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnit))
+                        angleUnit = AngleUnit.Degrees;
 
                     values = source.ToArray();
 
-                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => FromAngleUnits(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = ToAngleUnits(angle, angleUnits), Time = values[index].Time, Target = values[index].Target }))
+                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => Angle.ConvertFrom(dataValue.Value, angleUnit))).Select((angle, index) => new DataSourceValue { Value = angle.ConvertTo(angleUnit), Time = values[index].Time, Target = values[index].Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.WrapAngle:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
-                        angleUnits = AngleUnits.Degrees;
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnit))
+                        angleUnit = AngleUnit.Degrees;
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = ToAngleUnits(FromAngleUnits(dataValue.Value, angleUnits).ToRange(-Math.PI, false), angleUnits), Time = dataValue.Time, Target = dataValue.Target }))
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Angle.ConvertFrom(dataValue.Value, angleUnit).ToRange(-Math.PI, false).ConvertTo(angleUnit), Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
             }
         }
 
-        private static Angle FromAngleUnits(double value, AngleUnits units)
+        private static Time FromTimeUnits(double value, TargetTimeUnit target)
         {
-            switch (units)
-            {
-                case AngleUnits.Radians:
-                    return value;
-                case AngleUnits.Degrees:
-                    return Angle.FromDegrees(value);
-                case AngleUnits.Grads:
-                    return Angle.FromGrads(value);
-                case AngleUnits.ArcMinutes:
-                    return Angle.FromArcMinutes(value);
-                case AngleUnits.ArcSeconds:
-                    return Angle.FromArcSeconds(value);
-                case AngleUnits.AngularMil:
-                    return Angle.FromAngularMil(value);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
+            double time = Time.ConvertFrom(value, target.Unit);
+
+            if (!double.IsNaN(target.Factor))
+                time *= target.Factor;
+
+            return time;
         }
 
-        private static double ToAngleUnits(Angle value, AngleUnits units)
+        private static double ToTimeUnits(Time value, TargetTimeUnit target)
         {
-            switch (units)
-            {
-                case AngleUnits.Radians:
-                    return value;
-                case AngleUnits.Degrees:
-                    return value.ToDegrees();
-                case AngleUnits.Grads:
-                    return value.ToGrads();
-                case AngleUnits.ArcMinutes:
-                    return value.ToArcMinutes();
-                case AngleUnits.ArcSeconds:
-                    return value.ToArcSeconds();
-                case AngleUnits.AngularMil:
-                    return value.ToAngularMil();
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
-        }
+            double time = value.ConvertTo(target.Unit);
 
-        private static Time FromTimeUnits(double value, TimeUnits units)
-        {
-            switch (units)
-            {
-                case TimeUnits.Seconds:
-                    return value;
-                case TimeUnits.Ticks:
-                    return new Ticks((long)value).ToSeconds();
-                case TimeUnits.Nanoseconds:
-                    return value * SI.Nano;
-                case TimeUnits.Microseconds:
-                    return value * SI.Micro;
-                case TimeUnits.Milliseconds:
-                    return value * SI.Milli;
-                case TimeUnits.Minutes:
-                    return Time.FromMinutes(value);
-                case TimeUnits.Hours:
-                    return Time.FromHours(value);
-                case TimeUnits.Days:
-                    return Time.FromDays(value);
-                case TimeUnits.Weeks:
-                    return Time.FromWeeks(value);
-                case TimeUnits.Ke:
-                    return Time.FromKe(value);
-                case TimeUnits.PlanckTime:
-                    return Time.FromPlanckTime(value);
-                case TimeUnits.AtomicUnitsOfTime:
-                    return Time.FromAtomicUnitsOfTime(value);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
-        }
+            if (!double.IsNaN(target.Factor))
+                time /= target.Factor;
 
-        private static double ToTimeUnits(Time value, TimeUnits units)
-        {
-            switch (units)
-            {
-                case TimeUnits.Seconds:
-                    return value;
-                case TimeUnits.Ticks:
-                    return Ticks.FromSeconds(value);
-                case TimeUnits.Nanoseconds:
-                    return value / SI.Nano;
-                case TimeUnits.Microseconds:
-                    return value / SI.Micro;
-                case TimeUnits.Milliseconds:
-                    return value / SI.Milli;
-                case TimeUnits.Minutes:
-                    return value.ToMinutes();
-                case TimeUnits.Hours:
-                    return value.ToHours();
-                case TimeUnits.Days:
-                    return value.ToDays();
-                case TimeUnits.Weeks:
-                    return value.ToWeeks();
-                case TimeUnits.Ke:
-                    return value.ToKe();
-                case TimeUnits.PlanckTime:
-                    return value.ToPlanckTime();
-                case TimeUnits.AtomicUnitsOfTime:
-                    return value.ToAtomicUnitsOfTime();
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
+            return time;
         }
 
         private static int ParseInt(string parameter, bool includeZero = true)

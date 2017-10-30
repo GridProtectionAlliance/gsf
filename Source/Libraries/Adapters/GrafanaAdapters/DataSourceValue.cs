@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using GSF.TimeSeries;
+
 namespace GrafanaAdapters
 {
     /// <summary>
@@ -42,5 +44,10 @@ namespace GrafanaAdapters
         /// Timestamp, in Unix epoch milliseconds, of queried value.
         /// </summary>
         public double Time;
+
+        /// <summary>
+        /// Flags for queried value.
+        /// </summary>
+        public MeasurementStateFlags Flags;
     }
 }
