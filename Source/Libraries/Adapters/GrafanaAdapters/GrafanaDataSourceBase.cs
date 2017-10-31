@@ -1465,7 +1465,7 @@ namespace GrafanaAdapters
         private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters)
         {
             DataSourceValue[] values;
-            DataSourceValue result;
+            DataSourceValue result = new DataSourceValue();
             double lastValue = double.NaN;
             double lastTime = 0.0D;
             string lastTarget = null;
