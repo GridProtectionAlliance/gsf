@@ -690,8 +690,8 @@ namespace GrafanaAdapters
                 if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
-                uint excludedDataFlags = request.options?.excludedDataFlags ?? uint.MinValue; // 0x0000
-                uint includedDataFlags = request.options?.includedDataFlags ?? uint.MaxValue; // 0xFFFF
+                uint excludedDataFlags = request.options?.excludedDataFlags ?? uint.MinValue; // 0x00000000
+                uint includedDataFlags = request.options?.includedDataFlags ?? uint.MaxValue; // 0xFFFFFFFF
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
