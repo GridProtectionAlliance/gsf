@@ -307,6 +307,8 @@ namespace DynamicCalculator
 
             settings = Settings;
 
+            // Load useConcentrator setting before other parameters in case we
+            // need to inject defaults for FramesPerSecond, LagTime, and LeadTime
             if (settings.TryGetValue("useConcentrator", out setting))
                 m_useConcentrator = setting.ParseBoolean();
             else
@@ -326,8 +328,8 @@ namespace DynamicCalculator
 
             base.Initialize();
 
-            if (OutputMeasurements.Length != 1)
-                throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements.Length}");
+            if (OutputMeasurements?.Length != 1)
+                throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
 
             // Load required parameters
 
@@ -338,6 +340,7 @@ namespace DynamicCalculator
 
             if (!settings.TryGetValue("variableList", out setting))
                 throw new ArgumentException(string.Format(errorMessage, "variableList"));
+
             VariableList = settings["variableList"];
 
             // Load optional parameters
