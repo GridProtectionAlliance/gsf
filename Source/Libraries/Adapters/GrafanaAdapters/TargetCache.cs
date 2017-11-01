@@ -64,7 +64,16 @@ namespace GrafanaAdapters
         internal static T GetOrAdd(string target, Func<T> valueFactory)
         {
             Lazy<T> newValue = new Lazy<T>(valueFactory);
-            Lazy<T> oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
+            Lazy<T> oldValue;
+
+            try
+            {
+                oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
+            }
+            catch
+            {
+                oldValue = null;
+            }
 
             try
             {
