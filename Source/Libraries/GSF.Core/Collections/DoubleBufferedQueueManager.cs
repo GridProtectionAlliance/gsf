@@ -208,7 +208,14 @@ namespace GSF.Collections
             : this()
         {
             m_itemHandlingOperation = new ShortSynchronizedOperation(CallItemHandler, exceptionHandler);
-            m_itemHandler = () => itemHandler(Dequeue());
+
+            m_itemHandler = () =>
+            {
+                IList<T> items = Dequeue();
+
+                if (items.Count > 0)
+                    itemHandler(items);
+            };
         }
 
         #endregion
