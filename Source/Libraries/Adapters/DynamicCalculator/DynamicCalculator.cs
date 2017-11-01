@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -75,7 +74,11 @@ namespace DynamicCalculator
         private string m_imports;
         private bool m_supportsTemporalProcessing;
         private bool m_skipNanOutput;
+        private bool m_useConcentrator;
         private TimestampSource m_timestampSource;
+
+        private readonly ImmediateMeasurements m_latestMeasurements;
+        private Ticks m_latestTimestamp;
 
         private readonly HashSet<string> m_variableNames;
         private readonly Dictionary<MeasurementKey, string> m_keyMapping;
@@ -94,6 +97,9 @@ namespace DynamicCalculator
         /// </summary>
         public DynamicCalculator()
         {
+            m_latestMeasurements = new ImmediateMeasurements();
+            m_latestMeasurements.RealTimeFunction = () => RealTime;
+
             m_variableNames = new HashSet<string>();
             m_keyMapping = new Dictionary<MeasurementKey, string>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
@@ -214,6 +220,25 @@ namespace DynamicCalculator
         public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
+        /// Gets or sets the flag indicating whether to concentrate
+        /// incoming data or to just use the latest received values.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag indicating if this adapter should concentrate incoming data."),
+        DefaultValue(true)]
+        public bool UseConcentrator
+        {
+            get
+            {
+                return m_useConcentrator;
+            }
+            set
+            {
+                m_useConcentrator = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
         /// </summary>
         [ConnectionStringParameter,
@@ -231,6 +256,41 @@ namespace DynamicCalculator
             }
         }
 
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the dynamic calculator expects.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of input measurements the dynamic calculator expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+                m_latestMeasurements.ClearMeasurementCache();
+            }
+        }
+
+        private new Ticks RealTime
+        {
+            get
+            {
+                switch (m_timestampSource)
+                {
+                    default:
+                        return m_latestTimestamp;
+
+                    case TimestampSource.LocalClock:
+                        return DateTime.UtcNow;
+                }
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -245,8 +305,26 @@ namespace DynamicCalculator
             Dictionary<string, string> settings;
             string setting;
 
-            base.Initialize();
             settings = Settings;
+
+            if (settings.TryGetValue("useConcentrator", out setting))
+                m_useConcentrator = setting.ParseBoolean();
+            else
+                m_useConcentrator = true;
+
+            if (!m_useConcentrator)
+            {
+                if (!settings.ContainsKey("FramesPerSecond"))
+                    settings.Add("FramesPerSecond", "30");
+
+                if (!settings.ContainsKey("LagTime"))
+                    settings.Add("LagTime", "3");
+
+                if (!settings.ContainsKey("LeadTime"))
+                    settings.Add("LeadTime", "1");
+            }
+
+            base.Initialize();
 
             if (OutputMeasurements.Length != 1)
                 throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements.Length}");
@@ -287,6 +365,24 @@ namespace DynamicCalculator
                 m_timestampSource = (TimestampSource)Enum.Parse(typeof(TimestampSource), setting);
             else
                 m_timestampSource = TimestampSource.Frame;
+
+            m_latestMeasurements.LagTime = LagTime;
+            m_latestMeasurements.LeadTime = LeadTime;
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// </summary>
+        /// <param name="measurements">Collection of measurements to queue for processing.</param>
+        /// <remarks>
+        /// Measurements are filtered against the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// </remarks>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            if (m_useConcentrator)
+                base.QueueMeasurementsForProcessing(measurements);
+            else
+                ProcessMeasurements(measurements);
         }
 
         /// <summary>
@@ -297,18 +393,55 @@ namespace DynamicCalculator
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements;
-            IMeasurement measurement;
-            string name;
+            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
             long timestamp;
 
-            measurements = frame.Measurements;
+            // Get the timestamp of the measurement to be generated
+            switch (m_timestampSource)
+            {
+                default:
+                    timestamp = frame.Timestamp;
+                    break;
+
+                case TimestampSource.RealTime:
+                    timestamp = base.RealTime;
+                    break;
+
+                case TimestampSource.LocalClock:
+                    timestamp = DateTime.UtcNow.Ticks;
+                    break;
+            }
+
+            ProcessMeasurements(timestamp, measurements);
+        }
+
+        private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
+        {
+            foreach (IMeasurement measurement in measurements)
+            {
+                m_latestMeasurements.UpdateMeasurementValue(measurement);
+
+                if (measurement.Timestamp > m_latestTimestamp)
+                    m_latestTimestamp = measurement.Timestamp;
+            }
+
+            IDictionary<MeasurementKey, IMeasurement> measurementLookup = m_latestMeasurements
+                .Cast<IMeasurement>()
+                .ToDictionary(measurement => measurement.Key);
+
+            ProcessMeasurements(RealTime, measurementLookup);
+        }
+
+        private void ProcessMeasurements(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
+        {
+            IMeasurement measurement;
+
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
             foreach (MeasurementKey key in m_keyMapping.Keys)
             {
-                name = m_keyMapping[key];
+                string name = m_keyMapping[key];
 
                 if (measurements.TryGetValue(key, out measurement))
                     m_expressionContext.Variables[name] = measurement.AdjustedValue;
@@ -319,22 +452,6 @@ namespace DynamicCalculator
             // Compile the expression if it has not been compiled already
             if ((object)m_expression == null)
                 m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
-
-            // Get the timestamp of the measurement to be generated
-            switch (m_timestampSource)
-            {
-                default:
-                    timestamp = frame.Timestamp;
-                    break;
-
-                case TimestampSource.RealTime:
-                    timestamp = RealTime;
-                    break;
-
-                case TimestampSource.LocalClock:
-                    timestamp = DateTime.UtcNow.Ticks;
-                    break;
-            }
 
             // Evaluate the expression and generate the measurement
             GenerateCalculatedMeasurement(timestamp, m_expression.Evaluate() as IConvertible);
