@@ -22,19 +22,43 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.Caching;
+using System.Threading;
 
 namespace GrafanaAdapters
 {
+    /// <summary>
+    /// Exposes a method to reinitialize sliding memory caches used by Grafana data sources.
+    /// </summary>
+    public static class TargetCaches
+    {
+        // References each type T instance TargetCache ResetCache function
+        internal static List<Action> ResetCacheFunctions = new List<Action>();
+
+        /// <summary>
+        /// Resets all sliding memory caches used by Grafana data sources.
+        /// </summary>
+        public static void ResetAll()
+        {
+            foreach (Action resetCache in ResetCacheFunctions)
+                resetCache();
+        }                    
+    }
+
     // Usage Note: Each type T should be unique unless cache can be safely shared
     internal static class TargetCache<T>
     {
-        // ReSharper disable once StaticMemberInGenericType
-        private static readonly MemoryCache s_targetCache;
+        // Desired use case is one static MemoryCache per type T:
+        // ReSharper disable StaticMemberInGenericType
+        private static readonly string s_cacheName;
+        private static MemoryCache s_targetCache;
 
         static TargetCache()
         {
-            s_targetCache = new MemoryCache($"GrafanaTargetCache-{typeof(T).Name}");
+            s_cacheName = $"GrafanaTargetCache-{typeof(T).Name}";
+            s_targetCache = new MemoryCache(s_cacheName);
+            TargetCaches.ResetCacheFunctions.Add(ResetCache);
         }
 
         internal static T GetOrAdd(string target, Func<T> valueFactory)
@@ -53,23 +77,28 @@ namespace GrafanaAdapters
             }
         }
 
-        internal static bool GetLastAndUpdate(string target, out T oldValue, T newValue)
+        //internal static bool GetLastAndUpdate(string target, out T oldValue, T newValue)
+        //{
+        //    bool foundExisting = false;
+
+        //    if (s_targetCache.Contains(target))
+        //    {
+        //        oldValue = (T)s_targetCache.Get(target);
+        //        foundExisting = true;
+        //    }
+        //    else
+        //    {
+        //        oldValue = default(T);                
+        //    }
+
+        //    s_targetCache.Set(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
+
+        //    return foundExisting;
+        //}
+
+        internal static void ResetCache()
         {
-            bool foundExisting = false;
-
-            if (s_targetCache.Contains(target))
-            {
-                oldValue = (T)s_targetCache.Get(target);
-                foundExisting = true;
-            }
-            else
-            {
-                oldValue = default(T);                
-            }
-
-            s_targetCache.Set(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
-
-            return foundExisting;
+            Interlocked.Exchange(ref s_targetCache, new MemoryCache(s_cacheName)).Dispose();
         }
     }
 }

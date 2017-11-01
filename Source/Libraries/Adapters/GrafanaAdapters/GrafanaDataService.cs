@@ -149,6 +149,8 @@ namespace GrafanaAdapters
 
             if (LocalOutputAdapter.Instances.TryGetValue(m_dataSource.InstanceName, out adapter))
                 m_dataSource.Metadata = adapter.DataSource;
+
+            TargetCaches.ResetAll();
         }
 
         /// <summary>
