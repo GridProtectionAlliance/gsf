@@ -32,6 +32,7 @@ using System.Text;
 using Ciloci.Flee;
 using GSF;
 using GSF.Diagnostics;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -68,6 +69,29 @@ namespace DynamicCalculator
     {
         #region [ Members ]
 
+        // Nested Types
+        private class DelayedSynchronizedOperation : SynchronizedOperationBase
+        {
+            private Action m_delayedAction;
+
+            public DelayedSynchronizedOperation(Action action, Action<Exception> exceptionAction)
+                : base(action, exceptionAction)
+            {
+                m_delayedAction = () =>
+                {
+                    if (ExecuteAction())
+                        ExecuteActionAsync();
+                };
+            }
+
+            public int Delay { get; set; }
+
+            protected override void ExecuteActionAsync()
+            {
+                m_delayedAction.DelayAndExecute(Delay);
+            }
+        }
+
         // Fields
         private string m_expressionText;
         private string m_variableList;
@@ -88,6 +112,8 @@ namespace DynamicCalculator
         private readonly ExpressionContext m_expressionContext;
         private IDynamicExpression m_expression;
 
+        private DelayedSynchronizedOperation m_timerOperation;
+
         #endregion
 
         #region [ Constructors ]
@@ -104,6 +130,8 @@ namespace DynamicCalculator
             m_keyMapping = new Dictionary<MeasurementKey, string>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
             m_expressionContext = new ExpressionContext();
+
+            m_timerOperation = new DelayedSynchronizedOperation(ProcessLatestMeasurements, ex => OnProcessException(MessageLevel.Error, ex));
         }
 
         #endregion
@@ -239,6 +267,27 @@ namespace DynamicCalculator
         }
 
         /// <summary>
+        /// Gets or sets the interval at which the adapter should calculate values.
+        /// </summary>
+        /// <remarks>
+        /// Set to zero to disable the timer and calculate values upon receipt of input data.
+        /// </remarks>
+        [ConnectionStringParameter,
+        Description("Define the interval, in seconds, at which the adapter should calculate values."),
+        DefaultValue(0)]
+        public double CalculationInterval
+        {
+            get
+            {
+                return m_timerOperation.Delay / 1000.0D;
+            }
+            set
+            {
+                m_timerOperation.Delay = (int)(value * 1000.0D);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
         /// </summary>
         [ConnectionStringParameter,
@@ -369,8 +418,25 @@ namespace DynamicCalculator
             else
                 m_timestampSource = TimestampSource.Frame;
 
+            if (settings.TryGetValue("publicationInterval", out setting))
+                CalculationInterval = double.Parse(setting);
+            else
+                CalculationInterval = 0;
+
             m_latestMeasurements.LagTime = LagTime;
             m_latestMeasurements.LeadTime = LeadTime;
+        }
+
+        /// <summary>
+        /// Starts the <see cref="DynamicCalculator"/> or restarts it if it is already running.
+        /// </summary>
+        [AdapterCommand("Starts the action adapter or restarts it if it is already running.", "Administrator", "Editor")]
+        public override void Start()
+        {
+            base.Start();
+
+            if (!m_useConcentrator && m_timerOperation.Delay > 0)
+                m_timerOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -415,7 +481,7 @@ namespace DynamicCalculator
                     break;
             }
 
-            ProcessMeasurements(timestamp, measurements);
+            Calculate(timestamp, measurements);
         }
 
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
@@ -428,14 +494,26 @@ namespace DynamicCalculator
                     m_latestTimestamp = measurement.Timestamp;
             }
 
+            if (m_timerOperation.Delay <= 0)
+                ProcessLatestMeasurements();
+        }
+
+        private void ProcessLatestMeasurements()
+        {
+            if (!Enabled)
+                return;
+
             IDictionary<MeasurementKey, IMeasurement> measurementLookup = m_latestMeasurements
                 .Cast<IMeasurement>()
                 .ToDictionary(measurement => measurement.Key);
 
-            ProcessMeasurements(RealTime, measurementLookup);
+            Calculate(RealTime, measurementLookup);
+
+            if (m_timerOperation.Delay > 0)
+                m_timerOperation.RunOnceAsync();
         }
 
-        private void ProcessMeasurements(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
+        private void Calculate(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             IMeasurement measurement;
 
