@@ -92,6 +92,13 @@ namespace DynamicCalculator
             }
         }
 
+        // Constants
+
+        /// <summary>
+        /// Defines the default value for <see cref="Imports"/> property.
+        /// </summary>
+        public const string DefaultImports = "AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math";
+
         // Fields
         private string m_expressionText;
         private string m_variableList;
@@ -208,7 +215,7 @@ namespace DynamicCalculator
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the list of types which define methods to be imported into the expression parser."),
-        DefaultValue("AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math")]
+        DefaultValue(DefaultImports)]
         public string Imports
         {
             get
@@ -224,14 +231,15 @@ namespace DynamicCalculator
                         Dictionary<string, string> parsedTypeDef = typeDef.ParseKeyValuePairs(',');
                         string assemblyName = parsedTypeDef["assemblyName"];
                         string typeName = parsedTypeDef["typeName"];
-                        Assembly asm = Assembly.Load(new AssemblyName(assemblyName));
-                        Type t = asm.GetType(typeName);
+                        Assembly assembly = Assembly.Load(new AssemblyName(assemblyName));
+                        Type type = assembly.GetType(typeName);
 
-                        m_expressionContext.Imports.AddType(t);
+                        m_expressionContext.Imports.AddType(type);
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Error, new ArgumentException($"Unable to load type from assembly: {typeDef}", ex));
+                        string message = $"Unable to load type from assembly: {typeDef}";
+                        OnProcessException(MessageLevel.Error, new ArgumentException(message, ex));
                     }
                 }
 
@@ -329,13 +337,28 @@ namespace DynamicCalculator
         {
             get
             {
+                if (m_useConcentrator)
+                {
+                    switch (m_timestampSource)
+                    {
+                        case TimestampSource.RealTime:
+                            return base.RealTime;
+
+                        case TimestampSource.LocalClock:
+                            return DateTime.UtcNow;
+
+                        default:
+                            return m_latestTimestamp;
+                    }
+                }
+
                 switch (m_timestampSource)
                 {
-                    default:
-                        return m_latestTimestamp;
-
                     case TimestampSource.LocalClock:
                         return DateTime.UtcNow;
+
+                    default:
+                        return m_latestTimestamp;
                 }
             }
         }
@@ -349,7 +372,7 @@ namespace DynamicCalculator
         /// </summary>
         public override void Initialize()
         {
-            string errorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
+            const string ErrorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
 
             Dictionary<string, string> settings;
             string setting;
@@ -383,12 +406,12 @@ namespace DynamicCalculator
             // Load required parameters
 
             if (!settings.TryGetValue("expressionText", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "expressionText"));
+                throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
 
             ExpressionText = settings["expressionText"];
 
             if (!settings.TryGetValue("variableList", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "variableList"));
+                throw new ArgumentException(string.Format(ErrorMessage, "variableList"));
 
             VariableList = settings["variableList"];
 
@@ -462,26 +485,18 @@ namespace DynamicCalculator
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
-            long timestamp;
+            m_latestTimestamp = frame.Timestamp;
+            Calculate(frame.Measurements);
+        }
 
-            // Get the timestamp of the measurement to be generated
-            switch (m_timestampSource)
-            {
-                default:
-                    timestamp = frame.Timestamp;
-                    break;
-
-                case TimestampSource.RealTime:
-                    timestamp = base.RealTime;
-                    break;
-
-                case TimestampSource.LocalClock:
-                    timestamp = DateTime.UtcNow.Ticks;
-                    break;
-            }
-
-            Calculate(timestamp, measurements);
+        /// <summary>
+        /// Handler for the values calculated by the <see cref="DynamicCalculator"/>.
+        /// </summary>
+        /// <param name="value">The value calculated by the <see cref="DynamicCalculator"/>.</param>
+        protected virtual void HandleCalculatedValue(object value)
+        {
+            // Evaluate the expression and generate the measurement
+            GenerateCalculatedMeasurement(RealTime, value as IConvertible);
         }
 
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
@@ -507,13 +522,13 @@ namespace DynamicCalculator
                 .Cast<IMeasurement>()
                 .ToDictionary(measurement => measurement.Key);
 
-            Calculate(RealTime, measurementLookup);
+            Calculate(measurementLookup);
 
             if (m_timerOperation.Delay > 0)
                 m_timerOperation.RunOnceAsync();
         }
 
-        private void Calculate(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
+        private void Calculate(IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             IMeasurement measurement;
 
@@ -535,7 +550,7 @@ namespace DynamicCalculator
                 m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
             // Evaluate the expression and generate the measurement
-            GenerateCalculatedMeasurement(timestamp, m_expression.Evaluate() as IConvertible);
+            HandleCalculatedValue(m_expression.Evaluate());
         }
 
         // Adds a variable to the key-variable map.
@@ -616,20 +631,10 @@ namespace DynamicCalculator
         private MeasurementKey GetKey(string token)
         {
             Guid signalID;
-            MeasurementKey key;
 
-            if (Guid.TryParse(token, out signalID))
-            {
-                // Defined using the measurement's GUID
-                key = MeasurementKey.LookUpBySignalID(signalID);
-            }
-            else
-            {
-                // Defined using the measurement's key
-                key = MeasurementKey.Parse(token);
-            }
-
-            return key;
+            return Guid.TryParse(token, out signalID)
+                ? MeasurementKey.LookUpBySignalID(signalID)
+                : MeasurementKey.Parse(token);
         }
 
         // Generates a measurement with the given value and sends it into the system
