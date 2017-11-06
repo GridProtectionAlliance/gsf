@@ -175,6 +175,7 @@ namespace PhasorProtocolAdapters
         private double m_leadTime;
         private long m_timeResolution;
         private bool m_countOnlyMappedMeasurements;
+        private bool m_injectBadData;
 
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
@@ -718,6 +719,8 @@ namespace PhasorProtocolAdapters
                 status.AppendFormat("Allow use of cached config: {0}", m_allowUseOfCachedConfiguration);
                 status.AppendLine();
                 status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
+                status.AppendLine();
+                status.AppendFormat("           Inject bad data: {0}", m_injectBadData ? "Yes" : "No");
                 status.AppendLine();
 
                 if (m_allowUseOfCachedConfiguration)
@@ -1284,6 +1287,15 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
+        /// Toggles the flag that determines whether to inject the bad data state flag into the stream.
+        /// </summary>
+        [AdapterCommand("Toggles the flag that determines whether to inject the bad data state flag into the stream.")]
+        public void ToggleBadData()
+        {
+            m_injectBadData = !m_injectBadData;
+        }
+
+        /// <summary>
         /// Sends the specified <see cref="DeviceCommand"/> to the current device connection.
         /// </summary>
         /// <param name="command"><see cref="DeviceCommand"/> to send to connected device.</param>
@@ -1706,6 +1718,9 @@ namespace PhasorProtocolAdapters
 
                         // Track quality statistics for this device
                         definedDevice.TotalFrames++;
+
+                        if (m_injectBadData)
+                            parsedDevice.DataIsValid = false;
 
                         if (!parsedDevice.DataIsValid)
                             definedDevice.DataQualityErrors++;
