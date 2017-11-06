@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="AlarmAdapter.cs" />
     <Compile Include="AlarmStatistics.cs" />
+    <Compile Include="BestValueSelector.cs" />
     <Compile Include="FlatlineTest.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
