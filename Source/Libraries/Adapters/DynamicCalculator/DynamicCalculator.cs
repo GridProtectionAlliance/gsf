@@ -146,6 +146,24 @@ namespace DynamicCalculator
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public override IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return base.OutputMeasurements;
+            }
+            set
+            {
+                base.OutputMeasurements = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the textual representation of the expression.
         /// </summary>
         [ConnectionStringParameter,
