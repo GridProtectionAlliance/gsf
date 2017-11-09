@@ -52,9 +52,8 @@ namespace GrafanaAdapters
         /// Queries openHistorian as a Grafana Metadata source.
         /// </summary>
         /// <param name="request">Query request.</param>
-        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string> GetMetadata(Target request, CancellationToken cancellationToken);
+        Task<string> GetMetadata(Target request);
 
         /// <summary>
         /// Search openHistorian for a target.

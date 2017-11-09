@@ -221,7 +221,7 @@ namespace GSF
                 throw new ArgumentNullException(nameof(type));
 
             // Initialize culture info if not specified.
-            if ((object)culture == null)
+            if (culture == null)
                 culture = CultureInfo.InvariantCulture;
 
             try
@@ -332,7 +332,7 @@ namespace GSF
         /// </remarks>
         public static string JoinKeyValuePairs(this IDictionary<string, string> pairs, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}')
         {
-            if ((object)pairs == null)
+            if (pairs == null)
                 throw new ArgumentNullException(nameof(pairs));
 
             char[] delimiters = { parameterDelimiter, keyValueDelimiter };
@@ -387,7 +387,7 @@ namespace GSF
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}', bool ignoreDuplicateKeys = true)
         {
-            if (value == (string)null)
+            if (value == null)
                 throw new ArgumentNullException(nameof(value));
 
             if (parameterDelimiter == keyValueDelimiter ||
@@ -564,7 +564,7 @@ namespace GSF
         public static string ReplaceCharacters(this string value, char replacementCharacter, Func<char, bool> characterTestFunction)
         {
             // <pex>
-            if (characterTestFunction == (Func<char, bool>)null)
+            if (characterTestFunction == null)
                 throw new ArgumentNullException(nameof(characterTestFunction));
             // </pex>
 
@@ -596,7 +596,7 @@ namespace GSF
         public static string RemoveCharacters(this string value, Func<char, bool> characterTestFunction)
         {
             // <pex>
-            if (characterTestFunction == (Func<char, bool>)null)
+            if (characterTestFunction == null)
                 throw new ArgumentNullException(nameof(characterTestFunction));
             // </pex>
 
@@ -716,7 +716,7 @@ namespace GSF
         public static string ReplaceCrLfs(this string value, char replacementCharacter)
         {
             // <pex>
-            if (value == (string)null)
+            if (value == null)
                 throw new ArgumentNullException(nameof(value));
             // </pex>
 
@@ -1092,7 +1092,7 @@ namespace GSF
         public static char RegexDecode(this string value)
         {
             // <pex>
-            if (value == (string)null)
+            if (value == null)
                 throw new ArgumentNullException(nameof(value));
             // </pex>
 
@@ -1164,7 +1164,7 @@ namespace GSF
         {
             IntPtr intPtr;
 
-            if ((object)value == null)
+            if (value == null)
                 return null;
 
             intPtr = IntPtr.Zero;
@@ -1195,7 +1195,7 @@ namespace GSF
             if (string.IsNullOrEmpty(value))
                 return "";
 
-            if ((object)culture == null)
+            if (culture == null)
                 culture = CultureInfo.CurrentCulture;
 
             return culture.TextInfo.ToTitleCase(value.ToLower());
@@ -1652,7 +1652,7 @@ namespace GSF
             if (value.Length <= length)
                 return value;
 
-            int s1_Len = (int)(length / 2) - 1;
+            int s1_Len = length / 2 - 1;
 
             return string.Concat(value.Substring(0, s1_Len), "...", value.Substring(value.Length - s1_Len + 1 - length % 2));
         }
@@ -1790,7 +1790,7 @@ namespace GSF
                 if (!double.TryParse(value, out test))
                     return "0";
 
-                return test.ToString();
+                return test.ToString(CultureInfo.InvariantCulture);
             }
 
             bool isNeg = false;
@@ -1998,7 +1998,7 @@ namespace GSF
         /// </summary>
         /// <param name="value">Input string to process.</param>
         /// <param name="characterTestFunction">The delegate function used to match characters.</param>
-        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for <paramref name="testChar"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin executing test function. Typically length of <paramref name="value"/> minus 1."</param>
         /// <returns>The index of the matching character within <paramref name="value"/> or (-1) if not found.</returns>
         public static int IndexOfPrevious(this string value, Func<char, bool> characterTestFunction, int startIndex = 0)
         {
