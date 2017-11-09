@@ -176,9 +176,9 @@ namespace DataQualityMonitoring
 
                 IEnumerable<MeasurementStateFlags> badFlags = Enum.GetValues(typeof(MeasurementStateFlags))
                     .Cast<MeasurementStateFlags>()
-                    .Where(flag => m_badFlags.HasFlag(flag));
+                    .Where(flag => flag != MeasurementStateFlags.Normal &&  m_badFlags.HasFlag(flag));
 
-                string badFlagsText = string.Join("," + Environment.NewLine + "                            : ", badFlags);
+                string badFlagsText = string.Join("," + Environment.NewLine + "                              ", badFlags);
 
                 statusBuilder.AppendLine();
                 statusBuilder.AppendLine($"                   Bad Flags: {badFlagsText}");
