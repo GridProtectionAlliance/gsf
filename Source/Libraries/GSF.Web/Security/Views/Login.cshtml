@@ -34,9 +34,9 @@
     string redirectPage;
     string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
     string loginPage = AuthenticationOptions.DefaultLoginPage;
-
     string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
     string loginHeader = "";
+    bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
 
     if (request.QueryParameters().TryGetValue("redir", out redirectPage))
     {
@@ -84,12 +84,25 @@
         }
 
         table {
-            border-radius: 5px;
-            width: 50%;
+            width: 100%;
+            table-layout: fixed;
+            border-radius: 0px;
             margin: 0px auto;
             float: none;
         }
-        
+
+        td {
+            vertical-align: top;
+        }
+
+        label.disabled {
+            color: #ccc;
+        }
+
+        label.inline {
+            display: inline;
+        }
+
         .panel-red {
             color: #a94442;
             background-color: #f2dede;
@@ -167,26 +180,25 @@
                                 <label for="password">Password:</label>
                                 <input type="password" class="form-control" id="password" />
                             </div>
-                            <table style="width: 100%; table-layout: fixed">
+                            <table>
                                 <tr>
-                                    <td style="vertical-align: top">
+                                    <td>
                                         <div class="form-group">
-                                            <input type="checkbox" id="wia" />
-                                            <label for="wia">Windows Integrated Authentication</label>
+                                            <input type="checkbox" id="iwa" />
+                                            <label class="inline" for="iwa">Use Integrated Windows Authentication</label>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: top">
+                                    <td style="text-align: center">
                                         <div class="form-group">
                                             <input type="checkbox" id="remember" />
-                                            <label for="remember">Remember me</label>
+                                            <label class="inline" for="remember">Keep&nbsp;me signed&nbsp;in</label>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with domain credentials without domain access - e.g., roaming with laptop">
+                                    <td style="text-align: right">
+                                        <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with cached domain credentials&#13;and do not have domain access - e.g., roaming with laptop">
                                             <input type="checkbox" id="ntlm" checked />
-                                            <label for="ntlm">Use NTLM</label>
-                                            <br />
-                                            <span id="ntlmMessage" style="color: red; display: none">WARNING: Credentials will be passed in cleartext</span>
+                                            <label class="inline" for="ntlm" id="ntlmLabel">Use NTLM authentication</label>                                            
+                                            <span id="ntlmMessage" style="color: red; display: none"><br /><small>WARNING: Unsecure connection - any credentials passed to host "@request.RequestUri.Host" will be sent in clear-text</small></span>
                                         </div>
                                     </td>
                                 </tr>
@@ -215,17 +227,18 @@
         const redirectPage = "@redirectPage";
         const securePage = "@authTestPage";
         const clearCredentialsPage = securePage + "?@clearCredentials=true";
+        const unsecureConnection = @unsecureConnection.ToString().ToLowerInvariant();
 
         function loadSettings() {
             $("#username").val(persistentStorage.getItem("username")).trigger("input");
-            $("#wia").prop("checked", persistentStorage.getItem("wia") === "true").change();
+            $("#iwa").prop("checked", persistentStorage.getItem("iwa") === "true").change();
             $("#remember").prop("checked", persistentStorage.getItem("remember") === "true").change();
             $("#ntlm").prop("checked", persistentStorage.getItem("ntlm") !== "false").change();
         }
 
         function saveSettings() {
             persistentStorage.setItem("username", $("#username").val());
-            persistentStorage.setItem("wia", $("#wia").prop("checked"));
+            persistentStorage.setItem("iwa", $("#iwa").prop("checked"));
             persistentStorage.setItem("remember", $("#remember").prop("checked"));
             persistentStorage.setItem("ntlm", $("#ntlm").prop("checked"));
         }
@@ -391,7 +404,7 @@
                 $("#response").text("Checking authentication...");
 
                 // Test pass-through authentication
-                if ($("#wia").prop("checked"))
+                if ($("#iwa").prop("checked"))
                     passthroughNTLM();
                 else
                     passthroughBasic();
@@ -426,13 +439,10 @@
             $("#login").disable();
             $("#responsePanel").hide();
 
-            if ($("#wia").prop("checked")) {
+            if ($("#iwa").prop("checked"))
                 login();
-            } else {
-                const username = $("#username").val();
-                const password = $("#password").val();
-                login(username, password);
-            }
+            else
+                login($("#username").val(), $("#password").val());
         });
 
         $("#username").on("input", function () {
@@ -444,18 +454,23 @@
                 $("#ntlmRegion").hide();
         });
 
-        $("#wia").change(function() {
+        $("#iwa").change(function() {
             if (this.checked) {
                 $("#username").disable();
                 $("#password").disable();
+                $("#ntlm").prop("checked", true).change();
+                $("#ntlm").disable();
+                $("#ntlmLabel").addClass("disabled");
             } else {
                 $("#username").enable();
                 $("#password").enable();
+                $("#ntlm").enable();
+                $("#ntlmLabel").removeClass("disabled");
             }
         });
 
         $("#ntlm").change(function () {
-            if (location.protocol != "https:") {
+            if (unsecureConnection) {
                 if (this.checked)
                     $("#ntlmMessage").hide();
                 else
@@ -478,7 +493,7 @@
                 $("#login").click();
         });
 
-        $("#wia").keyup(function(event) {
+        $("#iwa").keyup(function(event) {
             if (event.keyCode === 13)
                 $("#login").click();
         });
