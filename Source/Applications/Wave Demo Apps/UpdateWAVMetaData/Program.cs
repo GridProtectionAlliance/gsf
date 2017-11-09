@@ -50,7 +50,7 @@ namespace UpdateWAVMetaData
             string connectionString = systemSettings["ConnectionString"].Value;
             string nodeIDQueryString = null;
             string parameterizedQuery;
-            int protocolID, signalTypeID;
+            int protocolID, signalTypePMID, signalTypePAID;
 
             // Define guid with query string delimiters according to database needs
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
@@ -82,8 +82,8 @@ namespace UpdateWAVMetaData
 
                 // Typically these values should be defined as analogs, however, we use a voltage magnitude signal type
                 // since these types of values can be better graphed with auto-scaling in the visualization tools 
-                signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='VPHM'"));
-                //signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
+                signalTypePMID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='VPHM'"));
+                signalTypePAID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='VPHA'"));
 
                 string pathRoot = FilePath.GetDirectoryName((args.Length > 0) ? args[0] : systemSettings["MusicDirectory"].Value);
                 string sourcePath = Path.Combine(pathRoot, "*" + Path.DirectorySeparatorChar + "*.wav");
@@ -114,26 +114,44 @@ namespace UpdateWAVMetaData
                             "connectionString", "enabled");
 
                         // Insert new device record
-                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}; memoryCache={2}", FilePath.GetAbsolutePath(sourceFileName), acronym, useMemoryCache), database.Bool(true));
+                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true));
                         int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
                         string pointTag;
+                        int lastPhasorIndex = 0;
+                        int phasorIndex = 1;
 
                         // Add a measurement for each defined wave channel
                         for (int i = 0; i < sourceWave.Channels; i++)
                         {
                             int index = i + 1;
+                            int signalTypeID = index % 2 == 0 ? signalTypePAID : signalTypePMID;
+
+                            if (i > 0 && i % 2 == 0)
+                                phasorIndex++;
+
+                            if (lastPhasorIndex != phasorIndex)
+                            {
+                                lastPhasorIndex = phasorIndex;
+
+                                parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Phasor(DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, 'V', '+', {2})", "deviceID", "label", "sourceIndex");
+
+                                // Insert new phasor record
+                                connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, acronym, phasorIndex);
+                            }
+
+                            string signalSuffix = index % 2 == 0 ? "-PA" : "-PM";
                             pointTag = acronym + ":WAVA" + index;
 
-                            parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, SignalReference, Description, " +
-                                "Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5})", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "enabled");
+                            parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, " +
+                                "Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6})", "deviceID", "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "enabled");
 
                             // Insert new measurement record
-                            connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, acronym + "-AV" + index, name + " - channel " + index, database.Bool(true));
-                            //index = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
+                            connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, phasorIndex, acronym + signalSuffix + phasorIndex, name + " - channel " + phasorIndex, database.Bool(true));
+                            //Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
                         }
 
                         // Disable all non analog measurements that may be associated with this device
-                        connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Measurement SET Enabled = {0} WHERE DeviceID = {1} AND SignalTypeID <> {2}", "enabled", "deviceID", "signalTypeID"), database.Bool(false), deviceID, signalTypeID);
+                        connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Measurement SET Enabled = {0} WHERE DeviceID = {1} AND NOT SignalTypeID IN ({2}, {3})", "enabled", "deviceID", "signalTypePAID", "signalTypePMID"), database.Bool(false), deviceID, signalTypePAID, signalTypePMID);
                     }
                 }
             }
