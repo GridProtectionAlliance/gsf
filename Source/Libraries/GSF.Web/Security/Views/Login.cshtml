@@ -167,10 +167,30 @@
                                 <label for="password">Password:</label>
                                 <input type="password" class="form-control" id="password" />
                             </div>
-                            <div class="form-group">
-                                <input type="checkbox" id="ntlm" />
-                                <label for="ntlm">Windows Integrated Authentication</label>
-                            </div>
+                            <table style="width: 100%; table-layout: fixed">
+                                <tr>
+                                    <td style="vertical-align: top">
+                                        <div class="form-group">
+                                            <input type="checkbox" id="wia" />
+                                            <label for="wia">Windows Integrated Authentication</label>
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: top">
+                                        <div class="form-group">
+                                            <input type="checkbox" id="remember" />
+                                            <label for="remember">Remember me</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with domain credentials without domain access - e.g., roaming with laptop">
+                                            <input type="checkbox" id="ntlm" checked />
+                                            <label for="ntlm">Use NTLM</label>
+                                            <br />
+                                            <span id="ntlmMessage" style="color: red; display: none">WARNING: Credentials will be passed in cleartext</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
                             <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
                         </form>
                     </div>
@@ -197,12 +217,16 @@
         const clearCredentialsPage = securePage + "?@clearCredentials=true";
 
         function loadSettings() {
-            $("#username").val(persistentStorage.getItem("username"));
-            $("#ntlm").prop("checked", persistentStorage.getItem("ntlm") === "true").change();
+            $("#username").val(persistentStorage.getItem("username")).trigger("input");
+            $("#wia").prop("checked", persistentStorage.getItem("wia") === "true").change();
+            $("#remember").prop("checked", persistentStorage.getItem("remember") === "true").change();
+            $("#ntlm").prop("checked", persistentStorage.getItem("ntlm") !== "false").change();
         }
 
         function saveSettings() {
             persistentStorage.setItem("username", $("#username").val());
+            persistentStorage.setItem("wia", $("#wia").prop("checked"));
+            persistentStorage.setItem("remember", $("#remember").prop("checked"));
             persistentStorage.setItem("ntlm", $("#ntlm").prop("checked"));
         }
 
@@ -214,7 +238,8 @@
             if (success) {
                 $("#response").text("Authentication succeeded, loading " + (redirectPage === "/" ? "main" : "target") + " page...");
 
-                persistentStorage.setItem("passthrough", "true");
+                if ($("#remember").prop("checked"))
+                    persistentStorage.setItem("passthrough", "true");
 
                 setTimeout(function() {
                     window.location = redirectPage;
@@ -293,7 +318,10 @@
                         }
                     },
                     beforeSend: function (xhr) {
-                        xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + hashPassword(password)));
+                        if (username.indexOf("\\") <= 0)
+                            password = hashPassword(password);
+
+                        xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
                     }
                 });
             }
@@ -353,7 +381,7 @@
                 // Attempt authentication with specifed user name and password
                 $("#response").text("Attempting authentication...");
 
-                if (username.indexOf("\\") > 0)
+                if (username.indexOf("\\") > 0 && $("#ntlm").prop("checked"))
                     authenticateNTLM(username, password);
                 else
                     authenticateBasic(username, password);
@@ -363,7 +391,7 @@
                 $("#response").text("Checking authentication...");
 
                 // Test pass-through authentication
-                if ($("#ntlm").prop("checked"))
+                if ($("#wia").prop("checked"))
                     passthroughNTLM();
                 else
                     passthroughBasic();
@@ -398,7 +426,7 @@
             $("#login").disable();
             $("#responsePanel").hide();
 
-            if ($("#ntlm").prop("checked")) {
+            if ($("#wia").prop("checked")) {
                 login();
             } else {
                 const username = $("#username").val();
@@ -407,13 +435,31 @@
             }
         });
 
-        $("#ntlm").change(function () {
+        $("#username").on("input", function () {
+            const username = $("#username").val();
+
+            if (username.indexOf("\\") > 0)
+                $("#ntlmRegion").show();
+            else
+                $("#ntlmRegion").hide();
+        });
+
+        $("#wia").change(function() {
             if (this.checked) {
                 $("#username").disable();
                 $("#password").disable();
             } else {
                 $("#username").enable();
                 $("#password").enable();
+            }
+        });
+
+        $("#ntlm").change(function () {
+            if (location.protocol != "https:") {
+                if (this.checked)
+                    $("#ntlmMessage").hide();
+                else
+                    $("#ntlmMessage").show();
             }
         });
 
@@ -432,7 +478,17 @@
                 $("#login").click();
         });
 
-        $("#ntlm").keyup(function (event) {
+        $("#wia").keyup(function(event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $("#remember").keyup(function(event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $("#ntlm").keyup(function(event) {
             if (event.keyCode === 13)
                 $("#login").click();
         });
