@@ -95,10 +95,6 @@
             vertical-align: top;
         }
 
-        label.disabled {
-            color: #ccc;
-        }
-
         label.inline {
             display: inline;
         }
@@ -195,10 +191,16 @@
                                         </div>
                                     </td>
                                     <td style="text-align: right">
-                                        <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with cached domain credentials&#13;and do not have domain access - e.g., roaming with laptop">
+                                        <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with cached domain&#13;credentials and do not have domain access - e.g., roaming&#13;with a laptop">
                                             <input type="checkbox" id="ntlm" checked />
-                                            <label class="inline" for="ntlm" id="ntlmLabel">Use NTLM authentication</label>                                            
-                                            <span id="ntlmMessage" style="color: red; display: none"><br /><small>WARNING: Unsecure connection - any credentials passed to host "@request.RequestUri.Host" will be sent in clear-text</small></span>
+                                            <label class="inline" for="ntlm">Use&nbsp;NTLM authentication</label>                                            
+                                            <div id="ntlmMessage" style="color: red; display: none; max-width: 200px; float: right; overflow: hidden; margin-bottom: 10px">
+                                                <small>
+                                                    WARNING: Unsecure&nbsp;connection,<br />any&nbsp;credentials passed&nbsp;to&nbsp;host
+                                                    <span style="white-space: nowrap">"@request.RequestUri.Host"</span> will&nbsp;be&nbsp;sent
+                                                    <span style="white-space: nowrap">in clear-text</span>
+                                                </small>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -446,9 +448,7 @@
         });
 
         $("#username").on("input", function () {
-            const username = $("#username").val();
-
-            if (username.indexOf("\\") > 0)
+            if ($("#username").val().indexOf("\\") > 0)
                 $("#ntlmRegion").show();
             else
                 $("#ntlmRegion").hide();
@@ -460,12 +460,14 @@
                 $("#password").disable();
                 $("#ntlm").prop("checked", true).change();
                 $("#ntlm").disable();
-                $("#ntlmLabel").addClass("disabled");
+                $("#ntlmRegion").hide();
             } else {
                 $("#username").enable();
                 $("#password").enable();
-                $("#ntlm").enable();
-                $("#ntlmLabel").removeClass("disabled");
+                $("#ntlm").enable();                
+                
+                if ($("#username").val().indexOf("\\") > 0)
+                    $("#ntlmRegion").show();
             }
         });
 

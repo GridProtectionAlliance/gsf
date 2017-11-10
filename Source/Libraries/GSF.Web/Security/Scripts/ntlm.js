@@ -18,6 +18,10 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+// WARNING: This file has been modified from the original work:
+// The Ntlm.authenticate method has been updated to work better with
+// IE/Edge and modified to return a request instead of boolean
+
 var Msg = function(data) {
     this.data = [];
     if (!data) return;
@@ -234,21 +238,55 @@ Ntlm.isChallenge = function(xhr) {
 Ntlm.authenticate = function(url) {
     if (!Ntlm.domain || !Ntlm.username || !Ntlm.lmHashedPassword || !Ntlm.ntHashedPassword) {
         Ntlm.error('No NTLM credentials specified. Use Ntlm.setCredentials(...) before making calls.');
-        return false;
+        return null;
     }
-    var hostname = Ntlm.getLocation(url).hostname;
-    var msg1 = Ntlm.createMessage1(hostname);
+
     var request = new XMLHttpRequest();
+
+    if (isIE) {
+        // Initialize XMLHttpRequest for future IE/Edge calls
+        request.open('GET', '\\', false);
+
+        try {
+            request.send(null);
+        } catch (ex) {
+            console.log(ex.message);
+        }
+    }
+
+    var hostname = Ntlm.getLocation(url).hostname;
+
+    if (!hostname)
+        hostname = window.location.hostname;
+
+    var msg1 = Ntlm.createMessage1(hostname);
+    var authMsg1 = 'NTLM ' + msg1.toBase64();
+	
     request.open('GET', url, false);
-    request.setRequestHeader('Authorization', 'NTLM ' + msg1.toBase64());
-    request.send(null);
+    request.setRequestHeader('Authorization', authMsg1);
+    
+    try {
+        request.send(null);
+    } catch (ex) {
+        console.log(ex.message);
+        return request;
+    }
+    
     var response = request.getResponseHeader('WWW-Authenticate');
     var challenge = Ntlm.getChallenge(response);
-
     var msg3 = Ntlm.createMessage3(challenge, hostname);
+    var authMsg3 = 'NTLM ' + msg3.toBase64();
+    
     request.open('GET', url, false);
-    request.setRequestHeader('Authorization', 'NTLM ' + msg3.toBase64());
-    request.send(null);
+    request.setRequestHeader('Authorization', authMsg3);
+    
+    try {
+        request.send(null);
+    } catch (ex) {
+        console.log(ex.message);
+        return request;
+    }
+
     return request;
 };
 
