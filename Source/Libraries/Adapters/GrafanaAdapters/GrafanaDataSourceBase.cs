@@ -944,13 +944,10 @@ namespace GrafanaAdapters
                         string derivedLabel = label;
                         DataRow record = target.MetadataRecordFromTag(Metadata);
 
-                        if ((object)record != null)
+                        if ((object)record != null && derivedLabel.IndexOf('{') >= 0)
                         {
-                            foreach (DataColumn column in record.Table.Columns)
-                            {
-                                string fieldName = column.ColumnName;
+                            foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
                                 derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
-                            }
                         }
 
                         // ReSharper disable once AccessToModifiedClosure
