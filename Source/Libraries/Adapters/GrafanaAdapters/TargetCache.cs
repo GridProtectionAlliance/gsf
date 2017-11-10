@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Caching;
 using System.Threading;
+using GSF.Threading;
 
 namespace GrafanaAdapters
 {
@@ -34,15 +35,32 @@ namespace GrafanaAdapters
     public static class TargetCaches
     {
         // References each type T instance TargetCache ResetCache function
-        internal static List<Action> ResetCacheFunctions = new List<Action>();
+        internal static readonly List<Action> ResetCacheFunctions;
+
+        private static readonly ShortSynchronizedOperation s_resetAllCaches;
+
+        static TargetCaches()
+        {
+            ResetCacheFunctions = new List<Action>();
+
+            s_resetAllCaches = new ShortSynchronizedOperation(() =>
+            {
+                Action[] resetCacheFunctions;
+
+                lock (ResetCacheFunctions)
+                    resetCacheFunctions = ResetCacheFunctions.ToArray();
+
+                foreach (Action resetCache in resetCacheFunctions)
+                    resetCache();
+            });
+        }
 
         /// <summary>
         /// Resets all sliding memory caches used by Grafana data sources.
         /// </summary>
         public static void ResetAll()
         {
-            foreach (Action resetCache in ResetCacheFunctions)
-                resetCache();
+            s_resetAllCaches.RunOnceAsync();
         }                    
     }
 
@@ -58,7 +76,9 @@ namespace GrafanaAdapters
         {
             s_cacheName = $"GrafanaTargetCache-{typeof(T).Name}";
             s_targetCache = new MemoryCache(s_cacheName);
-            TargetCaches.ResetCacheFunctions.Add(ResetCache);
+
+            lock (TargetCaches.ResetCacheFunctions)
+                TargetCaches.ResetCacheFunctions.Add(ResetCache);
         }
 
         internal static T GetOrAdd(string target, Func<T> valueFactory)
@@ -68,6 +88,8 @@ namespace GrafanaAdapters
 
             try
             {
+                // Race condition exists here such that target cache being referenced may
+                // be disposed between access and method invocation - hence the try/catch
                 oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
             }
             catch
@@ -85,25 +107,6 @@ namespace GrafanaAdapters
                 throw;
             }
         }
-
-        //internal static bool GetLastAndUpdate(string target, out T oldValue, T newValue)
-        //{
-        //    bool foundExisting = false;
-
-        //    if (s_targetCache.Contains(target))
-        //    {
-        //        oldValue = (T)s_targetCache.Get(target);
-        //        foundExisting = true;
-        //    }
-        //    else
-        //    {
-        //        oldValue = default(T);                
-        //    }
-
-        //    s_targetCache.Set(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
-
-        //    return foundExisting;
-        //}
 
         internal static void ResetCache()
         {
