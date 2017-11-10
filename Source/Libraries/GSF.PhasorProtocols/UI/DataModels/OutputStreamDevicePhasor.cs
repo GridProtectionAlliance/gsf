@@ -465,11 +465,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
                 else
                 {
-                    query = database.ParameterizedQueryString("UPDATE OutputStreamDevicePhasor SET NodeID = {0}, OutputStreamDeviceID = {1}, Label = {2}, Type = {3}, " +
-                        "Phase = {4}, ScalingValue = {5}, LoadOrder = {6}, UpdatedBy = {7}, UpdatedOn = {8} WHERE ID = {9}", "nodeID", "outputStreamDeviceID", "label",
-                        "type", "phase", "scalingValue", "loadOrder", "updatedBy", "updatedOn", "id");
+                    query = "UPDATE OutputStreamDevicePhasor SET NodeID = {0}, OutputStreamDeviceID = {1}, Label = {2}, Type = {3}, " +
+                        "Phase = {4}, ScalingValue = {5}, LoadOrder = {6}, UpdatedBy = {7}, UpdatedOn = {8} WHERE ID = {9}";
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, outputStreamDevicePhasor.NodeID, outputStreamDevicePhasor.OutputStreamDeviceID,
+                    database.ExecuteNonQuery(DefaultTimeout, query, outputStreamDevicePhasor.NodeID, outputStreamDevicePhasor.OutputStreamDeviceID,
                         outputStreamDevicePhasor.Label, outputStreamDevicePhasor.Type, outputStreamDevicePhasor.Phase, outputStreamDevicePhasor.ScalingValue,
                         outputStreamDevicePhasor.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow, outputStreamDevicePhasor.ID);
 
