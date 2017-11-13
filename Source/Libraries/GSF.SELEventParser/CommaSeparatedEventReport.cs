@@ -248,12 +248,12 @@ namespace GSF.SELEventParser
         /// </summary>
         /// <param name="lines">The string array of SEL.cev lines to process</param>
         /// <param name="fileIdentifier">For error logging, an identifier of the file being processed -- typically the filename.</param>
-        /// <param name="dataRecordLimit">Set to a positive value limit the number of data records processed.</param>
+        /// <param name="maxFileDuration">Set to a positive value limit the number of data records processed.</param>
         /// <remarks>Removed lineIndex since file must be processed in sequence. </remarks>
         /// <returns>Data model representing the comma separated event report.</returns>
-        public static CommaSeparatedEventReport Parse(string[] lines, string fileIdentifier = "", int dataRecordLimit = 0)
+        public static CommaSeparatedEventReport Parse(string[] lines, string fileIdentifier = "", double maxFileDuration = 0.0D)
         {
-            OnDebugMessage(string.Format("Parsing SEL CEV file: {0}", fileIdentifier));
+            //OnDebugMessage(string.Format("Parsing SEL CEV file: {0}", fileIdentifier));
 
             if (lines == null || lines.Length == 0)
             {
@@ -508,8 +508,8 @@ namespace GSF.SELEventParser
                     OnDebugMessage(string.Format("Only partial CEV header data found. Processing of SEL CEV file: {0} aborted at line {1}", fileIdentifier, lineIndex.ToString()));
                     return null;
                 }
-                else
-                    OnDebugMessage(string.Format("Successfully parsed header record {0} in SEL CEV file: {1}", headerRecordNumber - 1, fileIdentifier));
+                //else
+                //    OnDebugMessage(string.Format("Successfully parsed header record {0} in SEL CEV file: {1}", headerRecordNumber - 1, fileIdentifier));
             }
 
             commaSeparatedEventReport.InitialReadingIndex = lineIndex;
@@ -609,19 +609,21 @@ namespace GSF.SELEventParser
             }
 
             //Log significant info about the file
-            OnDebugMessage(string.Format("Found {0} analog channels and {1} digital channels to process within the SEL CEV file: {2} with an event time of {3} and a relative trigger index of {4}",
-               commaSeparatedEventReport.AnalogSection.AnalogChannels.Count, commaSeparatedEventReport.AnalogSection.DigitalChannels.Count, fileIdentifier,
-               commaSeparatedEventReport.Header.EventTime.ToLongDateString(), triggerIndexRelative.ToString()));
+            //OnDebugMessage(string.Format("Found {0} analog channels and {1} digital channels to process within the SEL CEV file: {2} with an event time of {3} and a relative trigger index of {4}",
+            //   commaSeparatedEventReport.AnalogSection.AnalogChannels.Count, commaSeparatedEventReport.AnalogSection.DigitalChannels.Count, fileIdentifier,
+            //   commaSeparatedEventReport.Header.EventTime.ToLongDateString(), triggerIndexRelative.ToString()));
 
             int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / commaSeparatedEventReport.FrequencyNominal / commaSeparatedEventReport.SamplesPerCycleAnalog));
             //Time (in ticks) is relative to the trigger line (record).
             //Negative in advance of the trigger record, Zero at the trigger record, Positive following the trigger recored.
             int lineTicks = -1 * triggerIndexRelative * timeStepTicks;
             //Log significant time-based info
-            OnDebugMessage(string.Format("Starting line tics: {0} Incremental tics per record: {1}", lineTicks, timeStepTicks));
+            //OnDebugMessage(string.Format("Starting line tics: {0} Incremental tics per record: {1}", lineTicks, timeStepTicks));
 
 
             //set data record limit
+            int dataRecordLimit = (int)Math.Round(maxFileDuration * commaSeparatedEventReport.FrequencyNominal * commaSeparatedEventReport.SamplesPerCycleAnalog);
+
             if (dataRecordLimit > 0)
                 dataRecordLimit = ((lines.Length - commaSeparatedEventReport.InitialReadingIndex) > dataRecordLimit) ? dataRecordLimit : lines.Length - commaSeparatedEventReport.InitialReadingIndex;
             else
@@ -697,8 +699,8 @@ namespace GSF.SELEventParser
                     //analogChannel.Samples.Add(Convert.ToDouble(lines[lineIndex].Split(',')[channelIndex]) * (lineFields[channelIndex++].ToUpper().Contains("KV") ? 1000 : 1));
                 }
 
-                if (dataRecordCount == 1)  //log the first recored for debug
-                    OnDebugMessage("Data record 1: " + lines[lineIndex]);
+                //if (dataRecordCount == 1)  //log the first recored for debug
+                //    OnDebugMessage("Data record 1: " + lines[lineIndex]);
 
                 //LOAD DIGITAL DATA
                 char[] hexDigitals = data[commaSeparatedEventReport.AnalogSection.AnalogChannels.Count + 1].QuoteUnwrap().Trim().ToCharArray(); //digitals always on the other side of "TRIG"
@@ -746,7 +748,7 @@ namespace GSF.SELEventParser
                 OnDebugMessage(string.Format("Reached data record limit of {0} prior to finding SETTINGS as data section terminator in SEL CEV file: {1}", dataRecordLimit, fileIdentifier));
 
             commaSeparatedEventReport.ExpectedSampleCount = dataRecordCount;
-            OnDebugMessage(string.Format("Successfully processed {0} data records in SEL CEV file: {1}", dataRecordCount, fileIdentifier));
+            //OnDebugMessage(string.Format("Successfully processed {0} data records in SEL CEV file: {1}", dataRecordCount, fileIdentifier));
 
             if (lineIndex >= lines.Length)
                 return commaSeparatedEventReport;  //we're done.
@@ -875,7 +877,7 @@ namespace GSF.SELEventParser
                 regions[i++] = sd.Name;
             }
 
-            OnDebugMessage(string.Format("Successfully found {0} settings groups and a total of {1} settings.", regions.Length, settingValues.Count));
+            //OnDebugMessage(string.Format("Successfully found {0} settings groups and a total of {1} settings.", regions.Length, settingValues.Count));
 
             commaSeparatedEventReport.SettingsRegions = regions;
             commaSeparatedEventReport.Settings = settingValues;

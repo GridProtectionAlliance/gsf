@@ -119,7 +119,7 @@ namespace GSF.SELEventParser
             return Parse(filename, 60.0D);
         }
 
-        public static EventFile Parse(string filename, double systemFrequency)
+        public static EventFile Parse(string filename, double systemFrequency, double maxFileDuration = 0.0D)
         {
             string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
 
@@ -158,7 +158,7 @@ namespace GSF.SELEventParser
                 }
                 else if (command.ToUpper().Contains("CEV") || filename.ToUpper().Contains(".CEV"))
                 {
-                    parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, filename);
+                    parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, filename, maxFileDuration);
                     parsedFile.Add(parsedCommaSeparatedEventReport);
                     parsed = true;
                 }
