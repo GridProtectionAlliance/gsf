@@ -269,7 +269,7 @@ Ntlm.authenticate = function(url, handleResponse) {
     $.ajax({
         url: url,
         cache: false,
-        processData: false,
+        crossDomain: false,
         xhrFields: {
             withCredentials: true
         },
@@ -279,7 +279,7 @@ Ntlm.authenticate = function(url, handleResponse) {
                     $.ajax({
                         url: url,
                         cache: false,
-                        processData: false,
+                        crossDomain: false,
                         xhrFields: {
                             withCredentials: true
                         },
