@@ -346,12 +346,13 @@
                 const parts = username.split("\\");
 
                 Ntlm.setCredentials(parts[0], parts[1], password);
-                const response = Ntlm.authenticate(securePage + "?scheme=NTLM");
-
-                if (response.status === 200)
-                    loginComplete(true);
-                else
-                    loginFailed(response);
+                    
+                Ntlm.authenticate(securePage + "?scheme=NTLM", function(response) {
+                    if (response.status === 200)
+                        loginComplete(true);
+                    else
+                        loginFailed(response);
+                });
             }
 
             // Authentication for database user without

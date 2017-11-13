@@ -19,14 +19,13 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // WARNING: This file has been modified from the original work:
-// The Ntlm.authenticate method has been updated to work better with
-// IE/Edge and modified to return a request instead of boolean
+// Ntlm.authenticate method has been updated to operate asynchronously
 
 var Msg = function(data) {
     this.data = [];
     if (!data) return;
-    if (data.indexOf('NTLM ') == 0) data = data.substr(5);
-    atob(data).split('').map(function(c) { this.push(c.charCodeAt(0)); }, this.data);
+    if (data.indexOf("NTLM ") === 0) data = data.substr(5);
+    atob(data).split("").map(function(c) { this.push(c.charCodeAt(0)); }, this.data);
 };
 
 Msg.prototype.addByte = function(b) {
@@ -40,17 +39,17 @@ Msg.prototype.addShort = function(s) {
 
 Msg.prototype.addString = function(str, utf16) {
     if (utf16) // Fake UTF16 by padding each character in string.
-        str = str.split('').map(function(c) { return (c + '\0'); }).join('');
+        str = str.split("").map(function(c) { return (c + "\0"); }).join("");
 
-    for (var i = 0; i < str.length; i++)
+    for (let i = 0; i < str.length; i++)
         this.data.push(str.charCodeAt(i));
 };
 
 Msg.prototype.getString = function(offset, length) {
-    var result = '';
-    for (var i = 0; i < length; i++) {
+    var result = "";
+    for (let i = 0; i < length; i++) {
         if (offset + i >= this.data.length)
-            return '';
+            return "";
         result += String.fromCharCode(this.data[offset + i]);
     }
     return result;
@@ -61,11 +60,12 @@ Msg.prototype.getByte = function(offset) {
 };
 
 Msg.prototype.toBase64 = function() {
-    var str = String.fromCharCode.apply(null, this.data);
-    return btoa(str).replace(/.{76}(?=.)/g,'$&');
+    const str = String.fromCharCode.apply(null, this.data);
+    return btoa(str).replace(/.{76}(?=.)/g,"$&");
 };
 
 var Ntlm = {};
+
 Ntlm.domain = null;
 Ntlm.username = null;
 Ntlm.lmHashedPassword = null;
@@ -80,36 +80,40 @@ Ntlm.message = function(msg) {
 };
 
 Ntlm.createMessage1 = function(hostname) {
-    var msg1 = new Msg();
-    msg1.addString('NTLMSSP\0');
+    const msg1 = new Msg();
+    msg1.addString("NTLMSSP\0");
     msg1.addByte(1);
-    msg1.addString('\0\0\0');
+    msg1.addString("\0\0\0");
     msg1.addShort(0xb203);
-    msg1.addString('\0\0');
+    msg1.addString("\0\0");
     msg1.addShort(Ntlm.domain.length);
     msg1.addShort(Ntlm.domain.length);
     msg1.addShort(32 + hostname.length);
-    msg1.addString('\0\0');
+    msg1.addString("\0\0");
     msg1.addShort(hostname.length);
     msg1.addShort(hostname.length);
     msg1.addShort(32);
-    msg1.addString('\0\0');
+    msg1.addString("\0\0");
     msg1.addString(hostname.toUpperCase());
     msg1.addString(Ntlm.domain.toUpperCase());
     return msg1;
 };
 
 Ntlm.getChallenge = function(data) {
-    var msg2 = new Msg(data);
-    if (msg2.getString(0, 8) != 'NTLMSSP\0') {
-        Ntlm.error('Invalid NTLM response header.');
-        return '';
+    const msg2 = new Msg(data);
+    
+    if (msg2.getString(0, 8) !== "NTLMSSP\0") {
+        Ntlm.error("Invalid NTLM response header.");
+        return "";
     }
-    if (msg2.getByte(8) != 2) {
-        Ntlm.error('Invalid NTLM response type.');
-        return '';
+    
+    if (msg2.getByte(8) !== 2) {
+        Ntlm.error("Invalid NTLM response type.");
+        return "";
     }
-    var challenge = msg2.getString(24, 8);
+    
+    const challenge = msg2.getString(24, 8);
+    
     return challenge;
 };
 
@@ -120,40 +124,40 @@ Ntlm.createMessage3 = function(challenge, hostname) {
     var domain = Ntlm.domain;
     var msg3 = new Msg();
 
-    msg3.addString('NTLMSSP\0');
+    msg3.addString("NTLMSSP\0");
     msg3.addByte(3);
-    msg3.addString('\0\0\0');
+    msg3.addString("\0\0\0");
 
     msg3.addShort(24); // lmResponse
     msg3.addShort(24);
     msg3.addShort(64 + (domain.length + username.length + hostname.length) * 2);
-    msg3.addString('\0\0');
+    msg3.addString("\0\0");
 
     msg3.addShort(24); // ntResponse
     msg3.addShort(24);
     msg3.addShort(88 + (domain.length + username.length + hostname.length) * 2);
-    msg3.addString('\0\0');
+    msg3.addString("\0\0");
 
     msg3.addShort(domain.length * 2); // Domain.
     msg3.addShort(domain.length * 2);
     msg3.addShort(64);
-    msg3.addString('\0\0');
+    msg3.addString("\0\0");
 
     msg3.addShort(username.length * 2); // Username.
     msg3.addShort(username.length * 2);
     msg3.addShort(64 + domain.length * 2);
-    msg3.addShort('\0\0');
+    msg3.addShort("\0\0");
 
     msg3.addShort(hostname.length * 2); // Hostname.
     msg3.addShort(hostname.length * 2);
     msg3.addShort(64 + (domain.length + username.length) * 2);
-    msg3.addString('\0\0');
+    msg3.addString("\0\0");
 
-    msg3.addString('\0\0\0\0');
+    msg3.addString("\0\0\0\0");
     msg3.addShort(112 + (domain.length + username.length + hostname.length) * 2);
-    msg3.addString('\0\0');
+    msg3.addString("\0\0");
     msg3.addShort(0x8201);
-    msg3.addString('\0\0');
+    msg3.addString("\0\0");
 
     msg3.addString(domain.toUpperCase(), true); // "Some" string are passed as UTF-16.
     msg3.addString(username, true);
@@ -165,11 +169,15 @@ Ntlm.createMessage3 = function(challenge, hostname) {
 };
 
 Ntlm.createKey = function(str) {
-    var key56 = [];
-    while (str.length < 7) str += '\0';
+    const key56 = [];
+
+    while (str.length < 7) str += "\0";
+
     str = str.substr(0, 7);
-    str.split('').map(function(c) { this.push(c.charCodeAt(0)); }, key56);
-    var key = [0, 0, 0, 0, 0, 0, 0, 0];
+    str.split("").map(function(c) { this.push(c.charCodeAt(0)); }, key56);
+
+    const key = [0, 0, 0, 0, 0, 0, 0, 0];
+
     key[0] = key56[0]; // Convert 56 bit key to 64 bit.
     key[1] = ((key56[0] << 7) & 0xFF) | (key56[1] >> 1);
     key[2] = ((key56[1] << 6) & 0xFF) | (key56[2] >> 2);
@@ -178,47 +186,54 @@ Ntlm.createKey = function(str) {
     key[5] = ((key56[4] << 3) & 0xFF) | (key56[5] >> 5);
     key[6] = ((key56[5] << 2) & 0xFF) | (key56[6] >> 6);
     key[7] =  (key56[6] << 1) & 0xFF;
-    for (var i = 0; i < key.length; i++) { // Fix DES key parity bits.
-        var bit = 0
-        for (var k = 0; k < 7; k++) {
-            t = key[i] >> k;
+
+    for (let i = 0; i < key.length; i++) { // Fix DES key parity bits.
+        let bit = 0;
+
+        for (let k = 0; k < 7; k++) {
+            const t = key[i] >> k;
             bit = (t ^ bit) & 0x1;
         }
+
         key[i] = (key[i] & 0xFE) | bit;
     }
 
-    var result = '';
+    var result = "";
+
     key.map(function(i) { result += String.fromCharCode(i); });
+
     return result;
 };
 
 Ntlm.buildResponse = function(key, text) {
     while (key.length < 21)
-        key += '\0';
-    var key1 = Ntlm.createKey(key.substr(0, 7));
-    var key2 = Ntlm.createKey(key.substr(7, 7));
-    var key3 = Ntlm.createKey(key.substr(14, 7));
+        key += "\0";
+
+    const key1 = Ntlm.createKey(key.substr(0, 7));
+    const key2 = Ntlm.createKey(key.substr(7, 7));
+    const key3 = Ntlm.createKey(key.substr(14, 7));
+
     return des(key1, text, 1, 0) + des(key2, text, 1, 0) + des(key3, text, 1, 0);
 };
 
 Ntlm.getLocation = function(url) {
-    var l = document.createElement("a");
+    const l = document.createElement("a");
     l.href = url;
     return l;
 };
 
 Ntlm.setCredentials = function(domain, username, password) {
-    var magic = 'KGS!@#$%'; // Create LM password hash.
+    const magic = "KGS!@#$%"; // Create LM password hash.
     var lmPassword = password.toUpperCase().substr(0, 14);
-    while (lmPassword.length < 14) lmPassword += '\0';
-    var key1 = Ntlm.createKey(lmPassword);
-    var key2 = Ntlm.createKey(lmPassword.substr(7));
-    var lmHashedPassword = des(key1, magic, 1, 0) + des(key2, magic, 1, 0);
+    while (lmPassword.length < 14) lmPassword += "\0";
+    const key1 = Ntlm.createKey(lmPassword);
+    const key2 = Ntlm.createKey(lmPassword.substr(7));
+    const lmHashedPassword = des(key1, magic, 1, 0) + des(key2, magic, 1, 0);
 
-    var ntPassword = ''; // Create NT password hash.
-    for (var i = 0; i < password.length; i++)
-        ntPassword += password.charAt(i) + '\0';
-    var ntHashedPassword = str_md4(ntPassword);
+    var ntPassword = ""; // Create NT password hash.
+    for (let i = 0; i < password.length; i++)
+        ntPassword += password.charAt(i) + "\0";
+    const ntHashedPassword = str_md4(ntPassword);
 
     Ntlm.domain = domain;
     Ntlm.username = username;
@@ -229,65 +244,67 @@ Ntlm.setCredentials = function(domain, username, password) {
 Ntlm.isChallenge = function(xhr) {
     if (!xhr)
         return false;
-    if (xhr.status != 401)
+    
+    if (xhr.status !== 401)
         return false;
-    var header = xhr.getResponseHeader('WWW-Authenticate');
-    return header && header.indexOf('NTLM') != -1;
+    
+    const header = xhr.getResponseHeader("WWW-Authenticate");
+    return header && header.indexOf("NTLM") !== -1;
 };
 
-Ntlm.authenticate = function(url) {
+Ntlm.authenticate = function(url, handleResponse) {
     if (!Ntlm.domain || !Ntlm.username || !Ntlm.lmHashedPassword || !Ntlm.ntHashedPassword) {
-        Ntlm.error('No NTLM credentials specified. Use Ntlm.setCredentials(...) before making calls.');
-        return null;
+        Ntlm.error("No NTLM credentials specified. Use Ntlm.setCredentials(...) before making calls.");
+        return;
     }
 
-    var request = new XMLHttpRequest();
-
-    if (isIE) {
-        // Initialize XMLHttpRequest for future IE/Edge calls
-        request.open('GET', '\\', false);
-
-        try {
-            request.send(null);
-        } catch (ex) {
-            console.log(ex.message);
-        }
-    }
+    if (url.startsWith("/"))
+        url = window.location.protocol + "//" + window.location.host + url;
 
     var hostname = Ntlm.getLocation(url).hostname;
 
     if (!hostname)
         hostname = window.location.hostname;
+    
+    $.ajax({
+        url: url,
+        cache: false,
+        processData: false,
+        xhrFields: {
+            withCredentials: true
+        },
+        complete: function (xhr) {
+            switch (xhr.status) {
+                case 401:
+                    $.ajax({
+                        url: url,
+                        cache: false,
+                        processData: false,
+                        xhrFields: {
+                            withCredentials: true
+                        },
+                        complete: function (xhr2) {
+                            handleResponse(xhr2.statusCode());
+                        },
+                        beforeSend: function (xhr2) {
+                            const response = xhr.getResponseHeader("WWW-Authenticate");
+                            const challenge = Ntlm.getChallenge(response);
+                            const msg3 = Ntlm.createMessage3(challenge, hostname);
 
-    var msg1 = Ntlm.createMessage1(hostname);
-    var authMsg1 = 'NTLM ' + msg1.toBase64();
-	
-    request.open('GET', url, false);
-    request.setRequestHeader('Authorization', authMsg1);
-    
-    try {
-        request.send(null);
-    } catch (ex) {
-        console.log(ex.message);
-        return request;
-    }
-    
-    var response = request.getResponseHeader('WWW-Authenticate');
-    var challenge = Ntlm.getChallenge(response);
-    var msg3 = Ntlm.createMessage3(challenge, hostname);
-    var authMsg3 = 'NTLM ' + msg3.toBase64();
-    
-    request.open('GET', url, false);
-    request.setRequestHeader('Authorization', authMsg3);
-    
-    try {
-        request.send(null);
-    } catch (ex) {
-        console.log(ex.message);
-        return request;
-    }
-
-    return request;
+                            xhr2.setRequestHeader("Authorization", "NTLM " + msg3.toBase64());
+                        }
+                    });
+                    break;
+                default:
+                    handleResponse(xhr.statusCode());
+                    break;
+            }
+        },
+        beforeSend: function (xhr) {
+            const msg1 = Ntlm.createMessage1(hostname);
+            xhr.setRequestHeader("Authorization", "NTLM " + msg1.toBase64());
+        }
+    });
 };
 
 /*
@@ -384,14 +401,17 @@ function md4_cmn(q, a, b, x, s, t)
 {
     return safe_add(rol(safe_add(safe_add(a, q), safe_add(x, t)), s), b);
 }
+
 function md4_ff(a, b, c, d, x, s)
 {
     return md4_cmn((b & c) | ((~b) & d), a, 0, x, s, 0);
 }
+
 function md4_gg(a, b, c, d, x, s)
 {
     return md4_cmn((b & c) | (b & d) | (c & d), a, 0, x, s, 1518500249);
 }
+
 function md4_hh(a, b, c, d, x, s)
 {
     return md4_cmn(b ^ c ^ d, a, 0, x, s, 1859775393);
@@ -399,8 +419,8 @@ function md4_hh(a, b, c, d, x, s)
 
 function safe_add(x, y)
 {
-    var lsw = (x & 0xFFFF) + (y & 0xFFFF);
-    var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+    const lsw = (x & 0xFFFF) + (y & 0xFFFF);
+    const msw = (x >> 16) + (y >> 16) + (lsw >> 16);
     return (msw << 16) | (lsw & 0xFFFF);
 }
 
@@ -411,9 +431,9 @@ function rol(num, cnt)
 
 function str2binl(str)
 {
-    var bin = Array();
-    var mask = (1 << chrsz) - 1;
-    for(var i = 0; i < str.length * chrsz; i += chrsz)
+    const bin = Array();
+    const mask = (1 << chrsz) - 1;
+    for(let i = 0; i < str.length * chrsz; i += chrsz)
         bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (i%32);
     return bin;
 }
@@ -421,8 +441,8 @@ function str2binl(str)
 function binl2str(bin)
 {
     var str = "";
-    var mask = (1 << chrsz) - 1;
-    for(var i = 0; i < bin.length * 32; i += chrsz)
+    const mask = (1 << chrsz) - 1;
+    for(let i = 0; i < bin.length * 32; i += chrsz)
         str += String.fromCharCode((bin[i>>5] >>> (i % 32)) & mask);
     return str;
 }
