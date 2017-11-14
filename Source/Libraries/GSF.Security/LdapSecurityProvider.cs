@@ -404,79 +404,77 @@ namespace GSF.Security
                 userData.IsDefined = user.Exists;
                 userData.LoginID = user.LoginID;
 
+                // Fill in user information from domain data if it is available
                 if (userData.IsDefined)
                 {
-                    // Fill in user information from domain data if it is available
-                    if (user.DomainRespondsForUser)
+                    // Copy relevant user information
+                    userData.FirstName = user.FirstName;
+                    userData.LastName = user.LastName;
+                    userData.CompanyName = user.Company;
+                    userData.PhoneNumber = user.Telephone;
+                    userData.EmailAddress = user.Email;
+
+                    try
                     {
-                        // Copy relevant user information
-                        userData.FirstName = user.FirstName;
-                        userData.LastName = user.LastName;
-                        userData.CompanyName = user.Company;
-                        userData.PhoneNumber = user.Telephone;
-                        userData.EmailAddress = user.Email;
+                        userData.IsLockedOut = user.AccountIsLockedOut;
+                        userData.IsDisabled = user.AccountIsDisabled;
+                    }
+                    catch (SecurityException)
+                    {
+                        // AD may restrict information on account availability, if so, have to make a safe assumption:
+                        userData.IsLockedOut = true;
+                        userData.IsDisabled = true;
+                    }
 
-                        try
-                        {
-                            userData.IsLockedOut = user.AccountIsLockedOut;
-                            userData.IsDisabled = user.AccountIsDisabled;
-                        }
-                        catch (SecurityException)
-                        {
-                            // AD may restrict information on account availability, if so, have to make a safe assumption:
-                            userData.IsLockedOut = true;
-                            userData.IsDisabled = true;
-                        }
+                    userData.PasswordChangeDateTime = user.NextPasswordChangeDate;
+                    userData.AccountCreatedDateTime = user.AccountCreationDate;
 
-                        userData.PasswordChangeDateTime = user.NextPasswordChangeDate;
-                        userData.AccountCreatedDateTime = user.AccountCreationDate;
+                    // Assign all groups the user is a member of
+                    foreach (string groupName in user.Groups)
+                    {
+                        if (!groupCollection.Contains(groupName, StringComparer.OrdinalIgnoreCase))
+                            groupCollection.Add(groupName);
+                    }
 
-                        // Assign all groups the user is a member of
-                        foreach (string groupName in user.Groups)
-                        {
-                            if (!groupCollection.Contains(groupName, StringComparer.OrdinalIgnoreCase))
-                                groupCollection.Add(groupName);
-                        }
+                    if ((object)userDataCache != null)
+                    {
+                        // Cache user data so that information can be loaded later if domain is unavailable
+                        userDataCache[userData.LoginID] = userData;
 
-                        if ((object)userDataCache != null)
-                        {
-                            // Cache user data so that information can be loaded later if domain is unavailable
-                            userDataCache[userData.LoginID] = userData;
+                        // Wait for pending serialization since cache is scoped locally to this method and will be disposed before exit
+                        userDataCache.WaitForSave();
+                    }
+                }
+                else if (!user.DomainRespondsForUser)
+                {
+                    // Attempt to load previously cached user information when domain is offline
+                    UserData cachedUserData;
 
-                            // Wait for pending serialization since cache is scoped locally to this method and will be disposed before exit
-                            userDataCache.WaitForSave();
-                        }
+                    if ((object)userDataCache != null && userDataCache.TryGetUserData(userData.LoginID, out cachedUserData))
+                    {
+                        // Copy relevant cached user information
+                        userData.IsDefined = true;
+                        userData.FirstName = cachedUserData.FirstName;
+                        userData.LastName = cachedUserData.LastName;
+                        userData.CompanyName = cachedUserData.CompanyName;
+                        userData.PhoneNumber = cachedUserData.PhoneNumber;
+                        userData.EmailAddress = cachedUserData.EmailAddress;
+                        userData.IsLockedOut = cachedUserData.IsLockedOut;
+                        userData.IsDisabled = cachedUserData.IsDisabled;
+                        userData.Roles.AddRange(cachedUserData.Roles);
+                        userData.Groups.AddRange(cachedUserData.Groups);
+
+                        // If domain is offline, a password change cannot be initiated
+                        userData.PasswordChangeDateTime = DateTime.MaxValue;
+                        userData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
                     }
                     else
                     {
-                        // Attempt to load previously cached user information when domain is offline
-                        UserData cachedUserData;
-
-                        if ((object)userDataCache != null && userDataCache.TryGetUserData(userData.LoginID, out cachedUserData))
-                        {
-                            // Copy relevant cached user information
-                            userData.FirstName = cachedUserData.FirstName;
-                            userData.LastName = cachedUserData.LastName;
-                            userData.CompanyName = cachedUserData.CompanyName;
-                            userData.PhoneNumber = cachedUserData.PhoneNumber;
-                            userData.EmailAddress = cachedUserData.EmailAddress;
-                            userData.IsLockedOut = cachedUserData.IsLockedOut;
-                            userData.IsDisabled = cachedUserData.IsDisabled;
-                            userData.Roles.AddRange(cachedUserData.Roles);
-                            userData.Groups.AddRange(cachedUserData.Groups);
-
-                            // If domain is offline, a password change cannot be initiated
-                            userData.PasswordChangeDateTime = DateTime.MaxValue;
-                            userData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
-                        }
-                        else
-                        {
-                            // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
-                            userData.IsLockedOut = false;
-                            userData.IsDisabled = false;
-                            userData.PasswordChangeDateTime = DateTime.MaxValue;
-                            userData.AccountCreatedDateTime = DateTime.MinValue;
-                        }
+                        // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
+                        userData.IsLockedOut = false;
+                        userData.IsDisabled = false;
+                        userData.PasswordChangeDateTime = DateTime.MaxValue;
+                        userData.AccountCreatedDateTime = DateTime.MinValue;
                     }
                 }
 
