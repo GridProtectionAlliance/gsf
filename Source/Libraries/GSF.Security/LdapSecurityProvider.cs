@@ -470,7 +470,10 @@ namespace GSF.Security
                     }
                     else
                     {
-                        // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
+                        // No previous user data was cached and domain is currently unavailable, however Windows could
+                        // allow authentication using cached credentials when authenticating, so all we can do at this
+                        // point is assume that user "could" exist and allow authentication to be attempted
+                        userData.IsDefined = true;
                         userData.IsLockedOut = false;
                         userData.IsDisabled = false;
                         userData.PasswordChangeDateTime = DateTime.MaxValue;

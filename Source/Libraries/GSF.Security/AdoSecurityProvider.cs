@@ -591,18 +591,17 @@ namespace GSF.Security
                 try
                 {
                     // Determine if user is LDAP or database authenticated
-                    if (!UserData.IsExternal)
+                    if (UserData.IsExternal)
                     {
-                        // Authenticate against active directory (via LDAP base class) - in context of ADO security
-                        // provisions, you are only authenticated if you are in a role!
-                        isAuthenticated = base.Authenticate();
-                    }
-                    else
-                    {
-                        // Authenticate against backend data store
+                        // Test password for database user authentication
                         isAuthenticated =
                             UserData.Password == Password ||
                             UserData.Password == SecurityProviderUtility.EncryptPassword(Password);
+                    }
+                    else
+                    {
+                        // Execute operating system authentication using provided credentials
+                        isAuthenticated = base.Authenticate();
                     }
                 }
                 catch (Exception ex)
