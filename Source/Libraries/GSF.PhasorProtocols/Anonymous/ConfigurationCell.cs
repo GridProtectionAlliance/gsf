@@ -483,6 +483,8 @@ namespace GSF.PhasorProtocols.Anonymous
 
                     if (lookup.TryGetValue(signalReference, out key))
                         keyArray[x] = key;
+                    else
+                        keyArray[x] = MeasurementKey.Undefined;
                 }
             }
 

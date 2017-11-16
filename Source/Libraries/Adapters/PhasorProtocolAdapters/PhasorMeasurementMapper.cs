@@ -1622,6 +1622,9 @@ namespace PhasorProtocolAdapters
         /// <param name="parsedMeasurement">The parsed <see cref="IMeasurement"/> value.</param>
         protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, MeasurementMetadata metadata, IMeasurement parsedMeasurement)
         {
+            if (metadata == MeasurementMetadata.Undefined)
+                return;
+
             if ((object)metadata == null)
                 return;
 
