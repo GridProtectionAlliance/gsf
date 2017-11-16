@@ -51,7 +51,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Defines a Grafana time-series underlying point tag.
         /// </summary>
-        public string pointtag;
+        public string rootTarget;
 
         /// <summary>
         /// Defines a Grafana time-series underlying point tag latitude.

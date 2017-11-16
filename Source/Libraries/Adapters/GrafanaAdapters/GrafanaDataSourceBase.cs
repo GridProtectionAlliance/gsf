@@ -693,7 +693,7 @@ namespace GrafanaAdapters
 
                 uint excludedDataFlags = Convert.ToUInt32(request.options?["excludedDataFlags"].ToString() ?? "0x00000000", 16); // 0x00000000
                 uint includedDataFlags = Convert.ToUInt32(request.options?["includedDataFlags"].ToString() ?? "0xFFFFFFFF", 16); // 0xFFFFFFFF
-                bool includeNormalData = Convert.ToBoolean(request.options?["includeNormalData"].ToString() ?? "true"); 
+                bool includeNormalData = Convert.ToBoolean(request.options?["includeNormalData"].ToString() ?? "true");
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
@@ -701,11 +701,12 @@ namespace GrafanaAdapters
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
-                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues {
+                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
+                {
                     target = valueGroup.Target,
-                    pointtag = valueGroup.RootTarget,
-                    latitude = float.Parse(Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{valueGroup.RootTarget}'").FirstOrDefault()?["Latitude"].ToString() ?? "0.00"),
-                    longitude = float.Parse(Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{valueGroup.RootTarget}'").FirstOrDefault()?["Longitude"].ToString()?? "0.00"),
+                    rootTarget = valueGroup.RootTarget,
+                    latitude = LookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
+                    longitude = LookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
                 }).ToList();
 
                 // Process series data in parallel
@@ -715,23 +716,20 @@ namespace GrafanaAdapters
                     IEnumerable<DataSourceValue> values = valueGroups.First(group => group.Target.Equals(series.target)).Source;
 
                     if (excludedDataFlags > uint.MinValue)
-                        values = values.Where(value => (!includeNormalData && value.Flags == MeasurementStateFlags.Normal) || ((uint)value.Flags & excludedDataFlags) == 0);
+                        values = values.Where(value => !includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & excludedDataFlags) == 0);
 
                     if (includedDataFlags < uint.MaxValue)
-                        values = values.Where(value => (includeNormalData && value.Flags == MeasurementStateFlags.Normal) || ((uint)value.Flags & includedDataFlags) > 0);
+                        values = values.Where(value => includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & includedDataFlags) > 0);
 
                     series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
 
                 #region [ Original "request.maxDataPoints" Implementation ]
 
-                // Grafana provides a "maxDataPoints" property, but implementing it seems to cause an occasional visual distortion when
-                // the max points value comes in too small- at least with the following algorithm - so this has been disabled for now:
-
                 //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
 
                 //// Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
-                
+
                 //foreach (TimeSeriesValues series in result)
                 //{
                 //    if (series.datapoints.Count > maxDataPoints)
@@ -758,6 +756,16 @@ namespace GrafanaAdapters
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
         protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap);
+
+        private DataRow LookupTargetMetadata(string target)
+        {
+            return TargetCache<DataRow>.GetOrAdd(target, () => Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault());
+        }
+
+        private float LookupTargetCoordinate(string target, string field)
+        {
+            return TargetCache<float>.GetOrAdd($"{target}_{field}", () => float.Parse(LookupTargetMetadata(target)?[field].ToString() ?? "0.00"));
+        }
 
         private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
