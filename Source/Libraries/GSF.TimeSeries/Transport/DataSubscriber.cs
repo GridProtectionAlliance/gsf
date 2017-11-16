@@ -4058,7 +4058,7 @@ namespace GSF.TimeSeries.Transport
                             string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0}", "deviceID");
 
                             // Define SQL statement to query phasor record ID
-                            string queryPhasorIDSql = database.ParameterizedQueryString("SELECT ID FROM Phasor WHERE WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
+                            string queryPhasorIDSql = database.ParameterizedQueryString("SELECT ID FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
 
                             // Define SQL statement to update destinationPhasorID field of existing phasor record
                             string updateDestinationPhasorIDSql = database.ParameterizedQueryString("UPDATE Phasor SET DestinationPhasorID = {0} WHERE ID = {1}", "destinationPhasorID", "id");
