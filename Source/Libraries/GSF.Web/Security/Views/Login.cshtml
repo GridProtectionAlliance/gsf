@@ -49,6 +49,7 @@
         redirectPage = "/";
     }
 
+    string redirectPageLabel = redirectPage == "/" ? "main" : "target";
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
     if ((object)options != null) {
@@ -74,8 +75,8 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Login</title>
     <link href="@Resources.Root/Shared/Content/bootstrap.css" rel="stylesheet">
     @Raw(Resources.HeaderIcons)
     <style>
@@ -97,6 +98,10 @@
 
         label.inline {
             display: inline;
+        }
+
+        label.disabled {
+            color: #ccc;
         }
 
         .panel-red {
@@ -192,8 +197,8 @@
                                     </td>
                                     <td style="text-align: right">
                                         <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with cached domain&#13;credentials and do not have domain access - e.g., roaming&#13;with a laptop">
-                                            <input type="checkbox" id="ntlm" checked />
-                                            <label class="inline" for="ntlm">Use&nbsp;NTLM authentication</label>                                            
+                                            <input type="checkbox" id="ntlm" checked disabled />
+                                            <label class="inline disabled" for="ntlm" id="ntlmLabel">Use&nbsp;NTLM authentication</label>                                            
                                             <div id="ntlmMessage" style="color: red; display: none; max-width: 200px; float: right; overflow: hidden; margin-bottom: 10px">
                                                 <small>
                                                     WARNING: Unsecure&nbsp;connection,<br />any&nbsp;credentials passed&nbsp;to&nbsp;host
@@ -235,7 +240,7 @@
             $("#username").val(persistentStorage.getItem("username")).trigger("input");
             $("#iwa").prop("checked", persistentStorage.getItem("iwa") === "true").change();
             $("#remember").prop("checked", persistentStorage.getItem("remember") === "true").change();
-            $("#ntlm").prop("checked", persistentStorage.getItem("ntlm") !== "false").change();
+            $("#ntlm").prop("checked", !isIE && persistentStorage.getItem("ntlm") !== "false").change();
         }
 
         function saveSettings() {
@@ -249,9 +254,82 @@
             return CryptoJS.SHA256(password + "0").toString(CryptoJS.enc.Base64);
         }
 
+        // Authorize user with basic authentication using provided credentials
+        function authenticateBasic(username, password) {
+            $.ajax({
+                url: securePage,
+                complete: function (xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginFailed(xhr.statusCode());
+                            break;
+                    }
+                },
+                beforeSend: function (xhr) {
+                    if (username.indexOf("\\") <= 0)
+                        password = hashPassword(password);
+
+                    xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+                }
+            });
+        }
+
+        // Authorize user with NTLM authentication using provided domain credentials
+        function authenticateNTLM(username, password) {
+            const parts = username.split("\\");
+
+            Ntlm.setCredentials(parts[0], parts[1], password);
+                    
+            Ntlm.authenticate(securePage + "?scheme=NTLM", function(response) {
+                if (response.status === 200)
+                    loginComplete(true);
+                else
+                    loginFailed(response);
+            });
+        }
+
+        // Authorize user with pass-through basic authentication without credentials
+        // using pre-authorized authentication token cookie with remember me option
+        function passthroughBasic() {
+            $.ajax({
+                url: securePage,
+                complete: function (xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginFailed(xhr.statusCode());
+                            break;
+                    }
+                }
+            });
+        }
+
+        // Authorize user with pass-through NTLM (or negotiated) authentication without credentials,
+        // NTLM implementation on some browsers may prompt for credentials anyway
+        function passthroughNTLM() {
+            $.ajax({
+                url: securePage + "?scheme=NTLM",
+                complete: function (xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
+                            break;
+                    }
+                }
+            });
+        }
+
         function loginComplete(success, response) {
             if (success) {
-                $("#response").text("Authentication succeeded, loading " + (redirectPage === "/" ? "main" : "target") + " page...");
+                $("#response").text("Authentication succeeded, loading @redirectPageLabel page...");
 
                 if ($("#remember").prop("checked"))
                     persistentStorage.setItem("passthrough", "true");
@@ -316,79 +394,6 @@
         }
 
         function login(username, password) {
-            // Authentication for database user with credentials
-            function authenticateBasic(username, password) {
-                $.ajax({
-                    url: securePage,
-                    complete: function (xhr) {
-                        switch (xhr.status) {
-                            case 200:
-                                loginComplete(true);
-                                break;
-                            default:
-                                loginFailed(xhr.statusCode());
-                                break;
-                        }
-                    },
-                    beforeSend: function (xhr) {
-                        if (username.indexOf("\\") <= 0)
-                            password = hashPassword(password);
-
-                        xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
-                    }
-                });
-            }
-
-            // Authentication for domain user with NTLM support
-            function authenticateNTLM(username, password) {
-                const parts = username.split("\\");
-
-                Ntlm.setCredentials(parts[0], parts[1], password);
-                    
-                Ntlm.authenticate(securePage + "?scheme=NTLM", function(response) {
-                    if (response.status === 200)
-                        loginComplete(true);
-                    else
-                        loginFailed(response);
-                });
-            }
-
-            // Authentication for database user without
-            // credentials (using authentication token cookie)
-            function passthroughBasic() {
-                $.ajax({
-                    url: securePage,
-                    complete: function (xhr) {
-                        switch (xhr.status) {
-                            case 200:
-                                loginComplete(true);
-                                break;
-                            default:
-                                loginFailed(xhr.statusCode());
-                                break;
-                        }
-                    }
-                });
-            }
-
-            // Authentication for domain user with NTLM
-            // support without credentials (or with browser prompt)
-            function passthroughNTLM() {
-                $.ajax({
-                    url: securePage + "?scheme=NTLM",
-                    complete: function (xhr) {
-                        switch (xhr.status) {
-                            case 200:
-                                loginComplete(true);
-                                break;
-                            default:
-                                loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
-                                break;
-                        }
-                    }
-                });
-            }
-
             $("#workingIcon").show();
 
             if (username) {
@@ -457,13 +462,18 @@
             if (this.checked) {
                 $("#username").disable();
                 $("#password").disable();
-                $("#ntlm").prop("checked", true).change();
+                $("#ntlm").prop("checked", !isIE).change();
                 $("#ntlm").disable();
+                $("#ntlmLabel").addClass("disabled");
                 $("#ntlmRegion").hide();
             } else {
                 $("#username").enable();
                 $("#password").enable();
-                $("#ntlm").enable();                
+
+                if (!isIE) {
+                    $("#ntlm").enable();
+                    $("#ntlmLabel").removeClass("disabled");
+                }
                 
                 if ($("#username").val().indexOf("\\") > 0)
                     $("#ntlmRegion").show();
