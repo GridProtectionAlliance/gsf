@@ -77,7 +77,10 @@
   <ItemGroup>
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="Adapters\CustomConfigurationEditorAttribute.cs" />
+    <Compile Include="Adapters\FilterAdapterBase.cs" />
+    <Compile Include="Adapters\FilterAdapterCollection.cs" />
     <Compile Include="Adapters\IaonSession.cs" />
+    <Compile Include="Adapters\IFilterAdapter.cs" />
     <Compile Include="Adapters\IOptimizedRoutingConsumer.cs" />
     <Compile Include="Adapters\IRouteMappingTables.cs" />
     <Compile Include="Adapters\RoutingPassthroughMethod.cs" />

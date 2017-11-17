@@ -78,6 +78,9 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="UserControls\CustomFilterAdapterUserControl.xaml.cs">
+      <DependentUpon>CustomFilterAdapterUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\DeviceStatusUserControl.xaml.cs">
       <DependentUpon>DeviceStatusUserControl.xaml</DependentUpon>
     </Compile>
@@ -268,6 +271,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Resources\StyleResource.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\CustomFilterAdapterUserControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

@@ -1649,6 +1649,9 @@ namespace GSF.TimeSeries
             if (requestInfo.Request.Arguments.Exists("O"))
                 return m_iaonSession.OutputAdapters;
 
+            if (requestInfo.Request.Arguments.Exists("F"))
+                return m_iaonSession.FilterAdapters;
+
             return m_iaonSession.InputAdapters;
         }
 

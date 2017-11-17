@@ -58,6 +58,13 @@ namespace GSF.TimeSeries.UI.DataModels
         /// </remarks>
         Action,
         /// <summary>
+        /// Filter Adapter.
+        /// </summary>
+        /// <remarks>
+        /// Use this option to modify incoming data before routing to other adapters.
+        /// </remarks>
+        Filter,
+        /// <summary>
         /// Input Adapter.
         /// </summary>
         /// <remarks>
@@ -362,6 +369,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (adapterType == AdapterType.Action)
                     viewName = "CustomActionAdapterDetail";
+                else if (adapterType == AdapterType.Filter)
+                    viewName = "CustomFilterAdapterDetail";
                 else if (adapterType == AdapterType.Input)
                     viewName = "CustomInputAdapterDetail";
                 else
@@ -412,6 +421,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (adapterType == AdapterType.Action)
                     viewName = "CustomActionAdapterDetail";
+                else if (adapterType == AdapterType.Filter)
+                    viewName = "CustomFilterAdapterDetail";
                 else if (adapterType == AdapterType.Input)
                     viewName = "CustomInputAdapterDetail";
                 else
@@ -485,6 +496,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (adapterType == AdapterType.Action)
                     tableName = "CustomActionAdapter";
+                else if (adapterType == AdapterType.Filter)
+                    tableName = "CustomFilterAdapter";
                 else if (adapterType == AdapterType.Input)
                     tableName = "CustomInputAdapter";
                 else
@@ -523,6 +536,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (adapter.Type == AdapterType.Action)
                     tableName = "CustomActionAdapter";
+                else if (adapter.Type == AdapterType.Filter)
+                    tableName = "CustomFilterAdapter";
                 else if (adapter.Type == AdapterType.Input)
                     tableName = "CustomInputAdapter";
                 else
@@ -576,6 +591,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (adapterType == AdapterType.Action)
                     tableName = "CustomActionAdapter";
+                else if (adapterType == AdapterType.Filter)
+                    tableName = "CustomFilterAdapter";
                 else if (adapterType == AdapterType.Input)
                     tableName = "CustomInputAdapter";
                 else
