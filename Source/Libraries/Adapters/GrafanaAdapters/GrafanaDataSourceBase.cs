@@ -30,6 +30,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GSF;
 using GSF.Collections;
+using GSF.Data;
 using GSF.NumericalAnalysis;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -759,12 +760,22 @@ namespace GrafanaAdapters
 
         private DataRow LookupTargetMetadata(string target)
         {
-            return TargetCache<DataRow>.GetOrAdd(target, () => Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault());
+            return TargetCache<DataRow>.GetOrAdd(target, () =>
+            {
+                try
+                {
+                    return Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault();
+                }
+                catch
+                {
+                    return null;
+                }                
+            });
         }
 
         private float LookupTargetCoordinate(string target, string field)
         {
-            return TargetCache<float>.GetOrAdd($"{target}_{field}", () => float.Parse(LookupTargetMetadata(target)?[field].ToString() ?? "0.00"));
+            return TargetCache<float>.GetOrAdd($"{target}_{field}", () => LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
         }
 
         private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
