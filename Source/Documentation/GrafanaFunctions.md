@@ -20,7 +20,7 @@ Series functions can operate over the set of defined series, producing a single 
 
 ## Series Functions
 
-Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where available, a named target name available from the expression. For named targets the value used as the parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
+Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where available, a named target available from the expression. For named targets the value used as the parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
 
 ### Execution Modes
 Each of the series functions include documentation for the mode of execution required by the function. These modes determine the level of processing expense and memory burden incurred by the function. The impacts of the execution modes increase as the time-range or resolution of the series data increases.
