@@ -20,7 +20,7 @@ Series functions can operate over the set of defined series, producing a single 
 
 ## Series Functions
 
-Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or where available, a named target name available from the expression. For named targets, the value used as the parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
+Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where available, a named target name available from the expression. For named targets the value used as the parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
 
 ### Execution Modes
 Each of the series functions include documentation for the mode of execution required by the function. These modes determine the level of processing expense and memory burden incurred by the function. The impacts of the execution modes increase as the time-range or resolution of the series data increases.
@@ -152,7 +152,7 @@ Returns a series of values that represent the absolute value each of the values 
 
 Returns a series of values that represent each of the values in the source series added with N.
 N is a floating point value representing an additive offset to be applied to each value the source series.
-N can either be constant value or a named target available from the expression.
+N can either be a constant value or a named target available from the expression.
 
 * Signature: `Add(N, expression)`
 * Returns: Series of values
@@ -164,7 +164,7 @@ N can either be constant value or a named target available from the expression.
 
 Returns a series of values that represent each of the values in the source series subtracted by N.
 N is a floating point value representing an subtractive offset to be applied to each value the source series.
-N can either be constant value or a named target available from the expression.
+N can either be a constant value or a named target available from the expression.
 
 * Signature: `Subtract(N, expression)`
 * Returns: Series of values
@@ -176,7 +176,7 @@ N can either be constant value or a named target available from the expression.
 
 Returns a series of values that represent each of the values in the source series multiplied by N.
 N is a floating point value representing a multiplicative factor to be applied to each value the source series.
-N can either be constant value or a named target available from the expression.
+N can either be a constant value or a named target available from the expression.
 
 * Signature: `Multiply(N, expression)`
 * Returns: Series of values
@@ -188,7 +188,7 @@ N can either be constant value or a named target available from the expression.
 
 Returns a series of values that represent each of the values in the source series divided by N.
 N is a floating point value representing a divisive factor to be applied to each value the source series.
-N can either be constant value or a named target available from the expression.
+N can either be a constant value or a named target available from the expression.
 
 * Signature: `Divide(N, expression)`
 * Returns: Series of values
@@ -200,7 +200,7 @@ N can either be constant value or a named target available from the expression.
 
 Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
 N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
-N can either be constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
+N can either be a constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
 
 * Signature: `Round([N = 0], expression)`
 * Returns: Series of values
@@ -274,7 +274,7 @@ Returns a series of N, or N% of total, values that are the largest in the source
 N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
 Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
-N can either be constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
+N can either be a constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
 
 * Signature: `Top(N|N%, [normalizeTime = true], expression)`
 * Returns: Series of values
@@ -288,7 +288,7 @@ Returns a series of N, or N% of total, values that are the smallest in the sourc
 N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
 Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
-N can either be constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
+N can either be a constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
 
 * Signature: `Bottom(N|N%, [normalizeTime = true], expression)`
 * Returns: Series of values
@@ -302,7 +302,7 @@ Returns a series of N, or N% of total, values that are a random sample of the va
 N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
 Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
-N can either be constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
+N can either be a constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
 
 * Signature: `Random(N|N%, [normalizeTime = true], expression)`
 * Returns: Series of values
@@ -315,7 +315,7 @@ N can either be constant value or a named target available from the expression. 
 Returns a series of N, or N% of total, values from the start of the source series.
 N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
-N can either be constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
+N can either be a constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
 
 * Signature: `First([N|N% = 1], expression)`
 * Returns: Series of values
@@ -328,7 +328,7 @@ N can either be constant value or a named target available from the expression. 
 Returns a series of N, or N% of total, values from the end of the source series.
 N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
-N can either be constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
+N can either be a constant value or a named target available from the expression. Any target values that fall between 0 and 1 will be treated as a percentage.
 
 * Signature: `Last([N|N% = 1], expression)`
 * Returns: Series of values
@@ -390,7 +390,7 @@ Returns a single value that represents the time-based integration, i.e., the sum
 ## Interval
 
 Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units. N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned data. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or AtomicUnitsOfTime - defaults to Seconds.  Setting N value to zero will request non-decimated, full resolution data from the data source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden on data source for large time ranges.
-N can either be constant value or a named target available from the expression.
+N can either be a constant value or a named target available from the expression.
 
 * Signature: `Interval(N, [units = Seconds], expression)`
 * Returns: Series of values
