@@ -138,6 +138,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a series of values that represent each of the values in the source series added with N.
         /// N is a floating point value representing an additive offset to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Add(N, expression)</c><br/>
@@ -150,6 +151,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a series of values that represent each of the values in the source series subtracted by N.
         /// N is a floating point value representing an subtractive offset to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Subtract(N, expression)</c><br/>
@@ -162,6 +164,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a series of values that represent each of the values in the source series multiplied by N.
         /// N is a floating point value representing a multiplicative factor to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Multiply(N, expression)</c><br/>
@@ -174,6 +177,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a series of values that represent each of the values in the source series divided by N.
         /// N is a floating point value representing a divisive factor to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Divide(N, expression)</c><br/>
@@ -268,6 +272,8 @@ namespace GrafanaAdapters
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Top(N|N%, [normalizeTime = true], expression)</c><br/>
@@ -282,6 +288,8 @@ namespace GrafanaAdapters
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Bottom(N|N%, [normalizeTime = true], expression)</c><br/>
@@ -296,6 +304,8 @@ namespace GrafanaAdapters
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Random(N|N%, [normalizeTime = true], expression)</c><br/>
@@ -309,6 +319,8 @@ namespace GrafanaAdapters
         /// Returns a series of N, or N% of total, values from the start of the source series.
         /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>First([N|N% = 1], expression)</c><br/>
@@ -322,6 +334,8 @@ namespace GrafanaAdapters
         /// Returns a series of N, or N% of total, values from the end of the source series.
         /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Last([N|N% = 1], expression)</c><br/>
@@ -403,6 +417,7 @@ namespace GrafanaAdapters
         /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
         /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds. Setting N value to zero will request non-decimated, full resolution data from the data
         /// source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Interval(N, [units = Seconds], expression)</c><br/>
@@ -418,6 +433,7 @@ namespace GrafanaAdapters
         /// is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means
         /// values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+        /// The low and high parameter values can either be constant values or named targets available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>IncludeRange(low, high, [inclusive = false], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
@@ -433,6 +449,7 @@ namespace GrafanaAdapters
         /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means
         /// values are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+        /// The low and high parameter values can either be constant values or named targets available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>ExcludeRange(low, high, [inclusive = false], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
@@ -907,7 +924,6 @@ namespace GrafanaAdapters
                 if (groupOperation == GroupOperation.Slice)
                     requiredParameters++;
 
-                // TODO: Consider parsing with regular expression so function results could be used as parameter values
                 if (requiredParameters > 0)
                 {
                     int index = 0;
@@ -1630,28 +1646,28 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.Add:
-                    value = ParseFloat(parameters[0], false);
+                    value = ParseFloat(parameters[0], source, false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.Subtract:
-                    value = ParseFloat(parameters[0], false);
+                    value = ParseFloat(parameters[0], source, false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.Multiply:
-                    value = ParseFloat(parameters[0], false);
+                    value = ParseFloat(parameters[0], source, false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.Divide:
-                    value = ParseFloat(parameters[0], false);
+                    value = ParseFloat(parameters[0], source, false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
@@ -1708,7 +1724,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values.Length);
+                    count = ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1728,7 +1744,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values.Length);
+                    count = ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1748,7 +1764,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values.Length);
+                    count = ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1769,7 +1785,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1784,7 +1800,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1890,7 +1906,7 @@ namespace GrafanaAdapters
                     if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
                         timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
-                    value = FromTimeUnits(ParseFloat(parameters[0]), timeUnit) / SI.Milli;
+                    value = FromTimeUnits(ParseFloat(parameters[0], source), timeUnit) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -1910,8 +1926,8 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.IncludeRange:
-                    low = ParseFloat(parameters[0], false);
-                    high = ParseFloat(parameters[1], false);
+                    low = ParseFloat(parameters[0], source, false);
+                    high = ParseFloat(parameters[1], source, false);
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
@@ -1920,8 +1936,8 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.ExcludeRange:
-                    low = ParseFloat(parameters[0], false);
-                    high = ParseFloat(parameters[1], false);
+                    low = ParseFloat(parameters[0], source, false);
+                    high = ParseFloat(parameters[1], source, false);
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
@@ -2000,14 +2016,35 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static double ParseFloat(string parameter, bool validateGTEZero = true)
+        private static double ParseFloat(string parameter, IEnumerable<DataSourceValue> source = null, bool validateGTEZero = true)
         {
             double value;
 
             parameter = parameter.Trim();
 
-            if (!double.TryParse(parameter, out value))
-                throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+            Tuple<bool, double> cache = TargetCache<Tuple<bool, double>>.GetOrAdd(parameter, () =>
+            {
+                double result;
+                bool success = double.TryParse(parameter, out result);
+                return new Tuple<bool, double>(success, result);
+            });
+
+            if (cache.Item1)
+            {
+                value = cache.Item2;
+            }
+            else
+            {
+                if ((object)source == null)
+                    throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+
+                DataSourceValue result = source.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
+
+                if (string.IsNullOrEmpty(result.Target))
+                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as a floating-point value.");
+
+                value = result.Value;
+            }
 
             if (validateGTEZero)
             {
@@ -2018,29 +2055,68 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static int ParseCount(string parameter, int length)
+        private static int ParseCount(string parameter, DataSourceValue[] values)
         {
+            int length = values.Length;
             int count;
 
             if (length == 0)
                 return 0;
 
-            if (parameter.Contains("%"))
-            {
-                double percent = ParsePercentage(parameter, false);
-                count = (int)(length * (percent / 100.0D));
+            parameter = parameter.Trim();
 
-                if (count == 0)
-                    count = 1;
+            Tuple<bool, int> cache = TargetCache<Tuple<bool, int>>.GetOrAdd(parameter, () =>
+            {
+                bool success = true;
+                int result;
+
+                if (parameter.EndsWith("%"))
+                {
+                    try
+                    {
+                        double percent = ParsePercentage(parameter, false);
+                        result = (int)(length * (percent / 100.0D));
+
+                        if (result == 0)
+                            result = 1;
+                    }
+                    catch
+                    {
+                        success = false;
+                        result = 0;
+                    }
+                }
+                else
+                {
+                    success = int.TryParse(parameter, out result);
+                }
+
+                return new Tuple<bool, int>(success, result);
+            });
+
+            if (cache.Item1)
+            {
+                count = cache.Item2;
             }
             else
             {
-                if (!int.TryParse(parameter, out count))
-                    throw new FormatException($"Could not parse '{parameter}' as an integer value.");
+                if (parameter.EndsWith("%"))
+                    throw new ArgumentOutOfRangeException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
 
-                if (count < 1)
-                    throw new ArgumentOutOfRangeException($"Count '{parameter}' is less than one.");
+                DataSourceValue result = values.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
+
+                if (string.IsNullOrEmpty(result.Target))
+                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as an integer value.");
+
+                // Treat fractional numbers as a percentage of length
+                if (result.Value > 0.0D && result.Value < 1.0D)
+                    count = (int)(length * result.Value);
+                else
+                    count = (int)result.Value;
             }
+
+            if (count < 1)
+                throw new ArgumentOutOfRangeException($"Count '{count}' is less than one.");
 
             return count;
         }
