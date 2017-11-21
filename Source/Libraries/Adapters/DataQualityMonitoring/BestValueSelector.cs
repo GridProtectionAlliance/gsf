@@ -44,6 +44,11 @@ namespace DataQualityMonitoring
         // Constants
 
         /// <summary>
+        /// Defines the default value for the <see cref="PublishBadValues"/> property.
+        /// </summary>
+        public const bool DefaultPublishBadValues = false;
+
+        /// <summary>
         /// Defines the default value for the <see cref="DefaultBadFlags"/> property.
         /// </summary>
         public const MeasurementStateFlags DefaultBadFlags =
@@ -75,6 +80,7 @@ namespace DataQualityMonitoring
         public const bool DefaultSupportsTemporalProcessing = false;
 
         // Fields
+        private bool m_publishBadValues;
         private MeasurementStateFlags m_badFlags;
         private bool m_handleZeroAsBad;
         private bool m_handleNaNAsBad;
@@ -100,6 +106,25 @@ namespace DataQualityMonitoring
             set
             {
                 base.OutputMeasurements = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the value that determines whether the adapter should
+        /// publish measurements if all of its inputs are found to be bad.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultPublishBadValues),
+        Description("Define the flag that indicates whether this adapter should publish measurements if all inputs are bad.")]
+        public bool PublishBadValues
+        {
+            get
+            {
+                return m_publishBadValues;
+            }
+            set
+            {
+                m_publishBadValues = value;
             }
         }
 
@@ -181,9 +206,10 @@ namespace DataQualityMonitoring
                 string badFlagsText = string.Join("," + Environment.NewLine + "                              ", badFlags);
 
                 statusBuilder.AppendLine();
+                statusBuilder.AppendLine($"          Publish bad values: {(m_publishBadValues ? "Yes" : "No")}");
                 statusBuilder.AppendLine($"                   Bad Flags: {badFlagsText}");
                 statusBuilder.AppendLine($"          Handle Zero As Bad: {(m_handleZeroAsBad ? "Yes" : "No")}");
-                statusBuilder.AppendLine($"           Handle NaN As Bad: {(m_handleZeroAsBad ? "Yes" : "No")}");
+                statusBuilder.AppendLine($"           Handle NaN As Bad: {(m_handleNaNAsBad ? "Yes" : "No")}");
                 statusBuilder.AppendLine($"Supports Temporal Processing: {(m_supportsTemporalProcessing ? "Yes" : "No")}");
                 statusBuilder.AppendLine($"   Last Selected Measurement: {m_lastSelectedMeasurement}");
 
@@ -207,6 +233,11 @@ namespace DataQualityMonitoring
 
             Dictionary<string, string> settings = Settings;
             string setting;
+
+            if (settings.TryGetValue(nameof(PublishBadValues), out setting))
+                m_publishBadValues = setting.ParseBoolean();
+            else
+                m_publishBadValues = DefaultHandleZeroAsBad;
 
             if (!settings.TryGetValue(nameof(BadFlags), out setting) || !Enum.TryParse(setting, out m_badFlags))
                 m_badFlags = DefaultBadFlags;
@@ -235,11 +266,10 @@ namespace DataQualityMonitoring
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IMeasurement bestMeasurement = frame.Measurements.Values
-                .OrderBy(measurement => (m_handleNaNAsBad && double.IsNaN(measurement.Value)) ? 1 : 0)
-                .ThenBy(measurement => (m_handleZeroAsBad && measurement.Value == 0.0D) ? 1 : 0)
-                .ThenBy(measurement => CountFlags(measurement.StateFlags & m_badFlags))
-                .FirstOrDefault();
+            IMeasurement bestMeasurement = GetBestMeasurement(frame);
+
+            if ((object)bestMeasurement == null)
+                return;
 
             IMeasurement newMeasurement = Measurement.Clone(OutputMeasurements[0]);
 
@@ -250,6 +280,30 @@ namespace DataQualityMonitoring
             OnNewMeasurements(new[] { newMeasurement });
 
             m_lastSelectedMeasurement = bestMeasurement.Key;
+        }
+
+        private IMeasurement GetBestMeasurement(IFrame frame)
+        {
+            IMeasurement measurement;
+
+            if (m_publishBadValues)
+            {
+                return InputMeasurementKeys
+                    .Select(key => frame.Measurements.TryGetValue(key, out measurement) ? measurement : null)
+                    .Where(m => (object)m != null)
+                    .OrderBy(m => (m_handleNaNAsBad && double.IsNaN(m.Value)) ? 1 : 0)
+                    .ThenBy(m => (m_handleZeroAsBad && m.Value == 0.0D) ? 1 : 0)
+                    .ThenBy(m => CountFlags(m.StateFlags & m_badFlags))
+                    .FirstOrDefault();
+            }
+
+            return InputMeasurementKeys
+                .Select(key => frame.Measurements.TryGetValue(key, out measurement) ? measurement : null)
+                .Where(m => (object)m != null)
+                .Where(m => !m_handleNaNAsBad || !double.IsNaN(m.Value))
+                .Where(m => !m_handleZeroAsBad || m.Value != 0.0D)
+                .Where(m => (m.StateFlags & m_badFlags) == MeasurementStateFlags.Normal)
+                .FirstOrDefault();
         }
 
         private int CountFlags(MeasurementStateFlags flags)
