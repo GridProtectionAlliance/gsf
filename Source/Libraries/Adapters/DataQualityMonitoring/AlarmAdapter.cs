@@ -110,6 +110,8 @@ namespace DataQualityMonitoring
             m_alarmLogOperation = new LongSynchronizedOperation(LogStateChanges, ex => OnProcessException(MessageLevel.Warning, ex));
             m_stateChanges = new DoubleBufferedQueue<StateChange>();
             m_alarmLogOperation.IsBackground = true;
+
+            Default = this;
         }
 
         #endregion
@@ -783,6 +785,17 @@ namespace DataQualityMonitoring
         {
             OnProcessException(MessageLevel.Warning, e.Argument);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Properties
+
+        /// <summary>
+        /// The default (most recently created) instance of the alarm adapter.
+        /// </summary>
+        public static AlarmAdapter Default { get; private set; }
 
         #endregion
     }

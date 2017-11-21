@@ -135,8 +135,12 @@ namespace DataQualityMonitoring
                 .Where(obj => inputMeasurementKeys.Contains(obj.SignalID))
                 .ToDictionary(obj => obj.AlarmID, obj => obj.SignalID);
 
+            HashSet<MeasurementKey> raisedAlarms = new HashSet<MeasurementKey>(AlarmAdapter.Default?.GetRaisedAlarms()
+                .Select(alarm => alarm.AssociatedMeasurementID.GetValueOrDefault())
+                .Select(alarmID => MeasurementKey.LookUpBySignalID(alarmID)) ?? Enumerable.Empty<MeasurementKey>());
+
             Dictionary<MeasurementKey, bool> signalToAlarmStateLookup = alarmToSignalLookup.Values
-                .ToDictionary(key => key, key => false);
+                .ToDictionary(key => key, key => raisedAlarms.Contains(key));
 
             m_alarmToSignalLookup = alarmToSignalLookup;
             m_signalToAlarmStateLookup = new ConcurrentDictionary<MeasurementKey, bool>(signalToAlarmStateLookup);
