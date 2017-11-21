@@ -142,11 +142,23 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Add(N, expression)</c><br/>
         /// Returns: Series of values.<br/>
-        /// Example: <c>Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Example: <c>Add(1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Add<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Add,
+        /// <summary>
+        /// Returns a series of values that represent each of the values in the source series subtracted by N.
+        /// N is a floating point value representing an subtractive offset to be applied to each value the source series.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>Subtract(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>Subtract(2.2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Subtract<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Subtract,
         /// <summary>
         /// Returns a series of values that represent each of the values in the source series multiplied by N.
         /// N is a floating point value representing a multiplicative factor to be applied to each value the source series.
@@ -154,11 +166,23 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Multiply(N, expression)</c><br/>
         /// Returns: Series of values.<br/>
-        /// Example: <c>Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Example: <c>Multiply(1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Multiply<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Multiply,
+        /// <summary>
+        /// Returns a series of values that represent each of the values in the source series divided by N.
+        /// N is a floating point value representing a divisive factor to be applied to each value the source series.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>Divide(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>Divide(1.732, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Divide<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Divide,
         /// <summary>
         /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
@@ -1055,7 +1079,9 @@ namespace GrafanaAdapters
         private static readonly Regex s_distinctExpression;
         private static readonly Regex s_absoluteValueExpression;
         private static readonly Regex s_addExpression;
+        private static readonly Regex s_subtractExpression;
         private static readonly Regex s_multiplyExpression;
+        private static readonly Regex s_divideExpression;
         private static readonly Regex s_roundExpression;
         private static readonly Regex s_floorExpression;
         private static readonly Regex s_ceilingExpression;
@@ -1103,7 +1129,9 @@ namespace GrafanaAdapters
             s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_addExpression = new Regex(string.Format(GetExpression, "Add"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_subtractExpression = new Regex(string.Format(GetExpression, "Subtract"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_multiplyExpression = new Regex(string.Format(GetExpression, "Multiply"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_divideExpression = new Regex(string.Format(GetExpression, "Divide"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_floorExpression = new Regex(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1141,7 +1169,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
                 [SeriesFunction.Add] = 1,
+                [SeriesFunction.Subtract] = 1,
                 [SeriesFunction.Multiply] = 1,
+                [SeriesFunction.Divide] = 1,
                 [SeriesFunction.Round] = 0,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -1180,7 +1210,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
                 [SeriesFunction.Add] = 0,
+                [SeriesFunction.Subtract] = 0,
                 [SeriesFunction.Multiply] = 0,
+                [SeriesFunction.Divide] = 0,
                 [SeriesFunction.Round] = 1,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -1292,12 +1324,26 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Add, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
+                // Look for subtract function
+                lock (s_subtractExpression)
+                    filterMatch = s_subtractExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Subtract, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
                 // Look for multiply function
                 lock (s_multiplyExpression)
                     filterMatch = s_multiplyExpression.Match(expression);
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Multiply, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for divide function
+                lock (s_divideExpression)
+                    filterMatch = s_divideExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Divide, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for round function
                 lock (s_roundExpression)
@@ -1590,10 +1636,24 @@ namespace GrafanaAdapters
                         yield return dataValue;
 
                     break;
+                case SeriesFunction.Subtract:
+                    value = ParseFloat(parameters[0], false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
                 case SeriesFunction.Multiply:
                     value = ParseFloat(parameters[0], false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Divide:
+                    value = ParseFloat(parameters[0], false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
