@@ -1001,6 +1001,8 @@ namespace PhasorProtocolAdapters
             // For captured data simulations we will inject a simulated timestamp and auto-repeat file stream...
             if (frameParser.TransportProtocol == TransportProtocol.File)
             {
+                DateTime replayTime;
+
                 if (settings.TryGetValue("definedFrameRate", out setting))
                     frameParser.DefinedFrameRate = int.Parse(setting);
                 else
@@ -1015,6 +1017,16 @@ namespace PhasorProtocolAdapters
                     frameParser.UseHighResolutionInputTimer = setting.ParseBoolean();
                 else
                     frameParser.UseHighResolutionInputTimer = false;
+
+                if (settings.TryGetValue("replayStartTime", out setting) && DateTime.TryParse(setting, out replayTime))
+                    frameParser.ReplayStartTime = replayTime;
+                else
+                    FrameParser.ReplayStartTime = DateTime.MinValue;
+
+                if (settings.TryGetValue("replayStopTime", out setting) && DateTime.TryParse(setting, out replayTime))
+                    frameParser.ReplayStopTime = replayTime;
+                else
+                    FrameParser.ReplayStartTime = DateTime.MaxValue;
             }
 
             // Apply other settings as needed

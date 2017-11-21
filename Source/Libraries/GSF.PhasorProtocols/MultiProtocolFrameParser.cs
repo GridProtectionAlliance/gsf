@@ -2193,6 +2193,24 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets the replay start time to use for file based input. File read will begin when encountered
+        /// frame timestamps are greater than or equal to specified <see cref="ReplayStartTime"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is only applicable when connection is made to a file for replay purposes.
+        /// </remarks>
+        public DateTime ReplayStartTime { get; set; } = DateTime.MinValue;
+
+        /// <summary>
+        /// Gets or sets the replay stop time to use for file based input. File read will end when encountered
+        /// frame timestamps are greater than or equal to specified <see cref="ReplayStopTime"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is only applicable when connection is made to a file for replay purposes.
+        /// </remarks>
+        public DateTime ReplayStopTime { get; set; } = DateTime.MaxValue;
+
+        /// <summary>
         /// Gets or sets flag indicating whether or not to inject local system time into parsed data frames.
         /// </summary>
         /// <remarks>
@@ -2625,6 +2643,14 @@ namespace GSF.PhasorProtocols
                     if ((object)m_inputTimer != null)
                     {
                         status.AppendFormat("  Timer resynchronizations: {0}", m_inputTimer.Resynchronizations);
+                        status.AppendLine();
+                    }
+
+                    if (ReplayStartTime > DateTime.MinValue || ReplayStopTime < DateTime.MaxValue)
+                    {
+                        status.AppendFormat("         Replay start time: {0:yyyy-MM-dd HH:mm:ss.fff}", ReplayStartTime);
+                        status.AppendLine();
+                        status.AppendFormat("          Replay stop time: {0:yyyy-MM-dd HH:mm:ss.fff}", ReplayStopTime);
                         status.AppendLine();
                     }
                 }
@@ -3729,10 +3755,6 @@ namespace GSF.PhasorProtocols
             // If injecting a simulated timestamp, use the last received time
             if (m_injectSimulatedTimestamp)
                 sourceFrame.Timestamp = simulatedTimestamp;
-
-            // Read next buffer if output frames are almost all processed
-            if (QueuedOutputs < 2 && (object)m_readNextBuffer != null)
-                m_readNextBuffer.RunOnceAsync();
         }
 
         #region [ Data Channel Event Handlers ]
@@ -3774,8 +3796,8 @@ namespace GSF.PhasorProtocols
             try
             {
                 // Start reading file data
-                if (m_transportProtocol == TransportProtocol.File && (object)m_readNextBuffer != null)
-                    m_readNextBuffer.RunOnceAsync();
+                if (m_transportProtocol == TransportProtocol.File)
+                    m_readNextBuffer?.RunOnceAsync();
             }
             catch (Exception ex)
             {
@@ -4041,12 +4063,28 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (m_transportProtocol == TransportProtocol.File)
-                    MaintainCapturedFrameReplayTiming(e.Argument);
-                else if (m_injectSimulatedTimestamp)
-                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
+                bool publishFrame = true;
+                IDataFrame dataFrame = e.Argument;
 
-                if ((object)ReceivedDataFrame != null)
+                if (m_transportProtocol == TransportProtocol.File)
+                {
+                    DateTime timestamp = dataFrame.Timestamp;
+
+                    if (timestamp >= ReplayStartTime && timestamp < ReplayStopTime)
+                        MaintainCapturedFrameReplayTiming(dataFrame);
+                    else
+                        publishFrame = false;
+
+                    // Read next buffer if output frames are almost all processed
+                    if (QueuedOutputs < 2)
+                        m_readNextBuffer?.RunOnceAsync();
+                }
+                else if (m_injectSimulatedTimestamp)
+                {
+                    dataFrame.Timestamp = DateTime.UtcNow.Ticks;
+                }
+
+                if ((object)ReceivedDataFrame != null && publishFrame)
                     ReceivedDataFrame(this, e);
             }
             catch (Exception ex)
