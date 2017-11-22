@@ -63,7 +63,9 @@ namespace StatHistorianReportGenerator
                         CompanyText = CompanyTextTextBox.Text,
                         ReportDate = new DateTime(ReportDateDateTimePicker.Value.Ticks, DateTimeKind.Utc),
                         Level4Alias = Level4AliasTextBox.Text,
-                        Level3Alias = Level3AliasTextBox.Text
+                        Level3Alias = Level3AliasTextBox.Text,
+                        GenerateCsvReport = true,
+                        ReportFilePath = fileDialog.FileName
                     };
 
                     if (double.TryParse(Level4ThresholdTextBox.Text, out level4Threshold))

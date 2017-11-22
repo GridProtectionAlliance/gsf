@@ -78,9 +78,12 @@ namespace StatHistorianReportGenerator
         private double m_level3Threshold;
         private string m_level4Alias;
         private string m_level3Alias;
+        private bool m_generateCsvReport;
 
         private List<DeviceStats> m_deviceStatsList;
         private float m_systemUpTime;
+
+        private string m_reportFilePath;
 
         #endregion
 
@@ -240,6 +243,30 @@ namespace StatHistorianReportGenerator
             }
         }
 
+        public bool GenerateCsvReport
+        {
+            get
+            {
+                return m_generateCsvReport;
+            }
+            set
+            {
+                m_generateCsvReport = value;
+            }
+        }
+
+        public string ReportFilePath
+        {
+            get
+            {
+                return m_reportFilePath;
+            }
+            set
+            {
+                m_reportFilePath = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -258,6 +285,8 @@ namespace StatHistorianReportGenerator
             double verticalMillimeters;
 
             ReadStatistics();
+            if (m_generateCsvReport && m_reportFilePath != null)
+                GenerateCsvReportFunction(m_reportFilePath);
 
             // Page one
             verticalMillimeters = PageMarginMillimeters;
@@ -285,6 +314,29 @@ namespace StatHistorianReportGenerator
             InsertDetailsList(report, fontDefinition, pageTwo, verticalMillimeters, now, 2);
 
             return report;
+        }
+
+        private void GenerateCsvReportFunction(string filepath)
+        {
+            filepath = Path.ChangeExtension(filepath, ".csv");
+            StreamWriter writer = File.CreateText(filepath);
+            writer.WriteLine("Name,Completeness,DataErrors,Time Errors,StatDate");
+
+            List<DeviceStats>[] levels = GetLevels(ReportDays);
+
+            for(int level = 0; level < levels.Length; level++)
+            {
+                // Sort the devices in this level by completeness, then data errors descending, then name
+                levels[level] = levels[level].OrderBy(device => Math.Round(device.MeasurementsReceived[ReportDays - 1] / device.MeasurementsExpected[ReportDays - 1], 4)).ThenByDescending(device => device.DataQualityErrors[ReportDays - 1]).ThenBy(device => device.Name).ToList();
+
+                foreach (DeviceStats stats in levels[level])
+                {
+                    writer.WriteLine($"{stats.Name},{(stats.MeasurementsReceived[ReportDays - 1] / stats.MeasurementsExpected[ReportDays - 1]).ToString("P2")},{stats.DataQualityErrors[ReportDays - 1]},{stats.TimeQualityErrors[ReportDays - 1]},{m_reportDate.ToString("d/M/yyyy")}");
+                }
+            }
+
+
+            writer.Dispose();
         }
 
         // Creates a page and sets width and height to standard 8.5x11 inches.
@@ -323,9 +375,10 @@ namespace StatHistorianReportGenerator
             {
                 // Create the archive locator to
                 // determine the location of the archive
+                //ArchiveLocation = m_archiveLocation,
                 locator = new ArchiveLocator()
                 {
-                    ArchiveLocation = m_archiveLocation,
+                    ArchiveLocation = "S:\\tmp\\StatsFabricator\\StatsFabricator\\bin\\Debug\\Statistics",
                     ArchiveLocationName = "Statistics",
                     ArchiveName = "STAT"
                 };

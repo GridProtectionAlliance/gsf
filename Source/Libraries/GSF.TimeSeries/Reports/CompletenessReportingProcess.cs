@@ -22,6 +22,9 @@
 //       Added report e-mail parameters.
 //  06/08/2015 - J. Ritchie Carroll
 //       Modified class to derive from ReportingProcessBase.
+//  10/27/2017 - Stephen Jenks
+//      Added GenerateCsvReport property
+//
 //
 //******************************************************************************************************
 
@@ -43,6 +46,7 @@ namespace GSF.TimeSeries.Reports
         private double m_level3Threshold;
         private string m_level4Alias;
         private string m_level3Alias;
+        private bool m_generateCsvReport;
 
         #endregion
 
@@ -58,6 +62,7 @@ namespace GSF.TimeSeries.Reports
             m_level3Threshold = 90.0D;
             m_level4Alias = "Good";
             m_level3Alias = "Fair";
+            m_generateCsvReport = false;
         }
 
         #endregion
@@ -125,6 +130,21 @@ namespace GSF.TimeSeries.Reports
         }
 
         /// <summary>
+        /// Gets or sets the option to generate a csv report along with pdf report.
+        /// </summary>
+        public bool GenerateCsvReport
+        {
+            get
+            {
+                return m_generateCsvReport;
+            }
+            set
+            {
+                m_generateCsvReport = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the current status details about reporting process.
         /// </summary>
         public override string Status
@@ -165,11 +185,13 @@ namespace GSF.TimeSeries.Reports
             settings.Add("Level3Threshold", m_level3Threshold, "Minimum percentage of measurements received from devices in level 3.");
             settings.Add("Level4Alias", m_level4Alias, "Alias for the level 4 category.");
             settings.Add("Level3Alias", m_level3Alias, "Alias for the level 3 category.");
+            settings.Add("GenerateCsvReport", m_generateCsvReport, "Generate a csv version of the pdf report");
 
             Level4Threshold = settings["Level4Threshold"].ValueAs(m_level4Threshold);
             Level3Threshold = settings["Level3Threshold"].ValueAs(m_level3Threshold);
             Level4Alias = settings["Level4Alias"].ValueAs(m_level4Alias);
             Level3Alias = settings["Level3Alias"].ValueAs(m_level3Alias);
+            GenerateCsvReport = settings["GenerateCsvReport"].ValueAs(m_generateCsvReport);
         }
 
         /// <summary>
@@ -187,6 +209,7 @@ namespace GSF.TimeSeries.Reports
             settings["Level3Threshold", true].Update(m_level3Threshold);
             settings["Level4Alias", true].Update(m_level4Alias);
             settings["Level3Alias", true].Update(m_level3Alias);
+            settings["GenerateCsvReport"].Update(m_generateCsvReport);
             config.Save();
         }
 
@@ -203,12 +226,14 @@ namespace GSF.TimeSeries.Reports
                  "--level4threshold=\" {1} \" " +
                  "--level3threshold=\" {2} \" " +
                  "--level4alias=\" {3} \" " +
-                 "--level3alias=\" {4} \"",
+                 "--level3alias=\" {4} \"" +
+                 "--GenerateCsvReport=\" {4} \"",
                  base.GetArguments(),
                  Level4Threshold,
                  Level3Threshold,
                  Level4Alias.Replace("\"", "\\\""),
-                 Level3Alias.Replace("\"", "\\\""));
+                 Level3Alias.Replace("\"", "\\\""),
+                 GenerateCsvReport);
         }
 
         /// <summary>
@@ -239,6 +264,12 @@ namespace GSF.TimeSeries.Reports
 
             if ((object)arg != null)
                 Level3Alias = arg.Trim();
+
+            bool value2;
+            arg = args["GenerateCsvReport"];
+
+            if ((object)arg != null & bool.TryParse(arg.Trim(), out value2))
+                GenerateCsvReport = value2;
         }
 
         #endregion

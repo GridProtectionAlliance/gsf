@@ -141,13 +141,13 @@ namespace StatHistorianReportGenerator
             if (!Directory.Exists(reportLocation))
                 Directory.CreateDirectory(reportLocation);
 
-            string reportFilePath = Path.Combine(reportLocation, reportFileName);
+            completenessReportGenerator.ReportFilePath = Path.Combine(reportLocation, reportFileName);
 
             // Generate PDF report
-            completenessReportGenerator.GenerateReport().Save(reportFilePath);
+            completenessReportGenerator.GenerateReport().Save(completenessReportGenerator.ReportFilePath);
 
             // E-mail PDF report if parameters were provided
-            EmailReport(args, string.Format("{0} {1} for {2:MMMM dd, yyyy}", completenessReportGenerator.CompanyText, completenessReportGenerator.TitleText, reportDate), reportFilePath);
+            EmailReport(args, string.Format("{0} {1} for {2:MMMM dd, yyyy}", completenessReportGenerator.CompanyText, completenessReportGenerator.TitleText, reportDate), completenessReportGenerator.ReportFilePath);
         }
 
         private static void GenerateCorrectnessReport()
