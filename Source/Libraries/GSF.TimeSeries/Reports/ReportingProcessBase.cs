@@ -650,7 +650,7 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Determines whether the given path is a path to a report, based on the file name.
         /// </summary>
-        private bool IsReportFileName(string fileName)
+        public virtual bool IsReportFileName(string fileName)
         {
             string regex = string.Format(@"{0} (?<Date>[^.]+)\.pdf", m_title);
             Match match = Regex.Match(fileName, regex);

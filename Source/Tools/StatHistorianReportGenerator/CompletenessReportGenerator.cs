@@ -375,10 +375,9 @@ namespace StatHistorianReportGenerator
             {
                 // Create the archive locator to
                 // determine the location of the archive
-                //ArchiveLocation = m_archiveLocation,
                 locator = new ArchiveLocator()
                 {
-                    ArchiveLocation = "S:\\tmp\\StatsFabricator\\StatsFabricator\\bin\\Debug\\Statistics",
+                    ArchiveLocation = m_archiveLocation,
                     ArchiveLocationName = "Statistics",
                     ArchiveName = "STAT"
                 };

@@ -209,6 +209,8 @@ namespace StatHistorianReportGenerator
             const string CryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
             string smtpServer, fromAddress, toAddresses;
             string username, password;
+            string generateCsvReportString;
+            bool generateCsvReport;
 
             if (TryGetValue(args, "smtpServer", out smtpServer) &&
                 TryGetValue(args, "fromAddress", out fromAddress) &&
@@ -232,6 +234,11 @@ namespace StatHistorianReportGenerator
                         "<i>E-mail generated at {0:yyyy-MM-dd HH:mm:ss.fff} UTC.</i>\r\n" +
                         "</div>",
                         DateTime.UtcNow);
+
+                    if (TryGetValue(args, "generateCsvReport", out generateCsvReportString) && bool.TryParse(generateCsvReportString, out generateCsvReport) && generateCsvReport)
+                    {
+                        message.Attachments += ";" + Path.ChangeExtension(reportFilePath, ".csv");
+                    }
 
                     if (TryGetValue(args, "username", out username) &&
                         TryGetValue(args, "password", out password) &&

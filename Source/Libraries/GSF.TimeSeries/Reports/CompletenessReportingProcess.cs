@@ -31,6 +31,8 @@
 using System.Text;
 using GSF.Configuration;
 using GSF.Console;
+using System.Text.RegularExpressions;
+using System;
 
 namespace GSF.TimeSeries.Reports
 {
@@ -270,6 +272,19 @@ namespace GSF.TimeSeries.Reports
 
             if ((object)arg != null && bool.TryParse(arg.Trim(), out value2))
                 GenerateCsvReport = value2;
+        }
+
+        /// <summary>
+        /// Determines whether the given path is a path to a report, based on the file name.
+        /// </summary>
+        public override bool IsReportFileName(string fileName)
+        {
+            string regex = string.Format(@"{0} (?<Date>[^.]+)\.csv", Title);
+            Match match = Regex.Match(fileName, regex);
+            DateTime reportDate;
+
+
+            return base.IsReportFileName(fileName) || match.Success && DateTime.TryParse(match.Groups["Date"].Value, out reportDate);
         }
 
         #endregion
