@@ -97,6 +97,7 @@ namespace StatHistorianReportGenerator
             string reportFileName = "";
             DateTime reportDate = DateTime.UtcNow;
             double threshold;
+            bool generateCsvReport;
 
             if (TryGetValue(args, "archiveLocation", out arg))
                 completenessReportGenerator.ArchiveLocation = arg;
@@ -132,6 +133,9 @@ namespace StatHistorianReportGenerator
 
             if (TryGetValue(args, "level3Alias", out arg))
                 completenessReportGenerator.Level3Alias = arg;
+
+            if (TryGetValue(args, "generateCsvReport", out arg) && bool.TryParse(arg, out generateCsvReport))
+                completenessReportGenerator.GenerateCsvReport = generateCsvReport;
 
             if (string.IsNullOrEmpty(reportFileName))
                 reportFileName = string.Format("{0} {1:yyyy-MM-dd}.pdf", completenessReportGenerator.TitleText, completenessReportGenerator.ReportDate);

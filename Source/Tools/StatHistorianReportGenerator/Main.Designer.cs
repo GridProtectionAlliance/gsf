@@ -46,6 +46,7 @@
             this.Level4AliasLabel = new System.Windows.Forms.Label();
             this.Level3AliasTextBox = new System.Windows.Forms.TextBox();
             this.Level3AliasLabel = new System.Windows.Forms.Label();
+            this.GenerateCsvReportCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // ReportDateLabel
@@ -198,11 +199,22 @@
             this.Level3AliasLabel.TabIndex = 0;
             this.Level3AliasLabel.Text = "Level 3 Alias";
             // 
+            // GenerateCsvReportCheckBox
+            // 
+            this.GenerateCsvReportCheckBox.AutoSize = true;
+            this.GenerateCsvReportCheckBox.Location = new System.Drawing.Point(96, 121);
+            this.GenerateCsvReportCheckBox.Name = "GenerateCsvReportCheckBox";
+            this.GenerateCsvReportCheckBox.Size = new System.Drawing.Size(129, 17);
+            this.GenerateCsvReportCheckBox.TabIndex = 17;
+            this.GenerateCsvReportCheckBox.Text = "Generate CSV Report";
+            this.GenerateCsvReportCheckBox.UseVisualStyleBackColor = true;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(498, 262);
+            this.Controls.Add(this.GenerateCsvReportCheckBox);
             this.Controls.Add(this.Level3AliasTextBox);
             this.Controls.Add(this.Level3AliasLabel);
             this.Controls.Add(this.Level4AliasTextBox);
@@ -248,6 +260,7 @@
         private System.Windows.Forms.Label Level4AliasLabel;
         private System.Windows.Forms.TextBox Level3AliasTextBox;
         private System.Windows.Forms.Label Level3AliasLabel;
+        private System.Windows.Forms.CheckBox GenerateCsvReportCheckBox;
     }
 }
 

@@ -227,7 +227,7 @@ namespace GSF.TimeSeries.Reports
                  "--level3threshold=\" {2} \" " +
                  "--level4alias=\" {3} \" " +
                  "--level3alias=\" {4} \"" +
-                 "--GenerateCsvReport=\" {4} \"",
+                 "--GenerateCsvReport=\" {5} \"",
                  base.GetArguments(),
                  Level4Threshold,
                  Level3Threshold,
@@ -268,7 +268,7 @@ namespace GSF.TimeSeries.Reports
             bool value2;
             arg = args["GenerateCsvReport"];
 
-            if ((object)arg != null & bool.TryParse(arg.Trim(), out value2))
+            if ((object)arg != null && bool.TryParse(arg.Trim(), out value2))
                 GenerateCsvReport = value2;
         }
 

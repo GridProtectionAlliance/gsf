@@ -64,7 +64,7 @@ namespace StatHistorianReportGenerator
                         ReportDate = new DateTime(ReportDateDateTimePicker.Value.Ticks, DateTimeKind.Utc),
                         Level4Alias = Level4AliasTextBox.Text,
                         Level3Alias = Level3AliasTextBox.Text,
-                        GenerateCsvReport = true,
+                        GenerateCsvReport = GenerateCsvReportCheckBox.Checked,
                         ReportFilePath = fileDialog.FileName
                     };
 
