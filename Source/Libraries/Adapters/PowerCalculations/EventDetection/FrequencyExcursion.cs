@@ -371,7 +371,7 @@ namespace PowerCalculations.EventDetection
 
                 if (!double.IsNaN(frequency1) && !double.IsNaN(frequency2))
                 {
-                    frequencyDelta = frequency1 - frequency2;
+                    frequencyDelta = frequency2 - frequency1;
 
                     if (Math.Abs(frequencyDelta) > m_estimateTriggerThreshold)
                         m_detectedExcursions++;
