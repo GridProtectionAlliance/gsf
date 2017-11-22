@@ -30,15 +30,15 @@ To better understand named targets, follow these example steps:
 
  1. The following expression produces two unwrapped voltage phase angle series:
 
-    `UnwrapAngle(DOM_GPLAINS-BUS1:VH, TVA_SHELBY-BUS1:VH)`
+    `UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)`
 
- 2. You could then subtract values in one of the series from both of the series at every 1/30 of a second slice:
+ 2. You could then subtract values in one of the series from values in both of the series at every 1/30 of a second slice:
 
-    `SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH, TVA_SHELBY-BUS1:VH))`
+    `SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`
 
- 3. Finally you could exclude zero values from the trend since one series will now always be zero:
+ 3. Finally you could exclude zero values from the trends since values in one series will now always be zero - this effectively removes the zero value trend:
 
-    `ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH, TVA_SHELBY-BUS1:VH)))`
+    `ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)))`
 
 ### Execution Modes
 Each of the series functions include documentation for the mode of execution required by the function. These modes determine the level of processing expense and memory burden incurred by the function. The impacts of the execution modes increase as the time-range or resolution of the series data increases.
