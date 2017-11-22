@@ -86,6 +86,9 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag indicating if this adapter supports temporal processing."),
+        DefaultValue(DefaultSupportsTemporalProcessing)]
         public override bool SupportsTemporalProcessing
         {
             get
