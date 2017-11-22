@@ -228,8 +228,8 @@ namespace DataQualityMonitoring
         {
             base.Initialize();
 
-            if (OutputMeasurements?.Length != 1)
-                throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
+            if (OutputMeasurements?.Length != 1 && OutputMeasurements?.Length != 2)
+                throw new ArgumentException($"Exactly one or two output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
 
             Dictionary<string, string> settings = Settings;
             string setting;
@@ -271,13 +271,22 @@ namespace DataQualityMonitoring
             if ((object)bestMeasurement == null)
                 return;
 
-            IMeasurement newMeasurement = Measurement.Clone(OutputMeasurements[0]);
+            IMeasurement[] newMeasurements = OutputMeasurements
+                .Select(measurement => Measurement.Clone(measurement))
+                .ToArray();
 
-            newMeasurement.Timestamp = frame.Timestamp;
-            newMeasurement.StateFlags = bestMeasurement.StateFlags;
-            newMeasurement.Value = bestMeasurement.Value;
+            newMeasurements[0].Timestamp = frame.Timestamp;
+            newMeasurements[0].StateFlags = bestMeasurement.StateFlags;
+            newMeasurements[0].Value = bestMeasurement.Value;
 
-            OnNewMeasurements(new[] { newMeasurement });
+            if (newMeasurements.Length > 1)
+            {
+                newMeasurements[1].Timestamp = frame.Timestamp;
+                newMeasurements[1].StateFlags = bestMeasurement.StateFlags;
+                newMeasurements[1].Value = Array.IndexOf(InputMeasurementKeys, bestMeasurement.Key) + 1;
+            }
+
+            OnNewMeasurements(newMeasurements);
 
             m_lastSelectedMeasurement = bestMeasurement.Key;
         }
