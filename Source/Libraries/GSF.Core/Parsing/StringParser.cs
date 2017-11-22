@@ -39,6 +39,15 @@ namespace GSF.Parsing
         private const string crLf = "\r\n";
         private const int workingArraySize = 128;
 
+        /// <summary>
+        /// Since everything in the class is static or private, a public constructor
+        /// is not necessary. Creating this private constructor prevents C# from automatically
+        /// creating a public constructor.
+        /// </summary>
+        private StringParser()
+        {
+            // Are you happy now IntelliSense?
+        }
 
         /// <summary>
         /// Returns the string that is between two delimiter strings beginning the first startDelimiter found.
