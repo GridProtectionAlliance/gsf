@@ -1026,7 +1026,7 @@ namespace PhasorProtocolAdapters
                 if (settings.TryGetValue("replayStopTime", out setting) && DateTime.TryParse(setting, out replayTime))
                     frameParser.ReplayStopTime = replayTime;
                 else
-                    frameParser.ReplayStartTime = DateTime.MaxValue;
+                    frameParser.ReplayStopTime = DateTime.MaxValue;
             }
 
             // Apply other settings as needed
