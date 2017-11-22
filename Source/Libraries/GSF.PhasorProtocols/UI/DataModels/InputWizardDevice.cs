@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 
@@ -65,7 +66,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Device Acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
+        [AcronymValidation]
         public string Acronym
         {
             get

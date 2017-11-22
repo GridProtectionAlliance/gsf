@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Temperature"/> value.
     /// </summary>
-    public enum TemperatureUnits
+    public enum TemperatureUnit
     {
         /// <summary>
         /// Kelvin temperature units.
@@ -251,32 +251,32 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Temperature"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Temperature"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Temperature"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(TemperatureUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Temperature"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(TemperatureUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case TemperatureUnits.Kelvin:
+                case TemperatureUnit.Kelvin:
                     return m_value;
-                case TemperatureUnits.Celsius:
+                case TemperatureUnit.Celsius:
                     return ToCelsius();
-                case TemperatureUnits.Fahrenheit:
+                case TemperatureUnit.Fahrenheit:
                     return ToFahrenheit();
-                case TemperatureUnits.Newton:
+                case TemperatureUnit.Newton:
                     return ToNewton();
-                case TemperatureUnits.Rankine:
+                case TemperatureUnit.Rankine:
                     return ToRankine();
-                case TemperatureUnits.Delisle:
+                case TemperatureUnit.Delisle:
                     return ToDelisle();
-                case TemperatureUnits.Réaumur:
+                case TemperatureUnit.Réaumur:
                     return ToRéaumur();
-                case TemperatureUnits.Rømer:
+                case TemperatureUnit.Rømer:
                     return ToRømer();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -951,33 +951,33 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Temperature"/> in Kelvin.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Temperature"/> in Kelvin.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Temperature"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Temperature ConvertFrom(double value, TemperatureUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Temperature"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Temperature ConvertFrom(double value, TemperatureUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case TemperatureUnits.Kelvin:
+                case TemperatureUnit.Kelvin:
                     return value;
-                case TemperatureUnits.Celsius:
+                case TemperatureUnit.Celsius:
                     return FromCelsius(value);
-                case TemperatureUnits.Fahrenheit:
+                case TemperatureUnit.Fahrenheit:
                     return FromFahrenheit(value);
-                case TemperatureUnits.Newton:
+                case TemperatureUnit.Newton:
                     return FromNewton(value);
-                case TemperatureUnits.Rankine:
+                case TemperatureUnit.Rankine:
                     return FromRankine(value);
-                case TemperatureUnits.Delisle:
+                case TemperatureUnit.Delisle:
                     return FromDelisle(value);
-                case TemperatureUnits.Réaumur:
+                case TemperatureUnit.Réaumur:
                     return FromRéaumur(value);
-                case TemperatureUnits.Rømer:
+                case TemperatureUnit.Rømer:
                     return FromRømer(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

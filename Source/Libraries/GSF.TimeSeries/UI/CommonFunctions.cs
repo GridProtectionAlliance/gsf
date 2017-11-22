@@ -101,7 +101,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Defines the current user name as defined in the CurrentPrincipal.Identity.
         /// </summary>
-        public static string CurrentUser = CurrentPrincipal.Identity.Name;
+        public static string CurrentUser => CurrentPrincipal.Identity.Name;
 
         /// <summary>
         /// Gets the flag that indicates whether we can go forward to the next user control in history.

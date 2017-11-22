@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GrafanaAdapters
@@ -46,6 +47,13 @@ namespace GrafanaAdapters
         /// <param name="request">Query request.</param>
         [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<List<TimeSeriesValues>> Query(QueryRequest request);
+
+        /// <summary>
+        /// Queries openHistorian as a Grafana Metadata source.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Task<string> GetMetadata(Target request);
 
         /// <summary>
         /// Search openHistorian for a target.

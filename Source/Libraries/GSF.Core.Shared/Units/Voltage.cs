@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Voltage"/> value.
     /// </summary>
-    public enum VoltageUnits
+    public enum VoltageUnit
     {
         /// <summary>
         /// Voltage units.
@@ -163,22 +163,22 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Voltage"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Voltage"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Voltage"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(VoltageUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Voltage"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(VoltageUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case VoltageUnits.Volts:
+                case VoltageUnit.Volts:
                     return m_value;
-                case VoltageUnits.Abvolts:
+                case VoltageUnit.Abvolts:
                     return ToAbvolts();
-                case VoltageUnits.Statvolts:
+                case VoltageUnit.Statvolts:
                     return ToStatvolts();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -796,23 +796,23 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Voltage"/> in volts.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Voltage"/> in volts.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Voltage"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Voltage ConvertFrom(double value, VoltageUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Voltage"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Voltage ConvertFrom(double value, VoltageUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case VoltageUnits.Volts:
+                case VoltageUnit.Volts:
                     return value;
-                case VoltageUnits.Abvolts:
+                case VoltageUnit.Abvolts:
                     return FromAbvolts(value);
-                case VoltageUnits.Statvolts:
+                case VoltageUnit.Statvolts:
                     return FromStatvolts(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

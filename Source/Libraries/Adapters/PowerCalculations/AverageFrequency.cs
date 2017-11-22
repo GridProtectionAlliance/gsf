@@ -247,13 +247,13 @@ namespace PowerCalculations
 
                 if (ReportUnreasonableResultsAsNaN)
                 {
-                    if (m_averageFrequency <= LowFrequencyThreshold && m_averageFrequency >= HighFrequencyThreshold)
+                    if (m_averageFrequency <= LowFrequencyThreshold || m_averageFrequency >= HighFrequencyThreshold)
                         m_averageFrequency = double.NaN;
 
-                    if (m_maximumFrequency <= LowFrequencyThreshold && m_maximumFrequency >= HighFrequencyThreshold)
+                    if (m_maximumFrequency <= LowFrequencyThreshold || m_maximumFrequency >= HighFrequencyThreshold)
                         m_maximumFrequency = double.NaN;
 
-                    if (m_minimumFrequency <= LowFrequencyThreshold && m_minimumFrequency >= HighFrequencyThreshold)
+                    if (m_minimumFrequency <= LowFrequencyThreshold || m_minimumFrequency >= HighFrequencyThreshold)
                         m_minimumFrequency = double.NaN;
                 }
 

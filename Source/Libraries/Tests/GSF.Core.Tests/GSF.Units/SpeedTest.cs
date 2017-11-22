@@ -250,21 +250,21 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for FromFeetPerMinute
-        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in feet per minute.
-        /// </summary>
-        /// <param name="value">New <see cref="Speed"/> value in feet per minute.</param>
-        /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in feet per minute.</returns>
-        [TestMethod]
-        public void FromFeetPerMinuteTest()
-        {
-            double value = 10F;
-            Speed expected = new Speed(0.0508);
-            Speed actual;
-            actual = Speed.FromFeetPerMinute(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromFeetPerMinute
+        ///// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in feet per minute.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Speed"/> value in feet per minute.</param>
+        ///// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in feet per minute.</returns>
+        //[TestMethod]
+        //public void FromFeetPerMinuteTest()
+        //{
+        //    double value = 10F;
+        //    Speed expected = new Speed(0.0508);
+        //    Speed actual;
+        //    actual = Speed.FromFeetPerMinute(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for FromInchesPerSecond
@@ -314,21 +314,21 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for FromMach
-        /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in mach.
-        /// </summary>
-        /// <param name="value">New <see cref="Speed"/> value in mach.</param>
-        /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in mach.</returns>
-        [TestMethod]
-        public void FromMachTest()
-        {
-            double value = 10F;
-            Speed expected = new Speed(3310);
-            Speed actual;
-            actual = Speed.FromMach(value);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for FromMach
+        ///// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in mach.
+        ///// </summary>
+        ///// <param name="value">New <see cref="Speed"/> value in mach.</param>
+        ///// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in mach.</returns>
+        //[TestMethod]
+        //public void FromMachTest()
+        //{
+        //    double value = 10F;
+        //    Speed expected = new Speed(3310);
+        //    Speed actual;
+        //    actual = Speed.FromMach(value);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for FromMilesPerHour
@@ -529,25 +529,25 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            Assert.Inconclusive("Can't cast 'Double' to 'Char'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToChar
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToCharTest()
+        //{
+        //    Assert.Inconclusive("Can't cast 'Double' to 'Char'.");
+        //}
 
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {
-            Assert.Inconclusive("Can't cast 'Double' to 'DateTime'.");
-        }
+        ///// <summary>
+        /////A test for System.IConvertible.ToDateTime
+        /////</summary>
+        //[TestMethod]
+        //[DeploymentItem("GSF.Core.dll")]
+        //public void ToDateTimeTest()
+        //{
+        //    Assert.Inconclusive("Can't cast 'Double' to 'DateTime'.");
+        //}
 
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
@@ -775,20 +775,20 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for ToMach
-        /// Gets the <see cref="Speed"/> value in mach.
-        /// </summary>
-        /// <returns>Value of <see cref="Speed"/> in mach.</returns>
-        [TestMethod]
-        public void ToMachTest()
-        {
-            Speed target = new Speed(10F);
-            double expected = 0.030211480362537766;
-            double actual;
-            actual = target.ToMach();
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToMach
+        ///// Gets the <see cref="Speed"/> value in mach.
+        ///// </summary>
+        ///// <returns>Value of <see cref="Speed"/> in mach.</returns>
+        //[TestMethod]
+        //public void ToMachTest()
+        //{
+        //    Speed target = new Speed(10F);
+        //    double expected = 0.030211480362537766;
+        //    double actual;
+        //    actual = target.ToMach();
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for ToMilesPerHour

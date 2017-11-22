@@ -579,7 +579,7 @@ namespace GSF.Web.Model
         /// </remarks>
         public void ConfigureView(RequestContext requestContext, dynamic viewBag)
         {
-            viewBag.Add("SecurityPrincipal", requestContext.HttpContext.User);
+            viewBag.SecurityPrincipal = requestContext.HttpContext.User;
             ConfigureView(requestContext.RouteData.Values["id"] as string, viewBag);
         }
 
@@ -598,6 +598,7 @@ namespace GSF.Web.Model
         /// </remarks>
         public void ConfigureView<TModel, THub>(RequestContext requestContext, dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
         {
+            viewBag.SecurityPrincipal = requestContext.HttpContext.User;
             ConfigureView(typeof(TModel), typeof(THub), requestContext, viewBag);
         }
 
@@ -616,6 +617,7 @@ namespace GSF.Web.Model
         /// </remarks>
         public void ConfigureView(Type model, Type hub, RequestContext requestContext, dynamic viewBag)
         {
+            viewBag.SecurityPrincipal = requestContext.HttpContext.User;
             ConfigureView(model, hub, requestContext.RouteData.Values["id"] as string, viewBag);
         }
 
@@ -647,9 +649,9 @@ namespace GSF.Web.Model
                 viewBag.DeleteRoles = viewBag.EditRoles;
 
             // Check current allowed roles for user
-            viewBag.CanEdit = UserIsInRole(viewBag.SecurityPrincipal, viewBag.EditRoles);
-            viewBag.CanAddNew = UserIsInRole(viewBag.SecurityPrincipal, viewBag.AddNewRoles);
-            viewBag.CanDelete = UserIsInRole(viewBag.SecurityPrincipal, viewBag.DeleteRoles);
+            viewBag.CanEdit = UserIsInRole((SecurityPrincipal)viewBag.SecurityPrincipal, viewBag.EditRoles);
+            viewBag.CanAddNew = UserIsInRole((SecurityPrincipal)viewBag.SecurityPrincipal, viewBag.AddNewRoles);
+            viewBag.CanDelete = UserIsInRole((SecurityPrincipal)viewBag.SecurityPrincipal, viewBag.DeleteRoles);
         }
 
         /// <summary>

@@ -35,6 +35,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using DataType = System.ComponentModel.DataAnnotations.DataType;
 
@@ -83,7 +84,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
         [StringLength(200, ErrorMessage = "Vendor acronym cannot exceed 200 characters")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
+        [AcronymValidation]
         public string Acronym
         {
             get
@@ -136,6 +137,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets the <see cref="Vendor"/> Contact Email.
         /// </summary>
         [StringLength(200, ErrorMessage = "Vendor contact e-mail cannot exceed 200 characters.")]
+        [EmailValidation]
         public string ContactEmail
         {
             get
@@ -153,6 +155,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets the <see cref="Vendor"/> URL.
         /// </summary>
         [DataType(DataType.Url, ErrorMessage = "Vendor URL is not formatted properly.")]
+        [UrlValidation]
         public string URL
         {
             get

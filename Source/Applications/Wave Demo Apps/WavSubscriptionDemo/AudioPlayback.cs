@@ -276,7 +276,7 @@ namespace WavSubscriptionDemo
             {
                 IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
                     .Where(row => row["DeviceAcronym"].ToNonNullString() == songName)
-                    .Where(row => row["SignalAcronym"].ToNonNullString() == "ALOG" || row["SignalAcronym"].ToNonNullString() == "VPHM")
+                    .Where(row => new[] { "ALOG", "VPHM", "VPHA" }.Contains(row["SignalAcronym"].ToNonNullString()))
                     .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
                     .OrderBy(row => row["ID"].ToNonNullString());
 

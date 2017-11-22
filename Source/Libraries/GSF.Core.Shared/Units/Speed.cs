@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Speed"/> value.
     /// </summary>
-    public enum SpeedUnits
+    public enum SpeedUnit
     {
         /// <summary>
         /// Meters per second speed units.
@@ -225,30 +225,30 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Speed"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Speed"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Speed"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(SpeedUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Speed"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(SpeedUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case SpeedUnits.MetersPerSecond:
+                case SpeedUnit.MetersPerSecond:
                     return m_value;
-                case SpeedUnits.MilesPerHour:
+                case SpeedUnit.MilesPerHour:
                     return ToMilesPerHour();
-                case SpeedUnits.KilometersPerHour:
+                case SpeedUnit.KilometersPerHour:
                     return ToKilometersPerHour();
-                case SpeedUnits.FeetPerMinute:
+                case SpeedUnit.FeetPerMinute:
                     return ToFeetPerMinute();
-                case SpeedUnits.InchesPerSecond:
+                case SpeedUnit.InchesPerSecond:
                     return ToInchesPerSecond();
-                case SpeedUnits.Knots:
+                case SpeedUnit.Knots:
                     return ToKnots();
-                case SpeedUnits.Mach:
+                case SpeedUnit.Mach:
                     return ToMach();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -906,31 +906,31 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Speed"/> in meters per second.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Speed"/> in meters per second.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Speed"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Speed ConvertFrom(double value, SpeedUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Speed"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Speed ConvertFrom(double value, SpeedUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case SpeedUnits.MetersPerSecond:
+                case SpeedUnit.MetersPerSecond:
                     return value;
-                case SpeedUnits.MilesPerHour:
+                case SpeedUnit.MilesPerHour:
                     return FromMilesPerHour(value);
-                case SpeedUnits.KilometersPerHour:
+                case SpeedUnit.KilometersPerHour:
                     return FromKilometersPerHour(value);
-                case SpeedUnits.FeetPerMinute:
+                case SpeedUnit.FeetPerMinute:
                     return FromFeetPerMinute(value);
-                case SpeedUnits.InchesPerSecond:
+                case SpeedUnit.InchesPerSecond:
                     return FromInchesPerSecond(value);
-                case SpeedUnits.Knots:
+                case SpeedUnit.Knots:
                     return FromKnots(value);
-                case SpeedUnits.Mach:
+                case SpeedUnit.Mach:
                     return FromMach(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

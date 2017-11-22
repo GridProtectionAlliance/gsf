@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for an <see cref="Energy"/> value.
     /// </summary>
-    public enum EnergyUnits
+    public enum EnergyUnit
     {
         /// <summary>
         /// Joule energy units, i.e., watt-seconds.
@@ -277,34 +277,34 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Energy"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Energy"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Energy"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(EnergyUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Energy"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(EnergyUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case EnergyUnits.Joules:
+                case EnergyUnit.Joules:
                     return m_value;
-                case EnergyUnits.WattHours:
+                case EnergyUnit.WattHours:
                     return ToWattHours();
-                case EnergyUnits.BTU:
+                case EnergyUnit.BTU:
                     return ToBTU();
-                case EnergyUnits.CelsiusHeatUnits:
+                case EnergyUnit.CelsiusHeatUnits:
                     return ToCelsiusHeatUnits();
-                case EnergyUnits.LitersAtmosphere:
+                case EnergyUnit.LitersAtmosphere:
                     return ToLitersAtmosphere();
-                case EnergyUnits.Calories:
+                case EnergyUnit.Calories:
                     return ToCalories();
-                case EnergyUnits.HorsepowerHours:
+                case EnergyUnit.HorsepowerHours:
                     return ToHorsepowerHours();
-                case EnergyUnits.BarrelsOfOil:
+                case EnergyUnit.BarrelsOfOil:
                     return ToBarrelsOfOil();
-                case EnergyUnits.TonsOfCoal:
+                case EnergyUnit.TonsOfCoal:
                     return ToTonsOfCoal();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -982,35 +982,35 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Energy"/> in joules.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Energy"/> in joules.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Energy"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Energy ConvertFrom(double value, EnergyUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Energy"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Energy ConvertFrom(double value, EnergyUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case EnergyUnits.Joules:
+                case EnergyUnit.Joules:
                     return value;
-                case EnergyUnits.WattHours:
+                case EnergyUnit.WattHours:
                     return FromWattHours(value);
-                case EnergyUnits.BTU:
+                case EnergyUnit.BTU:
                     return FromBTU(value);
-                case EnergyUnits.CelsiusHeatUnits:
+                case EnergyUnit.CelsiusHeatUnits:
                     return FromCelsiusHeatUnits(value);
-                case EnergyUnits.LitersAtmosphere:
+                case EnergyUnit.LitersAtmosphere:
                     return FromLitersAtmosphere(value);
-                case EnergyUnits.Calories:
+                case EnergyUnit.Calories:
                     return FromCalories(value);
-                case EnergyUnits.HorsepowerHours:
+                case EnergyUnit.HorsepowerHours:
                     return FromHorsepowerHours(value);
-                case EnergyUnits.BarrelsOfOil:
+                case EnergyUnit.BarrelsOfOil:
                     return FromBarrelsOfOil(value);
-                case EnergyUnits.TonsOfCoal:
+                case EnergyUnit.TonsOfCoal:
                     return FromTonOfCoal(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

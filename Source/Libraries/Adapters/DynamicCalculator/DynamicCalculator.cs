@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -33,6 +32,7 @@ using System.Text;
 using Ciloci.Flee;
 using GSF;
 using GSF.Diagnostics;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -69,13 +69,47 @@ namespace DynamicCalculator
     {
         #region [ Members ]
 
+        // Nested Types
+        private class DelayedSynchronizedOperation : SynchronizedOperationBase
+        {
+            private Action m_delayedAction;
+
+            public DelayedSynchronizedOperation(Action action, Action<Exception> exceptionAction)
+                : base(action, exceptionAction)
+            {
+                m_delayedAction = () =>
+                {
+                    if (ExecuteAction())
+                        ExecuteActionAsync();
+                };
+            }
+
+            public int Delay { get; set; }
+
+            protected override void ExecuteActionAsync()
+            {
+                m_delayedAction.DelayAndExecute(Delay);
+            }
+        }
+
+        // Constants
+
+        /// <summary>
+        /// Defines the default value for <see cref="Imports"/> property.
+        /// </summary>
+        public const string DefaultImports = "AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math";
+
         // Fields
         private string m_expressionText;
         private string m_variableList;
         private string m_imports;
         private bool m_supportsTemporalProcessing;
         private bool m_skipNanOutput;
+        private bool m_useConcentrator;
         private TimestampSource m_timestampSource;
+
+        private readonly ImmediateMeasurements m_latestMeasurements;
+        private Ticks m_latestTimestamp;
 
         private readonly HashSet<string> m_variableNames;
         private readonly Dictionary<MeasurementKey, string> m_keyMapping;
@@ -84,6 +118,8 @@ namespace DynamicCalculator
         private string m_aliasedExpressionText;
         private readonly ExpressionContext m_expressionContext;
         private IDynamicExpression m_expression;
+
+        private DelayedSynchronizedOperation m_timerOperation;
 
         #endregion
 
@@ -94,15 +130,38 @@ namespace DynamicCalculator
         /// </summary>
         public DynamicCalculator()
         {
+            m_latestMeasurements = new ImmediateMeasurements();
+            m_latestMeasurements.RealTimeFunction = () => RealTime;
+
             m_variableNames = new HashSet<string>();
             m_keyMapping = new Dictionary<MeasurementKey, string>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
             m_expressionContext = new ExpressionContext();
+
+            m_timerOperation = new DelayedSynchronizedOperation(ProcessLatestMeasurements, ex => OnProcessException(MessageLevel.Error, ex));
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public override IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return base.OutputMeasurements;
+            }
+            set
+            {
+                base.OutputMeasurements = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the textual representation of the expression.
@@ -174,7 +233,7 @@ namespace DynamicCalculator
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the list of types which define methods to be imported into the expression parser."),
-        DefaultValue("AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math")]
+        DefaultValue(DefaultImports)]
         public string Imports
         {
             get
@@ -190,14 +249,15 @@ namespace DynamicCalculator
                         Dictionary<string, string> parsedTypeDef = typeDef.ParseKeyValuePairs(',');
                         string assemblyName = parsedTypeDef["assemblyName"];
                         string typeName = parsedTypeDef["typeName"];
-                        Assembly asm = Assembly.Load(new AssemblyName(assemblyName));
-                        Type t = asm.GetType(typeName);
+                        Assembly assembly = Assembly.Load(new AssemblyName(assemblyName));
+                        Type type = assembly.GetType(typeName);
 
-                        m_expressionContext.Imports.AddType(t);
+                        m_expressionContext.Imports.AddType(type);
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Error, new ArgumentException($"Unable to load type from assembly: {typeDef}", ex));
+                        string message = $"Unable to load type from assembly: {typeDef}";
+                        OnProcessException(MessageLevel.Error, new ArgumentException(message, ex));
                     }
                 }
 
@@ -212,6 +272,46 @@ namespace DynamicCalculator
         Description("Define the flag indicating if this adapter supports temporal processing."),
         DefaultValue(false)]
         public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
+
+        /// <summary>
+        /// Gets or sets the flag indicating whether to concentrate
+        /// incoming data or to just use the latest received values.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag indicating if this adapter should concentrate incoming data."),
+        DefaultValue(true)]
+        public bool UseConcentrator
+        {
+            get
+            {
+                return m_useConcentrator;
+            }
+            set
+            {
+                m_useConcentrator = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the interval at which the adapter should calculate values.
+        /// </summary>
+        /// <remarks>
+        /// Set to zero to disable the timer and calculate values upon receipt of input data.
+        /// </remarks>
+        [ConnectionStringParameter,
+        Description("Define the interval, in seconds, at which the adapter should calculate values."),
+        DefaultValue(0)]
+        public double CalculationInterval
+        {
+            get
+            {
+                return m_timerOperation.Delay / 1000.0D;
+            }
+            set
+            {
+                m_timerOperation.Delay = (int)(value * 1000.0D);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
@@ -231,6 +331,56 @@ namespace DynamicCalculator
             }
         }
 
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the dynamic calculator expects.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of input measurements the dynamic calculator expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+                m_latestMeasurements.ClearMeasurementCache();
+            }
+        }
+
+        private new Ticks RealTime
+        {
+            get
+            {
+                if (m_useConcentrator)
+                {
+                    switch (m_timestampSource)
+                    {
+                        case TimestampSource.RealTime:
+                            return base.RealTime;
+
+                        case TimestampSource.LocalClock:
+                            return DateTime.UtcNow;
+
+                        default:
+                            return m_latestTimestamp;
+                    }
+                }
+
+                switch (m_timestampSource)
+                {
+                    case TimestampSource.LocalClock:
+                        return DateTime.UtcNow;
+
+                    default:
+                        return m_latestTimestamp;
+                }
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -240,26 +390,47 @@ namespace DynamicCalculator
         /// </summary>
         public override void Initialize()
         {
-            string errorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
+            const string ErrorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
 
             Dictionary<string, string> settings;
             string setting;
 
-            base.Initialize();
             settings = Settings;
 
-            if (OutputMeasurements.Length != 1)
-                throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements.Length}");
+            // Load useConcentrator setting before other parameters in case we
+            // need to inject defaults for FramesPerSecond, LagTime, and LeadTime
+            if (settings.TryGetValue("useConcentrator", out setting))
+                m_useConcentrator = setting.ParseBoolean();
+            else
+                m_useConcentrator = true;
+
+            if (!m_useConcentrator)
+            {
+                if (!settings.ContainsKey("FramesPerSecond"))
+                    settings.Add("FramesPerSecond", "30");
+
+                if (!settings.ContainsKey("LagTime"))
+                    settings.Add("LagTime", "3");
+
+                if (!settings.ContainsKey("LeadTime"))
+                    settings.Add("LeadTime", "1");
+            }
+
+            base.Initialize();
+
+            if (OutputMeasurements?.Length != 1)
+                throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
 
             // Load required parameters
 
             if (!settings.TryGetValue("expressionText", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "expressionText"));
+                throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
 
             ExpressionText = settings["expressionText"];
 
             if (!settings.TryGetValue("variableList", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "variableList"));
+                throw new ArgumentException(string.Format(ErrorMessage, "variableList"));
+
             VariableList = settings["variableList"];
 
             // Load optional parameters
@@ -287,6 +458,41 @@ namespace DynamicCalculator
                 m_timestampSource = (TimestampSource)Enum.Parse(typeof(TimestampSource), setting);
             else
                 m_timestampSource = TimestampSource.Frame;
+
+            if (settings.TryGetValue("publicationInterval", out setting))
+                CalculationInterval = double.Parse(setting);
+            else
+                CalculationInterval = 0;
+
+            m_latestMeasurements.LagTime = LagTime;
+            m_latestMeasurements.LeadTime = LeadTime;
+        }
+
+        /// <summary>
+        /// Starts the <see cref="DynamicCalculator"/> or restarts it if it is already running.
+        /// </summary>
+        [AdapterCommand("Starts the action adapter or restarts it if it is already running.", "Administrator", "Editor")]
+        public override void Start()
+        {
+            base.Start();
+
+            if (!m_useConcentrator && m_timerOperation.Delay > 0)
+                m_timerOperation.RunOnceAsync();
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// </summary>
+        /// <param name="measurements">Collection of measurements to queue for processing.</param>
+        /// <remarks>
+        /// Measurements are filtered against the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// </remarks>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            if (m_useConcentrator)
+                base.QueueMeasurementsForProcessing(measurements);
+            else
+                ProcessMeasurements(measurements);
         }
 
         /// <summary>
@@ -297,18 +503,59 @@ namespace DynamicCalculator
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements;
-            IMeasurement measurement;
-            string name;
-            long timestamp;
+            m_latestTimestamp = frame.Timestamp;
+            Calculate(frame.Measurements);
+        }
 
-            measurements = frame.Measurements;
+        /// <summary>
+        /// Handler for the values calculated by the <see cref="DynamicCalculator"/>.
+        /// </summary>
+        /// <param name="value">The value calculated by the <see cref="DynamicCalculator"/>.</param>
+        protected virtual void HandleCalculatedValue(object value)
+        {
+            // Evaluate the expression and generate the measurement
+            GenerateCalculatedMeasurement(RealTime, value as IConvertible);
+        }
+
+        private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
+        {
+            foreach (IMeasurement measurement in measurements)
+            {
+                m_latestMeasurements.UpdateMeasurementValue(measurement);
+
+                if (measurement.Timestamp > m_latestTimestamp)
+                    m_latestTimestamp = measurement.Timestamp;
+            }
+
+            if (m_timerOperation.Delay <= 0)
+                ProcessLatestMeasurements();
+        }
+
+        private void ProcessLatestMeasurements()
+        {
+            if (!Enabled)
+                return;
+
+            IDictionary<MeasurementKey, IMeasurement> measurementLookup = m_latestMeasurements
+                .Cast<IMeasurement>()
+                .ToDictionary(measurement => measurement.Key);
+
+            Calculate(measurementLookup);
+
+            if (m_timerOperation.Delay > 0)
+                m_timerOperation.RunOnceAsync();
+        }
+
+        private void Calculate(IDictionary<MeasurementKey, IMeasurement> measurements)
+        {
+            IMeasurement measurement;
+
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
             foreach (MeasurementKey key in m_keyMapping.Keys)
             {
-                name = m_keyMapping[key];
+                string name = m_keyMapping[key];
 
                 if (measurements.TryGetValue(key, out measurement))
                     m_expressionContext.Variables[name] = measurement.AdjustedValue;
@@ -320,24 +567,8 @@ namespace DynamicCalculator
             if ((object)m_expression == null)
                 m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
-            // Get the timestamp of the measurement to be generated
-            switch (m_timestampSource)
-            {
-                default:
-                    timestamp = frame.Timestamp;
-                    break;
-
-                case TimestampSource.RealTime:
-                    timestamp = RealTime;
-                    break;
-
-                case TimestampSource.LocalClock:
-                    timestamp = DateTime.UtcNow.Ticks;
-                    break;
-            }
-
             // Evaluate the expression and generate the measurement
-            GenerateCalculatedMeasurement(timestamp, m_expression.Evaluate() as IConvertible);
+            HandleCalculatedValue(m_expression.Evaluate());
         }
 
         // Adds a variable to the key-variable map.
@@ -418,20 +649,10 @@ namespace DynamicCalculator
         private MeasurementKey GetKey(string token)
         {
             Guid signalID;
-            MeasurementKey key;
 
-            if (Guid.TryParse(token, out signalID))
-            {
-                // Defined using the measurement's GUID
-                key = MeasurementKey.LookUpBySignalID(signalID);
-            }
-            else
-            {
-                // Defined using the measurement's key
-                key = MeasurementKey.Parse(token);
-            }
-
-            return key;
+            return Guid.TryParse(token, out signalID)
+                ? MeasurementKey.LookUpBySignalID(signalID)
+                : MeasurementKey.Parse(token);
         }
 
         // Generates a measurement with the given value and sends it into the system

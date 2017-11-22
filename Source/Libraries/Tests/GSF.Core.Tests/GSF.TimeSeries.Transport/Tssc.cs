@@ -236,7 +236,7 @@ namespace GSF.Core.Tests.GSF.Threading
 
 
 
-        [TestMethod]
+        //[TestMethod]
         public unsafe void TestActualData()
         {
             Stopwatch sw = new Stopwatch();
@@ -306,7 +306,7 @@ namespace GSF.Core.Tests.GSF.Threading
 
         }
 
-        [TestMethod]
+        //[TestMethod]
         public unsafe void TestSmallerSegments()
         {
             Stopwatch sw = new Stopwatch();

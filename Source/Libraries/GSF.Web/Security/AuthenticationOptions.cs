@@ -24,7 +24,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using Microsoft.Owin;
 
 namespace GSF.Web.Security
 {
@@ -46,11 +48,6 @@ namespace GSF.Web.Security
         /// Default value for <see cref="AnonymousResourceExpression"/>.
         /// </summary>
         public const string DefaultAnonymousResourceExpression = "^/@|^/favicon.ico$";
-
-        /// <summary>
-        /// Default value for <see cref="PassThroughAuthSupportedBrowserExpression"/>.
-        /// </summary>
-        public const string DefaultPassThroughAuthSupportedBrowserExpression = @"^(.+\(Windows.+(MSIE |Trident/))|(.+\(Windows.+Chrome/((?! Edge/).)*)$";
 
         /// <summary>
         /// Default value for <see cref="LoginPage"/>.
@@ -75,13 +72,10 @@ namespace GSF.Web.Security
         // Fields
         private readonly ConcurrentDictionary<string, bool> m_authFailureRedirectResourceCache;
         private readonly ConcurrentDictionary<string, bool> m_anonymousResourceCache;
-        private readonly ConcurrentDictionary<string, bool> m_passThroughAuthSupportedBrowserCache;
         private string m_authFailureRedirectResourceExpression;
         private string m_anonymousResourceExpression;
-        private string m_passThroughAuthSupportedBrowserExpression;
         private Regex m_authFailureRedirectResources;
         private Regex m_anonymousResources;
-        private Regex m_passThroughAuthSupportedBrowsers;
         private string m_realm;
 
         #endregion
@@ -91,11 +85,10 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
-        public AuthenticationOptions() : base(SessionHandler.DefaultSessionToken)
+        public AuthenticationOptions() : base(SessionHandler.DefaultAuthenticationToken)
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-            m_passThroughAuthSupportedBrowserCache = new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
         }
 
         #endregion
@@ -137,21 +130,9 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Gets or sets expression that will match user-agent header string for browser clients
-        /// that can support NTLM based pass-through authentication.
+        /// Gets or sets the token used for identifying the authentication token in cookie headers.
         /// </summary>
-        public string PassThroughAuthSupportedBrowserExpression
-        {
-            get
-            {
-                return m_passThroughAuthSupportedBrowserExpression;
-            }
-            set
-            {
-                m_passThroughAuthSupportedBrowserExpression = value;
-                m_passThroughAuthSupportedBrowsers = new Regex(m_passThroughAuthSupportedBrowserExpression, RegexOptions.Compiled | RegexOptions.Singleline);
-            }
-        }
+        public string AuthenticationToken { get; set; } = SessionHandler.DefaultAuthenticationToken;
 
         /// <summary>
         /// Gets or sets the token used for identifying the session ID in cookie headers.
@@ -299,12 +280,6 @@ namespace GSF.Web.Security
         public string AnonymousResourceExpression => m_authenticationOptions.AnonymousResourceExpression;
 
         /// <summary>
-        /// Gets expression that will match user-agent header string for browser clients
-        /// that can support NTLM based pass-through authentication.
-        /// </summary>
-        public string PassThroughAuthSupportedBrowserExpression => m_authenticationOptions.PassThroughAuthSupportedBrowserExpression;
-
-        /// <summary>
         /// Gets the token used for identifying the session ID in cookie headers.
         /// </summary>
         public string SessionToken => m_authenticationOptions.SessionToken;
@@ -357,6 +332,32 @@ namespace GSF.Web.Security
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAnonymousResource(string urlPath) => m_authenticationOptions.IsAnonymousResource(urlPath);
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Retrieves the authentication options from the given <see cref="HttpRequestMessage"/>.
+        /// </summary>
+        /// <param name="request">The HTTP request.</param>
+        /// <returns>The authentication options.</returns>
+        public static ReadonlyAuthenticationOptions GetAuthenticationOptions(HttpRequestMessage request)
+        {
+            object value;
+
+            if (request.Properties.TryGetValue("MS_OwinContext", out value))
+            {
+                IOwinContext context = value as IOwinContext;
+
+                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
+                    return value as ReadonlyAuthenticationOptions;
+            }
+
+            return null;
+        }
 
         #endregion
     }

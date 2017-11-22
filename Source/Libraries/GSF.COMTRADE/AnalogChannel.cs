@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using GSF.PhasorProtocols;
+using GSF.Units;
 using GSF.Units.EE;
 using Newtonsoft.Json;
 
@@ -39,8 +40,41 @@ namespace GSF.COMTRADE
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default multiplier for current magnitude values.
+        /// </summary>
+        public const double DefaultCurrentMagnitudeMultiplier = 0.05D;
+
+        /// <summary>
+        /// Default multiplier for voltage magnitude values.
+        /// </summary>
+        public const double DefaultVoltageMagnitudeMultiplier = 5.77362D;
+
+        /// <summary>
+        /// Default multiplier for phase angle values.
+        /// </summary>
+        public const double DefaultPhaseAngleMultiplier = 1.0E-4D;
+
+        /// <summary>
+        /// Default multiplier for frequency values.
+        /// </summary>
+        public const double DefaultFrequencyMultiplier = 0.001D;
+
+        /// <summary>
+        /// Default multiplier for dF/dt values.
+        /// </summary>
+        public const double DefaultDfDtMultiplier = 0.01D;
+
+        /// <summary>
+        /// Default multiplier for an analog value.
+        /// </summary>
+        public const double DefaultAnalogMultipler = 0.04D;
+
         // Fields
         private readonly int m_version;
+        private readonly bool m_targetFloatingPoint;
         private string m_stationName;
         private string m_channelName;
         private char m_phaseDesignation;
@@ -48,6 +82,7 @@ namespace GSF.COMTRADE
         private double m_nominalFrequency;
         private string m_circuitComponent;
         private string m_units;
+        private AngleUnit? m_angleUnit;
         private char m_scalingIdentifier;
 
         #endregion
@@ -58,17 +93,19 @@ namespace GSF.COMTRADE
         /// Creates a new instance of the <see cref="AnalogChannel"/>.
         /// </summary>
         /// <param name="version">Target schema version.</param>
-        public AnalogChannel(int version = 1999)
+        /// <param name="targetFloatingPoint">Determines if file type is targeting floating point.</param>
+        public AnalogChannel(int version = 1999, bool targetFloatingPoint = false)
         {
             m_version = version;
+            m_targetFloatingPoint = targetFloatingPoint;
             m_phaseDesignation = char.MinValue;
             m_signalKind = SignalKind.Analog;
             CoordinateFormat = CoordinateFormat.Polar;
-            Multiplier = 0.04D;
+            Multiplier = targetFloatingPoint ? 1.0D : DefaultAnalogMultipler;
             Adder = 0.0D;
             m_nominalFrequency = 60.0D;
-            MinValue = -99999;
-            MaxValue = 99998;
+            MinValue = targetFloatingPoint ? float.MinValue : -99999;
+            MaxValue = targetFloatingPoint ? float.MaxValue : 99998;
             PrimaryRatio = 1.0D;
             SecondaryRatio = 1.0D;
             m_scalingIdentifier = 'P';
@@ -79,20 +116,22 @@ namespace GSF.COMTRADE
         /// </summary>
         /// <param name="lineImage">Line image to parse.</param>
         /// <param name="version">Target schema version.</param>
-        public AnalogChannel(string lineImage, int version = 1999)
+        /// <param name="targetFloatingPoint">Determines if file type is targeting floating point.</param>
+        public AnalogChannel(string lineImage, int version = 1999, bool targetFloatingPoint = false)
         {
             // An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
             string[] parts = lineImage.Split(',');
 
             m_version = version;
+            m_targetFloatingPoint = targetFloatingPoint;
 
             if (parts.Length == 10 || parts.Length == 13)
             {               
                 Index = int.Parse(parts[0].Trim());
                 Name = parts[1];
+                Units = parts[4];   // Assign Units before PhaseID
                 PhaseID = parts[2];
                 CircuitComponent = parts[3];
-                Units = parts[4];
                 Multiplier = double.Parse(parts[5].Trim());
                 Adder = double.Parse(parts[6].Trim());
                 Skew = double.Parse(parts[7].Trim());
@@ -377,29 +416,53 @@ namespace GSF.COMTRADE
 
                 m_signalKind = value;
 
+                if (m_targetFloatingPoint)
+                {
+                    switch (m_signalKind)
+                    {
+                        case SignalKind.Angle:
+                            Angle minAngle = new Angle(-Math.PI);
+                            Angle maxAngle = new Angle(Math.PI);
+                            MinValue = minAngle.ConvertTo(AngleUnit);
+                            MaxValue = maxAngle.ConvertTo(AngleUnit);
+                            break;
+                        case SignalKind.Frequency:
+                            MinValue = m_nominalFrequency - 4.0D;
+                            MaxValue = m_nominalFrequency + 4.0D;
+                            break;
+                    }
+
+                    return;
+                }
+
                 switch (m_signalKind)
                 {
                     case SignalKind.Angle:
-                        Multiplier = 0.006D;
+                        Multiplier = DefaultPhaseAngleMultiplier;
                         Adder = 0.0D;
                         break;
                     case SignalKind.Magnitude:
                         if (PhasorType == PhasorType.Current)
-                            Multiplier = 0.4D;
+                            Multiplier = DefaultCurrentMagnitudeMultiplier;
                         else
-                            Multiplier = 0.04D;
+                            Multiplier = DefaultVoltageMagnitudeMultiplier;
                         Adder = 0.0D;
                         break;
                     case SignalKind.Frequency:
-                        Multiplier = 0.001D;
+                        Multiplier = DefaultFrequencyMultiplier;
                         Adder = m_nominalFrequency;
                         break;
                     case SignalKind.DfDt:
-                        Multiplier = 0.01D;
+                        Multiplier = DefaultDfDtMultiplier;
+                        Adder = 0.0D;
+                        break;
+                    case SignalKind.Status:
+                    case SignalKind.Digital:
+                        Multiplier = 1.0D;
                         Adder = 0.0D;
                         break;
                     default:
-                        Multiplier = 0.04D;
+                        Multiplier = DefaultAnalogMultipler;
                         Adder = 0.0D;
                         break;
                 }
@@ -447,6 +510,8 @@ namespace GSF.COMTRADE
 
                 if (m_units.Length > 32)
                     m_units = m_units.Substring(0, 32);
+
+                m_angleUnit = null;
             }
         }
 
@@ -486,7 +551,7 @@ namespace GSF.COMTRADE
         public double SecondaryRatio { get; set; }
 
         /// <summary>
-        /// Gets or sets the the primary or secondary data scaling identifier of this <see cref="AnalogChannel"/>.
+        /// Gets or sets the primary or secondary data scaling identifier of this <see cref="AnalogChannel"/>.
         /// </summary>
         public char ScalingIdentifier
         {
@@ -504,6 +569,11 @@ namespace GSF.COMTRADE
                 m_scalingIdentifier = value;
             }
         }
+
+        /// <summary>
+        /// Gets <see cref="AngleUnit"/> derived from <see cref="Units"/>, if applicable to channel type.
+        /// </summary>
+        public AngleUnit AngleUnit => m_angleUnit ?? (m_angleUnit = GetAngleUnit(Units)).Value;
 
         /// <summary>
         /// Gets target schema version.
@@ -558,6 +628,33 @@ namespace GSF.COMTRADE
         {
             s_validAnalogSignalKinds = new List<SignalKind>(new[] { SignalKind.Analog, SignalKind.Angle, SignalKind.Calculation, SignalKind.DfDt, SignalKind.Frequency, SignalKind.Magnitude, SignalKind.Statistic });
             s_validAnalogSignalKinds.Sort();
+        }
+
+        // Static Methods
+
+        // Attempt to parse units as an AngleUnit enum value
+        private static AngleUnit GetAngleUnit(string units)
+        {
+            AngleUnit angleUnit;
+
+            if (!Enum.TryParse(units, true, out angleUnit))
+            {
+                // Fall back on other common names for angle units
+                if (units.StartsWith("deg", StringComparison.OrdinalIgnoreCase))
+                    angleUnit = AngleUnit.Degrees;
+                else if (units.StartsWith("grad", StringComparison.OrdinalIgnoreCase) || units.StartsWith("gon", StringComparison.OrdinalIgnoreCase))
+                    angleUnit = AngleUnit.Grads;
+                else if (units.StartsWith("arcm", StringComparison.OrdinalIgnoreCase) || units.StartsWith("min", StringComparison.OrdinalIgnoreCase) || units.StartsWith("moa", StringComparison.OrdinalIgnoreCase))
+                    angleUnit = AngleUnit.ArcMinutes;
+                else if (units.StartsWith("arcs", StringComparison.OrdinalIgnoreCase) || units.StartsWith("sec", StringComparison.OrdinalIgnoreCase))
+                    angleUnit = AngleUnit.ArcSeconds;
+                else if (units.StartsWith("ang", StringComparison.OrdinalIgnoreCase) || units.StartsWith("mil", StringComparison.OrdinalIgnoreCase))
+                    angleUnit = AngleUnit.AngularMil;
+                else // rad
+                    angleUnit = AngleUnit.Radians;
+            }
+
+            return angleUnit;
         }
 
         #endregion

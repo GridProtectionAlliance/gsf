@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Charge"/> value.
     /// </summary>
-    public enum ChargeUnits
+    public enum ChargeUnit
     {
         /// <summary>
         /// Coulomb charge units, i.e., ampere-seconds.
@@ -208,28 +208,28 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Charge"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Charge"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Charge"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(ChargeUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Charge"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(ChargeUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case ChargeUnits.Coulombs:
+                case ChargeUnit.Coulombs:
                     return m_value;
-                case ChargeUnits.AmpereHours:
+                case ChargeUnit.AmpereHours:
                     return ToAmpereHours();
-                case ChargeUnits.Abcoulombs:
+                case ChargeUnit.Abcoulombs:
                     return ToAbcoulombs();
-                case ChargeUnits.Statcoulombs:
+                case ChargeUnit.Statcoulombs:
                     return ToStatcoulombs();
-                case ChargeUnits.AtomicUnitsOfCharge:
+                case ChargeUnit.AtomicUnitsOfCharge:
                     return ToAtomicUnitsOfCharge();
-                case ChargeUnits.Faraday:
+                case ChargeUnit.Faraday:
                     return ToFaraday();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -876,29 +876,29 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Charge"/> in coulombs.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Charge"/> in coulombs.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Charge"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Charge ConvertFrom(double value, ChargeUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Charge"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Charge ConvertFrom(double value, ChargeUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case ChargeUnits.Coulombs:
+                case ChargeUnit.Coulombs:
                     return value;
-                case ChargeUnits.AmpereHours:
+                case ChargeUnit.AmpereHours:
                     return FromAmpereHours(value);
-                case ChargeUnits.Abcoulombs:
+                case ChargeUnit.Abcoulombs:
                     return FromAbcoulombs(value);
-                case ChargeUnits.Statcoulombs:
+                case ChargeUnit.Statcoulombs:
                     return FromStatcoulombs(value);
-                case ChargeUnits.AtomicUnitsOfCharge:
+                case ChargeUnit.AtomicUnitsOfCharge:
                     return FromAtomicUnitsOfCharge(value);
-                case ChargeUnits.Faraday:
+                case ChargeUnit.Faraday:
                     return FromFaraday(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

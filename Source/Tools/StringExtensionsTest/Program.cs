@@ -13,7 +13,6 @@ namespace StringExtensionsTest
     {
         static void Main(string[] args)
         {
-            StringParser parser = new StringParser();
             string csvInput = File.ReadAllText("test2.csv");
             string[] csvOutput = StringParser.ParseStandardCSV(csvInput);
             string upperGreekLetters = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ";
@@ -30,7 +29,7 @@ namespace StringExtensionsTest
 
             for (int i = 0; i < quoteUnwrapTests.Length; i++)
             {
-                quoteUnwrapTests[i] = quoteUnwrapTests[i].quoteUnwrap(quotes[i]);
+                quoteUnwrapTests[i] = quoteUnwrapTests[i].QuoteUnwrap(quotes[i]);
                 Console.WriteLine(quoteUnwrapTests[i]);
             }
             Console.ReadLine();

@@ -115,6 +115,23 @@ namespace GSF.Web.Security
                     }
                 }
 
+                if ((object)authorization == null && (object)securityPrincipal == null)
+                {
+                    // Attempt to authenticate using cached credentials associated with the authentication token cookie
+                    string authenticationToken = SessionHandler.GetAuthenticationTokenFromCookie(Request, Options.AuthenticationToken);
+
+                    securityPrincipal = AuthenticateCachedCredentials(authenticationToken);
+
+                    // If authentication using cached credentials fails,
+                    // fall back on the other authentication methods
+                    if (securityPrincipal?.Identity.IsAuthenticated != true)
+                        securityPrincipal = null;
+
+                    // Attempt to cache the security principal to the session
+                    if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
+                        s_authorizationCache[sessionID] = securityPrincipal;
+                }
+
                 if ((object)securityPrincipal == null)
                 {
                     // Pick the appropriate authentication logic based
@@ -220,6 +237,28 @@ namespace GSF.Web.Security
                 return username;
 
             return parts[0].Trim().Equals(Environment.MachineName) ? parts[1].Trim() : username;
+        }
+
+        // Applies authentication for requests where credentials are passed directly in the HTTP headers.
+        private SecurityPrincipal AuthenticateCachedCredentials(string authenticationToken)
+        {
+            string username, password;
+
+            if ((object)authenticationToken == null)
+                return null;
+
+            // Get the user's credentials from the credential cache
+            if (!SessionHandler.TryGetCachedCredentials(authenticationToken, out username, out password))
+                return null;
+
+            // Create the security provider that will authenticate the user's credentials
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+            securityProvider.Password = password;
+            securityProvider.Authenticate();
+
+            // Return the security principal that will be used for role-based authorization
+            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            return new SecurityPrincipal(securityIdentity);
         }
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.

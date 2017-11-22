@@ -97,8 +97,9 @@ namespace GSF.Windows.Forms
         #endregion
 
         #region [ Properties ]
+
         /// <summary>
-        /// Gets SecurityPrincipal for the SecureForm
+        /// Gets current security principal for secure form.
         /// </summary>
         public SecurityPrincipal SecurityPrincipal
         {

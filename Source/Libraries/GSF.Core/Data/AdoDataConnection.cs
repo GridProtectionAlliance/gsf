@@ -1041,11 +1041,12 @@ namespace GSF.Data
                         object value = parameters[i];
                         DbType? type = null;
 
-                        if (value is IDbDataParameter)
+                        IDbDataParameter dataParameter = value as IDbDataParameter;
+
+                        if ((object)dataParameter != null)
                         {
-                            IDbDataParameter intermediateParameter = value as IDbDataParameter;
-                            type = intermediateParameter.DbType;
-                            value = intermediateParameter.Value;
+                            type = dataParameter.DbType;
+                            value = dataParameter.Value;
                         }
 
                         if (value == null)

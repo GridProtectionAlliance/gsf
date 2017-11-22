@@ -54,6 +54,7 @@ namespace GSF.TimeSeries
 
             // Run data operations
             ValidateDefaultNode(database, nodeIDQueryString);
+            ValidateAdapterCollections(database, nodeIDQueryString);
             ValidateActiveMeasurements(database, nodeIDQueryString);
             ValidateAccountsAndGroups(database, nodeIDQueryString);
             ValidateDataPublishers(database, nodeIDQueryString, arguments);
@@ -82,6 +83,51 @@ namespace GSF.TimeSeries
             {
                 database.Connection.ExecuteNonQuery(NodeInsertFormat);
                 database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
+            }
+        }
+
+        /// <summary>
+        /// Data operation to validate and ensure there is a record in the
+        /// ConfigurationEntity table for each of the adapter collections.
+        /// </summary>
+        private static void ValidateAdapterCollections(AdoDataConnection database, string nodeIDQueryString)
+        {
+            const string ConfigEntityCountFormat = "SELECT COUNT(*) FROM ConfigurationEntity WHERE RuntimeName = {0}";
+            const string ConfigEntityInsertFormat = "INSERT INTO ConfigurationEntity(SourceName, RuntimeName, Description, LoadOrder, Enabled) VALUES({0}, {1}, {2}, {3}, 1)";
+
+            string[] sourceNames =
+            {
+                "IaonFilterAdapter",
+                "IaonInputAdapter",
+                "IaonActionAdapter",
+                "IaonOutputAdapter"
+            };
+
+            string[] runtimeNames =
+            {
+                "FilterAdapters",
+                "InputAdapters",
+                "ActionAdapters",
+                "OutputAdapters"
+            };
+
+            string[] descriptions =
+            {
+                "Defines IFilterAdapter definitions for a PDC node",
+                "Defines IInputAdapter definitions for a PDC node",
+                "Defines IActionAdapter definitions for a PDC node",
+                "Defines IOutputAdapter definitions for a PDC node"
+            };
+
+            for (int i = 0; i < runtimeNames.Length; i++)
+            {
+                string sourceName = sourceNames[i];
+                string runtimeName = runtimeNames[i];
+                string description = descriptions[i];
+                int loadOrder = i + 1;
+
+                if (database.ExecuteScalar<int>(ConfigEntityCountFormat, runtimeName) == 0)
+                    database.ExecuteNonQuery(ConfigEntityInsertFormat, sourceName, runtimeName, description, loadOrder);
             }
         }
 

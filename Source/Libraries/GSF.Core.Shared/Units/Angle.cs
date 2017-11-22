@@ -80,7 +80,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for an <see cref="Angle"/> value.
     /// </summary>
-    public enum AngleUnits
+    public enum AngleUnit
     {
         /// <summary>
         /// Radian angle units.
@@ -213,28 +213,28 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Angle"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Angle"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Angle"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(AngleUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Angle"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(AngleUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case AngleUnits.Radians:
+                case AngleUnit.Radians:
                     return m_value;
-                case AngleUnits.Degrees:
+                case AngleUnit.Degrees:
                     return ToDegrees();
-                case AngleUnits.Grads:
+                case AngleUnit.Grads:
                     return ToGrads();
-                case AngleUnits.ArcMinutes:
+                case AngleUnit.ArcMinutes:
                     return ToArcMinutes();
-                case AngleUnits.ArcSeconds:
+                case AngleUnit.ArcSeconds:
                     return ToArcSeconds();
-                case AngleUnits.AngularMil:
+                case AngleUnit.AngularMil:
                     return ToAngularMil();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -889,29 +889,29 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Angle"/> in radians.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Angle"/> in radians.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Angle"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Angle ConvertFrom(double value, AngleUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Angle"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Angle ConvertFrom(double value, AngleUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case AngleUnits.Radians:
+                case AngleUnit.Radians:
                     return value;
-                case AngleUnits.Degrees:
+                case AngleUnit.Degrees:
                     return FromDegrees(value);
-                case AngleUnits.Grads:
+                case AngleUnit.Grads:
                     return FromGrads(value);
-                case AngleUnits.ArcMinutes:
+                case AngleUnit.ArcMinutes:
                     return FromArcMinutes(value);
-                case AngleUnits.ArcSeconds:
+                case AngleUnit.ArcSeconds:
                     return FromArcSeconds(value);
-                case AngleUnits.AngularMil:
+                case AngleUnit.AngularMil:
                     return FromAngularMil(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

@@ -659,11 +659,11 @@ namespace PhasorProtocolAdapters
 
                 if (m_dataFormat == DataFormat.FixedInteger)
                 {
-                    status.AppendFormat("     Current scaling value: {0:00000000} ({1})", m_currentScalingValue, (m_currentScalingValue * 0.00001D).ToString("0.00000"));
+                    status.AppendFormat("     Current scaling value: {0:00000000} ({1:0.00000})", m_currentScalingValue, m_currentScalingValue * 0.00001D);
                     status.AppendLine();
-                    status.AppendFormat("     Voltage scaling value: {0:00000000} ({1})", m_voltageScalingValue, (m_voltageScalingValue * 0.00001D).ToString("0.00000"));
+                    status.AppendFormat("     Voltage scaling value: {0:00000000} ({1:0.00000})", m_voltageScalingValue, m_voltageScalingValue * 0.00001D);
                     status.AppendLine();
-                    status.AppendFormat("      Analog scaling value: {0:00000000} ({1})", m_analogScalingValue, (m_analogScalingValue * 0.00001D).ToString("0.00000"));
+                    status.AppendFormat("      Analog scaling value: {0:00000000} ({1:0.00000})", m_analogScalingValue, m_analogScalingValue * 0.00001D);
                     status.AppendLine();
                 }
 
@@ -1129,7 +1129,7 @@ namespace PhasorProtocolAdapters
 
                         // Choose stream defined default value if no scaling value was defined
                         if (scalingValue == 0)
-                            scalingValue = (type == PhasorType.Voltage ? m_voltageScalingValue : m_currentScalingValue);
+                            scalingValue = type == PhasorType.Voltage ? m_voltageScalingValue : m_currentScalingValue;
 
                         cell.PhasorDefinitions.Add(new PhasorDefinition(
                             cell,

@@ -30,6 +30,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GSF;
 using GSF.Collections;
+using GSF.Data;
 using GSF.NumericalAnalysis;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -137,27 +138,55 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a series of values that represent each of the values in the source series added with N.
         /// N is a floating point value representing an additive offset to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Add(N, expression)</c><br/>
         /// Returns: Series of values.<br/>
-        /// Example: <c>Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Example: <c>Add(1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Add<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Add,
         /// <summary>
+        /// Returns a series of values that represent each of the values in the source series subtracted by N.
+        /// N is a floating point value representing an subtractive offset to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>Subtract(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>Subtract(2.2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Subtract<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Subtract,
+        /// <summary>
         /// Returns a series of values that represent each of the values in the source series multiplied by N.
         /// N is a floating point value representing a multiplicative factor to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Multiply(N, expression)</c><br/>
         /// Returns: Series of values.<br/>
-        /// Example: <c>Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Example: <c>Multiply(1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: Multiply<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Multiply,
+        /// <summary>
+        /// Returns a series of values that represent each of the values in the source series divided by N.
+        /// N is a floating point value representing a divisive factor to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>Divide(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>Divide(1.732, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Divide<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Divide,
         /// <summary>
         /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
@@ -243,6 +272,8 @@ namespace GrafanaAdapters
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Top(N|N%, [normalizeTime = true], expression)</c><br/>
@@ -257,6 +288,8 @@ namespace GrafanaAdapters
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Bottom(N|N%, [normalizeTime = true], expression)</c><br/>
@@ -271,6 +304,8 @@ namespace GrafanaAdapters
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Random(N|N%, [normalizeTime = true], expression)</c><br/>
@@ -284,6 +319,8 @@ namespace GrafanaAdapters
         /// Returns a series of N, or N% of total, values from the start of the source series.
         /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>First([N|N% = 1], expression)</c><br/>
@@ -297,6 +334,8 @@ namespace GrafanaAdapters
         /// Returns a series of N, or N% of total, values from the end of the source series.
         /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
         /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+        /// and 1 will be treated as a percentage.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Last([N|N% = 1], expression)</c><br/>
@@ -378,6 +417,7 @@ namespace GrafanaAdapters
         /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
         /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds. Setting N value to zero will request non-decimated, full resolution data from the data
         /// source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges.
+        /// N can either be constant value or a named target available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Interval(N, [units = Seconds], expression)</c><br/>
@@ -393,6 +433,7 @@ namespace GrafanaAdapters
         /// is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means
         /// values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+        /// The low and high parameter values can either be constant values or named targets available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>IncludeRange(low, high, [inclusive = false], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
@@ -408,6 +449,7 @@ namespace GrafanaAdapters
         /// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means
         /// values are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four
         /// parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive.
+        /// The low and high parameter values can either be constant values or named targets available from the expression.
         /// </summary>
         /// <remarks>
         /// Signature: <c>ExcludeRange(low, high, [inclusive = false], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
@@ -460,8 +502,9 @@ namespace GrafanaAdapters
         /// Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three
         /// series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this
         /// function will be ignored. The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly
-        /// map to a point tag, one of the following metadata value substitutions can be used in the label value: {ID}, {SignalID}, {PointTag}, {AlternateTag},
-        /// {SignalReference}, {Device} or {SignalType} - where applicable, these substitutions can be used in any combination.
+        /// map to a point tag, metadata value substitutions for the tag can be used in the label value - for example: {ID}, {SignalID}, {PointTag}, {AlternateTag},
+        /// {SignalReference}, {Device}, {FramesPerSecond}, {Protocol}, {ProtocolType}, {SignalType}, {EngineeringUnits}, {PhasorType}, {Company}, {Description} -
+        /// where applicable, these substitutions can be used in any combination.
         /// </summary>
         /// <remarks>
         /// Signature: <c>Label(value, expression)</c><br/>
@@ -496,92 +539,6 @@ namespace GrafanaAdapters
         None
     }
 
-    /// <summary>
-    /// Time units for time related functions.
-    /// </summary>
-    public enum TimeUnits
-    {
-        /// <summary>
-        /// Specifies that the time is in ticks, 100-nanoseconds intervals.
-        /// </summary>
-        Ticks,
-        /// <summary>
-        /// Specifies that the time is in nanoseconds.
-        /// </summary>
-        Nanoseconds,
-        /// <summary>
-        /// Specifies that the time is in microseconds.
-        /// </summary>
-        Microseconds,
-        /// <summary>
-        /// Specifies that the time is in milliseconds.
-        /// </summary>
-        Milliseconds,
-        /// <summary>
-        /// Specifies that the time is in seconds.
-        /// </summary>
-        Seconds,
-        /// <summary>
-        /// Specifies that the time is in minutes.
-        /// </summary>
-        Minutes,
-        /// <summary>
-        /// Specifies that the time is in hours.
-        /// </summary>
-        Hours,
-        /// <summary>
-        /// Specifies that the time is in days.
-        /// </summary>
-        Days,
-        /// <summary>
-        /// Specifies that the time is in weeks.
-        /// </summary>
-        Weeks,
-        /// <summary>
-        /// Specifies that the time is in ke, the traditional Chinese unit of decimal time.
-        /// </summary>
-        Ke,
-        /// <summary>
-        /// Specifies that the time is in Planck time.
-        /// </summary>
-        PlanckTime,
-        /// <summary>
-        /// Specifies that the time is in atomic units of time.
-        /// </summary>
-        AtomicUnitsOfTime
-    }
-
-    /// <summary>
-    /// Angle units for wrap and unwrap functions.
-    /// </summary>
-    public enum AngleUnits
-    {
-        /// <summary>
-        /// Specifies that angle is in degrees.
-        /// </summary>
-        Degrees,
-        /// <summary>
-        /// Specifies that angle is in radians.
-        /// </summary>
-        Radians,
-        /// <summary>
-        /// Specifies that angle is in grads.
-        /// </summary>
-        Grads,
-        /// <summary>
-        /// Specifies that angle is in arc minutes.
-        /// </summary>
-        ArcMinutes,
-        /// <summary>
-        /// Specifies that angle is in arc seconds.
-        /// </summary>
-        ArcSeconds,
-        /// <summary>
-        /// Specifies that angle is in angular mil.
-        /// </summary>
-        AngularMil
-    }
-
     #endregion
 
     /// <summary>
@@ -589,6 +546,64 @@ namespace GrafanaAdapters
     /// </summary>
     public abstract class GrafanaDataSourceBase
     {
+        #region [ Members ]
+
+        // Nested Types
+        private class TargetTimeUnit
+        {
+            public TimeUnit Unit;
+
+            public double Factor = double.NaN;
+
+            public static bool TryParse(string value, out TargetTimeUnit targetTimeUnit)
+            {
+                TimeUnit timeUnit;
+
+                if (Enum.TryParse(value, out timeUnit))
+                {
+                    targetTimeUnit = new TargetTimeUnit
+                    {
+                        Unit = timeUnit
+                    };
+
+                    return true;
+                }
+
+                switch (value?.ToLowerInvariant())
+                {
+                    case "milliseconds":
+                        targetTimeUnit = new TargetTimeUnit
+                        {
+                            Unit = TimeUnit.Seconds,
+                            Factor = SI.Milli
+                        };
+
+                        return true;
+                    case "microseconds":
+                        targetTimeUnit = new TargetTimeUnit
+                        {
+                            Unit = TimeUnit.Seconds,
+                            Factor = SI.Micro
+                        };
+
+                        return true;
+                    case "nanoseconds":
+                        targetTimeUnit = new TargetTimeUnit
+                        {
+                            Unit = TimeUnit.Seconds,
+                            Factor = SI.Nano
+                        };
+
+                        return true;
+                }
+
+                targetTimeUnit = null;
+                return false;
+            }
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -621,12 +636,48 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public virtual Task<string[]> Search(Target request)
         {
-            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders
-            // For now, just return a truncated list of tag names
-            string target = (request.target == "select metric" ? "" : request.target);
+            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders - for now, just return a truncated list of tag names:
+            string target = request.target == "select metric" ? "" : request.target;
+
             return Task.Factory.StartNew(() =>
             {
                 return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+            });
+        }
+
+        /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        public virtual Task<string[]> SearchFields(Target request)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+            });
+        }
+
+        /// <summary>
+        /// Search data source for a list of tables.
+        /// </summary>
+        /// <param name="request">Request.</param>
+        public virtual Task<string[]> SearchFilters(Target request)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables.Cast<DataTable>().Select(table => table.TableName).ToArray();
+            });
+        }
+
+        /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        public virtual Task<string[]> SearchOrderBys(Target request)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
             });
         }
 
@@ -682,23 +733,45 @@ namespace GrafanaAdapters
                 if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
+                uint excludedDataFlags = Convert.ToUInt32(request.options?["excludedDataFlags"].ToString() ?? "0x00000000", 16); // 0x00000000
+                uint includedDataFlags = Convert.ToUInt32(request.options?["includedDataFlags"].ToString() ?? "0xFFFFFFFF", 16); // 0xFFFFFFFF
+                bool includeNormalData = Convert.ToBoolean(request.options?["includeNormalData"].ToString() ?? "true");
+
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
 
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
-                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target }).ToList();
+                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
+                {
+                    target = valueGroup.Target,
+                    rootTarget = valueGroup.RootTarget,
+                    latitude = LookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
+                    longitude = LookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
+                }).ToList();
 
                 // Process series data in parallel
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
                     // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation
-                    series.datapoints = valueGroups.First(group => group.Target.Equals(series.target)).Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
+                    IEnumerable<DataSourceValue> values = valueGroups.First(group => group.Target.Equals(series.target)).Source;
+
+                    if (excludedDataFlags > uint.MinValue)
+                        values = values.Where(value => !includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & excludedDataFlags) == 0);
+
+                    if (includedDataFlags < uint.MaxValue)
+                        values = values.Where(value => includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & includedDataFlags) > 0);
+
+                    series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
 
+                #region [ Original "request.maxDataPoints" Implementation ]
+
+                //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
+
                 //// Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
+
                 //foreach (TimeSeriesValues series in result)
                 //{
                 //    if (series.datapoints.Count > maxDataPoints)
@@ -707,6 +780,8 @@ namespace GrafanaAdapters
                 //        series.datapoints = Enumerable.Range(0, request.maxDataPoints).Select(index => series.datapoints[(int)(index * indexFactor)]).ToList();
                 //    }
                 //}
+
+                #endregion
 
                 return result;
             },
@@ -723,6 +798,26 @@ namespace GrafanaAdapters
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
         protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap);
+
+        private DataRow LookupTargetMetadata(string target)
+        {
+            return TargetCache<DataRow>.GetOrAdd(target, () =>
+            {
+                try
+                {
+                    return Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault();
+                }
+                catch
+                {
+                    return null;
+                }                
+            });
+        }
+
+        private float LookupTargetCoordinate(string target, string field)
+        {
+            return TargetCache<float>.GetOrAdd($"{target}_{field}", () => LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
+        }
 
         private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
@@ -829,7 +924,6 @@ namespace GrafanaAdapters
                 if (groupOperation == GroupOperation.Slice)
                     requiredParameters++;
 
-                // TODO: Consider parsing with regular expression so function results could be used as parameter values
                 if (requiredParameters > 0)
                 {
                     int index = 0;
@@ -914,9 +1008,9 @@ namespace GrafanaAdapters
                         string derivedLabel = label;
                         DataRow record = target.MetadataRecordFromTag(Metadata);
 
-                        if ((object)record != null)
+                        if ((object)record != null && derivedLabel.IndexOf('{') >= 0)
                         {
-                            foreach (string fieldName in s_metadataRecordFields)
+                            foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
                                 derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
                         }
 
@@ -1001,7 +1095,9 @@ namespace GrafanaAdapters
         private static readonly Regex s_distinctExpression;
         private static readonly Regex s_absoluteValueExpression;
         private static readonly Regex s_addExpression;
+        private static readonly Regex s_subtractExpression;
         private static readonly Regex s_multiplyExpression;
+        private static readonly Regex s_divideExpression;
         private static readonly Regex s_roundExpression;
         private static readonly Regex s_floorExpression;
         private static readonly Regex s_ceilingExpression;
@@ -1029,7 +1125,6 @@ namespace GrafanaAdapters
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
         private static readonly Dictionary<SeriesFunction, int> s_optionalParameters;
         private static readonly string[] s_groupOperationNames;
-        private static readonly string[] s_metadataRecordFields;
 
         // Static Constructor
         static GrafanaDataSourceBase()
@@ -1039,7 +1134,6 @@ namespace GrafanaAdapters
             // RegEx instance to find all series functions
             s_groupOperationNames = Enum.GetNames(typeof(GroupOperation));
             s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!\s+IN\s+)\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_metadataRecordFields = new[] { "ID", "SignalID", "PointTag", "AlternateTag", "SignalReference", "Device", "SignalType" };
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1051,7 +1145,9 @@ namespace GrafanaAdapters
             s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_addExpression = new Regex(string.Format(GetExpression, "Add"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_subtractExpression = new Regex(string.Format(GetExpression, "Subtract"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_multiplyExpression = new Regex(string.Format(GetExpression, "Multiply"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_divideExpression = new Regex(string.Format(GetExpression, "Divide"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_floorExpression = new Regex(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1089,7 +1185,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
                 [SeriesFunction.Add] = 1,
+                [SeriesFunction.Subtract] = 1,
                 [SeriesFunction.Multiply] = 1,
+                [SeriesFunction.Divide] = 1,
                 [SeriesFunction.Round] = 0,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -1128,7 +1226,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
                 [SeriesFunction.Add] = 0,
+                [SeriesFunction.Subtract] = 0,
                 [SeriesFunction.Multiply] = 0,
+                [SeriesFunction.Divide] = 0,
                 [SeriesFunction.Round] = 1,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -1240,12 +1340,26 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Add, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
+                // Look for subtract function
+                lock (s_subtractExpression)
+                    filterMatch = s_subtractExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Subtract, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
                 // Look for multiply function
                 lock (s_multiplyExpression)
                     filterMatch = s_multiplyExpression.Match(expression);
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Multiply, filterMatch.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for divide function
+                lock (s_divideExpression)
+                    filterMatch = s_divideExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Divide, filterMatch.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for round function
                 lock (s_roundExpression)
@@ -1437,7 +1551,7 @@ namespace GrafanaAdapters
         private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters)
         {
             DataSourceValue[] values;
-            DataSourceValue result;
+            DataSourceValue result = new DataSourceValue();
             double lastValue = double.NaN;
             double lastTime = 0.0D;
             string lastTarget = null;
@@ -1452,8 +1566,8 @@ namespace GrafanaAdapters
             double baseTime, timeStep, value, low, high;
             bool normalizeTime, lowInclusive, highInclusive;
             int count;
-            TimeUnits timeUnits;
-            AngleUnits angleUnits;
+            TargetTimeUnit timeUnit;
+            AngleUnit angleUnit;
 
             switch (seriesFunction)
             {
@@ -1532,16 +1646,30 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.Add:
-                    value = ParseFloat(parameters[0], false);
+                    value = ParseFloat(parameters[0], source, false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
+                case SeriesFunction.Subtract:
+                    value = ParseFloat(parameters[0], source, false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
                 case SeriesFunction.Multiply:
-                    value = ParseFloat(parameters[0], false);
+                    value = ParseFloat(parameters[0], source, false);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Divide:
+                    value = ParseFloat(parameters[0], source, false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
@@ -1596,7 +1724,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values.Length);
+                    count = ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1616,7 +1744,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values.Length);
+                    count = ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1636,7 +1764,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values.Length);
+                    count = ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1657,7 +1785,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1672,7 +1800,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1726,26 +1854,26 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.TimeDifference:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
-                        timeUnits = TimeUnits.Seconds;
+                    if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
                     }
                     break;
                 case SeriesFunction.Derivative:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
-                        timeUnits = TimeUnits.Seconds;
+                    if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -1753,15 +1881,15 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.TimeIntegration:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out timeUnits))
-                        timeUnits = TimeUnits.Hours;
+                    if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Hours };
 
                     result.Value = 0.0D;
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            result.Value += dataValue.Value * ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnits);
+                            result.Value += dataValue.Value * ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit);
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -1775,10 +1903,10 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.Interval:
-                    if (parameters.Length == 1 || !Enum.TryParse(parameters[1], true, out timeUnits))
-                        timeUnits = TimeUnits.Seconds;
+                    if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
-                    value = FromTimeUnits(ParseFloat(parameters[0]), timeUnits) / SI.Milli;
+                    value = FromTimeUnits(ParseFloat(parameters[0], source), timeUnit) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -1798,8 +1926,8 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.IncludeRange:
-                    low = ParseFloat(parameters[0], false);
-                    high = ParseFloat(parameters[1], false);
+                    low = ParseFloat(parameters[0], source, false);
+                    high = ParseFloat(parameters[1], source, false);
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
@@ -1808,8 +1936,8 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.ExcludeRange:
-                    low = ParseFloat(parameters[0], false);
-                    high = ParseFloat(parameters[1], false);
+                    low = ParseFloat(parameters[0], source, false);
+                    high = ParseFloat(parameters[1], source, false);
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
@@ -1820,137 +1948,49 @@ namespace GrafanaAdapters
                 case SeriesFunction.FilterNaN:
                     bool alsoFilterInifinity = parameters.Length == 0 || parameters[0].Trim().ParseBoolean();
 
-                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || (alsoFilterInifinity && double.IsInfinity(dataValue.Value)))))
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || alsoFilterInifinity && double.IsInfinity(dataValue.Value))))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.UnwrapAngle:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
-                        angleUnits = AngleUnits.Degrees;
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnit))
+                        angleUnit = AngleUnit.Degrees;
 
                     values = source.ToArray();
 
-                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => FromAngleUnits(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = ToAngleUnits(angle, angleUnits), Time = values[index].Time, Target = values[index].Target }))
+                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => Angle.ConvertFrom(dataValue.Value, angleUnit))).Select((angle, index) => new DataSourceValue { Value = angle.ConvertTo(angleUnit), Time = values[index].Time, Target = values[index].Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.WrapAngle:
-                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
-                        angleUnits = AngleUnits.Degrees;
+                    if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnit))
+                        angleUnit = AngleUnit.Degrees;
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = ToAngleUnits(FromAngleUnits(dataValue.Value, angleUnits).ToRange(-Math.PI, false), angleUnits), Time = dataValue.Time, Target = dataValue.Target }))
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Angle.ConvertFrom(dataValue.Value, angleUnit).ToRange(-Math.PI, false).ConvertTo(angleUnit), Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
             }
         }
 
-        private static Angle FromAngleUnits(double value, AngleUnits units)
+        private static Time FromTimeUnits(double value, TargetTimeUnit target)
         {
-            switch (units)
-            {
-                case AngleUnits.Radians:
-                    return value;
-                case AngleUnits.Degrees:
-                    return Angle.FromDegrees(value);
-                case AngleUnits.Grads:
-                    return Angle.FromGrads(value);
-                case AngleUnits.ArcMinutes:
-                    return Angle.FromArcMinutes(value);
-                case AngleUnits.ArcSeconds:
-                    return Angle.FromArcSeconds(value);
-                case AngleUnits.AngularMil:
-                    return Angle.FromAngularMil(value);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
+            double time = Time.ConvertFrom(value, target.Unit);
+
+            if (!double.IsNaN(target.Factor))
+                time *= target.Factor;
+
+            return time;
         }
 
-        private static double ToAngleUnits(Angle value, AngleUnits units)
+        private static double ToTimeUnits(Time value, TargetTimeUnit target)
         {
-            switch (units)
-            {
-                case AngleUnits.Radians:
-                    return value;
-                case AngleUnits.Degrees:
-                    return value.ToDegrees();
-                case AngleUnits.Grads:
-                    return value.ToGrads();
-                case AngleUnits.ArcMinutes:
-                    return value.ToArcMinutes();
-                case AngleUnits.ArcSeconds:
-                    return value.ToArcSeconds();
-                case AngleUnits.AngularMil:
-                    return value.ToAngularMil();
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
-        }
+            double time = value.ConvertTo(target.Unit);
 
-        private static Time FromTimeUnits(double value, TimeUnits units)
-        {
-            switch (units)
-            {
-                case TimeUnits.Seconds:
-                    return value;
-                case TimeUnits.Ticks:
-                    return new Ticks((long)value).ToSeconds();
-                case TimeUnits.Nanoseconds:
-                    return value * SI.Nano;
-                case TimeUnits.Microseconds:
-                    return value * SI.Micro;
-                case TimeUnits.Milliseconds:
-                    return value * SI.Milli;
-                case TimeUnits.Minutes:
-                    return Time.FromMinutes(value);
-                case TimeUnits.Hours:
-                    return Time.FromHours(value);
-                case TimeUnits.Days:
-                    return Time.FromDays(value);
-                case TimeUnits.Weeks:
-                    return Time.FromWeeks(value);
-                case TimeUnits.Ke:
-                    return Time.FromKe(value);
-                case TimeUnits.PlanckTime:
-                    return Time.FromPlanckTime(value);
-                case TimeUnits.AtomicUnitsOfTime:
-                    return Time.FromAtomicUnitsOfTime(value);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
-        }
+            if (!double.IsNaN(target.Factor))
+                time /= target.Factor;
 
-        private static double ToTimeUnits(Time value, TimeUnits units)
-        {
-            switch (units)
-            {
-                case TimeUnits.Seconds:
-                    return value;
-                case TimeUnits.Ticks:
-                    return Ticks.FromSeconds(value);
-                case TimeUnits.Nanoseconds:
-                    return value / SI.Nano;
-                case TimeUnits.Microseconds:
-                    return value / SI.Micro;
-                case TimeUnits.Milliseconds:
-                    return value / SI.Milli;
-                case TimeUnits.Minutes:
-                    return value.ToMinutes();
-                case TimeUnits.Hours:
-                    return value.ToHours();
-                case TimeUnits.Days:
-                    return value.ToDays();
-                case TimeUnits.Weeks:
-                    return value.ToWeeks();
-                case TimeUnits.Ke:
-                    return value.ToKe();
-                case TimeUnits.PlanckTime:
-                    return value.ToPlanckTime();
-                case TimeUnits.AtomicUnitsOfTime:
-                    return value.ToAtomicUnitsOfTime();
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
-            }
+            return time;
         }
 
         private static int ParseInt(string parameter, bool includeZero = true)
@@ -1976,14 +2016,35 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static double ParseFloat(string parameter, bool validateGTEZero = true)
+        private static double ParseFloat(string parameter, IEnumerable<DataSourceValue> source = null, bool validateGTEZero = true)
         {
             double value;
 
             parameter = parameter.Trim();
 
-            if (!double.TryParse(parameter, out value))
-                throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+            Tuple<bool, double> cache = TargetCache<Tuple<bool, double>>.GetOrAdd(parameter, () =>
+            {
+                double result;
+                bool success = double.TryParse(parameter, out result);
+                return new Tuple<bool, double>(success, result);
+            });
+
+            if (cache.Item1)
+            {
+                value = cache.Item2;
+            }
+            else
+            {
+                if ((object)source == null)
+                    throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+
+                DataSourceValue result = source.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
+
+                if (string.IsNullOrEmpty(result.Target))
+                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as a floating-point value.");
+
+                value = result.Value;
+            }
 
             if (validateGTEZero)
             {
@@ -1994,29 +2055,68 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static int ParseCount(string parameter, int length)
+        private static int ParseCount(string parameter, DataSourceValue[] values)
         {
+            int length = values.Length;
             int count;
 
             if (length == 0)
                 return 0;
 
-            if (parameter.Contains("%"))
-            {
-                double percent = ParsePercentage(parameter, false);
-                count = (int)(length * (percent / 100.0D));
+            parameter = parameter.Trim();
 
-                if (count == 0)
-                    count = 1;
+            Tuple<bool, int> cache = TargetCache<Tuple<bool, int>>.GetOrAdd(parameter, () =>
+            {
+                bool success = true;
+                int result;
+
+                if (parameter.EndsWith("%"))
+                {
+                    try
+                    {
+                        double percent = ParsePercentage(parameter, false);
+                        result = (int)(length * (percent / 100.0D));
+
+                        if (result == 0)
+                            result = 1;
+                    }
+                    catch
+                    {
+                        success = false;
+                        result = 0;
+                    }
+                }
+                else
+                {
+                    success = int.TryParse(parameter, out result);
+                }
+
+                return new Tuple<bool, int>(success, result);
+            });
+
+            if (cache.Item1)
+            {
+                count = cache.Item2;
             }
             else
             {
-                if (!int.TryParse(parameter, out count))
-                    throw new FormatException($"Could not parse '{parameter}' as an integer value.");
+                if (parameter.EndsWith("%"))
+                    throw new ArgumentOutOfRangeException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
 
-                if (count < 1)
-                    throw new ArgumentOutOfRangeException($"Count '{parameter}' is less than one.");
+                DataSourceValue result = values.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
+
+                if (string.IsNullOrEmpty(result.Target))
+                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as an integer value.");
+
+                // Treat fractional numbers as a percentage of length
+                if (result.Value > 0.0D && result.Value < 1.0D)
+                    count = (int)(length * result.Value);
+                else
+                    count = (int)result.Value;
             }
+
+            if (count < 1)
+                throw new ArgumentOutOfRangeException($"Count '{count}' is less than one.");
 
             return count;
         }

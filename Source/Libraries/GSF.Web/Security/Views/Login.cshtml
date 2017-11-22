@@ -31,14 +31,12 @@
 @{
     HttpRequestMessage request = ViewBag.Request;
 
-    string sessionToken = SessionHandler.DefaultSessionToken;
-
     string redirectPage;
     string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
     string loginPage = AuthenticationOptions.DefaultLoginPage;
-
     string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
     string loginHeader = "";
+    bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
 
     if (request.QueryParameters().TryGetValue("redir", out redirectPage))
     {
@@ -51,11 +49,10 @@
         redirectPage = "/";
     }
 
+    string redirectPageLabel = redirectPage == "/" ? "main" : "target";
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
     if ((object)options != null) {
-        sessionToken = options.SessionToken;
-
         if (!string.IsNullOrWhiteSpace(options.AuthTestPage)) {
             authTestPage = options.AuthTestPage;
         }
@@ -68,6 +65,7 @@
             clearCredentials = options.ClearCredentialsParameter;
         }
 
+        // Login header is used set custom logo and application title for page
         loginHeader = options.LoginHeader;
     }
 }
@@ -77,9 +75,9 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link href="@(Resources.Root)/Shared/Content/bootstrap.css" rel="stylesheet">
+    <title>Login</title>
+    <link href="@Resources.Root/Shared/Content/bootstrap.css" rel="stylesheet">
     @Raw(Resources.HeaderIcons)
     <style>
         body {
@@ -87,12 +85,25 @@
         }
 
         table {
-            border-radius: 5px;
-            width: 50%;
+            width: 100%;
+            table-layout: fixed;
+            border-radius: 0px;
             margin: 0px auto;
             float: none;
         }
-        
+
+        td {
+            vertical-align: top;
+        }
+
+        label.inline {
+            display: inline;
+        }
+
+        label.disabled {
+            color: #ccc;
+        }
+
         .panel-red {
             color: #a94442;
             background-color: #f2dede;
@@ -153,7 +164,7 @@
 </head>
 <body role="document">
     <span class="glyphicon glyphicon-refresh pre-cache"></span>
-    <div class="container theme-showcase" role="main" id="bodyContainer">
+    <div class="container" role="main" id="bodyContainer">
         <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12">
                 @Raw(loginHeader)
@@ -170,10 +181,35 @@
                                 <label for="password">Password:</label>
                                 <input type="password" class="form-control" id="password" />
                             </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="form-check-input" id="ntlm" />
-                                <label for="ntlm">Windows Integrated Authentication</label>
-                            </div>
+                            <table>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <input type="checkbox" id="iwa" />
+                                            <label class="inline" for="iwa">Use Integrated Windows Authentication</label>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: center">
+                                        <div class="form-group">
+                                            <input type="checkbox" id="remember" />
+                                            <label class="inline" for="remember">Keep&nbsp;me signed&nbsp;in</label>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right">
+                                        <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with cached domain&#13;credentials and do not have domain access - e.g., roaming&#13;with a laptop">
+                                            <input type="checkbox" id="ntlm" checked disabled />
+                                            <label class="inline disabled" for="ntlm" id="ntlmLabel">Use&nbsp;NTLM authentication</label>                                            
+                                            <div id="ntlmMessage" style="color: red; display: none; max-width: 200px; float: right; overflow: hidden; margin-bottom: 10px">
+                                                <small>
+                                                    WARNING: Unsecure&nbsp;connection,<br />any&nbsp;credentials passed&nbsp;to&nbsp;host
+                                                    <span style="white-space: nowrap">"@request.RequestUri.Host"</span> will&nbsp;be&nbsp;sent
+                                                    <span style="white-space: nowrap">in clear-text</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
                             <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
                         </form>
                     </div>
@@ -187,36 +223,116 @@
             </div>
         </div>
     </div>
-    <script src="@(Resources.Root)/Shared/Scripts/jquery.js"></script>
-    <script src="@(Resources.Root)/Shared/Scripts/bootstrap.js"></script>
-    <script src="@(Resources.Root)/Shared/Scripts/js.cookie.js"></script>
-    <script src="@(Resources.Root)/Shared/Scripts/gsf.web.client.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/core.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/sha256.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/enc-base64.js"></script>
-    <script src="@(Resources.Root)/Security/Scripts/ntlm.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/jquery.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/bootstrap.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/gsf.web.client.js"></script>
+    <script src="@Resources.Root/Security/Scripts/core.js"></script>
+    <script src="@Resources.Root/Security/Scripts/sha256.js"></script>
+    <script src="@Resources.Root/Security/Scripts/enc-base64.js"></script>
+    <script src="@Resources.Root/Security/Scripts/ntlm.js"></script>
     <script>
         const redirectPage = "@redirectPage";
         const securePage = "@authTestPage";
         const clearCredentialsPage = securePage + "?@clearCredentials=true";
+        const unsecureConnection = @unsecureConnection.ToString().ToLowerInvariant();
 
         function loadSettings() {
-            $("#username").val(localStorage.getItem("username"));
-            $("#ntlm").prop("checked", localStorage.getItem("ntlm") === "true").change();
+            $("#username").val(persistentStorage.getItem("username")).trigger("input");
+            $("#iwa").prop("checked", persistentStorage.getItem("iwa") === "true").change();
+            $("#remember").prop("checked", persistentStorage.getItem("remember") === "true").change();
+            $("#ntlm").prop("checked", !isIE && persistentStorage.getItem("ntlm") !== "false").change();
         }
 
         function saveSettings() {
-            localStorage.setItem("username", $("#username").val());
-            localStorage.setItem("ntlm", $("#ntlm").prop("checked"));
+            persistentStorage.setItem("username", $("#username").val());
+            persistentStorage.setItem("iwa", $("#iwa").prop("checked"));
+            persistentStorage.setItem("remember", $("#remember").prop("checked"));
+            persistentStorage.setItem("ntlm", $("#ntlm").prop("checked"));
         }
 
         function hashPassword(password) {
             return CryptoJS.SHA256(password + "0").toString(CryptoJS.enc.Base64);
         }
 
+        // Authorize user with basic authentication using provided credentials
+        function authenticateBasic(username, password) {
+            $.ajax({
+                url: securePage,
+                complete: function (xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginFailed(xhr.statusCode());
+                            break;
+                    }
+                },
+                beforeSend: function (xhr) {
+                    if (username.indexOf("\\") <= 0)
+                        password = hashPassword(password);
+
+                    xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
+                }
+            });
+        }
+
+        // Authorize user with NTLM authentication using provided domain credentials
+        function authenticateNTLM(username, password) {
+            const parts = username.split("\\");
+
+            Ntlm.setCredentials(parts[0], parts[1], password);
+                    
+            Ntlm.authenticate(securePage + "?scheme=NTLM", function(response) {
+                if (response.status === 200)
+                    loginComplete(true);
+                else
+                    loginFailed(response);
+            });
+        }
+
+        // Authorize user with pass-through basic authentication without credentials
+        // using pre-authorized authentication token cookie with remember me option
+        function passthroughBasic() {
+            $.ajax({
+                url: securePage,
+                complete: function (xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginFailed(xhr.statusCode());
+                            break;
+                    }
+                }
+            });
+        }
+
+        // Authorize user with pass-through NTLM (or negotiated) authentication without credentials,
+        // NTLM implementation on some browsers may prompt for credentials anyway
+        function passthroughNTLM() {
+            $.ajax({
+                url: securePage + "?scheme=NTLM",
+                complete: function (xhr) {
+                    switch (xhr.status) {
+                        case 200:
+                            loginComplete(true);
+                            break;
+                        default:
+                            loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
+                            break;
+                    }
+                }
+            });
+        }
+
         function loginComplete(success, response) {
             if (success) {
-                $("#response").text("Authentication succeeded, loading main page...");
+                $("#response").text("Authentication succeeded, loading @redirectPageLabel page...");
+
+                if ($("#remember").prop("checked"))
+                    persistentStorage.setItem("passthrough", "true");
 
                 setTimeout(function() {
                     window.location = redirectPage;
@@ -253,7 +369,6 @@
                 }
             }
             else {
-
                 if (success) {
                     $("#response").text("Partial Logout - Browser Credentials Only");
                     $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
@@ -285,62 +400,20 @@
                 // Attempt authentication with specifed user name and password
                 $("#response").text("Attempting authentication...");
 
-                if (username.indexOf("\\") > 0) {
-                    // Login is for domain user with NTLM support
-                    const parts = username.split("\\");
-
-                    Ntlm.setCredentials(parts[0], parts[1], password);
-                    const response = Ntlm.authenticate(securePage + "?scheme=NTLM");
-
-                    if (response.status === 200)
-                        loginComplete(true);
-                    else
-                        loginFailed(response);
-                }
-                else {
-                    // Login is for database user
-                    $.ajax({
-                        url: securePage,
-                        complete: function(xhr) {
-                            switch (xhr.status) {
-                                case 200:
-                                    loginComplete(true);
-                                    break;
-                                default:
-                                    loginFailed(xhr.statusCode());
-                                    break;
-                            }
-                        },
-                        beforeSend: function(xhr) {
-                            xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
-                        }
-                    });
-                }
+                if (username.indexOf("\\") > 0 && $("#ntlm").prop("checked"))
+                    authenticateNTLM(username, password);
+                else
+                    authenticateBasic(username, password);
             }
             else {
-                // When no user name is provided, attempt pass-through authenitcation
+                // When no user name is provided, attempt pass-through authentication
                 $("#response").text("Checking authentication...");
 
-                // If credential entry is requested, show login screen
-                if (getBool(getParameterByName("requestCredentials"))) {
-                    loginComplete(false);
-                    return;
-                }
-
                 // Test pass-through authentication
-                $.ajax({
-                    url: securePage + "?scheme=NTLM",
-                    complete: function(xhr) {
-                        switch (xhr.status) {
-                            case 200:
-                                loginComplete(true);
-                                break;
-                            default:
-                                loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
-                                break;
-                        }
-                    }
-                });
+                if ($("#iwa").prop("checked"))
+                    passthroughNTLM();
+                else
+                    passthroughBasic();
             }
         }
 
@@ -348,6 +421,8 @@
             $("#response").text("Logging out...");
             $("#workingIcon").show();
             $("#credentialsForm").hide();
+
+            persistentStorage.removeItem("passthrough");
 
             // Attempt to clear any credentials cached by browser
             clearCachedCredentials(clearCredentialsPage, function(success) {
@@ -370,22 +445,47 @@
             $("#login").disable();
             $("#responsePanel").hide();
 
-            if ($("#ntlm").prop("checked")) {
+            if ($("#iwa").prop("checked"))
                 login();
+            else
+                login($("#username").val(), $("#password").val());
+        });
+
+        $("#username").on("input", function () {
+            if ($("#username").val().indexOf("\\") > 0)
+                $("#ntlmRegion").show();
+            else
+                $("#ntlmRegion").hide();
+        });
+
+        $("#iwa").change(function() {
+            if (this.checked) {
+                $("#username").disable();
+                $("#password").disable();
+                $("#ntlm").prop("checked", !isIE).change();
+                $("#ntlm").disable();
+                $("#ntlmLabel").addClass("disabled");
+                $("#ntlmRegion").hide();
             } else {
-                const username = $("#username").val();
-                const password = $("#password").val();
-                login(username, password);
+                $("#username").enable();
+                $("#password").enable();
+
+                if (!isIE) {
+                    $("#ntlm").enable();
+                    $("#ntlmLabel").removeClass("disabled");
+                }
+                
+                if ($("#username").val().indexOf("\\") > 0)
+                    $("#ntlmRegion").show();
             }
         });
 
         $("#ntlm").change(function () {
-            if (this.checked) {
-                $("#username").disable();
-                $("#password").disable();
-            } else {
-                $("#username").enable();
-                $("#password").enable();
+            if (unsecureConnection) {
+                if (this.checked)
+                    $("#ntlmMessage").hide();
+                else
+                    $("#ntlmMessage").show();
             }
         });
 
@@ -404,7 +504,17 @@
                 $("#login").click();
         });
 
-        $("#ntlm").keyup(function (event) {
+        $("#iwa").keyup(function(event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $("#remember").keyup(function(event) {
+            if (event.keyCode === 13)
+                $("#login").click();
+        });
+
+        $("#ntlm").keyup(function(event) {
             if (event.keyCode === 13)
                 $("#login").click();
         });
@@ -417,6 +527,9 @@
 
             $(window).unload(saveSettings);
             loadSettings();
+
+            if (persistentStorage.getItem("passthrough"))
+                login();
 
             $("#username").focus();
             $("#username").select();

@@ -28,6 +28,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using GSF.IO;
+using GSF.Units;
+using GSF.Units.EE;
 
 namespace GSF.COMTRADE
 {
@@ -74,6 +76,11 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets associated COMTRADE schema for this <see cref="Parser"/>.
         /// </summary>
+        /// <remarks>
+        /// Upon assignment, any <see cref="COMTRADE.Schema.FileName"/> value will be used to
+        /// initialize the parser's initial <see cref="FileName"/> property when an associated
+        /// data file that ends with either ".dat" or ".d00" is found to exist.
+        /// </remarks>
         public Schema Schema
         {
             get
@@ -93,6 +100,21 @@ namespace GSF.COMTRADE
 
                     if (m_schema.TotalSampleRates == 0)
                         InferTimeFromSampleRates = false;
+
+                    // If no data file name is already defined, attempt to find initial data file with same
+                    // root file name as schema configuration file but with a ".dat" or ".d00" extension:
+                    if (string.IsNullOrWhiteSpace(FileName) && !string.IsNullOrWhiteSpace(m_schema.FileName))
+                    {
+                        string directory = FilePath.GetDirectoryName(m_schema.FileName);
+                        string rootFileName = FilePath.GetFileNameWithoutExtension(m_schema.FileName);
+                        string dataFile1 = Path.Combine(directory, $"{rootFileName}.dat");
+                        string dataFile2 = Path.Combine(directory, $"{rootFileName}.d00");
+
+                        if (File.Exists(dataFile1))
+                            FileName = dataFile1;
+                        else if (File.Exists(dataFile2))
+                            FileName = dataFile2;
+                    }
                 }
                 else
                 {
@@ -185,6 +207,14 @@ namespace GSF.COMTRADE
         /// </summary>
         public bool AdjustToUTC { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets target angle unit for any analog channels that are angles.
+        /// </summary>
+        /// <remarks>
+        /// When assigned, any encountered angles will be converted to the specified unit while parsing.
+        /// </remarks>
+        public AngleUnit? TargetAngleUnit { get; set; }
+
         #endregion
 
         #region [ Methods ]
@@ -234,10 +264,9 @@ namespace GSF.COMTRADE
             // Get all data files in the collection
             const string FileRegex = @"(?:\.dat|\.d\d\d)$";
             string directory = FilePath.GetDirectoryName(FileName);
-            string rootFileName = FilePath.GetFileNameWithoutExtension(FileName);
-            string extension = FilePath.GetExtension(FileName).Substring(0, 2) + "*";
-
-            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension))
+            string fileNamePattern = $"{FilePath.GetFileNameWithoutExtension(FileName)}.d*";
+            
+            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, fileNamePattern))
                 .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
                 .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
@@ -301,6 +330,7 @@ namespace GSF.COMTRADE
         // Handle ASCII file read
         private bool ReadNextAscii()
         {
+            // For ASCII files, we wrap file streams with file readers
             if ((object)m_fileReaders == null)
             {
                 m_fileReaders = new StreamReader[m_fileStreams.Length];
@@ -318,12 +348,7 @@ namespace GSF.COMTRADE
             if ((object)elems == null || elems.Length != Values.Length + 2)
             {
                 if (reader.EndOfStream)
-                {
-                    m_streamIndex++;
-
-                    // There is more to read if there is another file
-                    return m_streamIndex < m_fileStreams.Length && ReadNext();
-                }
+                    return ReadNextFile();
 
                 throw new InvalidOperationException("COMTRADE schema does not match number of elements found in ASCII data file.");
             }
@@ -361,10 +386,7 @@ namespace GSF.COMTRADE
                 Values[i] = double.Parse(elems[i + 2]);
 
                 if (i < m_schema.AnalogChannels.Length)
-                {
-                    Values[i] *= m_schema.AnalogChannels[i].Multiplier;
-                    Values[i] += m_schema.AnalogChannels[i].Adder;
-                }
+                    Values[i] = AdjustValue(Values[i], i);
             }
 
             return true;
@@ -382,47 +404,24 @@ namespace GSF.COMTRADE
 
             // See if we have reached the end of this file
             if (bytesRead == 0)
-            {
-                m_streamIndex++;
-
-                // There is more to read if there is another file
-                return m_streamIndex < m_fileStreams.Length && ReadNext();
-            }
+                return ReadNextFile();
 
             if (bytesRead == recordLength)
             {
                 int index = ReadTimestamp(buffer);
 
-                // Parse all analog record values
-                for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
-                {
-                    // Read next value
-                    Values[i] = LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
-                    index += 2;
-                }
+                index = ReadAnalogValues(buffer, index, ReadInt16, 2);
 
-                int valueIndex = m_schema.AnalogChannels.Length;
-                int digitalWords = m_schema.DigitalWords;
-                ushort digitalWord;
-
-                for (int i = 0; i < digitalWords; i++)
-                {
-                    // Read next digital word
-                    digitalWord = LittleEndian.ToUInt16(buffer, index);
-                    index += 2;
-
-                    // Distribute each bit of digital word through next 16 digital values
-                    for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
-                        Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
-                }
+                ReadDigitalValues(buffer, index);
             }
             else
             {
-                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE BINARY file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
             }
 
             return true;
         }
+
 
         // Handle binary32 file read
         private bool ReadNextBinary32()
@@ -436,43 +435,19 @@ namespace GSF.COMTRADE
 
             // See if we have reached the end of this file
             if (bytesRead == 0)
-            {
-                m_streamIndex++;
-
-                // There is more to read if there is another file
-                return m_streamIndex < m_fileStreams.Length && ReadNext();
-            }
+                return ReadNextFile();
 
             if (bytesRead == recordLength)
             {
                 int index = ReadTimestamp(buffer);
 
-                // Parse all analog record values
-                for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
-                {
-                    // Read next value
-                    Values[i] = LittleEndian.ToSingle(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
-                    index += 4;
-                }
+                index = ReadAnalogValues(buffer, index, ReadInt32, 4);
 
-                int valueIndex = m_schema.AnalogChannels.Length;
-                int digitalWords = m_schema.DigitalWords;
-                ushort digitalWord;
-
-                for (int i = 0; i < digitalWords; i++)
-                {
-                    // Read next digital word
-                    digitalWord = LittleEndian.ToUInt16(buffer, index);
-                    index += 2;
-
-                    // Distribute each bit of digital word through next 16 digital values
-                    for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
-                        Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
-                }
+                ReadDigitalValues(buffer, index);
             }
             else
             {
-                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE BINARY32 file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
             }
 
             return true;
@@ -490,46 +465,30 @@ namespace GSF.COMTRADE
 
             // See if we have reached the end of this file
             if (bytesRead == 0)
-            {
-                m_streamIndex++;
-
-                // There is more to read if there is another file
-                return m_streamIndex < m_fileStreams.Length && ReadNext();
-            }
+                return ReadNextFile();
 
             if (bytesRead == recordLength)
             {
                 int index = ReadTimestamp(buffer);
 
-                // Parse all analog record values
-                for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
-                {
-                    // Read next value
-                    Values[i] = LittleEndian.ToSingle(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
-                    index += 4;
-                }
+                index = ReadAnalogValues(buffer, index, ReadFloat, 4);
 
-                int valueIndex = m_schema.AnalogChannels.Length;
-                int digitalWords = m_schema.DigitalWords;
-                ushort digitalWord;
-
-                for (int i = 0; i < digitalWords; i++)
-                {
-                    // Read next digital word
-                    digitalWord = LittleEndian.ToUInt16(buffer, index);
-                    index += 2;
-
-                    // Distribute each bit of digital word through next 16 digital values
-                    for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
-                        Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
-                }
+                ReadDigitalValues(buffer, index);
             }
             else
             {
-                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE FLOAT32 file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
             }
 
             return true;
+        }
+
+        private bool ReadNextFile()
+        {
+            m_streamIndex++;
+
+            // See if there is more to read if there is another file
+            return m_streamIndex < m_fileStreams.Length && ReadNext();
         }
 
         private int ReadTimestamp(byte[] buffer)
@@ -570,6 +529,59 @@ namespace GSF.COMTRADE
 
             return index;
         }
+
+        private int ReadAnalogValues(byte[] buffer, int index, Func<byte[], int, double> byteConverter, int byteSize)
+        {
+            // Parse all analog record values
+            for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
+            {
+                // Read next analog value
+                Values[i] = AdjustValue(byteConverter(buffer, index), i);
+                index += byteSize;
+            }
+
+            return index;
+        }
+
+        private double AdjustValue(double value, int channelIndex)
+        {
+            AnalogChannel channel = m_schema.AnalogChannels[channelIndex];
+
+            value = value * channel.Multiplier + channel.Adder;
+
+            if (channel.SignalKind == SignalKind.Angle && TargetAngleUnit.HasValue)
+                value = Angle.ConvertFrom(value, channel.AngleUnit).ConvertTo(TargetAngleUnit.Value);
+
+            return value;
+        }
+
+        private void ReadDigitalValues(byte[] buffer, int index)
+        {
+            int valueIndex = m_schema.AnalogChannels.Length;
+
+            // Parse all digital record values
+            for (int i = 0; i < m_schema.DigitalWords; i++)
+            {
+                // Read next digital word
+                ushort digitalWord = LittleEndian.ToUInt16(buffer, index);
+                index += 2;
+
+                // Distribute each bit of digital word through next 16 digital values
+                for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
+                    Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static double ReadInt16(byte[] buffer, int startIndex) => LittleEndian.ToInt16(buffer, startIndex);
+
+        private static double ReadInt32(byte[] buffer, int startIndex) => LittleEndian.ToInt32(buffer, startIndex);
+
+        private static double ReadFloat(byte[] buffer, int startIndex) => LittleEndian.ToSingle(buffer, startIndex);
 
         #endregion
     }

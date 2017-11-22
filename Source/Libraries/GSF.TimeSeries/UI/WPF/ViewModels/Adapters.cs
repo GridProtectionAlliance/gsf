@@ -550,6 +550,8 @@ namespace GSF.TimeSeries.UI.ViewModels
                 {
                     if (m_adapterType == AdapterType.Action)
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomActionAdapter", CurrentItem.ID);
+                    else if (m_adapterType == AdapterType.Filter)
+                        RuntimeID = CommonFunctions.GetRuntimeID("CustomFilterAdapter", CurrentItem.ID);
                     else if (m_adapterType == AdapterType.Input)
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomInputAdapter", CurrentItem.ID);
                     else
@@ -590,6 +592,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             switch (type)
             {
+                case AdapterType.Filter:
+                    return typeof(IFilterAdapter);
                 case AdapterType.Input:
                     return typeof(IInputAdapter);
                 case AdapterType.Action:

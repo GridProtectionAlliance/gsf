@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.IO;
 using System.Text;
 
@@ -143,7 +144,7 @@ namespace GSF.COMTRADE
     #endregion
 
     /// <summary>
-    /// Represents the schema for a configuration file in the COMTRADE file standard, IEEE Std C37.111-1999.
+    /// Represents the schema for a configuration file in the COMTRADE file standard, IEEE Std C37.111-1999/2013.
     /// </summary>
     public class Schema
     {
@@ -175,6 +176,12 @@ namespace GSF.COMTRADE
         /// <param name="fileName">File name of configuration file to parse.</param>
         public Schema(string fileName)
         {
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException($"Configuration file \"{fileName}\" does not exist.");
+
+            // Cache configuration file name used to create schema
+            FileName = fileName;
+
             string[] lines = File.ReadAllLines(fileName);
             string[] parts;
             int lineNumber = 0;
@@ -206,13 +213,11 @@ namespace GSF.COMTRADE
             if (totalChannels != totalAnalogChannels + totalDigitalChannels)
                 throw new InvalidOperationException($"Total defined channels must equal the sum of the total number of analog and digital channel definitions.{Environment.NewLine}Image = {lines[1]}");
 
-            // Parse analog definitions
-            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
+            // Cache analog line image definitions - will parse after file type is known
+            List<string> analogLineImages = new List<string>();
 
             for (int i = 0; i < totalAnalogChannels; i++)
-                analogChannels.Add(new AnalogChannel(lines[lineNumber++], Version));
-
-            AnalogChannels = analogChannels.ToArray();
+                analogLineImages.Add(lines[lineNumber++]);
 
             // Parse digital definitions
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
@@ -248,6 +253,15 @@ namespace GSF.COMTRADE
             Enum.TryParse(lines[lineNumber++], true, out fileType);
             FileType = fileType;
 
+            // Parse analog definitions - we do this after knowing file type to better assign default linear scaling factors
+            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
+            bool targetFloatingPoint = fileType == FileType.Float32;
+
+            for (int i = 0; i < analogLineImages.Count; i++)
+                analogChannels.Add(new AnalogChannel(analogLineImages[i], Version, targetFloatingPoint));
+
+            AnalogChannels = analogChannels.ToArray();
+
             // Parse time factor
             TimeFactor = lines.Length < lineNumber ? double.Parse(lines[lineNumber++]) : 1;
 
@@ -279,6 +293,11 @@ namespace GSF.COMTRADE
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the file name used to generate this schema when constructed with one; otherwise, <c>null</c>.
+        /// </summary>
+        public string FileName { get; }
 
         /// <summary>
         /// Gets or sets free-form station name for this <see cref="Schema"/>.
@@ -343,11 +362,6 @@ namespace GSF.COMTRADE
         }
 
         /// <summary>
-        /// Gets total number of sample rates of this <see cref="Schema"/>.
-        /// </summary>
-        public int TotalSampleRates => m_sampleRates.Length == 1 && m_sampleRates[0].Rate == 0.0D ? 0 : m_sampleRates.Length;
-
-        /// <summary>
         /// Gets or sets sampling rates of this <see cref="Schema"/>. A file of phasor data will normally be made using a single sampling rate, so this will usually be 1.
         /// </summary>
         public SampleRate[] SampleRates
@@ -364,6 +378,21 @@ namespace GSF.COMTRADE
                     m_sampleRates = value;
             }
         }
+
+        /// <summary>
+        /// Gets total number of sample rates of this <see cref="Schema"/>.
+        /// </summary>
+        public int TotalSampleRates => m_sampleRates.Length == 1 && m_sampleRates[0].Rate == 0.0D ? 0 : m_sampleRates.Length;
+
+        /// <summary>
+        /// Gets total number of samples, i.e., rows per timestamp, as reported by the sample rates.
+        /// </summary>
+        public long TotalSamples => m_sampleRates.Max(sampleRate => (long)sampleRate.EndSample);
+
+        /// <summary>
+        /// Gets total number of channels values, i.e., <c>TotalChannels * TotalSamples</c>.
+        /// </summary>
+        public long TotalChannelValues => TotalChannels * TotalSamples;
 
         /// <summary>
         /// Gets or sets start timestamp of this <see cref="Schema"/>.

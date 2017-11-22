@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Power"/> value.
     /// </summary>
-    public enum PowerUnits
+    public enum PowerUnit
     {
         /// <summary>
         /// Watt power units.
@@ -231,30 +231,30 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Power"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Power"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Power"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(PowerUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Power"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(PowerUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case PowerUnits.Watts:
+                case PowerUnit.Watts:
                     return m_value;
-                case PowerUnits.Horsepower:
+                case PowerUnit.Horsepower:
                     return ToHorsepower();
-                case PowerUnits.MetricHorsepower:
+                case PowerUnit.MetricHorsepower:
                     return ToMetricHorsepower();
-                case PowerUnits.BoilerHorsepower:
+                case PowerUnit.BoilerHorsepower:
                     return ToBoilerHorsepower();
-                case PowerUnits.BTUPerSecond:
+                case PowerUnit.BTUPerSecond:
                     return ToBTUPerSecond();
-                case PowerUnits.CaloriesPerSecond:
+                case PowerUnit.CaloriesPerSecond:
                     return ToCaloriesPerSecond();
-                case PowerUnits.LitersAtmospherePerSecond:
+                case PowerUnit.LitersAtmospherePerSecond:
                     return ToLitersAtmospherePerSecond();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -911,31 +911,31 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Power"/> in watts.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Power"/> in watts.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Power"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Power ConvertFrom(double value, PowerUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Power"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Power ConvertFrom(double value, PowerUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case PowerUnits.Watts:
+                case PowerUnit.Watts:
                     return value;
-                case PowerUnits.Horsepower:
+                case PowerUnit.Horsepower:
                     return FromHorsepower(value);
-                case PowerUnits.MetricHorsepower:
+                case PowerUnit.MetricHorsepower:
                     return FromMetricHorsepower(value);
-                case PowerUnits.BoilerHorsepower:
+                case PowerUnit.BoilerHorsepower:
                     return FromBoilerHorsepower(value);
-                case PowerUnits.BTUPerSecond:
+                case PowerUnit.BTUPerSecond:
                     return FromBTUPerSecond(value);
-                case PowerUnits.CaloriesPerSecond:
+                case PowerUnit.CaloriesPerSecond:
                     return FromCaloriesPerSecond(value);
-                case PowerUnits.LitersAtmospherePerSecond:
+                case PowerUnit.LitersAtmospherePerSecond:
                     return FromLitersAtmospherePerSecond(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

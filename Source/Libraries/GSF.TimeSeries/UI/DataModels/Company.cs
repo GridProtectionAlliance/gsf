@@ -36,6 +36,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using DataType = System.ComponentModel.DataAnnotations.DataType;
 
@@ -85,7 +86,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Company acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Company acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
+        [AcronymValidation]
         public string Acronym
         {
             get
@@ -139,6 +140,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Company"/> URL.
         /// </summary>
         [DataType(DataType.Url, ErrorMessage = "Company web site address URL is not formatted properly.")]
+        [UrlValidation]
         public string URL
         {
             get

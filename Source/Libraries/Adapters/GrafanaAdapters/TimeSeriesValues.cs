@@ -49,6 +49,21 @@ namespace GrafanaAdapters
         public string target;
 
         /// <summary>
+        /// Defines a Grafana time-series underlying point tag.
+        /// </summary>
+        public string rootTarget;
+
+        /// <summary>
+        /// Defines a Grafana time-series underlying point tag latitude.
+        /// </summary>
+        public float latitude;
+
+        /// <summary>
+        /// Defines a Grafana time-series underlying point tag longitude.
+        /// </summary>
+        public float longitude;
+
+        /// <summary>
         /// Defines a Grafana time-series value data.
         /// </summary>
         /// <remarks>

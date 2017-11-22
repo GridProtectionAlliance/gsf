@@ -25,10 +25,12 @@
 @using GSF
 @using GSF.Web
 @using GSF.Web.Model
+@using GSF.Web.Shared
 @inherits ExtendedTemplateBase
 @{
     // ReSharper disable NotResolvedInText
     DataContext dataContext = ViewBag.DataContext;
+    string resourcesRoot = Url.Content("~" + Resources.Root);
 
     if (dataContext == null) {
         throw new ArgumentNullException("ViewBag.DataContext", "DataContext was not defined in ViewBag, cannot render PagedViewModel");
@@ -60,18 +62,19 @@
     );
 
     if (includeScripts) {
-        pageControlScripts.Append(@"
-    <script src=""/@GSF/Web/Shared/Scripts/knockout.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/knockout.mapping.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/knockout.validation.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/knockout.reactor.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/knockout.observableDictionary.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/js.cookie.js""></script>
-    <script src=""/@GSF/Web/Shared/Scripts/gsf.web.knockout.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/bootstrap-toolkit.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/bootstrap-datepicker.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
-    ");
+        pageControlScripts.AppendFormat(@"
+    <script src=""{0}/Shared/Scripts/knockout.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.mapping.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.validation.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.reactor.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.observableDictionary.js""></script>
+    <script src=""{0}/Shared/Scripts/js.cookie.js""></script>
+    <script src=""{0}/Shared/Scripts/gsf.web.knockout.js""></script>
+    <script src=""{0}/Model/Scripts/bootstrap-toolkit.js""></script>
+    <script src=""{0}/Model/Scripts/bootstrap-datepicker.js""></script>
+    <script src=""{0}/Model/Scripts/pagedViewModel.js""></script>
+    ",
+        resourcesRoot);
     }
 
     pageControlScripts.Append(@"
@@ -347,14 +350,14 @@
                     return;
 
                 dataHub.getConnectionID().done(function(connectionID) {{
-                    $(""#exportCSVLink"").attr(""href"", ""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx"" +
+                    $(""#exportCSVLink"").attr(""href"", ""{0}/Model/Handlers/CsvDownloadHandler.ashx"" +
                         ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
                         ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
                         ""&ConnectionID="" + encodeURIComponent(connectionID) + 
                         ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
                         ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
                         ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
-                        ""&ShowDeleted={0}&ParentKeys={1}"");
+                        ""&ShowDeleted={1}&ParentKeys={2}"");
 
                     $(""#exportCSVLink"")[0].click();
                 }}).
@@ -371,6 +374,7 @@
             }});
         }});
     ",
+        resourcesRoot,
         ViewBag.ShowDeleted ?? false,
         WebExtensions.UrlEncode((ViewBag.ParentKeys ?? "").ToString())
     );

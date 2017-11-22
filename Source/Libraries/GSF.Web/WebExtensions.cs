@@ -208,9 +208,18 @@ namespace GSF.Web
         /// </summary>
         /// <param name="script">Script text.</param>
         /// <param name="spaces">Desired forward spaces.</param>
+        /// <param name="forceFixed">Determines if exact forward spacing should forced on each line - when true, existing hierarchy will not be preserved.</param>
         /// <returns>Script with corrected forward alignment.</returns>
-        public static string FixForwardSpacing(this string script, int spaces = 4)
+        public static string FixForwardSpacing(this string script, int spaces = 4, bool forceFixed = false)
         {
+            string forwardSpacing = new string(' ', spaces);
+
+            if (forceFixed)
+            {
+                string[] lines = script.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                return string.Join(Environment.NewLine, lines.Select(line => $"{forwardSpacing}{line.TrimStart(null)}"));
+            }
+
             Tuple<string, int>[] linesAndLengths = script
                 .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
                 .Select(line => new Tuple<string, int>(line, line.Length - line.TrimStart(null).Length))
@@ -221,13 +230,9 @@ namespace GSF.Web
                 .Where(length => length.GetValueOrDefault() > 0)
                 .Min() ?? 0;
 
-            string forwardSpacing = new string(' ', spaces);
-
-            return linesAndLengths
-                .Select(lineAndLength => lineAndLength.Item2 > 0 ?
-                    $"{forwardSpacing}{(lineAndLength.Item2 > minLength ? lineAndLength.Item1.Substring(minLength) : lineAndLength.Item1)}" :
-                    lineAndLength.Item1.ToNonNullNorEmptyString())
-                .ToDelimitedString(Environment.NewLine);
+            return string.Join(Environment.NewLine, linesAndLengths.Select(lineAndLength => lineAndLength.Item2 > 0 ?
+                $"{forwardSpacing}{(lineAndLength.Item2 > minLength ? lineAndLength.Item1.Substring(minLength) : lineAndLength.Item1)}" :
+                lineAndLength.Item1.ToNonNullNorEmptyString()));
         }
 
         /// <summary>

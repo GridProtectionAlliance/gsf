@@ -32,6 +32,7 @@ using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Diagnostics;
+using System.Collections.Generic;
 
 // ReSharper disable InconsistentlySynchronizedField
 namespace GSF.TimeSeries.Adapters
@@ -117,6 +118,7 @@ namespace GSF.TimeSeries.Adapters
         private Guid m_nodeID;
         private RoutingTables m_routingTables;
         private AllAdaptersCollection m_allAdapters;
+        private FilterAdapterCollection m_filterAdapters;
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
@@ -183,12 +185,17 @@ namespace GSF.TimeSeries.Adapters
             m_allAdapters.ConfigurationChanged += ConfigurationChangedHandler;
             m_allAdapters.Disposed += DisposedHandler;
 
+            // Create filter adapters collection
+            m_filterAdapters = new FilterAdapterCollection();
+
             // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
+            m_inputAdapters.NewMeasurements += NewMeasurementsHandler;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
+            m_actionAdapters.NewMeasurements += NewMeasurementsHandler;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
             m_actionAdapters.RequestTemporalSupport += RequestTemporalSupportHandler;
 
@@ -201,10 +208,11 @@ namespace GSF.TimeSeries.Adapters
             m_routingTables.ActionAdapters = m_actionAdapters;
             m_routingTables.OutputAdapters = m_outputAdapters;
 
-            // We group these adapters such that they are initialized in the following order: output, input, action. This
-            // is done so that the archival capabilities will be setup before we start receiving input and the input data
-            // will be flowing before any actions get established for the input - at least generally.
+            // We group these adapters such that they are initialized in the following order: output, filter, input, action.
+            // This is done so that the archival capabilities will be setup before we start receiving input and the input
+            // data will be flowing before any actions get established for the input - at least generally.
             m_allAdapters.Add(m_outputAdapters);
+            m_allAdapters.Add(m_filterAdapters);
             m_allAdapters.Add(m_inputAdapters);
             m_allAdapters.Add(m_actionAdapters);
 
@@ -231,6 +239,17 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 return m_allAdapters;
+            }
+        }
+
+        /// <summary>
+        /// Gets the filter adapter collection for this <see cref="IaonSession"/>.
+        /// </summary>
+        public virtual FilterAdapterCollection FilterAdapters
+        {
+            get
+            {
+                return m_filterAdapters;
             }
         }
 
@@ -348,6 +367,13 @@ namespace GSF.TimeSeries.Adapters
                 StringBuilder status = new StringBuilder();
 
                 status.AppendLine();
+                status.AppendLine(">> Filter Adapters:");
+                status.AppendLine();
+
+                if (m_filterAdapters != null)
+                    status.AppendLine(m_filterAdapters.Status);
+
+                status.AppendLine();
                 status.AppendLine(">> Input Adapters:");
                 status.AppendLine();
 
@@ -399,19 +425,29 @@ namespace GSF.TimeSeries.Adapters
                     {
                         DataSet dataSource = DataSource;
 
+                        // Dispose filter adapters collection
+                        if ((object)m_filterAdapters != null)
+                        {
+                            m_filterAdapters.Stop();
+                            m_filterAdapters.Dispose();
+                        }
+                        m_filterAdapters = null;
+
                         // Dispose input adapters collection
-                        if (m_inputAdapters != null)
+                        if ((object)m_inputAdapters != null)
                         {
                             m_inputAdapters.Stop();
+                            m_inputAdapters.NewMeasurements -= NewMeasurementsHandler;
                             m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
                             m_inputAdapters.Dispose();
                         }
                         m_inputAdapters = null;
 
                         // Dispose action adapters collection
-                        if (m_actionAdapters != null)
+                        if ((object)m_actionAdapters != null)
                         {
                             m_actionAdapters.Stop();
+                            m_actionAdapters.NewMeasurements -= NewMeasurementsHandler;
                             m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
                             m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
                             m_actionAdapters.Dispose();
@@ -419,7 +455,7 @@ namespace GSF.TimeSeries.Adapters
                         m_actionAdapters = null;
 
                         // Dispose output adapters collection
-                        if (m_outputAdapters != null)
+                        if ((object)m_outputAdapters != null)
                         {
                             m_outputAdapters.Stop();
                             m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
@@ -838,6 +874,16 @@ namespace GSF.TimeSeries.Adapters
 
             // Bubble message up to any event subscribers
             OnUnprocessedMeasurements(sender, e.Argument);
+        }
+
+        /// <summary>
+        /// Event handler for new measurement notifications from input adapters and action adapters.
+        /// </summary>
+        /// <param name="sender">Event source reference to the adapter that is reporting new measurements.</param>
+        /// <param name="e">Event arguments for event that contains references to the new measurements.</param>
+        public virtual void NewMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e)
+        {
+            m_filterAdapters.HandleNewMeasurements(e.Argument);
         }
 
         /// <summary>

@@ -38,6 +38,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GSF.Communication;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.PhasorProtocols.BPAPDCstream;
 using GSF.PhasorProtocols.UI.DataModels;
@@ -1750,8 +1751,6 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>
         private void ValidatePdcAcronym()
         {
-            const string Pattern = "^[A-Z0-9-'!'_''.' @#\\$]+$";
-
             Device device;
             string errorMessage;
 
@@ -1769,10 +1768,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     // the PDC acronym must be specified
                     errorMessage = "PDC acronym must not be empty.";
                 }
-                else if (!Regex.IsMatch(m_pdcAcronym, Pattern))
+                else if (!Regex.IsMatch(m_pdcAcronym, AcronymValidationAttribute.ValidationPattern))
                 {
                     // Check if the acronym is formatted properly
-                    errorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.";
+                    errorMessage = AcronymValidationAttribute.DefaultErrorMessage;
                 }
                 else
                 {

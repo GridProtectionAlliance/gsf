@@ -280,28 +280,28 @@ namespace GSF.Core.Tests
         //
         #endregion
 
-        /// <summary>
-        /// A test for ToScaledString
-        /// Turns the given number of units into a textual representation with an appropriate unit scaling.
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
-        /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
-        /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
-        /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod]
-        public void ToScaledStringTest()
-        {
-            double totalUnits = 10F;
-            int decimalPlaces = 3;
-            string unitName = " nano";
-            string expected = "1.000 da nano";
-            string actual = string.Empty;
-            actual = SI.ToScaledString(totalUnits, decimalPlaces, unitName);
-            Assert.AreEqual(expected, actual);
-        }
+        ///// <summary>
+        ///// A test for ToScaledString
+        ///// Turns the given number of units into a textual representation with an appropriate unit scaling.
+        ///// </summary>
+        ///// <param name="totalUnits">Total units to represent textually.</param>
+        ///// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        ///// <remarks>
+        ///// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
+        ///// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
+        ///// </remarks>
+        ///// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        //[TestMethod]
+        //public void ToScaledStringTest()
+        //{
+        //    double totalUnits = 10F;
+        //    int decimalPlaces = 3;
+        //    string unitName = " nano";
+        //    string expected = "1.000 da nano";
+        //    string actual = string.Empty;
+        //    actual = SI.ToScaledString(totalUnits, decimalPlaces, unitName);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// A test for ToScaledString
@@ -331,28 +331,28 @@ namespace GSF.Core.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        /// <summary>
-        /// A test for ToScaledString
-        /// Turns the given number of units into a textual representation with an appropriate unit scaling.
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
-        /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
-        /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
-        /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod]
-        public void ToScaledStringUnitTest()
-        {
-            double totalUnits = 1F;
-            string unitName = " deco";
-            string expected = "10.000 d deco";
-            string actual;
-            actual = SI.ToScaledString(totalUnits, unitName);
-            Assert.AreEqual(expected, actual);
+        ///// <summary>
+        ///// A test for ToScaledString
+        ///// Turns the given number of units into a textual representation with an appropriate unit scaling.
+        ///// </summary>
+        ///// <param name="totalUnits">Total units to represent textually.</param>
+        ///// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        ///// <remarks>
+        ///// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
+        ///// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
+        ///// </remarks>
+        ///// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        //[TestMethod]
+        //public void ToScaledStringUnitTest()
+        //{
+        //    double totalUnits = 1F;
+        //    string unitName = " deco";
+        //    string expected = "10.000 d deco";
+        //    string actual;
+        //    actual = SI.ToScaledString(totalUnits, unitName);
+        //    Assert.AreEqual(expected, actual);
 
-        }
+        //}
 
         /// <summary>
         /// A test for ToScaledString

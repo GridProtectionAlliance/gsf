@@ -592,7 +592,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 if (!double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LagTime")?.ToString(), out lagTime))
                     lagTime = 60.0D;
 
-                if (!double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LagTime")?.ToString(), out leadTime))
+                if (!double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LeadTime")?.ToString(), out leadTime))
                     leadTime = 60.0D;
 
                 info = new UnsynchronizedSubscriptionInfo(true);

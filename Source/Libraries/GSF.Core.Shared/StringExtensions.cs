@@ -91,6 +91,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -99,7 +100,9 @@ using System.Threading.Tasks;
 
 namespace GSF
 {
-    /// <summary>Defines extension functions related to string manipulation.</summary>
+    /// <summary>
+    /// Defines extension functions related to string manipulation.
+    /// </summary>
     public static partial class StringExtensions
     {
         /// <summary>
@@ -218,7 +221,7 @@ namespace GSF
                 throw new ArgumentNullException(nameof(type));
 
             // Initialize culture info if not specified.
-            if ((object)culture == null)
+            if (culture == null)
                 culture = CultureInfo.InvariantCulture;
 
             try
@@ -329,7 +332,7 @@ namespace GSF
         /// </remarks>
         public static string JoinKeyValuePairs(this IDictionary<string, string> pairs, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}')
         {
-            if ((object)pairs == null)
+            if (pairs == null)
                 throw new ArgumentNullException(nameof(pairs));
 
             char[] delimiters = { parameterDelimiter, keyValueDelimiter };
@@ -384,7 +387,7 @@ namespace GSF
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}', bool ignoreDuplicateKeys = true)
         {
-            if (value == (string)null)
+            if (value == null)
                 throw new ArgumentNullException(nameof(value));
 
             if (parameterDelimiter == keyValueDelimiter ||
@@ -561,7 +564,7 @@ namespace GSF
         public static string ReplaceCharacters(this string value, char replacementCharacter, Func<char, bool> characterTestFunction)
         {
             // <pex>
-            if (characterTestFunction == (Func<char, bool>)null)
+            if (characterTestFunction == null)
                 throw new ArgumentNullException(nameof(characterTestFunction));
             // </pex>
 
@@ -593,7 +596,7 @@ namespace GSF
         public static string RemoveCharacters(this string value, Func<char, bool> characterTestFunction)
         {
             // <pex>
-            if (characterTestFunction == (Func<char, bool>)null)
+            if (characterTestFunction == null)
                 throw new ArgumentNullException(nameof(characterTestFunction));
             // </pex>
 
@@ -608,6 +611,31 @@ namespace GSF
                 character = value[x];
 
                 if (!characterTestFunction(character))
+                    result.Append(character);
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Removes all characters matching the given <paramref name="characterToRemove"/>.
+        /// </summary>
+        /// <param name="value">Input string.</param>
+        /// <param name="characterToRemove">The specific character to remove.</param>
+        /// <returns>Returns <paramref name="value" /> with all characters matching the given character removed.</returns>
+        public static string RemoveCharacter(this string value, char characterToRemove)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            StringBuilder result = new StringBuilder();
+            char character;
+
+            for (int x = 0; x < value.Length; x++)
+            {
+                character = value[x];
+
+                if (character != characterToRemove)
                     result.Append(character);
             }
 
@@ -688,7 +716,7 @@ namespace GSF
         public static string ReplaceCrLfs(this string value, char replacementCharacter)
         {
             // <pex>
-            if (value == (string)null)
+            if (value == null)
                 throw new ArgumentNullException(nameof(value));
             // </pex>
 
@@ -1064,7 +1092,7 @@ namespace GSF
         public static char RegexDecode(this string value)
         {
             // <pex>
-            if (value == (string)null)
+            if (value == null)
                 throw new ArgumentNullException(nameof(value));
             // </pex>
 
@@ -1136,7 +1164,7 @@ namespace GSF
         {
             IntPtr intPtr;
 
-            if ((object)value == null)
+            if (value == null)
                 return null;
 
             intPtr = IntPtr.Zero;
@@ -1167,7 +1195,7 @@ namespace GSF
             if (string.IsNullOrEmpty(value))
                 return "";
 
-            if ((object)culture == null)
+            if (culture == null)
                 culture = CultureInfo.CurrentCulture;
 
             return culture.TextInfo.ToTitleCase(value.ToLower());
@@ -1624,7 +1652,7 @@ namespace GSF
             if (value.Length <= length)
                 return value;
 
-            int s1_Len = (int)(length / 2) - 1;
+            int s1_Len = length / 2 - 1;
 
             return string.Concat(value.Substring(0, s1_Len), "...", value.Substring(value.Length - s1_Len + 1 - length % 2));
         }
@@ -1758,11 +1786,11 @@ namespace GSF
 
             if (AssureParseDouble)
             {
-                double test = 0.0;
+                double test;
                 if (!double.TryParse(value, out test))
                     return "0";
 
-                return test.ToString();
+                return test.ToString(CultureInfo.InvariantCulture);
             }
 
             bool isNeg = false;
@@ -1905,8 +1933,9 @@ namespace GSF
         /// <param name="value">Input string to process.</param>
         /// <param name="testString">The string to find.</param>
         /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for <paramref name="testString"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <param name="matchCase">Set to <c>false</c> for case insensitive search</param>
         /// <returns>The start (or left most) index of <paramref name="testString"/> within <paramref name="value"/> or (-1) if not found.</returns>
-        public static int IndexOfPrevious(this string value, string testString, int startIndex = 0)
+        public static int IndexOfPrevious(this string value, string testString, int startIndex = 0, bool matchCase = true)
         {
             if (string.IsNullOrEmpty(value))
                 return -1;
@@ -1926,7 +1955,7 @@ namespace GSF
             //this is the fastest way to do this 
             string s = value.Reverse();
             string v = testString.Reverse();
-            int i = s.IndexOf(v, s.Length - startIndex - 1);
+            int i = s.IndexOf(v, s.Length - startIndex - 1, matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
             if (i > -1)
                 return s.Length - i - testString.Length;
@@ -1953,15 +1982,134 @@ namespace GSF
                 return -1;
 
             if (startIndex > value.Length - 1)
-            {
                 throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
-            }
 
             for (int j = startIndex; j > -1; j--)
             {
                 if (value[j] == testChar)
                     return j;
             }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches a string from right to left for the next instance of a character passing the specified delegate.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="characterTestFunction">The delegate function used to match characters.</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin executing test function. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <returns>The index of the matching character within <paramref name="value"/> or (-1) if not found.</returns>
+        public static int IndexOfPrevious(this string value, Func<char, bool> characterTestFunction, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if ((object)characterTestFunction == null)
+                throw new ArgumentNullException(nameof(characterTestFunction));
+
+            if (startIndex < 0)
+                return -1;
+
+            if (startIndex > value.Length - 1)
+                throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
+
+            for (int j = startIndex; j > -1; j--)
+            {
+                if (characterTestFunction(value[j]))
+                    return j;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches a string from right to left for the next instance of a character that is not the specified character.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="testChar">The char to ignore.</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for a character that is not <paramref name="testChar"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <returns>The index of the character within <paramref name="value"/> or (-1) if not found.</returns>
+        public static int IndexOfPreviousNot(this string value, char testChar, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (testChar == 0)
+                return -1;
+
+            if (startIndex < 0)
+                return -1;
+
+            if (startIndex > value.Length - 1)
+                throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
+
+            for (int j = startIndex; j > -1; j--)
+            {
+                if (value[j] != testChar)
+                    return j;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches a string from right to left for the next instance of a character that is not contained in the specified collection of characters.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="anyOf">The characters to use to test find.</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin looking for characters not in <paramref name="anyOf"/>. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <returns>The index of the character within <paramref name="value"/> or (-1) if not found.</returns>
+        public static int IndexOfPreviousNot(this string value, char[] anyOf, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (anyOf == null || anyOf[0] == 0)
+                return -1;
+
+            if (startIndex < 0)
+                return -1;
+
+            if (startIndex > value.Length - 1)
+                throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
+
+            for (int j = startIndex; j > -1; j--)
+            {
+                if (!anyOf.Any(c => c == value[j]))
+                    return j;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches a string from right to left for the next instance of a character that does not pass the given delegate function.
+        /// </summary>
+        /// <param name="value">Input string to process.</param>
+        /// <param name="characterTestFunction">The character test to use.</param>
+        /// <param name="startIndex">The index in <paramref name="value"/> from which to begin testing characters. Typically length of <paramref name="value"/> minus 1."</param>
+        /// <returns>The index of the character within <paramref name="value"/> or (-1) if not found.</returns>
+        public static int IndexOfPreviousNot(this string value, Func<char, bool> characterTestFunction, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if ((object)characterTestFunction == null)
+                throw new ArgumentNullException(nameof(characterTestFunction));
+
+            if (startIndex < 0)
+                return -1;
+
+            if (startIndex > value.Length - 1)
+                throw new ArgumentException("IndexOfPrevious startIndex Invalid " + startIndex.ToString());
+
+            for (int j = startIndex; j > -1; j--)
+            {
+                if (!characterTestFunction(value[j]))
+                    return j;
+            }
+
             return -1;
         }
 
@@ -1985,7 +2133,61 @@ namespace GSF
 
             for (int i = startIndex; i < value.Length; i++)
             {
-                if (value.IndexOfAny(anyOf) == -1)
+                if (!anyOf.Any(c => value[i] == c))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Finds the first index that does not match the given <paramref name="character"/>.
+        /// </summary>
+        /// <param name="value">String to process</param>
+        /// <param name="character">the character use to test</param>
+        /// <param name="startIndex">the index at which to begin testing <paramref name="value"/></param>
+        /// <returns>The first index of a character that does NOT match <paramref name="character"/>. </returns>
+        public static int IndexOfNot(this string value, char character, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if (character == 0)
+                return -1;
+
+            if (startIndex >= value.Length)
+                return -1;
+
+            for (int i = startIndex; i < value.Length; i++)
+            {
+                if (value[i] != character)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Finds the first index that does NOT pass the <paramref name="characterTestFunction"/> delegate function.
+        /// </summary>
+        /// <param name="value">String to process</param>
+        /// <param name="characterTestFunction">the character test to use</param>
+        /// <param name="startIndex">the index at which to begin testing <paramref name="value"/></param>
+        /// <returns>The first index of a character that does NOT pass the <paramref name="characterTestFunction"/>. </returns>
+        public static int IndexOfNot(this string value, Func<char, bool> characterTestFunction, int startIndex = 0)
+        {
+            if (string.IsNullOrEmpty(value))
+                return -1;
+
+            if ((object)characterTestFunction == null)
+                throw new ArgumentNullException(nameof(characterTestFunction));
+
+            if (startIndex >= value.Length)
+                return -1;
+
+            for (int i = startIndex; i < value.Length; i++)
+            {
+                if (!characterTestFunction(value[i]))
                     return i;
             }
 
@@ -2035,21 +2237,22 @@ namespace GSF
         /// <param name="value">The string to process</param>
         /// <param name="quoteChar">The quote char to use.  Default is double quote. Due to trimming, quoteChar of whitespace is not allowed.</param>
         /// <remarks> 
-        ///           To remove all quote chars at beginning and end of a string regardless of match use .Trim('\"')  It's faster.
+        ///           To remove all quote chars at beginning and end of a string regardless of match use .Trim('"')  It's faster.
         ///           Three consecutive quotes assures a singe quote char in output.
         /// </remarks>
-        /// <returns>The sent string with matched surrounding double quotes removed.</returns>
-        public static string quoteUnwrap(this string value, char quoteChar = '\"')
+        /// <returns>The sent string with matched surrounding quotes removed.</returns>
+        public static string QuoteUnwrap(this string value, char quoteChar = '"')
         {
             if (string.IsNullOrEmpty(value))
                 return string.Empty;
 
             string s = value.Trim();
+
             if (s.Length <= 1)
                 return value;
 
             if (quoteChar == ' ')
-                throw new ArgumentOutOfRangeException("quoteChar cannot be space (Character 32).");
+                throw new ArgumentOutOfRangeException(nameof(quoteChar), "quoteChar cannot be space (Character 32).");
 
             string assuredQuote = new string(quoteChar, 3);
             const char marker = (char)2;
@@ -2059,10 +2262,9 @@ namespace GSF
             s = s.Replace(assuredQuote, markerString);
 
             int quoteCount = s.CharCount(quoteChar);
+
             if (quoteCount > 2 && quoteCount % 2 == 0)  //even number and more than two quotes, assume that quotes are important to retain.
-            {
                 return s.Replace(markerString, quoteString);
-            }
 
             while (s.IndexOf(quoteChar) == 0)  //work off front of string -- and reduce it.
             {
@@ -2071,8 +2273,10 @@ namespace GSF
                     s = s.Substring(1, s.Length - 2);
                     int nq = s.IndexOf(quoteChar);
                     int ns = s.IndexOf(' ');
+
                     if (nq > -1 && ns > -1 && nq > ns)  //allow white spaces between quotes -- but don't strip spaces following quotes
-                        s.Trim();
+                        s = s.Trim();
+
                     if (s.Length <= 1)
                         return s.Replace(markerString, quoteString);
                 }
@@ -2081,27 +2285,26 @@ namespace GSF
                     break;
                 }
             }
+
             return s.Replace(markerString, quoteString);
         }
 
         /// <summary>
-        /// 
+        /// Unwraps quotes similar to Excel.  However, a little more predictable for unusual edge cases.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="quoteChars"></param>
-        /// <returns></returns>
-        public static string quoteUnwrap(this string value, char[] quoteChars)
+        /// <param name="value">The string to process</param>
+        /// <param name="quoteChars">The collection of quote chars to use. Due to trimming, whitespace is not allowed.</param>
+        /// <returns>The sent string with matched surrounding quote chars removed.</returns>
+        public static string QuoteUnwrap(this string value, char[] quoteChars)
         {
             if (string.IsNullOrEmpty(value))
                 return string.Empty;
 
-            if (quoteChars == null || quoteChars[0] == 0)
+            if (quoteChars == null || quoteChars.Length == 0 || quoteChars[0] == 0)
                 return value;
 
             foreach (char c in quoteChars)
-            {
-                value = value.quoteUnwrap(c);
-            }
+                value = value.QuoteUnwrap(c);
 
             return value;
         }

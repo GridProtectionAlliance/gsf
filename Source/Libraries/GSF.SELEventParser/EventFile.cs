@@ -119,7 +119,7 @@ namespace GSF.SELEventParser
             return Parse(filename, 60.0D);
         }
 
-        public static EventFile Parse(string filename, double systemFrequency)
+        public static EventFile Parse(string filename, double systemFrequency, double maxFileDuration = 0.0D)
         {
             string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
 
@@ -158,8 +158,7 @@ namespace GSF.SELEventParser
                 }
                 else if (command.ToUpper().Contains("CEV") || filename.ToUpper().Contains(".CEV"))
                 {
-                    parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, ref lineIndex);
-                    parsedCommaSeparatedEventReport.Command = (command.ToUpper().Contains("FID") ? command.Split('\"')[0] : command);
+                    parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, filename, maxFileDuration);
                     parsedFile.Add(parsedCommaSeparatedEventReport);
                     parsed = true;
                 }
@@ -176,8 +175,7 @@ namespace GSF.SELEventParser
                     // We can attempt to glean if it is a cev by checking if the 3rd line can be split by commas.
                     if(lines[2].Split(',').Count() > 1)
                     {
-                        parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, ref lineIndex);
-                        parsedCommaSeparatedEventReport.Command = (command.ToUpper().Contains("FID") ? command.Split('\"')[0] : command);
+                        parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, filename);
                         parsedFile.Add(parsedCommaSeparatedEventReport);
                         parsed = true;
                     }

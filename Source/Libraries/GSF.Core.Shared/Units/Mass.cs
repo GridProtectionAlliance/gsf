@@ -77,7 +77,7 @@ namespace GSF.Units
     /// <summary>
     /// Represents the units available for a <see cref="Mass"/> value.
     /// </summary>
-    public enum MassUnits
+    public enum MassUnit
     {
         /// <summary>
         /// Kilogram mass units.
@@ -230,30 +230,30 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <see cref="Mass"/> to the specified <paramref name="targetUnits"/>.
+        /// Converts the <see cref="Mass"/> to the specified <paramref name="targetUnit"/>.
         /// </summary>
-        /// <param name="targetUnits">Target units.</param>
-        /// <returns><see cref="Mass"/> converted to <paramref name="targetUnits"/>.</returns>
-        public double ConvertTo(MassUnits targetUnits)
+        /// <param name="targetUnit">Target units.</param>
+        /// <returns><see cref="Mass"/> converted to <paramref name="targetUnit"/>.</returns>
+        public double ConvertTo(MassUnit targetUnit)
         {
-            switch (targetUnits)
+            switch (targetUnit)
             {
-                case MassUnits.Kilograms:
+                case MassUnit.Kilograms:
                     return m_value;
-                case MassUnits.Ounces:
+                case MassUnit.Ounces:
                     return ToOunces();
-                case MassUnits.Pounds:
+                case MassUnit.Pounds:
                     return ToPounds();
-                case MassUnits.MetricPounds:
+                case MassUnit.MetricPounds:
                     return ToMetricPounds();
-                case MassUnits.Tons:
+                case MassUnit.Tons:
                     return ToTons();
-                case MassUnits.MectricTons:
+                case MassUnit.MectricTons:
                     return ToMetricTons();
-                case MassUnits.LongTons:
+                case MassUnit.LongTons:
                     return ToLongTons();
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(targetUnits), targetUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(targetUnit), targetUnit, null);
             }
         }
 
@@ -911,31 +911,31 @@ namespace GSF.Units
         }
 
         /// <summary>
-        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnits"/> to a new <see cref="Mass"/> in kilograms.
+        /// Converts the <paramref name="value"/> in the specified <paramref name="sourceUnit"/> to a new <see cref="Mass"/> in kilograms.
         /// </summary>
         /// <param name="value">Source value.</param>
-        /// <param name="sourceUnits">Source value units.</param>
-        /// <returns>New <see cref="Mass"/> from the specified <paramref name="value"/> in <paramref name="sourceUnits"/>.</returns>
-        public static Mass ConvertFrom(double value, MassUnits sourceUnits)
+        /// <param name="sourceUnit">Source value units.</param>
+        /// <returns>New <see cref="Mass"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        public static Mass ConvertFrom(double value, MassUnit sourceUnit)
         {
-            switch (sourceUnits)
+            switch (sourceUnit)
             {
-                case MassUnits.Kilograms:
+                case MassUnit.Kilograms:
                     return value;
-                case MassUnits.Ounces:
+                case MassUnit.Ounces:
                     return FromOunces(value);
-                case MassUnits.Pounds:
+                case MassUnit.Pounds:
                     return FromPounds(value);
-                case MassUnits.MetricPounds:
+                case MassUnit.MetricPounds:
                     return FromMetricPounds(value);
-                case MassUnits.Tons:
+                case MassUnit.Tons:
                     return FromTons(value);
-                case MassUnits.MectricTons:
+                case MassUnit.MectricTons:
                     return FromMetricTons(value);
-                case MassUnits.LongTons:
+                case MassUnit.LongTons:
                     return FromLongTons(value);
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(sourceUnits), sourceUnits, null);
+                    throw new ArgumentOutOfRangeException(nameof(sourceUnit), sourceUnit, null);
             }
         }
 

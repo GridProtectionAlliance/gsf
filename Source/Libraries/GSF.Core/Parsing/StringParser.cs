@@ -19,10 +19,9 @@
 //  07/01/2017 - F. Russell Robertson
 //       Generated original version of source code.
 //
-//******************************************************************************************************using System;
+//******************************************************************************************************
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace GSF.Parsing
@@ -30,7 +29,7 @@ namespace GSF.Parsing
     /// <summary>
     /// Like the Excel CSV Parser, only better.
     /// </summary>
-    public class StringParser
+    public static class StringParser
     {
         private const char quoteDoubleChar = '\"';
         private const char quoteSingleChar = '\"';
@@ -318,11 +317,11 @@ namespace GSF.Parsing
             }
 
             int count = 1;
-            int indexPos = inString.IndexOf(token, startIndex);
+            int indexPos = inString.IndexOf(token, startIndex, StringComparison.Ordinal);
 
             while (indexPos > -1 && count != occurrenceCount)
             {
-                indexPos = inString.IndexOf(token, indexPos + 1);
+                indexPos = inString.IndexOf(token, indexPos + 1, StringComparison.Ordinal);
                 count++;
             }
             return indexPos;
@@ -502,14 +501,14 @@ namespace GSF.Parsing
                 closeToken = closeToken.ToLower();
             }
 
-            int openTokenIndex = inString.IndexOf(openToken, startIndex);
+            int openTokenIndex = inString.IndexOf(openToken, startIndex, StringComparison.Ordinal);
             if (openTokenIndex < 0)
                 return -1;
 
             if (startIndex + openToken.Length > inString.Length)
                 return -1;
 
-            int closeTokenIndex = inString.IndexOf(closeToken, openTokenIndex + openToken.Length);
+            int closeTokenIndex = inString.IndexOf(closeToken, openTokenIndex + openToken.Length, StringComparison.Ordinal);
             if (closeTokenIndex < 0)
                 return -1;
 
@@ -581,7 +580,6 @@ namespace GSF.Parsing
         /// <remarks>The string.split method is about 4 times faster.</remarks>
         public static string[] ParseStandardCSV(string inString, int startIndex = 0, bool removeResultQuotes = true)
         {
-
             if (string.IsNullOrEmpty(inString))
                 return null;
 
@@ -594,7 +592,7 @@ namespace GSF.Parsing
             if (nextQ < 0 && nextD < 0)  //no quote, no delimiter
                 return new string[] { inString };
 
-            string[] p = new string[workingArraySize];
+            string[] parsedValues = new string[workingArraySize];
             int index = 0;
 
             while (true)
@@ -610,6 +608,7 @@ namespace GSF.Parsing
 
                         //find the close quote.
                         int closeQ = inString.IndexOf(quoteDoubleChar, nextQ + 1);
+
                         if (closeQ > -1)
                         {
                             //where is the next delimiter
@@ -624,58 +623,64 @@ namespace GSF.Parsing
                         if (nextD < 0)
                         {
                             if (removeResultQuotes)
-                                p[index] = inString.Substring(startIndex).quoteUnwrap();
+                                parsedValues[index] = inString.Substring(startIndex).QuoteUnwrap();
                             else
-                                p[index] = inString.Substring(startIndex);
+                                parsedValues[index] = inString.Substring(startIndex);
 
-                            Array.Resize(ref p, index + 1);
-                            return p;
+                            Array.Resize(ref parsedValues, index + 1);
+                            return parsedValues;
                         }
                         else
                         {
                             if (removeResultQuotes)
-                                p[index] = inString.Substring(startIndex, nextD - startIndex).quoteUnwrap();
+                                parsedValues[index] = inString.Substring(startIndex, nextD - startIndex).QuoteUnwrap();
                             else
-                                p[index] = inString.Substring(startIndex, nextD - startIndex);
+                                parsedValues[index] = inString.Substring(startIndex, nextD - startIndex);
+
                             startIndex = nextD + 1;
                         }
+                    }
+                    else  //delimiter prior to quote, parse it
+                    {
+                        parsedValues[index] = inString.Substring(startIndex, nextD - startIndex);
+                        startIndex = nextD + 1;
                     }
                 }
                 else if (nextD < 0 && nextQ < 0)  //we're done
                 {
                     if (removeResultQuotes)
-                        p[index] = inString.Substring(startIndex).quoteUnwrap();
+                        parsedValues[index] = inString.Substring(startIndex).QuoteUnwrap();
                     else
-                        p[index] = inString.Substring(startIndex);
+                        parsedValues[index] = inString.Substring(startIndex);
 
-                    Array.Resize(ref p, index + 1);
-                    return p;
+                    Array.Resize(ref parsedValues, index + 1);
+                    return parsedValues;
                 }
                 else if (nextD < 0) //no remaining delimiter, but have quote
                 {
                     if (removeResultQuotes)
-                        p[index] = inString.Substring(startIndex).quoteUnwrap();
+                        parsedValues[index] = inString.Substring(startIndex).QuoteUnwrap();
                     else
-                        p[index] = inString.Substring(startIndex);
+                        parsedValues[index] = inString.Substring(startIndex);
 
-                    Array.Resize(ref p, index + 1);
-                    return p;
+                    Array.Resize(ref parsedValues, index + 1);
+                    return parsedValues;
                 }
                 else //nextQ < 0, no remaining quote, at least one remaining delimiter
                 {
-                    p[index] = inString.Substring(startIndex, nextD - startIndex).Trim();
+                    parsedValues[index] = inString.Substring(startIndex, nextD - startIndex).Trim();
                     startIndex = nextD + 1;
                 }
 
                 nextQ = IndexOfNextToken(inString, quoteDoubleChar, startIndex);
                 nextD = IndexOfNextToken(inString, commaChar, startIndex);
 
-                if (++index >= p.Length)
-                    Array.Resize(ref p, p.Length + workingArraySize);
+                if (++index >= parsedValues.Length)
+                    Array.Resize(ref parsedValues, parsedValues.Length + workingArraySize);
             }
 
-            Array.Resize(ref p, index + 1);
-            return p;
+            Array.Resize(ref parsedValues, index + 1);
+            return parsedValues;
         }
 
         /// <summary>
@@ -741,7 +746,7 @@ namespace GSF.Parsing
                         if (nextD < 0)
                         {
                             if (removeResultQuotes)
-                                p[index] = inString.Substring(startIndex).quoteUnwrap(quoteChars);
+                                p[index] = inString.Substring(startIndex).QuoteUnwrap(quoteChars);
                             else
                                 p[index] = inString.Substring(startIndex);
 
@@ -751,7 +756,7 @@ namespace GSF.Parsing
                         else
                         {
                             if (removeResultQuotes)
-                                p[index] = inString.Substring(startIndex, nextD - startIndex).quoteUnwrap(quoteChars);
+                                p[index] = inString.Substring(startIndex, nextD - startIndex).QuoteUnwrap(quoteChars);
                             else
                                 p[index] = inString.Substring(startIndex, nextD - startIndex);
                             startIndex = nextD + 1;
@@ -761,7 +766,7 @@ namespace GSF.Parsing
                 else if (nextD < 0 && nextQ < 0)  //we're done
                 {
                     if (removeResultQuotes)
-                        p[index] = inString.Substring(startIndex).quoteUnwrap();
+                        p[index] = inString.Substring(startIndex).QuoteUnwrap();
                     else
                         p[index] = inString.Substring(startIndex);
 
@@ -771,7 +776,7 @@ namespace GSF.Parsing
                 else if (nextD < 0) //no remaining delimiter, but have quote
                 {
                     if (removeResultQuotes)
-                        p[index] = inString.Substring(startIndex).quoteUnwrap(quoteChars);
+                        p[index] = inString.Substring(startIndex).QuoteUnwrap(quoteChars);
                     else
                         p[index] = inString.Substring(startIndex);
 
@@ -796,12 +801,13 @@ namespace GSF.Parsing
         }
 
         /// <summary>
-        /// 
+        /// Parses strings and validates they match expected type codes.
         /// </summary>
         /// <param name="parsedStrings"></param>
         /// <param name="expectedTypeCodes"></param>
         /// <param name="values">the returned values from the try parse.</param>
         /// <returns>TRUE if all values parse successfully.</returns>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static bool ParseCheck(string[] parsedStrings, TypeCode[] expectedTypeCodes, out object[] values)
         {
             values = null;
@@ -1001,6 +1007,99 @@ namespace GSF.Parsing
             }
 
             return checkParse;
+        }
+
+        /// <summary>
+        /// Validates that expected field names match field names found.
+        /// </summary>
+        /// <param name="expectedFieldNames"></param>
+        /// <param name="actualFieldNames"></param>
+        /// <param name="matchCase">Set to TRUE to require case to match.</param>
+        /// <param name="length">The number of fields to check.  Less than 1 sets length to expectedFieldName length</param>
+        /// <returns></returns>
+        public static bool ExpectedFieldNamesMatch(string[] expectedFieldNames, string[] actualFieldNames, bool matchCase = true, int length = 0)
+        {
+            if (expectedFieldNames == null || actualFieldNames == null)
+                return false;
+
+            if (length <= 0 || length > expectedFieldNames.Length)
+                length = expectedFieldNames.Length;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (i == actualFieldNames.Length)
+                    return false;
+
+                if (matchCase)
+                {
+                    if (!string.Equals(expectedFieldNames[i], actualFieldNames[i]))
+                        return false;
+                }
+                else
+                {
+                    if (!string.Equals(expectedFieldNames[i].ToUpper(), actualFieldNames[i].ToUpper()))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Finds the index of the first matching (or containing) field name
+        /// </summary>
+        /// <param name="fieldNameValueSought">the field name to find</param>
+        /// <param name="fieldNames">the string array of fields</param>
+        /// <param name="matchCase">set to FALSE for case insensitive tests</param>
+        /// <param name="contains">Set to TRUE to find index that CONTAINS the fileNameValueSought</param>
+        /// <returns></returns>
+        public static int FindIndex(string fieldNameValueSought, string[] fieldNames, bool matchCase = true, bool contains = false)
+        {
+            if (fieldNames == null || fieldNames.Length == 0 || string.IsNullOrEmpty(fieldNameValueSought))
+                return -1;
+
+            if (!matchCase)
+                fieldNameValueSought = fieldNameValueSought.ToUpper();
+
+            fieldNameValueSought = fieldNameValueSought.Trim();
+
+            if (fieldNameValueSought.Length == 0)
+                return -1;
+
+            if (contains)
+            {
+                for (int i = 0; i < fieldNames.Length; i++)
+                {
+                    if (matchCase)
+                    {
+                        if (fieldNames[i].Contains(fieldNameValueSought))
+                            return i;
+                    }
+                    else
+                    {
+                        if (fieldNames[i].ToUpper().Contains(fieldNameValueSought))
+                            return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            for (int i = 0; i < fieldNames.Length; i++)
+            {
+                if (matchCase)
+                {
+                    if (string.Equals(fieldNameValueSought, fieldNames[i]))
+                        return i;
+                }
+                else
+                {
+                    if (string.Equals(fieldNameValueSought, fieldNames[i].ToUpper()))
+                        return i;
+                }
+            }
+
+            return -1;
         }
     }
 }

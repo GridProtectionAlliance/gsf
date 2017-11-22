@@ -100,7 +100,7 @@ namespace PhasorProtocolAdapters
 
                     cutOff = Ticks.AlignToSubsecondDistribution(RealTime - LagTicks, FramesPerSecond, TimeResolution);
                     missingFrameCount = (int)Math.Round((cutOff - m_lastFrameTimestamp) / TicksPerFrame);
-                    m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
+                    m_missingData += missingFrameCount > m_redundantFramesPerPacket ? missingFrameCount - m_redundantFramesPerPacket : 0;
                     m_lastFrameTimestamp = cutOff;
 
                     return m_missingData;
@@ -130,7 +130,7 @@ namespace PhasorProtocolAdapters
                 int missingFrameCount;
 
                 missingFrameCount = (int)Math.Round((frame.Timestamp - m_lastFrameTimestamp) / TicksPerFrame);
-                m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
+                m_missingData += missingFrameCount > m_redundantFramesPerPacket ? missingFrameCount - m_redundantFramesPerPacket : 0;
                 m_lastFrameTimestamp = frame.Timestamp;
             }
 
@@ -175,6 +175,7 @@ namespace PhasorProtocolAdapters
         private double m_leadTime;
         private long m_timeResolution;
         private bool m_countOnlyMappedMeasurements;
+        private bool m_injectBadData;
 
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
@@ -719,6 +720,8 @@ namespace PhasorProtocolAdapters
                 status.AppendLine();
                 status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
                 status.AppendLine();
+                status.AppendFormat("           Inject bad data: {0}", m_injectBadData ? "Yes" : "No");
+                status.AppendLine();
 
                 if (m_allowUseOfCachedConfiguration)
                 {
@@ -765,8 +768,8 @@ namespace PhasorProtocolAdapters
                     if ((object)m_frameParser != null && (object)m_frameParser.ConfigurationFrame != null)
                     {
                         // Attempt to lookup by label (if defined), then by ID code
-                        if (((object)m_labelDefinedDevices != null && (object)definedDevice.StationName != null &&
-                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice)) ||
+                        if ((object)m_labelDefinedDevices != null && (object)definedDevice.StationName != null &&
+                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice) ||
                             m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(definedDevice.IDCode, out parsedDevice))
                             stationName = parsedDevice.StationName;
                     }
@@ -998,6 +1001,8 @@ namespace PhasorProtocolAdapters
             // For captured data simulations we will inject a simulated timestamp and auto-repeat file stream...
             if (frameParser.TransportProtocol == TransportProtocol.File)
             {
+                DateTime replayTime;
+
                 if (settings.TryGetValue("definedFrameRate", out setting))
                     frameParser.DefinedFrameRate = int.Parse(setting);
                 else
@@ -1012,13 +1017,23 @@ namespace PhasorProtocolAdapters
                     frameParser.UseHighResolutionInputTimer = setting.ParseBoolean();
                 else
                     frameParser.UseHighResolutionInputTimer = false;
+
+                if (settings.TryGetValue("replayStartTime", out setting) && DateTime.TryParse(setting, out replayTime))
+                    frameParser.ReplayStartTime = replayTime;
+                else
+                    FrameParser.ReplayStartTime = DateTime.MinValue;
+
+                if (settings.TryGetValue("replayStopTime", out setting) && DateTime.TryParse(setting, out replayTime))
+                    frameParser.ReplayStopTime = replayTime;
+                else
+                    FrameParser.ReplayStartTime = DateTime.MaxValue;
             }
 
             // Apply other settings as needed
             if (settings.TryGetValue("simulateTimestamp", out setting))
                 frameParser.InjectSimulatedTimestamp = setting.ParseBoolean();
             else
-                frameParser.InjectSimulatedTimestamp = (frameParser.TransportProtocol == TransportProtocol.File);
+                frameParser.InjectSimulatedTimestamp = frameParser.TransportProtocol == TransportProtocol.File;
 
             if (settings.TryGetValue("allowedParsingExceptions", out setting))
                 frameParser.AllowedParsingExceptions = int.Parse(setting);
@@ -1168,7 +1183,7 @@ namespace PhasorProtocolAdapters
                     {
                         // Create status display string for expected device
                         deviceStatus.Append("   Device ");
-                        deviceStatus.Append((index++).ToString("00"));
+                        deviceStatus.Append(index++.ToString("00"));
                         deviceStatus.Append(": ");
                         deviceStatus.Append(definedDevice.StationName);
                         deviceStatus.Append(" (");
@@ -1281,6 +1296,15 @@ namespace PhasorProtocolAdapters
             }
 
             OnStatusMessage(MessageLevel.Info, $"Loaded {definedMeasurements.Count} active device measurements...", "Loading");
+        }
+
+        /// <summary>
+        /// Toggles the flag that determines whether to inject the bad data state flag into the stream.
+        /// </summary>
+        [AdapterCommand("Toggles the flag that determines whether to inject the bad data state flag into the stream.")]
+        public void ToggleBadData()
+        {
+            m_injectBadData = !m_injectBadData;
         }
 
         /// <summary>
@@ -1610,6 +1634,9 @@ namespace PhasorProtocolAdapters
         /// <param name="parsedMeasurement">The parsed <see cref="IMeasurement"/> value.</param>
         protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, MeasurementMetadata metadata, IMeasurement parsedMeasurement)
         {
+            if (metadata == MeasurementMetadata.Undefined)
+                return;
+
             if ((object)metadata == null)
                 return;
 
@@ -1694,8 +1721,8 @@ namespace PhasorProtocolAdapters
                 try
                 {
                     // Lookup device by its label (if needed), then by its ID code
-                    if (((object)m_labelDefinedDevices != null &&
-                        m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out statisticsHelper)) ||
+                    if ((object)m_labelDefinedDevices != null &&
+                        m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out statisticsHelper) ||
                         m_definedDevices.TryGetValue(parsedDevice.IDCode, out statisticsHelper))
                     {
                         definedDevice = statisticsHelper.Device;
@@ -1706,6 +1733,9 @@ namespace PhasorProtocolAdapters
 
                         // Track quality statistics for this device
                         definedDevice.TotalFrames++;
+
+                        if (m_injectBadData)
+                            parsedDevice.DataIsValid = false;
 
                         if (!parsedDevice.DataIsValid)
                             definedDevice.DataQualityErrors++;

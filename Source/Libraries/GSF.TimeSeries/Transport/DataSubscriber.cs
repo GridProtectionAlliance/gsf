@@ -540,6 +540,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_includeTime;
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
+        private bool m_useSourcePrefixNames;
         private bool m_useLocalClockAsRealTime;
         private bool m_metadataRefreshPending;
         private int m_metadataSynchronizationTimeout;
@@ -636,6 +637,7 @@ namespace GSF.TimeSeries.Transport
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
             m_useLocalClockAsRealTime = true;
+            m_useSourcePrefixNames = true;
         }
 
         #endregion
@@ -745,6 +747,23 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_autoSynchronizeMetadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if child devices associated with a subscription
+        /// should be prefixed with the subscription name and an exclamation point to ensure
+        /// device name uniqueness - recommended value is <c>true</c>.
+        /// </summary>
+        public bool UseSourcePrefixNames
+        {
+            get
+            {
+                return m_useSourcePrefixNames;
+            }
+            set
+            {
+                m_useSourcePrefixNames = value;
             }
         }
 
@@ -1608,6 +1627,10 @@ namespace GSF.TimeSeries.Transport
             // Check if synchronize meta-data is explicitly enabled or disabled
             if (settings.TryGetValue("synchronizeMetadata", out setting))
                 m_autoSynchronizeMetadata = setting.ParseBoolean();
+
+            // Determine if source name prefixes should be applied during metadata synchronization
+            if (settings.TryGetValue("useSourcePrefixNames", out setting))
+                m_useSourcePrefixNames = setting.ParseBoolean();
 
             // Define data loss interval
             if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out interval))
@@ -2655,7 +2678,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
         public virtual void LogDataGap(string timeString)
         {
-            DateTimeOffset start = default(DateTimeOffset);
+            DateTimeOffset start;
             DateTimeOffset end = default(DateTimeOffset);
             string[] split = timeString.Split(';');
 
@@ -2685,7 +2708,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Removes a data gap from data gap recovery.", "Administrator", "Editor")]
         public virtual string RemoveDataGap(string timeString)
         {
-            DateTimeOffset start = default(DateTimeOffset);
+            DateTimeOffset start;
             DateTimeOffset end = default(DateTimeOffset);
             string[] split = timeString.Split(';');
 
@@ -3651,7 +3674,7 @@ namespace GSF.TimeSeries.Transport
                         InitSyncProgress(metadata.Tables.Cast<DataTable>().Select(dataTable => (long)dataTable.Rows.Count).Sum() + 3);
 
                         // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
-                        string sourcePrefix = Name + "!";
+                        string sourcePrefix = m_useSourcePrefixNames ? Name + "!" : "";
                         Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                         string deviceAcronym, signalTypeAcronym;
                         decimal longitude, latitude;
@@ -4036,7 +4059,10 @@ namespace GSF.TimeSeries.Transport
                         // Check to see if data for the "PhasorDetail" table was included in the meta-data
                         if (metadata.Tables.Contains("PhasorDetail"))
                         {
+                            DataTable phasorDetail = metadata.Tables["PhasorDetail"];
                             Dictionary<int, List<int>> definedSourceIndicies = new Dictionary<int, List<int>>();
+                            Dictionary<int, int> metadataToDatabaseIDMap = new Dictionary<int, int>();
+                            Dictionary<int, int> sourceToDestinationIDMap = new Dictionary<int, int>();
 
                             // Phasor data is normally only needed so that the user can properly generate a mirrored IEEE C37.118 output stream from the source data.
                             // This is necessary since, in this protocol, the phasors are described (i.e., labeled) as a unit (i.e., as a complex number) instead of
@@ -4054,7 +4080,18 @@ namespace GSF.TimeSeries.Transport
                             // Define SQL statement to delete a phasor record
                             string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0}", "deviceID");
 
-                            foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
+                            // Define SQL statement to query phasor record ID
+                            string queryPhasorIDSql = database.ParameterizedQueryString("SELECT ID FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
+
+                            // Define SQL statement to update destinationPhasorID field of existing phasor record
+                            string updateDestinationPhasorIDSql = database.ParameterizedQueryString("UPDATE Phasor SET DestinationPhasorID = {0} WHERE ID = {1}", "destinationPhasorID", "id");
+
+                            // Check existence of optional meta-data fields
+                            DataColumnCollection phasorDetailColumns = phasorDetail.Columns;
+                            bool phasorIDFieldExists = phasorDetailColumns.Contains("ID");
+                            bool destinationPhasorIDFieldExists = phasorDetailColumns.Contains("DestinationPhasorID");
+
+                            foreach (DataRow row in phasorDetail.Rows)
                             {
                                 // Get device acronym
                                 deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
@@ -4080,24 +4117,50 @@ namespace GSF.TimeSeries.Transport
 
                                     deviceID = deviceIDs[deviceAcronym];
 
+                                    int sourceIndex = row.ConvertField<int>("SourceIndex");
+
                                     // Determine if phasor record already exists
-                                    if (Convert.ToInt32(command.ExecuteScalar(phasorExistsSql, m_metadataSynchronizationTimeout, deviceID, row.ConvertField<int>("SourceIndex"))) == 0)
+                                    if (Convert.ToInt32(command.ExecuteScalar(phasorExistsSql, m_metadataSynchronizationTimeout, deviceID, sourceIndex)) == 0)
                                     {
                                         // Insert new phasor record
-                                        command.ExecuteNonQuery(insertPhasorSql, m_metadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), row.ConvertField<int>("SourceIndex"));
+                                        command.ExecuteNonQuery(insertPhasorSql, m_metadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), sourceIndex);
                                     }
                                     else if (recordNeedsUpdating)
                                     {
                                         // Update existing phasor record
-                                        command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.ConvertField<int>("SourceIndex"));
+                                        command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, sourceIndex);
+                                    }
+
+                                    if (phasorIDFieldExists && destinationPhasorIDFieldExists)
+                                    {
+                                        int sourcePhasorID = row.ConvertField<int>("ID");
+
+                                        // Using ConvertNullableField extension since publisher could use SQLite database in which case
+                                        // all integers would arrive in data set as longs and need to be converted back to integers
+                                        int? destinationPhasorID = row.ConvertNullableField<int>("DestinationPhasorID");
+
+                                        if (destinationPhasorID.HasValue)
+                                            sourceToDestinationIDMap[sourcePhasorID] = destinationPhasorID.Value;
+
+                                        // Map all metadata phasor IDs to associated local database phasor IDs
+                                        metadataToDatabaseIDMap[sourcePhasorID] = Convert.ToInt32(command.ExecuteScalar(queryPhasorIDSql, m_metadataSynchronizationTimeout, deviceID, sourceIndex));
                                     }
 
                                     // Track defined phasors for each device
-                                    definedSourceIndicies.GetOrAdd(deviceID, id => new List<int>()).Add(row.ConvertField<int>("SourceIndex"));
+                                    definedSourceIndicies.GetOrAdd(deviceID, id => new List<int>()).Add(sourceIndex);
                                 }
 
                                 // Periodically notify user about synchronization progress
                                 UpdateSyncProgress();
+                            }
+
+                            // Once all phasor records have been processed, handle updating of destination phasor IDs
+                            foreach (KeyValuePair<int, int> item in sourceToDestinationIDMap)
+                            {
+                                int sourcePhasorID, destinationPhasorID;
+
+                                if (metadataToDatabaseIDMap.TryGetValue(item.Key, out sourcePhasorID) && metadataToDatabaseIDMap.TryGetValue(item.Value, out destinationPhasorID))
+                                    command.ExecuteNonQuery(updateDestinationPhasorIDSql, m_metadataSynchronizationTimeout, destinationPhasorID, sourcePhasorID);
                             }
 
                             // Remove any phasor records associated with existing devices in this session but no longer exist in the meta-data

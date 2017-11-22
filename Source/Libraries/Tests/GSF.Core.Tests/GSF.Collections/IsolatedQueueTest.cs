@@ -38,7 +38,7 @@ namespace GSF.Core.Tests.GSF.Collections
         private const int cnt = 1000000;
         private ManualResetEvent m_wait;
 
-        [TestMethod]
+        //[TestMethod]
         public void BenchmarkWrite()
         {
 
@@ -94,7 +94,7 @@ namespace GSF.Core.Tests.GSF.Collections
             System.Console.WriteLine(swDequeue.Elapsed.TotalSeconds);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void BenchmarkBulkWrite()
         {
 
@@ -145,7 +145,7 @@ namespace GSF.Core.Tests.GSF.Collections
             System.Console.WriteLine(swDequeue.Elapsed.TotalSeconds);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void BenchmarkConcurrentQueue()
         {
 

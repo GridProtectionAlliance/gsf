@@ -2530,8 +2530,10 @@ namespace GSF.ServiceProcess
                         securityProvider.PassthroughPrincipal = windowsPrincipal;
                         securityProvider.SecurePassword = client.SecureClientPassword;
 
+                        securityProvider.RefreshData();
+
                         if (!securityProvider.Authenticate())
-                            throw new SecurityException($"Authentication failed for user '{client.ClientUsername}'.");
+                            throw new SecurityException($"Authentication failed for user '{client.ClientUsername}'. Reason: {securityProvider.AuthenticationFailureReason}");
 
                         // Create the security principal to provide role-based authentication lookups
                         SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);

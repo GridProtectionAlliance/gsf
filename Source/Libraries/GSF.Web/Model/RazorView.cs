@@ -230,12 +230,13 @@ namespace GSF.Web.Model
                 if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
                     dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
 
+                m_viewBag.AddValue("Application", s_applicationCache);
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", request);
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
                 m_viewBag.AddValue("WebServerOptions", WebServerOptions);
-                m_viewBag.AddValue("AuthenticationOptions", GetAuthenticationOptions(request));
+                m_viewBag.AddValue("AuthenticationOptions", ReadonlyAuthenticationOptions.GetAuthenticationOptions(request));
 
                 // See if a client session identifier has been defined for this execution request
                 Guid sessionID;
@@ -276,21 +277,6 @@ namespace GSF.Web.Model
             return Task.Run(() => Execute(request, response, isPost), cancellationToken);
         }
 
-        private ReadonlyAuthenticationOptions GetAuthenticationOptions(HttpRequestMessage request)
-        {
-            object value;
-
-            if (request.Properties.TryGetValue("MS_OwinContext", out value))
-            {
-                IOwinContext context = value as IOwinContext;
-
-                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
-                    return value as ReadonlyAuthenticationOptions;
-            }
-
-            return null;
-        }
-
         #endregion
 
         #region [ Static ]
@@ -303,6 +289,7 @@ namespace GSF.Web.Model
         public static event EventHandler<EventArgs<Guid, DynamicViewBag>> SessionExpired;
 
         // Static Fields
+        private static readonly DynamicViewBag s_applicationCache;
         private static readonly Timer s_sessionCacheMonitor;
         private static readonly ConcurrentDictionary<Guid, Tuple<DynamicViewBag, Ticks>> s_sessionCache;
 
@@ -316,6 +303,7 @@ namespace GSF.Web.Model
             SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
             SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
 
+            s_applicationCache = new DynamicViewBag();
             s_sessionCacheMonitor = new Timer(SessionMonitorInterval);
             s_sessionCacheMonitor.Elapsed += s_sessionCacheMonitor_Elapsed;
             s_sessionCacheMonitor.Enabled = false;
