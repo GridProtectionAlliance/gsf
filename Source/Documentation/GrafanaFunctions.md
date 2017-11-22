@@ -20,23 +20,23 @@ Series functions can operate over the set of defined series, producing a single 
 
 ## Series Functions
 
-Various functions are available that can be applied to each series that comes from a specified expression, see [full list](#available-functions) below. Series expressions can be an individual listing of point tag names, Guids or measurement keys separated by semi-colons - or - a [filter expression](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Documentation/FilterExpressions.md) that will select several series at once. Filter expressions and individual points, with or without functions, may be selected simultaneously when separated with semi-colons:
+Various functions are available that can be applied to each series that come from a specified expression, see full list of [available functions](#available-functions) below. Series expressions can be an individual listing of point tag names, Guids or measurement keys separated by semi-colons - or - a [filter expression](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Documentation/FilterExpressions.md) that will select several series at once. Filter expressions and individual points, with or without functions, may be selected simultaneously when separated with semi-colons:
 
-* Example: `PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))`
+* Example: `PPA:15; STAT:20; SetSum(Count(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); Range(PPA:99; Sum(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))`
 
-Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where available, a named target available from the expression. Named targets only work with group operations, i.e., [Set](#set) or [Slice](#slice), that provide access to multiple series values. The actual value used for a named target parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
+Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where applicable, a named target available from the expression. Named targets only work with group operations, i.e., [Set](#set) or [Slice](#slice), since group operations provide access to multiple series values from within a single series. The actual value used for a named target parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
 
-To better understand named targets, follow these examples:
+To better understand named targets, follow these example steps:
 
-* The following expression produces two unwrapped voltage phase angle trends:\
+ 1. The following expression produces two unwrapped voltage phase angle series:
 
     `UnwrapAngle(DOM_GPLAINS-BUS1:VH, TVA_SHELBY-BUS1:VH)`
 
- * You could then subtract one of the values from both of the series at every 1/30 of a second slice:
+ 2. You could then subtract values in one of the series from both of the series at every 1/30 of a second slice:
 
     `SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH, TVA_SHELBY-BUS1:VH))`
 
- * Finally you could exclude zero values from the trend since one series will now always be zero:
+ 3. Finally you could exclude zero values from the trend since one series will now always be zero:
 
     `ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH, TVA_SHELBY-BUS1:VH)))`
 
