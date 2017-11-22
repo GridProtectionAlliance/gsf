@@ -79,6 +79,7 @@
     <Compile Include="Services\SerializableOutOfRangeMeasurement.cs" />
     <Compile Include="Services\SerializableRangeTest.cs" />
     <Compile Include="Services\SerializableRangeTestCollection.cs" />
+    <Compile Include="StateFlagsTransferAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
