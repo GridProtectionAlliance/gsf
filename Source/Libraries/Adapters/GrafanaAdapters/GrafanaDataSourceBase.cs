@@ -697,24 +697,40 @@ namespace GrafanaAdapters
 
             foreach (TimeSeriesValues values in annotationData)
             {
-                string target = values.target;
-                DataRow definition = definitions[target];
+                DataRow definition;
+                string[] parts = values.target.Split(',');
+                string target;
 
-                foreach (double[] datapoint in values.datapoints)
+                // Remove "Interval(0, {target})" from target if defined
+                if (parts.Length > 1)
                 {
-                    if (type.IsApplicable(datapoint))
+                    target = parts[1].Trim();
+                    target = target.Length > 1 ? target.Substring(0, target.Length - 1).Trim() : parts[0].Trim();
+                }
+                else
+                {
+                    target = parts[0].Trim();
+                }
+
+                if (definitions.TryGetValue(target, out definition))
+                {
+                    foreach (double[] datapoint in values.datapoints)
                     {
-                        AnnotationResponse response = new AnnotationResponse
+                        if (type.IsApplicable(datapoint))
                         {
-                            annotation = request.annotation,
-                            time = datapoint[TimeSeriesValues.Time]
-                        };
+                            AnnotationResponse response = new AnnotationResponse
+                            {
+                                annotation = request.annotation,
+                                time = datapoint[TimeSeriesValues.Time]
+                            };
 
-                        type.PopulateResponse(response, target, definition, datapoint, Metadata);
+                            type.PopulateResponse(response, target, definition, datapoint, Metadata);
 
-                        responses.Add(response);
+                            responses.Add(response);
+                        }
                     }
                 }
+
             }
 
             return responses;

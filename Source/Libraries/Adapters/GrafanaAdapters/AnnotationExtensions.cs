@@ -158,12 +158,14 @@ namespace GrafanaAdapters
             if ((object)targets == null)
                 throw new ArgumentNullException(nameof(targets));
 
+            // Create annotation query request for full resolution data using "Interval(0, {target})"
+            // function so that any encountered alarms not will not be down-sampled
             return new QueryRequest
             {
                 range = request.range,
                 rangeRaw = request.rangeRaw,
                 interval = "*",
-                targets = targets.Select((target, index) => new Target { refId = $"ID{index}", target = target }).ToList(),
+                targets = targets.Select((target, index) => new Target { refId = $"ID{index}", target = $"Interval(0, {target})" }).ToList(),
                 format = "json",
                 maxDataPoints = maxDataPoints
             };
