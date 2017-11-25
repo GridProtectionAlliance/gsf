@@ -105,7 +105,8 @@ namespace DynamicCalculator
         private string m_imports;
         private bool m_supportsTemporalProcessing;
         private bool m_skipNanOutput;
-        private bool m_useConcentrator;
+        private bool m_useLatestValues;
+        private double m_sentinelValue;
         private TimestampSource m_timestampSource;
 
         private readonly ImmediateMeasurements m_latestMeasurements;
@@ -274,21 +275,39 @@ namespace DynamicCalculator
         public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
-        /// Gets or sets the flag indicating whether to concentrate
-        /// incoming data or to just use the latest received values.
+        /// Gets or sets the flag indicating whether to use the latest
+        /// received values to fill in values missing from the current frame.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the flag indicating if this adapter should concentrate incoming data."),
+        Description("Define the flag indicating if this adapter should use latest values for missing measurements."),
         DefaultValue(true)]
-        public bool UseConcentrator
+        public bool UseLatestValues
         {
             get
             {
-                return m_useConcentrator;
+                return m_useLatestValues;
             }
             set
             {
-                m_useConcentrator = value;
+                m_useLatestValues = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the value used when no other value can be determined for a variable.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the value used when no other value can be determined for a variable.")
+        DefaultValue(double.NaN)]
+        public double SentinelValue
+        {
+            get
+            {
+                return m_sentinelValue;
+            }
+            set
+            {
+                m_sentinelValue = value;
             }
         }
 
@@ -355,23 +374,11 @@ namespace DynamicCalculator
         {
             get
             {
-                if (m_useConcentrator)
-                {
-                    switch (m_timestampSource)
-                    {
-                        case TimestampSource.RealTime:
-                            return base.RealTime;
-
-                        case TimestampSource.LocalClock:
-                            return DateTime.UtcNow;
-
-                        default:
-                            return m_latestTimestamp;
-                    }
-                }
-
                 switch (m_timestampSource)
                 {
+                    case TimestampSource.RealTime:
+                        return base.RealTime;
+
                     case TimestampSource.LocalClock:
                         return DateTime.UtcNow;
 
@@ -396,26 +403,6 @@ namespace DynamicCalculator
             string setting;
 
             settings = Settings;
-
-            // Load useConcentrator setting before other parameters in case we
-            // need to inject defaults for FramesPerSecond, LagTime, and LeadTime
-            if (settings.TryGetValue("useConcentrator", out setting))
-                m_useConcentrator = setting.ParseBoolean();
-            else
-                m_useConcentrator = true;
-
-            if (!m_useConcentrator)
-            {
-                if (!settings.ContainsKey("FramesPerSecond"))
-                    settings.Add("FramesPerSecond", "30");
-
-                if (!settings.ContainsKey("LagTime"))
-                    settings.Add("LagTime", "3");
-
-                if (!settings.ContainsKey("LeadTime"))
-                    settings.Add("LeadTime", "1");
-            }
-
             base.Initialize();
 
             if (OutputMeasurements?.Length != 1)
@@ -464,6 +451,16 @@ namespace DynamicCalculator
             else
                 CalculationInterval = 0;
 
+            if (settings.TryGetValue("useLatestValues", out setting))
+                m_useLatestValues = setting.ParseBoolean();
+            else
+                m_useLatestValues = true;
+
+            if (settings.TryGetValue("sentinelValue", out setting))
+                m_sentinelValue = double.Parse(setting);
+            else
+                m_sentinelValue = double.NaN;
+
             m_latestMeasurements.LagTime = LagTime;
             m_latestMeasurements.LeadTime = LeadTime;
         }
@@ -476,23 +473,8 @@ namespace DynamicCalculator
         {
             base.Start();
 
-            if (!m_useConcentrator && m_timerOperation.Delay > 0)
+            if (m_useLatestValues && m_timerOperation.Delay > 0)
                 m_timerOperation.RunOnceAsync();
-        }
-
-        /// <summary>
-        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
-        /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for processing.</param>
-        /// <remarks>
-        /// Measurements are filtered against the defined <see cref="IAdapter.InputMeasurementKeys"/>.
-        /// </remarks>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            if (m_useConcentrator)
-                base.QueueMeasurementsForProcessing(measurements);
-            else
-                ProcessMeasurements(measurements);
         }
 
         /// <summary>
@@ -504,7 +486,11 @@ namespace DynamicCalculator
         protected override void PublishFrame(IFrame frame, int index)
         {
             m_latestTimestamp = frame.Timestamp;
-            Calculate(frame.Measurements);
+
+            if (m_useLatestValues)
+                ProcessMeasurements(frame.Measurements.Values);
+            else
+                Calculate(frame.Measurements);
         }
 
         /// <summary>
@@ -560,7 +546,7 @@ namespace DynamicCalculator
                 if (measurements.TryGetValue(key, out measurement))
                     m_expressionContext.Variables[name] = measurement.AdjustedValue;
                 else
-                    m_expressionContext.Variables[name] = double.NaN;
+                    m_expressionContext.Variables[name] = m_sentinelValue;
             }
 
             // Compile the expression if it has not been compiled already
