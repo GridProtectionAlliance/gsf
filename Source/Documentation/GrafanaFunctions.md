@@ -1,6 +1,6 @@
 # GSF Grafana Functions
 
-The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-set basis. The following defines the available functions and group operations that are available for a data source implementing the GSF Grafana interface, e.g., [openHistorian](https://github.com/GridProtectionAlliance/openHistorian). Note that any data source that implements the [GrafanaDataSourceBase](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Libraries/Adapters/GrafanaAdapters/GrafanaDataSourceBase.cs) class will automatically inherit this functionality.
+The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-group basis. The following defines the [available functions](#available-functions) and group operations that are available for a data source implementing the GSF Grafana interface, e.g., [openHistorian](https://github.com/GridProtectionAlliance/openHistorian). Note that any data source that implements the [GrafanaDataSourceBase](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Libraries/Adapters/GrafanaAdapters/GrafanaDataSourceBase.cs) class will automatically inherit this functionality.
 
 ## Group Operations
 
@@ -20,7 +20,25 @@ Series functions can operate over the set of defined series, producing a single 
 
 ## Series Functions
 
-Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where available, a named target available from the expression. For named targets the value used as the parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
+Various functions are available that can be applied to each series that come from a specified expression, see full list of [available functions](#available-functions) below. Series expressions can be an individual listing of point tag names, Guids or measurement keys separated by semi-colons - or - a [filter expression](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Documentation/FilterExpressions.md) that will select several series at once. Filter expressions and individual points, with or without functions, may be selected simultaneously when separated with semi-colons:
+
+* Example: `PPA:15; STAT:20; SetSum(Count(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); Range(PPA:99; Sum(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))`
+
+Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where applicable, a named target available from the expression. Named targets only work with group operations, i.e., [Set](#set) or [Slice](#slice), since group operations provide access to multiple series values from within a single series. The actual value used for a named target parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice.
+
+To better understand named targets, follow these example steps:
+
+ 1. The following expression produces two unwrapped voltage phase angle series:
+
+    `UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)`
+
+ 2. You could then subtract values in one of the series from values in both of the series at every 1/30 of a second slice:
+
+    `SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`
+
+ 3. Finally you could exclude zero values from the trends since values in one series will now always be zero - this effectively removes the zero value trend:
+
+    `ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)))`
 
 ### Execution Modes
 Each of the series functions include documentation for the mode of execution required by the function. These modes determine the level of processing expense and memory burden incurred by the function. The impacts of the execution modes increase as the time-range or resolution of the series data increases.

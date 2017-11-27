@@ -23,11 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -57,6 +57,7 @@ namespace GSF.Web.Security
             {
             }
 
+            [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
             public Credential(Stream stream)
             {
                 byte[] protectedCredentials;
@@ -70,7 +71,7 @@ namespace GSF.Web.Security
                 byte[] credentials = ProtectedData.Unprotect(protectedCredentials, null, DataProtectionScope.LocalMachine);
 
                 using (MemoryStream memStream = new MemoryStream(credentials))
-                using (BinaryReader memReader = new BinaryReader(memStream, Encoding.Unicode))
+                using (BinaryReader memReader = new BinaryReader(memStream, Encoding.Unicode, true))
                 {
                     Validator = memReader.ReadString();
                     Username = memReader.ReadString();
@@ -84,20 +85,24 @@ namespace GSF.Web.Security
             #region [ Properties ]
 
             public string Validator { get; set; }
+
             public string Username { get; set; }
+
             public string Password { get; set; }
+
             public DateTime Expiration { get; set; }
 
             #endregion
 
             #region [ Methods ]
 
+            [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
             public void WriteTo(Stream stream)
             {
                 byte[] credentials;
 
                 using (MemoryStream memStream = new MemoryStream())
-                using (BinaryWriter memWriter = new BinaryWriter(memStream, Encoding.Unicode))
+                using (BinaryWriter memWriter = new BinaryWriter(memStream, Encoding.Unicode, true))
                 {
                     memWriter.Write(Validator);
                     memWriter.Write(Username);
