@@ -228,7 +228,7 @@ namespace GSF.TimeSeries.Reports
                  "--level4threshold=\" {1} \" " +
                  "--level3threshold=\" {2} \" " +
                  "--level4alias=\" {3} \" " +
-                 "--level3alias=\" {4} \"" +
+                 "--level3alias=\" {4} \" " +
                  "--GenerateCsvReport=\" {5} \"",
                  base.GetArguments(),
                  Level4Threshold,
