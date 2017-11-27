@@ -399,7 +399,7 @@ namespace GSF.TimeSeries.Reports
             {
                 return FilePath.GetFileList(reportLocation)
                     .Select(FilePath.GetFileName)
-                    .Where(IsReportFileName)
+                    .Where(filename => IsReportFileName(filename) && Path.GetExtension(filename).ToLower() == ".pdf")
                     .ToList();
             }
 
