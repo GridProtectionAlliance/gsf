@@ -31,6 +31,7 @@ using GSF;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
+using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
 namespace FileAdapters
@@ -123,8 +124,34 @@ namespace FileAdapters
         /// </summary>
         public const bool DefaultRedirectErrorToHostEnvironment = true;
 
+        /// <summary>
+        /// Default value for the <see cref="ProcessOutputAsLogMessages"/> property.
+        /// </summary>
+        public const bool DefaultProcessOutputAsLogMessages = false;
+
+        /// <summary>
+        /// Default value for the <see cref="LogMessageTextToken"/> property.
+        /// </summary>
+        public const string DefaultLogMessageTextToken = "msg=";
+
+        /// <summary>
+        /// Default value for the <see cref="LogMessageLevelToken"/> property.
+        /// </summary>
+        public const string DefaultLogMessageLevelToken = "lvl=";
+
+        /// <summary>
+        /// Default value for the <see cref="LogMessageLevelMappingConnectionString"/> property.
+        /// </summary>
+        public const string DefaultLogMessageLevelMappingConnectionString = "info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug";
+
+        /// <summary>
+        /// Default value for the <see cref="ForceKillOnDispose"/> property.
+        /// </summary>
+        public const bool DefaultForceKillOnDispose = false;
+
         // Fields
         private readonly Process m_process;
+        private readonly Dictionary<string, MessageLevel> m_messageLevelMap;
         private bool m_supportsTemporalProcessing;
         private long m_inputLinesProcessed;
         private long m_outputLinesProcessed;
@@ -141,6 +168,7 @@ namespace FileAdapters
         public ProcessLauncher()
         {
             m_process = new Process();
+            m_messageLevelMap = new Dictionary<string, MessageLevel>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -174,7 +202,7 @@ namespace FileAdapters
         /// Gets or sets working directory to use when launching the process.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define working directory to use when launching the process. Defaults to current working directory as set by hosting environment."),
+        Description("Define working directory to use when launching the process. Defaults to path of executable to launch."),
         DefaultValue(DefaultWorkingDirectory)]
         public string WorkingDirectory { get; set; } = DefaultWorkingDirectory;
 
@@ -275,6 +303,133 @@ namespace FileAdapters
         public bool RedirectErrorToHostEnvironment { get; set; } = DefaultRedirectErrorToHostEnvironment;
 
         /// <summary>
+        /// Gets or sets flag that determines if redirected output should attempt parse as formatted log messages, e.g.: lvl=info msg="log message".
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define flag that determines if redirected output should attempt parse as formatted log messages, e.g.: lvl=info msg=\"log message\"."),
+        DefaultValue(DefaultProcessOutputAsLogMessages)]
+        public bool ProcessOutputAsLogMessages { get; set; } = DefaultProcessOutputAsLogMessages;
+
+        /// <summary>
+        /// Gets or sets token used to find log message text when redirected output is processed as formatted log messages.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define token used to find log message text when redirected output is processed as formatted log messages."),
+        DefaultValue(DefaultLogMessageTextToken)]
+        public string LogMessageTextToken { get; set; } = DefaultLogMessageTextToken;
+
+        /// <summary>
+        /// Gets or sets token used to find log message level when redirected output is processed as formatted log messages.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define token used to find log message level when redirected output is processed as formatted log messages."),
+        DefaultValue(DefaultLogMessageLevelToken)]
+        public string LogMessageLevelToken { get; set; } = DefaultLogMessageLevelToken;
+
+        /// <summary>
+        /// Gets or sets log level mappings connecLtion string to use when redirected output is processed as formatted log messages.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define log level mappings connection string to use when redirected output is processed as formatted log messages. Format is \"log_level_name=GSF.Diagnostics.MessageLevel\", for example: info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug"),
+        DefaultValue(DefaultLogMessageLevelMappingConnectionString)]
+        public string LogMessageLevelMappingConnectionString { get; set; } = DefaultLogMessageLevelMappingConnectionString;
+
+        /// <summary>
+        /// Gets or sets flag that determines if launched process should be forcibly terminated when adapter is disposed.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define flag that determines if launched process should be forcibly terminated when adapter is disposed."),
+        DefaultValue(DefaultForceKillOnDispose)]
+        public bool ForceKillOnDispose { get; set; } = DefaultForceKillOnDispose;
+
+        #region [ Hidden Properties ]
+
+        // The following common adapter properties are marked as never browse by an
+        // editor since the properties are not used by the ProcessLauncher adapter
+
+        /// <summary>
+        /// Property hidden - not used by <see cref="ProcessLauncher"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public new MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+            }
+        }
+
+        /// <summary>
+        /// Property hidden - not used by <see cref="ProcessLauncher"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public new IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return base.OutputMeasurements;
+            }
+            set
+            {
+                base.OutputMeasurements = value;
+            }
+        }
+
+        /// <summary>
+        /// Property hidden - not used by <see cref="ProcessLauncher"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public new int FramesPerSecond
+        {
+            get
+            {
+                return base.FramesPerSecond;
+            }
+            set
+            {
+                base.FramesPerSecond = value;
+            }
+        }
+
+        /// <summary>
+        /// Property hidden - not used by <see cref="ProcessLauncher"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public new double LagTime
+        {
+            get
+            {
+                return base.LagTime;
+            }
+            set
+            {
+                base.LagTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Property hidden - not used by <see cref="ProcessLauncher"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public new double LeadTime
+        {
+            get
+            {
+                return base.LeadTime;
+            }
+            set
+            {
+                base.LeadTime = value;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
         /// Returns the detailed status of the data input source.
         /// </summary>
         /// <remarks>
@@ -291,72 +446,76 @@ namespace FileAdapters
 
                 status.Append(base.Status);
                 status.AppendLine($"       Executable filename: {FilePath.TrimFileName(FileName, 51)}");
-
-                try
-                {
-                    FileVersionInfo version = m_process.MainModule.FileVersionInfo;
-
-                    status.AppendLine($"   Executable file version: {version.FileVersion}");
-
-                    if (!string.IsNullOrWhiteSpace(version.FileDescription))
-                        status.AppendLine($"    Executable description: {version.FileDescription}");
-
-                    if (!string.IsNullOrWhiteSpace(version.Comments))
-                        status.AppendLine($"       Executable comments: {version.Comments}");
-
-                    if (!string.IsNullOrWhiteSpace(version.CompanyName))
-                        status.AppendLine($"   Executable company name: {version.CompanyName}");
-
-                    if (!string.IsNullOrWhiteSpace(version.LegalCopyright))
-                        status.AppendLine($"      Executable copyright: {version.LegalCopyright}");
-
-                    status.AppendLine($" Executable is debug build: {version.IsDebug}");
-                    status.AppendLine($"       Executable language: {version.Language}");
-
-                    if (!string.IsNullOrWhiteSpace(version.OriginalFilename))
-                        status.AppendLine($"  Executable original name: {version.OriginalFilename}");
-
-                    if (!string.IsNullOrWhiteSpace(version.InternalName))
-                        status.AppendLine($"  Executable internal name: {version.InternalName}");
-
-                    if (!string.IsNullOrWhiteSpace(version.ProductName))
-                        status.AppendLine($"   Executable product name: {version.ProductName}");
-
-                    if (!string.IsNullOrWhiteSpace(version.ProductVersion))
-                        status.AppendLine($"Executable product version: {version.ProductVersion}");
-                }
-                catch
-                {
-                    status.AppendLine("       Version information: [unavailable]");
-                }
-
                 status.AppendLine($"         Working directory: {FilePath.TrimFileName(WorkingDirectory, 51)}");
-                status.AppendLine($"              Process name: {m_process.ProcessName}");
-                status.AppendLine($"             OS Process ID: {m_process.Id}");
-                status.AppendLine($"        Process start time: {m_process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
-                status.AppendLine($"     Process is responding: {m_process.Responding}");
-                status.AppendLine($"     Process base priority: {m_process.BasePriority}");
-                status.AppendLine($"        Process has exited: {m_process.HasExited}");
 
-                if (m_process.HasExited)
+                if (Initialized)
                 {
-                    status.AppendLine($"         Process exit code: {m_process.ExitCode}");
-                    status.AppendLine($"         Process exit time: {m_process.ExitTime:yyyy-MM-dd HH:mm:ss.fff}");
-                    status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
-                    status.AppendLine($"            Total run-time: {(m_process.ExitTime - m_process.StartTime).ToElapsedTimeString()}");
-                }
-                else
-                {
-                    status.AppendLine($"      Process thread count: {m_process.Threads:N0}");
-                    status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
-                    status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
-                    status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
+                    try
+                    {
+                        FileVersionInfo version = m_process.MainModule.FileVersionInfo;
+
+                        status.AppendLine($"   Executable file version: {version.FileVersion}");
+
+                        if (!string.IsNullOrWhiteSpace(version.FileDescription))
+                            status.AppendLine($"    Executable description: {version.FileDescription}");
+
+                        if (!string.IsNullOrWhiteSpace(version.Comments))
+                            status.AppendLine($"       Executable comments: {version.Comments}");
+
+                        if (!string.IsNullOrWhiteSpace(version.CompanyName))
+                            status.AppendLine($"   Executable company name: {version.CompanyName}");
+
+                        if (!string.IsNullOrWhiteSpace(version.LegalCopyright))
+                            status.AppendLine($"      Executable copyright: {version.LegalCopyright}");
+
+                        status.AppendLine($" Executable is debug build: {version.IsDebug}");
+                        status.AppendLine($"       Executable language: {version.Language}");
+
+                        if (!string.IsNullOrWhiteSpace(version.OriginalFilename))
+                            status.AppendLine($"  Executable original name: {version.OriginalFilename}");
+
+                        if (!string.IsNullOrWhiteSpace(version.InternalName))
+                            status.AppendLine($"  Executable internal name: {version.InternalName}");
+
+                        if (!string.IsNullOrWhiteSpace(version.ProductName))
+                            status.AppendLine($"   Executable product name: {version.ProductName}");
+
+                        if (!string.IsNullOrWhiteSpace(version.ProductVersion))
+                            status.AppendLine($"Executable product version: {version.ProductVersion}");
+                    }
+                    catch
+                    {
+                        status.AppendLine("       Version information: [unavailable]");
+                    }
+
+                    if (m_process.HasExited)
+                    {
+                        status.AppendLine("        Process has exited: True");
+                        status.AppendLine($"         Process exit code: {m_process.ExitCode}");
+                        status.AppendLine($"         Process exit time: {m_process.ExitTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
+                        status.AppendLine($"            Total run-time: {(m_process.ExitTime - ((DateTime)StartTime).ToLocalTime()).ToElapsedTimeString()}");
+                    }
+                    else
+                    {
+                        status.AppendLine($"     Process is responding: {m_process.Responding}");
+                        status.AppendLine($"              Process name: {m_process.ProcessName}");
+                        status.AppendLine($"        Process start time: {m_process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        status.AppendLine($"             OS Process ID: {m_process.Id}");
+                        status.AppendLine($"     Process base priority: {m_process.BasePriority}");
+                        status.AppendLine($"      Process thread count: {m_process.Threads:N0}");
+                        status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
+                        status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
+                        status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
+                    }
                 }
 
                 status.AppendLine($"    Initial input filename: {FilePath.TrimFileName(InitialInputFileName, 51)}");
                 status.AppendLine($"     Input lines processed: {m_inputLinesProcessed:N0}");
                 status.AppendLine($"    Output lines processed: {m_outputLinesProcessed:N0}");
                 status.AppendLine($"     Error lines processed: {m_errorLinesProcessed:N0}");
+                status.AppendLine($"   Process as log messages: {ProcessOutputAsLogMessages}");
+                status.AppendLine($"   Forcing kill on dispose: {ForceKillOnDispose}");
 
                 return status.ToString();
             }
@@ -372,42 +531,34 @@ namespace FileAdapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {			
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    
-                    if (disposing)
+            if (m_disposed)
+                return;
+
+            try
+            {			
+                if (disposing)
+                {
+                    if (ForceKillOnDispose)
                     {
                         try
                         {
-                            m_process.Dispose();
+                            m_process.Kill();
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            try
-                            {
-                                if (!m_process.HasExited)
-                                    m_process.Kill();
-                            }
-                            catch (Exception ex)
-                            {
-                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to stop process launched \"{FileName}\": {ex.Message}", ex));
-                            }
-                        }
-                        finally
-                        {
-                            m_process.OutputDataReceived -= ProcessOutputDataReceived;
-                            m_process.ErrorDataReceived -= ProcessErrorDataReceived;
+                            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Exception encountered while attempting to stop process launched from \"{FileName}\": {ex.Message}", ex));
                         }
                     }
+
+                    m_process.Dispose();
+                    m_process.OutputDataReceived -= ProcessOutputDataReceived;
+                    m_process.ErrorDataReceived -= ProcessErrorDataReceived;
                 }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -423,12 +574,12 @@ namespace FileAdapters
             int initialInputProcessingDelay;
             string setting;
 
-            ProcessStartInfo startInfo = new ProcessStartInfo();
+            ProcessStartInfo startInfo = m_process.StartInfo;
 
             // Load required parameters
             if (settings.TryGetValue(nameof(FileName), out setting))
             {
-                setting = setting.Trim();
+                setting = FilePath.GetAbsolutePath(setting.Trim());
 
                 if (File.Exists(setting))
                 {
@@ -472,6 +623,11 @@ namespace FileAdapters
                     throw new DirectoryNotFoundException($"Cannot launch process: specified working directory \"{setting}\" does not exist.");
                 }
             }
+            else
+            {
+                WorkingDirectory = FilePath.GetDirectoryName(FileName);
+                startInfo.WorkingDirectory = WorkingDirectory;
+            }
 
             if (settings.TryGetValue(nameof(EnvironmentalConnectionString), out setting))
             {
@@ -502,7 +658,7 @@ namespace FileAdapters
 
             if (settings.TryGetValue(nameof(InitialInputFileName), out setting))
             {
-                setting = setting.Trim();
+                setting = FilePath.GetAbsolutePath(setting.Trim());
 
                 if (File.Exists(setting))
                     InitialInputFileName = setting;
@@ -514,26 +670,47 @@ namespace FileAdapters
                 InitialInputProcessingDelay = initialInputProcessingDelay;
 
             if (settings.TryGetValue(nameof(RedirectOutputToHostEnvironment), out setting))
-            {
                 RedirectOutputToHostEnvironment = setting.ParseBoolean();
-                startInfo.RedirectStandardOutput = RedirectOutputToHostEnvironment;
-            }
 
             if (settings.TryGetValue(nameof(RedirectErrorToHostEnvironment), out setting))
-            {
                 RedirectErrorToHostEnvironment = setting.ParseBoolean();
-                startInfo.RedirectStandardError = true;
-            }
 
+            startInfo.RedirectStandardOutput = RedirectOutputToHostEnvironment;
+            startInfo.RedirectStandardError = RedirectErrorToHostEnvironment;
             startInfo.RedirectStandardInput = true;
+            startInfo.UseShellExecute = false;
 
-            m_process.StartInfo = startInfo;
             m_process.EnableRaisingEvents = true;
             m_process.OutputDataReceived += ProcessOutputDataReceived;
             m_process.ErrorDataReceived += ProcessErrorDataReceived;
 
-            if (!m_process.Start())
-                throw new InvalidOperationException($"Failed to launch process from \"{FileName}\".");
+            if (settings.TryGetValue(nameof(ProcessOutputAsLogMessages), out setting))
+                ProcessOutputAsLogMessages = setting.ParseBoolean();
+
+            if (ProcessOutputAsLogMessages)
+            {
+                if (settings.TryGetValue(nameof(LogMessageTextToken), out setting) && setting.Length > 0)
+                    LogMessageTextToken = setting;
+
+                if (settings.TryGetValue(nameof(LogMessageLevelToken), out setting) && setting.Length > 0)
+                    LogMessageLevelToken = setting;
+
+                if (settings.TryGetValue(nameof(LogMessageLevelMappingConnectionString), out setting))
+                    LogMessageLevelMappingConnectionString = setting;
+
+                foreach (KeyValuePair<string, string> item in LogMessageLevelMappingConnectionString.ParseKeyValuePairs())
+                {
+                    MessageLevel level;
+
+                    if (Enum.TryParse(item.Value, true, out level))
+                        m_messageLevelMap[item.Key] = level;
+                }
+            }
+
+            if (settings.TryGetValue(nameof(ForceKillOnDispose), out setting))
+                ForceKillOnDispose = setting.ParseBoolean();
+
+            m_process.Start();
 
             if (RedirectOutputToHostEnvironment)
                 m_process.BeginOutputReadLine();
@@ -541,27 +718,28 @@ namespace FileAdapters
             if (RedirectErrorToHostEnvironment)
                 m_process.BeginErrorReadLine();
 
-            if (!string.IsNullOrEmpty(InitialInputFileName))
-            {
-                new Action(() =>
-                {
-                    try
-                    {
-                        using (StreamReader reader = File.OpenText(InitialInputFileName))
-                        {
-                            string line;
+            if (string.IsNullOrEmpty(InitialInputFileName))
+                return;
 
-                            while ((object)(line = reader.ReadLine()) != null)
-                                Input(line);
-                        }
-                    }
-                    catch (Exception ex)
+            // Send any defined initial input to launched application
+            new Action(() =>
+            {
+                try
+                {
+                    using (StreamReader reader = File.OpenText(InitialInputFileName))
                     {
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed while sending text from \"{InitialInputFileName}\" to launched process standard input: {ex.Message}", ex));
-                    }                    
-                })
-                .DelayAndExecute(InitialInputProcessingDelay);
-            }
+                        string line;
+
+                        while ((object)(line = reader.ReadLine()) != null)
+                            Input(line);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed while sending text from \"{InitialInputFileName}\" to launched process standard input: {ex.Message}", ex));
+                }
+            })
+            .DelayAndExecute(InitialInputProcessingDelay);
         }
 
         /// <summary>
@@ -571,13 +749,15 @@ namespace FileAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
+            string filename = FilePath.GetFileName(FileName);
+
             if (m_process.HasExited)
-                return $"Process launched from \"{FileName}\" exited with code {m_process.ExitCode}.".CenterText(maxLength);
+                return $"Process for \"{filename}\" exited with {m_process.ExitCode}.".CenterText(maxLength);
             
             if (m_process.Responding)
-                return $"Process launched from \"{FileName}\" has been running for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+                return $"Process for \"{filename}\" running for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
 
-            return $"Process launched from \"{FileName}\" is not responding...".CenterText(maxLength);
+            return $"Process for \"{filename}\" is not responding...".CenterText(maxLength);
         }
 
         /// <summary>
@@ -603,14 +783,83 @@ namespace FileAdapters
 
         private void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, e.Data);
+            MessageLevel level = MessageLevel.Info;
+            string status = ProcessOutputAsLogMessages ? ParseLogMessage(e.Data, out level) : e.Data;
+
+            if (string.IsNullOrEmpty(status))
+                return;
+
+            OnStatusMessage(level, status);
             m_outputLinesProcessed++;
         }
 
         private void ProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            OnStatusMessage(MessageLevel.Error, e.Data);
+            MessageLevel level = MessageLevel.Error;
+            string status = ProcessOutputAsLogMessages ? ParseLogMessage(e.Data, out level) : e.Data;
+
+            if (string.IsNullOrEmpty(status))
+                return;
+
+            OnStatusMessage(level, status);
             m_errorLinesProcessed++;
+        }
+
+        private string ParseLogMessage(string message, out MessageLevel level)
+        {
+            int textTokenLength = LogMessageTextToken?.Length ?? 0;
+            int levelTokenLength = LogMessageLevelToken?.Length ?? 0;
+
+            level = MessageLevel.NA;
+
+            if (string.IsNullOrWhiteSpace(message))
+                return "";
+
+            int startIndex, endIndex;
+
+            // Get log level
+            if (levelTokenLength > 0)
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                startIndex = message.IndexOf(LogMessageLevelToken, StringComparison.Ordinal);
+
+                if (startIndex > -1)
+                {
+                    startIndex += levelTokenLength;
+                    endIndex = message.IndexOf(" ", startIndex, StringComparison.Ordinal);
+
+                    if (endIndex > -1)
+                    {
+                        if (!m_messageLevelMap.TryGetValue(message.Substring(startIndex, endIndex - startIndex), out level))
+                            level = MessageLevel.NA;
+                    }
+                }
+            }
+
+            // Get log message
+            if (textTokenLength > 0)
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                startIndex = message.IndexOf(LogMessageTextToken, StringComparison.Ordinal);
+
+                if (startIndex > -1)
+                {
+                    if (message[startIndex + textTokenLength] == '"')
+                    {
+                        startIndex += textTokenLength + 1;
+                        endIndex = message.IndexOf("\"", startIndex, StringComparison.Ordinal);
+                    }
+                    else
+                    {
+                        startIndex += textTokenLength;
+                        endIndex = message.IndexOf(" ", startIndex, StringComparison.Ordinal);
+                    }
+
+                    return message.Substring(startIndex, endIndex - startIndex);
+                }
+            }
+
+            return message;
         }
 
         #endregion
