@@ -62,6 +62,7 @@
       <DependentUpon>RetransmissionStatPicker.xaml</DependentUpon>
     </Compile>
     <Compile Include="RetransmissionStatViewModel.cs" />
+    <Compile Include="ProcessLauncher.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
