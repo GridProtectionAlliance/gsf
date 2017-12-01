@@ -39,7 +39,7 @@ namespace FileAdapters
     /// Represents an adapter that will launch a configured executable process.
     /// </summary>
     /// <remarks>
-    /// Unless a credentials are provided to create an authentication context, rights of
+    /// Unless credentials are provided to create an authentication context, rights of
     /// any launched executable will be limited to those available to time-series host.
     /// </remarks>
     public class ProcessLauncher : FacileActionAdapterBase
@@ -534,6 +534,12 @@ namespace FileAdapters
 
             if (!m_process.Start())
                 throw new InvalidOperationException($"Failed to launch process from \"{FileName}\".");
+
+            if (RedirectOutputToHostEnvironment)
+                m_process.BeginOutputReadLine();
+
+            if (RedirectErrorToHostEnvironment)
+                m_process.BeginErrorReadLine();
 
             if (!string.IsNullOrEmpty(InitialInputFileName))
             {
