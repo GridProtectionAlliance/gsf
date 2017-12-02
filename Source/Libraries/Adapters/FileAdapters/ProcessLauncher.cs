@@ -316,26 +316,26 @@ namespace FileAdapters
         public bool ProcessOutputAsLogMessages { get; set; } = DefaultProcessOutputAsLogMessages;
 
         /// <summary>
-        /// Gets or sets token used to find log message text when redirected output is processed as formatted log messages.
+        /// Gets or sets regular expression used to find log message text when redirected output is processed as formatted log messages.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define token used to find log message text when redirected output is processed as formatted log messages."),
+        Description("Define regular expression used to find log message text when redirected output is processed as formatted log messages. Multiple matches will be joined as a single string."),
         DefaultValue(DefaultLogMessageTextExpression)]
         public string LogMessageTextExpression { get; set; } = DefaultLogMessageTextExpression;
 
         /// <summary>
-        /// Gets or sets token used to find log message level when redirected output is processed as formatted log messages.
+        /// Gets or sets regular expression used to find log message level when redirected output is processed as formatted log messages.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define token used to find log message level when redirected output is processed as formatted log messages."),
+        Description("Define regular expression used to find log message level when redirected output is processed as formatted log messages."),
         DefaultValue(DefaultLogMessageLevelExpression)]
         public string LogMessageLevelExpression { get; set; } = DefaultLogMessageLevelExpression;
 
         /// <summary>
-        /// Gets or sets log level mappings connecLtion string to use when redirected output is processed as formatted log messages.
+        /// Gets or sets log level mappings to use when redirected output is processed as formatted log messages.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define log level mappings connection string to use when redirected output is processed as formatted log messages. Use connection string format as \"log_level_name=GSF.Diagnostics.MessageLevel\", for example: info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug"),
+        Description("Define log level mappings to use when redirected output is processed as formatted log messages. Use connection string format as \"log_level_name=GSF.Diagnostics.MessageLevel\", for example: info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug"),
         DefaultValue(DefaultLogMessageLevelMappings)]
         public string LogMessageLevelMappings { get; set; } = DefaultLogMessageLevelMappings;
 
@@ -459,7 +459,8 @@ namespace FileAdapters
                     {
                         FileVersionInfo version = m_process.MainModule.FileVersionInfo;
 
-                        status.AppendLine($"   Executable file version: {version.FileVersion}");
+                        if (!string.IsNullOrWhiteSpace(version.FileVersion))
+                            status.AppendLine($"   Executable file version: {version.FileVersion}");
 
                         if (!string.IsNullOrWhiteSpace(version.FileDescription))
                             status.AppendLine($"    Executable description: {version.FileDescription}");
@@ -473,8 +474,8 @@ namespace FileAdapters
                         if (!string.IsNullOrWhiteSpace(version.LegalCopyright))
                             status.AppendLine($"      Executable copyright: {version.LegalCopyright}");
 
-                        status.AppendLine($" Executable is debug build: {version.IsDebug}");
-                        status.AppendLine($"       Executable language: {version.Language}");
+                        if (!string.IsNullOrWhiteSpace(version.Language))
+                            status.AppendLine($"       Executable language: {version.Language}");
 
                         if (!string.IsNullOrWhiteSpace(version.OriginalFilename))
                             status.AppendLine($"  Executable original name: {version.OriginalFilename}");
@@ -487,6 +488,8 @@ namespace FileAdapters
 
                         if (!string.IsNullOrWhiteSpace(version.ProductVersion))
                             status.AppendLine($"Executable product version: {version.ProductVersion}");
+
+                        status.AppendLine($" Executable is debug build: {version.IsDebug}");
                     }
                     catch
                     {
@@ -540,7 +543,7 @@ namespace FileAdapters
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="ProcessLauncher"/> object and optionally releases the managed resources.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
             if (m_disposed)
@@ -614,10 +617,6 @@ namespace FileAdapters
             else
                 m_supportsTemporalProcessing = DefaultSupportsTemporalProcessing;
 
-            // Note that it's possible that time-series framework is being hosted by an application
-            // running in a Window making many of the following process start properties relevant.
-            // Even when hosted as a service, the user may start the service log on using the
-            // local system account and select to allow the service interact with the desktop.
             if (settings.TryGetValue(nameof(Arguments), out setting) && setting.Length > 0)
                 startInfo.Arguments = setting;
 
@@ -647,6 +646,10 @@ namespace FileAdapters
                     startInfo.Environment[item.Key] = item.Value;
             }
 
+            // Note that it's possible that time-series framework is being hosted by an application
+            // running in a Window making many of the following process start properties relevant.
+            // Even when hosted as a service, the user may start the service logging on using the
+            // local system account and select to allow the service interact with the desktop.
             if (settings.TryGetValue(nameof(CreateNoWindow), out setting))
                 startInfo.CreateNoWindow = setting.ParseBoolean();
 
