@@ -26,7 +26,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GSF;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -34,6 +36,7 @@ using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
+// ReSharper disable AssignNullToNotNullAttribute
 namespace FileAdapters
 {
     /// <summary>
@@ -65,9 +68,9 @@ namespace FileAdapters
         public const string DefaultWorkingDirectory = "";
 
         /// <summary>
-        /// Default value for the <see cref="EnvironmentalConnectionString"/> property.
+        /// Default value for the <see cref="EnvironmentalVariables"/> property.
         /// </summary>
-        public const string DefaultEnvironmentalConnectionString = "";
+        public const string DefaultEnvironmentalVariables = "";
 
         /// <summary>
         /// Default value for the <see cref="CreateNoWindow"/> property.
@@ -77,7 +80,7 @@ namespace FileAdapters
         /// <summary>
         /// Default value for the <see cref="WindowStyle"/> property.
         /// </summary>
-        public const ProcessWindowStyle DefaultWindowStyle = ProcessWindowStyle.Normal;
+        public const string DefaultWindowStyle = "Normal";
 
         /// <summary>
         /// Default value for the <see cref="ErrorDialog"/> property.
@@ -130,19 +133,19 @@ namespace FileAdapters
         public const bool DefaultProcessOutputAsLogMessages = false;
 
         /// <summary>
-        /// Default value for the <see cref="LogMessageTextToken"/> property.
+        /// Default value for the <see cref="LogMessageTextExpression"/> property.
         /// </summary>
-        public const string DefaultLogMessageTextToken = "msg=";
+        public const string DefaultLogMessageTextExpression = @"(?<=.*msg\s*\=\s*\"")[^\""]*(?=\"")";
 
         /// <summary>
-        /// Default value for the <see cref="LogMessageLevelToken"/> property.
+        /// Default value for the <see cref="LogMessageLevelExpression"/> property.
         /// </summary>
-        public const string DefaultLogMessageLevelToken = "lvl=";
+        public const string DefaultLogMessageLevelExpression = @"(?<=.*lvl\s*\=\s*)[^\s]*(?=\s|$)";
 
         /// <summary>
-        /// Default value for the <see cref="LogMessageLevelMappingConnectionString"/> property.
+        /// Default value for the <see cref="LogMessageLevelMappings"/> property.
         /// </summary>
-        public const string DefaultLogMessageLevelMappingConnectionString = "info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug";
+        public const string DefaultLogMessageLevelMappings = "info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug";
 
         /// <summary>
         /// Default value for the <see cref="ForceKillOnDispose"/> property.
@@ -152,6 +155,8 @@ namespace FileAdapters
         // Fields
         private readonly Process m_process;
         private readonly Dictionary<string, MessageLevel> m_messageLevelMap;
+        private Regex m_logMessageTextExpression;
+        private Regex m_logMessageLevelExpression;
         private bool m_supportsTemporalProcessing;
         private long m_inputLinesProcessed;
         private long m_outputLinesProcessed;
@@ -210,15 +215,15 @@ namespace FileAdapters
         /// Gets or sets any needed environmental variables that should be set or updated before launching the process.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define any needed environmental variables that should be set or updated before launching the process. Example connection string format: variable1=value1; variable2=value2"),
-        DefaultValue(DefaultEnvironmentalConnectionString)]
-        public string EnvironmentalConnectionString { get; set; } = DefaultEnvironmentalConnectionString;
+        Description("Define any needed environmental variables that should be set or updated before launching the process. Use connection string format to define variables, for example: variable1=value1; variable2=value2"),
+        DefaultValue(DefaultEnvironmentalVariables)]
+        public string EnvironmentalVariables { get; set; } = DefaultEnvironmentalVariables;
 
         /// <summary>
         /// Gets or sets flag that determines if a new window should be created when launching the process.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define flag that determines if a new window should be created when launching the process. This property is only applicable when adapter hosting environment can interact with a desktop user interface."),
+        Description("Define flag that determines if a new window should be created when launching the process. This property is only applicable when adapter hosting environment can interact with a user interface."),
         DefaultValue(DefaultCreateNoWindow)]
         public bool CreateNoWindow { get; set; } = DefaultCreateNoWindow;
 
@@ -226,15 +231,15 @@ namespace FileAdapters
         /// Gets or sets window style to use when launching the process if creating a window.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define window style to use when launching the process if creating a window. This property is only applicable when adapter hosting environment can interact with a desktop user interface."),
-        DefaultValue(DefaultWindowStyle)]
-        public ProcessWindowStyle WindowStyle { get; set; } = DefaultWindowStyle;
+        Description("Define window style to use when launching the process if creating a window. This property is only applicable when adapter hosting environment can interact with a user interface."),
+        DefaultValue(typeof(ProcessWindowStyle), DefaultWindowStyle)]
+        public ProcessWindowStyle WindowStyle { get; set; } = (ProcessWindowStyle)Enum.Parse(typeof(ProcessWindowStyle), DefaultWindowStyle);
 
         /// <summary>
         /// Gets or sets flag that determines if an error dialog should be displayed if the process cannot be launched.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define flag that determines if an error dialog should be displayed if the process cannot be launched. This property is only applicable when adapter hosting environment can interact with a desktop user interface."),
+        Description("Define flag that determines if an error dialog should be displayed if the process cannot be launched. This property is only applicable when adapter hosting environment can interact with a user interface."),
         DefaultValue(DefaultErrorDialog)]
         public bool ErrorDialog { get; set; } = DefaultErrorDialog;
 
@@ -303,10 +308,10 @@ namespace FileAdapters
         public bool RedirectErrorToHostEnvironment { get; set; } = DefaultRedirectErrorToHostEnvironment;
 
         /// <summary>
-        /// Gets or sets flag that determines if redirected output should attempt parse as formatted log messages, e.g.: lvl=info msg="log message".
+        /// Gets or sets flag that determines if redirected output should be attempted to be parsed as formatted log messages, e.g.: lvl=info msg="log message".
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define flag that determines if redirected output should attempt parse as formatted log messages, e.g.: lvl=info msg=\"log message\"."),
+        Description("Define flag that determines if redirected output should be attempted to be parsed as formatted log messages, e.g.: lvl=info msg=\"log message\"."),
         DefaultValue(DefaultProcessOutputAsLogMessages)]
         public bool ProcessOutputAsLogMessages { get; set; } = DefaultProcessOutputAsLogMessages;
 
@@ -315,24 +320,24 @@ namespace FileAdapters
         /// </summary>
         [ConnectionStringParameter,
         Description("Define token used to find log message text when redirected output is processed as formatted log messages."),
-        DefaultValue(DefaultLogMessageTextToken)]
-        public string LogMessageTextToken { get; set; } = DefaultLogMessageTextToken;
+        DefaultValue(DefaultLogMessageTextExpression)]
+        public string LogMessageTextExpression { get; set; } = DefaultLogMessageTextExpression;
 
         /// <summary>
         /// Gets or sets token used to find log message level when redirected output is processed as formatted log messages.
         /// </summary>
         [ConnectionStringParameter,
         Description("Define token used to find log message level when redirected output is processed as formatted log messages."),
-        DefaultValue(DefaultLogMessageLevelToken)]
-        public string LogMessageLevelToken { get; set; } = DefaultLogMessageLevelToken;
+        DefaultValue(DefaultLogMessageLevelExpression)]
+        public string LogMessageLevelExpression { get; set; } = DefaultLogMessageLevelExpression;
 
         /// <summary>
         /// Gets or sets log level mappings connecLtion string to use when redirected output is processed as formatted log messages.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define log level mappings connection string to use when redirected output is processed as formatted log messages. Format is \"log_level_name=GSF.Diagnostics.MessageLevel\", for example: info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug"),
-        DefaultValue(DefaultLogMessageLevelMappingConnectionString)]
-        public string LogMessageLevelMappingConnectionString { get; set; } = DefaultLogMessageLevelMappingConnectionString;
+        Description("Define log level mappings connection string to use when redirected output is processed as formatted log messages. Use connection string format as \"log_level_name=GSF.Diagnostics.MessageLevel\", for example: info=Info; warn=Waning; error=Error; critical=Critical; debug=Debug"),
+        DefaultValue(DefaultLogMessageLevelMappings)]
+        public string LogMessageLevelMappings { get; set; } = DefaultLogMessageLevelMappings;
 
         /// <summary>
         /// Gets or sets flag that determines if launched process should be forcibly terminated when adapter is disposed.
@@ -488,25 +493,32 @@ namespace FileAdapters
                         status.AppendLine("       Version information: [unavailable]");
                     }
 
-                    if (m_process.HasExited)
+                    try
                     {
-                        status.AppendLine("        Process has exited: True");
-                        status.AppendLine($"         Process exit code: {m_process.ExitCode}");
-                        status.AppendLine($"         Process exit time: {m_process.ExitTime:yyyy-MM-dd HH:mm:ss.fff}");
-                        status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
-                        status.AppendLine($"            Total run-time: {(m_process.ExitTime - ((DateTime)StartTime).ToLocalTime()).ToElapsedTimeString()}");
+                        if (m_process.HasExited)
+                        {
+                            status.AppendLine("        Process has exited: True");
+                            status.AppendLine($"         Process exit code: {m_process.ExitCode}");
+                            status.AppendLine($"         Process exit time: {m_process.ExitTime:yyyy-MM-dd HH:mm:ss.fff}");
+                            status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
+                            status.AppendLine($"            Total run-time: {(m_process.ExitTime - ((DateTime)StartTime).ToLocalTime()).ToElapsedTimeString()}");
+                        }
+                        else
+                        {
+                            status.AppendLine($"     Process is responding: {m_process.Responding}");
+                            status.AppendLine($"              Process name: {m_process.ProcessName}");
+                            status.AppendLine($"        Process start time: {m_process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
+                            status.AppendLine($"             OS Process ID: {m_process.Id}");
+                            status.AppendLine($"     Process base priority: {m_process.BasePriority}");
+                            status.AppendLine($"      Process thread count: {m_process.Threads:N0}");
+                            status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
+                            status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
+                            status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
+                        }
                     }
-                    else
+                    catch
                     {
-                        status.AppendLine($"     Process is responding: {m_process.Responding}");
-                        status.AppendLine($"              Process name: {m_process.ProcessName}");
-                        status.AppendLine($"        Process start time: {m_process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
-                        status.AppendLine($"             OS Process ID: {m_process.Id}");
-                        status.AppendLine($"     Process base priority: {m_process.BasePriority}");
-                        status.AppendLine($"      Process thread count: {m_process.Threads:N0}");
-                        status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
-                        status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
-                        status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
+                        status.AppendLine("             Process state: [unavailable]");
                     }
                 }
 
@@ -514,7 +526,7 @@ namespace FileAdapters
                 status.AppendLine($"     Input lines processed: {m_inputLinesProcessed:N0}");
                 status.AppendLine($"    Output lines processed: {m_outputLinesProcessed:N0}");
                 status.AppendLine($"     Error lines processed: {m_errorLinesProcessed:N0}");
-                status.AppendLine($"   Process as log messages: {ProcessOutputAsLogMessages}");
+                status.AppendLine($" Interpret output for logs: {ProcessOutputAsLogMessages}");
                 status.AppendLine($"   Forcing kill on dispose: {ForceKillOnDispose}");
 
                 return status.ToString();
@@ -629,7 +641,7 @@ namespace FileAdapters
                 startInfo.WorkingDirectory = WorkingDirectory;
             }
 
-            if (settings.TryGetValue(nameof(EnvironmentalConnectionString), out setting))
+            if (settings.TryGetValue(nameof(EnvironmentalVariables), out setting))
             {
                 foreach (KeyValuePair<string, string> item in setting.ParseKeyValuePairs())
                     startInfo.Environment[item.Key] = item.Value;
@@ -689,16 +701,20 @@ namespace FileAdapters
 
             if (ProcessOutputAsLogMessages)
             {
-                if (settings.TryGetValue(nameof(LogMessageTextToken), out setting) && setting.Length > 0)
-                    LogMessageTextToken = setting;
+                if (settings.TryGetValue(nameof(LogMessageTextExpression), out setting) && setting.Length > 0)
+                    LogMessageTextExpression = setting;
 
-                if (settings.TryGetValue(nameof(LogMessageLevelToken), out setting) && setting.Length > 0)
-                    LogMessageLevelToken = setting;
+                m_logMessageTextExpression = new Regex(LogMessageTextExpression, RegexOptions.Compiled);
 
-                if (settings.TryGetValue(nameof(LogMessageLevelMappingConnectionString), out setting))
-                    LogMessageLevelMappingConnectionString = setting;
+                if (settings.TryGetValue(nameof(LogMessageLevelExpression), out setting) && setting.Length > 0)
+                    LogMessageLevelExpression = setting;
 
-                foreach (KeyValuePair<string, string> item in LogMessageLevelMappingConnectionString.ParseKeyValuePairs())
+                m_logMessageLevelExpression = new Regex(LogMessageLevelExpression, RegexOptions.Compiled);
+
+                if (settings.TryGetValue(nameof(LogMessageLevelMappings), out setting))
+                    LogMessageLevelMappings = setting;
+
+                foreach (KeyValuePair<string, string> item in LogMessageLevelMappings.ParseKeyValuePairs())
                 {
                     MessageLevel level;
 
@@ -751,13 +767,23 @@ namespace FileAdapters
         {
             string filename = FilePath.GetFileName(FileName);
 
-            if (m_process.HasExited)
-                return $"Process for \"{filename}\" exited with {m_process.ExitCode}.".CenterText(maxLength);
-            
-            if (m_process.Responding)
-                return $"Process for \"{filename}\" running for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+            if (!Initialized)
+                return $"\"{filename}\" process has not started...".CenterText(maxLength);
 
-            return $"Process for \"{filename}\" is not responding...".CenterText(maxLength);
+            try
+            {
+                if (m_process.HasExited)
+                    return $"\"{filename}\" process exited with {m_process.ExitCode}.".CenterText(maxLength);
+
+                if (m_process.Responding)
+                    return $"\"{filename}\" process running for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+
+                return $"\"{filename}\" process is not responding...".CenterText(maxLength);
+            }
+            catch
+            {
+                return $"\"{filename}\" process state could not be determined...".CenterText(maxLength);
+            }
         }
 
         /// <summary>
@@ -779,6 +805,15 @@ namespace FileAdapters
         public void Refresh()
         {
             m_process.Refresh();
+        }
+
+        /// <summary>
+        /// Stops the launched process.
+        /// </summary>
+        [AdapterCommand("Stops the launched process.")]
+        public void Kill()
+        {
+            m_process.Kill();
         }
 
         private void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
@@ -807,56 +842,30 @@ namespace FileAdapters
 
         private string ParseLogMessage(string message, out MessageLevel level)
         {
-            int textTokenLength = LogMessageTextToken?.Length ?? 0;
-            int levelTokenLength = LogMessageLevelToken?.Length ?? 0;
-
             level = MessageLevel.NA;
 
             if (string.IsNullOrWhiteSpace(message))
                 return "";
 
-            int startIndex, endIndex;
-
-            // Get log level
-            if (levelTokenLength > 0)
+            // Parse log message level
+            if ((object)m_logMessageLevelExpression != null)
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                startIndex = message.IndexOf(LogMessageLevelToken, StringComparison.Ordinal);
+                Match match = m_logMessageLevelExpression.Match(message);
 
-                if (startIndex > -1)
+                if (match.Success)
                 {
-                    startIndex += levelTokenLength;
-                    endIndex = message.IndexOf(" ", startIndex, StringComparison.Ordinal);
-
-                    if (endIndex > -1)
-                    {
-                        if (!m_messageLevelMap.TryGetValue(message.Substring(startIndex, endIndex - startIndex), out level))
-                            level = MessageLevel.NA;
-                    }
+                    if (!m_messageLevelMap.TryGetValue(match.Value, out level))
+                        level = MessageLevel.NA;
                 }
             }
 
-            // Get log message
-            if (textTokenLength > 0)
+            // Parse log message text
+            if ((object)m_logMessageTextExpression != null)
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                startIndex = message.IndexOf(LogMessageTextToken, StringComparison.Ordinal);
+                MatchCollection matches = m_logMessageTextExpression.Matches(message);
 
-                if (startIndex > -1)
-                {
-                    if (message[startIndex + textTokenLength] == '"')
-                    {
-                        startIndex += textTokenLength + 1;
-                        endIndex = message.IndexOf("\"", startIndex, StringComparison.Ordinal);
-                    }
-                    else
-                    {
-                        startIndex += textTokenLength;
-                        endIndex = message.IndexOf(" ", startIndex, StringComparison.Ordinal);
-                    }
-
-                    return message.Substring(startIndex, endIndex - startIndex);
-                }
+                if (matches.Count > 0)
+                    return string.Join(" ", matches.Cast<Match>().Select(match => match.Value));
             }
 
             return message;
