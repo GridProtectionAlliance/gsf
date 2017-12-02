@@ -150,7 +150,7 @@ namespace FileAdapters
         /// <summary>
         /// Default value for the <see cref="ForceKillOnDispose"/> property.
         /// </summary>
-        public const bool DefaultForceKillOnDispose = false;
+        public const bool DefaultForceKillOnDispose = true;
 
         // Fields
         private readonly Process m_process;
