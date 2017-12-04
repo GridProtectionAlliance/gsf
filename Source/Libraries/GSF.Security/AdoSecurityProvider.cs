@@ -45,10 +45,8 @@ using System.Threading;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.Identity;
-using GSF.Security.Model;
 
 namespace GSF.Security
 {
@@ -915,6 +913,13 @@ namespace GSF.Security
 
         #region [ Static ]
 
+        // Static Events
+
+        /// <summary>
+        /// Raised when the security context is refreshed.
+        /// </summary>
+        public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurtyContextRefreshed;
+
         // Static Fields
         private static readonly string[] s_securityTables =
         {
@@ -1007,6 +1012,34 @@ namespace GSF.Security
 
             cacheSecurityContext.IsBackground = true;
             cacheSecurityContext.Start();
+
+            // Raise an event that will send a notification when the security context for a user has been refreshed
+            if ((object)SecurtyContextRefreshed != null)
+            {
+                try
+                {
+                    Dictionary<string, string[]> userRoles = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+                    using (UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache())
+                    {
+                        foreach (DataRow row in securityContext.Tables[UserAccountTable].Rows)
+                        {
+                            string userName = Convert.ToString(row["Name"]);
+                            string[] roles;
+
+                            if (userRoleCache.TryGetUserRole(userName, out roles))
+                                userRoles[userName] = roles;
+                        }
+
+                        if (userRoles.Count > 0)
+                            SecurtyContextRefreshed(typeof(AdoSecurityProvider), new EventArgs<Dictionary<string, string[]>>(userRoles));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    exceptionHandler(new InvalidOperationException($"Failed to raise \"SecurtyContextRefreshed\" event: {ex.Message}", ex));
+                }
+            }
 
             return securityContext;
         }
