@@ -256,7 +256,7 @@ namespace GSF.InstallerActions
             LogInstallMessage(session, "Begin CompanyInfoAction");
 
             serviceName = GetPropertyValue(session, "SERVICENAME");
-            configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), string.Format("{0}.exe.config", serviceName));
+            configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), $"{serviceName}.exe.config");
 
             if (File.Exists(configPath))
             {
@@ -278,7 +278,7 @@ namespace GSF.InstallerActions
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "CompanyName"),
                             new XAttribute("value", GetPropertyValue(session, "COMPANYNAME")),
-                            new XAttribute("description", string.Format("The name of the company who owns this instance of the {0}.", serviceName)),
+                            new XAttribute("description", $"The name of the company who owns this instance of the {serviceName}."),
                             new XAttribute("encrypted", "false")
                         ));
                     }
@@ -289,7 +289,7 @@ namespace GSF.InstallerActions
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "CompanyAcronym"),
                             new XAttribute("value", GetPropertyValue(session, "COMPANYACRONYM")),
-                            new XAttribute("description", string.Format("The acronym representing the company who owns this instance of the {0}.", serviceName)),
+                            new XAttribute("description", $"The acronym representing the company who owns this instance of the {serviceName}."),
                             new XAttribute("encrypted", "false")
                         ));
                     }
@@ -336,13 +336,13 @@ namespace GSF.InstallerActions
             serviceName = GetPropertyValue(session, "SERVICENAME");
             serviceAccount = GetPropertyValue(session, "SERVICEACCOUNT");
             servicePorts = GetPropertyValue(session, "HTTPSERVICEPORTS");
-            groupName = string.Format("{0} Admins", serviceName);
+            groupName = $"{serviceName} Admins";
 
             // Create service admins group and add service account to that group as well as the Performance Log Users group
             try
             {
                 LogInstallMessage(session, $"Adding {serviceAccount} user to {groupName} group...");
-                UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to administrate the {0} service.", serviceName));
+                UserInfo.CreateLocalGroup(groupName, $"Members in this group have the necessary rights to administrate the {serviceName} service.");
                 UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
                 UserInfo.AddUserToLocalGroup("Performance Log Users", serviceAccount);
                 UserInfo.AddUserToLocalGroup("Performance Monitor Users", serviceAccount);
@@ -405,12 +405,12 @@ namespace GSF.InstallerActions
             {
                 LogInstallMessage(session, "Adding namespace reservations for default web services...");
 
-                foreach (string port in servicePorts.Split(',').Select(p => p.Trim()))
+                foreach (string endPoint in servicePorts.Split(',').Select(p => GetEndPoint(p.Trim())))
                 {
                     // Remove existing HTTP namespace reservations in case
                     // the current user does not match the service account
-                    RemoveHttpNamespaceReservation(port);
-                    AddHttpNamespaceReservation(serviceAccount, port);
+                    RemoveHttpNamespaceReservation(endPoint);
+                    AddHttpNamespaceReservation(serviceAccount, endPoint);
                 }
 
                 LogInstallMessage(session, "Done adding namespace reservations for default web services.");
@@ -440,7 +440,7 @@ namespace GSF.InstallerActions
                     openFileDialog.CheckFileExists = true;
                     openFileDialog.FileName = GetPropertyValue(session, "SelectedFile");
                     openFileDialog.DefaultExt = GetPropertyValue(session, "BrowseFileExtension");
-                    openFileDialog.Filter = string.Format("{0} Files|*.{1}|All Files|*.*", GetPropertyValue(session, "BrowseFileExtension").ToUpper(), GetPropertyValue(session, "BrowseFileExtension"));
+                    openFileDialog.Filter = $"{GetPropertyValue(session, "BrowseFileExtension").ToUpper()} Files|*.{GetPropertyValue(session, "BrowseFileExtension")}|All Files|*.*";
 
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                         session["SELECTEDFILE"] = openFileDialog.FileName;
@@ -754,14 +754,21 @@ namespace GSF.InstallerActions
             return ActionResult.Success;
         }
 
+        // Optionally port specification can include interface, e.g.: 127.0.0.1:8005 or +:8181,
+        // when only a port is specified, "+" is assumed meaning bind to all interfaces
+        private static string GetEndPoint(string servicePort)
+        {
+            return servicePort.IndexOf(':') == -1 ? $"+:{servicePort}" : servicePort;
+        }
+
         // Create an http namespace reservation
-        private static void AddHttpNamespaceReservation(string serviceAccount, string port)
+        private static void AddHttpNamespaceReservation(string serviceAccount, string endPoint)
         {
             ProcessStartInfo psi;
             string parameters;
 
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-            parameters = string.Format(@"http add urlacl url=http://+:{0}/ user=""{1}""", port, serviceAccount);
+            parameters = $@"http add urlacl url=http://{endPoint}/ user=""{serviceAccount}""";
 
             psi = new ProcessStartInfo("netsh", parameters)
             {
@@ -780,13 +787,13 @@ namespace GSF.InstallerActions
         }
 
         // Delete an http namespace reservation
-        private static void RemoveHttpNamespaceReservation(string port)
+        private static void RemoveHttpNamespaceReservation(string endPoint)
         {
             ProcessStartInfo psi;
             string parameters;
 
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-            parameters = string.Format(@"http delete urlacl url=http://+:{0}", port);
+            parameters = $@"http delete urlacl url=http://{endPoint}";
 
             psi = new ProcessStartInfo("netsh", parameters)
             {
