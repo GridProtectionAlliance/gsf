@@ -1024,7 +1024,7 @@ namespace GSF.Security
                     {
                         foreach (DataRow row in securityContext.Tables[UserAccountTable].Rows)
                         {
-                            string userName = Convert.ToString(row["Name"]);
+                            string userName = UserInfo.SIDToAccountName(Convert.ToString(row["Name"]));
                             string[] roles;
 
                             if (userRoleCache.TryGetUserRole(userName, out roles))
