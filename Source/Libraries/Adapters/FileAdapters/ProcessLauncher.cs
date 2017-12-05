@@ -46,6 +46,7 @@ namespace FileAdapters
     /// Unless credentials are provided to create an authentication context, rights of
     /// any launched executable will be limited to those available to time-series host.
     /// </remarks>
+    [Description("Process Launcher: Launches a configured executable process on initialization")]
     public class ProcessLauncher : FacileActionAdapterBase
     {
         #region [ Members ]
