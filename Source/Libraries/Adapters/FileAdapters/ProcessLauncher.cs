@@ -653,12 +653,18 @@ namespace FileAdapters
             // local system account and select to allow the service interact with the desktop.
             if (settings.TryGetValue(nameof(CreateNoWindow), out setting))
                 startInfo.CreateNoWindow = setting.ParseBoolean();
+            else
+                startInfo.CreateNoWindow = DefaultCreateNoWindow;
 
             if (settings.TryGetValue(nameof(WindowStyle), out setting) && Enum.TryParse(setting, true, out windowStyle))
                 startInfo.WindowStyle = windowStyle;
+            else
+                startInfo.WindowStyle = (ProcessWindowStyle)Enum.Parse(typeof(ProcessWindowStyle), DefaultWindowStyle);
 
             if (settings.TryGetValue(nameof(ErrorDialog), out setting))
                 startInfo.ErrorDialog = setting.ParseBoolean();
+            else
+                startInfo.ErrorDialog = DefaultErrorDialog;
 
             if (settings.TryGetValue(nameof(Domain), out setting) && setting.Length > 0)
                 startInfo.Domain = setting;
