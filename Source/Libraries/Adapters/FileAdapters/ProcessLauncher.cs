@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Timers;
 using GSF;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -50,6 +51,104 @@ namespace FileAdapters
     public class ProcessLauncher : FacileActionAdapterBase
     {
         #region [ Members ]
+
+        // Nested Types
+        private sealed class ProcessUtilizationCalculator : IDisposable
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly Timer m_updateUtilization;
+            private Process m_process;
+            private TimeSpan m_startTime;
+            private TimeSpan m_lastProcessorTime = new TimeSpan(0);
+            private DateTime m_lastMonitorTime = DateTime.UtcNow;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public ProcessUtilizationCalculator()
+            {
+                m_updateUtilization = new Timer(5000.0D)
+                {
+                    AutoReset = true,
+                    Enabled = false
+                };
+
+                m_updateUtilization.Elapsed += m_updateUtilization_Elapsed;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+            
+            public double Utilization { get; private set; }
+
+            public double UpdateInterval
+            {
+                get
+                {
+                    return m_updateUtilization.Interval;
+                }
+                set
+                {
+                    m_updateUtilization.Interval = value;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="ProcessUtilizationCalculator"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                if (m_disposed)
+                    return;
+
+                try
+                {
+                    m_updateUtilization.Stop();
+                    m_updateUtilization.Elapsed -= m_updateUtilization_Elapsed;
+                    m_updateUtilization.Dispose();
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+
+            public void Initialize(Process process)
+            {
+                m_process = process;
+                m_startTime = m_process.TotalProcessorTime;
+                m_updateUtilization.Start();
+            }
+
+            private void m_updateUtilization_Elapsed(object sender, ElapsedEventArgs e)
+            {
+                try
+                {
+                    DateTime currentTime = DateTime.UtcNow;
+                    TimeSpan processorTime = m_process.TotalProcessorTime - m_startTime;
+
+                    Utilization = (processorTime - m_lastProcessorTime).TotalSeconds / (Environment.ProcessorCount * currentTime.Subtract(m_lastMonitorTime).TotalSeconds);
+
+                    m_lastMonitorTime = currentTime;
+                    m_lastProcessorTime = processorTime;
+                }
+                catch
+                {
+                    m_updateUtilization.Enabled = false;
+                }
+            }
+
+            #endregion
+        }
 
         // Constants
 
@@ -156,6 +255,7 @@ namespace FileAdapters
         // Fields
         private readonly Process m_process;
         private readonly Dictionary<string, MessageLevel> m_messageLevelMap;
+        private readonly ProcessUtilizationCalculator m_processUtilizationCalculator;
         private Regex m_logMessageTextExpression;
         private Regex m_logMessageLevelExpression;
         private bool m_supportsTemporalProcessing;
@@ -175,6 +275,7 @@ namespace FileAdapters
         {
             m_process = new Process();
             m_messageLevelMap = new Dictionary<string, MessageLevel>(StringComparer.OrdinalIgnoreCase);
+            m_processUtilizationCalculator = new ProcessUtilizationCalculator();
         }
 
         #endregion
@@ -516,6 +617,7 @@ namespace FileAdapters
                             status.AppendLine($"     Process base priority: {m_process.BasePriority}");
                             status.AppendLine($"      Process thread count: {m_process.Threads.Count:N0}");
                             status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
+                            status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");
                             status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
                             status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
                         }
@@ -569,6 +671,8 @@ namespace FileAdapters
                     m_process.Dispose();
                     m_process.OutputDataReceived -= ProcessOutputDataReceived;
                     m_process.ErrorDataReceived -= ProcessErrorDataReceived;
+
+                    m_processUtilizationCalculator.Dispose();
                 }
             }
             finally
@@ -744,6 +848,8 @@ namespace FileAdapters
             if (RedirectErrorToHostEnvironment)
                 m_process.BeginErrorReadLine();
 
+            m_processUtilizationCalculator.Initialize(m_process);
+
             if (string.IsNullOrEmpty(InitialInputFileName))
                 return;
 
@@ -786,7 +892,7 @@ namespace FileAdapters
                     return $"\"{filename}\" process exited with {m_process.ExitCode}.".CenterText(maxLength);
 
                 if (m_process.Responding)
-                    return $"\"{filename}\" process running for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+                    return $"\"{filename}\" process running at {m_processUtilizationCalculator.Utilization:##0.0%} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
 
                 return $"\"{filename}\" process is not responding...".CenterText(maxLength);
             }
