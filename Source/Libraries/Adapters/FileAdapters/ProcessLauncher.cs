@@ -514,7 +514,7 @@ namespace FileAdapters
                             status.AppendLine($"        Process start time: {m_process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
                             status.AppendLine($"             OS Process ID: {m_process.Id}");
                             status.AppendLine($"     Process base priority: {m_process.BasePriority}");
-                            status.AppendLine($"      Process thread count: {m_process.Threads:N0}");
+                            status.AppendLine($"      Process thread count: {m_process.Threads.Count:N0}");
                             status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
                             status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
                             status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
