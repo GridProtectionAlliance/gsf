@@ -58,8 +58,9 @@ namespace FileAdapters
             #region [ Members ]
 
             // Fields
-            private readonly Timer m_updateUtilization;
+            private readonly Timer m_updateUtilizationTimer;
             private Process m_process;
+            private int m_updateInterval;
             private TimeSpan m_startTime;
             private TimeSpan m_lastProcessorTime = new TimeSpan(0);
             private DateTime m_lastMonitorTime = DateTime.UtcNow;
@@ -71,13 +72,15 @@ namespace FileAdapters
 
             public ProcessUtilizationCalculator()
             {
-                m_updateUtilization = new Timer(5000.0D)
+                m_updateInterval = DefaultUtilizationUpdateInterval;
+
+                m_updateUtilizationTimer = new Timer(m_updateInterval)
                 {
                     AutoReset = true,
                     Enabled = false
                 };
 
-                m_updateUtilization.Elapsed += m_updateUtilization_Elapsed;
+                m_updateUtilizationTimer.Elapsed += UpdateUtilizationTimerElapsed;
             }
 
             #endregion
@@ -86,15 +89,18 @@ namespace FileAdapters
             
             public double Utilization { get; private set; }
 
-            public double UpdateInterval
+            public int UpdateInterval
             {
                 get
                 {
-                    return m_updateUtilization.Interval;
+                    return m_updateInterval;
                 }
                 set
                 {
-                    m_updateUtilization.Interval = value;
+                    m_updateInterval = value;
+
+                    if (m_updateInterval > 0)
+                        m_updateUtilizationTimer.Interval = m_updateInterval;
                 }
             }
 
@@ -112,9 +118,9 @@ namespace FileAdapters
 
                 try
                 {
-                    m_updateUtilization.Stop();
-                    m_updateUtilization.Elapsed -= m_updateUtilization_Elapsed;
-                    m_updateUtilization.Dispose();
+                    m_updateUtilizationTimer.Stop();
+                    m_updateUtilizationTimer.Elapsed -= UpdateUtilizationTimerElapsed;
+                    m_updateUtilizationTimer.Dispose();
                 }
                 finally
                 {
@@ -126,10 +132,12 @@ namespace FileAdapters
             {
                 m_process = process;
                 m_startTime = m_process.TotalProcessorTime;
-                m_updateUtilization.Start();
+
+                if (m_updateInterval > 0)
+                    m_updateUtilizationTimer.Start();
             }
 
-            private void m_updateUtilization_Elapsed(object sender, ElapsedEventArgs e)
+            private void UpdateUtilizationTimerElapsed(object sender, ElapsedEventArgs e)
             {
                 try
                 {
@@ -143,7 +151,7 @@ namespace FileAdapters
                 }
                 catch
                 {
-                    m_updateUtilization.Enabled = false;
+                    m_updateUtilizationTimer.Enabled = false;
                 }
             }
 
@@ -251,6 +259,11 @@ namespace FileAdapters
         /// Default value for the <see cref="ForceKillOnDispose"/> property.
         /// </summary>
         public const bool DefaultForceKillOnDispose = true;
+
+        /// <summary>
+        /// Default value for the <see cref="UtilizationUpdateInterval"/> property.
+        /// </summary>
+        public const int DefaultUtilizationUpdateInterval = 5000;
 
         // Fields
         private readonly Process m_process;
@@ -449,6 +462,14 @@ namespace FileAdapters
         DefaultValue(DefaultForceKillOnDispose)]
         public bool ForceKillOnDispose { get; set; } = DefaultForceKillOnDispose;
 
+        /// <summary>
+        /// Gets or sets the interval over which to calculate lunched process utilization.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the interval over which to update the lunched process CPU utilization. Set to 0 to disable utilization calculations."),
+        DefaultValue(DefaultUtilizationUpdateInterval)]
+        public int UtilizationUpdateInterval { get; set; } = DefaultUtilizationUpdateInterval;
+
         #region [ Hidden Properties ]
 
         // The following common adapter properties are marked as never browse by an
@@ -617,7 +638,10 @@ namespace FileAdapters
                             status.AppendLine($"     Process base priority: {m_process.BasePriority}");
                             status.AppendLine($"      Process thread count: {m_process.Threads.Count:N0}");
                             status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
-                            status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");
+
+                            if (m_processUtilizationCalculator.UpdateInterval > 0)
+                                status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");
+
                             status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
                             status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
                         }
@@ -629,6 +653,7 @@ namespace FileAdapters
                 }
 
                 status.AppendLine($"    Initial input filename: {FilePath.TrimFileName(InitialInputFileName, 51)}");
+                status.AppendLine($" CPU usage update interval: {(m_processUtilizationCalculator.UpdateInterval > 0 ? $"{m_processUtilizationCalculator.UpdateInterval:N0}ms" : "Disabled")}");
                 status.AppendLine($"     Input lines processed: {m_inputLinesProcessed:N0}");
                 status.AppendLine($"    Output lines processed: {m_outputLinesProcessed:N0}");
                 status.AppendLine($"     Error lines processed: {m_errorLinesProcessed:N0}");
@@ -691,7 +716,7 @@ namespace FileAdapters
 
             Dictionary<string, string> settings = Settings;
             ProcessWindowStyle windowStyle;
-            int initialInputProcessingDelay;
+            int initialInputProcessingDelay, utilizationCalculationInterval;
             string setting;
 
             ProcessStartInfo startInfo = m_process.StartInfo;
@@ -801,6 +826,9 @@ namespace FileAdapters
             if (settings.TryGetValue(nameof(RedirectErrorToHostEnvironment), out setting))
                 RedirectErrorToHostEnvironment = setting.ParseBoolean();
 
+            if (settings.TryGetValue(nameof(UtilizationUpdateInterval), out setting) && int.TryParse(setting, out utilizationCalculationInterval))
+                UtilizationUpdateInterval = utilizationCalculationInterval;
+
             startInfo.RedirectStandardOutput = RedirectOutputToHostEnvironment;
             startInfo.RedirectStandardError = RedirectErrorToHostEnvironment;
             startInfo.RedirectStandardInput = true;
@@ -848,6 +876,7 @@ namespace FileAdapters
             if (RedirectErrorToHostEnvironment)
                 m_process.BeginErrorReadLine();
 
+            m_processUtilizationCalculator.UpdateInterval = UtilizationUpdateInterval;
             m_processUtilizationCalculator.Initialize(m_process);
 
             if (string.IsNullOrEmpty(InitialInputFileName))
@@ -891,10 +920,11 @@ namespace FileAdapters
                 if (m_process.HasExited)
                     return $"\"{filename}\" process exited with {m_process.ExitCode}.".CenterText(maxLength);
 
-                if (m_process.Responding)
-                    return $"\"{filename}\" process running at {m_processUtilizationCalculator.Utilization:##0.0%} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+                if (!m_process.Responding)
+                    return $"\"{filename}\" process is not responding...".CenterText(maxLength);
 
-                return $"\"{filename}\" process is not responding...".CenterText(maxLength);
+                string utilization = m_processUtilizationCalculator.UpdateInterval > 0 ? $" at {m_processUtilizationCalculator.Utilization:##0.0%}" : "";
+                return $"\"{filename}\" process running{utilization} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
             }
             catch
             {
