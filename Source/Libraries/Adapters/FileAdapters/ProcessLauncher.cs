@@ -62,8 +62,8 @@ namespace FileAdapters
             private Process m_process;
             private int m_updateInterval;
             private TimeSpan m_startTime;
-            private TimeSpan m_lastProcessorTime = new TimeSpan(0);
-            private DateTime m_lastMonitorTime = DateTime.UtcNow;
+            private TimeSpan m_lastProcessorTime;
+            private DateTime m_lastMonitorTime;
             private bool m_disposed;
 
             #endregion
@@ -73,6 +73,7 @@ namespace FileAdapters
             public ProcessUtilizationCalculator()
             {
                 m_updateInterval = DefaultUtilizationUpdateInterval;
+                m_lastProcessorTime = new TimeSpan(0L);
 
                 m_updateUtilizationTimer = new Timer(m_updateInterval)
                 {
@@ -108,9 +109,6 @@ namespace FileAdapters
 
             #region [ Methods ]
 
-            /// <summary>
-            /// Releases all the resources used by the <see cref="ProcessUtilizationCalculator"/> object.
-            /// </summary>
             public void Dispose()
             {
                 if (m_disposed)
@@ -132,6 +130,7 @@ namespace FileAdapters
             {
                 m_process = process;
                 m_startTime = m_process.TotalProcessorTime;
+                m_lastMonitorTime = DateTime.UtcNow;
 
                 if (m_updateInterval > 0)
                     m_updateUtilizationTimer.Start();
