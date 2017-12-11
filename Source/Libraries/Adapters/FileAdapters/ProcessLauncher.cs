@@ -36,6 +36,7 @@ using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units;
 
 // ReSharper disable AssignNullToNotNullAttribute
 namespace FileAdapters
@@ -637,9 +638,10 @@ namespace FileAdapters
                             status.AppendLine($"     Process base priority: {m_process.BasePriority}");
                             status.AppendLine($"      Process thread count: {m_process.Threads.Count:N0}");
                             status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
+                            status.AppendLine($"      Process memory usage: {SI2.ToScaledString(m_process.PrivateMemorySize64, 2, "B")} (private working set)");
 
                             if (m_processUtilizationCalculator.UpdateInterval > 0)
-                                status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");
+                                status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");                            
 
                             status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
                             status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
