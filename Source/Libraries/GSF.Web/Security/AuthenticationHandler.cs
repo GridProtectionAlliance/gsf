@@ -313,8 +313,8 @@ namespace GSF.Web.Security
         {
             s_authorizationCache = new ConcurrentDictionary<Guid, SecurityPrincipal>();
 
-            // Attach to razor view session expiration event so any cached authorizations can also be cleared
-            Model.RazorView.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
+            // Attach to session expiration event so any cached authorizations can also be cleared
+            SessionHandler.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
         }
 
         // Static Methods

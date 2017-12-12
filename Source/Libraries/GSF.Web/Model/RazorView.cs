@@ -22,21 +22,16 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Web;
 using GSF.Collections;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
-using Microsoft.Owin;
 using RazorEngine.Templating;
-using Timer = System.Timers.Timer;
 
 // ReSharper disable StaticMemberInGenericType
 namespace GSF.Web.Model
@@ -47,18 +42,6 @@ namespace GSF.Web.Model
     public class RazorView
     {
         #region [ Members ]
-
-        // Constants
-
-        /// <summary>
-        /// Default value for <see cref="SessionTimeout"/>.
-        /// </summary>
-        public const double DefaultSessionTimeout = 20.0D;
-
-        /// <summary>
-        /// Default value for <see cref="SessionMonitorInterval"/>.
-        /// </summary>
-        public const double DefaultSessionMonitorInterval = 60000.0D;
 
         // Fields
         private readonly IRazorEngine m_razorEngine;
@@ -238,27 +221,11 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("WebServerOptions", WebServerOptions);
                 m_viewBag.AddValue("AuthenticationOptions", ReadonlyAuthenticationOptions.GetAuthenticationOptions(request));
 
-                // See if a client session identifier has been defined for this execution request
-                Guid sessionID;
-                
-                if (SessionHandler.TryGetSessionID(request, WebServerOptions?.SessionToken, out sessionID))
-                {
-                    Tuple<DynamicViewBag, Ticks> session;
-                    DynamicViewBag sessionState;
+                DynamicViewBag sessionState;
 
-                    // Make sure session state is restored for this request, creating it if necessary
-                    if (!s_sessionCache.TryGetValue(sessionID, out session) || (object)session?.Item1 == null)
-                        sessionState = new DynamicViewBag();
-                    else
-                        sessionState = session.Item1;
-
-                    // Update the last access time for the session state
-                    s_sessionCache[sessionID] = new Tuple<DynamicViewBag, Ticks>(sessionState, DateTime.UtcNow.Ticks);
-                    s_sessionCacheMonitor.Enabled = true;
-
-                    // Provide session state to view
+                // See if a client session has been defined for this execution request
+                if (SessionHandler.TryGetSessionState(request, WebServerOptions?.SessionToken, out sessionState))
                     m_viewBag.AddValue("Session", sessionState);
-                }
 
                 return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
@@ -281,79 +248,13 @@ namespace GSF.Web.Model
 
         #region [ Static ]
 
-        // Static Events
-
-        /// <summary>
-        /// Raised when a client session is being expired.
-        /// </summary>
-        public static event EventHandler<EventArgs<Guid, DynamicViewBag>> SessionExpired;
-
         // Static Fields
         private static readonly DynamicViewBag s_applicationCache;
-        private static readonly Timer s_sessionCacheMonitor;
-        private static readonly ConcurrentDictionary<Guid, Tuple<DynamicViewBag, Ticks>> s_sessionCache;
 
         // Static Constructor
         static RazorView()
         {
-            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
-            settings.Add("SessionTimeout", DefaultSessionTimeout, "The timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.");
-            settings.Add("SessionMonitorInterval", DefaultSessionMonitorInterval, "The interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.");
-
-            SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
-            SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
-
             s_applicationCache = new DynamicViewBag();
-            s_sessionCacheMonitor = new Timer(SessionMonitorInterval);
-            s_sessionCacheMonitor.Elapsed += s_sessionCacheMonitor_Elapsed;
-            s_sessionCacheMonitor.Enabled = false;
-            s_sessionCache = new ConcurrentDictionary<Guid, Tuple<DynamicViewBag, Ticks>>();
-        }
-
-        // Static Properties
-
-        /// <summary>
-        /// Gets timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.
-        /// </summary>
-        public static double SessionTimeout { get; }
-
-        /// <summary>
-        /// Gets interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.
-        /// </summary>
-        public static double SessionMonitorInterval { get; }
-
-        // Static Methods
-
-        /// <summary>
-        /// Clears any cached session for the specified <paramref name="sessionID"/>.
-        /// </summary>
-        /// <param name="sessionID">Identifier of session to clear.</param>
-        /// <returns><c>true</c> if session was found and cleared; otherwise, <c>false</c>.</returns>
-        public static bool ClearSessionCache(Guid sessionID)
-        {
-            Tuple<DynamicViewBag, Ticks> session;
-
-            if (s_sessionCache.TryRemove(sessionID, out session))
-            {
-                SessionExpired?.Invoke(null, new EventArgs<Guid, DynamicViewBag>(sessionID, session.Item1));
-                return true;
-            }
-
-            return false;
-        }
-
-        private static void s_sessionCacheMonitor_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            // Check for expired client sessions
-            foreach (KeyValuePair<Guid, Tuple<DynamicViewBag, Ticks>> clientSession in s_sessionCache)
-            {
-                Ticks lastAccessTime = clientSession.Value.Item2;
-
-                if ((DateTime.UtcNow.Ticks - lastAccessTime).ToMinutes() > SessionTimeout)
-                    ClearSessionCache(clientSession.Key);
-             }
-
-            s_sessionCacheMonitor.Enabled = s_sessionCache.Count > 0;
         }
 
         #endregion    

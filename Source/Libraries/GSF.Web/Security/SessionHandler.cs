@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -32,23 +33,32 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Web.Http;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Security;
 using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
+using RazorEngine.Templating;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Web.Security
 {
     /// <summary>
-    /// Represents an HTTP messaging handler that can inject a session ID that can be used for security.
+    /// Represents an HTTP messaging handler that can inject a session ID that can be used for security and user state.
     /// </summary>
     public class SessionHandler : DelegatingHandler
     {
         #region [ Members ]
 
         // Nested Types
+        private class Session
+        {
+            public readonly DynamicViewBag State = new DynamicViewBag();
+            public DateTime LastAccess;
+        }
+
         private class Credential
         {
             #region [ Constructors ]
@@ -57,6 +67,8 @@ namespace GSF.Web.Security
             {
             }
 
+            // Note: Usage is dynamically called via FileBackedDictionary
+            // ReSharper disable once UnusedMember.Local
             [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
             public Credential(Stream stream)
             {
@@ -126,6 +138,16 @@ namespace GSF.Web.Security
         // Constants
 
         /// <summary>
+        /// Default value for <see cref="SessionTimeout"/>.
+        /// </summary>
+        public const double DefaultSessionTimeout = 20.0D;
+
+        /// <summary>
+        /// Default value for <see cref="SessionMonitorInterval"/>.
+        /// </summary>
+        public const double DefaultSessionMonitorInterval = 60000.0D;
+
+        /// <summary>
         /// Default value for <see cref="AuthenticationToken"/>;
         /// </summary>
         public const string DefaultAuthenticationToken = "x-gsf-auth";
@@ -178,23 +200,23 @@ namespace GSF.Web.Security
         {
             // Get existing session data from the request, if any
             CookieHeaderValue cookie = request.Headers.GetCookies(SessionToken).FirstOrDefault();
-            string sessionID = cookie?[SessionToken].Value;
-            Guid result;
+            string sessionCookieValue = cookie?[SessionToken].Value;
+            Guid sessionID;
 
             // If session ID format is invalid, create a new one
-            if (!Guid.TryParse(sessionID, out result))
-                result = Guid.NewGuid();
+            if (!Guid.TryParse(sessionCookieValue, out sessionID))
+                sessionID = Guid.NewGuid();
 
-            sessionID = result.ToString();
+            sessionCookieValue = sessionID.ToString();
 
             // Save session ID (as Guid) in the request properties
-            request.Properties[SessionToken] = result;
+            request.Properties[SessionToken] = sessionID;
 
             // Continue processing the HTTP request
             HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
             // Store session ID in response message cookie
-            response.Headers.AddCookies(new [] { new CookieHeaderValue(SessionToken, sessionID) { Path = "/" } });
+            response.Headers.AddCookies(new [] { new CookieHeaderValue(SessionToken, sessionCookieValue) { Path = "/" } });
 
             // If requesting the AuthTest page using BASIC authentication, reissue the client's authentication token
             string authTestPage = ReadonlyAuthenticationOptions.GetAuthenticationOptions(request).AuthTestPage;
@@ -223,6 +245,15 @@ namespace GSF.Web.Security
                         }
                     });
                 }
+            }
+            else
+            {
+                // Get cached session for this request, creating it if necessary
+                Session session = s_sessionCache.GetOrAdd(sessionID, id => new Session());
+
+                // Update the last access time for the session state - as long as user is making requests, session will persist
+                session.LastAccess = DateTime.UtcNow;
+                s_sessionCacheMonitor.Enabled = true;
             }
 
             return response;
@@ -265,7 +296,7 @@ namespace GSF.Web.Security
                     credentialCache.Compact();
 
                     // Enter the new token into the credential cache
-                    credentialCache[selector] = new Credential()
+                    credentialCache[selector] = new Credential
                     {
                         Validator = validator,
                         Username = username,
@@ -308,16 +339,68 @@ namespace GSF.Web.Security
 
         #region [ Static ]
 
-        // Static Fields
+        // Static Events
+
+        /// <summary>
+        /// Raised when a client session is being expired.
+        /// </summary>
+        public static event EventHandler<EventArgs<Guid, DynamicViewBag>> SessionExpired;
 
         /// <summary>
         /// Occurs when a static method encounters an exception.
         /// </summary>
         public static event EventHandler<EventArgs<Exception>> ProcessException;
 
+        // Static Fields
+        private static readonly Timer s_sessionCacheMonitor;
+        private static readonly ConcurrentDictionary<Guid, Session> s_sessionCache;
         private static readonly object CredentialCacheLock = new object();
 
+        // Static Constructor
+        static SessionHandler()
+        {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
+            settings.Add("SessionTimeout", DefaultSessionTimeout, "The timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.");
+            settings.Add("SessionMonitorInterval", DefaultSessionMonitorInterval, "The interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.");
+
+            SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
+            SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
+
+            s_sessionCacheMonitor = new Timer(SessionMonitorInterval);
+            s_sessionCacheMonitor.Elapsed += s_sessionCacheMonitor_Elapsed;
+            s_sessionCacheMonitor.Enabled = false;
+            s_sessionCache = new ConcurrentDictionary<Guid, Session>();
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.
+        /// </summary>
+        public static double SessionTimeout { get; }
+
+        /// <summary>
+        /// Gets interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.
+        /// </summary>
+        public static double SessionMonitorInterval { get; }
+
         // Static Methods
+
+        /// <summary>
+        /// Clears any cached session for the specified <paramref name="sessionID"/>.
+        /// </summary>
+        /// <param name="sessionID">Identifier of session to clear.</param>
+        /// <returns><c>true</c> if session was found and cleared; otherwise, <c>false</c>.</returns>
+        public static bool ClearSessionCache(Guid sessionID)
+        {
+            Session session;
+
+            if (!s_sessionCache.TryRemove(sessionID, out session))
+                return false;
+
+            OnSessionExpired(sessionID, session.State);
+            return true;
+        }
 
         /// <summary>
         /// Attempts to use the authentication token to retrieve the user's credentials from the credential cache.
@@ -377,12 +460,12 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Gets the session ID Guid as defined in the request properties dictionary.
+        /// Tries to get the session ID Guid as defined in the request properties dictionary.
         /// </summary>
         /// <param name="request">The target HTTP request message.</param>
         /// <param name="sessionToken">Token used for identifying the session ID in properties dictionary.</param>
         /// <param name="sessionID">Validated session ID to return.</param>
-        /// <returns>Session ID <see cref="Guid"/>, if defined; otherwise, <see cref="Guid.Empty"/>.</returns>
+        /// <returns><c>true</c> if session ID was successfully accessed; otherwise, <c>false</c>.</returns>
         public static bool TryGetSessionID(HttpRequestMessage request, string sessionToken, out Guid sessionID)
         {
             object result;
@@ -394,6 +477,28 @@ namespace GSF.Web.Security
             }
 
             sessionID = Guid.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the session state as defined in the request properties dictionary.
+        /// </summary>
+        /// <param name="request">The target HTTP request message.</param>
+        /// <param name="sessionToken">Token used for identifying the session ID in properties dictionary.</param>
+        /// <param name="sessionState">Session state to return.</param>
+        /// <returns><c>true</c> if session state was successfully accessed; otherwise, <c>false</c>.</returns>
+        public static bool TryGetSessionState(HttpRequestMessage request, string sessionToken, out DynamicViewBag sessionState)
+        {
+            Guid sessionID;
+            Session session;
+
+            if (TryGetSessionID(request, sessionToken, out sessionID) && s_sessionCache.TryGetValue(sessionID, out session))
+            {
+                sessionState = session.State;
+                return true;
+            }
+
+            sessionState = null;
             return false;
         }
 
@@ -469,9 +574,26 @@ namespace GSF.Web.Security
             return sessionID;
         }
 
+        private static void OnSessionExpired(Guid sessionID, DynamicViewBag sessionState)
+        {
+            SessionExpired?.Invoke(typeof(SessionHandler), new EventArgs<Guid, DynamicViewBag>(sessionID, sessionState));
+        }
+
         private static void OnProcessException(Exception ex)
         {
-            ProcessException?.Invoke(null, new EventArgs<Exception>(ex));
+            ProcessException?.Invoke(typeof(SessionHandler), new EventArgs<Exception>(ex));
+        }
+
+        private static void s_sessionCacheMonitor_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // Check for expired client sessions
+            foreach (KeyValuePair<Guid, Session> clientSession in s_sessionCache)
+            {
+                if ((DateTime.UtcNow - clientSession.Value.LastAccess).TotalMinutes > SessionTimeout)
+                    ClearSessionCache(clientSession.Key);
+            }
+
+            s_sessionCacheMonitor.Enabled = s_sessionCache.Count > 0;
         }
 
         #endregion
