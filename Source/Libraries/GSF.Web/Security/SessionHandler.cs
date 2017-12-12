@@ -216,7 +216,7 @@ namespace GSF.Web.Security
             HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
             // Store session ID in response message cookie
-            response.Headers.AddCookies(new [] { new CookieHeaderValue(SessionToken, sessionCookieValue) { Path = "/" } });
+            response.Headers.AddCookies(new[] { new CookieHeaderValue(SessionToken, sessionCookieValue) { Path = "/" } });
 
             // If requesting the AuthTest page using BASIC authentication, reissue the client's authentication token
             string authTestPage = ReadonlyAuthenticationOptions.GetAuthenticationOptions(request).AuthTestPage;
@@ -269,7 +269,7 @@ namespace GSF.Web.Security
             string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
 
             // Open the credential cache
-            lock (CredentialCacheLock)
+            lock (s_credentialCacheLock)
             {
                 using (FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath))
                 {
@@ -317,7 +317,7 @@ namespace GSF.Web.Security
             string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
 
             // Open the credential cache
-            lock (CredentialCacheLock)
+            lock (s_credentialCacheLock)
             {
                 using (FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath))
                 {
@@ -345,7 +345,7 @@ namespace GSF.Web.Security
         // Static Fields
         private static readonly Timer s_sessionCacheMonitor;
         private static readonly ConcurrentDictionary<Guid, Session> s_sessionCache;
-        private static readonly object CredentialCacheLock = new object();
+        private static readonly object s_credentialCacheLock = new object();
 
         // Static Constructor
         static SessionHandler()
@@ -425,7 +425,7 @@ namespace GSF.Web.Security
 
                 // Read the credential cache to retrieve the user's
                 // credentials that were mapped to this authentication token
-                lock (CredentialCacheLock)
+                lock (s_credentialCacheLock)
                 {
                     using (FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath))
                     {

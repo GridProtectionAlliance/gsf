@@ -137,7 +137,7 @@ namespace GSF.Web.Security
                     // Pick the appropriate authentication logic based
                     // on the authorization type in the HTTP headers
                     if (authorization?.Scheme == "Basic")
-                        securityPrincipal = AuthenticateBasic(authorization?.Parameter);
+                        securityPrincipal = AuthenticateBasic(authorization.Parameter);
                     else
                         securityPrincipal = AuthenticatePassthrough();
 
