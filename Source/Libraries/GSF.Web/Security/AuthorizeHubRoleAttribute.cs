@@ -97,7 +97,7 @@ namespace GSF.Web.Security
                 return false;
 
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => securityPrincipal.IsInRole(role)))
-                return false;
+                return false;            
 
             ThreadPool.QueueUserWorkItem(start => AuthorizationCache.CacheAuthorization(securityPrincipal.Identity.Name, SecuritySettingsCategory));
 

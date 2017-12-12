@@ -246,15 +246,6 @@ namespace GSF.Web.Security
                     });
                 }
             }
-            else
-            {
-                // Get cached session for this request, creating it if necessary
-                Session session = s_sessionCache.GetOrAdd(sessionID, id => new Session());
-
-                // Update the last access time for the session state - as long as user is making requests, session will persist
-                session.LastAccess = DateTime.UtcNow;
-                s_sessionCacheMonitor.Enabled = true;
-            }
 
             return response;
         }
@@ -537,7 +528,8 @@ namespace GSF.Web.Security
             string value = cookie?[sessionToken ?? DefaultSessionToken].Value;
             Guid sessionID;
 
-            Guid.TryParse(value, out sessionID);
+            if (Guid.TryParse(value, out sessionID))
+                UpdateSession(sessionID);
 
             return sessionID;
         }
@@ -553,7 +545,8 @@ namespace GSF.Web.Security
             string value = request?.Cookies?[sessionToken ?? DefaultSessionToken];
             Guid sessionID;
 
-            Guid.TryParse(value, out sessionID);
+            if (Guid.TryParse(value, out sessionID))
+                UpdateSession(sessionID);
 
             return sessionID;
         }
@@ -569,9 +562,20 @@ namespace GSF.Web.Security
             string value = request?.Cookies?[sessionToken ?? DefaultSessionToken].Value;
             Guid sessionID;
 
-            Guid.TryParse(value, out sessionID);
+            if (Guid.TryParse(value, out sessionID))
+                UpdateSession(sessionID);
 
             return sessionID;
+        }
+
+        private static void UpdateSession(Guid sessionID)
+        {
+            // Get cached session for this request, creating it if necessary
+            Session session = s_sessionCache.GetOrAdd(sessionID, id => new Session());
+
+            // Update the last access time for the session state - as long as user is making requests, session will persist
+            session.LastAccess = DateTime.UtcNow;
+            s_sessionCacheMonitor.Enabled = true;
         }
 
         private static void OnSessionExpired(Guid sessionID, DynamicViewBag sessionState)
