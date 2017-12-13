@@ -636,12 +636,11 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public virtual Task<string[]> Search(Target request)
         {
-            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders - for now, just return a truncated list of tag names:
             string target = request.target == "select metric" ? "" : request.target;
 
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                return TargetCache<string[]>.GetOrAdd($"search!{target}", () => Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray());
             });
         }
 
@@ -653,7 +652,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+                return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
             });
         }
 
@@ -665,7 +664,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables.Cast<DataTable>().Select(table => table.TableName).ToArray();
+                return TargetCache<string[]>.GetOrAdd("{A9BE60D2-EF94-4AE4-B002-63F7E9F6B334}", () => Metadata.Tables.Cast<DataTable>().Where(table => new[] { "ID", "SignalID", "PointTag", "Adder", "Multiplier" }.All(fieldName => table.Columns.Contains(fieldName))).Select(table => table.TableName).ToArray());
             });
         }
 
@@ -677,7 +676,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+                return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
             });
         }
 
