@@ -751,8 +751,11 @@ namespace GrafanaAdapters
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
 
-                Dictionary<string, TargetOptions> targetOptions = request.targets.ToDictionary(target => target.target.Trim(), target => new TargetOptions(target), StringComparer.OrdinalIgnoreCase);
-                DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
+                foreach (Target target in request.targets)
+                    target.target = target.target?.Trim() ?? "";
+
+                Dictionary<string, TargetOptions> targetOptions = request.targets.ToDictionary(target => target.target, target => new TargetOptions(target), StringComparer.OrdinalIgnoreCase);
+                DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
