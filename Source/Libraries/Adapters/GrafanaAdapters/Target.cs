@@ -39,19 +39,13 @@ namespace GrafanaAdapters
         public string target { get; set; }
 
         /// <summary>
-        /// Included data flags.
-        /// </summary>
-        public string includedFlags { get; set; }
-
-        /// <summary>
         /// Excluded data flags.
         /// </summary>
         public string excludedFlags { get; set; }
 
         /// <summary>
-        /// Include normal flag.
+        /// Exclude normal flag.
         /// </summary>
-        public bool includeNormalFlag { get; set; }
-
+        public bool excludeNormalFlag { get; set; }
     }
 }

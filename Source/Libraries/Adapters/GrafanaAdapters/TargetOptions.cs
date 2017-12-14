@@ -31,19 +31,14 @@ namespace GrafanaAdapters
     public class TargetOptions
     {
         /// <summary>
-        /// Included data flags.
-        /// </summary>
-        public readonly uint IncludedFlags;
-
-        /// <summary>
         /// Excluded data flags.
         /// </summary>
         public readonly uint ExcludedFlags;
 
         /// <summary>
-        /// Include normal flag.
+        /// Exclude normal flag.
         /// </summary>
-        public readonly bool IncludeNormalFlag;
+        public readonly bool ExcludeNormalFlag;
 
         /// <summary>
         /// Creates a new <see cref="TargetOptions"/> instance.
@@ -51,13 +46,8 @@ namespace GrafanaAdapters
         /// <param name="target">Source <see cref="GrafanaAdapters.Target"/></param>
         public TargetOptions(Target target)
         {
-            IncludedFlags = Convert.ToUInt32(target.includedFlags ?? "0xFFFFFFFF", 16); // 0xFFFFFFFF
             ExcludedFlags = Convert.ToUInt32(target.excludedFlags ?? "0x00000000", 16); // 0x00000000
-
-            if ((object)target.includedFlags == null && (object)target.excludedFlags == null)
-                IncludeNormalFlag = true;
-            else
-                IncludeNormalFlag = target.includeNormalFlag;
+            ExcludeNormalFlag = target.excludeNormalFlag;
         }
     }
 }

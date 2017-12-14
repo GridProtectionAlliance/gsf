@@ -772,11 +772,11 @@ namespace GrafanaAdapters
 
                     if (targetOptions.TryGetValue(series.target, out options))
                     {
-                        if (options.ExcludedFlags > uint.MinValue)
-                            values = values.Where(value => !options.IncludeNormalFlag && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & options.ExcludedFlags) == 0);
+                        if (options.ExcludeNormalFlag)
+                            values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
 
-                        if (options.IncludedFlags < uint.MaxValue)
-                            values = values.Where(value => options.IncludeNormalFlag && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & options.IncludedFlags) > 0);
+                        if (options.ExcludedFlags > uint.MinValue)
+                            values = values.Where(value => ((uint)value.Flags & options.ExcludedFlags) == 0);
                     }
 
                     series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
