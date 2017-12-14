@@ -80,7 +80,6 @@
     <Compile Include="Target.cs" />
     <Compile Include="TargetCache.cs" />
     <Compile Include="DataSourceValue.cs" />
-    <Compile Include="TargetOptions.cs" />
     <Compile Include="TimeSeriesValues.cs" />
     <Compile Include="TimeSliceScanner.cs" />
   </ItemGroup>
