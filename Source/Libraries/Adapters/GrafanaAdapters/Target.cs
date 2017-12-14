@@ -37,5 +37,21 @@ namespace GrafanaAdapters
         /// Target point/tag name.
         /// </summary>
         public string target { get; set; }
+
+        /// <summary>
+        /// Included data flags.
+        /// </summary>
+        public string includedFlags { get; set; }
+
+        /// <summary>
+        /// Excluded data flags.
+        /// </summary>
+        public string excludedFlags { get; set; }
+
+        /// <summary>
+        /// Included normal flags.
+        /// </summary>
+        public bool includeNormalFlag { get; set; }
+
     }
 }
