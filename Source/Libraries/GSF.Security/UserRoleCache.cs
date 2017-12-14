@@ -57,6 +57,8 @@ namespace GSF.Security
 
         #endregion
 
+        #region [ Constructors ]
+        
         /// <summary>
         /// Creates a new instance of the <see cref="UserRoleCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
         /// </summary>
@@ -67,6 +69,8 @@ namespace GSF.Security
             m_userRoles = new Dictionary<string, string[]>();
             m_userRolesLock = new object();
         }
+
+        #endregion
 
         #region [ Properties ]
 

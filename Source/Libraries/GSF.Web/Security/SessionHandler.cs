@@ -108,6 +108,8 @@ namespace GSF.Web.Security
 
             #region [ Methods ]
 
+            // Note: Usage is dynamically called via FileBackedDictionary
+            // ReSharper disable once UnusedMember.Local
             [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
             public void WriteTo(Stream stream)
             {

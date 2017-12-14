@@ -299,7 +299,7 @@ namespace GSF.Security
                     // Attempt to extract current security context from the database
                     using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
                     {
-                        securityContext = ExtractSecurityContext(database.Connection, ex => LogError(ex.Source, ex.ToString()));
+                        securityContext = ExtractSecurityContext(database.Connection, ex => LogError(ex.Source, ex.ToString()), UserData.Username);
                     }
                 }
                 catch (InvalidOperationException)
@@ -918,7 +918,7 @@ namespace GSF.Security
         /// <summary>
         /// Raised when the security context is refreshed.
         /// </summary>
-        public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurtyContextRefreshed;
+        public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurityContextRefreshed;
 
         // Static Fields
         private static readonly string[] s_securityTables =
@@ -982,8 +982,9 @@ namespace GSF.Security
         /// </summary>
         /// <param name="connection">Existing database connection used to extract security context.</param>
         /// <param name="exceptionHandler">Exception handler to use for any exceptions encountered while updating security cache.</param>
+        /// <param name="currentUserName">Current user name, if applicable in calling context.</param>
         /// <returns>A new <see cref="DataSet"/> containing the latest security context.</returns>
-        public static DataSet ExtractSecurityContext(IDbConnection connection, Action<Exception> exceptionHandler)
+        public static DataSet ExtractSecurityContext(IDbConnection connection, Action<Exception> exceptionHandler, string currentUserName = null)
         {
             DataSet securityContext = new DataSet("AdoSecurityContext");
 
@@ -1014,25 +1015,32 @@ namespace GSF.Security
             cacheSecurityContext.Start();
 
             // Raise an event that will send a notification when the security context for a user has been refreshed
-            if ((object)SecurtyContextRefreshed != null)
+            if ((object)SecurityContextRefreshed != null)
             {
                 try
                 {
                     Dictionary<string, string[]> userRoles = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                    string[] roles;
 
                     using (UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache())
                     {
                         foreach (DataRow row in securityContext.Tables[UserAccountTable].Rows)
                         {
                             string userName = UserInfo.SIDToAccountName(Convert.ToString(row["Name"]));
-                            string[] roles;
 
                             if (userRoleCache.TryGetUserRole(userName, out roles))
                                 userRoles[userName] = roles;
                         }
 
+                        // Also make sure current user is added since user may have implicit rights based on group
+                        if (!string.IsNullOrEmpty(currentUserName))
+                        {
+                            if (!userRoles.ContainsKey(currentUserName) && userRoleCache.TryGetUserRole(currentUserName, out roles))
+                                userRoles[currentUserName] = roles;
+                        }
+
                         if (userRoles.Count > 0)
-                            SecurtyContextRefreshed(typeof(AdoSecurityProvider), new EventArgs<Dictionary<string, string[]>>(userRoles));
+                            SecurityContextRefreshed(typeof(AdoSecurityProvider), new EventArgs<Dictionary<string, string[]>>(userRoles));
                     }
                 }
                 catch (Exception ex)

@@ -172,14 +172,8 @@ namespace GSF.Web.Security
             //  (1) Access resource marked as anonymous - let pipeline continue
             //  (2) Access resource as authenticated user - let pipeline continue
             //  --- remaining use cases are unauthorized ---
-            //  (3) Access AuthTest with Basic scheme or unsupported browser - respond with 403 and abort pipeline
-            //  (4) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
-            //  (5) Access all other resources - respond with 401 and abort pipeline
-            //
-            //  Unauthorized response logic:
-            //      if use case == 3, respond with 403 (prevents browser prompt for credentials)
-            //      else if use case == 4, respond with 302 (go back home)
-            //      else respond with 401
+            //  (3) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
+            //  (4) Access all other resources - respond with 401 and abort pipeline
             return Task.Run(() =>
             {
                 SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
