@@ -49,7 +49,7 @@ namespace GrafanaAdapters
         public string excludedFlags { get; set; }
 
         /// <summary>
-        /// Included normal flags.
+        /// Include normal flag.
         /// </summary>
         public bool includeNormalFlag { get; set; }
 

@@ -748,13 +748,10 @@ namespace GrafanaAdapters
                 if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
-                uint excludedDataFlags = Convert.ToUInt32(request.options?["excludedDataFlags"].ToString() ?? "0x00000000", 16); // 0x00000000
-                uint includedDataFlags = Convert.ToUInt32(request.options?["includedDataFlags"].ToString() ?? "0xFFFFFFFF", 16); // 0xFFFFFFFF
-                bool includeNormalData = Convert.ToBoolean(request.options?["includeNormalData"].ToString() ?? "true");
-
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
 
+                Dictionary<string, TargetOptions> targetOptions = request.targets.ToDictionary(target => target.target.Trim(), target => new TargetOptions(target), StringComparer.OrdinalIgnoreCase);
                 DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
@@ -769,14 +766,18 @@ namespace GrafanaAdapters
                 // Process series data in parallel
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
-                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation
+                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
                     IEnumerable<DataSourceValue> values = valueGroups.First(group => group.Target.Equals(series.target)).Source;
+                    TargetOptions options;
 
-                    if (excludedDataFlags > uint.MinValue)
-                        values = values.Where(value => !includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & excludedDataFlags) == 0);
+                    if (targetOptions.TryGetValue(series.target, out options))
+                    {
+                        if (options.ExcludedFlags > uint.MinValue)
+                            values = values.Where(value => !options.IncludeNormalFlag && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & options.ExcludedFlags) == 0);
 
-                    if (includedDataFlags < uint.MaxValue)
-                        values = values.Where(value => includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & includedDataFlags) > 0);
+                        if (options.IncludedFlags < uint.MaxValue)
+                            values = values.Where(value => options.IncludeNormalFlag && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & options.IncludedFlags) > 0);
+                    }
 
                     series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  QueryRequest.cs - Gbtc
+//  TargetOptions.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,53 +16,48 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  12/14/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
+using System;
 
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana query request.
+    /// Defines options associated with a Grafana target.
     /// </summary>
-    public class QueryRequest
+    public class TargetOptions
     {
         /// <summary>
-        /// Panel ID of request.
+        /// Included data flags.
         /// </summary>
-        public int panelId { get; set; }
+        public readonly uint IncludedFlags;
 
         /// <summary>
-        /// Request range.
+        /// Excluded data flags.
         /// </summary>
-        public Range range { get; set; }
+        public readonly uint ExcludedFlags;
 
         /// <summary>
-        /// Relative request range.
+        /// Include normal flag.
         /// </summary>
-        public RangeRaw rangeRaw { get; set; }
+        public readonly bool IncludeNormalFlag;
 
         /// <summary>
-        /// Request interval.
+        /// Creates a new <see cref="TargetOptions"/> instance.
         /// </summary>
-        public string interval { get; set; }
+        /// <param name="target">Source <see cref="GrafanaAdapters.Target"/></param>
+        public TargetOptions(Target target)
+        {
+            IncludedFlags = Convert.ToUInt32(target.includedFlags ?? "0xFFFFFFFF", 16); // 0xFFFFFFFF
+            ExcludedFlags = Convert.ToUInt32(target.excludedFlags ?? "0x00000000", 16); // 0x00000000
 
-        /// <summary>
-        /// Request targets.
-        /// </summary>
-        public List<Target> targets { get; set; }
-
-        /// <summary>
-        /// Request format (typically json).
-        /// </summary>
-        public string format { get; set; }
-
-        /// <summary>
-        /// Maximum data points to return.
-        /// </summary>
-        public int maxDataPoints { get; set; }
+            if ((object)target.includedFlags == null && (object)target.excludedFlags == null)
+                IncludeNormalFlag = true;
+            else
+                IncludeNormalFlag = target.includeNormalFlag;
+        }
     }
 }
