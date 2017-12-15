@@ -237,6 +237,33 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        public async Task<string[]> SearchFields(Target request)
+        {
+            return await m_dataSource.SearchFields(request);
+        }
+
+        /// <summary>
+        /// Search data source for a list of tables.
+        /// </summary>
+        /// <param name="request">Request.</param>
+        public async Task<string[]> SearchFilters(Target request)
+        {
+            return await m_dataSource.SearchFilters(request);
+        }
+
+        /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        public async Task<string[]> SearchOrderBys(Target request)
+        {
+            return await m_dataSource.SearchOrderBys(request);
+        }
+
+        /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
