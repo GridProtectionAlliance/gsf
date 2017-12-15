@@ -408,14 +408,16 @@ namespace COMTRADEConverter
         {
             try
             {
-                DateTime? startTime = m_channels[0].TimeValues[0];
+                DateTime startTime = m_channels[0].TimeValues[0];
+                DateTime endTime = m_channels[0].TimeValues.Last();
                 int sampleCount = m_channels[0].YValues.Count;
+                double samplingRate = (sampleCount - 1) / (endTime - startTime).TotalSeconds;
                 IEnumerable<ChannelMetadata> metadata = m_channels.Select(ConvertToChannelMetadata);
 
                 string configFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".cfg");
                 StreamWriter configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
 
-                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, fileType: FileType.Ascii);
+                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime, sampleCount, samplingRate: samplingRate, includeFracSecDefinition: false, fileType: FileType.Ascii);
 
                 configFileWriter.Write(schema.FileImage);
                 configFileWriter.Flush();
