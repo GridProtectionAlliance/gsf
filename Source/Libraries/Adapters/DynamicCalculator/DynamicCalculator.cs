@@ -297,7 +297,7 @@ namespace DynamicCalculator
         /// Gets or sets the value used when no other value can be determined for a variable.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Defines the value used when no other value can be determined for a variable.")
+        Description("Defines the value used when no other value can be determined for a variable."),
         DefaultValue(double.NaN)]
         public double SentinelValue
         {
