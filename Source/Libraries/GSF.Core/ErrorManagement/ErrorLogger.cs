@@ -1644,7 +1644,7 @@ namespace GSF.ErrorManagement
             actionText.Append("Try alternative methods of performing the same action. ");
 
             // Add information about the contact person if provided.
-            if (!string.IsNullOrEmpty(m_contactName) && (!string.IsNullOrEmpty(m_contactPhone) || !string.IsNullOrEmpty(m_contactPhone)))
+            if (!string.IsNullOrEmpty(m_contactName) && (!string.IsNullOrEmpty(m_contactEmail) || !string.IsNullOrEmpty(m_contactPhone)))
             {
                 actionText.AppendFormat("If you need immediate assistance, contact {0} ", m_contactName);
 
