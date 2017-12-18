@@ -57,7 +57,7 @@ namespace GSF.SELEventParser
             public override string ToString()
             {
                 if (string.IsNullOrEmpty(Name))
-                    return null;
+                    return "";
 
                 return string.Format("{0}: StartLine = {1}, Length = {2}", Name, StartLine, Length);
             }
