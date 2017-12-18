@@ -679,7 +679,7 @@ namespace GSF.SELEventParser
                 if (!byteSum.Match)
                 {
                     //todo: Append AnalogSection to include data quality
-                    OnDebugMessage(string.Format("Byte sum does not match for data record {0} in SEL CEV file {1). This record processed as if it is valid.", dataRecordCount, fileIdentifier));
+                    OnDebugMessage(string.Format("Byte sum does not match for data record {0} in SEL CEV file {1}. This record processed as if it is valid.", dataRecordCount, fileIdentifier));
                 }
 
                 //LOAD ANALOG DATA (overall record tests above are sufficient to verify expected number of values)
