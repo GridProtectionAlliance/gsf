@@ -27,6 +27,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Timers;
@@ -37,6 +39,7 @@ using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
+using Microsoft.Win32.SafeHandles;
 
 // ReSharper disable AssignNullToNotNullAttribute
 namespace FileAdapters
@@ -158,6 +161,166 @@ namespace FileAdapters
             #endregion
         }
 
+        private sealed class ChildProcessManager : IDisposable
+        {
+            #region [ Members ]
+
+            // Nested Types
+
+            // ReSharper disable FieldCanBeMadeReadOnly.Local
+            // ReSharper disable UnusedMember.Local
+            // ReSharper disable InconsistentNaming
+            // ReSharper disable MemberCanBePrivate.Local
+            [StructLayout(LayoutKind.Sequential)]
+            private struct IO_COUNTERS
+            {
+                public ulong ReadOperationCount;
+                public ulong WriteOperationCount;
+                public ulong OtherOperationCount;
+                public ulong ReadTransferCount;
+                public ulong WriteTransferCount;
+                public ulong OtherTransferCount;
+            }
+
+            [StructLayout(LayoutKind.Sequential)]
+            private struct JOBOBJECT_BASIC_LIMIT_INFORMATION
+            {
+                public long PerProcessUserTimeLimit;
+                public long PerJobUserTimeLimit;
+                public uint LimitFlags;
+                public UIntPtr MinimumWorkingSetSize;
+                public UIntPtr MaximumWorkingSetSize;
+                public uint ActiveProcessLimit;
+                public UIntPtr Affinity;
+                public uint PriorityClass;
+                public uint SchedulingClass;
+            }
+
+            [StructLayout(LayoutKind.Sequential)]
+            private struct SECURITY_ATTRIBUTES
+            {
+                public uint nLength;
+                public IntPtr lpSecurityDescriptor;
+                public int bInheritHandle;
+            }
+
+            [StructLayout(LayoutKind.Sequential)]
+            private struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+            {
+                public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+                public IO_COUNTERS IoInfo;
+                public UIntPtr ProcessMemoryLimit;
+                public UIntPtr JobMemoryLimit;
+                public UIntPtr PeakProcessMemoryUsed;
+                public UIntPtr PeakJobMemoryUsed;
+            }
+
+            private enum JobObjectInfoType
+            {
+                AssociateCompletionPortInformation = 7,
+                BasicLimitInformation = 2,
+                BasicUIRestrictions = 4,
+                EndOfJobTimeInformation = 6,
+                ExtendedLimitInformation = 9,
+                SecurityLimitInformation = 5,
+                GroupInformation = 11
+            }
+            // ReSharper restore FieldCanBeMadeReadOnly.Local
+            // ReSharper restore UnusedMember.Local
+            // ReSharper restore InconsistentNaming
+            // ReSharper restore MemberCanBePrivate.Local
+
+            private sealed class SafeJobHandle : SafeHandleZeroOrMinusOneIsInvalid
+            {
+                public SafeJobHandle(IntPtr handle) : base(true)
+                {
+                    SetHandle(handle);
+                }
+
+                protected override bool ReleaseHandle()
+                {
+                    return CloseHandle(handle);
+                }
+            }
+
+            // Fields
+            private SafeJobHandle m_jobHandle;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public ChildProcessManager()
+            {
+                m_jobHandle = new SafeJobHandle(CreateJobObject(IntPtr.Zero, null));
+
+                JOBOBJECT_BASIC_LIMIT_INFORMATION info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
+                {
+                    LimitFlags = 0x2000
+                };
+
+                JOBOBJECT_EXTENDED_LIMIT_INFORMATION extendedInfo = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+                {
+                    BasicLimitInformation = info
+                };
+
+                int length = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+
+                IntPtr extendedInfoPtr = Marshal.AllocHGlobal(length);
+                Marshal.StructureToPtr(extendedInfo, extendedInfoPtr, false);
+
+                if (!SetInformationJobObject(m_jobHandle, JobObjectInfoType.ExtendedLimitInformation, extendedInfoPtr, (uint)length))
+                    throw new InvalidOperationException($"Unable to set information for ChildProcessManager job.  Error: {Marshal.GetLastWin32Error()}");
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void Dispose()
+            {
+                if (m_disposed)
+                    return;
+
+                m_jobHandle.Dispose();
+                m_jobHandle = null;
+                m_disposed = true;
+            }
+
+            public void AddProcess(Process process)
+            {
+                if (m_disposed)
+                    throw new ObjectDisposedException(nameof(ChildProcessManager));
+
+                if (!AssignProcessToJobObject(m_jobHandle, process.SafeHandle))
+                    throw new InvalidOperationException($"Unable to add process to ChildProcessManager job.  Error: {Marshal.GetLastWin32Error()}");
+            }
+
+            #endregion
+
+            #region [ Static ]
+
+            // Static Methods
+
+            // ReSharper disable InconsistentNaming
+            [DllImport("kernel32", CharSet = CharSet.Unicode)]
+            private static extern IntPtr CreateJobObject(IntPtr hObject, string lpName);
+
+            [DllImport("kernel32", SetLastError = true)]
+            private static extern bool SetInformationJobObject(SafeJobHandle jobHandle, JobObjectInfoType infoType, IntPtr lpJobObjectInfo, uint cbJobObjectInfoLength);
+
+            [DllImport("kernel32", SetLastError = true)]
+            private static extern bool AssignProcessToJobObject(SafeJobHandle jobHandle, SafeProcessHandle process);
+
+            [DllImport("kernel32")]
+            [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+            private static extern bool CloseHandle(IntPtr hObject);
+            // ReSharper restore InconsistentNaming
+
+            #endregion
+        }
+
         // Constants
 
         /// <summary>
@@ -269,6 +432,7 @@ namespace FileAdapters
         private readonly Process m_process;
         private readonly Dictionary<string, MessageLevel> m_messageLevelMap;
         private readonly ProcessUtilizationCalculator m_processUtilizationCalculator;
+        private readonly ChildProcessManager m_childProcessManager;
         private Regex m_logMessageTextExpression;
         private Regex m_logMessageLevelExpression;
         private bool m_supportsTemporalProcessing;
@@ -289,6 +453,10 @@ namespace FileAdapters
             m_process = new Process();
             m_messageLevelMap = new Dictionary<string, MessageLevel>(StringComparer.OrdinalIgnoreCase);
             m_processUtilizationCalculator = new ProcessUtilizationCalculator();
+
+            // In Windows environments, make sure child processes can be terminated if parent is terminated - even if termination is not graceful
+            if (!Common.IsPosixEnvironment)
+                m_childProcessManager = new ChildProcessManager();
         }
 
         #endregion
@@ -687,6 +855,7 @@ namespace FileAdapters
                         try
                         {
                             m_process.Kill();
+                            m_childProcessManager?.Dispose();
                         }
                         catch (Exception ex)
                         {
@@ -870,6 +1039,9 @@ namespace FileAdapters
                 ForceKillOnDispose = setting.ParseBoolean();
 
             m_process.Start();
+
+            if (ForceKillOnDispose)
+                m_childProcessManager?.AddProcess(m_process);
 
             if (RedirectOutputToHostEnvironment)
                 m_process.BeginOutputReadLine();
