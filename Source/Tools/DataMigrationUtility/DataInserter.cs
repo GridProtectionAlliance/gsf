@@ -479,7 +479,7 @@ namespace DataMigrationUtility
                 if ((object)lookupField != null)
                 {
                     // We currently don't handle binary fields...
-                    if (!(field.Type == OleDbType.Binary || field.Type == OleDbType.LongVarBinary || field.Type == OleDbType.VarBinary) & !(lookupField.Type == OleDbType.Binary || lookupField.Type == OleDbType.LongVarBinary || lookupField.Type == OleDbType.VarBinary))
+                    if (!(field.Type == OleDbType.Binary || field.Type == OleDbType.LongVarBinary || field.Type == OleDbType.VarBinary) && !(lookupField.Type == OleDbType.Binary || lookupField.Type == OleDbType.LongVarBinary || lookupField.Type == OleDbType.VarBinary))
                     {
                         // Copy field information from destination field
                         if (m_useFromSchemaRI)
@@ -519,7 +519,7 @@ namespace DataMigrationUtility
                     if ((object)lookupField != null)
                     {
                         // We need only track auto inc translations when field is referenced by foreign keys
-                        if (lookupField.AutoIncrement & lookupField.ForeignKeys.Count > 0)
+                        if (lookupField.AutoIncrement && lookupField.ForeignKeys.Count > 0)
                         {
                             // Create a new hash-table to hold auto-inc translations
                             lookupField.AutoIncrementTranslations = new Hashtable();
@@ -653,7 +653,7 @@ namespace DataMigrationUtility
                 ResetAutoIncValues(toTable);
             }
 
-            if (useBulkInsert & (object)bulkInsertFileStream != null)
+            if (useBulkInsert && (object)bulkInsertFileStream != null)
                 CompleteBulkInsert(toTable, progressIndex, bulkInsertFile, bulkInsertFileStream);
 
             OnRowProgress(fromTable.Name, progressTotal, progressTotal);
@@ -890,7 +890,7 @@ namespace DataMigrationUtility
 
             // We only attempt a bulk insert if the destination data source type is SQL Server and we are inserting
             // fields into a table that has no auto-inc fields with foreign key dependencies (or user forces procedure)
-            bool useBulkInsert = m_forceBulkInsert || (parentSchema.DataSourceType == DatabaseType.SQLServer & ((object)autoIncField == null || m_tableCollection.Count == 1));
+            bool useBulkInsert = m_forceBulkInsert || (parentSchema.DataSourceType == DatabaseType.SQLServer && ((object)autoIncField == null || m_tableCollection.Count == 1));
 
             if (useBulkInsert)
             {

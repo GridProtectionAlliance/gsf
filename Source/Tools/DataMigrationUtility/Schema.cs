@@ -2692,7 +2692,7 @@ namespace DataMigrationUtility
                     DataSet data = new DataSet();
                     OleDbDataAdapter adapter = new OleDbDataAdapter();
 
-                    if (table.Name.IndexOf(' ') == -1 & table.UsesDefaultSchema())
+                    if (table.Name.IndexOf(' ') == -1 && table.UsesDefaultSchema())
                     {
                         try
                         {
