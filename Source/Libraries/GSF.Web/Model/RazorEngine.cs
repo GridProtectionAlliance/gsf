@@ -46,6 +46,87 @@ namespace GSF.Web.Model
     {
         #region [ Members ]
 
+        // Nested Types
+        private sealed class FileWatchDebugTemplateManager : ITemplateManager, IDisposable
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly ResolvePathTemplateManager m_templateManager;
+            private readonly InvalidatingCachingProvider m_cachingProvider;
+            private readonly SafeFileWatcher m_fileWatcher;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public FileWatchDebugTemplateManager(string layoutRoot, InvalidatingCachingProvider cachingProvider)
+            {
+                m_cachingProvider = cachingProvider;
+                m_templateManager = new ResolvePathTemplateManager(new[] { layoutRoot });
+
+                m_fileWatcher = new SafeFileWatcher(Path.GetFullPath(layoutRoot), "*.*")
+                {
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories = true
+                };
+
+                m_fileWatcher.Changed += m_fileWatcher_Changed;
+                m_fileWatcher.Created += m_fileWatcher_Changed;
+                m_fileWatcher.Deleted += m_fileWatcher_Changed;
+                m_fileWatcher.Renamed += m_fileWatcher_Changed;
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void Dispose()
+            {
+                if (m_disposed)
+                    return;
+
+                try
+                {
+                    if ((object)m_fileWatcher != null)
+                    {
+                        m_fileWatcher.Changed -= m_fileWatcher_Changed;
+                        m_fileWatcher.Created -= m_fileWatcher_Changed;
+                        m_fileWatcher.Deleted -= m_fileWatcher_Changed;
+                        m_fileWatcher.Renamed -= m_fileWatcher_Changed;
+                        m_fileWatcher.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
+
+            public ITemplateSource Resolve(ITemplateKey key)
+            {
+                return m_templateManager.Resolve(key);
+            }
+
+            public ITemplateKey GetKey(string name, ResolveType resolveType, ITemplateKey context)
+            {
+                return m_templateManager.GetKey(name, resolveType, context);
+            }
+
+            public void AddDynamic(ITemplateKey key, ITemplateSource source)
+            {
+                m_templateManager.AddDynamic(key, source);
+            }
+
+            private void m_fileWatcher_Changed(object sender, FileSystemEventArgs e)
+            {
+                m_cachingProvider.InvalidateAll();
+            }
+
+            #endregion
+        }
+
         // Fields
         private readonly IRazorEngineService m_engineService;
         private bool m_disposed;
@@ -93,7 +174,7 @@ namespace GSF.Web.Model
                         {
                             Language = languageType.TargetLanguage,
                             CachingProvider = cachingProvider,
-                            TemplateManager = new WatchingResolvePathTemplateManager(new[] { templatePath }, cachingProvider),
+                            TemplateManager = new FileWatchDebugTemplateManager(templatePath, cachingProvider),
                             Debug = true
                         });
                     }

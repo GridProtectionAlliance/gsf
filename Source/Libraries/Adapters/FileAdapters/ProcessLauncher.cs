@@ -271,7 +271,7 @@ namespace FileAdapters
                 Marshal.StructureToPtr(extendedInfo, extendedInfoPtr, false);
 
                 if (!SetInformationJobObject(m_jobHandle, JobObjectInfoType.ExtendedLimitInformation, extendedInfoPtr, (uint)length))
-                    throw new InvalidOperationException($"Unable to set information for ChildProcessManager job.  Error: {Marshal.GetLastWin32Error()}");
+                    throw new InvalidOperationException($"Unable to set information for ChildProcessManager job. Error: {Marshal.GetLastWin32Error()}");
             }
 
             #endregion
@@ -294,7 +294,7 @@ namespace FileAdapters
                     throw new ObjectDisposedException(nameof(ChildProcessManager));
 
                 if (!AssignProcessToJobObject(m_jobHandle, process.SafeHandle))
-                    throw new InvalidOperationException($"Unable to add process to ChildProcessManager job.  Error: {Marshal.GetLastWin32Error()}");
+                    throw new InvalidOperationException($"Unable to add process to ChildProcessManager job. Error: {Marshal.GetLastWin32Error()}");
             }
 
             #endregion
