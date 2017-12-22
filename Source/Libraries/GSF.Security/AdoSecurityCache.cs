@@ -58,6 +58,8 @@ namespace GSF.Security
 
         #endregion
 
+        #region [ Constructors ]
+
         /// <summary>
         /// Creates a new instance of the <see cref="AdoSecurityCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
         /// </summary>
@@ -68,6 +70,8 @@ namespace GSF.Security
             m_dataSet = new DataSet("AdoSecurityContext");
             m_dataSetLock = new object();
         }
+
+        #endregion
 
         #region [ Properties ]
 

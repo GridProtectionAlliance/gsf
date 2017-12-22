@@ -44,6 +44,11 @@ namespace GrafanaAdapters
         public string RootTarget;
 
         /// <summary>
+        /// Defines a reference to the original target that was the source of these results.
+        /// </summary>
+        public Target SourceTarget;
+
+        /// <summary>
         /// Data source values enumerable.
         /// </summary>
         public IEnumerable<DataSourceValue> Source;

@@ -636,12 +636,11 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public virtual Task<string[]> Search(Target request)
         {
-            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders - for now, just return a truncated list of tag names:
             string target = request.target == "select metric" ? "" : request.target;
 
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                return TargetCache<string[]>.GetOrAdd($"search!{target}", () => Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray());
             });
         }
 
@@ -653,7 +652,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+                return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
             });
         }
 
@@ -665,7 +664,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables.Cast<DataTable>().Select(table => table.TableName).ToArray();
+                return TargetCache<string[]>.GetOrAdd("{A9BE60D2-EF94-4AE4-B002-63F7E9F6B334}", () => Metadata.Tables.Cast<DataTable>().Where(table => new[] { "ID", "SignalID", "PointTag", "Adder", "Multiplier" }.All(fieldName => table.Columns.Contains(fieldName))).Select(table => table.TableName).ToArray());
             });
         }
 
@@ -677,7 +676,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                return Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+                return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
             });
         }
 
@@ -749,14 +748,13 @@ namespace GrafanaAdapters
                 if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
-                uint excludedDataFlags = Convert.ToUInt32(request.options?["excludedDataFlags"].ToString() ?? "0x00000000", 16); // 0x00000000
-                uint includedDataFlags = Convert.ToUInt32(request.options?["includedDataFlags"].ToString() ?? "0xFFFFFFFF", 16); // 0xFFFFFFFF
-                bool includeNormalData = Convert.ToBoolean(request.options?["includeNormalData"].ToString() ?? "true");
-
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
 
-                DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
+                foreach (Target target in request.targets)
+                    target.target = target.target?.Trim() ?? "";
+
+                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, true, cancellationToken)).SelectMany(groups => groups).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
@@ -770,14 +768,15 @@ namespace GrafanaAdapters
                 // Process series data in parallel
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
-                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation
-                    IEnumerable<DataSourceValue> values = valueGroups.First(group => group.Target.Equals(series.target)).Source;
+                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
+                    DataSourceValueGroup valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
+                    IEnumerable<DataSourceValue> values = valueGroup.Source;
 
-                    if (excludedDataFlags > uint.MinValue)
-                        values = values.Where(value => !includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & excludedDataFlags) == 0);
+                    if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+                        values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
 
-                    if (includedDataFlags < uint.MaxValue)
-                        values = values.Where(value => includeNormalData && value.Flags == MeasurementStateFlags.Normal || ((uint)value.Flags & includedDataFlags) > 0);
+                    if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
+                        values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
 
                     series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
                 });
@@ -835,12 +834,12 @@ namespace GrafanaAdapters
             return TargetCache<float>.GetOrAdd($"{target}_{field}", () => LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
         }
 
-        private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
             // A single target might look like the following:
             // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
 
-            HashSet<string> targetSet = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
+            HashSet<string> targetSet = new HashSet<string>(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
             HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             List<Match> seriesFunctions = new List<Match>();
 
@@ -876,7 +875,7 @@ namespace GrafanaAdapters
             {
                 // Execute series functions
                 foreach (Tuple<SeriesFunction, string, GroupOperation> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
-                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, interval, decimate, cancellationToken))
+                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, decimate, cancellationToken))
                         yield return valueGroup;
 
                 // Use reduced target set that excludes any series functions
@@ -917,12 +916,13 @@ namespace GrafanaAdapters
                     {
                         Target = target.Value,
                         RootTarget = target.Value,
+                        SourceTarget = sourceTarget,
                         Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value))
                     };
             }
         }
 
-        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
             SeriesFunction seriesFunction = parsedFunction.Item1;
             string expression = parsedFunction.Item2;
@@ -995,14 +995,14 @@ namespace GrafanaAdapters
             });
 
             string[] parameters = expressionParameters.Item1;
-            string targetExpression = expressionParameters.Item2;   // Final function parameter is always target expression
+            string queryExpression = expressionParameters.Item2;   // Final function parameter is always target expression
 
             // When accurate calculation results are requested, query data source at full resolution
             if (seriesFunction == SeriesFunction.Interval && ParseFloat(parameters[0]) == 0.0D)
                 decimate = false;
 
             // Query function expression to get series data
-            IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, interval, decimate, cancellationToken);
+            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, decimate, cancellationToken);
 
             // Handle label function as a special edge case - groups operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)
@@ -1041,6 +1041,7 @@ namespace GrafanaAdapters
                     {
                         Target = seriesLabel,
                         RootTarget = target,
+                        SourceTarget = sourceTarget,
                         Source = groups[i].Source
                     };
                 }
@@ -1053,8 +1054,9 @@ namespace GrafanaAdapters
                         // Flatten all series into a single enumerable
                         DataSourceValueGroup result = new DataSourceValueGroup
                         {
-                            Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
-                            RootTarget = targetExpression,
+                            Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
+                            RootTarget = queryExpression,
+                            SourceTarget = sourceTarget,
                             Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
                         };
 
@@ -1076,8 +1078,9 @@ namespace GrafanaAdapters
                         // Flatten all series into a single enumerable
                         yield return new DataSourceValueGroup
                         {
-                            Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
-                            RootTarget = targetExpression,
+                            Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
+                            RootTarget = queryExpression,
+                            SourceTarget = sourceTarget,
                             Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters)
                         };
 
@@ -1088,6 +1091,7 @@ namespace GrafanaAdapters
                             {
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
                                 RootTarget = dataValues.Target,
+                                SourceTarget = sourceTarget,
                                 Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
                             };
 

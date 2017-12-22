@@ -132,7 +132,7 @@ namespace GSF.ASN1.Utilities
         }
 
 
-        /*		public override void  WriteByte(byte b)
+		public override void  WriteByte(byte b)
         {
             lock (this)
             {
@@ -149,7 +149,7 @@ namespace GSF.ASN1.Utilities
                 }
             }
         }
-*/
+
 
         public void WriteByte(int b)
         {

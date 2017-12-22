@@ -119,6 +119,9 @@ namespace GSF.SELEventParser
 
             AnalogSection analogSection = new AnalogSection();
 
+            if (lines.Length < index)
+                return analogSection;
+
             int headerLineIndex;
             int firstDataLineIndex;
             int dataLineIndex;

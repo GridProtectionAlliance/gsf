@@ -54,7 +54,7 @@ namespace GSF.FuzzyStrings
                 targetSourceIntersetAsString += character;
             }
 
-            double t = sourceTargetIntersetAsString.LevenshteinDistance(targetSourceIntersetAsString) / 2;
+            double t = sourceTargetIntersetAsString.LevenshteinDistance(targetSourceIntersetAsString) / 2.0D;
 
             return ((m / source.Length) + (m / target.Length) + ((m - t) / m)) / 3;
         }

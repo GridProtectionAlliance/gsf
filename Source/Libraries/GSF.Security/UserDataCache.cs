@@ -80,6 +80,8 @@ namespace GSF.Security
 
         #endregion
 
+        #region [ Constructors ]
+
         /// <summary>
         /// Creates a new instance of the <see cref="UserDataCache"/>.
         /// </summary>
@@ -101,6 +103,8 @@ namespace GSF.Security
             m_userDataTable = new Dictionary<string, UserData>(StringComparer.OrdinalIgnoreCase);
             m_userDataTableLock = new object();
         }
+
+        #endregion
 
         #region [ Properties ]
 

@@ -63,6 +63,24 @@ namespace GrafanaAdapters
         Task<string[]> Search(Target request);
 
         /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        Task<string[]> SearchFields(Target request);
+
+        /// <summary>
+        /// Search data source for a list of tables.
+        /// </summary>
+        /// <param name="request">Request.</param>
+        Task<string[]> SearchFilters(Target request);
+
+        /// <summary>
+        /// Search data source for a list of columns from a specific table.
+        /// </summary>
+        /// <param name="request">Table Name.</param>
+        Task<string[]> SearchOrderBys(Target request);
+
+        /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>

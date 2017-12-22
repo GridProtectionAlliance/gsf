@@ -46,6 +46,87 @@ namespace GSF.Web.Model
     {
         #region [ Members ]
 
+        // Nested Types
+        private sealed class FileWatchDebugTemplateManager : ITemplateManager, IDisposable
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly ResolvePathTemplateManager m_templateManager;
+            private readonly InvalidatingCachingProvider m_cachingProvider;
+            private readonly SafeFileWatcher m_fileWatcher;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public FileWatchDebugTemplateManager(string layoutRoot, InvalidatingCachingProvider cachingProvider)
+            {
+                m_cachingProvider = cachingProvider;
+                m_templateManager = new ResolvePathTemplateManager(new[] { layoutRoot });
+
+                m_fileWatcher = new SafeFileWatcher(Path.GetFullPath(layoutRoot), "*.*")
+                {
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories = true
+                };
+
+                m_fileWatcher.Changed += m_fileWatcher_Changed;
+                m_fileWatcher.Created += m_fileWatcher_Changed;
+                m_fileWatcher.Deleted += m_fileWatcher_Changed;
+                m_fileWatcher.Renamed += m_fileWatcher_Changed;
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void Dispose()
+            {
+                if (m_disposed)
+                    return;
+
+                try
+                {
+                    if ((object)m_fileWatcher != null)
+                    {
+                        m_fileWatcher.Changed -= m_fileWatcher_Changed;
+                        m_fileWatcher.Created -= m_fileWatcher_Changed;
+                        m_fileWatcher.Deleted -= m_fileWatcher_Changed;
+                        m_fileWatcher.Renamed -= m_fileWatcher_Changed;
+                        m_fileWatcher.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
+
+            public ITemplateSource Resolve(ITemplateKey key)
+            {
+                return m_templateManager.Resolve(key);
+            }
+
+            public ITemplateKey GetKey(string name, ResolveType resolveType, ITemplateKey context)
+            {
+                return m_templateManager.GetKey(name, resolveType, context);
+            }
+
+            public void AddDynamic(ITemplateKey key, ITemplateSource source)
+            {
+                m_templateManager.AddDynamic(key, source);
+            }
+
+            private void m_fileWatcher_Changed(object sender, FileSystemEventArgs e)
+            {
+                m_cachingProvider.InvalidateAll();
+            }
+
+            #endregion
+        }
+
         // Fields
         private readonly IRazorEngineService m_engineService;
         private bool m_disposed;
@@ -93,7 +174,7 @@ namespace GSF.Web.Model
                         {
                             Language = languageType.TargetLanguage,
                             CachingProvider = cachingProvider,
-                            TemplateManager = new WatchingResolvePathTemplateManager(new[] { templatePath }, cachingProvider),
+                            TemplateManager = new FileWatchDebugTemplateManager(templatePath, cachingProvider),
                             Debug = true
                         });
                     }
@@ -199,10 +280,20 @@ namespace GSF.Web.Model
             m_engineService.AddTemplate(key, templateSource);
         }
 
-        /// <summary>Compiles the specified template and caches it.</summary>
+        /// <summary>
+        /// Compiles the specified template and caches it.
+        /// </summary>
         public void Compile(ITemplateKey key, Type modelType = null)
         {
             m_engineService.Compile(key, modelType);
+        }
+
+        /// <summary>
+        /// Compiles the specified template, by name, and caches it.
+        /// </summary>
+        public void Compile(string name, Type modelType = null)
+        {
+            m_engineService.Compile(name, modelType);
         }
 
         /// <summary>
@@ -213,7 +304,9 @@ namespace GSF.Web.Model
             m_engineService.RunCompile(key, writer, modelType, model, viewBag);
         }
 
-        /// <summary>Runs the given cached template.</summary>
+        /// <summary>
+        /// Runs the given cached template.
+        /// </summary>
         public void Run(ITemplateKey key, TextWriter writer, Type modelType = null, object model = null, DynamicViewBag viewBag = null)
         {
             m_engineService.Run(key, writer, modelType, model, viewBag);
@@ -223,9 +316,19 @@ namespace GSF.Web.Model
         /// Kicks off a task to pre-compile Razor templates.
         /// </summary>
         /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
-        public Task PreCompile(Action<Exception> exceptionHandler = null)
+        public Task PreCompile(Action<Exception> exceptionHandler)
         {
-            return PreCompile(null, exceptionHandler);
+            return PreCompile(exceptionHandler, null);
+        }
+
+        /// <summary>
+        /// Kicks off a task to pre-compile Razor templates.
+        /// </summary>
+        /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
+        /// <param name="templatePath">Template path is use; otherwise, set to <c>null</c> to use default path.</param>
+        public Task PreCompile(Action<Exception> exceptionHandler, string templatePath)
+        {
+            return PreCompile(null, exceptionHandler, templatePath);
         }
 
         /// <summary>
@@ -233,15 +336,19 @@ namespace GSF.Web.Model
         /// </summary>
         /// <param name="modelType">The type of the model used for the application.</param>
         /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
-        public Task PreCompile(Type modelType, Action<Exception> exceptionHandler = null)
+        /// <param name="templatePath">Template path is use; otherwise, set to <c>null</c> to use default path.</param>
+        public Task PreCompile(Type modelType, Action<Exception> exceptionHandler, string templatePath)
         {
+            if (string.IsNullOrEmpty(templatePath))
+                templatePath = TemplatePath;
+
             return Task.Run(() =>
             {
                 TLanguage languageType = new TLanguage();
 
                 if (languageType.ResolutionMode == RazorViewResolutionMode.EmbeddedResource)
                 {
-                    foreach (string fileName in Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(fileName => fileName.StartsWith(TemplatePath)))
+                    foreach (string fileName in Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(fileName => fileName.StartsWith(templatePath)))
                     {
                         try
                         {
@@ -256,7 +363,7 @@ namespace GSF.Web.Model
                 }
                 else
                 {
-                    string webRootFolder = FilePath.AddPathSuffix(TemplatePath);
+                    string webRootFolder = FilePath.AddPathSuffix(templatePath);
                     string[] razorFiles = FilePath.GetFileList($"{webRootFolder}*.{(languageType.TargetLanguage == Language.CSharp ? "cs" : "vb")}html");
 
                     foreach (string fileName in razorFiles)

@@ -37,5 +37,15 @@ namespace GrafanaAdapters
         /// Target point/tag name.
         /// </summary>
         public string target { get; set; }
+
+        /// <summary>
+        /// Exclude data that have the specified flags set.
+        /// </summary>
+        public uint excludedFlags { get; set; }
+
+        /// <summary>
+        /// Exclude data that has normal flag set.
+        /// </summary>
+        public bool excludeNormalFlags { get; set; }
     }
 }

@@ -1,22 +1,6 @@
 # GSF Grafana Functions
 
-The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-group basis. The following defines the [available functions](#available-functions) and group operations that are available for a data source implementing the GSF Grafana interface, e.g., [openHistorian](https://github.com/GridProtectionAlliance/openHistorian). Note that any data source that implements the [GrafanaDataSourceBase](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Libraries/Adapters/GrafanaAdapters/GrafanaDataSourceBase.cs) class will automatically inherit this functionality.
-
-## Group Operations
-
-Each Grafana series function can be operated on in aggregate using a group operator prefix:
-
-### Set
-
-Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series, horizontally, end-to-end by prefixing the function name with `Set`.
-
-* Example: `SetAverage(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
-
-### Slice
-
-Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as a group, vertically, per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with a slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
-
-* Example: `SliceSum(0.0333, FILTER ActiveMeasurements WHERE SignalType='IPHM')`
+The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-group basis. The following defines the [available functions](#available-functions) and [group operations](#group-operations) that are available for a data source implementing the GSF Grafana interface, e.g., [openHistorian](https://github.com/GridProtectionAlliance/openHistorian). Note that any data source that implements the [GrafanaDataSourceBase](https://github.com/GridProtectionAlliance/gsf/blob/master/Source/Libraries/Adapters/GrafanaAdapters/GrafanaDataSourceBase.cs) class will automatically inherit this functionality.
 
 ## Series Functions
 
@@ -49,7 +33,23 @@ Each of the series functions include documentation for the mode of execution req
 | _Immediate enumeration_ | Series data will be processed serially inside the function | Increased processing impact, minimal memory impact |
 | _Immediate in-memory array load_ | Series data will be loaded into an array and processed inside the function | Higher processing and memory impact |
 
-### Available Functions
+## Group Operations
+
+Each Grafana series function can be operated on in aggregate using a group operator prefix:
+
+### Set
+
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series, horizontally, end-to-end by prefixing the function name with `Set`.
+
+* Example: `SetAverage(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
+
+### Slice
+
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as a group, vertically, per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with a slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
+
+* Example: `SliceSum(0.0333, FILTER ActiveMeasurements WHERE SignalType='IPHM')`
+
+## Available Functions
 
 * [Average](#average)
 * [Minimum](#minimum)

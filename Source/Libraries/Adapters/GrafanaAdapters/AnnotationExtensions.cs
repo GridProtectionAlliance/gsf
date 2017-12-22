@@ -139,7 +139,7 @@ namespace GrafanaAdapters
                     DataRow metadata = GetTargetMetaData(source, definition["SignalID"]);
                     response.title = $"Alarm {(type == AnnotationType.RaisedAlarms ? "Raised" : "Cleared")}";
                     response.text = $"{definition["Description"]}<br/>Condition:&nbsp;{GetAlarmCondition(definition)}<br/>Severity:&nbsp;{definition["Severity"]}<br/>[{metadata["ID"]}]:&nbsp;{metadata["SignalReference"]}";
-                    response.tags = $"{metadata["PointTag"]}, {target}";
+                    response.tags = $"{metadata["PointTag"]},{target}";
                     break;
                 default:
                     throw new InvalidOperationException("Cannot populate response information for specified annotation type.");
