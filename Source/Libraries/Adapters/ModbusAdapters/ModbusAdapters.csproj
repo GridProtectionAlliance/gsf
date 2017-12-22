@@ -125,12 +125,6 @@
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Temperature %28DCM%29 Value.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Duration.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Status.json" />
-    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Day.json" />
-    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Hour.json" />
-    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Minute.json" />
-    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Month.json" />
-    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Second.json" />
-    <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Thermal Runaway Channel Timestamp, Year.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Average Count.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage Average.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\256 Vals\String Voltage High Limit.json" />
@@ -152,23 +146,14 @@
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 2.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 3.json" />
     <EmbeddedResource Include="ModbusConfigs\CellWatch\String Dependent Information\String Temperature Probe 4.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 1 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 1 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 2 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 2 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 3 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 3 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 4 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 4 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 5 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 5 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 6 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 6 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 1 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 1 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 2 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 2 Last Record.json" />
-    <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 3 Alarm 1, 2, and 3 Settings.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 3 Last Record.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\General Information.json" />
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\Kelman Mapping.py" />
@@ -227,6 +212,15 @@
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Last Record.json" />
     <EmbeddedResource Include="ModbusConfigs\PQube\Mappings.json" />
     <EmbeddedResource Include="ModbusConfigs\PQube\PQubeScript.py" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 1 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 2 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 3 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 4 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 5 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 6 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 1 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 2 Alarm 1+2+3 Settings.json" />
+    <None Include="ModbusConfigs\KelmanTransformerDGA\Digital Input 3 Alarm 1+2+3 Settings.json" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
