@@ -44,6 +44,7 @@ using GSF.Security;
 using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Hubs;
+using GSF.Web.Security;
 using CancellationToken = System.Threading.CancellationToken;
 
 // ReSharper disable once AccessToDisposedClosure
@@ -445,6 +446,17 @@ namespace GSF.Web.Model.Handlers
             return $"{modelName}Export.csv";
         }
 
-#endregion
+        #endregion
+
+        #region [ Static ]
+
+        // Static Constructor
+        static CsvDownloadHandler()
+        {
+            // Generally embedded resources are marked as anonymous, this forces CSV download handler to require authentication
+            AuthenticationOptions.ResourceRequiresAuthentication($"GSF.Web.Model.Handlers.{nameof(CsvDownloadHandler)}.ashx", true);
+        }
+
+        #endregion
     }
 }

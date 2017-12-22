@@ -237,8 +237,52 @@ namespace GSF.Web.Security
         {
             if ((object)m_anonymousResourceExpression == null)
                 AnonymousResourceExpression = DefaultAnonymousResourceExpression;
+                
+            return m_anonymousResourceCache.GetOrAdd(urlPath, path =>
+            {
+                string resource = path;
+                bool state;
 
-            return m_anonymousResourceCache.GetOrAdd(urlPath, m_anonymousResources.IsMatch);
+                // If path is an embedded resource, convert it to a properly formatted type name identifier
+                if (resource.StartsWith("/@"))
+                    resource = resource.Substring(2).Replace('/', '.');
+                else if (resource.StartsWith("@"))
+                    resource = resource.Substring(1).Replace('/', '.');
+
+                if (s_resourceRequiresAuthentication.TryGetValue(resource, out state))
+                    return !state;
+
+                // Always match against unmodified original path
+                return m_anonymousResources.IsMatch(path);
+            });
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ConcurrentDictionary<string, bool> s_resourceRequiresAuthentication;
+
+        // Static Constructor
+        static AuthenticationOptions()
+        {
+            s_resourceRequiresAuthentication = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        // Static Methods
+
+        /// <summary>
+        /// Sets the resource to the required authentication state.
+        /// </summary>
+        /// <param name="resource">Resource name.</param>
+        /// <param name="required">Set to <c>true</c> to require authenticated access; otherwise, <c>false</c> to require anonymous access.</param>
+        /// <remarks>
+        /// This state overrides any authentication state that would otherwise be derived from <see cref="AnonymousResourceExpression"/>.
+        /// </remarks>
+        public static void ResourceRequiresAuthentication(string resource, bool required)
+        {
+            s_resourceRequiresAuthentication[resource] = required;
         }
 
         #endregion
