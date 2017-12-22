@@ -44,7 +44,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Creates a new instance of the <see cref="FilterAdapterBase"/> class.
         /// </summary>
-        public FilterAdapterBase()
+        protected FilterAdapterBase()
         {
             m_inputMeasurementKeys = new HashSet<MeasurementKey>();
         }
