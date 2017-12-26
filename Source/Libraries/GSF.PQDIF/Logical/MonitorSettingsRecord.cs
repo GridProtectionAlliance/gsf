@@ -214,7 +214,7 @@ namespace GSF.PQDIF.Logical
                 ScalarElement nominalFrequencyElement = m_physicalRecord.Body.Collection.GetScalarByTag(NominalFrequencyTag);
 
                 if ((object)nominalFrequencyElement == null)
-                    return 60.0D;
+                    return DefaultNominalFrequency;
 
                 return nominalFrequencyElement.GetReal8();
             }
@@ -330,6 +330,14 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies the nominal frequency.
         /// </summary>
         public static readonly Guid NominalFrequencyTag = new Guid("0fa118c3-cb4a-11d2-b30b-fe25cb9a1760");
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets or sets the default value for the <see cref="NominalFrequency"/>
+        /// property when the value is not defined in the PQDIF file.
+        /// </summary>
+        public static double DefaultNominalFrequency { get; set; } = 60.0D;
 
         // Static Methods
 
