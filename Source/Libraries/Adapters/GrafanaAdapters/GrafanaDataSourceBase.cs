@@ -38,6 +38,7 @@ using GSF.Units;
 using GSF.Web;
 
 // ReSharper disable PossibleMultipleEnumeration
+// ReSharper disable AccessToModifiedClosure
 namespace GrafanaAdapters
 {
     #region [ Enumerations ]
@@ -2060,12 +2061,29 @@ namespace GrafanaAdapters
                 if ((object)source == null)
                     throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
 
+                double defaultValue = 0.0D;
+                bool hasDefaultValue = false;
+
+                if (parameter.IndexOf('^') > -1)
+                {
+                    string[] parts = parameter.Split('^');
+
+                    if (parts.Length >= 2)
+                    {
+                        parameter = parts[0];
+                        defaultValue = ParseFloat(parts[1], source, validateGTEZero, isSliceOperation);
+                        hasDefaultValue = true;
+                    }
+                }
+
                 DataSourceValue result = source.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
 
                 if (string.IsNullOrEmpty(result.Target))
                 {
                     // Slice operations may not have a target for a given slice - in this case function should use a default value and not fail
-                    if (!isSliceOperation)
+                    if (isSliceOperation || hasDefaultValue)
+                        result.Value = defaultValue;
+                    else
                         throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as a floating-point value.");
                 }
 
@@ -2129,13 +2147,28 @@ namespace GrafanaAdapters
                 if (parameter.EndsWith("%"))
                     throw new ArgumentOutOfRangeException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
 
+                double defaultValue = 1.0D;
+                bool hasDefaultValue = false;
+
+                if (parameter.IndexOf('^') > -1)
+                {
+                    string[] parts = parameter.Split('^');
+
+                    if (parts.Length >= 2)
+                    {
+                        parameter = parts[0];
+                        defaultValue = ParseCount(parts[1], values, isSliceOperation);
+                        hasDefaultValue = true;
+                    }
+                }
+
                 DataSourceValue result = values.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
 
                 if (string.IsNullOrEmpty(result.Target))
                 {
                     // Slice operations may not have a target for a given slice - in this case function should use a default value and not fail
-                    if (isSliceOperation)
-                        result.Value = 1.0D;
+                    if (isSliceOperation || hasDefaultValue)
+                        result.Value = defaultValue;
                     else
                         throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as an integer value.");
                 }
