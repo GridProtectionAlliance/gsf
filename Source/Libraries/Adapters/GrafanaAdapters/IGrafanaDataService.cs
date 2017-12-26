@@ -66,18 +66,21 @@ namespace GrafanaAdapters
         /// Search data source for a list of columns from a specific table.
         /// </summary>
         /// <param name="request">Table Name.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/searchfields", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<string[]> SearchFields(Target request);
 
         /// <summary>
         /// Search data source for a list of tables.
         /// </summary>
         /// <param name="request">Request.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/searchfilters", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<string[]> SearchFilters(Target request);
 
         /// <summary>
-        /// Search data source for a list of columns from a specific table.
+        /// Search data source for a list of columns from a specific table to use for ORDER BY expression.
         /// </summary>
         /// <param name="request">Table Name.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/searchorderbys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<string[]> SearchOrderBys(Target request);
 
         /// <summary>

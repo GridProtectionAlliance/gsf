@@ -659,24 +659,26 @@ namespace GrafanaAdapters
         /// <summary>
         /// Search data source for a list of tables.
         /// </summary>
-        /// <param name="request">Request.</param>
+        /// <param name="request">Request - ignored.</param>
         public virtual Task<string[]> SearchFilters(Target request)
         {
             return Task.Factory.StartNew(() =>
             {
-                return TargetCache<string[]>.GetOrAdd("{A9BE60D2-EF94-4AE4-B002-63F7E9F6B334}", () => Metadata.Tables.Cast<DataTable>().Where(table => new[] { "ID", "SignalID", "PointTag", "Adder", "Multiplier" }.All(fieldName => table.Columns.Contains(fieldName))).Select(table => table.TableName).ToArray());
+                // Any table that includes columns for ID, SignalID, PointTag, Adder and Multipler can be used as measurement sources for filter expressions
+                return TargetCache<string[]>.GetOrAdd("search!filters!{63F7E9F6B334}", () => Metadata.Tables.Cast<DataTable>().Where(table => new[] { "ID", "SignalID", "PointTag", "Adder", "Multiplier" }.All(fieldName => table.Columns.Contains(fieldName))).Select(table => table.TableName).ToArray());
             });
         }
 
         /// <summary>
-        /// Search data source for a list of columns from a specific table.
+        /// Search data source for a list of columns from a specific table to use for ORDER BY expression.
         /// </summary>
         /// <param name="request">Table Name.</param>
         public virtual Task<string[]> SearchOrderBys(Target request)
         {
             return Task.Factory.StartNew(() =>
             {
-                return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
+                // Result will typically be the same list as SearchFields but allows ability to deviate in case certain fields are not suitable for ORDER BY expression
+                return TargetCache<string[]>.GetOrAdd($"search!orderbys!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
             });
         }
 
@@ -1563,12 +1565,12 @@ namespace GrafanaAdapters
         private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
         {
             while (!scanner.DataReadComplete)
-                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters))
+                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
                     yield return dataValue;
         }
 
         // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
-        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters)
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters, bool isSliceOperation = false)
         {
             DataSourceValue[] values;
             DataSourceValue result = new DataSourceValue();
@@ -1666,28 +1668,28 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.Add:
-                    value = ParseFloat(parameters[0], source, false);
+                    value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.Subtract:
-                    value = ParseFloat(parameters[0], source, false);
+                    value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.Multiply:
-                    value = ParseFloat(parameters[0], source, false);
+                    value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
                 case SeriesFunction.Divide:
-                    value = ParseFloat(parameters[0], source, false);
+                    value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
@@ -1744,7 +1746,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values);
+                    count = ParseCount(parameters[0], values, isSliceOperation);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1764,7 +1766,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values);
+                    count = ParseCount(parameters[0], values, isSliceOperation);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1784,7 +1786,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = ParseCount(parameters[0], values);
+                    count = ParseCount(parameters[0], values, isSliceOperation);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1805,7 +1807,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values);
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values, isSliceOperation);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1820,7 +1822,7 @@ namespace GrafanaAdapters
                     if (values.Length == 0)
                         yield break;
 
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values);
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values, isSliceOperation);
 
                     if (count > values.Length)
                         count = values.Length;
@@ -1926,7 +1928,7 @@ namespace GrafanaAdapters
                     if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
                         timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
-                    value = FromTimeUnits(ParseFloat(parameters[0], source), timeUnit) / SI.Milli;
+                    value = FromTimeUnits(ParseFloat(parameters[0], source, true, isSliceOperation), timeUnit) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -1946,8 +1948,8 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.IncludeRange:
-                    low = ParseFloat(parameters[0], source, false);
-                    high = ParseFloat(parameters[1], source, false);
+                    low = ParseFloat(parameters[0], source, false, isSliceOperation);
+                    high = ParseFloat(parameters[1], source, false, isSliceOperation);
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
@@ -1956,8 +1958,8 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.ExcludeRange:
-                    low = ParseFloat(parameters[0], source, false);
-                    high = ParseFloat(parameters[1], source, false);
+                    low = ParseFloat(parameters[0], source, false, isSliceOperation);
+                    high = ParseFloat(parameters[1], source, false, isSliceOperation);
                     lowInclusive = parameters.Length > 2 && parameters[2].Trim().ParseBoolean();
                     highInclusive = parameters.Length > 3 ? parameters[3].Trim().ParseBoolean() : lowInclusive;
 
@@ -2036,7 +2038,7 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static double ParseFloat(string parameter, IEnumerable<DataSourceValue> source = null, bool validateGTEZero = true)
+        private static double ParseFloat(string parameter, IEnumerable<DataSourceValue> source = null, bool validateGTEZero = true, bool isSliceOperation = false)
         {
             double value;
 
@@ -2061,7 +2063,11 @@ namespace GrafanaAdapters
                 DataSourceValue result = source.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
 
                 if (string.IsNullOrEmpty(result.Target))
-                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as a floating-point value.");
+                {
+                    // Slice operations may not have a target for a given slice - in this case function should use a default value and not fail
+                    if (!isSliceOperation)
+                        throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as a floating-point value.");
+                }
 
                 value = result.Value;
             }
@@ -2075,7 +2081,7 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static int ParseCount(string parameter, DataSourceValue[] values)
+        private static int ParseCount(string parameter, DataSourceValue[] values, bool isSliceOperation)
         {
             int length = values.Length;
             int count;
@@ -2126,7 +2132,13 @@ namespace GrafanaAdapters
                 DataSourceValue result = values.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
 
                 if (string.IsNullOrEmpty(result.Target))
-                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as an integer value.");
+                {
+                    // Slice operations may not have a target for a given slice - in this case function should use a default value and not fail
+                    if (isSliceOperation)
+                        result.Value = 1.0D;
+                    else
+                        throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as an integer value.");
+                }
 
                 // Treat fractional numbers as a percentage of length
                 if (result.Value > 0.0D && result.Value < 1.0D)
