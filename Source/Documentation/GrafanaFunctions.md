@@ -14,15 +14,15 @@ To better understand named targets, follow these example steps:
 
  1. The following expression produces two unwrapped voltage phase angle series:
 
-    `UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)`
+    [`UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)`](#unwrapangle)
 
  2. Values from one of the series can now be substracted from values in both of the series at every 1/30 of a second slice:
 
-    `SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`
+    [`SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`](#subtract)
 
- 3. A _Slice_ operation on multiple series can produce multiple values at the same timestamp, however, since values produced by one of the series will now always be zero, the zero values can be excluded:
+ 3. Using a _Slice_ operation on functions that return multiple series can produce multiple values at the same timestamp, however, since values produced by one of the series will now always be zero, the zero values can be excluded:
 
-    `ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)))`
+    [`ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)))`](#excluderange)
 
 ### Execution Modes
 Each of the series functions include documentation for the mode of execution required by the function. These modes determine the level of processing expense and memory burden incurred by the function. The impacts of the execution modes increase as the time-range or resolution of the series data increases.
