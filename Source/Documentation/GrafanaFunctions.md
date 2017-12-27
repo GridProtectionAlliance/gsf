@@ -8,7 +8,7 @@ Various functions are available that can be applied to each series that come fro
 
 * Example: `PPA:15; STAT:20; SetSum(Count(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); Range(PPA:99; Sum(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))`
 
-Many series functions have parameters that can be required or optional. Optional values will always define a default state. Parameter values must be a constant value or, where applicable, a named target available from the expression. Named targets are intended to work with group operations, i.e., [Set](#set) or [Slice](#slice), since group operations provide access to multiple series values from within a single series. The actual value used for a named target parameter will be the first encountered value for the target series - in the case of slice group operations, this will be the first value encountered in each slice. Named target parameters can optionally specifiy multiple fall-back series and one final default constant value each separated by a `^` symbol to use when the named target series is not available , e.g.: `SliceSubtract(1, T1^T2^5.5, T1;T2;T3)`
+Many series functions have parameters that can be required or optional &ndash; optional values will always define a default state. Parameter values must be a constant value or, where applicable, a named target available from the expression. Named targets are intended to work with group operations, i.e., [Set](#set) or [Slice](#slice), since group operations provide access to multiple series values from within a single series. The actual value used for a named target parameter will be the first encountered value for the target series &ndash; in the case of slice group operations, this will be the first value encountered in each slice. Named target parameters can optionally specifiy multiple fall-back series and one final default constant value each separated by a `^` symbol to use when the named target series is not available, e.g.: `SliceSubtract(1, T1^T2^5.5, T1;T2;T3)`
 
 To better understand named targets, follow these example steps:
 
@@ -16,11 +16,11 @@ To better understand named targets, follow these example steps:
 
     `UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)`
 
- 2. You could then subtract values in one of the series from values in both of the series at every 1/30 of a second slice:
+ 2. Values from one of the series can now be substracted from values in both of the series at every 1/30 of a second slice:
 
     `SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`
 
- 3. Finally you could exclude zero values from the trends since values in one series will now always be zero - this effectively removes the zero value trend:
+ 3. A _Slice_ operation on multiple series can produce multiple values at the same timestamp, however, since values produced by one of the series will now always be zero, the zero values can be excluded:
 
     `ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)))`
 
