@@ -20,7 +20,7 @@ To better understand named targets, follow these example steps:
 
     [`SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`](#subtract)
 
- 3. Using a _Slice_ operation on functions that return multiple series can produce multiple values at the same timestamp, however, since values produced by one of the series will now always be zero, the zero values can be excluded:
+ 3. Using a [Slice](#slice) operation on functions that return multiple series can produce multiple values at the same timestamp, however, since values produced by one of the series will now always be zero, the zero values can be excluded:
 
     [`ExcludeRange(0, 0, SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)))`](#excluderange)
 
