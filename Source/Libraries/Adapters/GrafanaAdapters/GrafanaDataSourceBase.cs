@@ -2064,13 +2064,13 @@ namespace GrafanaAdapters
                 double defaultValue = 0.0D;
                 bool hasDefaultValue = false;
 
-                if (parameter.IndexOf('^') > -1)
+                if (parameter.IndexOf(';') > -1)
                 {
-                    string[] parts = parameter.Split('^');
+                    string[] parts = parameter.Split(';');
 
                     if (parts.Length >= 2)
                     {
-                        parameter = parts[0];
+                        parameter = parts[0].Trim();
                         defaultValue = ParseFloat(parts[1], source, validateGTEZero, isSliceOperation);
                         hasDefaultValue = true;
                     }
@@ -2150,13 +2150,13 @@ namespace GrafanaAdapters
                 double defaultValue = 1.0D;
                 bool hasDefaultValue = false;
 
-                if (parameter.IndexOf('^') > -1)
+                if (parameter.IndexOf(';') > -1)
                 {
-                    string[] parts = parameter.Split('^');
+                    string[] parts = parameter.Split(';');
 
                     if (parts.Length >= 2)
                     {
-                        parameter = parts[0];
+                        parameter = parts[0].Trim();
                         defaultValue = ParseCount(parts[1], values, isSliceOperation);
                         hasDefaultValue = true;
                     }
