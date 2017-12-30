@@ -38,6 +38,7 @@ using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using Microsoft.Win32.SafeHandles;
 
@@ -428,6 +429,11 @@ namespace FileAdapters
         /// </summary>
         public const int DefaultUtilizationUpdateInterval = 5000;
 
+        /// <summary>
+        /// Default value for the <see cref="TrackProcessStatistics"/> property.
+        /// </summary>
+        public const bool DefaultTrackProcessStatistics = true;
+
         // Fields
         private readonly Process m_process;
         private readonly Dictionary<string, MessageLevel> m_messageLevelMap;
@@ -638,6 +644,14 @@ namespace FileAdapters
         DefaultValue(DefaultUtilizationUpdateInterval)]
         public int UtilizationUpdateInterval { get; set; } = DefaultUtilizationUpdateInterval;
 
+        /// <summary>
+        /// Gets or sets flag that determines if statistics should be tracked for launched process.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define flag that determines if statistics should be tracked for launched process."),
+        DefaultValue(DefaultTrackProcessStatistics)]
+        public bool TrackProcessStatistics { get; set; } = DefaultTrackProcessStatistics;
+
         #region [ Hidden Properties ]
 
         // The following common adapter properties are marked as never browse by an
@@ -806,7 +820,7 @@ namespace FileAdapters
                             status.AppendLine($"     Process base priority: {m_process.BasePriority}");
                             status.AppendLine($"      Process thread count: {m_process.Threads.Count:N0}");
                             status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
-                            status.AppendLine($"      Process memory usage: {SI2.ToScaledString(m_process.PrivateMemorySize64, 2, "B")} (private working set)");
+                            status.AppendLine($"      Process memory usage: {SI2.ToScaledString(m_process.WorkingSet64, 2, "B")} (working set)");
 
                             if (m_processUtilizationCalculator.UpdateInterval > 0)
                                 status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");                            
@@ -828,6 +842,7 @@ namespace FileAdapters
                 status.AppendLine($"     Error lines processed: {m_errorLinesProcessed:N0}");
                 status.AppendLine($" Interpret output for logs: {ProcessOutputAsLogMessages}");
                 status.AppendLine($"   Forcing kill on dispose: {ForceKillOnDispose}");
+                status.AppendLine($"       Tracking statistics: {TrackProcessStatistics}");
 
                 return status.ToString();
             }
@@ -1038,6 +1053,9 @@ namespace FileAdapters
             if (settings.TryGetValue(nameof(ForceKillOnDispose), out setting))
                 ForceKillOnDispose = setting.ParseBoolean();
 
+            if (settings.TryGetValue(nameof(TrackProcessStatistics), out setting))
+                TrackProcessStatistics = setting.ParseBoolean();
+
             m_process.Start();
 
             if (ForceKillOnDispose)
@@ -1051,6 +1069,10 @@ namespace FileAdapters
 
             m_processUtilizationCalculator.UpdateInterval = UtilizationUpdateInterval;
             m_processUtilizationCalculator.Initialize(m_process);
+
+            // Register launched process with the statistics engine
+            if (TrackProcessStatistics)
+                StatisticsEngine.Register(this, "Process", "PROC");
 
             if (string.IsNullOrEmpty(InitialInputFileName))
                 return;
@@ -1189,6 +1211,49 @@ namespace FileAdapters
 
             return message;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // ReSharper disable UnusedMember.Local
+        // ReSharper disable UnusedParameter.Local
+        private static double GetProcessStatistic_CPUUsage(object source, string arguments)
+        {
+            double statistic = double.NaN;
+            ProcessLauncher launcher = source as ProcessLauncher;
+
+            if ((object)launcher != null && !launcher.m_disposed && launcher.m_processUtilizationCalculator.UpdateInterval > 0)
+                statistic = launcher.m_processUtilizationCalculator.Utilization;
+
+            return statistic;
+        }
+
+        private static double GetProcessStatistic_MemoryUsage(object source, string arguments)
+        {
+            double statistic = double.NaN;
+            ProcessLauncher launcher = source as ProcessLauncher;
+
+            if ((object)launcher != null && !launcher.m_disposed && !launcher.m_process.HasExited)
+                statistic = launcher.m_process.WorkingSet64 / (double)SI2.Mega;
+
+            return statistic;
+        }
+
+        private static double GetProcessStatistic_UpTime(object source, string arguments)
+        {
+            double statistic = double.NaN;
+            ProcessLauncher launcher = source as ProcessLauncher;
+
+            if ((object)launcher != null && !launcher.m_disposed && !launcher.m_process.HasExited)
+                statistic = (DateTime.Now - launcher.m_process.StartTime).TotalSeconds;
+
+            return statistic;
+        }
+        // ReSharper restore UnusedMember.Local
+        // ReSharper restore UnusedParameter.Local
 
         #endregion
     }

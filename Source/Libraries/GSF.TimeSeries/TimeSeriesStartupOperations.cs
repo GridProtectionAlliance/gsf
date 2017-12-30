@@ -30,13 +30,14 @@ using System.Linq;
 using GSF.Data;
 using GSF.Identity;
 
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable NotAccessedField.Local
+// ReSharper disable UnusedMember.Local
 namespace GSF.TimeSeries
 {
     /// <summary>
     /// Defines a data operations to be performed at startup.
     /// </summary>
-    // ReSharper disable UnusedParameter.Local
-    // ReSharper disable NotAccessedField.Local
     public static class TimeSeriesStartupOperations
     {
         // Messaging to the service
@@ -270,6 +271,7 @@ namespace GSF.TimeSeries
             const string DeviceStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Device' AND AssemblyName = 'GSF.TimeSeries.dll'";
             const string SubscriberStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Subscriber' AND AssemblyName = 'GSF.TimeSeries.dll'";
             const string PublisherStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Publisher' AND AssemblyName = 'GSF.TimeSeries.dll'";
+            const string ProcessStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Process' AND AssemblyName = 'FileAdapters.dll'";
 
             // INSERT queries
             const string StatConfigEntityInsertFormat = "INSERT INTO ConfigurationEntity(SourceName, RuntimeName, Description, LoadOrder, Enabled) VALUES('RuntimeStatistic', 'Statistics', 'Defines statistics that are monitored for the system, devices, and output streams', 11, 1)";
@@ -281,12 +283,14 @@ namespace GSF.TimeSeries
             const string DeviceStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.DeviceStatistics', 'GetDeviceStatistic_{3}', '', 1, 'System.Int32', '{{0:N0}}', 0, {0})";
             const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
             const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
+            const string ProcessStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Process', {0}, '{1}', '{2}', 'FileAdapters.dll', 'FileAdapters.ProcessLauncher', 'GetProcessStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
 
             // DELETE queries
             const string SystemStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'System' AND SignalIndex <= {0}";
             const string DeviceStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Device' AND SignalIndex <= {0}";
             const string SubscriberStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Subscriber' AND SignalIndex <= {0}";
             const string PublisherStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Publisher' AND SignalIndex <= {0}";
+            const string ProcessStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Process' AND SignalIndex <= {0}";
 
             // Names and descriptions for each of the statistics
 
@@ -360,11 +364,19 @@ namespace GSF.TimeSeries
                                                    "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
                                                    "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
                                                    "Total number of seconds publisher has been running."
-                                                 };
+                                                  };
 
             string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
             string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double" };
             string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s" };
+
+            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
+            string[] ProcessStatNames = { "CPU Usage", "Memory Usage", "Up Time" };
+
+            string[] ProcessStatDescriptions = { "Percentage of CPU currently used by the launched process.",
+                                                "Amount of memory currently used by the launched process in megabytes.",
+                                                "Total number of seconds the launched process has been running."
+                                               };
 
             // Query for count values to ensure existence of these records
             int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
@@ -376,6 +388,7 @@ namespace GSF.TimeSeries
             int deviceStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(DeviceStatCountFormat));
             int subscriberStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SubscriberStatCountFormat));
             int publisherStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(PublisherStatCountFormat));
+            int processStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(ProcessStatCountFormat));
 
             // Statistic info for inserting statistics
             int signalIndex;
@@ -462,6 +475,21 @@ namespace GSF.TimeSeries
                     statType = PublisherStatTypes[i];
                     statFormat = PublisherStatFormats[i];
                     database.Connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0));
+                }
+            }
+
+            // Ensure that process statistics exist
+            if (processStatCount < ProcessStatNames.Length)
+            {
+                database.Connection.ExecuteNonQuery(string.Format(ProcessStatisticDeleteFormat, ProcessStatNames.Length));
+
+                for (int i = 0; i < ProcessStatNames.Length; i++)
+                {
+                    signalIndex = i + 1;
+                    statName = ProcessStatNames[i];
+                    statDescription = ProcessStatDescriptions[i];
+                    statMethodSuffix = statName.Replace(" ", "");
+                    database.Connection.ExecuteNonQuery(string.Format(ProcessStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
                 }
             }
         }
