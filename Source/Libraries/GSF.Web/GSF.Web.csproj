@@ -268,8 +268,30 @@
     <EmbeddedResource Include="Shared\Content\Fonts\fontawesome-webfont.woff2" />
     <EmbeddedResource Include="Shared\Content\Fonts\FontAwesome.otf" />
     <EmbeddedResource Include="Security\Views\Login.cshtml" />
+    <EmbeddedResource Include="Shared\Views\GraphMeasurements.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\excanvas.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.colorhelpers.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.axislabels.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.canvas.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.categories.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.crosshair.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.errorbars.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.fillbetween.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.image.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.navigate.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.pie.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.resize.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.selection.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.stack.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.symbol.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.threshold.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.time.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.min.js" />
+    <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_2e83ff_256x240.png" />
@@ -289,7 +311,7 @@
     <EmbeddedResource Include="Shared\Content\Images\password-meter.png" />
     <EmbeddedResource Include="Shared\Content\Images\rating.png" />
     <Content Include="Shared\Content\Readme.txt" />
-    <Content Include="Shared\Scripts\angular.js" />
+    <EmbeddedResource Include="Shared\Scripts\angular.js" />
     <EmbeddedResource Include="Shared\Scripts\knockout.mapping.js" />
     <EmbeddedResource Include="Shared\Scripts\gsf.web.client.js" />
     <EmbeddedResource Include="Shared\Scripts\gsf.web.knockout.js" />
@@ -357,6 +379,7 @@
     <EmbeddedResource Include="Shared\Scripts\moment.js" />
     <Content Include="Model\Scripts\angular1.5.8.js" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
