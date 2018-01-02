@@ -95,6 +95,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.IO" />
     <Reference Include="System.Net" />
     <Reference Include="System.Net.Http, Version=4.0.0.0">
@@ -269,6 +270,8 @@
     <EmbeddedResource Include="Shared\Content\Fonts\FontAwesome.otf" />
     <EmbeddedResource Include="Security\Views\Login.cshtml" />
     <EmbeddedResource Include="Shared\Views\GraphMeasurements.cshtml" />
+    <EmbeddedResource Include="Shared\Views\RemoteConsole.cshtml" />
+    <EmbeddedResource Include="Shared\Views\SelectTheme.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
