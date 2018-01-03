@@ -147,6 +147,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Shared\Model\Company.cs" />
+    <Compile Include="Shared\Model\Vendor.cs" />
+    <Compile Include="Shared\Model\VendorDevice.cs" />
     <Compile Include="Shared\Resources.cs" />
     <Compile Include="Embedded\EmbeddedResourceProvider.cs" />
     <Compile Include="Embedded\NamespaceDoc.cs" />
@@ -209,6 +212,7 @@
     <Compile Include="Security\SecurityHub.cs" />
     <Compile Include="Model\RazorView.cs" />
     <Compile Include="Security\SessionHandler.cs" />
+    <Compile Include="Shared\SharedHub.cs" />
     <Compile Include="UI\ClientSideExtensions.cs" />
     <Compile Include="WebExtensions.cs" />
   </ItemGroup>
@@ -272,6 +276,10 @@
     <EmbeddedResource Include="Shared\Views\GraphMeasurements.cshtml" />
     <EmbeddedResource Include="Shared\Views\RemoteConsole.cshtml" />
     <EmbeddedResource Include="Shared\Views\SelectTheme.cshtml" />
+    <EmbeddedResource Include="Shared\Views\Companies.cshtml" />
+    <EmbeddedResource Include="Shared\Views\UserInfo.cshtml" />
+    <EmbeddedResource Include="Shared\Views\VendorDevices.cshtml" />
+    <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
