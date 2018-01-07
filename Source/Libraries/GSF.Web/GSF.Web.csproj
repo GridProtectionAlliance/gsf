@@ -285,7 +285,6 @@
     <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\excanvas.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.colorhelpers.min.js" />
-    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.axislabels.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.canvas.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.categories.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.crosshair.min.js" />
@@ -301,7 +300,7 @@
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.symbol.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.threshold.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.time.min.js" />
-    <EmbeddedResource Include="Shared\Scripts\flot\jquery.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.axislabels.min.js" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
