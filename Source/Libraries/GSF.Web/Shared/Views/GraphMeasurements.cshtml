@@ -19,6 +19,24 @@
 //  01/15/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
+//******************************************************************************************************
+//  To use in an ASP.NET project, include a GraphMeasurements.cshtml view with following content:
+//
+//  @using GSF.Web
+//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection?.ToString())}
+//  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
+//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection?.ToString())}
+//
+//******************************************************************************************************
+//  To use in a self-hosted web project, include a GraphMeasurements.cshtml view with following content:
+//
+//  @using GSF.Web.Model
+//  @using <MyAppNameSpace>.Model
+//  @inherits ExtendedTemplateBase<AppModel>
+//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
+//  @{Layout = "Layout.cshtml";}
+//  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
+//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
 //*****************************************************************************************************@
 @using System.Collections.Generic
 @using System.Net.Http
