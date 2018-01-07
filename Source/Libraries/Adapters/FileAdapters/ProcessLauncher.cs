@@ -1115,7 +1115,8 @@ namespace FileAdapters
                 if (m_process.HasExited)
                     return $"\"{filename}\" process exited with {m_process.ExitCode}.".CenterText(maxLength);
 
-                if (!m_process.Responding)
+                // Ignoring this check on Mono since it seems to report incorrect state for Responding property
+                if (!Common.IsMono && !m_process.Responding)
                     return $"\"{filename}\" process is not responding...".CenterText(maxLength);
 
                 string utilization = m_processUtilizationCalculator.UpdateInterval > 0 ? $" at {m_processUtilizationCalculator.Utilization:##0.0%}" : "";
