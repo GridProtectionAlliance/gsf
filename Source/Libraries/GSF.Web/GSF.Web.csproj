@@ -301,6 +301,7 @@
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.threshold.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.time.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.axislabels.min.js" />
+    <Content Include="Shared\Images\placeholder-64x64.png" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />

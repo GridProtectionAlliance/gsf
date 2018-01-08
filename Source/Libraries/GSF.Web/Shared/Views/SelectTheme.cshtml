@@ -31,6 +31,7 @@
 @using GSF.Web
 @using GSF.Web.Model
 @using GSF.Web.Hosting
+@using GSF.Web.Shared
 @inherits ExtendedTemplateBase
 @{
     ViewBag.Title = "Select Theme";
@@ -625,12 +626,12 @@
                 </div>
                 <p></p>
                 <div class="media">
-                    <a class="pull-left" href="#">    <img class="media-object" src="https://app.divshot.com/img/placeholder-64x64.gif">  </a>
+                    <a class="pull-left" href="#">    <img class="media-object" src="@Resources.Root/Shared/Images/placeholder-64x64.png">  </a>
                     <div class="media-body">
                         <h4 class="media-heading">Media heading</h4>
                         <p>This is the content for your media.</p>
                         <div class="media">
-                            <a class="pull-left" href="#">    <img class="media-object" src="https://app.divshot.com/img/placeholder-64x64.gif">  </a>
+                            <a class="pull-left" href="#">    <img class="media-object" src="@Resources.Root/Shared/Images/placeholder-64x64.png">  </a>
                             <div class="media-body">
                                 <h4 class="media-heading">Media heading</h4>
                                 <p>This is the content for your media.</p>
