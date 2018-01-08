@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using GSF.Web.Security;
+
 namespace GSF.Web.Shared
 {
     /// <summary>
@@ -58,5 +60,11 @@ namespace GSF.Web.Shared
             <meta name=""msapplication-wide310x150logo"" content=""{Root}/Shared/Images/Icons/mstile-310x150.png"" />
             <meta name=""msapplication-square310x310logo"" content=""{Root}/Shared/Images/Icons/mstile-310x310.png""/>
         ".FixForwardSpacing(forceFixed: true);
+
+        static Resources()
+        {
+            // Generally embedded resources are marked as anonymous, this forces the following to require authentication
+            AuthenticationOptions.ResourceRequiresAuthentication("GSF.Web.Shared.Views.UserInfo.cshtml", true);
+        }
     }
 }
