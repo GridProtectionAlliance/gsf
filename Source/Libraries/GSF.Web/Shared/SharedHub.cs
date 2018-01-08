@@ -23,14 +23,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using GSF.Data.Model;
-using GSF.Identity;
 using GSF.Security;
-using GSF.Security.Model;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
-using Microsoft.AspNet.SignalR.Hubs;
 using GSF.Web.Security;
 using System.Threading.Tasks;
 using GSF.Web.Shared.Model;
