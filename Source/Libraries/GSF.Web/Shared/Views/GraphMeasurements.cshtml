@@ -300,7 +300,7 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="panel-title">
-                                <img id="img{{parentDevice.parent}}" src="Images/StatusLights/Small/greylight.png" style="padding-left: 6px" />
+                                <img id="img{{parentDevice.parent}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 6px" />
                                 <button class="btn btn-link btn-sm" style="font-size: x-small;" data-toggle="collapse" data-parent="#devicelist" data-target="#dd{{parentDevice.parent}}">{{parentDevice.parent}}</button>
                                 <button id="btn{{parentDevice.parent}}" class="btn btn-xs badge pull-right" data-toggle="modal" data-target="#mod{{parentDevice.parent}}" style="font-size: xx-small; margin: 5px 15px 0 0">Stats</button>
                             </div>
@@ -309,7 +309,7 @@
                             <div id="dd{{parentDevice.parent}}" class="panel-collapse collapse in">
                                 <ul class="list-group nowrap" id="parent{{parentDevice.parent}}">
                                     <li class="list-group-item nowrap" ng-repeat="device in parentDevice.devices">
-                                        <img id="img{{ cleanIdentifier(device.Acronym)}}" src="Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
+                                        <img id="img{{ cleanIdentifier(device.Acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
                                         <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{device.Name}}" data-toggle="collapse" data-target="#dd{{ cleanIdentifier(device.Acronym)}}">{{ cleanIdentifier(device.Acronym)}}</button>
                                         <button id="btn{{ cleanIdentifier(device.Acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(device.Acronym)}}" style="font-size: xx-small;">Stats</button>
                                         <div id="dd{{ cleanIdentifier(device.Acronym)}}" class="collapse">
@@ -756,16 +756,16 @@
                             $('#time' + d.ID).text(new Date(d.Timestamp).formatDate(DateTimeFormat));
                             if (stats[i].description == "Device statistic for Number of measurements received from device during last reporting interval.") {
                                 if (stats[i].value != null && stats[i].value > 0) {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "Images/StatusLights/Small/greenlight.png");
+                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/greenlight.png");
                                 } else {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "Images/StatusLights/Small/redlight.png");
+                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/redlight.png");
                                 }
                             }
                             if (stats[i].description == "Subscriber statistic for Number of processed measurements reported by the subscriber during last reporting interval.") {
                                 if (stats[i].value != null && stats[i].value > 0) {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "Images/StatusLights/Small/greenlight.png");
+                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/greenlight.png");
                                 } else {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "Images/StatusLights/Small/redlight.png");
+                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/redlight.png");
                                 }
                             }
 
