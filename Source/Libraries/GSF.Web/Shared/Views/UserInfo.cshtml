@@ -64,8 +64,6 @@
         return securityPrincipal.IsInRole("Administrator");
     }
 }
-@section StyleSheets{}
-@section Scripts{}
 <!DOCTYPE html>
 <html>
 <head>
@@ -133,7 +131,3 @@
     </div>
 </body>
 </html>
-@{
-    ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
-    ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
-}
