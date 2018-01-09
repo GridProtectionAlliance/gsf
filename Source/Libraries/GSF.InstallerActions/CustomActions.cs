@@ -60,6 +60,8 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult AuthenticateServiceAccountAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             UserInfo serviceAccountInfo;
             IPrincipal servicePrincipal;
             string serviceAccount;
@@ -73,7 +75,7 @@ namespace GSF.InstallerActions
             bool isManagedServiceAccount;
             bool isManagedServiceAccountValid;
 
-            LogInstallMessage(session, "Begin AuthenticateServiceAccountAction");
+            logger.Log("Begin AuthenticateServiceAccountAction");
 
             serviceAccount = GetPropertyValue(session, "ServiceAccount");
             servicePassword = GetPropertyValue(session, "ServicePassword");
@@ -134,7 +136,7 @@ namespace GSF.InstallerActions
                     session["SERVICEAUTHENTICATED"] = null;
             }
 
-            LogInstallMessage(session, "End AuthenticateServiceAccountAction");
+            logger.Log("End AuthenticateServiceAccountAction");
 
             return ActionResult.Success;
         }
@@ -147,11 +149,13 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult XmlFileAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string filePath;
             string mode;
             string mappings;
 
-            LogInstallMessage(session, "Begin XmlFileAction");
+            logger.Log("Begin XmlFileAction");
 
             filePath = GetPropertyValue(session, "FilePath");
             mode = GetPropertyValue(session, "Mode").ToUpper();
@@ -201,15 +205,15 @@ namespace GSF.InstallerActions
                 {
                     string action = (mode == "WRITE") ? "update" : "read";
                     string message = $"Failed to {action} XML file: {ex.Message}";
-                    LogInstallMessage(session, InstallMessage.Error, message);
-                    LogInstallMessage(session, EventLogEntryType.Error, ex);
-                    LogInstallMessage(session, $"FilePath = {filePath}");
-                    LogInstallMessage(session, $"PropertyMappings = {mappings}");
+                    logger.Log(InstallMessage.Error, message);
+                    logger.Log(EventLogEntryType.Error, ex);
+                    logger.Log($"FilePath = {filePath}");
+                    logger.Log($"PropertyMappings = {mappings}");
                     return ActionResult.Failure;
                 }
             }
 
-            LogInstallMessage(session, "End XmlFileAction");
+            logger.Log("End XmlFileAction");
 
             return ActionResult.Success;
         }
@@ -217,12 +221,14 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ConnectionStringAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             Dictionary<string, string> settings;
             string connectionString;
             string mappings;
             string setting;
 
-            LogInstallMessage(session, "Begin ConnectionStringAction");
+            logger.Log("Begin ConnectionStringAction");
 
             connectionString = GetPropertyValue(session, "ConnectionString");
             mappings = GetPropertyValue(session, "PropertyMappings");
@@ -236,7 +242,7 @@ namespace GSF.InstallerActions
                     session[kvp.Key] = null;
             }
 
-            LogInstallMessage(session, "End ConnectionStringAction");
+            logger.Log("End ConnectionStringAction");
 
             return ActionResult.Success;
         }
@@ -249,11 +255,13 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult CompanyInfoAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string serviceName;
             string configPath;
             XDocument config;
 
-            LogInstallMessage(session, "Begin CompanyInfoAction");
+            logger.Log("Begin CompanyInfoAction");
 
             serviceName = GetPropertyValue(session, "SERVICENAME");
             configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), $"{serviceName}.exe.config");
@@ -298,7 +306,7 @@ namespace GSF.InstallerActions
                 config.Save(configPath);
             }
 
-            LogInstallMessage(session, "End CompanyInfoAction");
+            logger.Log("End CompanyInfoAction");
 
             return ActionResult.Success;
         }
@@ -311,9 +319,11 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ConfigureServiceAction(Session session)
         {
-            LogInstallMessage(session, "Begin ConfigureServiceAction");
-            UpdateServiceConfig(session);
-            LogInstallMessage(session, "End ConfigureServiceAction");
+            Logger logger = new Logger(session);
+
+            logger.Log("Begin ConfigureServiceAction");
+            UpdateServiceConfig(session, logger);
+            logger.Log("End ConfigureServiceAction");
             return ActionResult.Success;
         }
 
@@ -325,12 +335,14 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ServiceAccountAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string serviceName;
             string serviceAccount;
             string servicePorts;
             string groupName;
 
-            LogInstallMessage(session, "Begin ServiceAccountAction");
+            logger.Log("Begin ServiceAccountAction");
 
             // Get properties from the installer session
             serviceName = GetPropertyValue(session, "SERVICENAME");
@@ -341,19 +353,19 @@ namespace GSF.InstallerActions
             // Create service admins group and add service account to that group as well as the Performance Log Users group
             try
             {
-                LogInstallMessage(session, $"Adding {serviceAccount} user to {groupName} group...");
+                logger.Log($"Adding {serviceAccount} user to {groupName} group...");
                 UserInfo.CreateLocalGroup(groupName, $"Members in this group have the necessary rights to administrate the {serviceName} service.");
                 UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
                 UserInfo.AddUserToLocalGroup("Performance Log Users", serviceAccount);
                 UserInfo.AddUserToLocalGroup("Performance Monitor Users", serviceAccount);
                 AddPrivileges(serviceAccount, "SeServiceLogonRight");
-                LogInstallMessage(session, $"Done adding {serviceAccount} user to {groupName} group.");
+                logger.Log($"Done adding {serviceAccount} user to {groupName} group.");
             }
             catch (Exception ex)
             {
                 string message = $"Failed to add {serviceAccount} user to {groupName} group!";
-                LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                logger.Log(InstallMessage.Error, message);
+                logger.Log(EventLogEntryType.Error, ex);
             }
 
             // Attempt to grant rights to start and stop the service
@@ -397,13 +409,13 @@ namespace GSF.InstallerActions
             catch (Exception ex)
             {
                 string message = $"Failed to grant {serviceAccount} rights to restart the service!";
-                LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                logger.Log(InstallMessage.Error, message);
+                logger.Log(EventLogEntryType.Error, ex);
             }
 
             if (!string.IsNullOrEmpty(servicePorts))
             {
-                LogInstallMessage(session, "Adding namespace reservations for default web services...");
+                logger.Log("Adding namespace reservations for default web services...");
 
                 foreach (string endPoint in servicePorts.Split(',').Select(p => GetEndPoint(p.Trim())))
                 {
@@ -413,10 +425,10 @@ namespace GSF.InstallerActions
                     AddHttpNamespaceReservation(serviceAccount, endPoint);
                 }
 
-                LogInstallMessage(session, "Done adding namespace reservations for default web services.");
+                logger.Log("Done adding namespace reservations for default web services.");
             }
 
-            LogInstallMessage(session, "End ServiceAccountAction");
+            logger.Log("End ServiceAccountAction");
 
             return ActionResult.Success;
         }
@@ -429,9 +441,11 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult BrowseFileAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             Thread staThread;
 
-            LogInstallMessage(session, "Begin BrowseFileAction");
+            logger.Log("Begin BrowseFileAction");
 
             staThread = new Thread(() =>
             {
@@ -453,7 +467,7 @@ namespace GSF.InstallerActions
             staThread.Start();
             staThread.Join();
 
-            LogInstallMessage(session, "End BrowseFileAction");
+            logger.Log("End BrowseFileAction");
 
             return ActionResult.Success;
         }
@@ -466,9 +480,11 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult CheckFileExistenceAction(Session session)
         {
-            LogInstallMessage(session, "Begin CheckFileExistenceAction");
+            Logger logger = new Logger(session);
+
+            logger.Log("Begin CheckFileExistenceAction");
             session["FILEEXISTS"] = File.Exists(GetPropertyValue(session, "FILEPATH")) ? "yes" : null;
-            LogInstallMessage(session, "End CheckFileExistenceAction");
+            logger.Log("End CheckFileExistenceAction");
             return ActionResult.Success;
         }
 
@@ -480,6 +496,8 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult UnzipAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string zipFile;
             string sourceDir;
             string destinationDir;
@@ -488,7 +506,7 @@ namespace GSF.InstallerActions
             string directoryPath;
             string filePath;
 
-            LogInstallMessage(session, "Begin UnzipAction");
+            logger.Log("Begin UnzipAction");
 
             zipFile = GetPropertyValue(session, "ZIPFILE");
             sourceDir = GetPropertyValue(session, "SOURCEDIR") ?? string.Empty;
@@ -519,7 +537,7 @@ namespace GSF.InstallerActions
                 }
             }
 
-            LogInstallMessage(session, "End UnzipAction");
+            logger.Log("End UnzipAction");
 
             return ActionResult.Success;
         }
@@ -532,16 +550,18 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult PasswordGenerationAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             int passwordLength;
 
-            LogInstallMessage(session, "Begin PasswordGenerationAction");
+            logger.Log("Begin PasswordGenerationAction");
 
             if (int.TryParse(GetPropertyValue(session, "GenPasswordLength"), out passwordLength))
                 session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
             else
                 session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
 
-            LogInstallMessage(session, "End PasswordGenerationAction");
+            logger.Log("End PasswordGenerationAction");
 
             return ActionResult.Success;
         }
@@ -554,10 +574,12 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult TestDatabaseConnectionAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string connectionString;
             string dataProviderString;
 
-            LogInstallMessage(session, "Begin TestDatabaseConnectionAction");
+            logger.Log("Begin TestDatabaseConnectionAction");
 
             // Get properties from the installer session
             connectionString = GetPropertyValue(session, "ConnectionString");
@@ -575,12 +597,12 @@ namespace GSF.InstallerActions
             catch (Exception ex)
             {
                 // Log the error and return failure code
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
-                LogInstallMessage(session, EventLogEntryType.Error, $"Connection string: {connectionString}{Environment.NewLine}Data provider string: {dataProviderString}");
+                logger.Log(EventLogEntryType.Error, ex);
+                logger.Log(EventLogEntryType.Error, $"Connection string: {connectionString}{Environment.NewLine}Data provider string: {dataProviderString}");
                 session["DATABASECONNECTED"] = null;
             }
 
-            LogInstallMessage(session, "End TestDatabaseConnectionAction");
+            logger.Log("End TestDatabaseConnectionAction");
 
             return ActionResult.Success;
         }
@@ -593,11 +615,13 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult DatabaseQueryAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string connectionString;
             string dataProviderString;
             string query;
 
-            LogInstallMessage(session, "Begin DatabaseQueryAction");
+            logger.Log("Begin DatabaseQueryAction");
 
             // Get properties from the installer session
             connectionString = GetPropertyValue(session, "CONNECTIONSTRING");
@@ -616,10 +640,10 @@ namespace GSF.InstallerActions
             {
                 // Log the error and return failure code
                 string message = $"Failed to execute database query: {ex.Message}.";
-                LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                logger.Log(InstallMessage.Error, message);
+                logger.Log(EventLogEntryType.Error, ex);
 
-                LogInstallMessage(session, InstallMessage.Error,
+                logger.Log(InstallMessage.Error,
                     $"Database Query: {query}{Environment.NewLine}" +
                     $"Connection string: {connectionString}{Environment.NewLine}" +
                     $"Data provider string: {dataProviderString}");
@@ -627,7 +651,7 @@ namespace GSF.InstallerActions
                 return ActionResult.Failure;
             }
 
-            LogInstallMessage(session, "End DatabaseQueryAction");
+            logger.Log("End DatabaseQueryAction");
 
             return ActionResult.Success;
         }
@@ -640,11 +664,13 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult DatabaseScriptAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string connectionString;
             string dataProviderString;
             string scriptPath;
 
-            LogInstallMessage(session, "Begin DatabaseScriptAction");
+            logger.Log("Begin DatabaseScriptAction");
 
             // Get properties from the installer session
             connectionString = GetPropertyValue(session, "CONNECTIONSTRING");
@@ -663,10 +689,10 @@ namespace GSF.InstallerActions
             {
                 // Log the error and return failure code
                 string message = $"Failed to execute database script: {ex.Message}.";
-                LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                logger.Log(InstallMessage.Error, message);
+                logger.Log(EventLogEntryType.Error, ex);
 
-                LogInstallMessage(session, InstallMessage.Error,
+                logger.Log(InstallMessage.Error,
                     $"Database Script: {scriptPath}{Environment.NewLine}" +
                     $"Connection string: {connectionString}{Environment.NewLine}" +
                     $"Data provider string: {dataProviderString}");
@@ -674,7 +700,7 @@ namespace GSF.InstallerActions
                 return ActionResult.Failure;
             }
 
-            LogInstallMessage(session, "End DatabaseScriptAction");
+            logger.Log("End DatabaseScriptAction");
 
             return ActionResult.Success;
         }
@@ -687,12 +713,14 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult StartProcessAction(Session session)
         {
+            Logger logger = new Logger(session);
+
             string processStartInfo;
             Dictionary<string, string> infoLookup;
             Action<string, Action<string>> findAndExecute;
             ProcessStartInfo info;
 
-            LogInstallMessage(session, "Begin StartProcessAction");
+            logger.Log("Begin StartProcessAction");
 
             // Get properties from the installer session
             processStartInfo = GetPropertyValue(session, "ProcessStartInfo");
@@ -727,13 +755,13 @@ namespace GSF.InstallerActions
                 {
                     findAndExecute("WaitForExit", value =>
                     {
-                        process.OutputDataReceived += (sender, args) => LogInstallMessage(session, args.Data);
+                        process.OutputDataReceived += (sender, args) => logger.Log(args.Data);
 
                         process.ErrorDataReceived += (sender, args) =>
                         {
                             string message = $"Error in executing process: {args.Data}";
-                            LogInstallMessage(session, InstallMessage.Error, message);
-                            LogInstallMessage(session, EventLogEntryType.Error, message);
+                            logger.Log(InstallMessage.Error, message);
+                            logger.Log(EventLogEntryType.Error, message);
                         };
 
                         process.WaitForExit();
@@ -744,12 +772,12 @@ namespace GSF.InstallerActions
             {
                 // Log the error and return failure code
                 string message = $"Failed to start process: {ex.Message}";
-                LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                logger.Log(InstallMessage.Error, message);
+                logger.Log(EventLogEntryType.Error, ex);
                 return ActionResult.Failure;
             }
 
-            LogInstallMessage(session, "End StartProcessAction");
+            logger.Log("End StartProcessAction");
 
             return ActionResult.Success;
         }
@@ -825,47 +853,66 @@ namespace GSF.InstallerActions
             return session[name.ToUpper()];
         }
 
-        // Method to log to session
-        private static void LogInstallMessage(Session session, string message)
+        // Method to determine whether the custom action is immediate
+        private static bool IsImmediate(Session session)
         {
-            LogInstallMessage(session, InstallMessage.Info, message);
+            return
+                !session.GetMode(InstallRunMode.Scheduled) &&
+                !session.GetMode(InstallRunMode.Rollback) &&
+                !session.GetMode(InstallRunMode.Commit);
         }
 
-        // Method to log to session
-        private static void LogInstallMessage(Session session, InstallMessage messageType, string message)
+        private class Logger
         {
-            using (Record record = new Record(0))
-            {
-                // Square brackets and curly braces are evaluated upon logging the message so we escape them here
-                record.FormatString = Regex.Replace(message, @"[\[\]{}]", @"[\$&]");
+            private Session m_session;
+            private string m_serviceName;
+            private bool m_isImmediate;
 
-                // session.Log and session.Message both make use of MsiProcessMessage, which cannot be used during a DoAction ControlEvent.
-                // https://msdn.microsoft.com/en-us/library/aa368322(VS.85).aspx
-                //
-                // Fortunately, session.Message returns a code that can be used to determine whether the call actually logged a message.
-                // Setting the value of a property also generates a message in the log file so we use that as a workaround.
-                if (session.Message(messageType, record) == MessageResult.None)
-                    session["LOGMESSAGE"] = message;
-            }
-        }
-
-        // Method to log to event log
-        private static void LogInstallMessage(Session session, EventLogEntryType messageType, string message)
-        {
-            try
+            public Logger(Session session)
             {
-                EventLog.WriteEntry(GetPropertyValue(session, "SERVICENAME"), message, messageType);
+                m_session = session;
+                m_serviceName = GetPropertyValue(session, "SERVICENAME");
+                m_isImmediate = IsImmediate(session);
             }
-            catch (Exception ex)
-            {
-                LogInstallMessage(session, InstallMessage.Error, ex.ToString());
-            }
-        }
 
-        // Method to log exceptions to event log
-        private static void LogInstallMessage(Session session, EventLogEntryType messageType, Exception ex)
-        {
-            LogInstallMessage(session, messageType, ex.ToString());
+            public void Log(string message)
+            {
+                Log(InstallMessage.Info, message);
+            }
+
+            public void Log(InstallMessage messageType, string message)
+            {
+                using (Record record = new Record(0))
+                {
+                    // Square brackets and curly braces are evaluated upon logging the message so we escape them here
+                    record.FormatString = Regex.Replace(message, @"[\[\]{}]", @"[\$&]");
+
+                    // session.Log and session.Message both make use of MsiProcessMessage, which cannot be used during a DoAction ControlEvent.
+                    // https://msdn.microsoft.com/en-us/library/aa368322(VS.85).aspx
+                    //
+                    // Setting the value of a property generates a message in the log file so we use that as a workaround.
+                    // However, you cannot set session properties unless the custom action is an immediate custom action.
+                    if (m_session.Message(messageType, record) == MessageResult.None && m_isImmediate)
+                        m_session["LOGMESSAGE"] = message;
+                }
+            }
+
+            public void Log(EventLogEntryType messageType, Exception ex)
+            {
+                Log(messageType, ex.ToString());
+            }
+
+            public void Log(EventLogEntryType messageType, string message)
+            {
+                try
+                {
+                    EventLog.WriteEntry(m_serviceName, message, messageType);
+                }
+                catch (Exception ex)
+                {
+                    Log(InstallMessage.Error, ex.ToString());
+                }
+            }
         }
 
         #region [ Interop ]
@@ -880,7 +927,7 @@ namespace GSF.InstallerActions
         private const int SERVICE_CONFIG_FAILURE_ACTIONS_FLAG = 0x4;
 
         // The worker method to set all the extension properties for the service
-        private static void UpdateServiceConfig(Session session)
+        private static void UpdateServiceConfig(Session session, Logger logger)
         {
             // The failure actions to be defined for the service
             List<WindowsApi.SC_ACTION> failureActionsList = new List<WindowsApi.SC_ACTION>
@@ -911,8 +958,8 @@ namespace GSF.InstallerActions
                 if (serviceManagerHandle.ToInt32() <= 0)
                 {
                     string message = "UpdateServiceConfig: Failed to Open Service Control Manager";
-                    LogInstallMessage(session, InstallMessage.Error, message);
-                    LogInstallMessage(session, EventLogEntryType.Error, message);
+                    logger.Log(InstallMessage.Error, message);
+                    logger.Log(EventLogEntryType.Error, message);
                     return;
                 }
 
@@ -922,8 +969,8 @@ namespace GSF.InstallerActions
                 if (serviceLockHandle.ToInt32() <= 0)
                 {
                     string message = "UpdateServiceConfig: Failed to Lock Service Database for Write";
-                    LogInstallMessage(session, InstallMessage.Error, message);
-                    LogInstallMessage(session, EventLogEntryType.Error, message);
+                    logger.Log(InstallMessage.Error, message);
+                    logger.Log(EventLogEntryType.Error, message);
                     return;
                 }
 
@@ -933,8 +980,8 @@ namespace GSF.InstallerActions
                 if (serviceHandle.ToInt32() <= 0)
                 {
                     string message = "UpdateServiceConfig: Failed to Open Service";
-                    LogInstallMessage(session, InstallMessage.Error, message);
-                    LogInstallMessage(session, EventLogEntryType.Error, message);
+                    logger.Log(InstallMessage.Error, message);
+                    logger.Log(EventLogEntryType.Error, message);
                     return;
                 }
 
@@ -964,7 +1011,7 @@ namespace GSF.InstallerActions
                 // If we need shutdown privilege, then grant it to this process
                 if (needShutdownPrivilege)
                 {
-                    result = GrantShutdownPrivilege(session);
+                    result = GrantShutdownPrivilege(session, logger);
 
                     if (!result)
                         return;
@@ -993,7 +1040,7 @@ namespace GSF.InstallerActions
                         throw new Exception("UpdateServiceConfig: Access Denied while setting service failure actions");
                 }
 
-                LogInstallMessage(session, EventLogEntryType.Information, "UpdateServiceConfig: Successfully configured service failure actions");
+                logger.Log(EventLogEntryType.Information, "UpdateServiceConfig: Successfully configured service failure actions");
 
                 // Failure actions flag only applies on Vista / 2008 or better
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT && Environment.OSVersion.Version.Major >= 6)
@@ -1010,8 +1057,8 @@ namespace GSF.InstallerActions
             // Catch all exceptions
             catch (Exception ex)
             {
-                LogInstallMessage(session, InstallMessage.Error, ex.Message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex.Message);
+                logger.Log(InstallMessage.Error, ex.Message);
+                logger.Log(EventLogEntryType.Error, ex.Message);
             }
             finally
             {
@@ -1040,7 +1087,7 @@ namespace GSF.InstallerActions
 
         // This code mimics the MSDN defined way to adjust privilege for shutdown
         // https://msdn.microsoft.com/en-us/library/windows/desktop/aa376871(v=vs.85).aspx
-        private static bool GrantShutdownPrivilege(Session session)
+        private static bool GrantShutdownPrivilege(Session session, Logger logger)
         {
             bool grantSuccess = false;
             IntPtr processToken = IntPtr.Zero;
@@ -1075,8 +1122,8 @@ namespace GSF.InstallerActions
             catch (Exception ex)
             {
                 string message = "GrantShutdownPrivilege: " + ex.Message;
-                LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                logger.Log(InstallMessage.Error, message);
+                logger.Log(EventLogEntryType.Error, ex);
             }
             finally
             {
