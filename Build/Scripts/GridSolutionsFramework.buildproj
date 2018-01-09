@@ -225,6 +225,6 @@
       <NuGetPackages Remove="@(NuGetPackages)"/>
       <NuGetPackages Include="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg" Exclude="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.symbols.nupkg"/>
     </ItemGroup>
-    <Exec Command="%22$(NuGet)%22 push %22%(NuGetPackages.FullPath)%22 $(NuGetApiKey)" Condition="'@(NuGetPackages)' != ''" ContinueOnError="true"/>
+    <Exec Command="%22$(NuGet)%22 push %22%(NuGetPackages.FullPath)%22 $(NuGetApiKey) -Source https://api.nuget.org/v3/index.json" Condition="'@(NuGetPackages)' != ''" ContinueOnError="true"/>
   </Target>
 </Project>
