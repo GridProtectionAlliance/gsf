@@ -32,13 +32,6 @@ using GSF.Historian;
 using GSF.Historian.DataServices;
 using HistorianAdapters;
 
-// WCF service async Task method responses on Mono are always wrapped with "Result" object,
-// so async implementations of this service are skipped for Mono
-#if !MONO
-using Newtonsoft.Json;
-using System.Threading.Tasks;
-#endif
-
 namespace GrafanaAdapters
 {
     /// <summary>
@@ -196,90 +189,6 @@ namespace GrafanaAdapters
         public void TestDataSource()
         {
         }
-
- #if !MONO
-        /// <summary>
-        /// Queries openHistorian as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<List<TimeSeriesValues>> Query(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
-                return null;
-            return await m_dataSource.Query(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openHistorian as a Grafana Metadata source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public Task<string> GetMetadata(Target request)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                if (string.IsNullOrWhiteSpace(request.target))
-                    return string.Empty;
-
-                DataTable table = new DataTable();
-                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? new DataRow[0];
-
-                if (rows.Length > 0)
-                    table = rows.CopyToDataTable();
-
-                return JsonConvert.SerializeObject(table);
-            });
-        }
-
-        /// <summary>
-        /// Search openHistorian for a target.
-        /// </summary>
-        /// <param name="request">Search target.</param>
-        public async Task<string[]> Search(Target request)
-        {
-            return await m_dataSource.Search(request);
-        }
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public async Task<string[]> SearchFields(Target request)
-        {
-            return await m_dataSource.SearchFields(request);
-        }
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        public async Task<string[]> SearchFilters(Target request)
-        {
-            return await m_dataSource.SearchFilters(request);
-        }
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public async Task<string[]> SearchOrderBys(Target request)
-        {
-            return await m_dataSource.SearchOrderBys(request);
-        }
-
-        /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-        /// </summary>
-        /// <param name="request">Annotation request.</param>
-        public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
-                return null;
-
-        return await m_dataSource.Annotations(request, m_cancellationSource.Token);
-        }
-#endif
 
         #endregion
     }

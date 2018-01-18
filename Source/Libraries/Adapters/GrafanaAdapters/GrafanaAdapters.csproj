@@ -69,9 +69,11 @@
     <Compile Include="AnnotationType.cs" />
     <Compile Include="Column.cs" />
     <Compile Include="DataSourceValueGroup.cs" />
+    <Compile Include="GrafanaDataService.NET.cs" />
     <Compile Include="GrafanaDataServiceMono.cs" />
     <Compile Include="GrafanaDataService.cs" />
     <Compile Include="GrafanaDataSourceBase.cs" />
+    <Compile Include="IGrafanaDataService.NET.cs" />
     <Compile Include="IGrafanaDataServiceMono.cs" />
     <Compile Include="IGrafanaDataService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
