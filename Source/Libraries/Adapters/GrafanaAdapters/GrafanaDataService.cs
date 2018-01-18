@@ -27,12 +27,17 @@ using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
-using System.Threading.Tasks;
 using GSF;
 using GSF.Historian;
 using GSF.Historian.DataServices;
 using HistorianAdapters;
+
+// WCF service async Task method responses on Mono are always wrapped with "Result" object,
+// so async implementations of this service are skipped for Mono
+#if !MONO
 using Newtonsoft.Json;
+using System.Threading.Tasks;
+#endif
 
 namespace GrafanaAdapters
 {
@@ -40,7 +45,7 @@ namespace GrafanaAdapters
     /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
     /// </summary>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-    public class GrafanaDataService : DataService, IGrafanaDataService
+    public partial class GrafanaDataService : DataService, IGrafanaDataService
     {
         #region [ Members ]
 
@@ -192,6 +197,7 @@ namespace GrafanaAdapters
         {
         }
 
+ #if !MONO
         /// <summary>
         /// Queries openHistorian as a Grafana data source.
         /// </summary>
@@ -201,10 +207,8 @@ namespace GrafanaAdapters
             // Abort if services are not enabled
             if (!Enabled || (object)Archive == null)
                 return null;
-
             return await m_dataSource.Query(request, m_cancellationSource.Token);
         }
-
 
         /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
@@ -273,8 +277,9 @@ namespace GrafanaAdapters
             if (!Enabled || (object)Archive == null)
                 return null;
 
-            return await m_dataSource.Annotations(request, m_cancellationSource.Token);
+        return await m_dataSource.Annotations(request, m_cancellationSource.Token);
         }
+#endif
 
         #endregion
     }

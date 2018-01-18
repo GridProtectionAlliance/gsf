@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IGrafanaDataService.cs - Gbtc
+//  GrafanaDataServiceMono.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,78 +21,103 @@
 //
 //******************************************************************************************************
 
-using System.ServiceModel;
-using System.ServiceModel.Web;
-
 // WCF service async Task method responses on Mono are always wrapped with "Result" object,
 // so async implementations of this service are skipped for Mono
-#if !MONO
+#if MONO
+
 using System.Collections.Generic;
-using System.Threading.Tasks;
-#endif
+using System.Data;
+using GSF.Historian.DataServices;
+using Newtonsoft.Json;
 
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines needed API calls for a Grafana data source.
+    /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
     /// </summary>
-    [ServiceContract]
-    public partial interface IGrafanaDataService
+    // Mono Implementation
+    public partial class GrafanaDataService : DataService, IGrafanaDataService
     {
-        /// <summary>
-        /// Validates that openHistorian Grafana data source is responding as expected.
-        /// </summary>
-        [OperationContract, WebInvoke(UriTemplate = "/", Method ="GET", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        void TestDataSource();
-
-#if !MONO
         /// <summary>
         /// Queries openHistorian as a Grafana data source.
         /// </summary>
         /// <param name="request">Query request.</param>
-        Task<List<TimeSeriesValues>> Query(QueryRequest request);
+        public List<TimeSeriesValues> Query(QueryRequest request)
+        {
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
+
+            return m_dataSource.Query(request, m_cancellationSource.Token).Result;
+        }
 
         /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
         /// </summary>
         /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string> GetMetadata(Target request);
+        public string GetMetadata(Target request)
+        {
+            if (string.IsNullOrWhiteSpace(request.target))
+                return string.Empty;
+
+            DataTable table = new DataTable();
+            DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? new DataRow[0];
+
+            if (rows.Length > 0)
+                table = rows.CopyToDataTable();
+
+            return JsonConvert.SerializeObject(table);
+        }
 
         /// <summary>
         /// Search openHistorian for a target.
         /// </summary>
         /// <param name="request">Search target.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> Search(Target request);
+        public string[] Search(Target request)
+        {
+            return m_dataSource.Search(request).Result;
+        }
 
         /// <summary>
         /// Search data source for a list of columns from a specific table.
         /// </summary>
         /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfields", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchFields(Target request);
+        public string[] SearchFields(Target request)
+        {
+            return m_dataSource.SearchFields(request).Result;
+        }
 
         /// <summary>
         /// Search data source for a list of tables.
         /// </summary>
         /// <param name="request">Request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfilters", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchFilters(Target request);
+        public string[] SearchFilters(Target request)
+        {
+            return m_dataSource.SearchFilters(request).Result;
+        }
 
         /// <summary>
-        /// Search data source for a list of columns from a specific table to use for ORDER BY expression.
+        /// Search data source for a list of columns from a specific table.
         /// </summary>
         /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchorderbys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchOrderBys(Target request);
+        public string[] SearchOrderBys(Target request)
+        {
+            return m_dataSource.SearchOrderBys(request).Result;
+        }
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
-#endif
+        public List<AnnotationResponse> Annotations(AnnotationRequest request)
+        {
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
+
+            return m_dataSource.Annotations(request, m_cancellationSource.Token).Result;
+        }
     }
 }
+
+#endif
