@@ -33,7 +33,9 @@ using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+#if !MONO
 using GSF.TimeSeries.UI.Editors;
+#endif
 
 namespace FileAdapters
 {
@@ -128,9 +130,10 @@ namespace FileAdapters
         /// <summary>
         /// Gets or sets the path to the directory to be watched for files.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Defines the path to the directory to be watched for files."),
-        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
+        [ConnectionStringParameter, Description("Defines the path to the directory to be watched for files.")]
+#if !MONO
+        [CustomConfigurationEditor(typeof(FolderBrowserEditor))]
+#endif
         public string WatchDirectory
         {
             get
@@ -166,8 +169,10 @@ namespace FileAdapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Determines the statistic that defines the number of buffer block retransmissions in the system."),
-        CustomConfigurationEditor(typeof(RetransmissionStatPicker))]
+        Description("Determines the statistic that defines the number of buffer block retransmissions in the system.")]
+#if !MONO
+        [CustomConfigurationEditor(typeof(RetransmissionStatPicker))]
+#endif
         public string RetransmissionStat
         {
             get

@@ -31,7 +31,9 @@ using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+#if !MONO
 using GSF.TimeSeries.UI.Editors;
+#endif
 
 namespace FileAdapters
 {
@@ -59,9 +61,10 @@ namespace FileAdapters
         /// <summary>
         /// Gets or sets the directory to which files are written.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Defines the directory to which files are written."),
-        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
+        [ConnectionStringParameter, Description("Defines the directory to which files are written.")]
+#if !MONO
+        [CustomConfigurationEditor(typeof(FolderBrowserEditor))]
+#endif
         public string OutputDirectory
         {
             get

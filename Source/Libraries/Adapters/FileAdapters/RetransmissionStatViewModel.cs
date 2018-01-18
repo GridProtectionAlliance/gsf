@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+#if !MONO
 using System.ComponentModel;
 using System.Windows;
 
@@ -123,3 +124,4 @@ namespace FileAdapters
         #endregion
     }
 }
+#endif
