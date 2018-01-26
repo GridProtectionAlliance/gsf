@@ -390,7 +390,6 @@
     <EmbeddedResource Include="Shared\Scripts\knockout.js" />
     <EmbeddedResource Include="Shared\Scripts\knockout.validation.js" />
     <EmbeddedResource Include="Shared\Scripts\moment.js" />
-    <Content Include="Model\Scripts\angular1.5.8.js" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
