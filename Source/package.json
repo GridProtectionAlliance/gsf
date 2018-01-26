@@ -19,6 +19,6 @@
     "knockout.validation": "2.0.3",
     "moment": "2.20.1",
     "primeui": "Unavailable",
-    "flot": "0.8.3"
+    "flot/flot": "0.8.3"
   }
 }
