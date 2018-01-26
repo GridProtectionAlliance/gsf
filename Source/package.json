@@ -19,6 +19,6 @@
     "knockout.validation": "2.0.3",
     "moment": "2.20.1",
     "primeui": "4.1.9",
-    "Flot": "git+https://github.com/flot/flot.git#v0.8.3
+    "Flot": "git+https://github.com/flot/flot.git#v0.8.3"
   }
 }
