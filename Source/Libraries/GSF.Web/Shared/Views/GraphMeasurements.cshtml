@@ -642,7 +642,13 @@
         }, 200);
     });
 
-    $(function () {
+    $(document).ready(function () {
+        // Client function called from the dataHub when meta data gets recieved
+        dataHubClient.metaDataReceived = function () {
+            $(window).trigger('metaDataReceived');
+            //buildModal("Subscription");
+        }
+
         setHeights();
 
         $(window).resize(function () { setHeights() });
@@ -660,18 +666,13 @@
             dataHub.initializeSubscriptions();
         });
 
-        $(window).unload(function () {
+        $(window).on('beforeunload', function () {
             if (!hubIsConnected)
                 return;
 
             dataHub.terminateSubscriptions();
         });
 
-        // Client function called from the dataHub when meta data gets recieved
-        dataHubClient.metaDataReceived = function () {
-            $(window).trigger('metaDataReceived');
-            //buildModal("Subscription");
-        }
 
 
     });

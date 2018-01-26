@@ -525,7 +525,7 @@
                 return;
             }
 
-            $(window).unload(saveSettings);
+            $(window).on('beforeunload',saveSettings);
             loadSettings();
 
             if (persistentStorage.getItem("passthrough"))
