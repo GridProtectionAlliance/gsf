@@ -19,6 +19,6 @@
     "knockout.validation": "2.0.3",
     "moment": "2.20.1",
     "primeui": "Unavailable",
-    "flot": "git://github.com/GridProtectionAlliance/flot.git#6f849d8916fa52533fb1a4a197f0b5ebb23087b5"
+    "flot": "GridProtectionAlliance/flot"
   }
 }
