@@ -22,6 +22,7 @@
 //*****************************************************************************************************@
 @using GSF.Web
 @using GSF.Web.Model
+@using GSF.Web.Shared
 @using System.Net.Http
 @inherits ExtendedTemplateBase
 @{
@@ -105,7 +106,7 @@
     }
 }
 @section Scripts {
-    <script src="@("@GSF/Web/Model/Scripts/js.cookie.js")"></script>
+    <script src="@Resources.Root/Shared/Scripts/js.cookie.js")"></script>
     <script>
         $(function () {
             var overRemoteConsole = false;
