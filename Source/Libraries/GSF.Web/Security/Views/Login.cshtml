@@ -173,7 +173,8 @@
                         <h4><span id="response">Enter credentials:</span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin" style="display: none"></span></h4>
                     </div>
                     <div class="panel-body" id="credentialsForm">
-                        <form role="form">                            <div class="form-group">
+                        <form role="form">
+                            <div class="form-group">
                                 <label for="username">User name:</label>
                                 <input type="text" class="form-control" id="username" />
                             </div>
@@ -525,7 +526,7 @@
                 return;
             }
 
-            $(window).unload(saveSettings);
+            $(window).on("beforeunload", saveSettings);
             loadSettings();
 
             if (persistentStorage.getItem("passthrough"))

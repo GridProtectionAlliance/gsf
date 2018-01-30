@@ -108,12 +108,35 @@
 @section Scripts {
     <script src="@Resources.Root/Shared/Scripts/js.cookie.js")"></script>
     <script>
-        $(function () {
-            var overRemoteConsole = false;
-            var defaultRemoteConsoleEntries = 100;
-            var minimumRemoteConsoleEntries = 10;
-            var totalRemoteConsoleEntries = Cookies.get("totalRemoteConsoleEntries");
+        const defaultRemoteConsoleEntries = 100;
+        const minimumRemoteConsoleEntries = 10;
+        var overRemoteConsole = false;
+        var totalRemoteConsoleEntries = Cookies.get("totalRemoteConsoleEntries");
 
+        function scrollRemoteConsoleToBottom() {
+            var remoteConsole = $("#remoteConsoleWindow");
+            remoteConsole.scrollTop(remoteConsole[0].scrollHeight);
+        }
+
+        // Register SignalR client functions before hub connection
+        $(window).on("beforeHubConnected", function (event) {
+            // Create a function that the hub can call to broadcast new remote console messages
+            serviceHubClient.broadcastMessage = function (message, color) {
+                // Html encode message
+                var encodedMessage = $("<div />").text(message).html();
+                var remoteConsole = $("#remoteConsoleWindow");
+
+                remoteConsole.append("<span style='color: " + color + "'>" + encodedMessage + "</span>");
+
+                if (remoteConsole[0].childElementCount > totalRemoteConsoleEntries)
+                    remoteConsole.find(":first-child").remove();
+
+                if (!overRemoteConsole)
+                    scrollRemoteConsoleToBottom();
+            }
+        });
+
+        $(function () {
             // Initialize default setting for total remote console entries
             if (totalRemoteConsoleEntries === undefined)
                 totalRemoteConsoleEntries = defaultRemoteConsoleEntries;
@@ -159,26 +182,6 @@
             $("#remoteConsoleSettingsCloseButton").click(function () {
                 $("#remoteConsoleSettingsForm").hide();
             });
-
-            function scrollRemoteConsoleToBottom() {
-                var remoteConsole = $("#remoteConsoleWindow");
-                remoteConsole.scrollTop(remoteConsole[0].scrollHeight);
-            }
-
-            // Create a function that the hub can call to broadcast new remote console messages
-            serviceHubClient.broadcastMessage = function (message, color) {
-                // Html encode message
-                var encodedMessage = $("<div />").text(message).html();
-                var remoteConsole = $("#remoteConsoleWindow");
-
-                remoteConsole.append("<span style='color: " + color + "'>" + encodedMessage + "</span>");
-
-                if (remoteConsole[0].childElementCount > totalRemoteConsoleEntries)
-                    remoteConsole.find(":first-child").remove();
-
-                if (!overRemoteConsole)
-                    scrollRemoteConsoleToBottom();
-            }
 
             // Set the client filter to the value of the
             // filter parameter that came from the URL

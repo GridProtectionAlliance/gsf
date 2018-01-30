@@ -172,13 +172,6 @@ namespace GSF.Security
         /// </summary>
         public const string DefaultSettingsCategory = "SecurityProvider";
 
-        // Events
-
-        /// <summary>
-        /// Occurs when the class has been disposed.
-        /// </summary>
-        public event EventHandler Disposed;
-
         // Fields
         private string m_applicationName;
         private string m_connectionString;

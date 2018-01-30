@@ -67,7 +67,7 @@ namespace GSF.PQDIF.Physical
         // Fields
         private Guid m_tagOfElement;
         private PhysicalType m_typeOfValue;
-        private bool m_isError = false;
+        //private bool m_isError = false;
 
         #endregion
 

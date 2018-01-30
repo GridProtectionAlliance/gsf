@@ -642,7 +642,15 @@
         }, 200);
     });
 
-    $(function () {
+    // Register SignalR client functions before hub connection
+    $(window).on("beforeHubConnected", function (event) {
+        // Client function called from the dataHub when meta data gets recieved
+        dataHubClient.metaDataReceived = function () {
+            $(window).trigger('metaDataReceived');
+        }
+    });
+
+    $(document).ready(function () {
         setHeights();
 
         $(window).resize(function () { setHeights() });
@@ -660,18 +668,13 @@
             dataHub.initializeSubscriptions();
         });
 
-        $(window).unload(function () {
+        $(window).on('beforeunload', function () {
             if (!hubIsConnected)
                 return;
 
             dataHub.terminateSubscriptions();
         });
 
-        // Client function called from the dataHub when meta data gets recieved
-        dataHubClient.metaDataReceived = function () {
-            $(window).trigger('metaDataReceived');
-            //buildModal("Subscription");
-        }
 
 
     });

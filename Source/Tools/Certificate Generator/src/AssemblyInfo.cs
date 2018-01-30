@@ -33,9 +33,9 @@ using System.Runtime.InteropServices;
 //// You can specify all the values or you can default the Revision and Build Numbers
 //// by using the '*' as shown below:
 
-//[assembly: AssemblyVersion("2.2.182.0")]
-//[assembly: AssemblyFileVersion("2.2.182.0")]
-//[assembly: AssemblyInformationalVersion("2.2.182-beta")]
+//[assembly: AssemblyVersion("2.2.189.0")]
+//[assembly: AssemblyFileVersion("2.2.189.0")]
+//[assembly: AssemblyInformationalVersion("2.2.189-beta")]
 
 ////
 //// In order to sign your assembly you must specify a key to use. Refer to the
