@@ -40,6 +40,7 @@ namespace GrafanaAdapters
         /// Queries openHistorian as a Grafana data source.
         /// </summary>
         /// <param name="request">Query request.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<List<TimeSeriesValues>> Query(QueryRequest request);
 
         /// <summary>
