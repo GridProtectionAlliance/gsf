@@ -49,8 +49,18 @@ namespace GSF.Collections
         /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
         /// </summary>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="TKey"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedDictionary()
-            : this(EqualityComparer<TKey>.Default)
+            : this((IEqualityComparer<TKey>)null)
         {
         }
 
@@ -61,8 +71,18 @@ namespace GSF.Collections
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="TKey"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedDictionary(string filePath)
-            : this(filePath, EqualityComparer<TKey>.Default)
+            : this(filePath, (IEqualityComparer<TKey>)null)
         {
         }
 
@@ -72,8 +92,18 @@ namespace GSF.Collections
         /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
         /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="TKey"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedDictionary(IDictionary<TKey, TValue> dictionary)
-            : this(dictionary, EqualityComparer<TKey>.Default)
+            : this(dictionary, null)
         {
         }
 
@@ -95,6 +125,16 @@ namespace GSF.Collections
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="dictionary"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="TKey"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedDictionary(string filePath, IDictionary<TKey, TValue> dictionary)
             : this(filePath, dictionary, EqualityComparer<TKey>.Default)
         {

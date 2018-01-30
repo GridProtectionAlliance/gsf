@@ -806,6 +806,10 @@ namespace GSF.IO
             m_waitObject = new ManualResetEvent(false);
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+
+            // As of .NET 4.7.1, the OrdinalIgnoreCase comparer produces a consistent hash code across 32-bit and 64-bit platforms,
+            // but Microsoft provides no guarantees in terms of consistency across CLR versions. No testing has been done against Mono.
+            // TODO: Consider implementing a platform-independent equality comparer for ignoring case, though it would be a breaking change.
             m_processedFiles = new FileBackedHashSet<string>(Path.Combine(m_cachePath, m_processorID.ToString()), StringComparer.OrdinalIgnoreCase);
 
             // Create the enumerator last since we are passing

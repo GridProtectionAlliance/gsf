@@ -47,8 +47,18 @@ namespace GSF.Collections
         /// Creates a new instance of the <see cref="FileBackedHashSet{T}"/> class.
         /// </summary>
         /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="T"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedHashSet()
-            : this(Path.GetTempFileName(), EqualityComparer<T>.Default)
+            : this(Path.GetTempFileName(), (IEqualityComparer<T>)null)
         {
         }
 
@@ -59,8 +69,18 @@ namespace GSF.Collections
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="T"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedHashSet(string filePath)
-            : this(filePath, EqualityComparer<T>.Default)
+            : this(filePath, (IEqualityComparer<T>)null)
         {
         }
 
@@ -80,8 +100,18 @@ namespace GSF.Collections
         /// <param name="enumerable">The enumerable whose elements are copied to this hash set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="enumerable"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="T"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedHashSet(IEnumerable<T> enumerable)
-            : this(Path.GetTempFileName(), enumerable, EqualityComparer<T>.Default)
+            : this(enumerable, null)
         {
         }
 
@@ -106,8 +136,18 @@ namespace GSF.Collections
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="enumerable"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
+        /// <remarks>
+        /// This constructor uses the default equality comparer for file backed lookup tables,
+        /// which is not the same as the default equality comparer for <typeparamref name="T"/>
+        /// objects. This is because the default implementation of <see cref="object.GetHashCode"/>
+        /// does not provide guarantees about consistency across platforms, or even implementations
+        /// of the CLR. Instead, the default equality comparer uses a byte-for-byte comparison to
+        /// determine equality between keys and a CRC-32 for its hash code implementation. This
+        /// means the performance of the hashing function is dependent on the performance of the
+        /// serialization function.
+        /// </remarks>
         public FileBackedHashSet(string filePath, IEnumerable<T> enumerable)
-            : this(filePath, enumerable, EqualityComparer<T>.Default)
+            : this(filePath, enumerable, null)
         {
         }
 

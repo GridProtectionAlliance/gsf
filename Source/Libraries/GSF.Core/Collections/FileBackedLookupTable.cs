@@ -112,6 +112,118 @@ namespace GSF.Collections
             public TValue Value;
         }
 
+        private class CRCStream : Stream
+        {
+            #region [ Members ]
+
+            // Fields
+            private Crc32 m_checksum = new Crc32();
+
+            #endregion
+
+            #region [ Properties ]
+
+            public override bool CanRead => false;
+            public override bool CanSeek => false;
+            public override bool CanWrite => true;
+            public uint Value => m_checksum.Value;
+
+            #endregion
+
+            #region [ Methods ]
+
+            public override void Flush() { }
+
+            public void Reset() =>
+                m_checksum.Reset();
+
+            public override void Write(byte[] buffer, int offset, int count) =>
+                m_checksum.Update(buffer, offset, count);
+
+            #endregion
+
+            #region [ Not Supported ]
+
+            public override long Length
+            {
+                get
+                {
+                    throw new NotSupportedException();
+                }
+            }
+
+            public override long Position
+            {
+                get
+                {
+                    throw new NotSupportedException();
+                }
+
+                set
+                {
+                    throw new NotSupportedException();
+                }
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
+
+            #endregion
+        }
+
+        // The default equality comparer for strings does not guarantee
+        // consistency across platforms or versions of the CLR. This comparer
+        // uses CRC-32 for its hashing function to provide that guarantee.
+        private class DefaultKeyComparer : IEqualityComparer<TKey>
+        {
+            public bool Equals(TKey x, TKey y)
+            {
+                using (MemoryStream xStream = new MemoryStream())
+                using (MemoryStream yStream = new MemoryStream())
+                {
+                    WriteKeyAction(xStream, x);
+                    WriteKeyAction(yStream, y);
+
+                    if (xStream.Length != yStream.Length)
+                        return false;
+
+                    byte[] xBuffer = xStream.GetBuffer();
+                    byte[] yBuffer = yStream.GetBuffer();
+
+                    for (int i = 0; i < xStream.Length; i++)
+                    {
+                        if (xBuffer[i] != yBuffer[i])
+                            return false;
+                    }
+
+                    return true;
+                }
+            }
+
+            public int GetHashCode(TKey obj)
+            {
+                using (CRCStream crcStream = new CRCStream())
+                {
+                    WriteKeyAction(crcStream, obj);
+                    return unchecked((int)crcStream.Value);
+                }
+            }
+
+            public static readonly DefaultKeyComparer Default = new DefaultKeyComparer();
+        }
+
         private class KeysEnumerable : IEnumerable<TKey>
         {
             private Func<IEnumerator<TKey>> m_getEnumeratorFunc;
@@ -162,7 +274,7 @@ namespace GSF.Collections
         /// <param name="lookupTableType">Type of the lookup table used to tweak the file format.</param>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedLookupTable(LookupTableType lookupTableType)
-            : this(lookupTableType, EqualityComparer<TKey>.Default)
+            : this(lookupTableType, (IEqualityComparer<TKey>)null)
         {
         }
 
@@ -175,7 +287,7 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedLookupTable(LookupTableType lookupTableType, string filePath)
-            : this(lookupTableType, filePath, EqualityComparer<TKey>.Default)
+            : this(lookupTableType, filePath, null)
         {
         }
 
@@ -220,7 +332,7 @@ namespace GSF.Collections
             if ((object)keyComparer != null)
                 m_keyComparer = keyComparer;
             else
-                m_keyComparer = EqualityComparer<TKey>.Default;
+                m_keyComparer = DefaultKeyComparer.Default;
         }
 
         #endregion
