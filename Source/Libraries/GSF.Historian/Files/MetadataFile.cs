@@ -446,7 +446,7 @@ namespace GSF.Historian.Files
                 return record;
 
             // For compatibility with legacy mode, return a blank record if index is less than max
-            if (recordIndex < m_records.Keys.Max())
+            if (recordIndex < m_records.Keys.DefaultIfEmpty(0).Max())
                 return new MetadataRecord(recordIndex, m_legacyMode);
 
             return null;
