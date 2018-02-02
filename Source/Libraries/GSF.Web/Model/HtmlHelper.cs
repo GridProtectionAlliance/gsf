@@ -26,6 +26,8 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Web;
+using System.Web.Helpers;
+using System.Web.Mvc;
 using GSF.IO;
 using RazorEngine.Templating;
 using RazorEngine.Text;
@@ -59,6 +61,17 @@ namespace GSF.Web.Model
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Generates a hidden form field (anti-forgery token) that is validated when the form is submitted.
+        /// </summary>
+        /// <returns>The generated form field (anti-forgery token).</returns>
+        /// <remarks>
+        /// The anti-forgery token can be used to help protect your application against cross-site request forgery.
+        /// To use this feature, call the AntiForgeryToken method from a form and add the
+        /// <see cref="ValidateAntiForgeryTokenAttribute"/> attribute to the action method that you want to protect.
+        /// </remarks>
+        public IEncodedString AntiForgeryToken() => new RawString(AntiForgery.GetHtml().ToString());
 
         /// <summary>
         /// Returns a string value that is not HTML encoded.
