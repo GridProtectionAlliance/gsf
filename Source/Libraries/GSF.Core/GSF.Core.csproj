@@ -142,6 +142,8 @@
     <Compile Include="Data\Model\RecordRestriction.cs" />
     <Compile Include="Data\Model\TableOperations.cs" />
     <Compile Include="Collections\PagedList.cs" />
+    <Compile Include="Diagnostics\ChildProcessManager.cs" />
+    <Compile Include="Diagnostics\ProcessUtilizationCalculator.cs" />
     <Compile Include="Diagnostics\ThreadPoolMonitor.cs" />
     <Compile Include="Drawing\Point.cs" />
     <Compile Include="Identity\IUserInfo.cs" />
