@@ -78,6 +78,7 @@ using GSF.Historian.Files;
 using GSF.Historian.MetadataProviders;
 using GSF.Historian.Replication;
 using GSF.IO;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -109,6 +110,7 @@ namespace HistorianAdapters
         private readonly ProcessQueue<IDataPoint> m_badTimestampQueue;
         private readonly Dictionary<int, ulong> m_outOfSequenceCounts;
         private readonly ProcessQueue<IDataPoint> m_outOfSequenceQueue;
+        private readonly ShortSynchronizedOperation m_updateArchiveFileSettings;
         private bool m_disposed;
 
         #endregion
@@ -133,6 +135,7 @@ namespace HistorianAdapters
             m_badTimestampQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleBadTimestampData);
             m_outOfSequenceCounts = new Dictionary<int, ulong>();
             m_outOfSequenceQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOutOfSequenceData);
+            m_updateArchiveFileSettings = new ShortSynchronizedOperation(UpdateArchiveFileSettings, ex => OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed while updating archive file configuration parameters after configuration reload: {ex.Message}", ex)));
         }
 
         #endregion
@@ -235,17 +238,8 @@ namespace HistorianAdapters
             {
                 base.DataSource = value;
 
-                if ((object)m_archive != null)
-                {
-                    ConfigurationFile configFile = ConfigurationFile.Current;
-                    CategorizedSettingsElementCollection settings = configFile.Settings[m_archive.SettingsCategory];
-                    settings.Add("FileSize", m_archive.FileSize, "Size (in MB) of the file. Typical size = 100.");
-                    settings.Add("DataBlockSize", m_archive.DataBlockSize, "Size (in KB) of the data blocks in the file.");
-                    settings.Add("RolloverPreparationThreshold", m_archive.RolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
-                    m_archive.FileSize = settings["FileSize"].ValueAs(m_archive.FileSize);
-                    m_archive.DataBlockSize = settings["DataBlockSize"].ValueAs(m_archive.DataBlockSize);
-                    m_archive.RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(m_archive.RolloverPreparationThreshold);
-                }
+                // When configuration is reloaded, queue update to adjust archive file size parameters
+                m_updateArchiveFileSettings.RunOnceAsync();
             }
         }
 
@@ -654,6 +648,22 @@ namespace HistorianAdapters
             }
 
             return false;
+        }
+
+        // Do not invoke directly, call m_updateArchiveFileSettings.RunOnceAsync() to queue an operation
+        private void UpdateArchiveFileSettings()
+        {
+            // Error handling managed by short synchronized operation wrapper
+            ConfigurationFile configFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = configFile.Settings[m_archive.SettingsCategory];
+
+            settings.Add("FileSize", m_archive.FileSize, "Size (in MB) of the file. Typical size = 100.");
+            settings.Add("DataBlockSize", m_archive.DataBlockSize, "Size (in KB) of the data blocks in the file.");
+            settings.Add("RolloverPreparationThreshold", m_archive.RolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
+
+            m_archive.FileSize = settings["FileSize"].ValueAs(m_archive.FileSize);
+            m_archive.DataBlockSize = settings["DataBlockSize"].ValueAs(m_archive.DataBlockSize);
+            m_archive.RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(m_archive.RolloverPreparationThreshold);
         }
 
         private void m_archive_RolloverStart(object sender, EventArgs e)

@@ -905,9 +905,16 @@ namespace GSF.TimeSeries
 
                     DisplayStatusMessage("System initialization complete.", UpdateType.Information);
 
-                    // If any settings have been added to configuration file, we go ahead and save them now
-                    m_serviceHelper.SaveSettings(true);
-                    ConfigurationFile.Current.Save();
+                    try
+                    {
+                        // If any settings have been added to configuration file, we go ahead and save them now
+                        m_serviceHelper.SaveSettings(true);
+                        ConfigurationFile.Current.Save();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogException(new InvalidOperationException($"Failed to save current service helper settings: {ex.Message}", ex));
+                    }
                 }
                 else
                 {
