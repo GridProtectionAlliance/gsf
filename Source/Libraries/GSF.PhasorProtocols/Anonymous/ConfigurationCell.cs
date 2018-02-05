@@ -442,7 +442,7 @@ namespace GSF.PhasorProtocols.Anonymous
                     keyArray[0] = key;
             }
 
-            return keyArray[0].Metadata;
+            return keyArray[0]?.Metadata;
         }
 
         /// <summary>
@@ -488,7 +488,7 @@ namespace GSF.PhasorProtocols.Anonymous
                 }
             }
 
-            return keyArray[index].Metadata;
+            return keyArray[index]?.Metadata;
         }
 
         /// <summary>

@@ -564,7 +564,7 @@ namespace GSF.Security
         public override string TranslateRole(string role)
         {
             // Perform a translation from SID to Role only if the input starts with 'SID:'
-            if (role.StartsWith("SID:", StringComparison.CurrentCultureIgnoreCase))
+            if (role.StartsWith("SID:", StringComparison.OrdinalIgnoreCase))
                 return new SecurityIdentifier(role.Remove(0, 4)).Translate(typeof(NTAccount)).ToString().Split('\\')[1];
 
             return role;

@@ -1282,18 +1282,9 @@ namespace PhasorProtocolAdapters
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (definedMeasurements.Count > 0)
-            {
-                Func<MeasurementKey, IMeasurement> converter = measurement => new Measurement()
-                {
-                    Metadata = measurement.Metadata
-                };
-
-                OutputMeasurements = definedMeasurements.Values.Select(converter).ToArray();
-            }
+                OutputMeasurements = definedMeasurements.Values.Select(measurement => new Measurement { Metadata = measurement.Metadata } as IMeasurement).ToArray();
             else
-            {
                 OutputMeasurements = null;
-            }
 
             OnStatusMessage(MessageLevel.Info, $"Loaded {definedMeasurements.Count} active device measurements...", "Loading");
         }
@@ -1570,7 +1561,7 @@ namespace PhasorProtocolAdapters
                     }
 
                     string uptimeStats = $"Up for {uptime}, {totalDataErrors} errors";
-                    string runtimeStats = $" {((DateTime)m_lastReportTime).ToString("MM/dd/yyyy HH:mm:ss.fff")} {m_frameParser.CalculatedFrameRate.ToString("0.00")} fps";
+                    string runtimeStats = $" {(DateTime)m_lastReportTime:MM/dd/yyyy HH:mm:ss.fff} {m_frameParser.CalculatedFrameRate:0.00} fps";
 
                     uptimeStats = uptimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
 
