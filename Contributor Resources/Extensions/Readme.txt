@@ -5,8 +5,8 @@ Installation steps follow:
 
 * First, install the extension:
 
-  1) Close all instances of Visual Studio 2015 that are currently running
-  2) Double-click the GPAVSExtension.vsix file to begin the installation
+  1) Close all instances of Visual Studio that are currently running
+  2) Double-click the GPAVSExtension#VER#.vsix file to begin the installation
   3) Click the "Install" button to install the extension
   4) Start Visual Studio 2015
 
