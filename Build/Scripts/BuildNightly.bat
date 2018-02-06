@@ -35,6 +35,6 @@ SetLocal
 
 IF NOT "%1" == "" SET logflag=/l:FileLogger,Microsoft.Build.Engine;logfile=%1
 
-ECHO BuildNightly: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=false %logflag%
-"C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:ForceBuild=false %logflag%
+ECHO BuildNightly: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=false %logflag%
+"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:ForceBuild=false %logflag%
 endlocal
