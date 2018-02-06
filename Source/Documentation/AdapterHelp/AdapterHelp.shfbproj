@@ -7,13 +7,13 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>92b7fa59-4e8c-4ca8-a2ec-ebcd25aa49d2</ProjectGuid>
-    <SHFBSchemaVersion>2015.6.5.0</SHFBSchemaVersion>
+    <SHFBSchemaVersion>2017.9.26.0</SHFBSchemaVersion>
     <!-- AssemblyName, Name, and RootNamespace are not used by SHFB but Visual Studio adds them anyway -->
     <AssemblyName>AdapterHelp</AssemblyName>
     <RootNamespace>AdapterHelp</RootNamespace>
     <Name>AdapterHelp</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.6</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.6.1</FrameworkVersion>
     <OutputPath>..\..\..\Build\Help\Adapters\</OutputPath>
     <HtmlHelpName>GSFTimeSeriesAdapters</HtmlHelpName>
     <Language>en-US</Language>
@@ -81,10 +81,10 @@
     <FooterText>See &amp;lt%3ba href=&amp;quot%3bhttps://github.com/GridProtectionAlliance/gsf&amp;quot%3b&amp;gt%3bGrid Solutions Framework Project&amp;lt%3b/a&amp;gt%3b for latest code.</FooterText>
     <FeedbackEMailLinkText>GPA Development</FeedbackEMailLinkText>
     <FeedbackEMailAddress>rcarroll%40gridprotectionalliance.org</FeedbackEMailAddress>
-    <CopyrightText>Copyright &amp;#169%3b 2017, Grid Protection Alliance.  All Rights Reserved.</CopyrightText>
+    <CopyrightText>Copyright &amp;#169%3b 2018, Grid Protection Alliance.  All Rights Reserved.</CopyrightText>
     <CopyrightHref>https://www.gridprotectionalliance.org/</CopyrightHref>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
-    <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
+    <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, ProtectedInternalAsProtected, EditorBrowsableNever, NonBrowsable</VisibleItems>
     <ComponentConfigurations>
       <ComponentConfig id="API Token Resolution" enabled="True">
         <component id="API Token Resolution">{@TokenFiles}

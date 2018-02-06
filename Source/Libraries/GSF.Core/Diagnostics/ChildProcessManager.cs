@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
@@ -115,6 +116,7 @@ namespace GSF.Diagnostics
         }
 
         // Fields
+        private List<WeakReference<Process>> m_childProcesses;
         private SafeJobHandle m_jobHandle;
         private bool m_disposed;
 
@@ -127,25 +129,33 @@ namespace GSF.Diagnostics
         /// </summary>
         public ChildProcessManager()
         {
-            m_jobHandle = new SafeJobHandle(CreateJobObject(IntPtr.Zero, null));
-
-            JOBOBJECT_BASIC_LIMIT_INFORMATION info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
+            if (Common.IsPosixEnvironment)
             {
-                LimitFlags = 0x2000
-            };
-
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION extendedInfo = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+                // On non-Windows operating systems we just track associated processes
+                m_childProcesses = new List<WeakReference<Process>>();
+            }
+            else
             {
-                BasicLimitInformation = info
-            };
+                m_jobHandle = new SafeJobHandle(CreateJobObject(IntPtr.Zero, null));
 
-            int length = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+                JOBOBJECT_BASIC_LIMIT_INFORMATION info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
+                {
+                    LimitFlags = 0x2000
+                };
 
-            IntPtr extendedInfoPtr = Marshal.AllocHGlobal(length);
-            Marshal.StructureToPtr(extendedInfo, extendedInfoPtr, false);
+                JOBOBJECT_EXTENDED_LIMIT_INFORMATION extendedInfo = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+                {
+                    BasicLimitInformation = info
+                };
 
-            if (!SetInformationJobObject(m_jobHandle, JobObjectInfoType.ExtendedLimitInformation, extendedInfoPtr, (uint)length))
-                throw new InvalidOperationException($"Unable to set information for ChildProcessManager job. Error: {Marshal.GetLastWin32Error()}");
+                int length = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+
+                IntPtr extendedInfoPtr = Marshal.AllocHGlobal(length);
+                Marshal.StructureToPtr(extendedInfo, extendedInfoPtr, false);
+
+                if (!SetInformationJobObject(m_jobHandle, JobObjectInfoType.ExtendedLimitInformation, extendedInfoPtr, (uint)length))
+                    throw new InvalidOperationException($"Unable to set information for ChildProcessManager job. Error: {Marshal.GetLastWin32Error()}");
+            }
         }
 
         #endregion
@@ -201,13 +211,16 @@ namespace GSF.Diagnostics
         private static extern IntPtr CreateJobObject(IntPtr hObject, string lpName);
 
         [DllImport("kernel32", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetInformationJobObject(SafeJobHandle jobHandle, JobObjectInfoType infoType, IntPtr lpJobObjectInfo, uint cbJobObjectInfoLength);
 
         [DllImport("kernel32", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool AssignProcessToJobObject(SafeJobHandle jobHandle, SafeProcessHandle process);
 
         [DllImport("kernel32")]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool CloseHandle(IntPtr hObject);
         // ReSharper restore InconsistentNaming
 
