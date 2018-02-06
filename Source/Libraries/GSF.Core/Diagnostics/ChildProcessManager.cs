@@ -115,8 +115,18 @@ namespace GSF.Diagnostics
             }
         }
 
+        // Events
+
+        /// <summary>
+        /// Raised when there is an exception while attempting to terminate child process.
+        /// </summary>
+        /// <remarks>
+        /// This is currently only raised on non-Windows operating systems.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> TerminationException;
+
         // Fields
-        private List<WeakReference<Process>> m_childProcesses;
+        private readonly List<WeakReference<Process>> m_childProcesses;
         private SafeJobHandle m_jobHandle;
         private bool m_disposed;
 
@@ -136,6 +146,13 @@ namespace GSF.Diagnostics
             }
             else
             {
+                // Let safe handle manage terminations on Windows
+                GC.SuppressFinalize(this);
+
+                // On Windows we add child processes to a job object such that when the job
+                // is terminated, so are the child processes. Since safe handle ensures proper
+                // closing of job handle, child processes will be terminated even if parent 
+                // process is abnormally terminated
                 m_jobHandle = new SafeJobHandle(CreateJobObject(IntPtr.Zero, null));
 
                 JOBOBJECT_BASIC_LIMIT_INFORMATION info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
@@ -158,6 +175,14 @@ namespace GSF.Diagnostics
             }
         }
 
+        /// <summary>
+        /// Make sure child processes get disposed.
+        /// </summary>
+        ~ChildProcessManager()
+        {
+            Dispose();
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -172,8 +197,30 @@ namespace GSF.Diagnostics
 
             try
             {
-                m_jobHandle.Dispose();
-                m_jobHandle = null;
+                if (Common.IsPosixEnvironment)
+                {
+                    foreach (WeakReference<Process> childProcessReference in m_childProcesses)
+                    {
+                        Process childProcess;
+
+                        if (!childProcessReference.TryGetTarget(out childProcess))
+                            continue;
+
+                        try
+                        {
+                            childProcess.Kill();
+                        }
+                        catch (Exception ex)
+                        {
+                            TerminationException?.Invoke(this, new EventArgs<Exception>(ex));
+                        }
+                    }
+                }
+                else
+                {
+                    m_jobHandle?.Dispose();
+                    m_jobHandle = null;
+                }
             }
             finally
             {
@@ -186,18 +233,31 @@ namespace GSF.Diagnostics
         /// </summary>
         /// <param name="process">The <see cref="Process"/> to associate.</param>
         /// <remarks>
-        /// The <paramref name="process"/> will be assigned as an associated job of this <see cref="ChildProcessManager"/> instance.
-        /// When this <see cref="ChildProcessManager"/> instance is disposed and/or garbage collected, the children processes will
-        /// be terminated. Creating an instance of this class with lifetime scope of the executing application will causes any child
-        /// processes to be terminated when the parent process dies, even when parent process termination is abnormal.
+        /// <para>
+        /// The <paramref name="process"/> will be managed as an associated process of this <see cref="ChildProcessManager"/>
+        /// instance. When this <see cref="ChildProcessManager"/> instance is disposed or garbage collected, the children
+        /// processes will be terminated.
+        /// </para>
+        /// <para>
+        /// Creating an instance of this class with lifetime scope of the executing application will cause any child processes
+        /// to be terminated when the parent process shuts down, on Windows environments this will happen even when the parent
+        /// process termination is abnormal.
+        /// </para>
         /// </remarks>
         public void AddProcess(Process process)
         {
             if (m_disposed)
                 throw new ObjectDisposedException(nameof(ChildProcessManager));
 
-            if (!AssignProcessToJobObject(m_jobHandle, process.SafeHandle))
-                throw new InvalidOperationException($"Unable to add process to ChildProcessManager job. Error: {Marshal.GetLastWin32Error()}");
+            if (Common.IsPosixEnvironment)
+            {
+                m_childProcesses.Add(new WeakReference<Process>(process));
+            }
+            else
+            {
+                if (!AssignProcessToJobObject(m_jobHandle, process.SafeHandle))
+                    throw new InvalidOperationException($"Unable to add process to ChildProcessManager job. Error: {Marshal.GetLastWin32Error()}");
+            }
         }
 
         #endregion
