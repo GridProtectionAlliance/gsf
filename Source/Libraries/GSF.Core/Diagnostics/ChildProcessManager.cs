@@ -216,15 +216,14 @@ namespace GSF.Diagnostics
                         }
                     }
                 }
-                else
-                {
-                    m_jobHandle?.Dispose();
-                    m_jobHandle = null;
-                }
+
+                m_jobHandle?.Dispose();
+                m_jobHandle = null;
             }
             finally
             {
                 m_disposed = true;
+                GC.SuppressFinalize(this);
             }
         }
 
