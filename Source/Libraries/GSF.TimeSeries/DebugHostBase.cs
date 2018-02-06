@@ -26,8 +26,12 @@
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Reflection;
+
+// Process start command parameters only applicable from manual debug run
+#pragma warning disable SG0001 // Potential command injection with Process.Start
 
 namespace GSF.TimeSeries
 {
@@ -40,7 +44,7 @@ namespace GSF.TimeSeries
 
         // Fields
         private string m_productName;
-        private Process m_remoteConsole;
+        private ChildProcessManager m_processManager;
 
         /// <summary>
         /// Reference to instance of <see cref="ServiceHostBase"/>.
@@ -66,13 +70,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the executable name of the service client that can remotely access the time-series framework service.
         /// </summary>
-        protected virtual string ServiceClientName
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected virtual string ServiceClientName => null;
 
         #endregion
 
@@ -87,7 +85,10 @@ namespace GSF.TimeSeries
             string serviceClientName = ServiceClientName;
 
             if (!string.IsNullOrWhiteSpace(serviceClientName))
-                m_remoteConsole = Process.Start(FilePath.GetAbsolutePath(serviceClientName));
+            {
+                m_processManager = new ChildProcessManager();
+                m_processManager.AddProcess(Process.Start(FilePath.GetAbsolutePath(serviceClientName)));
+            }
         }
 
         /// <summary>
@@ -96,8 +97,7 @@ namespace GSF.TimeSeries
         protected virtual void DebugHostUnloading()
         {
             // Close remote console session
-            if (m_remoteConsole != null && !m_remoteConsole.HasExited)
-                m_remoteConsole.Kill();
+            m_processManager?.Dispose();
         }
 
         private void DebugHost_Load(object sender, EventArgs e)
