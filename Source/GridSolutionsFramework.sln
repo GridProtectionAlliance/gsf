@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -447,6 +447,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateGenerator", "Tools\Certificate Generator\CertificateGenerator.csproj", "{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eDNAAdapters", "Libraries\Adapters\eDNAAdapters\eDNAAdapters.csproj", "{1C165FAD-7D51-4D8E-9311-4A3BE266D877}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateAssemblyBindings", "Tools\ValidateAssemblyBindings\ValidateAssemblyBindings.csproj", "{835DF9AF-664B-4814-9654-5CB996D544F9}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -1556,6 +1558,18 @@ Global
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877}.Release|x86.ActiveCfg = Release|Any CPU
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877}.Release|x86.Build.0 = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Debug|x86.Build.0 = Debug|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Mono|x86.ActiveCfg = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Mono|x86.Build.0 = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|x86.ActiveCfg = Release|Any CPU
+		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1694,6 +1708,10 @@ Global
 		{82061A6B-EA5A-4EC2-9351-3B3CED4859C6} = {B48642A1-1163-4E1D-948A-50EE19DCD38D}
 		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
+		{835DF9AF-664B-4814-9654-5CB996D544F9} = {1B63485E-46C7-4185-B968-216A02396B88}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
