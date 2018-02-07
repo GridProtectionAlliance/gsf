@@ -1,4 +1,4 @@
-﻿<!-- Assembly bindings for the configuration/runtime section -->
+﻿<!-- Assembly bindings imported from GSF.Web.AssemblyBindings.xml resource -->
 <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
   <dependentAssembly>
     <assemblyIdentity name="Microsoft.Owin" publicKeyToken="31bf3856ad364e35" culture="neutral"/>
