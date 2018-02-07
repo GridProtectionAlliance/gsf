@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -190,6 +191,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Releases all the resources used by the <see cref="ChildProcessManager"/> object.
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_jobHandle", Justification = "It is disposed")]
         public void Dispose()
         {
             if (m_disposed)

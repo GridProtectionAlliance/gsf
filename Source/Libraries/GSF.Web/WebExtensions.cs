@@ -31,16 +31,16 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using GSF.Collections;
+using System.Xml;
 using GSF.IO;
 using GSF.Web.Model;
 using Newtonsoft.Json;
 using RazorEngine.Templating;
 using HtmlHelper = System.Web.Mvc.HtmlHelper;
-using System.Threading;
 
 namespace GSF.Web
 {
@@ -152,7 +152,7 @@ namespace GSF.Web
         private static readonly HashSet<string> s_executingAssemblyResources;
         private static readonly HashSet<string> s_callingAssemblyResources;
         private static readonly HashSet<string> s_entryAssemblyResources;
-        private static Dictionary<Assembly, HashSet<string>> s_embeddedResourceAssemblies;
+        private static readonly Dictionary<Assembly, HashSet<string>> s_embeddedResourceAssemblies;
 
         // Static Constructor
         static WebExtensions()
@@ -449,7 +449,6 @@ namespace GSF.Web
             foreach (KeyValuePair<Assembly, HashSet<string>> resources in s_embeddedResourceAssemblies)
             {
                 Assembly assembly = resources.Key;
-                HashSet<string> resourceNames = resources.Value;
 
                 if (resourceName.Contains(resourceName))
                     return assembly.GetManifestResourceStream(resourceName);
@@ -475,6 +474,73 @@ namespace GSF.Web
 
                 s_embeddedResourceAssemblies[assembly] = embeddedResourceNames;
             }
+        }
+
+        /// <summary>
+        /// Validates the assembly bindings for the specified application <paramref name="configFileName"/>.
+        /// </summary>
+        /// <param name="configFileName">Application configuration file to validate for needed assembly bindings.</param>
+        /// <param name="assemblyBindingsSource">Stream to assembly bindings to add; defaults to embedded "GSF.Web.AssemblyBindings.xml" resource.</param>
+        /// <returns><c>true</c> if assembly bindings were updated; otherwise, <c>false</c>.</returns>
+        /// <remarks>Any stream passed in via <paramref name="assemblyBindingsSource"/> will be closed if function succeeds.</remarks>
+        public static bool ValidateAssemblyBindings(string configFileName, Stream assemblyBindingsSource = null)
+        {
+            if (!File.Exists(configFileName))
+                return false;
+
+            XmlDocument configFile = new XmlDocument();
+            configFile.Load(configFileName);
+
+            XmlNode runTime = configFile.SelectSingleNode("configuration/runtime");
+
+            if ((object)runTime == null)
+            {
+                XmlNode config = configFile.SelectSingleNode("configuration");
+
+                // This is expected to already exist...
+                if ((object)config == null)
+                    return false;
+
+                runTime = configFile.CreateElement("runtime");
+                config.AppendChild(runTime);
+
+                XmlElement gcServer = configFile.CreateElement("gcServer");
+                XmlAttribute enabled = configFile.CreateAttribute("enabled");
+                enabled.Value = "true";
+
+                gcServer.Attributes.Append(enabled);
+                runTime.AppendChild(gcServer);
+
+                XmlElement gcConcurrent = configFile.CreateElement("gcConcurrent");
+                enabled = configFile.CreateAttribute("enabled");
+                enabled.Value = "true";
+
+                gcConcurrent.Attributes.Append(enabled);
+                runTime.AppendChild(gcConcurrent);
+            }
+
+            using (Stream stream = assemblyBindingsSource ?? OpenEmbeddedResourceStream("GSF.Web.AssemblyBindings.xml"))
+            {
+                XmlNamespaceManager nsmgr = new XmlNamespaceManager(configFile.NameTable);
+                nsmgr.AddNamespace("s", "urn:schemas-microsoft-com:asm.v1");
+
+                XmlDocument assemblyBindingsXml = new XmlDocument();
+                assemblyBindingsXml.Load(stream);
+
+                XmlDocumentFragment assemblyBindings = configFile.CreateDocumentFragment();
+                assemblyBindings.InnerXml = assemblyBindingsXml.InnerXml;
+
+                XmlNode oldAssemblyBindings = configFile.SelectSingleNode("configuration/runtime/s:assemblyBinding", nsmgr);
+
+                if ((object)oldAssemblyBindings != null)
+                    runTime.ReplaceChild(assemblyBindings, oldAssemblyBindings);
+                else
+                    runTime.AppendChild(assemblyBindings);
+            }
+
+            configFile.Save(configFileName);
+
+            return true;
         }
     }
 }

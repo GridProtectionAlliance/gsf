@@ -289,6 +289,7 @@
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.time.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.axislabels.min.js" />
     <EmbeddedResource Include="Shared\Images\placeholder-64x64.png" />
+    <EmbeddedResource Include="AssemblyBindings.xml" />
     <Content Include="Shared\Content\Images\ui-icons_444444_256x240.png" />
     <Content Include="Shared\Content\Images\ui-icons_555555_256x240.png" />
     <Content Include="Shared\Content\Images\ui-icons_777620_256x240.png" />

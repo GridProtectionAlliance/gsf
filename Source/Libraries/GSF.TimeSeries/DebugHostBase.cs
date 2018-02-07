@@ -148,14 +148,14 @@ namespace GSF.TimeSeries
         {
             if (this.WindowState == FormWindowState.Minimized)
             {
-                // Don't show the window in taskbar when minimized.
+                // Don't show the window in task bar when minimized.
                 this.ShowInTaskbar = false;
             }
         }
 
         private void showToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Show the window in taskbar the in normal mode (visible).
+            // Show the window in task bar the in normal mode (visible).
             this.ShowInTaskbar = true;
             this.WindowState = FormWindowState.Normal;
         }
