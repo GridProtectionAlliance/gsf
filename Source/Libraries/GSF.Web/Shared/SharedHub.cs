@@ -78,7 +78,7 @@ namespace GSF.Web.Shared
 
         // ReSharper disable once UnusedParameter.Local
         private SharedHub(string settingsCategory, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction, bool overload) :
-            base(settingsCategory ?? "securityProvider", logStatusMessageFunction ?? s_logStatusMessageFunction, logExceptionFunction ?? s_logExceptionFunction)
+            base(settingsCategory ?? "systemSettings", logStatusMessageFunction ?? s_logStatusMessageFunction, logExceptionFunction ?? s_logExceptionFunction)
         {
         }
 
