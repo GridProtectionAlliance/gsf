@@ -82,10 +82,10 @@ namespace GSF.Web.Shared
         {
         }
 
-
         #endregion
 
         #region [ Methods ]
+
         /// <summary>
         /// Overrides base OnConnected method to provide logging
         /// </summary>
@@ -132,6 +132,7 @@ namespace GSF.Web.Shared
         // Client-side script functionality
 
         #region [ Company Table Operations ]
+
         /// <summary>
         /// Queries company table counts
         /// </summary>
@@ -204,8 +205,9 @@ namespace GSF.Web.Shared
         #endregion
 
         #region [ Vendor Table Operations ]
+
         /// <summary>
-        /// Queries vender table count.
+        /// Queries vendor table count.
         /// </summary>
         /// <param name="filterText">Text to filter search down to.</param>
         /// <returns>The count of the rows in the table matching the query.</returns>
@@ -276,6 +278,7 @@ namespace GSF.Web.Shared
         #endregion
 
         #region [ VendorDevice Table Operations ]
+
         /// <summary>
         /// Queries vendor device table count.
         /// </summary>

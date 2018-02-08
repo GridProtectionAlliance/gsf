@@ -246,14 +246,6 @@
     <EmbeddedResource Include="Model\Views\AddInputField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddSelectField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddTextAreaField.cshtml" />
-    <EmbeddedResource Include="Model\Scripts\pagedViewModel.js" />
-    <EmbeddedResource Include="Model\Scripts\gsf.web.client.js" />
-    <EmbeddedResource Include="Model\Scripts\js.cookie.js" />
-    <EmbeddedResource Include="Model\Scripts\ko-reactor.js" />
-    <EmbeddedResource Include="Model\Scripts\ko-reactor.min.js" />
-    <EmbeddedResource Include="Model\Scripts\ko.observableDictionary.js" />
-    <EmbeddedResource Include="Model\Scripts\gsf.web.knockout.js" />
-    <EmbeddedResource Include="Model\Scripts\gsf.web.primeui.js" />
     <EmbeddedResource Include="Security\Views\Groups.cshtml" />
     <EmbeddedResource Include="Security\Views\Users.cshtml" />
   </ItemGroup>
@@ -385,9 +377,6 @@
     <EmbeddedResource Include="Shared\Images\StatusLights\Small\magentalight.png" />
     <EmbeddedResource Include="Shared\Images\StatusLights\Small\redlight.png" />
     <EmbeddedResource Include="Shared\Images\StatusLights\Small\yellowlight.png" />
-    <EmbeddedResource Include="Model\Scripts\bootstrap-datepicker.js" />
-    <EmbeddedResource Include="Model\Scripts\bootstrap-toolkit.js" />
-    <Content Include="Model\Scripts\ObsoleteFiles.txt" />
     <Content Include="Shared\Readme.txt" />
     <EmbeddedResource Include="Shared\Scripts\bootstrap.js" />
     <EmbeddedResource Include="Shared\Scripts\jquery.js" />
