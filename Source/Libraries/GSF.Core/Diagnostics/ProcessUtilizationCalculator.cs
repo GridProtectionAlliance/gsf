@@ -43,7 +43,7 @@ namespace GSF.Diagnostics
 
         // Fields
         private readonly Timer m_updateUtilizationTimer;
-        private Process m_process;
+        private WeakReference<Process> m_processReference;
         private int m_updateInterval;
         private TimeSpan m_startTime;
         private TimeSpan m_lastProcessorTime;
@@ -98,6 +98,23 @@ namespace GSF.Diagnostics
             }
         }
 
+        /// <summary>
+        /// Gets associated process for this <see cref="ProcessUtilizationCalculator"/>.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="ProcessUtilizationCalculator"/> maintains a <see cref="WeakReference{T}"/> to the associated
+        /// <see cref="Process"/> so this property can be <c>null</c> if the process is no longer available.
+        /// </remarks>
+        public Process AssociatedProcess
+        {
+            get
+            {
+                Process process = null;
+                m_processReference?.TryGetTarget(out process);
+                return process;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -128,8 +145,8 @@ namespace GSF.Diagnostics
         /// <param name="process">The <see cref="Process"/> to monitor for processor utilization.</param>
         public void Initialize(Process process)
         {
-            m_process = process;
-            m_startTime = m_process.TotalProcessorTime;
+            m_processReference = new WeakReference<Process>(process);
+            m_startTime = process.TotalProcessorTime;
             m_lastMonitorTime = DateTime.UtcNow;
 
             if (m_updateInterval > 0)
@@ -140,16 +157,27 @@ namespace GSF.Diagnostics
         {
             try
             {
-                DateTime currentTime = DateTime.UtcNow;
-                TimeSpan processorTime = m_process.TotalProcessorTime - m_startTime;
+                Process process;
 
-                Utilization = (processorTime - m_lastProcessorTime).TotalSeconds / (Environment.ProcessorCount * currentTime.Subtract(m_lastMonitorTime).TotalSeconds);
+                if ((object)m_processReference != null && m_processReference.TryGetTarget(out process) && !process.HasExited)
+                {
+                    DateTime currentTime = DateTime.UtcNow;
+                    TimeSpan processorTime = process.TotalProcessorTime - m_startTime;
 
-                m_lastMonitorTime = currentTime;
-                m_lastProcessorTime = processorTime;
+                    Utilization = (processorTime - m_lastProcessorTime).TotalSeconds / (Environment.ProcessorCount * currentTime.Subtract(m_lastMonitorTime).TotalSeconds);
+
+                    m_lastMonitorTime = currentTime;
+                    m_lastProcessorTime = processorTime;
+                }
+                else
+                {
+                    Utilization = 0.0D;
+                    m_updateUtilizationTimer.Enabled = false;
+                }
             }
             catch
             {
+                Utilization = 0.0D;
                 m_updateUtilizationTimer.Enabled = false;
             }
         }
