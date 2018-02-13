@@ -74,6 +74,20 @@ namespace GSF.Web.Model
         public IEncodedString AntiForgeryToken() => new RawString(AntiForgery.GetHtml().ToString());
 
         /// <summary>
+        /// Generates an anti-forgery token that can be manually added to a "RequestVerificationToken" HTTP header,
+        /// e.g., from within an AJAX request.
+        /// </summary>
+        /// <returns>Anti-forgery token to be added as the "RequestVerificationToken" HTTP header value.</returns>
+        public string AntiForgeryTokenHeader()
+        {
+            string cookieToken, formToken;
+
+            AntiForgery.GetTokens(null, out cookieToken, out formToken);
+
+            return $"{cookieToken}:{formToken}";
+        }
+
+        /// <summary>
         /// Returns a string value that is not HTML encoded.
         /// </summary>
         /// <param name="value">Raw string value to return.</param>
