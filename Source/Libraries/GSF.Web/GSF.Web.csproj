@@ -148,6 +148,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Security\ValidateRequestVerificationTokenAttribute.cs" />
     <Compile Include="Shared\Model\Company.cs" />
     <Compile Include="Shared\Model\Vendor.cs" />
     <Compile Include="Shared\Model\VendorDevice.cs" />
@@ -300,7 +301,11 @@
     <EmbeddedResource Include="AssemblyBindings.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Scripts\bootstrap-datepicker.js" />
+    <EmbeddedResource Include="Model\Scripts\bootstrap-toolkit.js" />
+    <EmbeddedResource Include="Model\Scripts\pagedViewModel.js" />
     <Content Include="Readme.txt" />
+    <EmbeddedResource Include="Security\Scripts\Login.js" />
     <Content Include="Shared\Content\Images\ui-icons_444444_256x240.png" />
     <Content Include="Shared\Content\Images\ui-icons_555555_256x240.png" />
     <Content Include="Shared\Content\Images\ui-icons_777620_256x240.png" />
