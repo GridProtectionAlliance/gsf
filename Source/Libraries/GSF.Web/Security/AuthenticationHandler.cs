@@ -38,6 +38,8 @@ using GSF.Security;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Infrastructure;
 
+#pragma warning disable SG0015 // Validated - no hard-coded password present
+
 namespace GSF.Web.Security
 {
     /// <summary>

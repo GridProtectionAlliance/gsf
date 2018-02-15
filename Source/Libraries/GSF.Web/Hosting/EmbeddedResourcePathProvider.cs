@@ -220,7 +220,7 @@ namespace GSF.Web.Hosting
             get
             {
                 string toParse = ConfigurationManager.AppSettings[ConfigKeyAllowOverrides];
-                if (String.IsNullOrEmpty(toParse))
+                if (string.IsNullOrEmpty(toParse))
                 {
                     return false;
                 }
@@ -676,7 +676,7 @@ namespace GSF.Web.Hosting
             }
 
             // Get the complete set of embedded resource names in the assembly; bail early if there aren't any.
-            List<String> assemblyResourceNames = new List<string>(assembly.GetManifestResourceNames());
+            List<string> assemblyResourceNames = new List<string>(assembly.GetManifestResourceNames());
             if (assemblyResourceNames.Count == 0)
             {
                 return;

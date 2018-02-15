@@ -42,6 +42,9 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
 using RazorEngine.Templating;
 using Timer = System.Timers.Timer;
+using Random = GSF.Security.Cryptography.Random;
+
+#pragma warning disable SG0015 // Validated - no hard-coded password present
 
 namespace GSF.Web.Security
 {
@@ -220,8 +223,11 @@ namespace GSF.Web.Security
             // Store session ID in response message cookie
             response.Headers.AddCookies(new[] { new CookieHeaderValue(SessionToken, sessionCookieValue) { Path = "/" } });
 
+            // Get authentication options associated with this request
+            ReadonlyAuthenticationOptions options = request.GetAuthenticationOptions();
+
             // If requesting the AuthTest page using BASIC authentication, reissue the client's authentication token
-            string authTestPage = ReadonlyAuthenticationOptions.GetAuthenticationOptions(request).AuthTestPage;
+            string authTestPage = options.AuthTestPage;
 
             if (request.RequestUri.LocalPath == authTestPage)
             {
@@ -247,6 +253,9 @@ namespace GSF.Web.Security
                         }
                     });
                 }
+
+                // AuthTest page should always have a valid request verification token
+                request.ValidateRequestVerificationToken(options);
             }
 
             return response;
@@ -257,11 +266,11 @@ namespace GSF.Web.Security
             byte[] buffer = new byte[9];
 
             // Generate the selector for the token
-            GSF.Security.Cryptography.Random.GetBytes(buffer);
+            Random.GetBytes(buffer);
             string selector = Convert.ToBase64String(buffer);
 
             // Generate the validator for the token
-            GSF.Security.Cryptography.Random.GetBytes(buffer);
+            Random.GetBytes(buffer);
             string validator = Convert.ToBase64String(buffer);
 
             // Determine where the credential cache is located
@@ -619,6 +628,75 @@ namespace GSF.Web.Security
         {
             if (!httpConfig.MessageHandlers.Any(handler => handler is SessionHandler))
                 httpConfig.MessageHandlers.Add(new SessionHandler(options.AuthenticationToken, options.SessionToken));
+
+            if (!httpConfig.Filters.Any(filter => filter.Instance is ValidateRequestVerificationTokenAttribute))
+                httpConfig.Filters.Add(new ValidateRequestVerificationTokenAttribute(true));
+        }
+
+        /// <summary>
+        /// Retrieves a read-only copy of the authentication options from the given <see cref="HttpRequestMessage"/>.
+        /// </summary>
+        /// <param name="request">The HTTP request.</param>
+        /// <returns>The authentication options.</returns>
+        public static ReadonlyAuthenticationOptions GetAuthenticationOptions(this HttpRequestMessage request)
+        {
+            object value;
+
+            if (request.Properties.TryGetValue("MS_OwinContext", out value))
+            {
+                IOwinContext context = value as IOwinContext;
+
+                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
+                    return value as ReadonlyAuthenticationOptions;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Validates that the request verification token value comes from the user who submitted the data.
+        /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <param name="formValidation">Flag that determines if form validation should be used.</param>
+        public static void ValidateRequestVerificationToken(this HttpRequestMessage request, bool formValidation = false)
+        {
+            ValidateRequestVerificationToken(request, request.GetAuthenticationOptions(), formValidation);
+        }
+
+        /// <summary>
+        /// Validates that the request verification token value comes from the user who submitted the data.
+        /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <param name="options">Read-only authentication options for this <paramref name="request"/>.</param>
+        /// <param name="formValidation">Flag that determines if form validation should be used.</param>
+        public static void ValidateRequestVerificationToken(this HttpRequestMessage request, ReadonlyAuthenticationOptions options, bool formValidation = false)
+        {
+            if (formValidation)
+            {
+                // Form validation
+                AntiForgery.Validate(request);
+            }
+            else
+            {
+                // Header validation
+                string cookieToken = "";
+                string formToken = "";
+
+                IEnumerable<string> tokenHeaders;
+
+                if (request.Headers.TryGetValues(options.RequestVerificationToken, out tokenHeaders))
+                {
+                    string[] tokens = tokenHeaders.First().Split(':');
+
+                    if (tokens.Length == 2)
+                    {
+                        cookieToken = tokens[0].Trim();
+                        formToken = tokens[1].Trim();
+                    }
+                }
+
+                AntiForgery.Validate(request, cookieToken, formToken);
+            }
         }
     }
 }

@@ -30,6 +30,9 @@ This includes, but may not be limited to, the following:
 * CertificateGenerator project that internally includes code from the Bouncy Castle libraries which
 	    includes bzip2 code based on work done by Keiron Liddle, Aftex Software
 
+* GSF.Web includes anti-CSRF code derived from AspNetWebStack (https://github.com/aspnet/AspNetWebStack):
+		Copyright (c) .NET Foundation. All rights reserved.
+
 =========================================================================================================
 
 Portions of this software, where noted in the source file header, were implemented using source code

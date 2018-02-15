@@ -26,9 +26,8 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Web;
-using System.Web.Helpers;
-using System.Web.Mvc;
 using GSF.IO;
+using GSF.Web.Security;
 using RazorEngine.Templating;
 using RazorEngine.Text;
 
@@ -65,24 +64,27 @@ namespace GSF.Web.Model
         /// <summary>
         /// Generates a hidden form field (anti-forgery token) that is validated when the form is submitted.
         /// </summary>
+        /// <param name="response">Response message.</param>
         /// <returns>The generated form field (anti-forgery token).</returns>
         /// <remarks>
-        /// The anti-forgery token can be used to help protect your application against cross-site request forgery.
-        /// To use this feature, call the AntiForgeryToken method from a form and add the
-        /// <see cref="ValidateAntiForgeryTokenAttribute"/> attribute to the action method that you want to protect.
+        /// The anti-forgery token can be used to help protect your application against cross-site request
+        /// forgery. To use this feature, call the RequestVerificationToken method from a form and add the
+        /// <see cref="ValidateRequestVerificationTokenAttribute"/> attribute to the action method that
+        /// you want to protect.
         /// </remarks>
-        public IEncodedString AntiForgeryToken() => new RawString(AntiForgery.GetHtml().ToString());
+        public IEncodedString RequestVerificationToken(HttpResponseMessage response) => new RawString(AntiForgery.GetHtml(response));
 
         /// <summary>
-        /// Generates an anti-forgery token that can be manually added to a "RequestVerificationToken" HTTP header,
+        /// Generates an anti-forgery token that can be manually added to an HTTP request header,
         /// e.g., from within an AJAX request.
         /// </summary>
-        /// <returns>Anti-forgery token to be added as the "RequestVerificationToken" HTTP header value.</returns>
-        public string AntiForgeryTokenHeader()
+        /// <param name="request">Request message.</param>
+        /// <returns>Anti-forgery token to be added as an HTTP header value.</returns>
+        public string RequestVerificationHeaderToken(HttpRequestMessage request)
         {
             string cookieToken, formToken;
 
-            AntiForgery.GetTokens(null, out cookieToken, out formToken);
+            AntiForgery.GetTokens(request, null, out cookieToken, out formToken);
 
             return $"{cookieToken}:{formToken}";
         }

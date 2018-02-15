@@ -25,23 +25,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using System.Web.Http.Filters;
+using GSF.Web.Model;
 
 namespace GSF.Web.Security
 {
     /// <summary>
     /// Requests that the controller or method validate the anti-forgery request verification
-    /// token value found in the HTTP header.
+    /// token values found in the HTTP headers.
     /// </summary>
     public class ValidateRequestVerificationTokenAttribute : ActionFilterAttribute
     {
         private readonly bool m_skipValidation;
 
+        /// <summary>
+        /// Gets or sets flag that determines if validation should occur via posted form data or header data.
+        /// Set to <c>true</c> to use form data with <see cref="HtmlHelper.RequestVerificationToken"/> function;
+        /// otherwise, set to <c>false</c> to use with <see cref="HtmlHelper.RequestVerificationHeaderToken"/>
+        /// function (e.g., when used via JSON). Defaults to <c>false</c>.
+        /// </summary>
+        public bool FormValidation { get; set; } = false;
+
+        /// <summary>
+        /// Creates a new <see cref="ValidateRequestVerificationTokenAttribute"/>.
+        /// </summary>
         public ValidateRequestVerificationTokenAttribute()
         {
             m_skipValidation = false;
         }
 
-        public ValidateRequestVerificationTokenAttribute(bool skipValidation)
+        internal ValidateRequestVerificationTokenAttribute(bool skipValidation)
         {
             m_skipValidation = skipValidation;
         }
@@ -52,7 +64,7 @@ namespace GSF.Web.Security
         public override Task OnActionExecutingAsync(HttpActionContext actionContext, CancellationToken cancellationToken)
         {
             if (!m_skipValidation)
-                actionContext.Request.ValidateRequestVerificationToken();
+                actionContext.Request.ValidateRequestVerificationToken(FormValidation);
 
             return base.OnActionExecutingAsync(actionContext, cancellationToken);
         }

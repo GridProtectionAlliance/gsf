@@ -252,7 +252,7 @@ Ntlm.isChallenge = function(xhr) {
     return header && header.indexOf("NTLM") !== -1;
 };
 
-Ntlm.authenticate = function(url, handleResponse) {
+Ntlm.authenticate = function(url, handleResponse, verificationHeader, verificationValue) {
     if (!Ntlm.domain || !Ntlm.username || !Ntlm.lmHashedPassword || !Ntlm.ntHashedPassword) {
         Ntlm.error("No NTLM credentials specified. Use Ntlm.setCredentials(...) before making calls.");
         return;
@@ -292,6 +292,9 @@ Ntlm.authenticate = function(url, handleResponse) {
                             const msg3 = Ntlm.createMessage3(challenge, hostname);
 
                             xhr2.setRequestHeader("Authorization", "NTLM " + msg3.toBase64());
+
+                            if (verificationHeader && verificationValue)
+                                xhr2.setRequestHeader(verificationHeader, verificationValue);
                         }
                     });
                     break;
@@ -303,6 +306,9 @@ Ntlm.authenticate = function(url, handleResponse) {
         beforeSend: function (xhr) {
             const msg1 = Ntlm.createMessage1(hostname);
             xhr.setRequestHeader("Authorization", "NTLM " + msg1.toBase64());
+
+            if (verificationHeader && verificationValue)
+                xhr.setRequestHeader(verificationHeader, verificationValue);
         }
     });
 };

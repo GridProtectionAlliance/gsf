@@ -24,20 +24,23 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
-using Microsoft.Owin;
 
 namespace GSF.Web.Security
 {
     /// <summary>
     /// Represents options for authentication using <see cref="AuthenticationHandler"/>.
     /// </summary>
-    public class AuthenticationOptions : Microsoft.Owin.Security.AuthenticationOptions
+    public sealed class AuthenticationOptions : Microsoft.Owin.Security.AuthenticationOptions
     {
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Default value for <see cref="RequestVerificationToken"/>.
+        /// </summary>
+        public const string DefaultRequestVerificationToken = "X-GSF-Verify";
 
         /// <summary>
         /// Default value for <see cref="AuthFailureRedirectResourceExpression"/>.
@@ -138,6 +141,11 @@ namespace GSF.Web.Security
         /// Gets or sets the token used for identifying the session ID in cookie headers.
         /// </summary>
         public string SessionToken { get; set; } = SessionHandler.DefaultSessionToken;
+
+        /// <summary>
+        /// Gets or sets the token used for anti-forgery verification in HTTP request headers.
+        /// </summary>
+        public string RequestVerificationToken { get; set; } = DefaultRequestVerificationToken;
 
         /// <summary>
         /// Gets or sets the login page used as a redirect location when authentication fails.
@@ -291,7 +299,7 @@ namespace GSF.Web.Security
     /// <summary>
     /// Represents an immutable version of <see cref="AuthenticationOptions"/>.
     /// </summary>
-    public class ReadonlyAuthenticationOptions
+    public sealed class ReadonlyAuthenticationOptions
     {
         #region [ Members ]
 
@@ -324,9 +332,19 @@ namespace GSF.Web.Security
         public string AnonymousResourceExpression => m_authenticationOptions.AnonymousResourceExpression;
 
         /// <summary>
+        /// Gets the token used for identifying the authentication token in cookie headers.
+        /// </summary>
+        public string AuthenticationToken => m_authenticationOptions.AuthenticationToken;
+
+        /// <summary>
         /// Gets the token used for identifying the session ID in cookie headers.
         /// </summary>
         public string SessionToken => m_authenticationOptions.SessionToken;
+
+        /// <summary>
+        /// Gets the token used for anti-forgery verification in HTTP request headers.
+        /// </summary>
+        public string RequestVerificationToken => m_authenticationOptions.RequestVerificationToken;
 
         /// <summary>
         /// Gets the login page used as a redirect location when authentication fails.
@@ -376,32 +394,6 @@ namespace GSF.Web.Security
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAnonymousResource(string urlPath) => m_authenticationOptions.IsAnonymousResource(urlPath);
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-
-        /// <summary>
-        /// Retrieves the authentication options from the given <see cref="HttpRequestMessage"/>.
-        /// </summary>
-        /// <param name="request">The HTTP request.</param>
-        /// <returns>The authentication options.</returns>
-        public static ReadonlyAuthenticationOptions GetAuthenticationOptions(HttpRequestMessage request)
-        {
-            object value;
-
-            if (request.Properties.TryGetValue("MS_OwinContext", out value))
-            {
-                IOwinContext context = value as IOwinContext;
-
-                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
-                    return value as ReadonlyAuthenticationOptions;
-            }
-
-            return null;
-        }
 
         #endregion
     }

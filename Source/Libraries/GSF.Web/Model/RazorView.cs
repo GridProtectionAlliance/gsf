@@ -219,7 +219,7 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("Response", response);
                 m_viewBag.AddValue("IsPost", isPost);
                 m_viewBag.AddValue("WebServerOptions", WebServerOptions);
-                m_viewBag.AddValue("AuthenticationOptions", ReadonlyAuthenticationOptions.GetAuthenticationOptions(request));
+                m_viewBag.AddValue("AuthenticationOptions", request.GetAuthenticationOptions());
 
                 DynamicViewBag sessionState;
 

@@ -44,7 +44,7 @@ namespace GSF.Web.Hosting
     /// </para>
     /// </remarks>
     /// <seealso cref="System.Web.Hosting.VirtualFileBase" />
-    public class VirtualFileBaseCollection : KeyedCollection<String, VirtualFileBase>
+    public class VirtualFileBaseCollection : KeyedCollection<string, VirtualFileBase>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GSF.Web.Hosting.VirtualFileBaseCollection" /> class that uses a case-insensitive comparer.
@@ -61,7 +61,7 @@ namespace GSF.Web.Hosting
         /// equality comparer for the type of the key, obtained from <see cref="System.Collections.Generic.EqualityComparer{T}.Default" />.
         /// </param>
         /// <seealso cref="GSF.Web.Hosting.VirtualFileBaseCollection" />
-        public VirtualFileBaseCollection(IEqualityComparer<String> comparer) : base(comparer) { }
+        public VirtualFileBaseCollection(IEqualityComparer<string> comparer) : base(comparer) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GSF.Web.Hosting.VirtualFileBaseCollection" /> class that uses the specified equality comparer.
@@ -77,7 +77,7 @@ namespace GSF.Web.Hosting
         /// a lookup dictionary is never created.
         /// </param>
         /// <seealso cref="GSF.Web.Hosting.VirtualFileBaseCollection" />
-        public VirtualFileBaseCollection(IEqualityComparer<String> comparer, int dictionaryCreationThreshold) : base(comparer, dictionaryCreationThreshold) { }
+        public VirtualFileBaseCollection(IEqualityComparer<string> comparer, int dictionaryCreationThreshold) : base(comparer, dictionaryCreationThreshold) { }
 
         /// <summary>
         /// Extracts the key from the specified element.
@@ -86,7 +86,7 @@ namespace GSF.Web.Hosting
         /// The <see cref="System.Web.Hosting.VirtualFileBase" /> element from which to extract the key (<see cref="System.Web.Hosting.VirtualFileBase.VirtualPath" />).
         /// </param>
         /// <seealso cref="GSF.Web.Hosting.VirtualFileBaseCollection" />
-        protected override String GetKeyForItem(VirtualFileBase item)
+        protected override string GetKeyForItem(VirtualFileBase item)
         {
             return item.VirtualPath;
         }

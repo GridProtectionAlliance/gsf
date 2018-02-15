@@ -153,6 +153,7 @@ namespace GSF.Web
         private static readonly HashSet<string> s_callingAssemblyResources;
         private static readonly HashSet<string> s_entryAssemblyResources;
         private static readonly Dictionary<Assembly, HashSet<string>> s_embeddedResourceAssemblies;
+        private static readonly string[] s_newLineDelimeters = { "\r\n", "\r", "\n" };
 
         // Static Constructor
         static WebExtensions()
@@ -216,12 +217,12 @@ namespace GSF.Web
 
             if (forceFixed)
             {
-                string[] lines = script.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                string[] lines = script.Split(s_newLineDelimeters, StringSplitOptions.None);
                 return string.Join(Environment.NewLine, lines.Select(line => $"{forwardSpacing}{line.TrimStart(null)}"));
             }
 
             Tuple<string, int>[] linesAndLengths = script
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
+                .Split(s_newLineDelimeters, StringSplitOptions.None)
                 .Select(line => new Tuple<string, int>(line, line.Length - line.TrimStart(null).Length))
                 .ToArray();
 

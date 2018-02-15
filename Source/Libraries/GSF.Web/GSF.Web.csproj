@@ -148,6 +148,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Security\AntiForgery.cs" />
+    <Compile Include="Security\AntiForgeryConfig.cs" />
+    <Compile Include="Security\AntiCsrf\AntiForgeryToken.cs" />
+    <Compile Include="Security\AntiCsrf\AntiForgeryTokenSerializer.cs" />
+    <Compile Include="Security\AntiCsrf\AntiForgeryTokenStore.cs" />
+    <Compile Include="Security\AntiCsrf\AntiForgeryWorker.cs" />
+    <Compile Include="Security\AntiCsrf\BinaryBlob.cs" />
+    <Compile Include="Security\AntiCsrf\CryptoSystem.cs" />
+    <Compile Include="Security\AntiCsrf\TokenValidator.cs" />
+    <Compile Include="Security\IAntiForgeryAdditionalDataProvider.cs" />
     <Compile Include="Security\ValidateRequestVerificationTokenAttribute.cs" />
     <Compile Include="Shared\Model\Company.cs" />
     <Compile Include="Shared\Model\Vendor.cs" />
