@@ -51,8 +51,8 @@ namespace GSF.Web.Security
         /// <param name="cancellationToken">Cancellation token.</param>
         public override Task OnActionExecutingAsync(HttpActionContext actionContext, CancellationToken cancellationToken)
         {
-            if (!m_skipValidation)
-                actionContext.Request.ValidateRequestVerificationToken();
+            //if (!m_skipValidation)
+            //  actionContext.Request.ValidateRequestVerificationToken();
 
             return base.OnActionExecutingAsync(actionContext, cancellationToken);
         }
