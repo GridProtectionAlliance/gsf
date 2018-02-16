@@ -62,7 +62,7 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.2.202.0")]
-[assembly: AssemblyVersion("2.2.202.0")]
-[assembly: AssemblyInformationalVersion("2.2.202-beta")]
+// [assembly: AssemblyVersion("2.2.203.0")]
+[assembly: AssemblyVersion("2.2.203.0")]
+[assembly: AssemblyInformationalVersion("2.2.203-beta")]
 
