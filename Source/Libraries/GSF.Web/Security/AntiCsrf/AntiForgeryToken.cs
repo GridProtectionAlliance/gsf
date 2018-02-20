@@ -44,22 +44,40 @@ namespace GSF.Web.Security.AntiCsrf
 
         public string AdditionalData
         {
-            get => m_additionalData ?? string.Empty;
-            set => m_additionalData = value;
+            get
+            {
+                return m_additionalData ?? string.Empty;
+            }
+            set
+            {
+                m_additionalData = value;
+            }
         }
 
         public bool IsSessionToken { get; set; }
 
         public BinaryBlob SecurityToken
         {
-            get => m_securityToken ?? (m_securityToken = new BinaryBlob(SecurityTokenBitLength));
-            set => m_securityToken = value;
+            get
+            {
+                return m_securityToken ?? (m_securityToken = new BinaryBlob(SecurityTokenBitLength));
+            }
+            set
+            {
+                m_securityToken = value;
+            }
         }
 
         public string Username
         {
-            get => m_username ?? string.Empty;
-            set => m_username = value;
+            get
+            {
+                return m_username ?? string.Empty;
+            }
+            set
+            {
+                m_username = value;
+            }
         }
     }
 }

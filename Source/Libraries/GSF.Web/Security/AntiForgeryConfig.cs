@@ -63,8 +63,14 @@ namespace GSF.Web.Security
         /// </remarks>
         public static string CookieName
         {
-            get => s_cookieName ?? (s_cookieName = AntiForgeryTokenFieldName);
-            set => s_cookieName = value;
+            get
+            {
+                return s_cookieName ?? (s_cookieName = AntiForgeryTokenFieldName);
+            }
+            set
+            {
+                s_cookieName = value;
+            }
         }
 
         /// <summary>
