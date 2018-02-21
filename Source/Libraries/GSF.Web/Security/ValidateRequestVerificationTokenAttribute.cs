@@ -33,6 +33,11 @@ namespace GSF.Web.Security
     /// Requests that the controller or method validate the anti-forgery request verification
     /// token values found in the HTTP headers.
     /// </summary>
+    /// <remarks>
+    /// For self-hosted web sites, use this attribute to validate anti-forgery tokens instead of
+    /// the <see cref="System.Web.Mvc.ValidateAntiForgeryTokenAttribute"/> which requires an
+    /// active <see cref="System.Web.HttpContext"/>.
+    /// </remarks>
     public class ValidateRequestVerificationTokenAttribute : ActionFilterAttribute
     {
         private readonly bool m_skipValidation;

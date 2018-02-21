@@ -47,14 +47,12 @@ namespace GSF.Web.Security.AntiCsrf
             try
             {
                 using (MemoryStream stream = new MemoryStream(CryptoSystem.Unprotect(serializedToken)))
+                using (BinaryReader reader = new BinaryReader(stream))
                 {
-                    using (BinaryReader reader = new BinaryReader(stream))
-                    {
-                        AntiForgeryToken token = Deserialize(reader);
+                    AntiForgeryToken token = Deserialize(reader);
 
-                        if (token != null)
-                            return token;
-                    }
+                    if (token != null)
+                        return token;
                 }
             }
             catch
@@ -104,22 +102,20 @@ namespace GSF.Web.Security.AntiCsrf
             Contract.Assert(token != null);
 
             using (MemoryStream stream = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                using (BinaryWriter writer = new BinaryWriter(stream))
+                writer.Write(TokenVersion);
+                writer.Write(token.SecurityToken.GetData());
+                writer.Write(token.IsSessionToken);
+
+                if (!token.IsSessionToken)
                 {
-                    writer.Write(TokenVersion);
-                    writer.Write(token.SecurityToken.GetData());
-                    writer.Write(token.IsSessionToken);
-
-                    if (!token.IsSessionToken)
-                    {
-                        writer.Write(token.Username);
-                        writer.Write(token.AdditionalData);
-                    }
-
-                    writer.Flush();
-                    return CryptoSystem.Protect(stream.ToArray());
+                    writer.Write(token.Username);
+                    writer.Write(token.AdditionalData);
                 }
+
+                writer.Flush();
+                return CryptoSystem.Protect(stream.ToArray());
             }
         }
     }
