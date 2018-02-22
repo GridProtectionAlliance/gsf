@@ -55,6 +55,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvExportAdapter.cs" />
+    <Compile Include="CsvImportAdapter.cs" />
     <Compile Include="CsvInputAdapter.cs" />
     <Compile Include="CsvOutputAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
