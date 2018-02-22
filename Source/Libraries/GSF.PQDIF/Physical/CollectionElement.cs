@@ -141,7 +141,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="tag">The tag of the elements to be removed.</param>
         public void RemoveElementsByTag(Guid tag)
         {
-            for (int i = m_elements.Count; i >= 0; i--)
+            for (int i = m_elements.Count - 1; i >= 0; i--)
             {
                 if (m_elements[i].TagOfElement == tag)
                     m_elements.RemoveAt(i);
