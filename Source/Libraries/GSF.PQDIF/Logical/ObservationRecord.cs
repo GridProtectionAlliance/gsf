@@ -194,7 +194,7 @@ namespace GSF.PQDIF.Logical
             {
                 channelInstancesElement = new CollectionElement()
                 {
-                    TagOfElement = OneChannelInstanceTag
+                    TagOfElement = ChannelInstancesTag
                 };
 
                 m_physicalRecord.Body.Collection.AddElement(channelInstancesElement);
