@@ -191,19 +191,9 @@ namespace GSF.PQDIF.Logical
                 else
                 {
                     ScalarElement seriesShareChannelIndexScalar = m_physicalStructure
-                        .GetScalarByTag(SeriesShareChannelIndexTag);
+                        .GetOrAddScalar(SeriesShareChannelIndexTag);
 
-                    if ((object)seriesShareChannelIndexScalar == null)
-                    {
-                        seriesShareChannelIndexScalar = new ScalarElement()
-                        {
-                            TagOfElement = SeriesShareChannelIndexTag,
-                            TypeOfValue = PhysicalType.UnsignedInteger4
-                        };
-
-                        m_physicalStructure.AddElement(seriesShareChannelIndexScalar);
-                    }
-
+                    seriesShareChannelIndexScalar.TypeOfValue = PhysicalType.UnsignedInteger4;
                     seriesShareChannelIndexScalar.SetUInt4(value.GetValueOrDefault());
                 }
             }
@@ -232,19 +222,9 @@ namespace GSF.PQDIF.Logical
                 else
                 {
                     ScalarElement seriesShareSeriesIndexScalar = m_physicalStructure
-                        .GetScalarByTag(SeriesShareSeriesIndexTag);
+                        .GetOrAddScalar(SeriesShareSeriesIndexTag);
 
-                    if ((object)seriesShareSeriesIndexScalar == null)
-                    {
-                        seriesShareSeriesIndexScalar = new ScalarElement()
-                        {
-                            TagOfElement = SeriesShareSeriesIndexTag,
-                            TypeOfValue = PhysicalType.UnsignedInteger4
-                        };
-
-                        m_physicalStructure.AddElement(seriesShareSeriesIndexScalar);
-                    }
-
+                    seriesShareSeriesIndexScalar.TypeOfValue = PhysicalType.UnsignedInteger4;
                     seriesShareSeriesIndexScalar.SetUInt4(value.GetValueOrDefault());
                 }
             }

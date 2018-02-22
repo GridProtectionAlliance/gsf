@@ -96,19 +96,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement channelDefinitionIndexElement = m_physicalStructure.GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag);
-
-                if ((object)channelDefinitionIndexElement == null)
-                {
-                    channelDefinitionIndexElement = new ScalarElement()
-                    {
-                        TagOfElement = ChannelDefinition.ChannelDefinitionIndexTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalStructure.AddElement(channelDefinitionIndexElement);
-                }
-
+                ScalarElement channelDefinitionIndexElement = m_physicalStructure.GetOrAddScalar(ChannelDefinition.ChannelDefinitionIndexTag);
+                channelDefinitionIndexElement.TypeOfValue = PhysicalType.UnsignedInteger4;
                 channelDefinitionIndexElement.SetUInt4(value);
             }
         }
@@ -129,19 +118,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement xdSystemSideRatioElement = m_physicalStructure.GetScalarByTag(XDSystemSideRatioTag);
-
-                if ((object)xdSystemSideRatioElement == null)
-                {
-                    xdSystemSideRatioElement = new ScalarElement()
-                    {
-                        TagOfElement = XDSystemSideRatioTag,
-                        TypeOfValue = PhysicalType.Real8
-                    };
-
-                    m_physicalStructure.AddElement(xdSystemSideRatioElement);
-                }
-
+                ScalarElement xdSystemSideRatioElement = m_physicalStructure.GetOrAddScalar(XDSystemSideRatioTag);
+                xdSystemSideRatioElement.TypeOfValue = PhysicalType.Real8;
                 xdSystemSideRatioElement.SetReal8(value);
             }
         }
@@ -162,19 +140,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement xdMonitorSideRatioElement = m_physicalStructure.GetScalarByTag(XDMonitorSideRatioTag);
-
-                if ((object)xdMonitorSideRatioElement == null)
-                {
-                    xdMonitorSideRatioElement = new ScalarElement()
-                    {
-                        TagOfElement = XDMonitorSideRatioTag,
-                        TypeOfValue = PhysicalType.Real8
-                    };
-
-                    m_physicalStructure.AddElement(xdMonitorSideRatioElement);
-                }
-
+                ScalarElement xdMonitorSideRatioElement = m_physicalStructure.GetOrAddScalar(XDMonitorSideRatioTag);
+                xdMonitorSideRatioElement.TypeOfValue = PhysicalType.Real8;
                 xdMonitorSideRatioElement.SetReal8(value);
             }
         }

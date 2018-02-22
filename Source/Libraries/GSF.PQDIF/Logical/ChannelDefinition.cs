@@ -391,21 +391,7 @@ namespace GSF.PQDIF.Logical
             set
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement channelNameElement = m_physicalStructure.GetVectorByTag(ChannelNameTag);
-
-                if ((object)channelNameElement == null)
-                {
-                    channelNameElement = new VectorElement()
-                    {
-                        TagOfElement = ChannelNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalStructure.AddElement(channelNameElement);
-                }
-
-                channelNameElement.Size = bytes.Length;
-                channelNameElement.SetValues(bytes, 0);
+                m_physicalStructure.AddOrUpdateVector(ChannelNameTag, PhysicalType.Char1, bytes);
             }
         }
 
@@ -422,19 +408,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement phaseIDElement = m_physicalStructure.GetScalarByTag(PhaseIDTag);
-
-                if ((object)phaseIDElement == null)
-                {
-                    phaseIDElement = new ScalarElement()
-                    {
-                        TagOfElement = PhaseIDTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalStructure.AddElement(phaseIDElement);
-                }
-
+                ScalarElement phaseIDElement = m_physicalStructure.GetOrAddScalar(PhaseIDTag);
+                phaseIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
                 phaseIDElement.SetUInt4((uint)value);
             }
         }
@@ -453,19 +428,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement quantityTypeIDElement = m_physicalStructure.GetScalarByTag(QuantityTypeIDTag);
-
-                if ((object)quantityTypeIDElement == null)
-                {
-                    quantityTypeIDElement = new ScalarElement()
-                    {
-                        TagOfElement = QuantityTypeIDTag,
-                        TypeOfValue = PhysicalType.Guid
-                    };
-
-                    m_physicalStructure.AddElement(quantityTypeIDElement);
-                }
-
+                ScalarElement quantityTypeIDElement = m_physicalStructure.GetOrAddScalar(QuantityTypeIDTag);
+                quantityTypeIDElement.TypeOfValue = PhysicalType.Guid;
                 quantityTypeIDElement.SetGuid(value);
             }
         }
@@ -484,19 +448,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement quantityMeasuredIDElement = m_physicalStructure.GetScalarByTag(QuantityMeasuredIDTag);
-
-                if ((object)quantityMeasuredIDElement == null)
-                {
-                    quantityMeasuredIDElement = new ScalarElement()
-                    {
-                        TagOfElement = QuantityMeasuredIDTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalStructure.AddElement(quantityMeasuredIDElement);
-                }
-
+                ScalarElement quantityMeasuredIDElement = m_physicalStructure.GetOrAddScalar(QuantityMeasuredIDTag);
+                quantityMeasuredIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
                 quantityMeasuredIDElement.SetUInt4((uint)value);
             }
         }
@@ -518,21 +471,7 @@ namespace GSF.PQDIF.Logical
             set
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement quantityNameElement = m_physicalStructure.GetVectorByTag(QuantityNameTag);
-
-                if ((object)quantityNameElement == null)
-                {
-                    quantityNameElement = new VectorElement()
-                    {
-                        TagOfElement = QuantityNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalStructure.AddElement(quantityNameElement);
-                }
-
-                quantityNameElement.Size = bytes.Length;
-                quantityNameElement.SetValues(bytes, 0);
+                m_physicalStructure.AddOrUpdateVector(QuantityNameTag, PhysicalType.Char1, bytes);
             }
         }
 

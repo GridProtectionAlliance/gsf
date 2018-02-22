@@ -75,23 +75,14 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalRecord.Body.Collection.GetScalarByTag(EffectiveTag).GetTimestamp();
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                return collectionElement.GetScalarByTag(EffectiveTag).GetTimestamp();
             }
             set
             {
-                ScalarElement effectiveElement = m_physicalRecord.Body.Collection.GetScalarByTag(EffectiveTag);
-
-                if ((object)effectiveElement == null)
-                {
-                    effectiveElement = new ScalarElement()
-                    {
-                        TagOfElement = EffectiveTag,
-                        TypeOfValue = PhysicalType.Timestamp
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(effectiveElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement effectiveElement = collectionElement.GetOrAddScalar(EffectiveTag);
+                effectiveElement.TypeOfValue = PhysicalType.Timestamp;
                 effectiveElement.SetTimestamp(value);
             }
         }
@@ -103,23 +94,14 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalRecord.Body.Collection.GetScalarByTag(TimeInstalledTag).GetTimestamp();
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                return collectionElement.GetScalarByTag(TimeInstalledTag).GetTimestamp();
             }
             set
             {
-                ScalarElement timeInstalledElement = m_physicalRecord.Body.Collection.GetScalarByTag(TimeInstalledTag);
-
-                if ((object)timeInstalledElement == null)
-                {
-                    timeInstalledElement = new ScalarElement()
-                    {
-                        TagOfElement = TimeInstalledTag,
-                        TypeOfValue = PhysicalType.Timestamp
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(timeInstalledElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement timeInstalledElement = collectionElement.GetOrAddScalar(TimeInstalledTag);
+                timeInstalledElement.TypeOfValue = PhysicalType.Timestamp;
                 timeInstalledElement.SetTimestamp(value);
             }
         }
@@ -133,23 +115,14 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalRecord.Body.Collection.GetScalarByTag(UseCalibrationTag).GetBool4();
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                return collectionElement.GetScalarByTag(UseCalibrationTag).GetBool4();
             }
             set
             {
-                ScalarElement useCalibrationElement = m_physicalRecord.Body.Collection.GetScalarByTag(UseCalibrationTag);
-
-                if ((object)useCalibrationElement == null)
-                {
-                    useCalibrationElement = new ScalarElement()
-                    {
-                        TagOfElement = UseCalibrationTag,
-                        TypeOfValue = PhysicalType.Boolean4
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(useCalibrationElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement useCalibrationElement = collectionElement.GetOrAddScalar(UseCalibrationTag);
+                useCalibrationElement.TypeOfValue = PhysicalType.Boolean4;
                 useCalibrationElement.SetBool4(value);
             }
         }
@@ -163,23 +136,14 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalRecord.Body.Collection.GetScalarByTag(UseTransducerTag).GetBool4();
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                return collectionElement.GetScalarByTag(UseTransducerTag).GetBool4();
             }
             set
             {
-                ScalarElement useTransducerElement = m_physicalRecord.Body.Collection.GetScalarByTag(UseTransducerTag);
-
-                if ((object)useTransducerElement == null)
-                {
-                    useTransducerElement = new ScalarElement()
-                    {
-                        TagOfElement = UseTransducerTag,
-                        TypeOfValue = PhysicalType.Boolean4
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(useTransducerElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement useTransducerElement = collectionElement.GetOrAddScalar(UseTransducerTag);
+                useTransducerElement.TypeOfValue = PhysicalType.Boolean4;
                 useTransducerElement.SetBool4(value);
             }
         }
@@ -191,7 +155,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                CollectionElement channelSettingsArray = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                CollectionElement channelSettingsArray = collectionElement.GetCollectionByTag(ChannelSettingsArrayTag);
 
                 if ((object)channelSettingsArray == null)
                     return null;
@@ -211,7 +176,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                ScalarElement nominalFrequencyElement = m_physicalRecord.Body.Collection.GetScalarByTag(NominalFrequencyTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement nominalFrequencyElement = collectionElement.GetScalarByTag(NominalFrequencyTag);
 
                 if ((object)nominalFrequencyElement == null)
                     return DefaultNominalFrequency;
@@ -220,19 +186,9 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement nominalFrequencyElement = m_physicalRecord.Body.Collection.GetScalarByTag(NominalFrequencyTag);
-
-                if ((object)nominalFrequencyElement == null)
-                {
-                    nominalFrequencyElement = new ScalarElement()
-                    {
-                        TagOfElement = NominalFrequencyTag,
-                        TypeOfValue = PhysicalType.Real8
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(nominalFrequencyElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement nominalFrequencyElement = collectionElement.GetOrAddScalar(NominalFrequencyTag);
+                nominalFrequencyElement.TypeOfValue = PhysicalType.Real8;
                 nominalFrequencyElement.SetReal8(value);
             }
         }

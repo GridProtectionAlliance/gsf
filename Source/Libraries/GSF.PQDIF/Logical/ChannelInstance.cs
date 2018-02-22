@@ -135,19 +135,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement channelDefinitionIndexElement = m_physicalStructure.GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag);
-
-                if ((object)channelDefinitionIndexElement == null)
-                {
-                    channelDefinitionIndexElement = new ScalarElement()
-                    {
-                        TagOfElement = ChannelDefinition.ChannelDefinitionIndexTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalStructure.AddElement(channelDefinitionIndexElement);
-                }
-
+                ScalarElement channelDefinitionIndexElement = m_physicalStructure.GetOrAddScalar(ChannelDefinition.ChannelDefinitionIndexTag);
+                channelDefinitionIndexElement.TypeOfValue = PhysicalType.UnsignedInteger4;
                 channelDefinitionIndexElement.SetUInt4(value);
             }
         }
@@ -169,19 +158,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement channelGroupIDElement = m_physicalStructure.GetScalarByTag(ChannelGroupIDTag);
-
-                if ((object)channelGroupIDElement == null)
-                {
-                    channelGroupIDElement = new ScalarElement()
-                    {
-                        TagOfElement = ChannelGroupIDTag,
-                        TypeOfValue = PhysicalType.Integer2
-                    };
-
-                    m_physicalStructure.AddElement(channelGroupIDElement);
-                }
-
+                ScalarElement channelGroupIDElement = m_physicalStructure.GetOrAddScalar(ChannelGroupIDTag);
+                channelGroupIDElement.TypeOfValue = PhysicalType.Integer2;
                 channelGroupIDElement.SetInt2(value);
             }
         }
@@ -205,21 +183,7 @@ namespace GSF.PQDIF.Logical
             set
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement moduleNameElement = m_physicalStructure.GetVectorByTag(ChannelTriggerModuleNameTag);
-
-                if ((object)moduleNameElement == null)
-                {
-                    moduleNameElement = new VectorElement()
-                    {
-                        TagOfElement = ChannelTriggerModuleNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalStructure.AddElement(moduleNameElement);
-                }
-
-                moduleNameElement.Size = bytes.Length;
-                moduleNameElement.SetValues(bytes, 0);
+                m_physicalStructure.AddOrUpdateVector(ChannelTriggerModuleNameTag, PhysicalType.Char1, bytes);
             }
         }
 
@@ -241,21 +205,7 @@ namespace GSF.PQDIF.Logical
             set
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement deviceNameElement = m_physicalStructure.GetVectorByTag(CrossTriggerDeviceNameTag);
-
-                if ((object)deviceNameElement == null)
-                {
-                    deviceNameElement = new VectorElement()
-                    {
-                        TagOfElement = CrossTriggerDeviceNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalStructure.AddElement(deviceNameElement);
-                }
-
-                deviceNameElement.Size = bytes.Length;
-                deviceNameElement.SetValues(bytes, 0);
+                m_physicalStructure.AddOrUpdateVector(CrossTriggerDeviceNameTag, PhysicalType.Char1, bytes);
             }
         }
 

@@ -195,6 +195,85 @@ namespace GSF.PQDIF.Physical
         }
 
         /// <summary>
+        /// Gets the scalar element identified by the given tag
+        /// or adds a new scalar element if one does not already exist.
+        /// </summary>
+        /// <param name="tag">The tag which identifies the scalar element to be retrieved.</param>
+        /// <returns>The scalar element identified by the tag, or a new scalar element if one did not already exist.</returns>
+        public ScalarElement GetOrAddScalar(Guid tag)
+        {
+            ScalarElement scalarElement = GetScalarByTag(tag);
+
+            if ((object)scalarElement == null)
+            {
+                scalarElement = new ScalarElement()
+                {
+                    TagOfElement = tag
+                };
+
+                AddElement(scalarElement);
+            }
+
+            return scalarElement;
+        }
+
+        /// <summary>
+        /// Gets the vector element identified by the given tag
+        /// or adds a new vector element if one does not already exist.
+        /// </summary>
+        /// <param name="tag">The tag which identifies the vector element to be retrieved.</param>
+        /// <returns>The vector element identified by the tag, or a new vector element if one did not already exist.</returns>
+        public VectorElement GetOrAddVector(Guid tag)
+        {
+            VectorElement vectorElement = GetVectorByTag(tag);
+
+            if ((object)vectorElement == null)
+            {
+                vectorElement = new VectorElement()
+                {
+                    TagOfElement = tag
+                };
+
+                AddElement(vectorElement);
+            }
+
+            return vectorElement;
+        }
+
+        /// <summary>
+        /// Updates the value of the scalar element identified by the given tag
+        /// or adds a new scalar element if one does not already exist.
+        /// </summary>
+        /// <param name="tag">The tag which identifies the scalar element to be updated.</param>
+        /// <param name="type">The physical type of the value contained in the scalar element.</param>
+        /// <param name="bytes">The value to be entered into the scalar element.</param>
+        /// <returns>The scalar element which was updated, or a new scalar element if one did not already exist.</returns>
+        public ScalarElement AddOrUpdateScalar(Guid tag, PhysicalType type, byte[] bytes)
+        {
+            ScalarElement scalarElement = GetOrAddScalar(tag);
+            scalarElement.TypeOfValue = type;
+            scalarElement.SetValue(bytes, 0);
+            return scalarElement;
+        }
+
+        /// <summary>
+        /// Updates the values contained by the vector element identified by the given tag
+        /// or adds a new vector element if one does not already exist.
+        /// </summary>
+        /// <param name="tag">The tag which identifies the vector element to be updated.</param>
+        /// <param name="type">The physical type of the values contained in the vector element.</param>
+        /// <param name="bytes">The values to be entered into the vector element.</param>
+        /// <returns>The vector element which was updated, or a new vector element if one did not already exist.</returns>
+        public VectorElement AddOrUpdateVector(Guid tag, PhysicalType type, byte[] bytes)
+        {
+            VectorElement vectorElement = GetOrAddVector(tag);
+            vectorElement.TypeOfValue = type;
+            vectorElement.Size = bytes.Length / type.GetByteSize();
+            vectorElement.SetValues(bytes, 0);
+            return vectorElement;
+        }
+
+        /// <summary>
         /// Returns a string that represents the collection.
         /// </summary>
         /// <returns>A string that represents the collection.</returns>

@@ -106,27 +106,15 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement nameElement = m_physicalRecord.Body.Collection.GetVectorByTag(ObservationNameTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement nameElement = collectionElement.GetVectorByTag(ObservationNameTag);
                 return Encoding.ASCII.GetString(nameElement.GetValues()).Trim((char)0);
             }
             set
             {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement nameElement = m_physicalRecord.Body.Collection.GetVectorByTag(ObservationNameTag);
-
-                if ((object)nameElement == null)
-                {
-                    nameElement = new VectorElement()
-                    {
-                        TagOfElement = ObservationNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(nameElement);
-                }
-
-                nameElement.Size = bytes.Length;
-                nameElement.SetValues(bytes, 0);
+                collectionElement.AddOrUpdateVector(ObservationNameTag, PhysicalType.Char1, bytes);
             }
         }
 
@@ -143,19 +131,9 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement timeStartElement = m_physicalRecord.Body.Collection.GetScalarByTag(TimeStartTag);
-
-                if ((object)timeStartElement == null)
-                {
-                    timeStartElement = new ScalarElement()
-                    {
-                        TagOfElement = TimeStartTag,
-                        TypeOfValue = PhysicalType.Timestamp
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(timeStartElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement timeStartElement = collectionElement.GetOrAddScalar(TimeStartTag);
+                timeStartElement.TypeOfValue = PhysicalType.Timestamp;
                 timeStartElement.SetTimestamp(value);
             }
         }

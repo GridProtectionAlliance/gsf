@@ -323,19 +323,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement valueTypeIDElement = m_physicalStructure.GetScalarByTag(ValueTypeIDTag);
-
-                if ((object)valueTypeIDElement == null)
-                {
-                    valueTypeIDElement = new ScalarElement()
-                    {
-                        TagOfElement = ValueTypeIDTag,
-                        TypeOfValue = PhysicalType.Guid
-                    };
-
-                    m_physicalStructure.AddElement(valueTypeIDElement);
-                }
-
+                ScalarElement valueTypeIDElement = m_physicalStructure.GetOrAddScalar(ValueTypeIDTag);
+                valueTypeIDElement.TypeOfValue = PhysicalType.Guid;
                 valueTypeIDElement.SetGuid(value);
             }
         }
@@ -353,19 +342,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement quantityUnitsIDElement = m_physicalStructure.GetScalarByTag(QuantityUnitsIDTag);
-
-                if ((object)quantityUnitsIDElement == null)
-                {
-                    quantityUnitsIDElement = new ScalarElement()
-                    {
-                        TagOfElement = QuantityUnitsIDTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalStructure.AddElement(quantityUnitsIDElement);
-                }
-
+                ScalarElement quantityUnitsIDElement = m_physicalStructure.GetOrAddScalar(QuantityUnitsIDTag);
+                quantityUnitsIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
                 quantityUnitsIDElement.SetUInt4((uint)value);
             }
         }
@@ -383,19 +361,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement quantityCharacteristicIDElement = m_physicalStructure.GetScalarByTag(QuantityCharacteristicIDTag);
-
-                if ((object)quantityCharacteristicIDElement == null)
-                {
-                    quantityCharacteristicIDElement = new ScalarElement()
-                    {
-                        TagOfElement = QuantityCharacteristicIDTag,
-                        TypeOfValue = PhysicalType.Guid
-                    };
-
-                    m_physicalStructure.AddElement(quantityCharacteristicIDElement);
-                }
-
+                ScalarElement quantityCharacteristicIDElement = m_physicalStructure.GetOrAddScalar(QuantityCharacteristicIDTag);
+                quantityCharacteristicIDElement.TypeOfValue = PhysicalType.Guid;
                 quantityCharacteristicIDElement.SetGuid(value);
             }
         }
@@ -414,19 +381,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement storageMethodIDElement = m_physicalStructure.GetScalarByTag(StorageMethodIDTag);
-
-                if ((object)storageMethodIDElement == null)
-                {
-                    storageMethodIDElement = new ScalarElement()
-                    {
-                        TagOfElement = StorageMethodIDTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalStructure.AddElement(storageMethodIDElement);
-                }
-
+                ScalarElement storageMethodIDElement = m_physicalStructure.GetOrAddScalar(StorageMethodIDTag);
+                storageMethodIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
                 storageMethodIDElement.SetUInt4((uint)value);
             }
         }
@@ -448,21 +404,7 @@ namespace GSF.PQDIF.Logical
             set
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement valueTypeNameElement = m_physicalStructure.GetVectorByTag(ValueTypeNameTag);
-
-                if ((object)valueTypeNameElement == null)
-                {
-                    valueTypeNameElement = new VectorElement()
-                    {
-                        TagOfElement = ValueTypeNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalStructure.AddElement(valueTypeNameElement);
-                }
-
-                valueTypeNameElement.Size = bytes.Length;
-                valueTypeNameElement.SetValues(bytes, 0);
+                m_physicalStructure.AddOrUpdateVector(ValueTypeNameTag, PhysicalType.Char1, bytes);
             }
         }
 
@@ -482,19 +424,8 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement seriesNominalQuantityElement = m_physicalStructure.GetScalarByTag(SeriesNominalQuantityTag);
-
-                if ((object)seriesNominalQuantityElement == null)
-                {
-                    seriesNominalQuantityElement = new ScalarElement()
-                    {
-                        TagOfElement = SeriesNominalQuantityTag,
-                        TypeOfValue = PhysicalType.Real8
-                    };
-
-                    m_physicalStructure.AddElement(seriesNominalQuantityElement);
-                }
-
+                ScalarElement seriesNominalQuantityElement = m_physicalStructure.GetOrAddScalar(SeriesNominalQuantityTag);
+                seriesNominalQuantityElement.TypeOfValue = PhysicalType.Real8;
                 seriesNominalQuantityElement.SetReal8(value);
             }
         }

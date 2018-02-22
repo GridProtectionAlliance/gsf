@@ -78,7 +78,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                ScalarElement vendorIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(VendorIDTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement vendorIDElement = collectionElement.GetScalarByTag(VendorIDTag);
 
                 if ((object)vendorIDElement == null)
                     return Vendor.None;
@@ -87,19 +88,9 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement vendorIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(VendorIDTag);
-
-                if ((object)vendorIDElement == null)
-                {
-                    vendorIDElement = new ScalarElement()
-                    {
-                        TagOfElement = VendorIDTag,
-                        TypeOfValue = PhysicalType.Guid
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(vendorIDElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement vendorIDElement = collectionElement.GetOrAddScalar(VendorIDTag);
+                vendorIDElement.TypeOfValue = PhysicalType.Guid;
                 vendorIDElement.SetGuid(value);
             }
         }
@@ -111,7 +102,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                ScalarElement equipmentIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(EquipmentIDTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement equipmentIDElement = collectionElement.GetScalarByTag(EquipmentIDTag);
 
                 if ((object)equipmentIDElement == null)
                     return Guid.Empty;
@@ -120,19 +112,9 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                ScalarElement equipmentIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(EquipmentIDTag);
-
-                if ((object)equipmentIDElement == null)
-                {
-                    equipmentIDElement = new ScalarElement()
-                    {
-                        TagOfElement = EquipmentIDTag,
-                        TypeOfValue = PhysicalType.Guid
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(equipmentIDElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement equipmentIDElement = collectionElement.GetOrAddScalar(EquipmentIDTag);
+                equipmentIDElement.TypeOfValue = PhysicalType.Guid;
                 equipmentIDElement.SetGuid(value);
             }
         }
@@ -144,27 +126,15 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement dataSourceNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceNameTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceNameElement = collectionElement.GetVectorByTag(DataSourceNameTag);
                 return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
             }
             set
             {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
                 byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
-                VectorElement dataSourceNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceNameTag);
-
-                if ((object)dataSourceNameElement == null)
-                {
-                    dataSourceNameElement = new VectorElement()
-                    {
-                        TagOfElement = DataSourceNameTag,
-                        TypeOfValue = PhysicalType.Char1
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(dataSourceNameElement);
-                }
-
-                dataSourceNameElement.Size = bytes.Length;
-                dataSourceNameElement.SetValues(bytes, 0);
+                collectionElement.AddOrUpdateVector(DataSourceNameTag, PhysicalType.Char1, bytes);
             }
         }
 
@@ -175,7 +145,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceCoordinatesElement = collectionElement.GetVectorByTag(DataSourceCoordinatesTag);
 
                 if ((object)dataSourceCoordinatesElement == null)
                     return uint.MaxValue;
@@ -184,20 +155,10 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
-
-                if ((object)dataSourceCoordinatesElement == null)
-                {
-                    dataSourceCoordinatesElement = new VectorElement()
-                    {
-                        Size = 2,
-                        TagOfElement = DataSourceCoordinatesTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(dataSourceCoordinatesElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceCoordinatesElement = collectionElement.GetOrAddVector(DataSourceCoordinatesTag);
+                dataSourceCoordinatesElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                dataSourceCoordinatesElement.Size = 2;
                 dataSourceCoordinatesElement.SetUInt4(0, value);
             }
         }
@@ -209,7 +170,8 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceCoordinatesElement = collectionElement.GetVectorByTag(DataSourceCoordinatesTag);
 
                 if ((object)dataSourceCoordinatesElement == null)
                     return uint.MaxValue;
@@ -218,20 +180,10 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
-
-                if ((object)dataSourceCoordinatesElement == null)
-                {
-                    dataSourceCoordinatesElement = new VectorElement()
-                    {
-                        Size = 2,
-                        TagOfElement = DataSourceCoordinatesTag,
-                        TypeOfValue = PhysicalType.UnsignedInteger4
-                    };
-
-                    m_physicalRecord.Body.Collection.AddElement(dataSourceCoordinatesElement);
-                }
-
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceCoordinatesElement = collectionElement.GetOrAddVector(DataSourceCoordinatesTag);
+                dataSourceCoordinatesElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                dataSourceCoordinatesElement.Size = 2;
                 dataSourceCoordinatesElement.SetUInt4(1, value);
             }
         }
