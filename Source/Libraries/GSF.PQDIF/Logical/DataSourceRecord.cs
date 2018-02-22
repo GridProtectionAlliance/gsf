@@ -163,6 +163,7 @@ namespace GSF.PQDIF.Logical
                     m_physicalRecord.Body.Collection.AddElement(dataSourceNameElement);
                 }
 
+                dataSourceNameElement.Size = bytes.Length;
                 dataSourceNameElement.SetValues(bytes, 0);
             }
         }

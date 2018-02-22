@@ -218,6 +218,7 @@ namespace GSF.PQDIF.Logical
                     m_physicalStructure.AddElement(moduleNameElement);
                 }
 
+                moduleNameElement.Size = bytes.Length;
                 moduleNameElement.SetValues(bytes, 0);
             }
         }
@@ -253,6 +254,7 @@ namespace GSF.PQDIF.Logical
                     m_physicalStructure.AddElement(deviceNameElement);
                 }
 
+                deviceNameElement.Size = bytes.Length;
                 deviceNameElement.SetValues(bytes, 0);
             }
         }

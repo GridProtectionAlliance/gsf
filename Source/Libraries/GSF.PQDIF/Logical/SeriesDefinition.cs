@@ -482,7 +482,6 @@ namespace GSF.PQDIF.Logical
             }
             set
             {
-
                 ScalarElement seriesNominalQuantityElement = m_physicalStructure.GetScalarByTag(SeriesNominalQuantityTag);
 
                 if ((object)seriesNominalQuantityElement == null)

@@ -125,6 +125,7 @@ namespace GSF.PQDIF.Logical
                     m_physicalRecord.Body.Collection.AddElement(nameElement);
                 }
 
+                nameElement.Size = bytes.Length;
                 nameElement.SetValues(bytes, 0);
             }
         }
