@@ -143,7 +143,7 @@ namespace CsvAdapters
         // Searches the import path for new CSV files and imports the measurements contained therein.
         private void Import()
         {
-            foreach (string filePath in FilePath.EnumerateFiles(ImportPath, exceptionHandler: HandleException))
+            foreach (string filePath in FilePath.EnumerateFiles(ImportPath, "*.csv", exceptionHandler: HandleException))
             {
                 using (TextReader reader = File.OpenText(filePath))
                 {

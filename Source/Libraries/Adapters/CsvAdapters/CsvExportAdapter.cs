@@ -203,8 +203,8 @@ namespace CsvAdapters
         // Generates the name of the next active file.
         private string GenerateActiveFileName()
         {
-            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH.mm");
-            return $"{timestamp}.csv";
+            DateTime now = DateTime.UtcNow;
+            return $"{now:yyyy-MM-dd HH.mm}.csv";
         }
 
         // Executes the rollover process to offload the
