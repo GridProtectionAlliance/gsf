@@ -35,6 +35,7 @@ namespace CsvAdapters
     /// <summary>
     /// Represents an output adapter that exports measurements in to a given directory in CSV format.
     /// </summary>
+    [Description("CSV Export: Exports data to a rolling CSV archive")]
     public class CsvExportAdapter : OutputAdapterBase
     {
         #region [ Members ]
@@ -81,6 +82,7 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue("")]
+        [Description("Defines the path to the directory where CSV exports are written")]
         public string ExportPath { get; set; }
 
         /// <summary>
@@ -89,6 +91,7 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue("")]
+        [Description("Defines the path to the directory to which CSV exports are moved on rollover")]
         public string OffloadPath { get; set; }
 
         /// <summary>
@@ -97,6 +100,7 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultRollverSchedule)]
+        [Description("Defines the schedule, defined by cron syntax, to determine how often to roll over CSV files")]
         public string RolloverSchedule { get; set; }
 
         /// <summary>
@@ -104,6 +108,7 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultTimestampFormat)]
+        [Description("Defines the format of timestamps in the CSV exports")]
         public string TimestampFormat { get; set; }
 
         /// <summary>

@@ -39,6 +39,7 @@ namespace CsvAdapters
     /// <summary>
     /// Represents an input adapter that imports measurements in CSV format from a given directory.
     /// </summary>
+    [Description("CSV Import: Reads data from a CSV file archive")]
     public class CsvImportAdapter : InputAdapterBase
     {
         #region [ Members ]
@@ -78,6 +79,7 @@ namespace CsvAdapters
         /// Gets or sets the path in which to search for new CSV files.
         /// </summary>
         [ConnectionStringParameter]
+        [Description("Defines the path in which to search for new CSV files")]
         public string ImportPath { get; set; }
 
         /// <summary>
@@ -85,6 +87,7 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultImportSchedule)]
+        [Description("Defines the schedule, defined by cron syntax, to search for new CSV files")]
         public string ImportSchedule { get; set; }
 
         /// <summary>
