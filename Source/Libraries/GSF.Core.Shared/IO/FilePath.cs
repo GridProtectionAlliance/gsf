@@ -135,7 +135,7 @@ namespace GSF.IO
                     ? Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly)
                     : Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly)
                         .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
-                            .SelectMany(directory => EnumerateDirectories(directory, searchPattern, searchOption)));
+                            .SelectMany(directory => EnumerateDirectories(directory, searchPattern, searchOption, exceptionHandler)));
             }
             catch (Exception ex)
             {
@@ -174,7 +174,7 @@ namespace GSF.IO
                     ? Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
                     : Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
                         .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
-                            .SelectMany(directory => EnumerateFiles(directory, searchPattern, searchOption)));
+                            .SelectMany(directory => EnumerateFiles(directory, searchPattern, searchOption, exceptionHandler)));
             }
             catch (Exception ex)
             {
