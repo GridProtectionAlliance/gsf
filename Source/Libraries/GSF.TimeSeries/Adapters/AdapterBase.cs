@@ -739,7 +739,7 @@ namespace GSF.TimeSeries.Adapters
 
         /// <summary>
         /// Stops the <see cref="AdapterBase"/>.
-        /// </summary>		
+        /// </summary>
         [AdapterCommand("Stops the adapter.", "Administrator", "Editor")]
         public virtual void Stop()
         {

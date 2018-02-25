@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -449,6 +449,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eDNAAdapters", "Libraries\Adapters\eDNAAdapters\eDNAAdapters.csproj", "{1C165FAD-7D51-4D8E-9311-4A3BE266D877}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateAssemblyBindings", "Tools\ValidateAssemblyBindings\ValidateAssemblyBindings.csproj", "{835DF9AF-664B-4814-9654-5CB996D544F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataAdapters", "Libraries\Adapters\MetadataAdapters\MetadataAdapters.csproj", "{C4B5D777-E389-4B30-A270-84542D8AB328}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -1570,6 +1572,18 @@ Global
 		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|x86.ActiveCfg = Release|Any CPU
 		{835DF9AF-664B-4814-9654-5CB996D544F9}.Release|x86.Build.0 = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Debug|x86.Build.0 = Debug|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Mono|x86.ActiveCfg = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Mono|x86.Build.0 = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|x86.ActiveCfg = Release|Any CPU
+		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1709,6 +1723,7 @@ Global
 		{DC3425CC-D14C-46E1-9C7A-52BF10FDFF18} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
 		{835DF9AF-664B-4814-9654-5CB996D544F9} = {1B63485E-46C7-4185-B968-216A02396B88}
+		{C4B5D777-E389-4B30-A270-84542D8AB328} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}
