@@ -3900,7 +3900,7 @@ namespace GSF.TimeSeries.Transport
                             // Load signal type ID's from local database associated with their acronym for proper signal type translation
                             Dictionary<string, int> signalTypeIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-                            foreach (DataRow row in command.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType").Rows)
+                            foreach (DataRow row in command.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType", m_metadataSynchronizationTimeout).Rows)
                             {
                                 signalTypeAcronym = row.Field<string>("Acronym");
 
