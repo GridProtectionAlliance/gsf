@@ -58,6 +58,7 @@ namespace CsvAdapters
         private string m_activeFileName;
         private object m_activeFileLock;
         private ScheduleManager m_scheduleManager;
+        private bool m_disposed;
 
         #endregion
 
@@ -187,6 +188,30 @@ namespace CsvAdapters
 
                     foreach (IMeasurement measurement in measurements)
                         writer.WriteLine(ToCSV(measurement));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="CsvExportAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        m_scheduleManager.Stop();
+                        m_scheduleManager.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
         }

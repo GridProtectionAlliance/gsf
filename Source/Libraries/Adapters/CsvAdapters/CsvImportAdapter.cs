@@ -56,6 +56,7 @@ namespace CsvAdapters
         // Fields
         private LongSynchronizedOperation m_importOperation;
         private ScheduleManager m_scheduleManager;
+        private bool m_disposed;
 
         #endregion
 
@@ -138,6 +139,30 @@ namespace CsvAdapters
         protected override void AttemptDisconnection()
         {
             m_scheduleManager.Stop();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="CsvImportAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        m_scheduleManager.Stop();
+                        m_scheduleManager.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
         }
 
         // Searches the import path for new CSV files and imports the measurements contained therein.
