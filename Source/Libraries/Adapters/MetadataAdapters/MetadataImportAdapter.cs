@@ -26,7 +26,6 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
-using GSF.IO;
 using GSF.Scheduling;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -37,8 +36,7 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace MetadataAdapters
 {
@@ -52,9 +50,24 @@ namespace MetadataAdapters
         // Constants
 
         /// <summary>
+        /// Defines the default value for the <see cref="ImportSchedule"/> property.
+        /// </summary>
+        public const string DefaultImportSchedule = "*/5 * * * *";
+
+        /// <summary>
         /// Defines the default value for the <see cref="UseTransactionForMetadata"/> property.
         /// </summary>
         public const bool DefaultUseTransactionForMetadata = true;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="MetadataSynchronizationTimeout"/> property.
+        /// </summary>
+        public const int DefaultMetadataSynchronizationTimeout = 0;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="UseSourcePrefixNames"/> property.
+        /// </summary>
+        public const bool DefaultUseSourcePrefixNames = false;
 
         private const string ScheduleName = nameof(MetadataImportAdapter);
 
@@ -83,17 +96,17 @@ namespace MetadataAdapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the path to the directory in which to search for serialized metadata files.
+        /// Gets or sets the path to the file in which the metadata to be imported will be defined.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the path to the directory in which to search for serialized metadata files.")]
-        public string ImportPath { get; set; }
+        [Description("Defines the path to the file in which the metadata to be imported will be defined.")]
+        public string ImportFilePath { get; set; }
 
         /// <summary>
         /// Gets or sets the schedule, using cron syntax, to search for metadata files to import.
         /// </summary>
         [ConnectionStringParameter]
-        [DefaultValue("*/5 * * * *")]
+        [DefaultValue(DefaultImportSchedule)]
         [Description("Defines the schedule, using cron syntax, to search for metadata files to import.")]
         public string ImportSchedule { get; set; }
 
@@ -117,7 +130,7 @@ namespace MetadataAdapters
         /// Gets or sets the timeout used when executing database queries during metadata synchronization.
         /// </summary>
         [ConnectionStringParameter]
-        [DefaultValue(DefaultUseTransactionForMetadata)]
+        [DefaultValue(DefaultMetadataSynchronizationTimeout)]
         [Description("Defines the timeout used when exeucting database queries during metadata synchronization.")]
         public int MetadataSynchronizationTimeout { get; set; }
 
@@ -127,8 +140,8 @@ namespace MetadataAdapters
         /// device name uniqueness - recommended value is <c>true</c>.
         /// </summary>
         [ConnectionStringParameter]
-        [DefaultValue(DefaultUseTransactionForMetadata)]
-        [Description("Defines the timeout used when exeucting database queries during metadata synchronization.")]
+        [DefaultValue(DefaultUseSourcePrefixNames)]
+        [Description("Defines the flag that determines if child device acronyms should be prefixed with the parent acronym.")]
         public bool UseSourcePrefixNames { get; set; }
 
         /// <summary>
@@ -262,6 +275,48 @@ namespace MetadataAdapters
         {
             base.Stop();
             m_scheduleManager.Stop();
+        }
+
+        /// <summary>
+        /// Searches for metadata to be imported and imports the metadata if found.
+        /// </summary>
+        [AdapterCommand("Imports metadata if found at the target location.")]
+        public void ImportMetadata()
+        {
+            if (!File.Exists(ImportFilePath))
+                return;
+
+            const int MaxFailedAttempts = 5;
+            const int DelayAfterFailure = 2000;
+            int failedAttempts = 0;
+
+            while (true)
+            {
+                try
+                {
+                    DataSet metadata;
+
+                    using (FileStream stream = File.OpenRead(ImportFilePath))
+                    {
+                        metadata = stream.DeserializeToDataSet();
+                    }
+
+                    m_synchronizeMetadataAction(metadata);
+                    File.Delete(ImportFilePath);
+                    break;
+                }
+                catch (IOException)
+                {
+                    // Only throw an IOException
+                    // after five failed attempts
+                    failedAttempts++;
+
+                    if (failedAttempts >= MaxFailedAttempts)
+                        throw;
+
+                    Thread.Sleep(DelayAfterFailure);
+                }
+            }
         }
 
         /// <summary>
@@ -909,21 +964,10 @@ namespace MetadataAdapters
             };
         }
 
+        // Searches for metadata to be imported and imports the metadata if found.
         private void ScheduleManager_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            foreach (string filePath in FilePath.EnumerateFiles(ImportPath, "*.bin", exceptionHandler: HandleException))
-            {
-                using (FileStream stream = File.OpenRead(filePath))
-                {
-                    DataSet metadata = stream.DeserializeToDataSet();
-                    m_synchronizeMetadataAction(metadata);
-                }
-            }
-        }
-
-        private void HandleException(Exception ex)
-        {
-            OnProcessException(MessageLevel.Error, ex);
+            ImportMetadata();
         }
 
         #endregion

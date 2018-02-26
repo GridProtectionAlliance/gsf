@@ -77,11 +77,11 @@ namespace MetadataAdapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets semi-colon separated list of SQL select statements used to create data for meta-data exchange.
+        /// Gets or sets semi-colon separated list of SQL select statements used to create data for metadata exchange.
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultMetadataTables)]
-        [Description("Semi-colon separated list of SQL select statements used to create data for meta-data exchange.")]
+        [Description("Semi-colon separated list of SQL select statements used to create data for metadata exchange.")]
         public string MetadataTables { get; set; }
 
         /// <summary>
@@ -279,12 +279,7 @@ namespace MetadataAdapters
             }
         }
 
-        /// <summary>
-        /// Gets meta-data to return to <see cref="DataSubscriber"/>.
-        /// </summary>
-        /// <param name="connection">Client connection requesting meta-data.</param>
-        /// <param name="filterExpressions">Any meta-data filter expressions requested by client.</param>
-        /// <returns>Meta-data to be returned to client.</returns>
+        // Gets the metadata to be exported to a file.
         private DataSet AcquireMetadata()
         {
             using (AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings"))
@@ -295,7 +290,7 @@ namespace MetadataAdapters
                 // Initialize active node ID
                 Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {ID}").ToString());
 
-                // Copy key meta-data tables
+                // Copy key metadata tables
                 foreach (string tableExpression in MetadataTables.Split(';'))
                 {
                     if (string.IsNullOrWhiteSpace(tableExpression))
@@ -308,7 +303,7 @@ namespace MetadataAdapters
                     Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                     table.TableName = regexMatch.Value.Split(' ')[1];
 
-                    // Add a copy of the results to the dataset for meta-data exchange
+                    // Add a copy of the results to the dataset for metadata exchange
                     metadata.Tables.Add(table.Copy());
                 }
 
@@ -316,6 +311,7 @@ namespace MetadataAdapters
             }
         }
 
+        // Handles exceptions encountered by the dump operation.
         private void HandleException(Exception ex)
         {
             OnProcessException(MessageLevel.Error, ex);
