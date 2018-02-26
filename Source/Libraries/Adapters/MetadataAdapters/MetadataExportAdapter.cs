@@ -212,6 +212,15 @@ namespace MetadataAdapters
         }
 
         /// <summary>
+        /// Starts the <see cref="MetadataExportAdapter"/> or restarts it if it is already running.
+        /// </summary>
+        public override void Start()
+        {
+            base.Start();
+            ExportMetadata();
+        }
+
+        /// <summary>
         /// Gets a short one-line status of this <see cref="MetadataExportAdapter"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
@@ -241,7 +250,8 @@ namespace MetadataAdapters
         [AdapterCommand("Initiates the operation to export metadata.")]
         public void ExportMetadata()
         {
-            m_dumpOperation.RunOnceAsync();
+            if (Enabled)
+                m_dumpOperation.RunOnceAsync();
         }
 
         // Executes the metadata export.
@@ -255,6 +265,11 @@ namespace MetadataAdapters
             {
                 try
                 {
+                    string directory = Path.GetDirectoryName(ExportFilePath);
+
+                    if (!string.IsNullOrEmpty(directory))
+                        Directory.CreateDirectory(directory);
+
                     // Open the file to be exported
                     using (FileStream stream = File.Create(ExportFilePath))
                     {
