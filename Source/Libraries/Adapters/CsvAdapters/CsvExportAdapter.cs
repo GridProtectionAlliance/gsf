@@ -144,6 +144,8 @@ namespace CsvAdapters
             Directory.CreateDirectory(ExportPath);
 
             m_scheduleManager.AddSchedule(ScheduleName, RolloverSchedule, true);
+
+            InternalProcessQueue.SynchronizedOperationType = GSF.Threading.SynchronizedOperationType.Long;
         }
 
         /// <summary>
