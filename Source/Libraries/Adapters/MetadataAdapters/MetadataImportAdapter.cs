@@ -43,6 +43,7 @@ namespace MetadataAdapters
     /// <summary>
     /// Represents an adapter that reads metadata from a file and updates the database.
     /// </summary>
+    [Description("Metadata Import: Reads metadata from a file and updates the database.")]
     public class MetadataImportAdapter : FacileActionAdapterBase
     {
         #region [ Members ]
@@ -442,7 +443,7 @@ namespace MetadataAdapters
 
                         // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                         if (nodeID == Guid.Empty)
-                            nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonInputAdapter WHERE ID = {(int)ID}", MetadataSynchronizationTimeout).ToString());
+                            nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {(int)ID}", MetadataSynchronizationTimeout).ToString());
 
                         // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
                         if (virtualProtocolID == 0)
@@ -456,14 +457,14 @@ namespace MetadataAdapters
                             "VALUES ({0}, {1}, {2}, {3}, {4}, 1, 1)", "nodeID", "historianID", "acronym", "name", "protocolID");
 
                         // Query the actual record ID based on the known run-time ID for this subscriber device
-                        object sourceID = command.ExecuteScalar(parentDeviceIDSql, MetadataSynchronizationTimeout);
+                        object sourceID = command.ExecuteScalar(parentDeviceIDSql, MetadataSynchronizationTimeout, ParentDeviceAcronym);
 
                         if (sourceID == null || sourceID == DBNull.Value)
                         {
                             // Get a historian ID, but exclude the STAT historian
                             object randomHistorianID = command.ExecuteScalar($"SELECT ID FROM Historian WHERE Acronym <> 'STAT'", MetadataSynchronizationTimeout);
-                            command.ExecuteNonQuery(insertParentDeviceSql, MetadataSynchronizationTimeout, nodeID, randomHistorianID, ParentDeviceAcronym, ParentDeviceAcronym, virtualProtocolID);
-                            sourceID = command.ExecuteScalar(parentDeviceIDSql, MetadataSynchronizationTimeout);
+                            command.ExecuteNonQuery(insertParentDeviceSql, MetadataSynchronizationTimeout, database.Guid(nodeID), randomHistorianID, ParentDeviceAcronym, ParentDeviceAcronym, virtualProtocolID);
+                            sourceID = command.ExecuteScalar(parentDeviceIDSql, MetadataSynchronizationTimeout, ParentDeviceAcronym);
                         }
 
                         int parentID = Convert.ToInt32(sourceID);
