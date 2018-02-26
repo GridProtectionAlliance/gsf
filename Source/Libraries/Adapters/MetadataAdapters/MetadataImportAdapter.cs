@@ -637,6 +637,9 @@ namespace MetadataAdapters
                             string updateMeasurementSql = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, PointTag = {1}, SignalTypeID = {2}, PhasorSourceIndex = {3}, SignalReference = {4}, Description = {5}, Internal = {6} WHERE SignalID = {7}",
                                                                                             "historianID", "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal", "signalID");
 
+                            // Define SQL statement to retrieve the runtime ID of the parent device
+                            string queryParentRuntimeIDSql = database.ParameterizedQueryString("SELECT ID FROM Runtime WHERE SourceID = {0} AND SourceTable = 'Device'", "sourceID");
+
                             // Define SQL statement to retrieve all measurement signal ID's for the current parent to check for mismatches - note that we use the ActiveMeasurements view
                             // since it associates measurements with their top-most parent runtime device ID, this allows us to easily query all measurements for the parent device
                             string queryMeasurementSignalIDsSql = database.ParameterizedQueryString("SELECT SignalID FROM ActiveMeasurement WHERE DeviceID = {0}", "deviceID");
@@ -766,8 +769,10 @@ namespace MetadataAdapters
                                 // Sort signal ID list so that binary search can be used for quick lookups
                                 signalIDs.Sort();
 
+                                object parentRuntimeID = command.ExecuteScalar(queryParentRuntimeIDSql, MetadataSynchronizationTimeout, parentID);
+
                                 // Query all the guid-based signal ID's for all measurement records associated with the parent device using run-time ID
-                                DataTable measurementSignalIDs = command.RetrieveData(database.AdapterType, queryMeasurementSignalIDsSql, MetadataSynchronizationTimeout, (int)ID);
+                                DataTable measurementSignalIDs = command.RetrieveData(database.AdapterType, queryMeasurementSignalIDsSql, MetadataSynchronizationTimeout, parentRuntimeID);
                                 Guid signalID;
 
                                 // Walk through each database record and see if the measurement exists in the provided metadata
