@@ -26,6 +26,8 @@ using System.ComponentModel;
 using System.IO;
 using GSF;
 using GSF.Configuration;
+using GSF.Diagnostics;
+using GSF.IO;
 using GSF.Scheduling;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -157,6 +159,10 @@ namespace CsvAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
+            // There may be some lingering files from
+            // the last time the adapter was running
+            OffloadLingeringFiles();
+
             m_scheduleManager.Start();
         }
 
@@ -166,6 +172,10 @@ namespace CsvAdapters
         protected override void AttemptDisconnection()
         {
             m_scheduleManager.Stop();
+
+            // Make sure the roll over the currently active file in case it would
+            // otherwise end up sitting in the export directory for a long time
+            RollOver();
         }
 
         /// <summary>
@@ -232,9 +242,10 @@ namespace CsvAdapters
             return $"{now:yyyy-MM-dd HH.mm}.csv";
         }
 
-        // Executes the rollover process to offload the
-        // currently active file and create a new active file.
-        private void ScheduleManager_ScheduleDue(object sender, EventArgs<Schedule> e)
+        // Rolls over the active file by moving it to the offload directory
+        // and unsetting the active file name so that a new active file
+        // can be generated the next time this adapter needs to update it.
+        private void RollOver()
         {
             lock (m_activeFileLock)
             {
@@ -252,6 +263,42 @@ namespace CsvAdapters
 
                 m_activeFileName = null;
             }
+        }
+
+        // Offloads lingering files which were not offloaded
+        // due to spontaneous starts and stops of this adapter.
+        private void OffloadLingeringFiles()
+        {
+            if (string.IsNullOrWhiteSpace(OffloadPath))
+                return;
+
+            lock (m_activeFileLock)
+            {
+                foreach (string filePath in FilePath.EnumerateFiles(ExportPath, "*.csv", SearchOption.TopDirectoryOnly, HandleException))
+                {
+                    string fileName = Path.GetFileName(filePath);
+
+                    // Ignore the active file, if it exists
+                    if (fileName == m_activeFileName)
+                        continue;
+
+                    string offloadFilePath = Path.Combine(OffloadPath, fileName);
+                    File.Move(filePath, offloadFilePath);
+                }
+            }
+        }
+
+        // Executes the rollover process to offload the
+        // currently active file and create a new active file.
+        private void ScheduleManager_ScheduleDue(object sender, EventArgs<Schedule> e)
+        {
+            RollOver();
+        }
+
+        // Handles the given exception.
+        private void HandleException(Exception ex)
+        {
+            OnProcessException(MessageLevel.Error, ex);
         }
 
         private StreamWriter AppendToFile(string filePath)
