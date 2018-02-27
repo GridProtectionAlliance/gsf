@@ -141,11 +141,35 @@ namespace CsvAdapters
             if (string.IsNullOrWhiteSpace(ExportPath))
                 ExportPath = Path.Combine("CSVExports", Name);
 
-            Directory.CreateDirectory(ExportPath);
-
             m_scheduleManager.AddSchedule(ScheduleName, RolloverSchedule, true);
-
             InternalProcessQueue.SynchronizedOperationType = GSF.Threading.SynchronizedOperationType.Long;
+        }
+
+        /// <summary>
+        /// Offloads lingering files which were not
+        /// offloaded due to errors or system failures.
+        /// </summary>
+        [AdapterCommand("Offloads lingering files which were not offloaded due to errors or system failures")]
+        public void OffloadLingeringFiles()
+        {
+            if (string.IsNullOrWhiteSpace(OffloadPath))
+                return;
+
+            lock (m_activeFileLock)
+            {
+                foreach (string filePath in FilePath.EnumerateFiles(ExportPath, "*.csv", SearchOption.TopDirectoryOnly, HandleException))
+                {
+                    string fileName = Path.GetFileName(filePath);
+
+                    // Ignore the active file, if it exists
+                    if (fileName == m_activeFileName)
+                        continue;
+
+                    string offloadFilePath = Path.Combine(OffloadPath, fileName);
+                    Directory.CreateDirectory(OffloadPath);
+                    File.Move(filePath, offloadFilePath);
+                }
+            }
         }
 
         /// <summary>
@@ -192,6 +216,7 @@ namespace CsvAdapters
 
                 string activeFilePath = Path.Combine(ExportPath, m_activeFileName);
                 bool writeHeader = !File.Exists(activeFilePath);
+                Directory.CreateDirectory(ExportPath);
 
                 using (TextWriter writer = AppendToFile(activeFilePath))
                 {
@@ -249,44 +274,24 @@ namespace CsvAdapters
         // can be generated the next time this adapter needs to update it.
         private void RollOver()
         {
+            string activeFileName;
+
             lock (m_activeFileLock)
             {
                 if (string.IsNullOrWhiteSpace(m_activeFileName))
                     return;
 
-                string activeFilePath = Path.Combine(ExportPath, m_activeFileName);
-
-                if (!string.IsNullOrWhiteSpace(OffloadPath) && File.Exists(activeFilePath))
-                {
-                    Directory.CreateDirectory(OffloadPath);
-                    string offloadFilePath = Path.Combine(OffloadPath, m_activeFileName);
-                    File.Move(activeFilePath, offloadFilePath);
-                }
-
+                activeFileName = m_activeFileName;
                 m_activeFileName = null;
             }
-        }
 
-        // Offloads lingering files which were not offloaded
-        // due to spontaneous starts and stops of this adapter.
-        private void OffloadLingeringFiles()
-        {
-            if (string.IsNullOrWhiteSpace(OffloadPath))
-                return;
+            string activeFilePath = Path.Combine(ExportPath, activeFileName);
 
-            lock (m_activeFileLock)
+            if (!string.IsNullOrWhiteSpace(OffloadPath) && File.Exists(activeFilePath))
             {
-                foreach (string filePath in FilePath.EnumerateFiles(ExportPath, "*.csv", SearchOption.TopDirectoryOnly, HandleException))
-                {
-                    string fileName = Path.GetFileName(filePath);
-
-                    // Ignore the active file, if it exists
-                    if (fileName == m_activeFileName)
-                        continue;
-
-                    string offloadFilePath = Path.Combine(OffloadPath, fileName);
-                    File.Move(filePath, offloadFilePath);
-                }
+                Directory.CreateDirectory(OffloadPath);
+                string offloadFilePath = Path.Combine(OffloadPath, activeFileName);
+                File.Move(activeFilePath, offloadFilePath);
             }
         }
 
