@@ -47,6 +47,9 @@ using GSF.Configuration;
 using GSF.Security;
 using GSF.Web.UI;
 
+// No actual passwords store here
+#pragma warning disable S2068
+
 namespace GSF.Web.Embedded
 {
     /// <summary>
