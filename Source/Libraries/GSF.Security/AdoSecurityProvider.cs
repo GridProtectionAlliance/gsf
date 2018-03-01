@@ -48,6 +48,8 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.Identity;
 
+#pragma warning disable S2068
+
 namespace GSF.Security
 {
     /// <summary>
