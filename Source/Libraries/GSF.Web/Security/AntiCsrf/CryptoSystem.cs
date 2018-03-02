@@ -31,21 +31,31 @@
 
 using System.Security.Cryptography;
 using System.Web;
+using Random = GSF.Security.Cryptography.Random;
 
+// ReSharper disable AssignNullToNotNullAttribute
 namespace GSF.Web.Security.AntiCsrf
 {
     internal static class CryptoSystem
     {
+        private static readonly byte[] s_entropy = new byte[16];
+
+        static CryptoSystem()
+        {
+            // Added entropy makes tokens unique to AppDomain instance of this class
+            Random.GetBytes(s_entropy);
+        }
+
         public static string Protect(byte[] data)
         {
-            byte[] rawProtectedBytes = ProtectedData.Protect(data, null, DataProtectionScope.LocalMachine);
+            byte[] rawProtectedBytes = ProtectedData.Protect(data, s_entropy, DataProtectionScope.LocalMachine);
             return HttpServerUtility.UrlTokenEncode(rawProtectedBytes);
         }
 
         public static byte[] Unprotect(string protectedData)
         {
             byte[] rawProtectedBytes = HttpServerUtility.UrlTokenDecode(protectedData);
-            return ProtectedData.Unprotect(rawProtectedBytes, null, DataProtectionScope.LocalMachine);
+            return ProtectedData.Unprotect(rawProtectedBytes, s_entropy, DataProtectionScope.LocalMachine);
         }
     }
 }
