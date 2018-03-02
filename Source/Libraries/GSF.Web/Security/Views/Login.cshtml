@@ -37,7 +37,7 @@
     string loginPage = AuthenticationOptions.DefaultLoginPage;
     string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
     string verificationHeader = AuthenticationOptions.DefaultRequestVerificationToken;
-    string verificationValue = Html.RequestVerificationHeaderToken(request);
+    string verificationValue = Html.RequestVerificationHeaderToken();
     string loginHeader = "";
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
 

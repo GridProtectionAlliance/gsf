@@ -64,7 +64,6 @@ namespace GSF.Web.Model
         /// <summary>
         /// Generates a hidden form field (anti-forgery token) that is validated when the form is submitted.
         /// </summary>
-        /// <param name="response">Response message.</param>
         /// <returns>The generated form field (anti-forgery token).</returns>
         /// <remarks>
         /// The anti-forgery token can be used to help protect your application against cross-site request
@@ -72,21 +71,29 @@ namespace GSF.Web.Model
         /// <see cref="ValidateRequestVerificationTokenAttribute"/> attribute to the action method that
         /// you want to protect.
         /// </remarks>
-        public IEncodedString RequestVerificationToken(HttpResponseMessage response) => new RawString(AntiForgery.GetHtml(response));
+        public IEncodedString RequestVerificationToken()
+        {
+            HttpResponseMessage response = m_parent.ViewBag.Response;
+
+            if ((object)response == null)
+                throw new NullReferenceException("HttpResponseMessage not found in ViewBag.Response, cannot generate anti-forgery token.");
+
+            return new RawString(AntiForgery.GetHtml(response));
+        }
 
         /// <summary>
         /// Generates an anti-forgery token that can be manually added to an HTTP request header,
         /// e.g., from within an AJAX request.
         /// </summary>
-        /// <param name="request">Request message.</param>
         /// <returns>Anti-forgery token to be added as an HTTP header value.</returns>
-        public string RequestVerificationHeaderToken(HttpRequestMessage request)
+        public string RequestVerificationHeaderToken()
         {
-            string cookieToken, formToken;
+            HttpRequestMessage request = m_parent.ViewBag.Request;
 
-            AntiForgery.GetTokens(request, null, out cookieToken, out formToken);
+            if ((object)request == null)
+                throw new NullReferenceException("HttpRequestMessage not found in ViewBag.Request, cannot generate anti-forgery header token.");
 
-            return $"{cookieToken}:{formToken}";
+            return request.GenerateRequestVerficationHeaderToken();
         }
 
         /// <summary>

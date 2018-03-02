@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
@@ -40,7 +43,9 @@ namespace GSF.Web.Security
     /// </remarks>
     public class ValidateRequestVerificationTokenAttribute : ActionFilterAttribute
     {
+        private readonly HashSet<string> m_httpMethods;
         private readonly bool m_skipValidation;
+        private bool m_skipMethodCheck;
 
         /// <summary>
         /// Gets or sets flag that determines if validation should occur via posted form data or header data.
@@ -51,24 +56,48 @@ namespace GSF.Web.Security
         public bool FormValidation { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets HTTP methods, as a comma separated value string, for which validation will apply.
+        /// Defaults to <c>*</c>, meaning validation applies to all possible HTTP methods.
+        /// </summary>
+        public string HttpMethods
+        {
+            get
+            {
+                return string.Join(",", m_httpMethods);
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    value = "*";
+
+                m_httpMethods.Clear();
+                m_httpMethods.UnionWith(value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(method => method.Trim().ToUpperInvariant()));
+                m_skipMethodCheck = value.Trim().Equals("*", StringComparison.Ordinal);
+            }
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ValidateRequestVerificationTokenAttribute"/>.
         /// </summary>
-        public ValidateRequestVerificationTokenAttribute()
+        public ValidateRequestVerificationTokenAttribute() : this(false)
         {
-            m_skipValidation = false;
         }
 
         internal ValidateRequestVerificationTokenAttribute(bool skipValidation)
         {
+            m_httpMethods = new HashSet<string>(new[] { "*" }, StringComparer.OrdinalIgnoreCase);
             m_skipValidation = skipValidation;
+            m_skipMethodCheck = true;
         }
 
-        /// <summary>Occurs before the action method is invoked.</summary>
+        /// <summary>
+        /// Occurs before the action method is invoked.
+        /// </summary>
         /// <param name="actionContext">The action context.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         public override Task OnActionExecutingAsync(HttpActionContext actionContext, CancellationToken cancellationToken)
         {
-            if (!m_skipValidation)
+            if (!m_skipValidation && (m_skipMethodCheck || m_httpMethods.Contains(actionContext.Request.Method.Method)))
                 actionContext.Request.ValidateRequestVerificationToken(FormValidation);
 
             return base.OnActionExecutingAsync(actionContext, cancellationToken);

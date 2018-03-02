@@ -634,7 +634,7 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Retrieves a read-only copy of the authentication options from the given <see cref="HttpRequestMessage"/>.
+        /// Retrieves a read-only copy of the authentication options from the specified <paramref name="request"/>.
         /// </summary>
         /// <param name="request">The HTTP request.</param>
         /// <returns>The authentication options.</returns>
@@ -654,7 +654,33 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Validates that the request verification token value comes from the user who submitted the data.
+        /// Generates an anti-forgery token that can be manually added to an HTTP request header,
+        /// e.g., from within an AJAX request.
+        /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <returns>Anti-forgery token to be added as an HTTP header value.</returns>
+        public static string GenerateRequestVerficationHeaderToken(this HttpRequestMessage request)
+        {
+            string cookieToken, formToken;
+
+            AntiForgery.GetTokens(request, null, out cookieToken, out formToken);
+
+            return $"{cookieToken}:{formToken}";
+        }
+
+        /// <summary>
+        /// Adds a new anti-forgery request verification token to the headers of the specified <paramref name="request"/>.
+        /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        public static void AddRequestVerificationHeaderToken(this HttpRequestMessage request)
+        {
+            request.Headers.Add(
+                request.GetAuthenticationOptions().RequestVerificationToken, 
+                request.GenerateRequestVerficationHeaderToken());
+        }
+
+        /// <summary>
+        /// Validates that the anti-forgery request verification token value comes from the user who submitted the data.
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="formValidation">Flag that determines if form validation should be used.</param>
@@ -664,7 +690,7 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
-        /// Validates that the request verification token value comes from the user who submitted the data.
+        /// Validates that the anti-forgery request verification token value comes from the user who submitted the data.
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="options">Read-only authentication options for this <paramref name="request"/>.</param>
