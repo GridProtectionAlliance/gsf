@@ -68,8 +68,19 @@ namespace GSF.Web.Model
         /// <remarks>
         /// The anti-forgery token can be used to help protect your application against cross-site request
         /// forgery. To use this feature, call the RequestVerificationToken method from a form and add the
-        /// <see cref="ValidateRequestVerificationTokenAttribute"/> attribute to the action method that
-        /// you want to protect.
+        /// <see cref="ValidateRequestVerificationTokenAttribute"/> attribute to the action method that you
+        /// want to protect setting <see cref="ValidateRequestVerificationTokenAttribute.FormValidation"/>
+        /// to <c>true</c>, for example:
+        /// <code>
+        /// [HttpPost]
+        /// [ValidateRequestVerificationToken(FormValidation = true)]
+        /// [SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        /// public void ImportData(CancellationToken cancellationToken)
+        /// {
+        ///      PostData postData = Request.GetPostData();
+        ///      string myFieldValue = postData.FormData["MyField"];
+        /// }
+        /// </code>
         /// </remarks>
         public IEncodedString RequestVerificationToken()
         {

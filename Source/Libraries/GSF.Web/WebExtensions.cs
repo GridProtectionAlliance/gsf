@@ -147,6 +147,10 @@ namespace GSF.Web
             public override DynamicMetaObject FallbackGetMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion) => null;
         }
 
+        /// <summary>
+        /// Key name for <see cref="HttpRequestMessage.Properties"/> dictionary used to cache parsed <see cref="PostData"/>.
+        /// </summary>
+        public const string PostDataKey = "GSF-" + nameof(PostData);
 
         // Static Fields
         private static readonly HashSet<string> s_executingAssemblyResources;
@@ -288,7 +292,17 @@ namespace GSF.Web
             if ((object)request?.Content == null)
                 return new PostData();
 
-            return (await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider(), cancellationToken)).PostData;
+            object postData;
+
+            if (!request.Properties.TryGetValue(PostDataKey, out postData))
+            {
+                postData = (await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider(), cancellationToken)).PostData;
+
+                // Cache parsed post data with request so it doesn't have to be parsed again
+                request.Properties[PostDataKey] = postData;
+            }
+
+            return postData as PostData;
         }
 
         /// <summary>
