@@ -194,6 +194,7 @@ namespace GSF.Web.Hosting
                 pageName = pageName.Substring(1).Replace('/', '.');
 
             response.RequestMessage = request;
+            request.RegisterForDispose(response);
 
             if (pageName.Equals(m_options.AuthTestPage, StringComparison.OrdinalIgnoreCase))
                 return CreateAuthTestResponse(request, response);
