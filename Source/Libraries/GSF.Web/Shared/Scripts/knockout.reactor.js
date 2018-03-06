@@ -1,7 +1,9 @@
+/*! ko-reactor v1.4.0
+ * The MIT License (MIT)
+ * Copyright (c) 2018 Ziad Jeeroburkhan */
 // Deep observer plugin for Knockout http://knockoutjs.com/
 // (c) Ziad Jeeroburkhan
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
-// Version 1.3.8
 ; (function (factory) {
     // CommonJS
     if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
@@ -36,6 +38,8 @@
         ///     { tagFields: true } -> Add the property '_fieldName' under each property for textual identification.<br/>
         ///     { tagFields: 'parentsOnly' } -> Same as above except that it is limited to parent properties only.<br/>
         ///     { oldValues: 3 } -> Keep the last three values for each subscribable under the property 'oldValues'.<br/>
+        ///     { async: false } -> Start watching new objects synchronously
+        ///     { splitArrayChanges: false } -> receive a single notification for array changes as an array of "items" instead of multiple notifications
         ///     { seal: true } -> Prevent any subsequent watcher from watching the target again.<br/>
         ///     { unloop: true } -> Avoid circular paths through the use of a breadcrumb property '_watcher' set at each node level.<br/>
         /// </param>
@@ -210,7 +214,8 @@
             case "3.4.0": subscriptionsField = 'K'; break;
             case "3.4.1": subscriptionsField = 'K'; break;
             case "3.4.2": subscriptionsField = 'F'; break;
-            default: throw "Unsupported Knockout version. Only v3.0.0 to v3.4.2 are supported when minified. Current version is " + ko.version;
+            case "3.5.0-beta": subscriptionsField = 'S'; break;
+            default: throw "Unsupported Knockout version. Only v3.0.0 to v3.5.0-beta are supported when minified. Current version is " + ko.version;
         }
 
         function disposeWatcher(child) {
@@ -241,15 +246,28 @@
             if (isArray) {
                 // Child is an observable array. Watch all changes within it.
                 child.subscribe(function (changes) {
-                    ko.utils.arrayForEach(changes, function (item) {
-                        var returnValue = evaluatorCallback.call(context, parents, child, item);
+                    var returnValue;
+                    if (options.splitArrayChanges === false) {
+                        returnValue = evaluatorCallback.call(context, parents, child, changes);
                         if (returnValue !== undefined)
                             context(returnValue);
+                    }
+                    ko.utils.arrayForEach(changes, function (item) {
+                        if (options.splitArrayChanges !== false) {
+                            var returnValue = evaluatorCallback.call(context, parents, child, item);
+                            if (returnValue !== undefined)
+                                context(returnValue);
+                        }
 
                         if (!item.moved) {
                             // Deleted or brand new item. Unwatch or watch it accordingly.
-                            // This used to be on a setTimeout but this is not symmetric to the !array case.
-                            watchChildren(item.value, (keepOffParentList ? null : child), parents, item.status === 'deleted');
+                            if (options.async === false) {
+                                watchChildren(item.value, (keepOffParentList ? null : child), parents, item.status === 'deleted');
+                            } else {
+                                setTimeout(function () {
+                                    watchChildren(item.value, (keepOffParentList ? null : child), parents, item.status === 'deleted');
+                                });
+                            }
                         }
                     });
                 }, undefined, 'arrayChange')._watcher = context;
@@ -262,9 +280,16 @@
                         if (returnValue !== undefined)
                             context(returnValue);
 
-                        if (options.mutable && typeof child() === 'object')
+                        if (options.mutable && typeof child() === 'object') {
                             // Watch the new comer.
-                            watchChildren(child(), (keepOffParentList ? null : child), parents, false, true);
+                            if (options.async === false) {
+                                watchChildren(child(), (keepOffParentList ? null : child), parents, false, true);
+                            } else {
+                                setTimeout(function () {
+                                    watchChildren(child(), (keepOffParentList ? null : child), parents, false, true);
+                                });
+                            }
+                        }
                     }
 
                 }, null, 'change')._watcher = context;
