@@ -30,6 +30,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Security.Principal;
@@ -114,7 +115,7 @@ namespace GSF.Web.Security.AntiCsrf
                 // for more information.
                 const string FrameHeaderName = "X-Frame-Options";
 
-                if (response.Headers.GetValues(FrameHeaderName) == null)
+                if (!response.Headers.Contains(FrameHeaderName))
                     response.Headers.Add(FrameHeaderName, "SAMEORIGIN");
             }
 

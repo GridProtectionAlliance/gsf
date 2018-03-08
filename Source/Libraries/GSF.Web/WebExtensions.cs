@@ -150,7 +150,7 @@ namespace GSF.Web
         /// <summary>
         /// Key name for <see cref="HttpRequestMessage.Properties"/> dictionary used to cache parsed <see cref="PostData"/>.
         /// </summary>
-        public const string PostDataKey = "GSF-" + nameof(PostData);
+        public const string PostDataKey = "GSF_" + nameof(PostData);
 
         // Static Fields
         private static readonly HashSet<string> s_executingAssemblyResources;
@@ -292,17 +292,27 @@ namespace GSF.Web
             if ((object)request?.Content == null)
                 return new PostData();
 
-            object postData;
+            PostData postData;
+            object cachedPostData;
 
-            if (!request.Properties.TryGetValue(PostDataKey, out postData))
+            if (request.Properties.TryGetValue(PostDataKey, out cachedPostData))
             {
-                postData = (await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider(), cancellationToken)).PostData;
-
+                postData = cachedPostData as PostData;
+            }
+            else
+            {
+                if (request.Content.IsMimeMultipartContent())
+                    postData = (await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider(), cancellationToken)).PostData;
+                else if (request.Content.IsFormData())
+                    postData = new PostData(await request.Content.ReadAsFormDataAsync(cancellationToken));
+                else
+                    postData = new PostData();
+                
                 // Cache parsed post data with request so it doesn't have to be parsed again
                 request.Properties[PostDataKey] = postData;
             }
 
-            return postData as PostData;
+            return postData;
         }
 
         /// <summary>

@@ -58,6 +58,9 @@ namespace GSF.Web.Security.AntiCsrf
             string formValue = postData.FormData[m_config.FormFieldName];
 
             if (string.IsNullOrEmpty(formValue))
+                request.QueryParameters().TryGetValue(m_config.FormFieldName, out formValue);
+
+            if (string.IsNullOrEmpty(formValue))
                 return null;
 
             return AntiForgeryTokenSerializer.Deserialize(formValue);

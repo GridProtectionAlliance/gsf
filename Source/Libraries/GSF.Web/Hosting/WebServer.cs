@@ -45,6 +45,8 @@ using GSF.Web.Model;
 using GSF.Web.Security;
 using Microsoft.Ajax.Utilities;
 
+#pragma warning disable SG0018 // Path traversal prevented by web api controller
+
 namespace GSF.Web.Hosting
 {
     /// <summary>
@@ -177,13 +179,12 @@ namespace GSF.Web.Hosting
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="pageName">Name of page to render.</param>
-        /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
         /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <returns>HTTP response for provided request.</returns>
-        public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, bool isPost, CancellationToken cancellationToken, object model = null, Type modelType = null, AdoDataConnection database = null)
+        public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, CancellationToken cancellationToken, object model = null, Type modelType = null, AdoDataConnection database = null)
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
@@ -194,7 +195,6 @@ namespace GSF.Web.Hosting
                 pageName = pageName.Substring(1).Replace('/', '.');
 
             response.RequestMessage = request;
-            request.RegisterForDispose(response);
 
             if (pageName.Equals(m_options.AuthTestPage, StringComparison.OrdinalIgnoreCase))
                 return CreateAuthTestResponse(request, response);
@@ -203,12 +203,12 @@ namespace GSF.Web.Hosting
             {
                 case ".cshtml":
                     PagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : RazorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, Options).ExecuteAsync(request, response, isPost, cancellationToken);
+                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : RazorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, Options).ExecuteAsync(request, response, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
                     PagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : RazorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, Options).ExecuteAsync(request, response, isPost, cancellationToken);
+                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : RazorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException, Options).ExecuteAsync(request, response, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":

@@ -11,3 +11,5 @@ References are typically relative and need to be converted to explicit GSF resou
 
 Referenced URL materials need to be added as embedded resources - ideally under the Content
 folder, e.g., Images or Fonts, since they are for use by the style sheets.
+
+Note that the paths are case-sensitive.

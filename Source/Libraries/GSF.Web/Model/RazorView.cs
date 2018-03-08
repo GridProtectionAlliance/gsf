@@ -201,9 +201,8 @@ namespace GSF.Web.Model
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="response">HTTP response message.</param>
-        /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <returns>Rendered result.</returns>
-        public string Execute(HttpRequestMessage request, HttpResponseMessage response, bool isPost)
+        public string Execute(HttpRequestMessage request, HttpResponseMessage response)
         {
             using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
@@ -217,7 +216,7 @@ namespace GSF.Web.Model
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", request);
                 m_viewBag.AddValue("Response", response);
-                m_viewBag.AddValue("IsPost", isPost);
+                m_viewBag.AddValue("IsPost", request.Method == HttpMethod.Post);
                 m_viewBag.AddValue("WebServerOptions", WebServerOptions);
                 m_viewBag.AddValue("AuthenticationOptions", request.GetAuthenticationOptions());
 
@@ -236,12 +235,11 @@ namespace GSF.Web.Model
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="response">HTTP response message.</param>
-        /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <returns>Task that will provide rendered result.</returns>
-        public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, bool isPost, CancellationToken cancellationToken)
+        public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
-            return Task.Run(() => Execute(request, response, isPost), cancellationToken);
+            return Task.Run(() => Execute(request, response), cancellationToken);
         }
 
         #endregion

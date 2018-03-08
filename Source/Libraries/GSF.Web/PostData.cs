@@ -45,9 +45,13 @@ namespace GSF.Web
         /// <summary>
         /// Creates a new <see cref="PostData"/> instance.
         /// </summary>
-        public PostData()
+        public PostData() : this(new NameValueCollection())
         {
-            m_formData = new NameValueCollection();
+        }
+
+        internal PostData(NameValueCollection formData)
+        {
+            m_formData = formData;
             m_fileData = new List<HttpContent>();
         }
 

@@ -37,15 +37,18 @@
     ViewBag.Title = "Select Theme";
 
     HttpRequestMessage request = ViewBag.Request;
-    Dictionary<string, string> parameters = request.QueryParameters();
+    string selectedTheme = null;
 
-    string selectedTheme;
-    parameters.TryGetValue("selectedTheme", out selectedTheme);
+    if (ViewBag.IsPost)
+    {
+        PostData postData = request.GetPostData();
+        selectedTheme = postData.FormData["selectedTheme"];
+    }
 
     string currentTheme = FilePath.GetFileName(ViewBag.Model.Global.BootstrapTheme).Trim();
     string[] fileList = FilePath.GetFileList(string.Format("{0}Content/bootstrap-theme-*.css", FilePath.AddPathSuffix(WebServer.Default.Options.WebRootPath))).Select(fileName => FilePath.GetFileName(fileName).Trim()).ToArray();
 
-    if (selectedTheme == null) {
+    if (string.IsNullOrWhiteSpace(selectedTheme)) {
         selectedTheme = currentTheme;
     }
     else {
@@ -62,7 +65,7 @@
     ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
 }
 <div class="well">
-    <form role="form">
+    <form role="form" method="post">
         <div class="form-group">
             <label for="selectBootstrapTheme">Selected Bootstrap Theme:</label>
             <select class="form-control" id="selectBootstrapTheme" name="selectedTheme">
@@ -72,9 +75,10 @@
                 }
             </select>
             <br />
-            <button class="btn btn-primary pull-right" onclick="$.post('@ViewBag.Request.RequestUri.AbsolutePath', { 'selectedTheme': $('#selectBootstrapTheme option:selected').text() });">Apply</button>
+            <button type="submit" class="btn btn-primary pull-right">Apply</button>
             <br />
         </div>
+        @Html.RequestVerificationToken()
     </form>
 </div>
 <h3><em>Selected Theme Element Rendering Preview:</em></h3>
