@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Web;
 using RazorEngine.Templating;
 
 namespace GSF.Web.Model
@@ -63,6 +64,11 @@ namespace GSF.Web.Model
         /// </summary>
         public UrlHelper Url => m_urlHelper;
 
+        /// <summary>
+        /// Gets the current <see cref="HttpContext"/>.
+        /// </summary>
+        protected HttpContext Context => HttpContext.Current;
+
         #endregion
     }
 
@@ -103,6 +109,11 @@ namespace GSF.Web.Model
         /// Gets URL based helper functions.
         /// </summary>
         public UrlHelper Url => m_urlHelper;
+
+        /// <summary>
+        /// Gets the current <see cref="HttpContext"/>.
+        /// </summary>
+        protected HttpContext Context => HttpContext.Current;
 
         #endregion
     }
