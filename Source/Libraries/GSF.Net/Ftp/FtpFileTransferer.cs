@@ -233,7 +233,13 @@ namespace GSF.Net.Ftp
             }
             finally
             {
-                remoteStream?.Dispose();
+                // Need to make sure we end data transfer on the session, which would
+                // normally happen automatically when the remote stream is closed
+                if ((object)remoteStream != null)
+                    remoteStream.Dispose();
+                else
+                    m_session.EndDataTransfer();
+
                 localStream?.Dispose();
             }
         }

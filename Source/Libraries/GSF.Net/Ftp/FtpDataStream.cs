@@ -72,7 +72,7 @@ namespace GSF.Net.Ftp
             m_stream = client.GetStream();
             m_stream.ReadTimeout = ctrl.Timeout;
             m_stream.WriteTimeout = ctrl.Timeout;
-            m_session.BeginDataTransfer(this);
+            TryBeginDataTransfer();
         }
 
         #endregion
@@ -325,6 +325,19 @@ namespace GSF.Net.Ftp
         public override void SetLength(long len)
         {
             m_stream.SetLength(len);
+        }
+
+        private void TryBeginDataTransfer()
+        {
+            try
+            {
+                m_session.BeginDataTransfer(this);
+            }
+            catch
+            {
+                CloseConnection();
+                throw;
+            }
         }
 
         #endregion
