@@ -67,6 +67,7 @@
     </Compile>
     <Compile Include="Ftp\FtpInputDataStream.cs" />
     <Compile Include="Ftp\FtpOutputDataStream.cs" />
+    <Compile Include="Ftp\FtpPath.cs" />
     <Compile Include="Ftp\FtpResponse.cs" />
     <Compile Include="Ftp\FtpSessionConnected.cs" />
     <Compile Include="Ftp\FtpSessionDisconnected.cs" />

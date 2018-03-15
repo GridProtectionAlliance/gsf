@@ -205,7 +205,7 @@ namespace GSF.Net.Ftp
         /// <param name="localFile">Local filename to use for download.</param>
         public void Get(string localFile)
         {
-            string remoteFile = $"{m_parent.FullPath}/{Name}";
+            string remoteFile = FtpPath.Combine(m_parent.FullPath, Name);
             FtpFileTransferer transferer = new FtpFileTransferer(m_parent, localFile, remoteFile, Size, TransferDirection.Download);
             transferer.StartTransfer();
         }
