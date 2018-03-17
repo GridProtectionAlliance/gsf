@@ -4,3 +4,5 @@
 
 *.cs     diff=csharp
 
+*.resx   eol=crlf
+

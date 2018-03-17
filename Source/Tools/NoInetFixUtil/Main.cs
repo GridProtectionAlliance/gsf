@@ -25,9 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Win32;
 
 namespace NoInetFixUtil
@@ -42,6 +45,7 @@ namespace NoInetFixUtil
             public string Name;
             public string InstallPath;
             public string ServiceOID;
+            public int DisableGeneratePublisherEvidence;
         }
 
         // Constants
@@ -67,7 +71,6 @@ namespace NoInetFixUtil
         // Sets the initial state of the checkboxes at startup.
         private void Main_Load(object sender, EventArgs e)
         {
-            List<Product> affectedProducts;
             object disableRootAutoUpdate;
 
             StatusTextBox.AppendText("Detecting GPA products that are installed on the system... ");
@@ -81,14 +84,8 @@ namespace NoInetFixUtil
                         .Select(productName => ConvertToProductAndDispose(gpaKey.OpenSubKey(productName)))
                         .ToList();
 
-                    // Filter the list down to GPA products that use TLS connections
-                    affectedProducts = m_products
-                        .Where(product => (object)product.InstallPath != null)
-                        .Where(product => File.Exists(Path.Combine(product.InstallPath, product.Name + ".cer")))
-                        .ToList();
-
                     // Display the list of products that will be affected by the fixes that this tool provides
-                    foreach (Product product in affectedProducts)
+                    foreach (Product product in m_products)
                     {
                         GPAProductsTextBox.AppendText(Environment.NewLine);
                         GPAProductsTextBox.AppendText(product.Name);
@@ -111,6 +108,20 @@ namespace NoInetFixUtil
                             AppendStatusMessage("NoInetFixUtil has detected that the service OID fix" +
                                 " has been applied to one or more GPA products that have since been uninstalled." +
                                 " To correct this, double-click the \"Register OIDs used by GSF services\" checkbox.");
+                        }
+                    }
+
+                    // Determine whether the publisher evidence fix is already registered for any products in the GPA product list
+                    if (m_products.Any(product => product.DisableGeneratePublisherEvidence != 0))
+                    {
+                        PublisherEvidenceCheckBox.Checked = true;
+
+                        // Determine whether any GPA services have been installed or uninstalled since the last time the fix was applied
+                        if (m_products.Any(product => product.DisableGeneratePublisherEvidence == 0))
+                        {
+                            AppendStatusMessage("NoInetFixUtil has detected that one or more GPA" +
+                                " products have been installed since the publisher evidence fix was last applied." +
+                                " To correct this, double-click the \"Disable publisher evidence generation\" checkbox.");
                         }
                     }
                 }
@@ -141,22 +152,6 @@ namespace NoInetFixUtil
 
             // Enabled checkbox checked events
             m_checkedEventsEnabled = true;
-        }
-
-        // Resizes the text boxes to fit the main window.
-        private void Main_Resize(object sender, EventArgs e)
-        {
-            if (Width > 494)
-                StatusTextBox.Width = Width - 494;
-
-            if (Height > 165)
-                SecurityInfoTextBox.Height = Height - 165;
-
-            if (Height > 62)
-            {
-                GPAProductsTextBox.Height = Height - 62;
-                StatusTextBox.Height = Height - 62;
-            }
         }
 
         // Registers or unregisters the OIDs used by GPA services based on user selection.
@@ -228,6 +223,16 @@ namespace NoInetFixUtil
                     m_checkedEventsEnabled = true;
                 }
             }
+        }
+
+        // Enables or disables publisher evidence generation.
+        private void PublisherEvidenceCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!m_checkedEventsEnabled)
+                return;
+
+            foreach (Product product in m_products)
+                SetDisableGeneratePublisherEvidence(product, PublisherEvidenceCheckBox.Checked);
         }
 
         // Registers the service OID for the given product.
@@ -328,6 +333,52 @@ namespace NoInetFixUtil
             }
         }
 
+        // Disables publisher evidence generation for the given product.
+        private void SetDisableGeneratePublisherEvidence(Product product, bool value)
+        {
+            string xmlValue = value ? "false" : "true";
+            int registryValue = value ? 1 : 0;
+
+            foreach (string executablePath in EnumerateFiles(product.InstallPath, "*.exe", SearchOption.TopDirectoryOnly))
+            {
+                string configPath = Path.Combine(executablePath + ".config");
+
+                XDocument document = File.Exists(configPath) ? XDocument.Load(configPath) : new XDocument();
+                XElement configuration = document.Root ?? new XElement("configuration");
+                XElement runtime = configuration.Element("runtime") ?? new XElement("runtime");
+                XElement generatePublisherEvidence = runtime.Element("generatePublisherEvidence") ?? new XElement("generatePublisherEvidence");
+                XAttribute enabled = generatePublisherEvidence.Attribute("enabled") ?? new XAttribute("enabled", "");
+
+                if (StringComparer.OrdinalIgnoreCase.Equals((string)enabled, xmlValue))
+                    continue;
+
+                if (configuration.Document != document)
+                    document.Add(configuration);
+
+                if (runtime.Document != document)
+                    configuration.Add(runtime);
+
+                if (generatePublisherEvidence.Document != document)
+                    runtime.Add(generatePublisherEvidence);
+
+                if (enabled.Document != document)
+                    generatePublisherEvidence.Add(enabled);
+
+                enabled.SetValue(xmlValue);
+                document.Save(configPath);
+            }
+
+            // Set publisher evidence flag
+            product.DisableGeneratePublisherEvidence = registryValue;
+
+            // Store the OID of that certificate in case we need to unregister it later
+            using (RegistryKey productKey = Registry.LocalMachine.CreateSubKey(string.Format(@"Software\Grid Protection Alliance\{0}", product.Name)))
+            {
+                if ((object)productKey != null)
+                    productKey.SetValue("DisableGeneratePublisherEvidence", registryValue);
+            }
+        }
+
         // Registers the given OID.
         private void RegisterOID(string oid)
         {
@@ -379,7 +430,8 @@ namespace NoInetFixUtil
                     {
                         Name = Path.GetFileName(productKey.Name),
                         InstallPath = GetInstallPath(productKey),
-                        ServiceOID = GetServiceOID(productKey)
+                        ServiceOID = GetServiceOID(productKey),
+                        DisableGeneratePublisherEvidence = GetDisableGeneratePublisherEvidence(productKey)
                     };
                 }
             }
@@ -403,6 +455,15 @@ namespace NoInetFixUtil
                 return (string)productKey.GetValue("ServiceOID");
 
             return null;
+        }
+
+        // Uses the given registry key to get the certificate OID of the product.
+        private int GetDisableGeneratePublisherEvidence(RegistryKey productKey)
+        {
+            if ((object)productKey != null)
+                return (int)(productKey.GetValue("DisableGeneratePublisherEvidence") ?? 0);
+
+            return 0;
         }
 
         // Determines whether the given OID is already registered.
@@ -439,6 +500,25 @@ namespace NoInetFixUtil
         {
             StatusTextBox.AppendText(message);
             StatusTextBox.AppendText(Environment.NewLine);
+        }
+
+        // Returns an enumerable collection of file names that match a search pattern in a specified path, and optionally searches subdirectories.
+        private IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            try
+            {
+                return (searchOption == SearchOption.TopDirectoryOnly)
+                    ? Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
+                    : Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
+                        .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
+                            .SelectMany(directory => EnumerateFiles(directory, searchPattern, searchOption, exceptionHandler)));
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler?.Invoke(ex);
+            }
+
+            return Enumerable.Empty<string>();
         }
 
         #endregion
