@@ -125,6 +125,7 @@ namespace Transport
 		typedef void (*MetadataCallback)(std::vector<uint8_t>);
 		typedef void (*NewMeasurementsCallback)(std::vector<Measurement>);
 		typedef void (*ConnectionTerminatedCallback)(DataSubscriber*);
+		typedef void (*ConfigurationChangedCallback)();
 		
 		// Structure used to dispatch
 		// callbacks on the callback thread.
@@ -175,6 +176,7 @@ namespace Transport
 		MetadataCallback m_metadataCallback;
 		NewMeasurementsCallback m_newMeasurementsCallback;
 		MessageCallback m_processingCompleteCallback;
+		ConfigurationChangedCallback m_configurationChangedCallback;
 		ConnectionTerminatedCallback m_connectionTerminatedCallback;
 
 		// Threads
@@ -195,6 +197,7 @@ namespace Transport
 		void HandleProcessingComplete(uint8_t* data, std::size_t offset, std::size_t length);
 		void HandleUpdateSignalIndexCache(uint8_t* data, std::size_t offset, std::size_t length);
 		void HandleUpdateBaseTimes(uint8_t* data, std::size_t offset, std::size_t length);
+		void HandleConfigurationChanged(uint8_t* data, std::size_t offset, std::size_t length);
 		void ProcessServerResponse(uint8_t* buffer, std::size_t offset, std::size_t length);
 
 		// Dispatchers
@@ -209,6 +212,7 @@ namespace Transport
 		static void MetadataDispatcher(DataSubscriber* source, std::vector<uint8_t> data);
 		static void NewMeasurementsDispatcher(DataSubscriber* source, std::vector<uint8_t> data);
 		static void ProcessingCompleteDispatcher(DataSubscriber* source, std::vector<uint8_t> data);
+		static void ConfigurationChangedDispatcher(DataSubscriber* source, std::vector<uint8_t> data);
 
 		// The connection terminated callback is a special case that
 		// must be called on its own separate thread so that it can
@@ -235,6 +239,7 @@ namespace Transport
 			  m_metadataCallback(0),
 			  m_newMeasurementsCallback(0),
 			  m_processingCompleteCallback(0),
+			  m_configurationChangedCallback(0),
 			  m_connectionTerminatedCallback(0)
 		{
 			m_baseTimeOffsets[0] = 0;
@@ -264,6 +269,7 @@ namespace Transport
 		void RegisterMetadataCallback(MetadataCallback metadataCallback);
 		void RegisterNewMeasurementsCallback(NewMeasurementsCallback newMeasurementsCallback);
 		void RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback);
+		void RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback);
 		void RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback);
 
 		// Gets or sets value that determines

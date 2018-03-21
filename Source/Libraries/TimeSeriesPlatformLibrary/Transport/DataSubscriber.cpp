@@ -360,6 +360,12 @@ void gsfts::Transport::DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, std:
 	m_baseTimeOffsets[1] = m_endianConverter.ConvertBigEndian(timeOffsetsPtr[1]);
 }
 
+// Handles configuration changed message sent by the server at the end of a temporal session.
+void gsfts::Transport::DataSubscriber::HandleConfigurationChanged(uint8_t* data, std::size_t offset, std::size_t length)
+{
+	Dispatch(&ConfigurationChangedDispatcher);
+}
+
 // Dispatches the given function to the callback thread.
 void gsfts::Transport::DataSubscriber::Dispatch(DispatcherFunction function)
 {
@@ -550,6 +556,12 @@ void gsfts::Transport::DataSubscriber::ProcessingCompleteDispatcher(DataSubscrib
 	}
 }
 
+// Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
+void gsfts::Transport::DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+{
+	source->m_configurationChangedCallback();
+}
+
 // Dispatcher for connection terminated. This is called from its own separate thread
 // in order to cleanly shut down the subscriber in case the connection was terminated
 // by the peer. Additionally, this allows the user to automatically reconnect in their
@@ -602,6 +614,10 @@ void gsfts::Transport::DataSubscriber::ProcessServerResponse(uint8_t* buffer, st
 	case ServerResponse::UpdateBaseTimes:
 		HandleUpdateBaseTimes(packetBodyStart, 0, packetBodyLength);
 		break;
+
+	case ServerResponse::ConfigurationChanged:
+		HandleConfigurationChanged(packetBodyStart, 0, packetBodyLength);
+		break;
 	}
 }
 
@@ -639,6 +655,12 @@ void gsfts::Transport::DataSubscriber::RegisterNewMeasurementsCallback(NewMeasur
 void gsfts::Transport::DataSubscriber::RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback)
 {
 	m_processingCompleteCallback = processingCompleteCallback;
+}
+
+// Registers the configuration changed callback.
+void gsfts::Transport::DataSubscriber::RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback)
+{
+	m_configurationChangedCallback = configurationChangedCallback;
 }
 
 // Registers the connection terminated callback.
