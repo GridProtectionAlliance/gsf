@@ -17,6 +17,7 @@
     <ClInclude Include="Common\ThreadSafeQueue.h" />
     <ClInclude Include="Common\Types.h" />
     <ClInclude Include="Common\Version.h" />
+    <ClInclude Include="Samples\SubscriberInstance.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClInclude Include="Transport\Constants.h" />
     <ClInclude Include="Transport\DataSubscriber.h" />
@@ -29,6 +30,7 @@
     <ClCompile Include="Samples\AdvancedSubscribe.cpp" />
     <ClCompile Include="Samples\AverageFrequencyCalculator.cpp" />
     <ClCompile Include="Samples\SimpleSubscribe.cpp" />
+    <ClCompile Include="Samples\SubscriberInstance.cpp" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />

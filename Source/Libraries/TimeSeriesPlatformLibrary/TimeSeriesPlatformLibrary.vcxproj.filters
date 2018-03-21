@@ -34,6 +34,9 @@
     <ClInclude Include="Common\Version.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Samples\SubscriberInstance.h">
+      <Filter>Samples</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\SignalIndexCache.cpp">
@@ -58,6 +61,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Samples\AverageFrequencyCalculator.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="Samples\SubscriberInstance.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>
