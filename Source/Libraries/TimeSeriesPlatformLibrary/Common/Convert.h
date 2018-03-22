@@ -31,6 +31,9 @@
 namespace GSF {
 namespace TimeSeries
 {
+	// Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
+	void GetUnixTime(int64_t gepTime, std::time_t& unixSOC, int& milliseconds);
+
 	// Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t).
 	std::size_t TicksToString(char* ptr, std::size_t maxsize, std::string format, int64_t ticks);
 }}

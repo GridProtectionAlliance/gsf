@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <ctime>
 
 #include "../Common/Convert.h"
 #include "../Common/Measurement.h"
@@ -51,28 +52,33 @@ private:
 	static void HandleResubscribe(tst::DataSubscriber* source);
 	static void HandleStatusMessage(tst::DataSubscriber* source, std::string message);
 	static void HandleErrorMessage(tst::DataSubscriber* source, std::string message);
-	static void HandleConnectionTerminated(tst::DataSubscriber* source);
+	static void HandleDataStartTime(tst::DataSubscriber* source, gsfts::int64_t startTime);
 	static void HandleMetadata(tst::DataSubscriber* source, std::vector<uint8_t> payload);
 	static void HandleNewMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> measurements);
 	static void HandleProcessingComplete(tst::DataSubscriber* source, std::string message);
 	static void HandleConfigurationChanged(tst::DataSubscriber* source);
+	static void HandleConnectionTerminated(tst::DataSubscriber* source);
 
 protected:
 	virtual tst::SubscriberConnector CreateSubscriberConnector();
 	virtual tst::SubscriptionInfo CreateSubscriptionInfo();
-	virtual void ConnectionTerminated();
 	virtual void StatusMessage(std::string message);
 	virtual void ErrorMessage(std::string message);
+	virtual void DataStartTime(std::time_t unixSOC, int milliseconds);
 	virtual void ReceivedMetadata(std::vector<uint8_t> payload);
 	virtual void ReceivedNewMeasurements(std::vector<gsfts::Measurement> measurements);
+	virtual void ConfigurationChanged();
 	virtual void HistoricalReadComplete();
+	virtual void ConnectionEstablished();
+	virtual void ConnectionTerminated();
 
 public:
 	SubscriberInstance();
 	~SubscriberInstance();
 
 	// Constants
-	static constexpr const char* SubscribeAllExpression = "FILTER ActiveMeasurements WHERE Protocol = 'GatewayTransport'";
+	static constexpr const char* SubscribeAllExpression = "FILTER ActiveMeasurements WHERE ID IS NOT NULL";
+	static constexpr const char* SubscribeAllNoStatsExpression = "FILTER ActiveMeasurements WHERE SignalType <> 'STAT'";
 
 	// Subscription functions
 	void Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort = 0); // Always call before connect!
@@ -106,7 +112,8 @@ public:
 	void* GetUserData() const;
 	void SetUserData(void* userData);
 
-	// Gets or sets value that determines if metadata transfer will be compressed
+	// Gets or sets value that determines if metadata transfer will be compressed,
+	// when true, metadata payload will be zlib compressed
 	bool IsMetadataCompressed() const;
 	void SetMetadataCompressed(bool compressed);
 

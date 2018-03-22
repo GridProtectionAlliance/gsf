@@ -25,7 +25,10 @@
 #define __MEASUREMENT_H
 
 #include <string>
+#include <ctime>
+
 #include "Types.h"
+#include "Convert.h"
 
 namespace GSF {
 namespace TimeSeries
@@ -78,6 +81,12 @@ namespace TimeSeries
 		float64_t AdjustedValue()
 		{
 			return Value * Multiplier + Adder;
+		}
+
+		// Gets time in UNIX second of century and milliseconds
+		void GetUnixTime(std::time_t& unixSOC, int& milliseconds)
+		{
+			GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
 		}
 	};
 }}

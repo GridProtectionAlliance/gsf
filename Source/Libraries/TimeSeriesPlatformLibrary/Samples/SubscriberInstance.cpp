@@ -21,8 +21,6 @@
 //
 //******************************************************************************************************
 
-#include <functional>
-
 #include "SubscriberInstance.h"
 #include "../Transport/Constants.h"
 
@@ -30,12 +28,13 @@ SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),
     m_port(6165),
     m_udpPort(0),
-    m_filterExpression(SubscribeAllExpression),
+    m_filterExpression(SubscribeAllNoStatsExpression),
     m_startTime(""),
     m_stopTime("")
 {
     // Reference this SubscriberInstance in DataSubsciber user data
     m_subscriber.SetUserData(this);
+    m_subscriber.SetMetadataCompressed(false);
 }
 
 SubscriberInstance::~SubscriberInstance()
@@ -75,6 +74,11 @@ void SubscriberInstance::Connect()
     // Register callbacks
     m_subscriber.RegisterStatusMessageCallback(&HandleStatusMessage);
     m_subscriber.RegisterErrorMessageCallback(&HandleErrorMessage);
+    m_subscriber.RegisterDataStartTimeCallback(&HandleDataStartTime);
+    m_subscriber.RegisterMetadataCallback(&HandleMetadata);
+    m_subscriber.RegisterNewMeasurementsCallback(&HandleNewMeasurements);
+    m_subscriber.RegisterConfigurationChangedCallback(&HandleConfigurationChanged);
+    m_subscriber.RegisterConnectionTerminatedCallback(&HandleConnectionTerminated);
 
     if (!m_startTime.empty() && !m_stopTime.empty())
     {
@@ -89,12 +93,11 @@ void SubscriberInstance::Connect()
         m_info.DataChannelLocalPort = m_udpPort;
     }
 
-    m_subscriber.RegisterMetadataCallback(this->HandleMetadata);
-    m_subscriber.RegisterConfigurationChangedCallback(this->HandleConfigurationChanged);
-
     // Connect and subscribe to publisher
     if (connector.Connect(m_subscriber))
     {
+        ConnectionEstablished();
+
         // Request metadata upon successful connection, after metadata is handled
         // the SubscriberInstance will then subscribe to the desired data
         m_subscriber.SendServerCommand(tst::ServerCommand::MetadataRefresh);
@@ -194,9 +197,6 @@ tst::SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     // Define desired filter expression
     info.FilterExpression = m_filterExpression;
 
-    // Establish user new measurements call back (if defined)
-    info.NewMeasurementsCallback = &HandleNewMeasurements;
-
     // To set up a remotely synchronized subscription, set this flag
     // to true and add the framesPerSecond parameter to the
     // ExtraConnectionStringParameters. Additionally, the following
@@ -220,10 +220,6 @@ tst::SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     return info;
 }
 
-void SubscriberInstance::ConnectionTerminated()
-{
-}
-
 void SubscriberInstance::StatusMessage(std::string message)
 {
     std::cout << message << std::endl << std::endl;
@@ -234,6 +230,10 @@ void SubscriberInstance::ErrorMessage(std::string message)
     std::cerr << message << std::endl << std::endl;
 }
 
+void SubscriberInstance::DataStartTime(std::time_t unixSOC, int milliseconds)
+{
+}
+
 void SubscriberInstance::ReceivedMetadata(std::vector<uint8_t> payload)
 {
 }
@@ -242,8 +242,24 @@ void SubscriberInstance::ReceivedNewMeasurements(std::vector<gsfts::Measurement>
 {
 }
 
+void SubscriberInstance::ConfigurationChanged()
+{
+    StatusMessage("Configuration changed");
+}
+
 void SubscriberInstance::HistoricalReadComplete()
 {
+    StatusMessage("Historical read complete");
+}
+
+void SubscriberInstance::ConnectionEstablished()
+{
+    StatusMessage("Connection established");
+}
+
+void SubscriberInstance::ConnectionTerminated()
+{
+    StatusMessage("Connection terminated");
 }
 
 // private functions
@@ -253,8 +269,13 @@ void SubscriberInstance::HistoricalReadComplete()
 
 void SubscriberInstance::HandleResubscribe(tst::DataSubscriber* source)
 {
+    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+
     if (source->IsConnected())
-        source->Subscribe(source->GetCurrentSubscription());
+    {
+        instance->ConnectionEstablished();
+        source->Subscribe(instance->m_info);
+    }
 }
 
 void SubscriberInstance::HandleStatusMessage(tst::DataSubscriber* source, std::string message)
@@ -269,10 +290,15 @@ void SubscriberInstance::HandleErrorMessage(tst::DataSubscriber* source, std::st
     instance->ErrorMessage(message);
 }
 
-void SubscriberInstance::HandleConnectionTerminated(tst::DataSubscriber* source)
+void SubscriberInstance::HandleDataStartTime(tst::DataSubscriber* source, gsfts::int64_t startTime)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();    
-    instance->ConnectionTerminated();
+    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    std::time_t unixSOC;
+    int milliseconds;
+    
+    gsfts::GetUnixTime(startTime, unixSOC, milliseconds);
+    
+    instance->DataStartTime(unixSOC, milliseconds);
 }
 
 void SubscriberInstance::HandleMetadata(tst::DataSubscriber* source, std::vector<uint8_t> payload)
@@ -294,6 +320,11 @@ void SubscriberInstance::HandleNewMeasurements(tst::DataSubscriber* source, std:
 
 void SubscriberInstance::HandleConfigurationChanged(tst::DataSubscriber* source)
 {
+    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+
+    // Call virtual method to notify consumer that configuration has changed
+    instance->ConfigurationChanged();
+
     // When publisher configuration has changed, request updated metadata
     source->SendServerCommand(tst::ServerCommand::MetadataRefresh);
 }
@@ -304,4 +335,10 @@ void SubscriberInstance::HandleProcessingComplete(tst::DataSubscriber* source, s
     
     instance->StatusMessage(message);
     instance->HistoricalReadComplete();
+}
+
+void SubscriberInstance::HandleConnectionTerminated(tst::DataSubscriber* source)
+{
+    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    instance->ConnectionTerminated();
 }

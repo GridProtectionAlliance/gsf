@@ -29,13 +29,21 @@
 
 namespace gsfts = GSF::TimeSeries;
 
-std::size_t gsfts::TicksToString(char* ptr, std::size_t maxsize, std::string format, int64_t ticks)
+void GSF::TimeSeries::GetUnixTime(gsfts::int64_t ticks, std::time_t& unixSOC, int& milliseconds)
 {
 	// Unix dates are measured as the number of seconds since 1/1/1970
 	const int64_t BaseTimeOffset = 621355968000000000L;
 
-	std::time_t fromSeconds = (std::time_t)((ticks - BaseTimeOffset) / 10000000);
-	int milliseconds = (int)(ticks / 10000 % 1000);
+	unixSOC = (std::time_t)((ticks - BaseTimeOffset) / 10000000);
+	milliseconds = (int)(ticks / 10000 % 1000);
+}
+
+std::size_t GSF::TimeSeries::TicksToString(char* ptr, std::size_t maxsize, std::string format, gsfts::int64_t ticks)
+{
+	std::time_t fromSeconds;
+	int milliseconds;
+
+	GetUnixTime(ticks, fromSeconds, milliseconds);
 	
 	std::stringstream formatStream;
 	std::size_t formatIndex = 0;
