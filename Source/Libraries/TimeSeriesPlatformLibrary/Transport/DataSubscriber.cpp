@@ -1073,7 +1073,7 @@ bool gsfts::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
 		if (!errorMessage.empty())
 		{
 			if (m_errorMessageCallback != 0)
-				boost::thread th(boost::bind(m_errorMessageCallback, subscriber, errorMessage));
+				boost::thread th(boost::bind(m_errorMessageCallback, &subscriber, errorMessage));
 
 			boost::asio::io_service io;
 			boost::asio::deadline_timer t(io, boost::posix_time::milliseconds(m_retryInterval));

@@ -42,6 +42,8 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
+	class DataSubscriber;
+
 	// Simple exception type thrown by the data subscriber.
 	class SubscriberException : public std::exception
 	{
