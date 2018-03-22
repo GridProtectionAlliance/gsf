@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/26/2012 - Stephen C. Wills
 //       Generated original version of source code.
+//  03/22/2018 - J. Ritchie Carroll
+//		 Updated DataSubscriber callback function signatures to always include instance reference.
 //
 //******************************************************************************************************
 
@@ -66,7 +68,7 @@ namespace Transport
 	struct SubscriptionInfo
 	{
 		std::string FilterExpression;
-		void (*NewMeasurementsCallback)(std::vector<Measurement>);
+		void (*NewMeasurementsCallback)(DataSubscriber*, std::vector<Measurement>);
 
 		bool RemotelySynchronized;
 		//bool CompactFormat;
@@ -120,13 +122,13 @@ namespace Transport
 
 		// Function pointer types
 		typedef void (*DispatcherFunction)(DataSubscriber*, std::vector<uint8_t>);
-		typedef void (*MessageCallback)(std::string);
-		typedef void (*DataStartTimeCallback)(int64_t);
-		typedef void (*MetadataCallback)(std::vector<uint8_t>);
-		typedef void (*NewMeasurementsCallback)(std::vector<Measurement>);
+		typedef void (*MessageCallback)(DataSubscriber*, std::string);
+		typedef void (*DataStartTimeCallback)(DataSubscriber*, int64_t);
+		typedef void (*MetadataCallback)(DataSubscriber*, std::vector<uint8_t>);
+		typedef void (*NewMeasurementsCallback)(DataSubscriber*, std::vector<Measurement>);
+		typedef void (*ConfigurationChangedCallback)(DataSubscriber*);
 		typedef void (*ConnectionTerminatedCallback)(DataSubscriber*);
-		typedef void (*ConfigurationChangedCallback)();
-		
+
 		// Structure used to dispatch
 		// callbacks on the callback thread.
 		struct CallbackDispatcher
@@ -141,6 +143,7 @@ namespace Transport
 		IPAddress m_hostAddress;
 		bool m_compressMetadata;
 		bool m_disconnecting;
+		void* m_userData;
 
 		// Statistics counters
 		long m_totalCommandChannelBytesReceived;
@@ -277,6 +280,10 @@ namespace Transport
 		bool IsMetadataCompressed() const;
 		void SetMetadataCompressed(bool compressed);
 
+		// Gets or sets user defined data reference
+		void* GetUserData() const;
+		void SetUserData(void* userData);
+
 		// Synchronously connects to publisher.
 		void Connect(std::string hostname, uint16_t port);
 
@@ -330,7 +337,7 @@ namespace Transport
 	class SubscriberConnector
 	{
 	private:
-		typedef void (*ErrorMessageCallback)(std::string);
+		typedef void (*ErrorMessageCallback)(DataSubscriber*, std::string);
 		typedef void (*ReconnectCallback)(DataSubscriber*);
 
 		ErrorMessageCallback m_errorMessageCallback;

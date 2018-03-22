@@ -35,7 +35,7 @@ namespace tst = gsfts::Transport;
 tst::DataSubscriber Subscriber;
 
 void RunSubscriber(std::string hostname, gsfts::uint16_t port);
-void ProcessMeasurements(std::vector<gsfts::Measurement> newMeasurements);
+void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> newMeasurements);
 
 // Sample application to demonstrate the most simple use of the subscriber API.
 //
@@ -96,7 +96,7 @@ void RunSubscriber(std::string hostname, gsfts::uint16_t port)
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(std::vector<gsfts::Measurement> newMeasurements)
+void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> newMeasurements)
 {
 	const std::string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
 	const std::size_t MaxTimestampSize = 80;

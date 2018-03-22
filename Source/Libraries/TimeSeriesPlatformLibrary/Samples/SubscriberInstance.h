@@ -35,76 +35,85 @@ namespace tst = gsfts::Transport;
 class SubscriberInstance
 {
 private:
-    // Function pointer types
-    typedef void (*MessageCallback)(std::string);
-    typedef void (*MetadataCallback)(std::vector<uint8_t>);
-    typedef void (*NewMeasurementsCallback)(std::vector<gsfts::Measurement> newMeasurements);
-    typedef void (*HistoricalReadCompleteCallback)();
+	// Subscription members
+	std::string m_hostname;
+	gsfts::uint16_t m_port;
+	gsfts::uint16_t m_udpPort;
+	std::string m_filterExpression;
+	tst::DataSubscriber m_subscriber;
+	tst::SubscriptionInfo m_info;
+	std::string m_startTime;
+	std::string m_stopTime;
+	gsfts::EndianConverter m_endianConverter;
+	void* m_userData;
 
-    // Subscription members
-    std::string m_hostname;
-    gsfts::uint16_t m_port;
-    gsfts::uint16_t m_udpPort;
-    std::string m_filterExpression;
-    tst::DataSubscriber m_subscriber;
-    tst::SubscriptionInfo m_info;
-    std::string m_startTime;
-    std::string m_stopTime;
-    gsfts::EndianConverter m_endianConverter;
+	// Internal subscription event handlers
+	static void HandleResubscribe(tst::DataSubscriber* source);
+	static void HandleStatusMessage(tst::DataSubscriber* source, std::string message);
+	static void HandleErrorMessage(tst::DataSubscriber* source, std::string message);
+	static void HandleConnectionTerminated(tst::DataSubscriber* source);
+	static void HandleMetadata(tst::DataSubscriber* source, std::vector<uint8_t> payload);
+	static void HandleNewMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> measurements);
+	static void HandleProcessingComplete(tst::DataSubscriber* source, std::string message);
+	static void HandleConfigurationChanged(tst::DataSubscriber* source);
 
-    // Callbacks
-    MessageCallback m_statusMessageCallback;
-    MessageCallback m_errorMessageCallback;
-    MetadataCallback m_metadataCallback;
-    NewMeasurementsCallback m_newMeasurementsCallback;
-    HistoricalReadCompleteCallback m_historicalReadCompleteCallback;
-
-    // Internal subscription functions
-    tst::SubscriberConnector CreateSubscriberConnector(std::string hostname, gsfts::uint16_t port);
-    tst::SubscriptionInfo CreateSubscriptionInfo();
-    
-    // Internal subscription event handlers
-    void HandleResubscribe(tst::DataSubscriber* source);
-    void HandleMetadata(std::vector<uint8_t> payload);
-    void HandleConfigurationChanged();
-    void HandleProcessComplete(std::string message);
+protected:
+	virtual tst::SubscriberConnector CreateSubscriberConnector();
+	virtual tst::SubscriptionInfo CreateSubscriptionInfo();
+	virtual void ConnectionTerminated();
+	virtual void StatusMessage(std::string message);
+	virtual void ErrorMessage(std::string message);
+	virtual void ReceivedMetadata(std::vector<uint8_t> payload);
+	virtual void ReceivedNewMeasurements(std::vector<gsfts::Measurement> measurements);
+	virtual void HistoricalReadComplete();
 
 public:
-    SubscriberInstance();
-    ~SubscriberInstance();
+	SubscriberInstance();
+	~SubscriberInstance();
 
-    // Callback registration
-    void RegisterStatusMessageCallback(MessageCallback statusMessageCallback);
-    void RegisterErrorMessageCallback(MessageCallback errorMessageCallback);
-    void RegisterMetadataCallback(MetadataCallback metadataCallback);
-    void RegisterNewMeasurementsCallback(NewMeasurementsCallback processMeasurementsCallback);
-    void RegisterHistoricalReadCompleteCallback(HistoricalReadCompleteCallback processingCompleteCallback);
+	// Constants
+	static constexpr const char* SubscribeAllExpression = "FILTER ActiveMeasurements WHERE Protocol = 'GatewayTransport'";
 
-    // Subscription functions
-    void Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort = 0); // Always call before connect!
+	// Subscription functions
+	void Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort = 0); // Always call before connect!
 
-    // The following are example filter expression formats:
-    //
-    // - Signal ID list -
-    // subscriber.SetFilterExpression("7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255;"
-    //						"93673c68-d59d-4926-b7e9-e7678f9f66b4;"
-    //						"65ac9cf6-ae33-4ece-91b6-bb79343855d5;"
-    //						"3647f729-d0ed-4f79-85ad-dae2149cd432;"
-    //						"069c5e29-f78a-46f6-9dff-c92cb4f69371;"
-    //						"25355a7b-2a9d-4ef2-99ba-4dd791461379");
-    //
-    // - Measurement key list pattern -
-    // subscriber.SetFilterExpression("PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14");
-    //
-    // - Filter pattern -
-    // subscriber.SetFilterExpression("FILTER ActiveMeasurements WHERE ID LIKE 'PPA:*'");
-    // subscriber.SetFilterExpression("FILTER ActiveMeasurements WHERE Device = 'SHELBY' AND SignalType = 'FREQ'");
-    void SetFilterExpression(std::string filterExpression); // Call before connect, this defaults to all measurements if not defined
+	// The following are example filter expression formats:
+	//
+	// - Signal ID list -
+	// subscriber.SetFilterExpression("7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255;"
+	//						"93673c68-d59d-4926-b7e9-e7678f9f66b4;"
+	//						"65ac9cf6-ae33-4ece-91b6-bb79343855d5;"
+	//						"3647f729-d0ed-4f79-85ad-dae2149cd432;"
+	//						"069c5e29-f78a-46f6-9dff-c92cb4f69371;"
+	//						"25355a7b-2a9d-4ef2-99ba-4dd791461379");
+	//
+	// - Measurement key list pattern -
+	// subscriber.SetFilterExpression("PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14");
+	//
+	// - Filter pattern -
+	// subscriber.SetFilterExpression("FILTER ActiveMeasurements WHERE ID LIKE 'PPA:*'");
+	// subscriber.SetFilterExpression("FILTER ActiveMeasurements WHERE Device = 'SHELBY' AND SignalType = 'FREQ'");
+	void SetFilterExpression(std::string filterExpression); // Call before connect, defaults to all measurements
 
-    void Connect();
-    void Disconnect();
+	void Connect();
+	void Disconnect();
 
-    // Historical subscription functions
-    void EstablishHistoricalRead(std::string startTime, std::string stopTime); // Call before connect, if needed
-    void SetHistoricalReplayInterval(int32_t replayInterval);
+	// Historical subscription functions
+	void EstablishHistoricalRead(std::string startTime, std::string stopTime); // Call before connect, if needed
+	void SetHistoricalReplayInterval(int32_t replayInterval);
+
+	// Gets or sets user defined data reference for SubscriberInstance
+	void* GetUserData() const;
+	void SetUserData(void* userData);
+
+	// Gets or sets value that determines if metadata transfer will be compressed
+	bool IsMetadataCompressed() const;
+	void SetMetadataCompressed(bool compressed);
+
+	// Statistical functions
+	long GetTotalCommandChannelBytesReceived() const;
+	long GetTotalDataChannelBytesReceived() const;
+	long GetTotalMeasurementsReceived() const;
+	bool IsConnected() const;
+	bool IsSubscribed() const;
 };

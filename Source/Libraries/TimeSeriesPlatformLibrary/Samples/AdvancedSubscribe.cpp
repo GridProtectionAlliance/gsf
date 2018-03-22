@@ -41,9 +41,9 @@ tst::SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
 void Resubscribe(tst::DataSubscriber* source);
-void ProcessMeasurements(std::vector<gsfts::Measurement> newMeasurements);
-void DisplayStatusMessage(std::string message);
-void DisplayErrorMessage(std::string message);
+void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> newMeasurements);
+void DisplayStatusMessage(tst::DataSubscriber* source, std::string message);
+void DisplayErrorMessage(tst::DataSubscriber* source, std::string message);
 
 // Runs the subscriber.
 void RunSubscriber(std::string hostname, gsfts::uint16_t port);
@@ -182,7 +182,7 @@ tst::SubscriberConnector CreateSubscriberConnector(std::string hostname, gsfts::
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(std::vector<gsfts::Measurement> newMeasurements)
+void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> newMeasurements)
 {
 	const std::string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
 	const std::size_t MaxTimestampSize = 80;
@@ -223,13 +223,13 @@ void Resubscribe(tst::DataSubscriber* source)
 }
 
 // Callback which is called to display status messages from the subscriber.
-void DisplayStatusMessage(std::string message)
+void DisplayStatusMessage(tst::DataSubscriber* source, std::string message)
 {
 	std::cout << message << std::endl << std::endl;
 }
 
 // Callback which is called to display error messages from the connector and subscriber.
-void DisplayErrorMessage(std::string message)
+void DisplayErrorMessage(tst::DataSubscriber* source, std::string message)
 {
 	std::cerr << message << std::endl << std::endl;
 }

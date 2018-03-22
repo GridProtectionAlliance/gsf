@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/26/2012 - Stephen C. Wills
 //       Generated original version of source code.
+//  03/22/2018 - J. Ritchie Carroll
+//		 Updated DataSubscriber callback function signatures to always include instance reference.
 //
 //******************************************************************************************************
 
@@ -419,7 +421,7 @@ void gsfts::Transport::DataSubscriber::StatusMessageDispatcher(DataSubscriber* s
 		messageStream << data[i];
 
 	if (statusMessageCallback != 0)
-		statusMessageCallback(messageStream.str());
+		statusMessageCallback(source, messageStream.str());
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
@@ -433,7 +435,7 @@ void gsfts::Transport::DataSubscriber::ErrorMessageDispatcher(DataSubscriber* so
 		messageStream << data[i];
 
 	if (errorMessageCallback != 0)
-		errorMessageCallback(messageStream.str());
+		errorMessageCallback(source, messageStream.str());
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
@@ -445,7 +447,7 @@ void gsfts::Transport::DataSubscriber::DataStartTimeDispatcher(DataSubscriber* s
 	int64_t dataStartTime = endianConverter.ConvertBigEndian(*dataPtr);
 
 	if (dataStartTimeCallback != 0)
-		dataStartTimeCallback(dataStartTime);
+		dataStartTimeCallback(source, dataStartTime);
 }
 
 // Dispatcher function for metadata. Provides encoded metadata to the user via the metadata callback.
@@ -454,7 +456,7 @@ void gsfts::Transport::DataSubscriber::MetadataDispatcher(DataSubscriber* source
 	MetadataCallback metadataCallback = source->m_metadataCallback;
 
 	if (metadataCallback != 0)
-		metadataCallback(data);
+		metadataCallback(source, data);
 }
 
 // Dispatcher function for new measurements. Decodes the measurements and provides them to the user via the new measurements callback.
@@ -504,14 +506,13 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 	// Create measurement parser
 	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, info.UseMillisecondResolution);
 
-
 	if (newMeasurementsCallback != 0)
 	{
 		while (length > 0)
 		{
 			if (!measurementParser.TryParseMeasurement(buffer, offset, length))
 			{
-				errorMessageCallback("Error parsing measurement");
+				errorMessageCallback(source, "Error parsing measurement");
 				break;
 			}
 
@@ -523,7 +524,7 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 			newMeasurements.push_back(parsedMeasurement);
 		}
 
-		newMeasurementsCallback(newMeasurements);
+		newMeasurementsCallback(source, newMeasurements);
 	}
 }
 
@@ -552,14 +553,14 @@ void gsfts::Transport::DataSubscriber::ProcessingCompleteDispatcher(DataSubscrib
 		for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
 			messageStream << *messageIter;
 
-		processingCompleteCallback(messageStream.str());
+		processingCompleteCallback(source, messageStream.str());
 	}
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
 void gsfts::Transport::DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
 {
-	source->m_configurationChangedCallback();
+	source->m_configurationChangedCallback(source);
 }
 
 // Dispatcher for connection terminated. This is called from its own separate thread
@@ -682,6 +683,18 @@ void gsfts::Transport::DataSubscriber::SetMetadataCompressed(bool compressed)
 
 	if (m_commandChannelSocket.is_open())
 		SendOperationalModes();
+}
+
+// Gets user defined data reference
+void* gsfts::Transport::DataSubscriber::GetUserData() const
+{
+	return m_userData;
+}
+
+// Sets user defined data reference
+void gsfts::Transport::DataSubscriber::SetUserData(void* userData)
+{
+	userData = userData;
 }
 
 // Synchronously connects to publisher.
@@ -1007,7 +1020,7 @@ void gsfts::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscr
 
 		// Notify the user that we are attempting to reconnect.
 		if (connector.m_cancel == false && connector.m_errorMessageCallback != 0)
-			connector.m_errorMessageCallback("Publisher connection terminated. Attempting to reconnect...");
+			connector.m_errorMessageCallback(subscriber, "Publisher connection terminated. Attempting to reconnect...");
 
 		connector.Connect(*subscriber);
 
@@ -1060,7 +1073,7 @@ bool gsfts::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
 		if (!errorMessage.empty())
 		{
 			if (m_errorMessageCallback != 0)
-				boost::thread th(boost::bind(m_errorMessageCallback, errorMessage));
+				boost::thread th(boost::bind(m_errorMessageCallback, subscriber, errorMessage));
 
 			boost::asio::io_service io;
 			boost::asio::deadline_timer t(io, boost::posix_time::milliseconds(m_retryInterval));
