@@ -59,6 +59,10 @@ void SubscriberInstance::EstablishHistoricalRead(std::string startTime, std::str
 void SubscriberInstance::SetFilterExpression(std::string filterExpression)
 {
     m_filterExpression = filterExpression;
+
+    // Resubscribe with new filter expression if already connected
+    if (m_subscriber.IsSubscribed())
+        m_subscriber.Subscribe(m_info);
 }
 
 void SubscriberInstance::Connect()
@@ -67,7 +71,7 @@ void SubscriberInstance::Connect()
     // is only needed for the initial connection
     tst::SubscriberConnector connector;
 
-    // Set up helper objects (derived classes can override behavior)
+    // Set up helper objects (derived classes can override behavior ad settings)
     connector = CreateSubscriberConnector();
     m_info = CreateSubscriptionInfo();
 
@@ -168,6 +172,9 @@ bool SubscriberInstance::IsSubscribed() const
 }
 
 // protected functions
+
+// All the following protected functions are virtual so that derived
+// classes can customize behavior of the SubscriberInstance
 
 tst::SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
 {
@@ -331,8 +338,7 @@ void SubscriberInstance::HandleConfigurationChanged(tst::DataSubscriber* source)
 
 void SubscriberInstance::HandleProcessingComplete(tst::DataSubscriber* source, std::string message)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
-    
+    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();   
     instance->StatusMessage(message);
     instance->HistoricalReadComplete();
 }

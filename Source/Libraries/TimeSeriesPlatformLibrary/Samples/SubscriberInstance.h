@@ -81,7 +81,11 @@ public:
 	static constexpr const char* SubscribeAllNoStatsExpression = "FILTER ActiveMeasurements WHERE SignalType <> 'STAT'";
 
 	// Subscription functions
-	void Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort = 0); // Always call before connect!
+
+	// Initialize a connection with host name, port. To enable UDP for data channel,
+	// optionally specify a UDP receive port. This function must be called before
+	// calling the Connect method.
+	void Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort = 0);
 
 	// The following are example filter expression formats:
 	//
@@ -99,13 +103,27 @@ public:
 	// - Filter pattern -
 	// subscriber.SetFilterExpression("FILTER ActiveMeasurements WHERE ID LIKE 'PPA:*'");
 	// subscriber.SetFilterExpression("FILTER ActiveMeasurements WHERE Device = 'SHELBY' AND SignalType = 'FREQ'");
-	void SetFilterExpression(std::string filterExpression); // Call before connect, defaults to all measurements
+	
+	// Define a filter expression to control which points to receive. The filter expression
+	// defaults to all non-static points available. When specified before the Connect function,
+	// this filter expression will be used for the initial connection. Updating the filter
+	// expression while a subscription is active will cause a resubscribe with new expression.
+	void SetFilterExpression(std::string filterExpression);
 
+	// Starts the connection cycle to a GEP publisher. Upon connection, meta-data will be requested,
+	// when received, a subscription will be established
 	void Connect();
+	
+	// Disconnects from the GEP publisher
 	void Disconnect();
 
 	// Historical subscription functions
-	void EstablishHistoricalRead(std::string startTime, std::string stopTime); // Call before connect, if needed
+	
+	// Defines the desired time-range of data from the GEP publisher, if the publisher supports
+	// historical queries. If specified, this function must be called before Connect.
+	void EstablishHistoricalRead(std::string startTime, std::string stopTime);
+
+	// Dynamically controls replay speed - can be updated while historical data is being received
 	void SetHistoricalReplayInterval(int32_t replayInterval);
 
 	// Gets or sets user defined data reference for SubscriberInstance
