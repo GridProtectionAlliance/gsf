@@ -846,7 +846,7 @@ void gsfts::Transport::DataSubscriber::Subscribe(gsfts::Transport::SubscriptionI
 	bigEndianConnectionStringSizePtr = (uint8_t*)&bigEndianConnectionStringSize;
 
 	bufferSize = 5 + connectionStringSize;
-	buffer.reserve(bufferSize);
+	buffer.resize(bufferSize, 0);
 
 	buffer[0] = DataPacketFlags::Compact | (info.RemotelySynchronized ? DataPacketFlags::Synchronized : DataPacketFlags::NoFlags);
 
@@ -908,7 +908,7 @@ void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, st
 	bigEndianMessageSizePtr = (uint8_t*)&bigEndianMessageSize;
 
 	bufferSize = 4 + messageSize;
-	buffer.reserve(bufferSize);
+	buffer.resize(bufferSize, 0);
 
 	buffer[0] = bigEndianMessageSizePtr[0];
 	buffer[1] = bigEndianMessageSizePtr[1];
