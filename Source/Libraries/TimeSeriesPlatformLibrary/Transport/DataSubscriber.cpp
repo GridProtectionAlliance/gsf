@@ -694,7 +694,7 @@ void* gsfts::Transport::DataSubscriber::GetUserData() const
 // Sets user defined data reference
 void gsfts::Transport::DataSubscriber::SetUserData(void* userData)
 {
-	userData = userData;
+	m_userData = userData;
 }
 
 // Synchronously connects to publisher.
