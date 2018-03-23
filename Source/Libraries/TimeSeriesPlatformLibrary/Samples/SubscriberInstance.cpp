@@ -62,7 +62,10 @@ void SubscriberInstance::SetFilterExpression(std::string filterExpression)
 
     // Resubscribe with new filter expression if already connected
     if (m_subscriber.IsSubscribed())
+    {
+        m_info.FilterExpression = m_filterExpression;
         m_subscriber.Subscribe(m_info);
+    }
 }
 
 void SubscriberInstance::Connect()
@@ -71,7 +74,7 @@ void SubscriberInstance::Connect()
     // is only needed for the initial connection
     tst::SubscriberConnector connector;
 
-    // Set up helper objects (derived classes can override behavior ad settings)
+    // Set up helper objects (derived classes can override behavior and settings)
     connector = CreateSubscriberConnector();
     m_info = CreateSubscriptionInfo();
 
