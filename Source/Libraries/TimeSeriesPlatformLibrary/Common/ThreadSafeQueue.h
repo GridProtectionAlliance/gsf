@@ -26,9 +26,9 @@
 
 #include <queue>
 
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
+#include "Types.h"
+
+using namespace boost;
 
 namespace GSF {
 namespace TimeSeries
@@ -44,9 +44,9 @@ namespace TimeSeries
 	class ThreadSafeQueue
 	{
 	private:
-		boost::mutex m_mutex;
-		boost::condition_variable m_dataWaitHandle;
-		std::queue<T> m_queue;
+		Mutex m_mutex;
+		WaitHandle m_dataWaitHandle;
+		queue<T> m_queue;
 		bool m_release;
 
 	public:
@@ -71,7 +71,7 @@ namespace TimeSeries
 		
 		// Returns the number of
 		// items left in the queue.
-		std::size_t Size();
+		size_t Size();
 
 		// Waits for data to be inserted into the queue.
 		// If there is already data in the queue,
@@ -102,7 +102,7 @@ namespace TimeSeries
 	template <class T>
 	void ThreadSafeQueue<T>::Enqueue(T item)
 	{
-		boost::lock_guard<boost::mutex> lock(m_mutex);
+		ScopeLock lock(m_mutex);
 		m_queue.push(item);
 		m_dataWaitHandle.notify_one();
 	}
@@ -112,7 +112,7 @@ namespace TimeSeries
 	template <class T>
 	T ThreadSafeQueue<T>::Dequeue()
 	{
-		boost::lock_guard<boost::mutex> lock(m_mutex);
+		ScopeLock lock(m_mutex);
 		T item = m_queue.front();
 		m_queue.pop();
 		return item;
@@ -122,7 +122,7 @@ namespace TimeSeries
 	template <class T>
 	void ThreadSafeQueue<T>::Clear()
 	{
-		boost::lock_guard<boost::mutex> lock(m_mutex);
+		ScopeLock lock(m_mutex);
 
 		while (m_queue.size() > 0)
 			m_queue.pop();
@@ -131,9 +131,9 @@ namespace TimeSeries
 	// Returns the number of
 	// items left in the queue.
 	template <class T>
-	std::size_t ThreadSafeQueue<T>::Size()
+	size_t ThreadSafeQueue<T>::Size()
 	{
-		boost::lock_guard<boost::mutex> lock(m_mutex);
+		ScopeLock lock(m_mutex);
 		return m_queue.size();
 	}
 	
@@ -143,7 +143,7 @@ namespace TimeSeries
 	template <class T>
 	void ThreadSafeQueue<T>::WaitForData()
 	{
-		boost::unique_lock<boost::mutex> lock(m_mutex);
+		UniqueLock lock(m_mutex);
 
 		while(m_queue.size() == 0 && !m_release)
 			m_dataWaitHandle.wait(lock);
@@ -153,7 +153,7 @@ namespace TimeSeries
 	template <class T>
 	void ThreadSafeQueue<T>::Release()
 	{
-		boost::lock_guard<boost::mutex> lock(m_mutex);
+		ScopeLock lock(m_mutex);
 
 		m_release = true;
 		m_dataWaitHandle.notify_all();
@@ -165,7 +165,7 @@ namespace TimeSeries
 	template <class T>
 	void ThreadSafeQueue<T>::Reset()
 	{
-		boost::lock_guard<boost::mutex> lock(m_mutex);
+		ScopeLock lock(m_mutex);
 		m_release = false;
 	}
 }}

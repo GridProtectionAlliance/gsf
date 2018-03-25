@@ -23,16 +23,17 @@
 
 #include "SignalIndexCache.h"
 
-namespace gsfts = GSF::TimeSeries;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
 
 // Adds a measurement key to the cache.
-void gsfts::Transport::SignalIndexCache::AddMeasurementKey(
+void SignalIndexCache::AddMeasurementKey(
 	uint16_t signalIndex,
-	gsfts::Guid signalID,
-	std::string source,
+	Guid signalID,
+	string source,
 	uint32_t id)
 {
-	std::size_t vectorIndex = m_signalIDList.size();
+	size_t vectorIndex = m_signalIDList.size();
 
 	m_reference[signalIndex] = vectorIndex;
 	m_signalIDList.push_back(signalID);
@@ -43,7 +44,7 @@ void gsfts::Transport::SignalIndexCache::AddMeasurementKey(
 }
 
 // Empties the cache.
-void gsfts::Transport::SignalIndexCache::Clear()
+void SignalIndexCache::Clear()
 {
 	m_reference.clear();
 	m_signalIDList.clear();
@@ -54,43 +55,43 @@ void gsfts::Transport::SignalIndexCache::Clear()
 }
 
 // Determines whether an element with the given runtime ID exists in the signal index cache.
-bool gsfts::Transport::SignalIndexCache::Contains(uint16_t signalIndex) const
+bool SignalIndexCache::Contains(uint16_t signalIndex) const
 {
 	return m_reference.find(signalIndex) != m_reference.end();
 }
 
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-gsfts::Guid gsfts::Transport::SignalIndexCache::GetSignalID(uint16_t signalIndex) const
+Guid SignalIndexCache::GetSignalID(uint16_t signalIndex) const
 {
-	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
+	size_t vectorIndex = m_reference.find(signalIndex)->second;
 	return m_signalIDList[vectorIndex];
 }
 
 // Gets the first half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
-std::string gsfts::Transport::SignalIndexCache::GetSource(uint16_t signalIndex) const
+string SignalIndexCache::GetSource(uint16_t signalIndex) const
 {
-	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
+	size_t vectorIndex = m_reference.find(signalIndex)->second;
 	return m_sourceList[vectorIndex];
 }
 
 // Gets the second half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
-uint32_t gsfts::Transport::SignalIndexCache::GetID(uint16_t signalIndex) const
+uint32_t SignalIndexCache::GetID(uint16_t signalIndex) const
 {
-	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
+	size_t vectorIndex = m_reference.find(signalIndex)->second;
 	return m_idList[vectorIndex];
 }
 
 // Gets the globally unique signal ID as well as the human-readable
 // measurement key associated with the given 16-bit runtime ID.
-void gsfts::Transport::SignalIndexCache::GetMeasurementKey(
+void SignalIndexCache::GetMeasurementKey(
 	uint16_t signalIndex,
-	gsfts::Guid& signalID,
-	std::string& source,
+	Guid& signalID,
+	string& source,
 	uint32_t& id) const
 {
-	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
+	size_t vectorIndex = m_reference.find(signalIndex)->second;
 
 	signalID = m_signalIDList[vectorIndex];
 	source = m_sourceList[vectorIndex];
@@ -98,9 +99,9 @@ void gsfts::Transport::SignalIndexCache::GetMeasurementKey(
 }
 
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-unsigned short gsfts::Transport::SignalIndexCache::GetSignalIndex(gsfts::Guid signalID) const
+uint16_t SignalIndexCache::GetSignalIndex(Guid signalID) const
 {
-	std::map<gsfts::Guid, uint16_t>::const_iterator it;
+	map<Guid, uint16_t>::const_iterator it;
 	uint16_t signalIndex = 0xFFFF;
 
 	it = m_signalIDCache.find(signalID);

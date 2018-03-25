@@ -12,53 +12,46 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Convert.h" />
+    <ClCompile Include="Common\Convert.cpp" />
     <ClInclude Include="Common\EndianConverter.h" />
-    <ClInclude Include="Common\Measurement.h" />
+    <ClCompile Include="Common\EndianConverter.cpp" />
     <ClInclude Include="Common\ThreadSafeQueue.h" />
     <ClInclude Include="Common\Types.h" />
-    <ClInclude Include="Common\Version.h" />
-    <ClInclude Include="Samples\SubscriberInstance.h" />
-    <ClInclude Include="Transport\CompactMeasurementParser.h" />
-    <ClInclude Include="Transport\Constants.h" />
-    <ClInclude Include="Transport\DataSubscriber.h" />
-    <ClInclude Include="Transport\GatewayMeasurementParser.h" />
-    <ClInclude Include="Transport\SignalIndexCache.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Common\Convert.cpp" />
-    <ClCompile Include="Common\EndianConverter.cpp" />
-    <ClCompile Include="Samples\AdvancedSubscribe.cpp" />
-    <ClCompile Include="Samples\AverageFrequencyCalculator.cpp" />
-    <ClCompile Include="Samples\SimpleSubscribe.cpp" />
-    <ClCompile Include="Samples\SubscriberInstance.cpp" />
+    <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
+    <ClInclude Include="Transport\Constants.h" />
+    <ClInclude Include="Transport\DataSubscriber.h" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
+    <ClInclude Include="Transport\SignalIndexCache.h" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
+    <ClInclude Include="Transport\SubscriberInstance.h" />
+    <ClCompile Include="Transport\SubscriberInstance.cpp" />
+    <ClInclude Include="Transport\Types.h" />
+    <ClCompile Include="Transport\Types.cpp" />
+    <ClInclude Include="Transport\Version.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
-    <None Include="Common\Version.h.in" />
     <None Include="README.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A542BE8-8D17-44C3-BCD2-768DF480FF82}</ProjectGuid>
-    <SccProjectName>SAK</SccProjectName>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccProvider>SAK</SccProvider>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <RootNamespace>TSFPlatformLibrary</RootNamespace>
     <ProjectName>TimeSeriesPlatformLibrary</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
@@ -76,15 +69,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)\Libraries\TSFPlatformLibrary\Include;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\Build\Output\$(Configuration)\Libraries\</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)\Libraries\TSFPlatformLibrary\Include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\Build\Output\$(Configuration)\Libraries\</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <CompileAs>Default</CompileAs>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -96,6 +98,12 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <CompileAs>Default</CompileAs>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

@@ -23,10 +23,10 @@
 
 #include "EndianConverter.h"
 
-namespace gsfts = GSF::TimeSeries;
+using namespace GSF::TimeSeries;
 
 // Creates a new instance of the EndianConverter.
-gsfts::EndianConverter::EndianConverter()
+EndianConverter::EndianConverter()
 {
 	union
 	{
@@ -42,15 +42,20 @@ gsfts::EndianConverter::EndianConverter()
 
 // Swaps the bytes in a character array.
 // Used for conversion between different byte orders.
-void gsfts::EndianConverter::ByteSwap(uint8_t* value, std::size_t length) const
+void EndianConverter::ByteSwap(uint8_t* value, size_t length) const
 {
 	uint8_t *start, *end;
 	uint8_t temp;
 
-	for(start = value, end = value + length - 1; start < end; ++start, --end)
+	for (start = value, end = value + length - 1; start < end; ++start, --end)
 	{
 		temp = *start;
 		*start = *end;
 		*end = temp;
 	}
+}
+
+int EndianConverter::NativeOrder() const
+{
+	return m_nativeOrder;
 }

@@ -27,56 +27,56 @@
 #include <map>
 
 #include "../Common/Convert.h"
-#include "../Common/Measurement.h"
 #include "../Transport/DataSubscriber.h"
 
-namespace gsfts = GSF::TimeSeries;
-namespace tst = gsfts::Transport;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
 
-tst::DataSubscriber Subscriber;
-tst::SubscriptionInfo Info;
+DataSubscriber Subscriber;
+SubscriptionInfo Info;
 
 // Create helper objects for subscription.
-tst::SubscriberConnector CreateSubscriberConnector(std::string hostname, uint16_t port);
-tst::SubscriptionInfo CreateSubscriptionInfo();
+SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port);
+SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
-void Resubscribe(tst::DataSubscriber* source);
-void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> newMeasurements);
-void DisplayStatusMessage(tst::DataSubscriber* source, std::string message);
-void DisplayErrorMessage(tst::DataSubscriber* source, std::string message);
+void Resubscribe(DataSubscriber* source);
+void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurements);
+void DisplayStatusMessage(DataSubscriber* source, string message);
+void DisplayErrorMessage(DataSubscriber* source, string message);
 
 // Runs the subscriber.
-void RunSubscriber(std::string hostname, gsfts::uint16_t port);
+void RunSubscriber(string hostname, uint16_t port);
 
 // Sample application to demonstrate average frequency calculation using the subscriber API.
 int main(int argc, char* argv[])
 {
-	std::string hostname;
-	gsfts::uint16_t port;
+	string hostname;
+	uint16_t port;
 
 	// Ensure that the necessary
 	// command line arguments are given.
 	if (argc < 3)
 	{
-		std::cout << "Usage:" << std::endl;
-		std::cout << "    AverageFrequencyCalculator HOSTNAME PORT" << std::endl;
+		cout << "Usage:" << endl;
+		cout << "    AverageFrequencyCalculator HOSTNAME PORT" << endl;
 		return 0;
 	}
 
 	// Get hostname and port.
 	hostname = argv[1];
-	std::stringstream(argv[2]) >> port;
+	stringstream(argv[2]) >> port;
 
 	// Run the subscriber.
 	RunSubscriber(hostname, port);
 
 	// Wait until the user presses enter before quitting.
-	std::string line;
-	std::getline(std::cin, line);
+	string line;
+	getline(cin, line);
 	
 	// Disconnect the subscriber to stop background threads.
 	Subscriber.Disconnect();
+	cout << "Disconnected." << endl;
 
 	return 0;
 }
@@ -86,11 +86,11 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Connect to publisher
 //   - Subscribe
-void RunSubscriber(std::string hostname, gsfts::uint16_t port)
+void RunSubscriber(string hostname, uint16_t port)
 {
 	// The connector is declared here because it
 	// is only needed for the initial connection
-	tst::SubscriberConnector connector;
+	SubscriberConnector connector;
 
 	// Set up helper objects
 	connector = CreateSubscriberConnector(hostname, port);
@@ -101,17 +101,25 @@ void RunSubscriber(std::string hostname, gsfts::uint16_t port)
 	Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
 
 	// Connect and subscribe to publisher
+	cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
+
+	// Connect and subscribe to publisher
 	if (connector.Connect(Subscriber))
+	{
+		cout << "Connected! Subscribing to data..." << endl << endl;
 		Subscriber.Subscribe(Info);
+	}
 	else
-		std::cerr << "All connection attempts failed" << std::endl;
+	{
+		cout << "Connection attempts exceeded. Press enter to exit." << endl;
+	}
 }
 
-tst::SubscriptionInfo CreateSubscriptionInfo()
+SubscriptionInfo CreateSubscriptionInfo()
 {
 	// SubscriptionInfo is a helper object which allows the user
 	// to set up their subscription and reuse subscription settings.
-	tst::SubscriptionInfo info;
+	SubscriptionInfo info;
 
 	info.FilterExpression = "FILTER ActiveMeasurements WHERE SignalType = 'FREQ'";
 	info.NewMeasurementsCallback = &ProcessMeasurements;
@@ -131,11 +139,11 @@ tst::SubscriptionInfo CreateSubscriptionInfo()
 	return info;
 }
 
-tst::SubscriberConnector CreateSubscriberConnector(std::string hostname, gsfts::uint16_t port)
+SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port)
 {
 	// SubscriberConnector is another helper object which allows the
 	// user to modify settings for auto-reconnects and retry cycles.
-	tst::SubscriberConnector connector;
+	SubscriberConnector connector;
 
 	connector.RegisterErrorMessageCallback(&DisplayErrorMessage);
 	connector.RegisterReconnectCallback(&Resubscribe);
@@ -151,20 +159,20 @@ tst::SubscriberConnector CreateSubscriberConnector(std::string hostname, gsfts::
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> newMeasurements)
+void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurements)
 {
 	const double LoFrequency = 57.0;
 	const double HiFrequency = 62.0;
 	const double HzResolution = 1000.0; // three decimal places
 
-	const std::string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-	const std::size_t MaxTimestampSize = 80;
+	const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
+	const size_t MaxTimestampSize = 80;
 
-	static std::map<gsfts::Guid, int> m_lastValues;
+	static map<Guid, int> m_lastValues;
 
-	std::map<gsfts::Guid, int>::iterator lastValueIter;
-	gsfts::Measurement currentMeasurement;
-	gsfts::Guid signalID;
+	map<Guid, int>::iterator lastValueIter;
+	Measurement currentMeasurement;
+	Guid signalID;
 
 	double frequency;
 	double frequencyTotal;
@@ -175,24 +183,24 @@ void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measure
 	int total;
 
 	char timestamp[MaxTimestampSize];
-	std::size_t i;
+	size_t i;
 
 	frequencyTotal = 0.0;
 	total = 0;
 
-	std::cout << Subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << std::endl;
+	cout << Subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
 	if (newMeasurements.size() > 0)
 	{
-		if (gsfts::TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
-			std::cout << "Timestamp: " << std::string(timestamp) << std::endl;
+		if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
+			cout << "Timestamp: " << string(timestamp) << endl;
 
-		std::cout << "Point\tValue" << std::endl;
+		cout << "Point\tValue" << endl;
 
 		for (i = 0; i < newMeasurements.size(); ++i)
-			std::cout << newMeasurements[i].ID << '\t' << newMeasurements[i].Value << std::endl;
+			cout << newMeasurements[i].ID << '\t' << newMeasurements[i].Value << endl;
 
-		std::cout << std::endl;
+		cout << endl;
 
 		for (i = 0; i < newMeasurements.size(); ++i)
 		{
@@ -235,28 +243,36 @@ void ProcessMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measure
 
 		if (total > 0)
 		{
-			std::cout << "Avg frequency: " << (frequencyTotal / total) << std::endl;
-			std::cout << "Max frequency: " << maximumFrequency << std::endl;
-			std::cout << "Min frequency: " << minimumFrequency << std::endl << std::endl;
+			cout << "Avg frequency: " << (frequencyTotal / total) << endl;
+			cout << "Max frequency: " << maximumFrequency << endl;
+			cout << "Min frequency: " << minimumFrequency << endl << endl;
 		}
 	}
 }
 
 // Callback that is called when the subscriber auto-reconnects.
-void Resubscribe(tst::DataSubscriber* source)
+void Resubscribe(DataSubscriber* source)
 {
 	if (source->IsConnected())
+	{
+		cout << "Reconnected! Subscribing to data..." << endl << endl;
 		source->Subscribe(Info);
+	}
+	else
+	{
+		source->Disconnect();
+		cout << "Connection retry attempts exceeded. Press enter to exit." << endl;
+	}
 }
 
 // Callback which is called to display status messages from the subscriber.
-void DisplayStatusMessage(tst::DataSubscriber* source, std::string message)
+void DisplayStatusMessage(DataSubscriber* source, string message)
 {
-	std::cout << message << std::endl << std::endl;
+	cout << message << endl << endl;
 }
 
 // Callback which is called to display error messages from the connector and subscriber.
-void DisplayErrorMessage(tst::DataSubscriber* source, std::string message)
+void DisplayErrorMessage(DataSubscriber* source, string message)
 {
-	std::cerr << message << std::endl << std::endl;
+	cerr << message << endl << endl;
 }

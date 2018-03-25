@@ -23,11 +23,25 @@
 
 #include "CompactMeasurementParser.h"
 
-namespace gsfts = GSF::TimeSeries;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
+
+CompactMeasurementParser::CompactMeasurementParser(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets, bool includeTime, bool useMillisecondResolution) :
+	m_signalIndexCache(signalIndexCache),
+	m_baseTimeOffsets(baseTimeOffsets),
+	m_includeTime(includeTime),
+	m_useMillisecondResolution(useMillisecondResolution)
+{
+}
+
+Measurement CompactMeasurementParser::GetParsedMeasurement() const
+{
+	return m_parsedMeasurement;
+}
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
-uint32_t gsfts::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags) const
+uint32_t CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags) const
 {
 	unsigned int fullFlags = 0;
 
@@ -53,9 +67,9 @@ uint32_t gsfts::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t comp
 }
 
 // Gets the byte length of measurements parsed by this parser.
-std::size_t gsfts::Transport::CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
+size_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
 {
-	std::size_t byteLength = 7;
+	size_t byteLength = 7;
 
 	if (m_includeTime)
 	{
@@ -73,20 +87,20 @@ std::size_t gsfts::Transport::CompactMeasurementParser::GetMeasurementByteLength
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool gsfts::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, std::size_t& offset, std::size_t& length)
+bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offset, size_t& length)
 {
 	uint8_t compactFlags;
 	uint16_t signalIndex;
 	Guid signalID;
-	std::string measurementSource;
+	string measurementSource;
 	uint32_t measurementID;
 	float32_t measurementValue;
 	int64_t timestamp = 0;
 
 	bool usingBaseTimeOffset;
-	std::size_t timeIndex;
+	size_t timeIndex;
 
-	std::size_t end = offset + length;
+	size_t end = offset + length;
 
 	// Ensure that we at least have enough
 	// data to read the compact state flags
@@ -96,7 +110,7 @@ bool gsfts::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t* bu
 	// Read the compact state flags to determine
 	// the size of the measurement being parsed
 	compactFlags = buffer[offset] & 0xFF;
-	usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag);
+	usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag) != 0;
 	timeIndex = (compactFlags & CompactTimeIndexFlag) ? 1 : 0;
 
 	// If we are using base time offsets, ensure that it is defined

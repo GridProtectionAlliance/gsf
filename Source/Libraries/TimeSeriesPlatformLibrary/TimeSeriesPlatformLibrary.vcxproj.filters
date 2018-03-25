@@ -1,88 +1,73 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Transport\SignalIndexCache.h">
-      <Filter>Transport</Filter>
+    <ClCompile Include="Common\Convert.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClInclude Include="Common\Convert.h">
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Transport\CompactMeasurementParser.h">
-      <Filter>Transport</Filter>
-    </ClInclude>
-    <ClInclude Include="Transport\GatewayMeasurementParser.h">
-      <Filter>Transport</Filter>
-    </ClInclude>
+    <ClCompile Include="Common\EndianConverter.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClInclude Include="Common\EndianConverter.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\ThreadSafeQueue.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Common\Types.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Measurement.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Transport\DataSubscriber.h">
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Transport\CompactMeasurementParser.cpp">
       <Filter>Transport</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\ThreadSafeQueue.h">
-      <Filter>Common</Filter>
+    </ClCompile>
+    <ClInclude Include="Transport\CompactMeasurementParser.h">
+      <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="Transport\Constants.h">
       <Filter>Transport</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Convert.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\Version.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Samples\SubscriberInstance.h">
-      <Filter>Samples</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Transport\SignalIndexCache.cpp">
-      <Filter>Transport</Filter>
-    </ClCompile>
-    <ClCompile Include="Transport\CompactMeasurementParser.cpp">
-      <Filter>Transport</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\EndianConverter.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="Transport\DataSubscriber.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="Samples\AdvancedSubscribe.cpp">
-      <Filter>Samples</Filter>
+    <ClInclude Include="Transport\DataSubscriber.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClCompile Include="Transport\SignalIndexCache.cpp">
+      <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="Samples\SimpleSubscribe.cpp">
-      <Filter>Samples</Filter>
+    <ClInclude Include="Transport\SignalIndexCache.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClCompile Include="Transport\SubscriberInstance.cpp">
+      <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="Common\Convert.cpp">
-      <Filter>Common</Filter>
+    <ClInclude Include="Transport\SubscriberInstance.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClCompile Include="Transport\Types.cpp">
+      <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="Samples\AverageFrequencyCalculator.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="Samples\SubscriberInstance.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
+    <ClInclude Include="Transport\Types.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\Version.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Transport">
-      <UniqueIdentifier>{0f19b432-ab9c-4d18-9a92-f80c87dc20c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{e88bc1e0-d6ef-458b-8c07-4ca6aa8f916c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Samples">
-      <UniqueIdentifier>{25c46a62-2d85-46ae-a6ad-bd13b252d63c}</UniqueIdentifier>
+    <Filter Include="Transport">
+      <UniqueIdentifier>{0f19b432-ab9c-4d18-9a92-f80c87dc20c7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
-    <None Include="Common\Version.h.in">
-      <Filter>Common</Filter>
-    </None>
     <None Include="README.txt" />
   </ItemGroup>
 </Project>

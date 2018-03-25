@@ -24,29 +24,30 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-#include <string>
+
 #include "Convert.h"
 
-namespace gsfts = GSF::TimeSeries;
+using namespace std;
+using namespace GSF::TimeSeries;
 
-void GSF::TimeSeries::GetUnixTime(gsfts::int64_t ticks, std::time_t& unixSOC, int& milliseconds)
+void GSF::TimeSeries::GetUnixTime(int64_t ticks, time_t& unixSOC, int16_t& milliseconds)
 {
 	// Unix dates are measured as the number of seconds since 1/1/1970
 	const int64_t BaseTimeOffset = 621355968000000000L;
 
-	unixSOC = (std::time_t)((ticks - BaseTimeOffset) / 10000000);
-	milliseconds = (int)(ticks / 10000 % 1000);
+	unixSOC = (time_t)((ticks - BaseTimeOffset) / 10000000);
+	milliseconds = (int16_t)(ticks / 10000 % 1000);
 }
 
-std::size_t GSF::TimeSeries::TicksToString(char* ptr, std::size_t maxsize, std::string format, gsfts::int64_t ticks)
+size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks)
 {
-	std::time_t fromSeconds;
-	int milliseconds;
+	time_t fromSeconds;
+	int16_t milliseconds;
 
 	GetUnixTime(ticks, fromSeconds, milliseconds);
-	
-	std::stringstream formatStream;
-	std::size_t formatIndex = 0;
+
+	stringstream formatStream;
+	size_t formatIndex = 0;
 
 	while (formatIndex < format.size())
 	{
@@ -69,8 +70,8 @@ std::size_t GSF::TimeSeries::TicksToString(char* ptr, std::size_t maxsize, std::
 		{
 		case 'f':
 		{
-			std::stringstream temp;
-			temp << std::setw(3) << std::setfill('0') << milliseconds;
+			stringstream temp;
+			temp << setw(3) << setfill('0') << milliseconds;
 			formatStream << temp.str();
 			break;
 		}
@@ -85,5 +86,8 @@ std::size_t GSF::TimeSeries::TicksToString(char* ptr, std::size_t maxsize, std::
 		}
 	}
 
-	return std::strftime(ptr, maxsize, formatStream.str().data(), std::localtime(&fromSeconds));
+	struct tm timeinfo;
+	localtime_s(&timeinfo, &fromSeconds);
+
+	return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }

@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  GatewayMeasurementParser.h - Gbtc
+//  Version.h - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,36 +16,15 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/09/2012 - Stephen C. Wills
+//  04/12/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-#ifndef __GATEWAY_MEASUREMENT_PARSER_H
-#define __GATEWAY_MEASUREMENT_PARSER_H
+#ifndef __VERSION_H
+#define __VERSION_H
 
-#include <cstddef>
-#include "../Common/Measurement.h"
-#include "../Common/Types.h"
-
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
-{
-	// Base class for measurement parsers.
-	class GatewayMeasurementParser
-	{
-	public:
-		// Attempts to parse a measurement from the buffer. Return value of false indicates
-		// that there is not enough data to parse the measurement. Offset and length will be
-		// updated by this method to indicate how many bytes were used when parsing.
-		// Measurements can be partially parsed if there is not enough data in the buffer,
-		// as long as parsing can be resumed by calling this method again with more data.
-		virtual bool TryParseMeasurement(uint8_t* buffer, std::size_t& offset, std::size_t& length) = 0;
-
-		// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
-		virtual Measurement GetParsedMeasurement() const = 0;
-	};
-}}}
+#define GSFTS_VERSION "0.9.1"
+#define GSFTS_BUILD_DATE "April 2018"
 
 #endif

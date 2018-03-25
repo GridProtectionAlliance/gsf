@@ -26,11 +26,8 @@
 
 #include <cstddef>
 
-#include "../Common/Measurement.h"
-#include "../Common/Types.h"
 #include "../Common/EndianConverter.h"
-
-#include "GatewayMeasurementParser.h"
+#include "Types.h"
 #include "SignalIndexCache.h"
 
 namespace GSF {
@@ -38,14 +35,14 @@ namespace TimeSeries {
 namespace Transport
 {
 	// Parser for the compact measurement format of the Gateway Exchange Protocol.
-	class CompactMeasurementParser : public GatewayMeasurementParser
+	class CompactMeasurementParser
 	{
 	private:
 		EndianConverter m_endianConverter;
 		Measurement m_parsedMeasurement;
 		
 		SignalIndexCache& m_signalIndexCache;
-		long* m_baseTimeOffsets;
+		int64_t* m_baseTimeOffsets;
 		bool m_includeTime;
 		bool m_useMillisecondResolution;
 
@@ -54,25 +51,19 @@ namespace Transport
 		uint32_t MapToFullFlags(uint8_t compactFlags) const;
 
 		// Gets the byte length of measurements parsed by this parser.
-		std::size_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
+		size_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
 
 	public:
 		// Creates a new instance of the compact measurement parser.
-		CompactMeasurementParser(SignalIndexCache& signalIndexCache, long* baseTimeOffsets = 0, bool includeTime = true, bool useMillisecondResolution = false)
-			: m_signalIndexCache(signalIndexCache), m_baseTimeOffsets(baseTimeOffsets), m_includeTime(includeTime), m_useMillisecondResolution(useMillisecondResolution)
-		{
-		}
+		CompactMeasurementParser(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets = 0, bool includeTime = true, bool useMillisecondResolution = false);
 
 		// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
-		Measurement GetParsedMeasurement() const
-		{
-			return m_parsedMeasurement;
-		}
+		Measurement GetParsedMeasurement() const;
 
 		// Attempts to parse a measurement from the buffer. Return value of false indicates
 		// that there is not enough data to parse the measurement. Offset and length will be
 		// updated by this method to indicate how many bytes were used when parsing.
-		bool TryParseMeasurement(uint8_t* buffer, std::size_t& offset, std::size_t& length);
+		bool TryParseMeasurement(uint8_t* buffer, size_t& offset, size_t& length);
 
 		// These constants represent each flag in the 8-bit compact measurement state flags.
 		static const uint8_t CompactDataRangeFlag       = 0x01;

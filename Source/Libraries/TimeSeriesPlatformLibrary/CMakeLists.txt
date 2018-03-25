@@ -8,7 +8,7 @@
 #  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
 #  not use this file except in compliance with the License. You may obtain a copy of the License at:
 #
-#      http:#www.opensource.org/licenses/eclipse-1.0.php
+#      http://opensource.org/licenses/MIT
 #
 #  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 #  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -24,8 +24,6 @@
 cmake_minimum_required (VERSION 2.8)
 project (TimeSeriesPlatformLibrary)
 
-set (GSFTS_VERSION 0.9.0)
-
 set (HEADER_OUTPUT_DIRECTORY Include/GSF)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY Output)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY Libraries)
@@ -38,12 +36,6 @@ set (headerFiles Common/Convert.h Common/EndianConverter.h Common/Measurement.h
 
 # Option to choose whether to build static or shared libraries
 option (BUILD_SHARED_LIBS "Build gsf using shared libraries" OFF)
-
-# Configure version header with the proper version
-configure_file (
-  "${PROJECT_SOURCE_DIR}/Common/Version.h.in"
-  "${PROJECT_SOURCE_DIR}/Common/Version.h"
-  )
 
 # Copy header files
 foreach (headerFile ${headerFiles})

@@ -24,8 +24,6 @@
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
 
-#include "../Common/Types.h"
-
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
@@ -87,6 +85,13 @@ namespace Transport
 		static const uint32_t BigEndianUnicode = 0x00000100;
 		static const uint32_t UTF8             = 0x00000200;
 		static const uint32_t ANSI             = 0x00000300;
+	};
+
+	struct CompressionModes
+	{
+		static const uint32_t GZip = 0x00000020;
+		static const uint32_t TSSC = 0x00000040;
+		static const uint32_t None = 0x00000000;
 	};
 }}}
 

@@ -21,52 +21,55 @@
 //
 //******************************************************************************************************
 
+#ifndef __SUBSCRIBERINSTANCE_H
+#define __SUBSCRIBERINSTANCE_H
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <ctime>
 
 #include "../Common/Convert.h"
-#include "../Common/Measurement.h"
-#include "../Transport/DataSubscriber.h"
+#include "DataSubscriber.h"
 
-namespace gsfts = GSF::TimeSeries;
-namespace tst = gsfts::Transport;
+using namespace std;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
 
 class SubscriberInstance
 {
 private:
 	// Subscription members
-	std::string m_hostname;
-	gsfts::uint16_t m_port;
-	gsfts::uint16_t m_udpPort;
-	std::string m_filterExpression;
-	tst::DataSubscriber m_subscriber;
-	tst::SubscriptionInfo m_info;
-	std::string m_startTime;
-	std::string m_stopTime;
-	gsfts::EndianConverter m_endianConverter;
+	string m_hostname;
+	uint16_t m_port;
+	uint16_t m_udpPort;
+	string m_filterExpression;
+	DataSubscriber m_subscriber;
+	SubscriptionInfo m_info;
+	string m_startTime;
+	string m_stopTime;
+	EndianConverter m_endianConverter;
 	void* m_userData;
 
 	// Internal subscription event handlers
-	static void HandleResubscribe(tst::DataSubscriber* source);
-	static void HandleStatusMessage(tst::DataSubscriber* source, std::string message);
-	static void HandleErrorMessage(tst::DataSubscriber* source, std::string message);
-	static void HandleDataStartTime(tst::DataSubscriber* source, gsfts::int64_t startTime);
-	static void HandleMetadata(tst::DataSubscriber* source, std::vector<uint8_t> payload);
-	static void HandleNewMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> measurements);
-	static void HandleProcessingComplete(tst::DataSubscriber* source, std::string message);
-	static void HandleConfigurationChanged(tst::DataSubscriber* source);
-	static void HandleConnectionTerminated(tst::DataSubscriber* source);
+	static void HandleResubscribe(DataSubscriber* source);
+	static void HandleStatusMessage(DataSubscriber* source, string message);
+	static void HandleErrorMessage(DataSubscriber* source, string message);
+	static void HandleDataStartTime(DataSubscriber* source, int64_t startTime);
+	static void HandleMetadata(DataSubscriber* source, vector<uint8_t> payload);
+	static void HandleNewMeasurements(DataSubscriber* source, vector<Measurement> measurements);
+	static void HandleProcessingComplete(DataSubscriber* source, string message);
+	static void HandleConfigurationChanged(DataSubscriber* source);
+	static void HandleConnectionTerminated(DataSubscriber* source);
 
 protected:
-	virtual tst::SubscriberConnector CreateSubscriberConnector();
-	virtual tst::SubscriptionInfo CreateSubscriptionInfo();
-	virtual void StatusMessage(std::string message);
-	virtual void ErrorMessage(std::string message);
-	virtual void DataStartTime(std::time_t unixSOC, int milliseconds);
-	virtual void ReceivedMetadata(std::vector<uint8_t> payload);
-	virtual void ReceivedNewMeasurements(std::vector<gsfts::Measurement> measurements);
+	virtual SubscriberConnector CreateSubscriberConnector();
+	virtual SubscriptionInfo CreateSubscriptionInfo();
+	virtual void StatusMessage(string message);
+	virtual void ErrorMessage(string message);
+	virtual void DataStartTime(time_t unixSOC, int milliseconds);
+	virtual void ReceivedMetadata(vector<uint8_t> payload);
+	virtual void ReceivedNewMeasurements(vector<Measurement> measurements);
 	virtual void ConfigurationChanged();
 	virtual void HistoricalReadComplete();
 	virtual void ConnectionEstablished();
@@ -85,7 +88,7 @@ public:
 	// Initialize a connection with host name, port. To enable UDP for data channel,
 	// optionally specify a UDP receive port. This function must be called before
 	// calling the Connect method.
-	void Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort = 0);
+	void Initialize(string hostname, uint16_t port, uint16_t udpPort = 0);
 
 	// The following are example filter expression formats:
 	//
@@ -108,7 +111,7 @@ public:
 	// defaults to all non-static points available. When specified before the Connect function,
 	// this filter expression will be used for the initial connection. Updating the filter
 	// expression while a subscription is active will cause a resubscribe with new expression.
-	void SetFilterExpression(std::string filterExpression);
+	void SetFilterExpression(string filterExpression);
 
 	// Starts the connection cycle to a GEP publisher. Upon connection, meta-data will be requested,
 	// when received, a subscription will be established
@@ -121,7 +124,7 @@ public:
 	
 	// Defines the desired time-range of data from the GEP publisher, if the publisher supports
 	// historical queries. If specified, this function must be called before Connect.
-	void EstablishHistoricalRead(std::string startTime, std::string stopTime);
+	void EstablishHistoricalRead(string startTime, string stopTime);
 
 	// Dynamically controls replay speed - can be updated while historical data is being received
 	void SetHistoricalReplayInterval(int32_t replayInterval);
@@ -142,3 +145,5 @@ public:
 	bool IsConnected() const;
 	bool IsSubscribed() const;
 };
+
+#endif

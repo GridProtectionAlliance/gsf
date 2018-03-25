@@ -21,35 +21,41 @@
 //
 //******************************************************************************************************
 
-#ifndef __TYPES_H
-#define __TYPES_H
+#ifndef __COMMON_TYPES_H
+#define __COMMON_TYPES_H
 
 #include <boost/uuid/uuid.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
+
+using namespace std;
 
 namespace GSF {
 namespace TimeSeries
 {
 	typedef boost::uuids::uuid Guid;
+	typedef boost::system::error_code ErrorCode;
+	typedef boost::system::system_error SystemError;
+	typedef boost::exception Exception;
+	typedef boost::thread Thread;
+	typedef boost::mutex Mutex;
+	typedef boost::condition_variable WaitHandle;
+	typedef boost::lock_guard<Mutex> ScopeLock;
+	typedef boost::unique_lock<Mutex> UniqueLock;
+	typedef boost::asio::ip::address IPAddress;
 	typedef boost::asio::ip::tcp::socket TcpSocket;
 	typedef boost::asio::ip::udp::socket UdpSocket;
-
-	// Signed integer types
-	typedef signed char		int8_t;
-	typedef short			int16_t;
-	typedef int				int32_t;
-	typedef long			int64_t;
-
-	// Unsigned integer types
-	typedef unsigned char	uint8_t;
-	typedef unsigned short	uint16_t;
-	typedef unsigned int	uint32_t;
-	typedef unsigned long	uint64_t;
+	typedef boost::asio::ip::tcp::resolver DnsResolver;
 
 	// Floating-point types
-	typedef float			float32_t;
-	typedef double			float64_t;
+	typedef float float32_t;
+	typedef double float64_t;
 }}
 
 #endif

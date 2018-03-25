@@ -1,6 +1,51 @@
-This file is intended to help developers build the Time Series Platform Library
-on Linux platforms. Similar instructions may apply to other platforms.
+This is the C++ implementation of the Gateway Exchange Protocol.
 
+Currently the code only exists as a "subscriber" for GEP.
+
+------------------------------------------------------------------------------
+Compiling in Visual Studio
+------------------------------------------------------------------------------
+
+To properly compile in Visual Studio, you will need to download Boost:
+	http://www.boost.org/users/download/
+
+By default, the GSF Time Series Platform Library project configuration adds an
+additional include directory for the Boost libraries in a parallel location to
+the Grid Solutions Framework project in a folder called "boost" regardless of
+version, for example:
+
+GSF Library files:
+	C:\Projects\gsf
+				   \Build
+				   \Source
+				   etc...
+
+Boost Library files:
+	C:\Projects\boost
+					 \boost
+					 \libs
+					 etc...
+
+If you have an existing Boost installation you can simply create a symbolic
+link to the folder, e.g., mklink /D C:\Projects\boost C:\boost_1_66_0
+
+Alternately you can adjust the additional include directories to your own
+Boost installation location for each of the build configurations. The code
+has been tested with version v1.66 of Boost, but will likely work with other
+versions as well.
+
+Note that you will need to build Boost in order to run the sample applications
+found in:
+
+	...\gsf\Source\Applications\TimeSeries Platform Library Samples
+
+------------------------------------------------------------------------------
+Compiling in Linux
+------------------------------------------------------------------------------
+
+The following information is intended to help developers build the GSF
+Time Series Platform Library on Linux platforms. Similar instructions may
+apply to other platforms.
 
 1. Dependencies
 ---------------
@@ -12,13 +57,12 @@ CMake v2.8 (http://www.cmake.org/)
 GNU Make (http://www.gnu.org/software/make/)
 	- Not required on a Windows platform
 
-Boost C++ Libraries v1.49.0 (http://www.boost.org/)
+Boost C++ Libraries v1.66.0 (http://www.boost.org/)
 	- Boost.Asio
 	- Boost.Bind
 	- Boost.System
 	- Boost.Thread
 	- Boost.Uuid
-
 
 2. Configuration
 ----------------

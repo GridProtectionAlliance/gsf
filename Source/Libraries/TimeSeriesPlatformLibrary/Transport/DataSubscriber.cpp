@@ -25,34 +25,60 @@
 
 #include <sstream>
 #include <exception>
-
 #include <boost/bind.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "../Common/Version.h"
-#include "Constants.h"
 #include "DataSubscriber.h"
+#include "Version.h"
+#include "Constants.h"
 #include "CompactMeasurementParser.h"
 
-namespace gsfts = GSF::TimeSeries;
+using namespace boost;
+using namespace boost::asio;
+using namespace boost::asio::ip;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
 
 // Convenience functions to perform simple conversions.
 template <class T>
-std::string ToString(const T& obj);
-gsfts::Guid ToGuid(uint8_t* data);
-void WriteHandler(const boost::system::error_code& error, std::size_t bytesTransferred);
-
+string ToString(const T& obj);
+Guid ToGuid(uint8_t* data);
+void WriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
 // --- DataSubscriber ---
 
-// Deconstructor calls disconnect to clean up after itself.
-gsfts::Transport::DataSubscriber::~DataSubscriber()
+DataSubscriber::DataSubscriber(bool compressMetadata) :
+	m_compressMetadata(compressMetadata),
+	m_disconnecting(false),
+	m_totalCommandChannelBytesReceived(0L),
+	m_totalDataChannelBytesReceived(0L),
+	m_totalMeasurementsReceived(0L),
+	m_connected(false),
+	m_subscribed(false),
+	m_commandChannelSocket(m_commandChannelService),
+	m_readBuffer(MaxPacketSize),
+	m_writeBuffer(MaxPacketSize),
+	m_dataChannelSocket(m_dataChannelService),
+	m_statusMessageCallback(0),
+	m_errorMessageCallback(0),
+	m_dataStartTimeCallback(0),
+	m_metadataCallback(0),
+	m_newMeasurementsCallback(0),
+	m_processingCompleteCallback(0),
+	m_configurationChangedCallback(0),
+	m_connectionTerminatedCallback(0)
+{
+	m_baseTimeOffsets[0] = 0;
+	m_baseTimeOffsets[1] = 0;
+}
+
+// Destructor calls disconnect to clean up after itself.
+DataSubscriber::~DataSubscriber()
 {
 	Disconnect();
 }
 
 // All callbacks are run from the callback thread from here.
-void gsfts::Transport::DataSubscriber::RunCallbackThread()
+void DataSubscriber::RunCallbackThread()
 {
 	CallbackDispatcher dispatcher;
 
@@ -70,19 +96,19 @@ void gsfts::Transport::DataSubscriber::RunCallbackThread()
 
 // All responses received from the server are handled by this thread with the
 // exception of data packets which may or may not be handled by this thread.
-void gsfts::Transport::DataSubscriber::RunCommandChannelResponseThread()
+void DataSubscriber::RunCommandChannelResponseThread()
 {
-	boost::asio::async_read(m_commandChannelSocket, boost::asio::buffer(m_commandChannelBuffer, PayloadHeaderSize), boost::bind(&gsfts::Transport::DataSubscriber::ReadPayloadHeader, this, _1, _2));
+	async_read(m_commandChannelSocket, asio::buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
 	m_commandChannelService.run();
 }
 
 // Callback for async read of the payload header.
-void gsfts::Transport::DataSubscriber::ReadPayloadHeader(const boost::system::error_code& error, std::size_t bytesTransferred)
+void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
 {
-	const std::size_t PayloadHeaderSize = 8;
-	const std::size_t PacketSizeOffset = 4;
+	const size_t PayloadHeaderSize = 8;
+	const size_t PacketSizeOffset = 4;
 
-	std::stringstream errorMessageStream;
+	stringstream errorMessageStream;
 
 	int32_t* packetSizePtr;
 	int32_t packetSize;
@@ -90,17 +116,17 @@ void gsfts::Transport::DataSubscriber::ReadPayloadHeader(const boost::system::er
 	if (m_disconnecting)
 		return;
 
-	if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
+	if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
 	{
 		// Connection closed by peer; terminate connection
-		boost::thread t(boost::bind(&gsfts::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
+		Thread t(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
 		return;
 	}
 		
 	if (error)
 	{
 		errorMessageStream << "Error reading data from command channel: ";
-		errorMessageStream << boost::system::system_error(error).what();
+		errorMessageStream << SystemError(error).what();
 		DispatchErrorMessage(errorMessageStream.str());
 		return;
 	}
@@ -109,37 +135,37 @@ void gsfts::Transport::DataSubscriber::ReadPayloadHeader(const boost::system::er
 	m_totalCommandChannelBytesReceived += PayloadHeaderSize;
 
 	// Parse payload header
-	packetSizePtr = (int32_t*)&m_commandChannelBuffer[PacketSizeOffset];
+	packetSizePtr = (int32_t*)&m_readBuffer[PacketSizeOffset];
 	packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
 
-	if (packetSize > m_commandChannelBuffer.size())
-		m_commandChannelBuffer.resize(packetSize);
+	if (packetSize > (int32_t)m_readBuffer.size())
+		m_readBuffer.resize(packetSize);
 
 	// Read packet (payload body)
 	// This read method is guaranteed not to return until the
 	// requested size has been read or an error has occurred.
-	boost::asio::async_read(m_commandChannelSocket, boost::asio::buffer(m_commandChannelBuffer, packetSize), boost::bind(&gsfts::Transport::DataSubscriber::ReadPacket, this, _1, _2));
+	async_read(m_commandChannelSocket, asio::buffer(m_readBuffer, packetSize), bind(&DataSubscriber::ReadPacket, this, _1, _2));
 }
 
 // Callback for async read of packets.
-void gsfts::Transport::DataSubscriber::ReadPacket(const boost::system::error_code& error, std::size_t bytesTransferred)
+void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
 {
-	std::stringstream errorMessageStream;
+	stringstream errorMessageStream;
 
 	if (m_disconnecting)
 		return;
 
-	if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
+	if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
 	{
 		// Connection closed by peer; terminate connection
-		boost::thread t(boost::bind(&gsfts::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
+		Thread t(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
 		return;
 	}
 
 	if (error)
 	{
 		errorMessageStream << "Error reading data from command channel: ";
-		errorMessageStream << boost::system::system_error(error).what();
+		errorMessageStream << SystemError(error).what();
 		DispatchErrorMessage(errorMessageStream.str());
 		return;
 	}
@@ -148,26 +174,26 @@ void gsfts::Transport::DataSubscriber::ReadPacket(const boost::system::error_cod
 	m_totalCommandChannelBytesReceived += bytesTransferred;
 
 	// Process response
-	ProcessServerResponse(&m_commandChannelBuffer[0], 0, bytesTransferred);
+	ProcessServerResponse(&m_readBuffer[0], 0, bytesTransferred);
 
 	// Read next payload header
-	boost::asio::async_read(m_commandChannelSocket, boost::asio::buffer(m_commandChannelBuffer, PayloadHeaderSize), boost::bind(&gsfts::Transport::DataSubscriber::ReadPayloadHeader, this, _1, _2));
+	async_read(m_commandChannelSocket, asio::buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
 }
 
 // If the user defines a separate UDP channel for their
 // subscription, data packets get handled from this thread.
-void gsfts::Transport::DataSubscriber::RunDataChannelResponseThread()
+void DataSubscriber::RunDataChannelResponseThread()
 {
-	std::vector<uint8_t> buffer(MaxPacketSize);
-	std::size_t length;
+	vector<uint8_t> buffer(MaxPacketSize);
+	size_t length;
 
-	boost::asio::ip::udp::endpoint endpoint(m_hostAddress, 0);
-	boost::system::error_code error;
-	std::stringstream errorMessageStream;
+	udp::endpoint endpoint(m_hostAddress, 0);
+	ErrorCode error;
+	stringstream errorMessageStream;
 
 	while (true)
 	{
-		length = m_dataChannelSocket.receive_from(boost::asio::buffer(buffer), endpoint, 0, error);
+		length = m_dataChannelSocket.receive_from(asio::buffer(buffer), endpoint, 0, error);
 
 		if (m_disconnecting)
 			break;
@@ -175,7 +201,7 @@ void gsfts::Transport::DataSubscriber::RunDataChannelResponseThread()
 		if (error)
 		{
 			errorMessageStream << "Error reading data from command channel: ";
-			errorMessageStream << boost::system::system_error(error).what();
+			errorMessageStream << SystemError(error).what();
 			DispatchErrorMessage(errorMessageStream.str());
 			break;
 		}
@@ -185,12 +211,12 @@ void gsfts::Transport::DataSubscriber::RunDataChannelResponseThread()
 }
 
 // Handles success messages received from the server.
-void gsfts::Transport::DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, size_t offset, size_t length)
 {
-	const std::size_t CharSize = sizeof(char);
+	const size_t CharSize = sizeof(char);
 
-	std::size_t messageLength = length / CharSize;
-	std::stringstream messageStream;
+	size_t messageLength = length / CharSize;
+	stringstream messageStream;
 
 	char* messageStart;
 	char* messageEnd;
@@ -216,7 +242,7 @@ void gsfts::Transport::DataSubscriber::HandleSucceeded(uint8_t commandCode, uint
 		// be delivered to the user via the status message callback.
 		messageStart = (char*)(data + offset);
 		messageEnd = messageStart + messageLength;
-		messageStream << "Received success code in response to server command 0x" << std::hex << (int)commandCode << ": ";
+		messageStream << "Received success code in response to server command 0x" << hex << (int)commandCode << ": ";
 
 		for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
 			messageStream << *messageIter;
@@ -228,19 +254,19 @@ void gsfts::Transport::DataSubscriber::HandleSucceeded(uint8_t commandCode, uint
 		// If we don't know what the message is, we can't interpret
 		// the data sent with the packet. Deliver an error message
 		// to the user via the error message callback.
-		messageStream << "Received success code in response to unknown server command 0x" << std::hex << (int)commandCode;
+		messageStream << "Received success code in response to unknown server command 0x" << hex << (int)commandCode;
 		DispatchErrorMessage(messageStream.str());
 		break;
 	}
 }
 
 // Handles failure messages from the server.
-void gsfts::Transport::DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, size_t offset, size_t length)
 {
-	const std::size_t CharSize = sizeof(char);
+	const size_t CharSize = sizeof(char);
 
-	std::size_t messageLength = length / CharSize;
-	std::stringstream messageStream;
+	size_t messageLength = length / CharSize;
+	stringstream messageStream;
 
 	char* messageStart;
 	char* messageEnd;
@@ -248,7 +274,7 @@ void gsfts::Transport::DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t
 
 	messageStart = (char*)(data + offset);
 	messageEnd = messageStart + messageLength;
-	messageStream << "Received failure code from server command 0x" << std::hex << (int)commandCode << ": ";
+	messageStream << "Received failure code from server command 0x" << hex << (int)commandCode << ": ";
 
 	for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
 		messageStream << *messageIter;
@@ -257,33 +283,33 @@ void gsfts::Transport::DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t
 }
 
 // Handles metadata refresh messages from the server.
-void gsfts::Transport::DataSubscriber::HandleMetadataRefresh(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleMetadataRefresh(uint8_t* data, size_t offset, size_t length)
 {
 	Dispatch(&MetadataDispatcher, data, offset, length);
 }
 
 // Handles data packets from the server.
-void gsfts::Transport::DataSubscriber::HandleDataPacket(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleDataPacket(uint8_t* data, size_t offset, size_t length)
 {
 	Dispatch(&NewMeasurementsDispatcher, data, offset, length);
 }
 
 // Handles data start time reported by the server at the beginning of a subscription.
-void gsfts::Transport::DataSubscriber::HandleDataStartTime(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleDataStartTime(uint8_t* data, size_t offset, size_t length)
 {
 	Dispatch(&DataStartTimeDispatcher, data, offset, length);
 }
 
 // Handles processing complete message sent by the server at the end of a temporal session.
-void gsfts::Transport::DataSubscriber::HandleProcessingComplete(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleProcessingComplete(uint8_t* data, size_t offset, size_t length)
 {
 	Dispatch(&ProcessingCompleteDispatcher, data, offset, length);
 }
 
 // Cache signal IDs sent by the server into the signal index cache.
-void gsfts::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, size_t length)
 {
-	const std::size_t CharSize = sizeof(char);
+	const size_t CharSize = sizeof(char);
 
 	int32_t* referenceCountPtr;
 	int32_t referenceCount;
@@ -296,11 +322,11 @@ void gsfts::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* dat
 
 	uint16_t signalIndex;
 	Guid signalID;
-	std::size_t sourceSize;
-	std::string source;
+	size_t sourceSize;
+	string source;
 	uint32_t id;
 
-	std::stringstream sourceStream;
+	stringstream sourceStream;
 	char* sourceIter;
 	int i;
 
@@ -322,7 +348,7 @@ void gsfts::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* dat
 		sourceSizePtr = (int32_t*)(signalIDPtr + 16);
 
 		// Get the source size now so we can use it to find the ID
-		sourceSize = (std::size_t)m_endianConverter.ConvertBigEndian(*sourceSizePtr) / CharSize;
+		sourceSize = (size_t)m_endianConverter.ConvertBigEndian(*sourceSizePtr) / CharSize;
 
 		// Continue setting up pointers
 		sourcePtr = (char*)(sourceSizePtr + 1);
@@ -352,34 +378,34 @@ void gsfts::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* dat
 }
 
 // Updates base time offsets.
-void gsfts::Transport::DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, size_t offset, size_t length)
 {
 	int32_t* timeIndexPtr = (int32_t*)(data + offset);
 	int64_t* timeOffsetsPtr = (int64_t*)(timeIndexPtr + 1);
 
-	m_timeIndex = (std::size_t)m_endianConverter.ConvertBigEndian(*timeIndexPtr);
+	m_timeIndex = (size_t)m_endianConverter.ConvertBigEndian(*timeIndexPtr);
 	m_baseTimeOffsets[0] = m_endianConverter.ConvertBigEndian(timeOffsetsPtr[0]);
 	m_baseTimeOffsets[1] = m_endianConverter.ConvertBigEndian(timeOffsetsPtr[1]);
 }
 
 // Handles configuration changed message sent by the server at the end of a temporal session.
-void gsfts::Transport::DataSubscriber::HandleConfigurationChanged(uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::HandleConfigurationChanged(uint8_t* data, size_t offset, size_t length)
 {
 	Dispatch(&ConfigurationChangedDispatcher);
 }
 
 // Dispatches the given function to the callback thread.
-void gsfts::Transport::DataSubscriber::Dispatch(DispatcherFunction function)
+void DataSubscriber::Dispatch(DispatcherFunction function)
 {
 	Dispatch(function, 0, 0, 0);
 }
 
 // Dispatches the given function to the callback thread and provides the given data to that function when it is called.
-void gsfts::Transport::DataSubscriber::Dispatch(DispatcherFunction function, uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::Dispatch(DispatcherFunction function, uint8_t* data, size_t offset, size_t length)
 {
 	CallbackDispatcher dispatcher;
-	std::vector<uint8_t> dataVector(length);
-	std::size_t i;
+	vector<uint8_t> dataVector(length);
+	size_t i;
 
 	if (data != 0)
 	{
@@ -395,27 +421,27 @@ void gsfts::Transport::DataSubscriber::Dispatch(DispatcherFunction function, uin
 }
 
 // Invokes the status message callback on the callback thread and provides the given message to it.
-void gsfts::Transport::DataSubscriber::DispatchStatusMessage(std::string message)
+void DataSubscriber::DispatchStatusMessage(string message)
 {
-	const std::size_t CharSize = sizeof(char);
-	std::size_t messageSize = message.size() * CharSize;
+	const size_t CharSize = sizeof(char);
+	size_t messageSize = message.size() * CharSize;
 	Dispatch(&StatusMessageDispatcher, (uint8_t*)message.data(), 0, messageSize);
 }
 
 // Invokes the error message callback on the callback thread and provides the given message to it.
-void gsfts::Transport::DataSubscriber::DispatchErrorMessage(std::string message)
+void DataSubscriber::DispatchErrorMessage(string message)
 {
-	const std::size_t CharSize = sizeof(char);
-	std::size_t messageSize = message.size() * CharSize;
+	const size_t CharSize = sizeof(char);
+	size_t messageSize = message.size() * CharSize;
 	Dispatch(&ErrorMessageDispatcher, (uint8_t*)message.data(), 0, messageSize);
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
-void gsfts::Transport::DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
 	MessageCallback statusMessageCallback = source->m_statusMessageCallback;
-	std::stringstream messageStream;
-	std::size_t i;
+	stringstream messageStream;
+	size_t i;
 
 	for (i = 0; i < data.size(); ++i)
 		messageStream << data[i];
@@ -425,11 +451,11 @@ void gsfts::Transport::DataSubscriber::StatusMessageDispatcher(DataSubscriber* s
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
-void gsfts::Transport::DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
 	MessageCallback errorMessageCallback = source->m_errorMessageCallback;
-	std::stringstream messageStream;
-	std::size_t i;
+	stringstream messageStream;
+	size_t i;
 
 	for (i = 0; i < data.size(); ++i)
 		messageStream << data[i];
@@ -439,7 +465,7 @@ void gsfts::Transport::DataSubscriber::ErrorMessageDispatcher(DataSubscriber* so
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
-void gsfts::Transport::DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
 	DataStartTimeCallback dataStartTimeCallback = source->m_dataStartTimeCallback;
 	EndianConverter endianConverter = source->m_endianConverter;
@@ -451,7 +477,7 @@ void gsfts::Transport::DataSubscriber::DataStartTimeDispatcher(DataSubscriber* s
 }
 
 // Dispatcher function for metadata. Provides encoded metadata to the user via the metadata callback.
-void gsfts::Transport::DataSubscriber::MetadataDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::MetadataDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
 	MetadataCallback metadataCallback = source->m_metadataCallback;
 
@@ -460,14 +486,14 @@ void gsfts::Transport::DataSubscriber::MetadataDispatcher(DataSubscriber* source
 }
 
 // Dispatcher function for new measurements. Decodes the measurements and provides them to the user via the new measurements callback.
-void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
 	NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
 	MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 	SubscriptionInfo& info = source->m_currentSubscription;
 
 	Measurement parsedMeasurement;
-	std::vector<Measurement> newMeasurements;
+	vector<Measurement> newMeasurements;
 
 	uint8_t dataPacketFlags;
 	int32_t* measurementCountPtr;
@@ -475,8 +501,8 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 	int64_t frameLevelTimestamp;
 
 	uint8_t* buffer;
-	std::size_t offset = 0;
-	std::size_t length = 0;
+	size_t offset = 0;
+	size_t length = 0;
 
 	bool includeTime = info.IncludeTime;
 
@@ -529,14 +555,13 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
-void gsfts::Transport::DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
-	const std::size_t CharSize = sizeof(char);
+	const size_t CharSize = sizeof(char);
 
 	MessageCallback processingCompleteCallback;
-
-	std::size_t messageLength;
-	std::stringstream messageStream;
+	size_t messageLength;
+	stringstream messageStream;
 
 	char* messageStart;
 	char* messageEnd;
@@ -558,7 +583,7 @@ void gsfts::Transport::DataSubscriber::ProcessingCompleteDispatcher(DataSubscrib
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
-void gsfts::Transport::DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
+void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, vector<uint8_t> data)
 {
 	source->m_configurationChangedCallback(source);
 }
@@ -567,7 +592,7 @@ void gsfts::Transport::DataSubscriber::ConfigurationChangedDispatcher(DataSubscr
 // in order to cleanly shut down the subscriber in case the connection was terminated
 // by the peer. Additionally, this allows the user to automatically reconnect in their
 // callback function without having to spawn their own separate thread.
-void gsfts::Transport::DataSubscriber::ConnectionTerminatedDispatcher()
+void DataSubscriber::ConnectionTerminatedDispatcher()
 {
 	Disconnect();
 
@@ -576,12 +601,12 @@ void gsfts::Transport::DataSubscriber::ConnectionTerminatedDispatcher()
 }
 
 // Processes a response sent by the server. Response codes are defined in the header file "Constants.h".
-void gsfts::Transport::DataSubscriber::ProcessServerResponse(uint8_t* buffer, std::size_t offset, std::size_t length)
+void DataSubscriber::ProcessServerResponse(uint8_t* buffer, size_t offset, size_t length)
 {
-	const std::size_t PacketHeaderSize = 6;
+	const size_t PacketHeaderSize = 6;
 
 	uint8_t* packetBodyStart = buffer + PacketHeaderSize;
-	std::size_t packetBodyLength = length - PacketHeaderSize;
+	size_t packetBodyLength = length - PacketHeaderSize;
 	
 	uint8_t responseCode = buffer[0];
 	uint8_t commandCode = buffer[1];
@@ -623,61 +648,61 @@ void gsfts::Transport::DataSubscriber::ProcessServerResponse(uint8_t* buffer, st
 }
 
 // Registers the status message callback.
-void gsfts::Transport::DataSubscriber::RegisterStatusMessageCallback(MessageCallback statusMessageCallback)
+void DataSubscriber::RegisterStatusMessageCallback(MessageCallback statusMessageCallback)
 {
 	m_statusMessageCallback = statusMessageCallback;
 }
 
 // Registers the error message callback.
-void gsfts::Transport::DataSubscriber::RegisterErrorMessageCallback(MessageCallback errorMessageCallback)
+void DataSubscriber::RegisterErrorMessageCallback(MessageCallback errorMessageCallback)
 {
 	m_errorMessageCallback = errorMessageCallback;
 }
 
 // Registers the data start time callback.
-void gsfts::Transport::DataSubscriber::RegisterDataStartTimeCallback(DataStartTimeCallback dataStartTimeCallback)
+void DataSubscriber::RegisterDataStartTimeCallback(DataStartTimeCallback dataStartTimeCallback)
 {
 	m_dataStartTimeCallback = dataStartTimeCallback;
 }
 
 // Registers the metadata callback.
-void gsfts::Transport::DataSubscriber::RegisterMetadataCallback(MetadataCallback metadataCallback)
+void DataSubscriber::RegisterMetadataCallback(MetadataCallback metadataCallback)
 {
 	m_metadataCallback = metadataCallback;
 }
 
 // Registers the new measurements callback.
-void gsfts::Transport::DataSubscriber::RegisterNewMeasurementsCallback(NewMeasurementsCallback newMeasurementsCallback)
+void DataSubscriber::RegisterNewMeasurementsCallback(NewMeasurementsCallback newMeasurementsCallback)
 {
 	m_newMeasurementsCallback = newMeasurementsCallback;
 }
 
 // Registers the processing complete callback.
-void gsfts::Transport::DataSubscriber::RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback)
+void DataSubscriber::RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback)
 {
 	m_processingCompleteCallback = processingCompleteCallback;
 }
 
 // Registers the configuration changed callback.
-void gsfts::Transport::DataSubscriber::RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback)
+void DataSubscriber::RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback)
 {
 	m_configurationChangedCallback = configurationChangedCallback;
 }
 
 // Registers the connection terminated callback.
-void gsfts::Transport::DataSubscriber::RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback)
+void DataSubscriber::RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback)
 {
 	m_connectionTerminatedCallback = connectionTerminatedCallback;
 }
 
 // Returns true if metadata exchange is compressed.
-bool gsfts::Transport::DataSubscriber::IsMetadataCompressed() const
+bool DataSubscriber::IsMetadataCompressed() const
 {
 	return m_compressMetadata;
 }
 
 // Set the value which determines whether metadata exchange is compressed.
-void gsfts::Transport::DataSubscriber::SetMetadataCompressed(bool compressed)
+void DataSubscriber::SetMetadataCompressed(bool compressed)
 {
 	m_compressMetadata = compressed;
 
@@ -686,25 +711,25 @@ void gsfts::Transport::DataSubscriber::SetMetadataCompressed(bool compressed)
 }
 
 // Gets user defined data reference
-void* gsfts::Transport::DataSubscriber::GetUserData() const
+void* DataSubscriber::GetUserData() const
 {
 	return m_userData;
 }
 
 // Sets user defined data reference
-void gsfts::Transport::DataSubscriber::SetUserData(void* userData)
+void DataSubscriber::SetUserData(void* userData)
 {
 	m_userData = userData;
 }
 
 // Synchronously connects to publisher.
-void gsfts::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port)
+void DataSubscriber::Connect(string hostname, uint16_t port)
 {
-	boost::asio::ip::tcp::resolver resolver(m_commandChannelService);
-	boost::asio::ip::tcp::resolver::query query(hostname, ToString(port));
-	boost::asio::ip::tcp::resolver::iterator endpointIterator = resolver.resolve(query);
-	boost::asio::ip::tcp::resolver::iterator hostEndpoint;
-	boost::system::error_code error;
+	DnsResolver resolver(m_commandChannelService);
+	DnsResolver::query query(hostname, ToString(port));
+	DnsResolver::iterator endpointIterator = resolver.resolve(query);
+	DnsResolver::iterator hostEndpoint;
+	ErrorCode error;
 
 	m_totalCommandChannelBytesReceived = 0L;
 	m_totalDataChannelBytesReceived = 0L;
@@ -713,37 +738,40 @@ void gsfts::Transport::DataSubscriber::Connect(std::string hostname, uint16_t po
 	if (m_connected)
 		throw SubscriberException("Subscriber is already connected; disconnect first");
 
-	hostEndpoint = boost::asio::connect(m_commandChannelSocket, endpointIterator, error);
+	hostEndpoint = connect(m_commandChannelSocket, endpointIterator, error);
 
 	if (error)
-		throw boost::system::system_error(error);
+		throw SystemError(error);
 
 	if (!m_commandChannelSocket.is_open())
 		throw SubscriberException("Failed to connect to host");
 
 	m_hostAddress = hostEndpoint->endpoint().address();
 
-	m_callbackThread = boost::thread(boost::bind(&gsfts::Transport::DataSubscriber::RunCallbackThread, this));
-	m_commandChannelResponseThread = boost::thread(boost::bind(&gsfts::Transport::DataSubscriber::RunCommandChannelResponseThread, this));
+	m_commandChannelService.restart();
+	m_callbackThread = Thread(bind(&DataSubscriber::RunCallbackThread, this));
+	m_commandChannelResponseThread = Thread(bind(&DataSubscriber::RunCommandChannelResponseThread, this));
 
 	SendOperationalModes();
 	m_connected = true;
 }
 
 // Disconnects from the publisher.
-void gsfts::Transport::DataSubscriber::Disconnect()
+void DataSubscriber::Disconnect()
 {
-	boost::system::error_code error;
+	ErrorCode error;
 
 	// Notify running threads that
 	// the subscriber is disconnecting
 	m_disconnecting = true;
+	m_connected = false;
+	m_subscribed = false;
 
 	// Release queues and close sockets so
 	// that threads can shut down gracefully
 	m_callbackQueue.Release();
 	m_commandChannelSocket.close(error);
-	m_dataChannelSocket.shutdown(boost::asio::ip::udp::socket::shutdown_receive, error);
+	m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
 	m_dataChannelSocket.close(error);
 
 	// Join with all threads to guarantee their completion
@@ -758,29 +786,27 @@ void gsfts::Transport::DataSubscriber::Disconnect()
 	m_callbackQueue.Reset();
 
 	// Disconnect completed
-	m_subscribed = false;
 	m_disconnecting = false;
-	m_connected = false;
 }
 
-// Subscribe to publisher in order to start receving data.
-void gsfts::Transport::DataSubscriber::Subscribe(gsfts::Transport::SubscriptionInfo info)
+// Subscribe to publisher in order to start receiving data.
+void DataSubscriber::Subscribe(SubscriptionInfo info)
 {
-	const std::size_t CharSize = sizeof(char);
+	const size_t CharSize = sizeof(char);
 
-	boost::asio::ip::udp ipVersion = boost::asio::ip::udp::v4();
+	udp ipVersion = udp::v4();
 
-	std::stringstream stringStream;
-	std::string connectionString;
+	stringstream stringStream;
+	string connectionString;
 
-	std::vector<uint8_t> buffer;
+	vector<uint8_t> buffer;
 	uint8_t* connectionStringPtr;
 	uint32_t connectionStringSize;
 	uint32_t bigEndianConnectionStringSize;
 	uint8_t* bigEndianConnectionStringSizePtr;
 
-	std::size_t bufferSize;
-	std::size_t i;
+	size_t bufferSize;
+	size_t i;
 
 	// Make sure to unsubscribe before attempting another
 	// subscription so we don't leave connections open
@@ -800,7 +826,7 @@ void gsfts::Transport::DataSubscriber::Subscribe(gsfts::Transport::SubscriptionI
 	stringStream << "useLocalClockAsRealTime=" << info.UseLocalClockAsRealTime << ";";
 	stringStream << "processingInterval=" << info.ProcessingInterval << ";";
 	stringStream << "useMillisecondResolution=" << info.UseMillisecondResolution << ";";
-	stringStream << "assemblyInfo={source=TimeSeriesPlatformLibrary;version=" GSFTS_VERSION ";buildDate=April 2012};";
+	stringStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" GSFTS_VERSION "; buildDate=" GSFTS_BUILD_DATE "};";
 	
 	if (!info.FilterExpression.empty())
 		stringStream << "inputMeasurementKeys={" << info.FilterExpression << "};";
@@ -808,12 +834,12 @@ void gsfts::Transport::DataSubscriber::Subscribe(gsfts::Transport::SubscriptionI
 	if (info.UdpDataChannel)
 	{
 		if (m_hostAddress.is_v6())
-			ipVersion = boost::asio::ip::udp::v6();
+			ipVersion = udp::v6();
 		
 		// Attempt to bind to local UDP port
 		m_dataChannelSocket.open(ipVersion);
-		m_dataChannelSocket.bind(boost::asio::ip::udp::endpoint(ipVersion, info.DataChannelLocalPort));
-		m_dataChannelResponseThread = boost::thread(boost::bind(&gsfts::Transport::DataSubscriber::RunDataChannelResponseThread, this));
+		m_dataChannelSocket.bind(udp::endpoint(ipVersion, info.DataChannelLocalPort));
+		m_dataChannelResponseThread = Thread(bind(&DataSubscriber::RunDataChannelResponseThread, this));
 
 		if (!m_dataChannelSocket.is_open())
 			throw SubscriberException("Failed to bind to local port");
@@ -829,12 +855,6 @@ void gsfts::Transport::DataSubscriber::Subscribe(gsfts::Transport::SubscriptionI
 
 	if (!info.ConstraintParameters.empty())
 		stringStream << "timeConstraintParameters=" << info.ConstraintParameters << ";";
-
-	if (!info.WaitHandleNames.empty())
-	{
-		stringStream << "waitHandleNames=" << info.WaitHandleNames << ";";
-		stringStream << "waitHandleTimeout=" << info.WaitHandleTimeout << ";";
-	}
 
 	if (!info.ExtraConnectionStringParameters.empty())
 		stringStream << info.ExtraConnectionStringParameters << ";";
@@ -862,18 +882,18 @@ void gsfts::Transport::DataSubscriber::Subscribe(gsfts::Transport::SubscriptionI
 }
 
 // Returns the subscription info object used to define the most recent subscription.
-gsfts::Transport::SubscriptionInfo gsfts::Transport::DataSubscriber::GetCurrentSubscription() const
+SubscriptionInfo DataSubscriber::GetCurrentSubscription() const
 {
 	return m_currentSubscription;
 }
 
 // Unsubscribe from publisher to stop receiving data.
-void gsfts::Transport::DataSubscriber::Unsubscribe()
+void DataSubscriber::Unsubscribe()
 {
-	boost::system::error_code error;
+	ErrorCode error;
 
 	m_disconnecting = true;
-	m_dataChannelSocket.shutdown(boost::asio::ip::udp::socket::shutdown_receive, error);
+	m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
 	m_dataChannelSocket.close(error);
 	m_dataChannelResponseThread.join();
 	m_disconnecting = false;
@@ -882,25 +902,23 @@ void gsfts::Transport::DataSubscriber::Unsubscribe()
 }
 
 // Sends a command to the server.
-void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode)
+void DataSubscriber::SendServerCommand(uint8_t commandCode)
 {
 	SendServerCommand(commandCode, 0, 0, 0);
 }
 
 // Sends a command along with the given message to the server.
-void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, std::string message)
+void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
 {
-	const std::size_t CharSize = sizeof(char);
+	const size_t CharSize = sizeof(char);
 
 	uint32_t bufferSize;
-	std::vector<uint8_t> buffer;
+	vector<uint8_t> buffer;
 
 	uint8_t* messagePtr;
 	uint32_t messageSize;
 	uint32_t bigEndianMessageSize;
 	uint8_t* bigEndianMessageSizePtr;
-	
-	int i;
 
 	messagePtr = (uint8_t*)&message[0];
 	messageSize = (uint32_t)(message.size() * CharSize);
@@ -915,49 +933,50 @@ void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, st
 	buffer[2] = bigEndianMessageSizePtr[2];
 	buffer[3] = bigEndianMessageSizePtr[3];
 
-	for (i = 0; i < messageSize; ++i)
+	for (uint32_t i = 0; i < messageSize; ++i)
 		buffer[4 + i] = messagePtr[i];
 
 	SendServerCommand(commandCode, &buffer[0], 0, bufferSize);
 }
 
 // Sends a command along with the given data to the server.
-void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length)
+void DataSubscriber::SendServerCommand(uint8_t commandCode, uint8_t* data, size_t offset, size_t length)
 {
-	std::size_t packetSize = 1 + length;
-	int32_t littleEndianPacketSize = m_endianConverter.ConvertLittleEndian((int32_t)packetSize);
+	int32_t packetSize = 1 + (int32_t)length;
+	int32_t littleEndianPacketSize = m_endianConverter.ConvertLittleEndian(packetSize);
 	uint8_t* littleEndianPacketSizePtr = (uint8_t*)&littleEndianPacketSize;
-
-	CommandPacket packet(8 + packetSize);
-	std::size_t i;
+	int32_t commandBufferSize = packetSize + 8;
 	
+	if (commandBufferSize > (int32_t)m_writeBuffer.size())
+		m_writeBuffer.resize(commandBufferSize);
+
 	// Insert payload marker
-	packet[0] = 0xAA;
-	packet[1] = 0xBB;
-	packet[2] = 0xCC;
-	packet[3] = 0xDD;
+	m_writeBuffer[0] = 0xAA;
+	m_writeBuffer[1] = 0xBB;
+	m_writeBuffer[2] = 0xCC;
+	m_writeBuffer[3] = 0xDD;
 
 	// Insert packet size
-	packet[4] = littleEndianPacketSizePtr[0];
-	packet[5] = littleEndianPacketSizePtr[1];
-	packet[6] = littleEndianPacketSizePtr[2];
-	packet[7] = littleEndianPacketSizePtr[3];
+	m_writeBuffer[4] = littleEndianPacketSizePtr[0];
+	m_writeBuffer[5] = littleEndianPacketSizePtr[1];
+	m_writeBuffer[6] = littleEndianPacketSizePtr[2];
+	m_writeBuffer[7] = littleEndianPacketSizePtr[3];
 
 	// Insert command code
-	packet[8] = commandCode;
+	m_writeBuffer[8] = commandCode;
 
 	if (data != 0)
 	{
-		for (i = 0; i < length; ++i)
-			packet[9 + i] = data[offset + i];
+		for (size_t i = 0; i < length; ++i)
+			m_writeBuffer[9 + i] = data[offset + i];
 	}
 
-	boost::asio::async_write(m_commandChannelSocket, boost::asio::buffer(packet), &WriteHandler);
+	async_write(m_commandChannelSocket, asio::buffer(m_writeBuffer, commandBufferSize), &WriteHandler);
 }
 
 // Convenience method to send the currently defined
 // and/or supported operational modes to the server.
-void gsfts::Transport::DataSubscriber::SendOperationalModes()
+void DataSubscriber::SendOperationalModes()
 {
 	uint32_t operationalModes = OperationalModes::NoFlags;
 	uint32_t bigEndianOperationalModes;
@@ -973,45 +992,44 @@ void gsfts::Transport::DataSubscriber::SendOperationalModes()
 }
 
 // Gets the total number of bytes received via the command channel since last connection.
-long gsfts::Transport::DataSubscriber::GetTotalCommandChannelBytesReceived() const
+long DataSubscriber::GetTotalCommandChannelBytesReceived() const
 {
 	return m_totalCommandChannelBytesReceived;
 }
 
 // Gets the total number of bytes received via the data channel since last connection.
-long gsfts::Transport::DataSubscriber::GetTotalDataChannelBytesReceived() const
+long DataSubscriber::GetTotalDataChannelBytesReceived() const
 {
 	return m_totalDataChannelBytesReceived;
 }
 
 // Gets the total number of measurements received since last subscription.
-long gsfts::Transport::DataSubscriber::GetTotalMeasurementsReceived() const
+long DataSubscriber::GetTotalMeasurementsReceived() const
 {
 	return m_totalMeasurementsReceived;
 }
 
 // Indicates whether the subscriber is connected.
-bool gsfts::Transport::DataSubscriber::IsConnected() const
+bool DataSubscriber::IsConnected() const
 {
 	return m_connected;
 }
 
 // Indicates whether the subscriber is subscribed.
-bool gsfts::Transport::DataSubscriber::IsSubscribed() const
+bool DataSubscriber::IsSubscribed() const
 {
 	return m_subscribed;
 }
 
-
 // --- SubscriberConnector ---
 
 // Static member variable definition.
-std::map<gsfts::Transport::DataSubscriber*, gsfts::Transport::SubscriberConnector> gsfts::Transport::SubscriberConnector::s_connectors;
+map<DataSubscriber*, SubscriberConnector> SubscriberConnector::s_connectors;
 
 // Auto-reconnect handler.
-void gsfts::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
+void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 {
-	std::map<DataSubscriber*, SubscriberConnector>::iterator connectorIter;
+	map<DataSubscriber*, SubscriberConnector>::iterator connectorIter;
 	connectorIter = s_connectors.find(subscriber);
 
 	if (connectorIter != s_connectors.end())
@@ -1032,19 +1050,19 @@ void gsfts::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscr
 
 // Registers a callback to provide error messages each time
 // the subscriber fails to connect during a connection sequence.
-void gsfts::Transport::SubscriberConnector::RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback)
+void SubscriberConnector::RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback)
 {
 	m_errorMessageCallback = errorMessageCallback;
 }
 
 // Registers a callback to notify after an automatic reconnection attempt has been made.
-void gsfts::Transport::SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectCallback)
+void SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectCallback)
 {
 	m_reconnectCallback = reconnectCallback;
 }
 
 // Begin connection sequence.
-bool gsfts::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
+bool SubscriberConnector::Connect(DataSubscriber& subscriber)
 {
 	if (m_autoReconnect)
 	{
@@ -1052,32 +1070,41 @@ bool gsfts::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
 		subscriber.RegisterConnectionTerminatedCallback(&AutoReconnect);
 	}
 
-	for (int i = 0; !m_cancel && (m_maxRetries == -1 || i < m_maxRetries); ++i)
+	for (int i = 0; !m_cancel && (m_maxRetries == -1 || i < m_maxRetries); i++)
 	{
-		std::string errorMessage;
+		string errorMessage;
+		bool connected = false;
 
 		try
 		{
 			subscriber.Connect(m_hostname, m_port);
+			connected = true;
 			break;
 		}
 		catch (SubscriberException ex)
 		{
 			errorMessage = ex.what();
 		}
-		catch (boost::system::system_error ex)
+		catch (SystemError ex)
 		{
 			errorMessage = ex.what();
 		}
+		catch (...)
+		{
+			errorMessage = current_exception_diagnostic_information(true);
+		}
 
-		if (!errorMessage.empty())
+		if (!connected)
 		{
 			if (m_errorMessageCallback != 0)
-				boost::thread th(boost::bind(m_errorMessageCallback, &subscriber, errorMessage));
+			{
+				errorMessage = "Failed to connect to \"" + m_hostname + ":" + to_string(m_port) + "\": " + errorMessage;
+				Thread th(bind(m_errorMessageCallback, &subscriber, errorMessage));
+			}
 
-			boost::asio::io_service io;
-			boost::asio::deadline_timer t(io, boost::posix_time::milliseconds(m_retryInterval));
-			t.wait();
+			io_service io;
+			deadline_timer timer(io, posix_time::milliseconds(m_retryInterval));
+			timer.wait();
 		}
 	}
 
@@ -1086,98 +1113,97 @@ bool gsfts::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
 
 // Cancel all current and
 // future connection sequences.
-void gsfts::Transport::SubscriberConnector::Cancel()
+void SubscriberConnector::Cancel()
 {
 	m_cancel = true;
 }
 
 // Set the hostname of the publisher to connect to.
-void gsfts::Transport::SubscriberConnector::SetHostname(std::string hostname)
+void SubscriberConnector::SetHostname(string hostname)
 {
 	m_hostname = hostname;
 }
 
 // Set the port that the publisher is listening on.
-void gsfts::Transport::SubscriberConnector::SetPort(uint16_t port)
+void SubscriberConnector::SetPort(uint16_t port)
 {
 	m_port = port;
 }
 
 // Set the maximum number of retries during a connection sequence.
-void gsfts::Transport::SubscriberConnector::SetMaxRetries(int maxRetries)
+void SubscriberConnector::SetMaxRetries(int maxRetries)
 {
 	m_maxRetries = maxRetries;
 }
 
 // Set the interval of idle time (in milliseconds) between connection attempts.
-void gsfts::Transport::SubscriberConnector::SetRetryInterval(int retryInterval)
+void SubscriberConnector::SetRetryInterval(int retryInterval)
 {
 	m_retryInterval = retryInterval;
 }
 
 // Set the flag that determines whether the subscriber should
 // automatically attempt to reconnect when the connection is terminated.
-void gsfts::Transport::SubscriberConnector::SetAutoReconnect(bool autoReconnect)
+void SubscriberConnector::SetAutoReconnect(bool autoReconnect)
 {
 	m_autoReconnect = autoReconnect;
 }
 
 // Gets the hostname of the publisher to connect to.
-std::string gsfts::Transport::SubscriberConnector::GetHostname() const
+string SubscriberConnector::GetHostname() const
 {
 	return m_hostname;
 }
 
 // Gets the port that the publisher is listening on.
-uint16_t gsfts::Transport::SubscriberConnector::GetPort() const
+uint16_t SubscriberConnector::GetPort() const
 {
 	return m_port;
 }
 
 // Gets the maximum number of retries during a connection sequence.
-int gsfts::Transport::SubscriberConnector::GetMaxRetries() const
+int SubscriberConnector::GetMaxRetries() const
 {
 	return m_maxRetries;
 }
 
 // Gets the interval of idle time between connection attempts.
-int gsfts::Transport::SubscriberConnector::GetRetryInterval() const
+int SubscriberConnector::GetRetryInterval() const
 {
 	return m_retryInterval;
 }
 
 // Gets the flag that determines whether the subscriber should
 // automatically attempt to reconnect when the connection is terminated.
-bool gsfts::Transport::SubscriberConnector::GetAutoReconnect() const
+bool SubscriberConnector::GetAutoReconnect() const
 {
 	return m_autoReconnect;
 }
-
 
 // --- Convenience Methods ---
 
 // Converts an object to a string.
 template <class T>
-std::string ToString(const T& obj)
+string ToString(const T& obj)
 {
-	std::stringstream stringStream;
+	stringstream stringStream;
 	stringStream << obj;
 	return stringStream.str();
 }
 
 // Converts 16 contiguous bytes of data into a globally unique identifier.
-gsfts::Guid ToGuid(uint8_t* data)
+Guid ToGuid(uint8_t* data)
 {
-	gsfts::Guid id;
-	gsfts::Guid::iterator iter;
+	Guid id;
+	Guid::iterator iter;
 
 	for (iter = id.begin(); iter != id.end(); ++iter, ++data)
-		*iter = (gsfts::Guid::value_type)*data;
+		*iter = (Guid::value_type)*data;
 
 	return id;
 }
 
 // This method does nothing. It is used as the callback for asynchronous write operations.
-void WriteHandler(const boost::system::error_code& error, std::size_t bytesTransferred)
+void WriteHandler(const ErrorCode& error, size_t bytesTransferred)
 {
 }

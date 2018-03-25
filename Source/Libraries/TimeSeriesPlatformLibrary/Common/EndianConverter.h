@@ -25,6 +25,7 @@
 #define __ENDIAN_CONVERTER_H
 
 #include <cstddef>
+
 #include "Types.h"
 
 namespace GSF {
@@ -39,7 +40,7 @@ namespace TimeSeries
 
 		// Swaps the bytes in a character array.
 		// Used for conversion between different byte orders.
-		void ByteSwap(uint8_t* value, std::size_t length) const;
+		void ByteSwap(uint8_t* value, size_t length) const;
 
 	public:
 		// Creates a new instance.
@@ -58,10 +59,7 @@ namespace TimeSeries
 		// Returns an integer value indicating which byte order is
 		// the native byte order used by the system. The value is
 		// defined by the BigEndian and LittleEndian class constants.
-		int NativeOrder() const
-		{
-			return m_nativeOrder;
-		}
+		int NativeOrder() const;
 
 		// Class constant defining the big endian byte order.
 		static const int BigEndian = 0;

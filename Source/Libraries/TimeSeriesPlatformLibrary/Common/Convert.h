@@ -21,21 +21,22 @@
 //
 //******************************************************************************************************
 
-#ifndef __CONVERT_H
-#define __CONVERT_H
+#ifndef __COMMON_CONVERT_H
+#define __COMMON_CONVERT_H
 
 #include <cstddef>
 #include <string>
-#include "Types.h"
+
+using namespace std;
 
 namespace GSF {
 namespace TimeSeries
 {
 	// Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
-	void GetUnixTime(int64_t gepTime, std::time_t& unixSOC, int& milliseconds);
+	void GetUnixTime(int64_t gepTime, time_t& unixSOC, int16_t& milliseconds);
 
 	// Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t).
-	std::size_t TicksToString(char* ptr, std::size_t maxsize, std::string format, int64_t ticks);
+	size_t TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks);
 }}
 
 #endif

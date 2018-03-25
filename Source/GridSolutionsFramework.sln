@@ -452,6 +452,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateAssemblyBindings", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataAdapters", "Libraries\Adapters\MetadataAdapters\MetadataAdapters.csproj", "{C4B5D777-E389-4B30-A270-84542D8AB328}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TimeSeries Platform Library Samples", "TimeSeries Platform Library Samples", "{FD32F5EF-6A51-455E-9022-19A46EE9D730}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleSubscribe", "Applications\TimeSeries Platform Library Samples\SimpleSubscribe\SimpleSubscribe.vcxproj", "{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AdvancedSubscribe", "Applications\TimeSeries Platform Library Samples\AdvancedSubscribe\AdvancedSubscribe.vcxproj", "{6DCA52BE-054A-4F25-B08A-3195543A169C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AverageFrequencyCalculator", "Applications\TimeSeries Platform Library Samples\AverageFrequencyCalculator\AverageFrequencyCalculator.vcxproj", "{3AB7FB78-65FE-4526-991F-532F39D9A26A}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{5ce3d6f4-d38d-4f71-acb6-79681cfe47df}*SharedItemsImports = 13
@@ -1584,6 +1592,36 @@ Global
 		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|x86.ActiveCfg = Release|Any CPU
 		{C4B5D777-E389-4B30-A270-84542D8AB328}.Release|x86.Build.0 = Release|Any CPU
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Debug|x86.ActiveCfg = Debug|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Debug|x86.Build.0 = Debug|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Mono|Any CPU.ActiveCfg = Release|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Mono|Any CPU.Build.0 = Release|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Mono|x86.ActiveCfg = Release|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Mono|x86.Build.0 = Release|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Release|Any CPU.ActiveCfg = Release|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Release|x86.ActiveCfg = Release|Win32
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D}.Release|x86.Build.0 = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Debug|x86.ActiveCfg = Debug|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Debug|x86.Build.0 = Debug|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Mono|Any CPU.ActiveCfg = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Mono|Any CPU.Build.0 = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Mono|x86.ActiveCfg = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Mono|x86.Build.0 = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Release|Any CPU.ActiveCfg = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Release|x86.ActiveCfg = Release|Win32
+		{6DCA52BE-054A-4F25-B08A-3195543A169C}.Release|x86.Build.0 = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Debug|x86.ActiveCfg = Debug|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Debug|x86.Build.0 = Debug|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Mono|Any CPU.ActiveCfg = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Mono|Any CPU.Build.0 = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Mono|x86.ActiveCfg = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Mono|x86.Build.0 = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Release|Any CPU.ActiveCfg = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Release|x86.ActiveCfg = Release|Win32
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1724,6 +1762,10 @@ Global
 		{1C165FAD-7D51-4D8E-9311-4A3BE266D877} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
 		{835DF9AF-664B-4814-9654-5CB996D544F9} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{C4B5D777-E389-4B30-A270-84542D8AB328} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
+		{FD32F5EF-6A51-455E-9022-19A46EE9D730} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
+		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
+		{6DCA52BE-054A-4F25-B08A-3195543A169C} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
+		{3AB7FB78-65FE-4526-991F-532F39D9A26A} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}

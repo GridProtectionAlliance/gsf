@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 #include "SubscriberInstance.h"
-#include "../Transport/Constants.h"
+#include "Constants.h"
 
 SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),
@@ -43,20 +43,20 @@ SubscriberInstance::~SubscriberInstance()
 
 // public functions
 
-void SubscriberInstance::Initialize(std::string hostname, gsfts::uint16_t port, gsfts::uint16_t udpPort)
+void SubscriberInstance::Initialize(string hostname, uint16_t port, uint16_t udpPort)
 {
     m_hostname = hostname;
     m_port = port;
     m_udpPort = udpPort;
 }
 
-void SubscriberInstance::EstablishHistoricalRead(std::string startTime, std::string stopTime)
+void SubscriberInstance::EstablishHistoricalRead(string startTime, string stopTime)
 {
     m_startTime = startTime;
     m_stopTime = stopTime;
 }
 
-void SubscriberInstance::SetFilterExpression(std::string filterExpression)
+void SubscriberInstance::SetFilterExpression(string filterExpression)
 {
     m_filterExpression = filterExpression;
 
@@ -72,7 +72,7 @@ void SubscriberInstance::Connect()
 {
     // The connector is declared here because it
     // is only needed for the initial connection
-    tst::SubscriberConnector connector;
+    SubscriberConnector connector;
 
     // Set up helper objects (derived classes can override behavior and settings)
     connector = CreateSubscriberConnector();
@@ -107,7 +107,7 @@ void SubscriberInstance::Connect()
 
         // Request metadata upon successful connection, after metadata is handled
         // the SubscriberInstance will then subscribe to the desired data
-        m_subscriber.SendServerCommand(tst::ServerCommand::MetadataRefresh);
+        m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh);
     }
     else
     {
@@ -125,7 +125,7 @@ void SubscriberInstance::SetHistoricalReplayInterval(int32_t replayInterval)
     if (m_subscriber.IsSubscribed())
     {
         replayInterval = m_endianConverter.ConvertBigEndian(replayInterval);
-        m_subscriber.SendServerCommand(tst::ServerCommand::UpdateProcessingInterval, (gsfts::uint8_t*)&replayInterval, 0, 4);
+        m_subscriber.SendServerCommand(ServerCommand::UpdateProcessingInterval, (uint8_t*)&replayInterval, 0, 4);
     }
 }
 
@@ -179,11 +179,11 @@ bool SubscriberInstance::IsSubscribed() const
 // All the following protected functions are virtual so that derived
 // classes can customize behavior of the SubscriberInstance
 
-tst::SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
+SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
 {
     // SubscriberConnector is another helper object which allows the
     // user to modify settings for auto-reconnects and retry cycles.
-    tst::SubscriberConnector connector;
+    SubscriberConnector connector;
 
     // Register callbacks
     connector.RegisterErrorMessageCallback(&HandleErrorMessage);
@@ -198,11 +198,11 @@ tst::SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
     return connector;
 }
 
-tst::SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
+SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
 {
     // SubscriptionInfo is a helper object which allows the user
     // to set up their subscription and reuse subscription settings.
-    tst::SubscriptionInfo info;
+    SubscriptionInfo info;
 
     // Define desired filter expression
     info.FilterExpression = m_filterExpression;
@@ -230,25 +230,25 @@ tst::SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     return info;
 }
 
-void SubscriberInstance::StatusMessage(std::string message)
+void SubscriberInstance::StatusMessage(string message)
 {
-    std::cout << message << std::endl << std::endl;
+    cout << message << endl << endl;
 }
 
-void SubscriberInstance::ErrorMessage(std::string message)
+void SubscriberInstance::ErrorMessage(string message)
 {
-    std::cerr << message << std::endl << std::endl;
+    cerr << message << endl << endl;
 }
 
-void SubscriberInstance::DataStartTime(std::time_t unixSOC, int milliseconds)
-{
-}
-
-void SubscriberInstance::ReceivedMetadata(std::vector<uint8_t> payload)
+void SubscriberInstance::DataStartTime(time_t unixSOC, int milliseconds)
 {
 }
 
-void SubscriberInstance::ReceivedNewMeasurements(std::vector<gsfts::Measurement> measurements)
+void SubscriberInstance::ReceivedMetadata(vector<uint8_t> payload)
+{
+}
+
+void SubscriberInstance::ReceivedNewMeasurements(vector<Measurement> measurements)
 {
 }
 
@@ -277,7 +277,7 @@ void SubscriberInstance::ConnectionTerminated()
 // The following member methods are defined as static so they
 // can be used as callback registrations for DataSubscriber
 
-void SubscriberInstance::HandleResubscribe(tst::DataSubscriber* source)
+void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
 
@@ -288,30 +288,30 @@ void SubscriberInstance::HandleResubscribe(tst::DataSubscriber* source)
     }
 }
 
-void SubscriberInstance::HandleStatusMessage(tst::DataSubscriber* source, std::string message)
+void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, string message)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
     instance->StatusMessage(message);
 }
 
-void SubscriberInstance::HandleErrorMessage(tst::DataSubscriber* source, std::string message)
+void SubscriberInstance::HandleErrorMessage(DataSubscriber* source, string message)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
     instance->ErrorMessage(message);
 }
 
-void SubscriberInstance::HandleDataStartTime(tst::DataSubscriber* source, gsfts::int64_t startTime)
+void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t startTime)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
-    std::time_t unixSOC;
-    int milliseconds;
+    time_t unixSOC;
+    int16_t milliseconds;
     
-    gsfts::GetUnixTime(startTime, unixSOC, milliseconds);
+    GetUnixTime(startTime, unixSOC, milliseconds);
     
     instance->DataStartTime(unixSOC, milliseconds);
 }
 
-void SubscriberInstance::HandleMetadata(tst::DataSubscriber* source, std::vector<uint8_t> payload)
+void SubscriberInstance::HandleMetadata(DataSubscriber* source, vector<uint8_t> payload)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
     
@@ -322,13 +322,13 @@ void SubscriberInstance::HandleMetadata(tst::DataSubscriber* source, std::vector
     source->Subscribe(instance->m_info);
 }
 
-void SubscriberInstance::HandleNewMeasurements(tst::DataSubscriber* source, std::vector<gsfts::Measurement> measurements)
+void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, vector<Measurement> measurements)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
     instance->ReceivedNewMeasurements(measurements);
 }
 
-void SubscriberInstance::HandleConfigurationChanged(tst::DataSubscriber* source)
+void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
 
@@ -336,17 +336,17 @@ void SubscriberInstance::HandleConfigurationChanged(tst::DataSubscriber* source)
     instance->ConfigurationChanged();
 
     // When publisher configuration has changed, request updated metadata
-    source->SendServerCommand(tst::ServerCommand::MetadataRefresh);
+    source->SendServerCommand(ServerCommand::MetadataRefresh);
 }
 
-void SubscriberInstance::HandleProcessingComplete(tst::DataSubscriber* source, std::string message)
+void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, string message)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();   
     instance->StatusMessage(message);
     instance->HistoricalReadComplete();
 }
 
-void SubscriberInstance::HandleConnectionTerminated(tst::DataSubscriber* source)
+void SubscriberInstance::HandleConnectionTerminated(DataSubscriber* source)
 {
     SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
     instance->ConnectionTerminated();
