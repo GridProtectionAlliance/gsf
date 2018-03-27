@@ -28,6 +28,9 @@ SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),
     m_port(6165),
     m_udpPort(0),
+    m_autoReconnect(true),
+    m_maxRetries(-1),
+    m_retryInterval(2000),
     m_filterExpression(SubscribeAllNoStatsExpression),
     m_startTime(""),
     m_stopTime("")
@@ -48,6 +51,36 @@ void SubscriberInstance::Initialize(string hostname, uint16_t port, uint16_t udp
     m_hostname = hostname;
     m_port = port;
     m_udpPort = udpPort;
+}
+
+bool SubscriberInstance::GetAutoReconnect() const
+{
+    return m_autoReconnect;
+}
+
+void SubscriberInstance::SetAutoReconnect(bool autoReconnect)
+{
+    m_autoReconnect = autoReconnect;
+}
+
+int16_t SubscriberInstance::GetMaxRetries() const
+{
+    return m_maxRetries;
+}
+
+void SubscriberInstance::SetMaxRetries(int16_t maxRetries)
+{
+    m_maxRetries = maxRetries;
+}
+
+int16_t SubscriberInstance::GetRetryInterval() const
+{
+    return m_retryInterval;
+}
+
+void SubscriberInstance::SetRetyInterval(int16_t retryInterval)
+{
+    m_retryInterval = retryInterval;
 }
 
 void SubscriberInstance::EstablishHistoricalRead(string startTime, string stopTime)
@@ -191,9 +224,9 @@ SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
 
     connector.SetHostname(m_hostname);
     connector.SetPort(m_port);
-    connector.SetMaxRetries(-1);
-    connector.SetRetryInterval(5000);
-    connector.SetAutoReconnect(true);
+    connector.SetMaxRetries(m_maxRetries);
+    connector.SetRetryInterval(m_retryInterval);
+    connector.SetAutoReconnect(m_autoReconnect);
 
     return connector;
 }
@@ -283,8 +316,14 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 
     if (source->IsConnected())
     {
+        instance->StatusMessage("Reconnected. Subscribing to data...");
         instance->ConnectionEstablished();
         source->Subscribe(instance->m_info);
+    }
+    else
+    {
+        source->Disconnect();
+        instance->StatusMessage("Connection retry attempts exceeded. Press enter to exit.");
     }
 }
 

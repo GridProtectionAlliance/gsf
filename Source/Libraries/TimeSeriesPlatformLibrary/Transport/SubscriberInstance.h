@@ -43,6 +43,9 @@ private:
 	string m_hostname;
 	uint16_t m_port;
 	uint16_t m_udpPort;
+	bool m_autoReconnect;
+	int16_t m_maxRetries;
+	int16_t m_retryInterval;
 	string m_filterExpression;
 	DataSubscriber m_subscriber;
 	SubscriptionInfo m_info;
@@ -90,6 +93,18 @@ public:
 	// calling the Connect method.
 	void Initialize(string hostname, uint16_t port, uint16_t udpPort = 0);
 
+	// Gets or sets flag that determines if auto-reconnect is enabled
+	bool GetAutoReconnect() const;
+	void SetAutoReconnect(bool autoReconnect);
+
+	// Gets or sets maximum connection retries
+	int16_t GetMaxRetries() const;
+	void SetMaxRetries(int16_t maxRetries);
+
+	// Gets or sets delay between connection retries
+	int16_t GetRetryInterval() const;
+	void SetRetyInterval(int16_t retryInterval);
+	
 	// The following are example filter expression formats:
 	//
 	// - Signal ID list -
