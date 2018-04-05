@@ -199,6 +199,7 @@ namespace GSF.Security
         private bool m_successfulPassThroughAuthentication;
         private string m_passwordRequirementsRegex;
         private string m_passwordRequirementsError;
+        private bool? m_lastLoggedLoginResult;
 
         #endregion
 
@@ -732,9 +733,11 @@ namespace GSF.Security
         /// Logs user authentication attempt.
         /// </summary>
         /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
-        /// <returns>true if logging was successful, otherwise false.</returns>
-        protected virtual bool LogAuthenticationAttempt(bool loginSuccess)
+        protected virtual void LogAuthenticationAttempt(bool loginSuccess)
         {
+            if (m_lastLoggedLoginResult == loginSuccess)
+                return;
+
             if ((object)UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
                 string message = $"User \"{UserData.Username}\" login attempt {(loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed")}.";
@@ -766,11 +769,9 @@ namespace GSF.Security
                         connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
                     }
                 }
-
-                return true;
             }
 
-            return false;
+            m_lastLoggedLoginResult = loginSuccess;
         }
 
         /// <summary>
