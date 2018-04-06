@@ -41,9 +41,9 @@ SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
 void Resubscribe(DataSubscriber* source);
-void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurements);
-void DisplayStatusMessage(DataSubscriber* source, string message);
-void DisplayErrorMessage(DataSubscriber* source, string message);
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements);
+void DisplayStatusMessage(DataSubscriber* source, const string& message);
+void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
 // Runs the subscriber.
 void RunSubscriber(string hostname, uint16_t port);
@@ -159,7 +159,7 @@ SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port)
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurements)
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
 {
 	const double LoFrequency = 57.0;
 	const double HiFrequency = 62.0;
@@ -171,7 +171,7 @@ void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurem
 	static map<Guid, int> m_lastValues;
 
 	map<Guid, int>::iterator lastValueIter;
-	Measurement currentMeasurement;
+	MeasurementPtr currentMeasurement;
 	Guid signalID;
 
 	double frequency;
@@ -188,26 +188,26 @@ void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurem
 	frequencyTotal = 0.0;
 	total = 0;
 
-	cout << Subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
+	cout << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
-	if (newMeasurements.size() > 0)
+	if (!newMeasurements.empty())
 	{
-		if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
+		if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0]->Timestamp))
 			cout << "Timestamp: " << string(timestamp) << endl;
 
 		cout << "Point\tValue" << endl;
 
 		for (i = 0; i < newMeasurements.size(); ++i)
-			cout << newMeasurements[i].ID << '\t' << newMeasurements[i].Value << endl;
+			cout << newMeasurements[i]->ID << '\t' << newMeasurements[i]->Value << endl;
 
 		cout << endl;
 
 		for (i = 0; i < newMeasurements.size(); ++i)
 		{
 			currentMeasurement = newMeasurements[i];
-			frequency = currentMeasurement.Value;
-			signalID = currentMeasurement.SignalID;
-			adjustedFrequency = (int)(frequency * HzResolution);
+			frequency = currentMeasurement->Value;
+			signalID = currentMeasurement->SignalID;
+			adjustedFrequency = static_cast<int>(frequency * HzResolution);
 
 			// Do some simple flat line avoidance...
 			lastValueIter = m_lastValues.find(signalID);
@@ -266,13 +266,13 @@ void Resubscribe(DataSubscriber* source)
 }
 
 // Callback which is called to display status messages from the subscriber.
-void DisplayStatusMessage(DataSubscriber* source, string message)
+void DisplayStatusMessage(DataSubscriber* source, const string& message)
 {
 	cout << message << endl << endl;
 }
 
 // Callback which is called to display error messages from the connector and subscriber.
-void DisplayErrorMessage(DataSubscriber* source, string message)
+void DisplayErrorMessage(DataSubscriber* source, const string& message)
 {
 	cerr << message << endl << endl;
 }

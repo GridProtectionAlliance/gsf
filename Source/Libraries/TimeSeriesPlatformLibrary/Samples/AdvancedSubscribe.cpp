@@ -40,9 +40,9 @@ SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
 void Resubscribe(DataSubscriber* source);
-void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurements);
-void DisplayStatusMessage(DataSubscriber* source, string message);
-void DisplayErrorMessage(DataSubscriber* source, string message);
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements);
+void DisplayStatusMessage(DataSubscriber* source, const string& message);
+void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
 // Runs the subscriber.
 void RunSubscriber(string hostname, uint16_t port);
@@ -189,7 +189,7 @@ SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port)
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurements)
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
 {
 	const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
 	const size_t MaxTimestampSize = 80;
@@ -203,17 +203,17 @@ void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurem
 	// seconds (assuming 30 calls per second).
 	if (processCount % 150 == 0)
 	{
-		cout << Subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
+		cout << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
 		if (!newMeasurements.empty())
 		{
-			if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
+			if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0]->Timestamp))
 				cout << "Timestamp: " << string(timestamp) << endl;
 
 			cout << "Point\tValue" << endl;
 
 			for (i = 0; i < newMeasurements.size(); ++i)
-				cout << newMeasurements[i].ID << '\t' << newMeasurements[i].Value << endl;
+				cout << newMeasurements[i]->ID << '\t' << newMeasurements[i]->Value << endl;
 
 			cout << endl;
 		}
