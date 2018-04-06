@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -13,8 +13,12 @@
   <ItemGroup>
     <ClInclude Include="Common\Convert.h" />
     <ClCompile Include="Common\Convert.cpp" />
+    <ClInclude Include="Common\Date.h" />
     <ClInclude Include="Common\EndianConverter.h" />
     <ClCompile Include="Common\EndianConverter.cpp" />
+    <ClInclude Include="Common\pugiconfig.hpp" />
+    <ClInclude Include="Common\pugixml.hpp" />
+    <ClCompile Include="Common\pugixml.cpp" />
     <ClInclude Include="Common\ThreadSafeQueue.h" />
     <ClInclude Include="Common\Types.h" />
   </ItemGroup>
@@ -41,21 +45,21 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <RootNamespace>TSFPlatformLibrary</RootNamespace>
     <ProjectName>TimeSeriesPlatformLibrary</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -86,7 +90,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -103,7 +107,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

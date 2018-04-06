@@ -24,13 +24,13 @@
 //******************************************************************************************************
 
 #include <sstream>
-#include <exception>
 #include <boost/bind.hpp>
 
 #include "DataSubscriber.h"
 #include "Version.h"
 #include "Constants.h"
 #include "CompactMeasurementParser.h"
+#include "../Common/Convert.h"
 
 using namespace boost;
 using namespace boost::asio;
@@ -39,9 +39,6 @@ using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 // Convenience functions to perform simple conversions.
-template <class T>
-string ToString(const T& obj);
-Guid ToGuid(uint8_t* data);
 void WriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
 // --- DataSubscriber ---
@@ -58,14 +55,14 @@ DataSubscriber::DataSubscriber(bool compressMetadata) :
 	m_readBuffer(MaxPacketSize),
 	m_writeBuffer(MaxPacketSize),
 	m_dataChannelSocket(m_dataChannelService),
-	m_statusMessageCallback(0),
-	m_errorMessageCallback(0),
-	m_dataStartTimeCallback(0),
-	m_metadataCallback(0),
-	m_newMeasurementsCallback(0),
-	m_processingCompleteCallback(0),
-	m_configurationChangedCallback(0),
-	m_connectionTerminatedCallback(0)
+	m_statusMessageCallback(nullptr),
+	m_errorMessageCallback(nullptr),
+	m_dataStartTimeCallback(nullptr),
+	m_metadataCallback(nullptr),
+	m_newMeasurementsCallback(nullptr),
+	m_processingCompleteCallback(nullptr),
+	m_configurationChangedCallback(nullptr),
+	m_connectionTerminatedCallback(nullptr)
 {
 	m_baseTimeOffsets[0] = 0;
 	m_baseTimeOffsets[1] = 0;
@@ -135,10 +132,10 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
 	m_totalCommandChannelBytesReceived += PayloadHeaderSize;
 
 	// Parse payload header
-	packetSizePtr = (int32_t*)&m_readBuffer[PacketSizeOffset];
+	packetSizePtr = reinterpret_cast<int32_t*>(&m_readBuffer[PacketSizeOffset]);
 	packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
 
-	if (packetSize > (int32_t)m_readBuffer.size())
+	if (packetSize > static_cast<int32_t>(m_readBuffer.size()))
 		m_readBuffer.resize(packetSize);
 
 	// Read packet (payload body)
@@ -213,9 +210,7 @@ void DataSubscriber::RunDataChannelResponseThread()
 // Handles success messages received from the server.
 void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, size_t offset, size_t length)
 {
-	const size_t CharSize = sizeof(char);
-
-	size_t messageLength = length / CharSize;
+	const size_t messageLength = length / sizeof(char);
 	stringstream messageStream;
 
 	char* messageStart;
@@ -224,57 +219,55 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, size_t 
 	
 	switch (commandCode)
 	{
-	case ServerCommand::MetadataRefresh:
-		// Metadata refresh message is not sent with a
-		// message, but rather the metadata itself.
-		HandleMetadataRefresh(data, offset, length);
-		break;
+		case ServerCommand::MetadataRefresh:
+			// Metadata refresh message is not sent with a
+			// message, but rather the metadata itself.
+			HandleMetadataRefresh(data, offset, length);
+			break;
 		
-	case ServerCommand::Subscribe:
-	case ServerCommand::Unsubscribe:
-		// Do not break on these messages because there is
-		// still an associated message to be processed.
-		m_subscribed = (commandCode == ServerCommand::Subscribe);
+		case ServerCommand::Subscribe:
+		case ServerCommand::Unsubscribe:
+			// Do not break on these messages because there is
+			// still an associated message to be processed.
+			m_subscribed = (commandCode == ServerCommand::Subscribe);
 
-	case ServerCommand::Authenticate:
-	case ServerCommand::RotateCipherKeys:
-		// Each of these responses come with a message that will
-		// be delivered to the user via the status message callback.
-		messageStart = (char*)(data + offset);
-		messageEnd = messageStart + messageLength;
-		messageStream << "Received success code in response to server command 0x" << hex << (int)commandCode << ": ";
+		case ServerCommand::Authenticate:
+		case ServerCommand::RotateCipherKeys:
+			// Each of these responses come with a message that will
+			// be delivered to the user via the status message callback.
+			messageStart = reinterpret_cast<char*>(data + offset);
+			messageEnd = messageStart + messageLength;
+			messageStream << "Received success code in response to server command 0x" << hex << static_cast<int>(commandCode) << ": ";
 
-		for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
-			messageStream << *messageIter;
+			for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
+				messageStream << *messageIter;
 
-		DispatchStatusMessage(messageStream.str());
-		break;
+			DispatchStatusMessage(messageStream.str());
+			break;
 
-	default:
-		// If we don't know what the message is, we can't interpret
-		// the data sent with the packet. Deliver an error message
-		// to the user via the error message callback.
-		messageStream << "Received success code in response to unknown server command 0x" << hex << (int)commandCode;
-		DispatchErrorMessage(messageStream.str());
-		break;
+		default:
+			// If we don't know what the message is, we can't interpret
+			// the data sent with the packet. Deliver an error message
+			// to the user via the error message callback.
+			messageStream << "Received success code in response to unknown server command 0x" << hex << static_cast<int>(commandCode);
+			DispatchErrorMessage(messageStream.str());
+			break;
 	}
 }
 
 // Handles failure messages from the server.
 void DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, size_t offset, size_t length)
 {
-	const size_t CharSize = sizeof(char);
-
-	size_t messageLength = length / CharSize;
+	const size_t messageLength = length / sizeof(char);
 	stringstream messageStream;
 
 	char* messageStart;
 	char* messageEnd;
 	char* messageIter;
 
-	messageStart = (char*)(data + offset);
+	messageStart = reinterpret_cast<char*>(data + offset);
 	messageEnd = messageStart + messageLength;
-	messageStream << "Received failure code from server command 0x" << hex << (int)commandCode << ": ";
+	messageStream << "Received failure code from server command 0x" << hex << static_cast<int>(commandCode) << ": ";
 
 	for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
 		messageStream << *messageIter;
@@ -309,7 +302,7 @@ void DataSubscriber::HandleProcessingComplete(uint8_t* data, size_t offset, size
 // Cache signal IDs sent by the server into the signal index cache.
 void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, size_t length)
 {
-	const size_t CharSize = sizeof(char);
+	const bool swapBytes = m_endianConverter.NativeOrder() == EndianConverter::LittleEndian;
 
 	int32_t* referenceCountPtr;
 	int32_t referenceCount;
@@ -330,29 +323,39 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, 
 	char* sourceIter;
 	int i;
 
+	// Perform zlib decompression on buffer
+	vector<uint8_t> uncompressed;
+	const MemoryStream payloadStream(data, offset, length);
+	Decompressor decompressor;
+
+	decompressor.push(GZipStream());
+	decompressor.push(payloadStream);
+
+	CopyStream(decompressor, uncompressed);
+
 	// Begin by emptying the cache
 	m_signalIndexCache.Clear();
 
 	// Skip 4-byte length and 16-byte subscriber ID
 	// We may need to parse these in the future...
-	referenceCountPtr = (int32_t*)(data + offset + 20);
+	referenceCountPtr = reinterpret_cast<int32_t*>(uncompressed.data() + 20);
 	referenceCount = m_endianConverter.ConvertBigEndian(*referenceCountPtr);
 
 	// Set up signalIndexPtr before entering the loop
-	signalIndexPtr = (uint16_t*)(referenceCountPtr + 1);
+	signalIndexPtr = reinterpret_cast<uint16_t*>(referenceCountPtr + 1);
 
 	for (i = 0; i < referenceCount; ++i)
 	{
 		// Begin setting up pointers
-		signalIDPtr = (uint8_t*)(signalIndexPtr + 1);
-		sourceSizePtr = (int32_t*)(signalIDPtr + 16);
+		signalIDPtr = reinterpret_cast<uint8_t*>(signalIndexPtr + 1);
+		sourceSizePtr = reinterpret_cast<int32_t*>(signalIDPtr + 16);
 
 		// Get the source size now so we can use it to find the ID
-		sourceSize = (size_t)m_endianConverter.ConvertBigEndian(*sourceSizePtr) / CharSize;
+		sourceSize = static_cast<size_t>(m_endianConverter.ConvertBigEndian(*sourceSizePtr)) / sizeof(char);
 
 		// Continue setting up pointers
-		sourcePtr = (char*)(sourceSizePtr + 1);
-		idPtr = (uint32_t*)(sourcePtr + sourceSize);
+		sourcePtr = reinterpret_cast<char*>(sourceSizePtr + 1);
+		idPtr = reinterpret_cast<uint32_t*>(sourcePtr + sourceSize);
 
 		// Build string from binary data
 		for (sourceIter = sourcePtr; sourceIter < sourcePtr + sourceSize; ++sourceIter)
@@ -360,7 +363,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, 
 
 		// Set values for measurement key
 		signalIndex = m_endianConverter.ConvertBigEndian(*signalIndexPtr);
-		signalID = ToGuid(signalIDPtr);
+		signalID = ToGuid(signalIDPtr, swapBytes);
 		source = sourceStream.str();
 		id = m_endianConverter.ConvertBigEndian(*idPtr);
 
@@ -369,7 +372,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, 
 
 		// Advance signalIndexPtr to the next signal
 		// index and clear out the string stream
-		signalIndexPtr = (uint16_t*)(idPtr + 1);
+		signalIndexPtr = reinterpret_cast<uint16_t*>(idPtr + 1);
 		sourceStream.str("");
 	}
 
@@ -380,10 +383,10 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, 
 // Updates base time offsets.
 void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, size_t offset, size_t length)
 {
-	int32_t* timeIndexPtr = (int32_t*)(data + offset);
-	int64_t* timeOffsetsPtr = (int64_t*)(timeIndexPtr + 1);
+	int32_t* timeIndexPtr = reinterpret_cast<int32_t*>(data + offset);
+	int64_t* timeOffsetsPtr = reinterpret_cast<int64_t*>(timeIndexPtr + 1);
 
-	m_timeIndex = (size_t)m_endianConverter.ConvertBigEndian(*timeIndexPtr);
+	m_timeIndex = static_cast<size_t>(m_endianConverter.ConvertBigEndian(*timeIndexPtr));
 	m_baseTimeOffsets[0] = m_endianConverter.ConvertBigEndian(timeOffsetsPtr[0]);
 	m_baseTimeOffsets[1] = m_endianConverter.ConvertBigEndian(timeOffsetsPtr[1]);
 }
@@ -397,17 +400,17 @@ void DataSubscriber::HandleConfigurationChanged(uint8_t* data, size_t offset, si
 // Dispatches the given function to the callback thread.
 void DataSubscriber::Dispatch(DispatcherFunction function)
 {
-	Dispatch(function, 0, 0, 0);
+	Dispatch(function, nullptr, 0, 0);
 }
 
 // Dispatches the given function to the callback thread and provides the given data to that function when it is called.
-void DataSubscriber::Dispatch(DispatcherFunction function, uint8_t* data, size_t offset, size_t length)
+void DataSubscriber::Dispatch(DispatcherFunction function, const uint8_t* data, size_t offset, size_t length)
 {
 	CallbackDispatcher dispatcher;
 	vector<uint8_t> dataVector(length);
 	size_t i;
 
-	if (data != 0)
+	if (data != nullptr)
 	{
 		for (i = 0; i < length; ++i)
 			dataVector[i] = data[offset + i];
@@ -421,88 +424,89 @@ void DataSubscriber::Dispatch(DispatcherFunction function, uint8_t* data, size_t
 }
 
 // Invokes the status message callback on the callback thread and provides the given message to it.
-void DataSubscriber::DispatchStatusMessage(string message)
+void DataSubscriber::DispatchStatusMessage(const string& message)
 {
-	const size_t CharSize = sizeof(char);
-	size_t messageSize = message.size() * CharSize;
-	Dispatch(&StatusMessageDispatcher, (uint8_t*)message.data(), 0, messageSize);
+	const size_t messageSize = message.size() * sizeof(char);
+	const char* data = message.c_str();
+	
+	Dispatch(&StatusMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
 }
 
 // Invokes the error message callback on the callback thread and provides the given message to it.
-void DataSubscriber::DispatchErrorMessage(string message)
+void DataSubscriber::DispatchErrorMessage(const string& message)
 {
-	const size_t CharSize = sizeof(char);
-	size_t messageSize = message.size() * CharSize;
-	Dispatch(&ErrorMessageDispatcher, (uint8_t*)message.data(), 0, messageSize);
+	const size_t messageSize = message.size() * sizeof(char);
+	const char* data = message.c_str();
+
+	Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
-void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-	MessageCallback statusMessageCallback = source->m_statusMessageCallback;
+	const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
 	stringstream messageStream;
 	size_t i;
 
 	for (i = 0; i < data.size(); ++i)
 		messageStream << data[i];
 
-	if (statusMessageCallback != 0)
+	if (statusMessageCallback != nullptr)
 		statusMessageCallback(source, messageStream.str());
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
-void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-	MessageCallback errorMessageCallback = source->m_errorMessageCallback;
+	const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 	stringstream messageStream;
 	size_t i;
 
 	for (i = 0; i < data.size(); ++i)
 		messageStream << data[i];
 
-	if (errorMessageCallback != 0)
+	if (errorMessageCallback != nullptr)
 		errorMessageCallback(source, messageStream.str());
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
-void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-	DataStartTimeCallback dataStartTimeCallback = source->m_dataStartTimeCallback;
+	const DataStartTimeCallback dataStartTimeCallback = source->m_dataStartTimeCallback;
 	EndianConverter endianConverter = source->m_endianConverter;
-	int64_t* dataPtr = (int64_t*)&data[0];
-	int64_t dataStartTime = endianConverter.ConvertBigEndian(*dataPtr);
+	const int64_t dataStartTime = endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&data[0]));
 
-	if (dataStartTimeCallback != 0)
+	if (dataStartTimeCallback != nullptr)
 		dataStartTimeCallback(source, dataStartTime);
 }
 
 // Dispatcher function for metadata. Provides encoded metadata to the user via the metadata callback.
-void DataSubscriber::MetadataDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-	MetadataCallback metadataCallback = source->m_metadataCallback;
+	const MetadataCallback metadataCallback = source->m_metadataCallback;
 
-	if (metadataCallback != 0)
+	if (metadataCallback != nullptr)
 		metadataCallback(source, data);
 }
 
 // Dispatcher function for new measurements. Decodes the measurements and provides them to the user via the new measurements callback.
-void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-	NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
-	MessageCallback errorMessageCallback = source->m_errorMessageCallback;
+	const NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
+	const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 	SubscriptionInfo& info = source->m_currentSubscription;
 
-	Measurement parsedMeasurement;
-	vector<Measurement> newMeasurements;
+	MeasurementPtr parsedMeasurement;
+	vector<MeasurementPtr> newMeasurements;
 
 	uint8_t dataPacketFlags;
-	int32_t* measurementCountPtr;
-	int64_t* frameLevelTimestampPtr = 0;
-	int64_t frameLevelTimestamp;
+	const int32_t* measurementCountPtr;
+	const int64_t* frameLevelTimestampPtr = nullptr;
+	int64_t frameLevelTimestamp = 0;
 
-	uint8_t* buffer;
+	const uint8_t* buffer;
 	size_t offset = 0;
-	size_t length = 0;
+	size_t length;
 
 	bool includeTime = info.IncludeTime;
 
@@ -513,7 +517,7 @@ void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, vector<ui
 	// Read frame-level timestamp, if available
 	if (dataPacketFlags & DataPacketFlags::Synchronized)
 	{
-		frameLevelTimestampPtr = (int64_t*)&data[offset];
+		frameLevelTimestampPtr = reinterpret_cast<const int64_t*>(&data[offset]);
 		frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*frameLevelTimestampPtr);
 		offset += 8;
 
@@ -521,18 +525,18 @@ void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, vector<ui
 	}
 
 	// Read measurement count and gather statistics
-	measurementCountPtr = (int32_t*)&data[offset];
+	measurementCountPtr = reinterpret_cast<const int32_t*>(&data[offset]);
 	source->m_totalMeasurementsReceived += source->m_endianConverter.ConvertBigEndian(*measurementCountPtr);
 	offset += 4;
 
 	// Set up buffer and length for measurement parsing
-	buffer = &data[0];
+	buffer = reinterpret_cast<const uint8_t*>(&data[0]);
 	length = data.size() - offset;
 	
 	// Create measurement parser
 	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, info.UseMillisecondResolution);
 
-	if (newMeasurementsCallback != 0)
+	if (newMeasurementsCallback != nullptr)
 	{
 		while (length > 0)
 		{
@@ -544,8 +548,8 @@ void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, vector<ui
 
 			parsedMeasurement = measurementParser.GetParsedMeasurement();
 
-			if (frameLevelTimestampPtr != 0)
-				parsedMeasurement.Timestamp = frameLevelTimestamp;
+			if (frameLevelTimestampPtr != nullptr)
+				parsedMeasurement->Timestamp = frameLevelTimestamp;
 
 			newMeasurements.push_back(parsedMeasurement);
 		}
@@ -555,35 +559,24 @@ void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, vector<ui
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
-void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-	const size_t CharSize = sizeof(char);
+	const MessageCallback processingCompleteCallback = source->m_processingCompleteCallback;
 
-	MessageCallback processingCompleteCallback;
-	size_t messageLength;
-	stringstream messageStream;
-
-	char* messageStart;
-	char* messageEnd;
-	char* messageIter;
-
-	processingCompleteCallback = source->m_processingCompleteCallback;
-
-	if (processingCompleteCallback != 0)
+	if (processingCompleteCallback != nullptr)
 	{
-		messageLength = data.size() / CharSize;
-		messageStart = (char*)&data[0];
-		messageEnd = messageStart + messageLength;
+		stringstream messageStream;
+		size_t i;
 
-		for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
-			messageStream << *messageIter;
+		for (i = 0; i < data.size(); ++i)
+			messageStream << data[i];
 
 		processingCompleteCallback(source, messageStream.str());
 	}
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
-void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, vector<uint8_t> data)
+void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
 	source->m_configurationChangedCallback(source);
 }
@@ -596,7 +589,7 @@ void DataSubscriber::ConnectionTerminatedDispatcher()
 {
 	Disconnect();
 
-	if (m_connectionTerminatedCallback != 0)
+	if (m_connectionTerminatedCallback != nullptr)
 		m_connectionTerminatedCallback(this);
 }
 
@@ -606,44 +599,54 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, size_t offset, size_
 	const size_t PacketHeaderSize = 6;
 
 	uint8_t* packetBodyStart = buffer + PacketHeaderSize;
-	size_t packetBodyLength = length - PacketHeaderSize;
+	const size_t packetBodyLength = length - PacketHeaderSize;
 	
-	uint8_t responseCode = buffer[0];
-	uint8_t commandCode = buffer[1];
+	const uint8_t responseCode = buffer[0];
+	const uint8_t commandCode = buffer[1];
 
 	switch (responseCode)
 	{
-	case ServerResponse::Succeeded:
-		HandleSucceeded(commandCode, packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::Succeeded:
+			HandleSucceeded(commandCode, packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::Failed:
-		HandleFailed(commandCode, packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::Failed:
+			HandleFailed(commandCode, packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::DataPacket:
-		HandleDataPacket(packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::DataPacket:
+			HandleDataPacket(packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::DataStartTime:
-		HandleDataStartTime(packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::DataStartTime:
+			HandleDataStartTime(packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::ProcessingComplete:
-		HandleProcessingComplete(packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::ProcessingComplete:
+			HandleProcessingComplete(packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::UpdateSignalIndexCache:
-		HandleUpdateSignalIndexCache(packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::UpdateSignalIndexCache:
+			HandleUpdateSignalIndexCache(packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::UpdateBaseTimes:
-		HandleUpdateBaseTimes(packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::UpdateBaseTimes:
+			HandleUpdateBaseTimes(packetBodyStart, 0, packetBodyLength);
+			break;
 
-	case ServerResponse::ConfigurationChanged:
-		HandleConfigurationChanged(packetBodyStart, 0, packetBodyLength);
-		break;
+		case ServerResponse::ConfigurationChanged:
+			HandleConfigurationChanged(packetBodyStart, 0, packetBodyLength);
+			break;
+
+		case ServerResponse::NoOP:
+			break;
+
+		default:
+			stringstream errorMessageStream;
+			errorMessageStream << "Encountered unexpected server response code: 0x";
+			errorMessageStream << hex << static_cast<int>(responseCode);
+			DispatchErrorMessage(errorMessageStream.str());
+			break;
 	}
 }
 
@@ -726,8 +729,8 @@ void DataSubscriber::SetUserData(void* userData)
 void DataSubscriber::Connect(string hostname, uint16_t port)
 {
 	DnsResolver resolver(m_commandChannelService);
-	DnsResolver::query query(hostname, ToString(port));
-	DnsResolver::iterator endpointIterator = resolver.resolve(query);
+	const DnsResolver::query query(hostname, to_string(port));
+	const DnsResolver::iterator endpointIterator = resolver.resolve(query);
 	DnsResolver::iterator hostEndpoint;
 	ErrorCode error;
 
@@ -792,11 +795,9 @@ void DataSubscriber::Disconnect()
 // Subscribe to publisher in order to start receiving data.
 void DataSubscriber::Subscribe(SubscriptionInfo info)
 {
-	const size_t CharSize = sizeof(char);
-
 	udp ipVersion = udp::v4();
 
-	stringstream stringStream;
+	stringstream connectionStream;
 	string connectionString;
 
 	vector<uint8_t> buffer;
@@ -816,20 +817,20 @@ void DataSubscriber::Subscribe(SubscriptionInfo info)
 	m_currentSubscription = info;
 	m_totalMeasurementsReceived = 0L;
 	
-	if (info.NewMeasurementsCallback != 0)
+	if (info.NewMeasurementsCallback != nullptr)
 		m_newMeasurementsCallback = info.NewMeasurementsCallback;
 
-	stringStream << "trackLatestMeasurements=" << info.Throttled << ";";
-	stringStream << "includeTime=" << info.IncludeTime << ";";
-	stringStream << "lagTime=" << info.LagTime << ";";
-	stringStream << "leadTime=" << info.LeadTime << ";";
-	stringStream << "useLocalClockAsRealTime=" << info.UseLocalClockAsRealTime << ";";
-	stringStream << "processingInterval=" << info.ProcessingInterval << ";";
-	stringStream << "useMillisecondResolution=" << info.UseMillisecondResolution << ";";
-	stringStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" GSFTS_VERSION "; buildDate=" GSFTS_BUILD_DATE "};";
+	connectionStream << "trackLatestMeasurements=" << info.Throttled << ";";
+	connectionStream << "includeTime=" << info.IncludeTime << ";";
+	connectionStream << "lagTime=" << info.LagTime << ";";
+	connectionStream << "leadTime=" << info.LeadTime << ";";
+	connectionStream << "useLocalClockAsRealTime=" << info.UseLocalClockAsRealTime << ";";
+	connectionStream << "processingInterval=" << info.ProcessingInterval << ";";
+	connectionStream << "useMillisecondResolution=" << info.UseMillisecondResolution << ";";
+	connectionStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" GSFTS_VERSION "; buildDate=" GSFTS_BUILD_DATE "};";
 	
 	if (!info.FilterExpression.empty())
-		stringStream << "inputMeasurementKeys={" << info.FilterExpression << "};";
+		connectionStream << "inputMeasurementKeys={" << info.FilterExpression << "};";
 
 	if (info.UdpDataChannel)
 	{
@@ -844,26 +845,26 @@ void DataSubscriber::Subscribe(SubscriptionInfo info)
 		if (!m_dataChannelSocket.is_open())
 			throw SubscriberException("Failed to bind to local port");
 
-		stringStream << "dataChannel={localport=" << info.DataChannelLocalPort << "};";
+		connectionStream << "dataChannel={localport=" << info.DataChannelLocalPort << "};";
 	}
 
 	if (!info.StartTime.empty())
-		stringStream << "startTimeConstraint=" << info.StartTime << ";";
+		connectionStream << "startTimeConstraint=" << info.StartTime << ";";
 
 	if (!info.StopTime.empty())
-		stringStream << "stopTimeConstraint=" << info.StopTime << ";";
+		connectionStream << "stopTimeConstraint=" << info.StopTime << ";";
 
 	if (!info.ConstraintParameters.empty())
-		stringStream << "timeConstraintParameters=" << info.ConstraintParameters << ";";
+		connectionStream << "timeConstraintParameters=" << info.ConstraintParameters << ";";
 
 	if (!info.ExtraConnectionStringParameters.empty())
-		stringStream << info.ExtraConnectionStringParameters << ";";
+		connectionStream << info.ExtraConnectionStringParameters << ";";
 
-	connectionString = stringStream.str();
-	connectionStringPtr = (uint8_t*)&connectionString[0];
-	connectionStringSize = (uint32_t)(connectionString.size() * CharSize);
+	connectionString = connectionStream.str();
+	connectionStringPtr = reinterpret_cast<uint8_t*>(&connectionString[0]);
+	connectionStringSize = static_cast<uint32_t>(connectionString.size() * sizeof(char));
 	bigEndianConnectionStringSize = m_endianConverter.ConvertBigEndian(connectionStringSize);
-	bigEndianConnectionStringSizePtr = (uint8_t*)&bigEndianConnectionStringSize;
+	bigEndianConnectionStringSizePtr = reinterpret_cast<uint8_t*>(&bigEndianConnectionStringSize);
 
 	bufferSize = 5 + connectionStringSize;
 	buffer.resize(bufferSize, 0);
@@ -904,14 +905,12 @@ void DataSubscriber::Unsubscribe()
 // Sends a command to the server.
 void DataSubscriber::SendServerCommand(uint8_t commandCode)
 {
-	SendServerCommand(commandCode, 0, 0, 0);
+	SendServerCommand(commandCode, nullptr, 0, 0);
 }
 
 // Sends a command along with the given message to the server.
 void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
 {
-	const size_t CharSize = sizeof(char);
-
 	uint32_t bufferSize;
 	vector<uint8_t> buffer;
 
@@ -920,10 +919,10 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
 	uint32_t bigEndianMessageSize;
 	uint8_t* bigEndianMessageSizePtr;
 
-	messagePtr = (uint8_t*)&message[0];
-	messageSize = (uint32_t)(message.size() * CharSize);
+	messagePtr = reinterpret_cast<uint8_t*>(&message[0]);
+	messageSize = static_cast<uint32_t>(message.size() * sizeof(char));
 	bigEndianMessageSize = m_endianConverter.ConvertBigEndian(messageSize);
-	bigEndianMessageSizePtr = (uint8_t*)&bigEndianMessageSize;
+	bigEndianMessageSizePtr = reinterpret_cast<uint8_t*>(&bigEndianMessageSize);
 
 	bufferSize = 4 + messageSize;
 	buffer.resize(bufferSize, 0);
@@ -940,14 +939,14 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
 }
 
 // Sends a command along with the given data to the server.
-void DataSubscriber::SendServerCommand(uint8_t commandCode, uint8_t* data, size_t offset, size_t length)
+void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data, size_t offset, size_t length)
 {
-	int32_t packetSize = 1 + (int32_t)length;
+	const int32_t packetSize = 1 + static_cast<int32_t>(length);
 	int32_t littleEndianPacketSize = m_endianConverter.ConvertLittleEndian(packetSize);
-	uint8_t* littleEndianPacketSizePtr = (uint8_t*)&littleEndianPacketSize;
-	int32_t commandBufferSize = packetSize + 8;
+	uint8_t* littleEndianPacketSizePtr = reinterpret_cast<uint8_t*>(&littleEndianPacketSize);
+	const int32_t commandBufferSize = packetSize + 8;
 	
-	if (commandBufferSize > (int32_t)m_writeBuffer.size())
+	if (commandBufferSize > static_cast<int32_t>(m_writeBuffer.size()))
 		m_writeBuffer.resize(commandBufferSize);
 
 	// Insert payload marker
@@ -965,7 +964,7 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, uint8_t* data, size_
 	// Insert command code
 	m_writeBuffer[8] = commandCode;
 
-	if (data != 0)
+	if (data != nullptr)
 	{
 		for (size_t i = 0; i < length; ++i)
 			m_writeBuffer[9 + i] = data[offset + i];
@@ -981,14 +980,16 @@ void DataSubscriber::SendOperationalModes()
 	uint32_t operationalModes = OperationalModes::NoFlags;
 	uint32_t bigEndianOperationalModes;
 
+	operationalModes |= CompressionModes::GZip;
 	operationalModes |= OperationalEncoding::UTF8;
 	operationalModes |= OperationalModes::UseCommonSerializationFormat;
+	operationalModes |= OperationalModes::CompressSignalIndexCache;
 
 	if (m_compressMetadata)
 		operationalModes |= OperationalModes::CompressMetadata;
 
 	bigEndianOperationalModes = m_endianConverter.ConvertBigEndian(operationalModes);
-	SendServerCommand(ServerCommand::DefineOperationalModes, (uint8_t*)&bigEndianOperationalModes, 0, 4);
+	SendServerCommand(ServerCommand::DefineOperationalModes, reinterpret_cast<uint8_t*>(&bigEndianOperationalModes), 0, 4);
 }
 
 // Gets the total number of bytes received via the command channel since last connection.
@@ -1037,13 +1038,13 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 		SubscriberConnector connector = connectorIter->second;
 
 		// Notify the user that we are attempting to reconnect.
-		if (connector.m_cancel == false && connector.m_errorMessageCallback != 0)
+		if (!connector.m_cancel && connector.m_errorMessageCallback != nullptr)
 			connector.m_errorMessageCallback(subscriber, "Publisher connection terminated. Attempting to reconnect...");
 
 		connector.Connect(*subscriber);
 
 		// Notify the user that reconnect attempt was completed.
-		if (connector.m_cancel == false && connector.m_reconnectCallback != 0)
+		if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
 			connector.m_reconnectCallback(subscriber);
 	}
 }
@@ -1062,7 +1063,7 @@ void SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectC
 }
 
 // Begin connection sequence.
-bool SubscriberConnector::Connect(DataSubscriber& subscriber)
+bool SubscriberConnector::Connect(DataSubscriber& subscriber) const
 {
 	if (m_autoReconnect)
 	{
@@ -1081,11 +1082,11 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
 			connected = true;
 			break;
 		}
-		catch (SubscriberException ex)
+		catch (SubscriberException& ex)
 		{
 			errorMessage = ex.what();
 		}
-		catch (SystemError ex)
+		catch (SystemError& ex)
 		{
 			errorMessage = ex.what();
 		}
@@ -1096,10 +1097,11 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
 
 		if (!connected)
 		{
-			if (m_errorMessageCallback != 0)
+			if (m_errorMessageCallback != nullptr)
 			{
-				errorMessage = "Failed to connect to \"" + m_hostname + ":" + to_string(m_port) + "\": " + errorMessage;
-				Thread th(bind(m_errorMessageCallback, &subscriber, errorMessage));
+				stringstream errorMessageStream;
+				errorMessageStream << "Failed to connect to \"" << m_hostname << ":" << m_port << "\": " << errorMessage;				
+				Thread th(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
 			}
 
 			io_service io;
@@ -1119,7 +1121,7 @@ void SubscriberConnector::Cancel()
 }
 
 // Set the hostname of the publisher to connect to.
-void SubscriberConnector::SetHostname(string hostname)
+void SubscriberConnector::SetHostname(const string& hostname)
 {
 	m_hostname = hostname;
 }
@@ -1181,27 +1183,6 @@ bool SubscriberConnector::GetAutoReconnect() const
 }
 
 // --- Convenience Methods ---
-
-// Converts an object to a string.
-template <class T>
-string ToString(const T& obj)
-{
-	stringstream stringStream;
-	stringStream << obj;
-	return stringStream.str();
-}
-
-// Converts 16 contiguous bytes of data into a globally unique identifier.
-Guid ToGuid(uint8_t* data)
-{
-	Guid id;
-	Guid::iterator iter;
-
-	for (iter = id.begin(); iter != id.end(); ++iter, ++data)
-		*iter = (Guid::value_type)*data;
-
-	return id;
-}
 
 // This method does nothing. It is used as the callback for asynchronous write operations.
 void WriteHandler(const ErrorCode& error, size_t bytesTransferred)

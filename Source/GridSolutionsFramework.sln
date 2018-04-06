@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -459,6 +459,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AdvancedSubscribe", "Applications\TimeSeries Platform Library Samples\AdvancedSubscribe\AdvancedSubscribe.vcxproj", "{6DCA52BE-054A-4F25-B08A-3195543A169C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AverageFrequencyCalculator", "Applications\TimeSeries Platform Library Samples\AverageFrequencyCalculator\AverageFrequencyCalculator.vcxproj", "{3AB7FB78-65FE-4526-991F-532F39D9A26A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InstanceSubscribe", "Applications\TimeSeries Platform Library Samples\InstanceSubscribe\InstanceSubscribe.vcxproj", "{87F19B27-127E-4241-A442-345AC1F71FE0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82} = {2A542BE8-8D17-44C3-BCD2-768DF480FF82}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -1622,6 +1627,16 @@ Global
 		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Release|Any CPU.ActiveCfg = Release|Win32
 		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Release|x86.ActiveCfg = Release|Win32
 		{3AB7FB78-65FE-4526-991F-532F39D9A26A}.Release|x86.Build.0 = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Debug|x86.ActiveCfg = Debug|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Debug|x86.Build.0 = Debug|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Mono|Any CPU.ActiveCfg = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Mono|Any CPU.Build.0 = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Mono|x86.ActiveCfg = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Mono|x86.Build.0 = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Release|Any CPU.ActiveCfg = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Release|x86.ActiveCfg = Release|Win32
+		{87F19B27-127E-4241-A442-345AC1F71FE0}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1766,6 +1781,7 @@ Global
 		{BB15820E-B4B7-4DCB-887E-B78AA648FE3D} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
 		{6DCA52BE-054A-4F25-B08A-3195543A169C} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
 		{3AB7FB78-65FE-4526-991F-532F39D9A26A} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
+		{87F19B27-127E-4241-A442-345AC1F71FE0} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}

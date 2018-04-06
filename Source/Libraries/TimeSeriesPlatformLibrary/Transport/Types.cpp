@@ -31,28 +31,28 @@
 using namespace GSF::TimeSeries;
 using namespace boost::algorithm;
 
-Measurement::Measurement() : Adder(0), Multiplier(1)
+Measurement::Measurement() : 
+	Adder(0), 
+	Multiplier(1)
 {
 }
 
-float64_t Measurement::AdjustedValue()
+float64_t Measurement::AdjustedValue() const
 {
 	return Value * Multiplier + Adder;
 }
 
-void Measurement::GetUnixTime(time_t& unixSOC, int16_t& milliseconds)
+void Measurement::GetUnixTime(time_t& unixSOC, int16_t& milliseconds) const
 {
 	GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
 }
 
-SignalReference::SignalReference()
-{
-}
+SignalReference::SignalReference() = default;
 
-SignalReference::SignalReference(const string& signal)
+SignalReference::SignalReference(const string& signal) : SignalID(Guid())
 {
 	// Signal reference may contain multiple dashes, we're interested in the last one
-	int splitIndex = signal.find_last_of('-');
+	const int splitIndex = signal.find_last_of('-');
 
 	// Assign default values to fields
 	Index = 0;
@@ -126,18 +126,16 @@ SignalKind GSF::TimeSeries::ParseSignalKind(string acronym)
 	return SignalKind::Unknown;
 }
 
-MeasurementMetaData::MeasurementMetaData()
-{
-}
-
-MeasurementMetaData::MeasurementMetaData(const MeasurementMetaData& value)
-{
-	DeviceAcronym = value.DeviceAcronym;
-	ID = value.ID;
-	SignalID = value.SignalID;
-	PointTag = value.PointTag;
-	Reference = value.Reference;
-	PhasorSourceIndex = value.PhasorSourceIndex;
-	Description = value.Description;
-	UpdatedOn = value.UpdatedOn;
-}
+//MeasurementMetadata::MeasurementMetadata() = default;
+//
+//MeasurementMetadata::MeasurementMetadata(const MeasurementMetadata& value)
+//{
+//	DeviceAcronym = value.DeviceAcronym;
+//	ID = value.ID;
+//	SignalID = value.SignalID;
+//	PointTag = value.PointTag;
+//	Reference = value.Reference;
+//	PhasorSourceIndex = value.PhasorSourceIndex;
+//	Description = value.Description;
+//	UpdatedOn = value.UpdatedOn;
+//}

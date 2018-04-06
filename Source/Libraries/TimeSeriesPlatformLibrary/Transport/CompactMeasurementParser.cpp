@@ -27,6 +27,7 @@ using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 CompactMeasurementParser::CompactMeasurementParser(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets, bool includeTime, bool useMillisecondResolution) :
+	m_parsedMeasurement(nullptr),
 	m_signalIndexCache(signalIndexCache),
 	m_baseTimeOffsets(baseTimeOffsets),
 	m_includeTime(includeTime),
@@ -34,14 +35,14 @@ CompactMeasurementParser::CompactMeasurementParser(SignalIndexCache& signalIndex
 {
 }
 
-Measurement CompactMeasurementParser::GetParsedMeasurement() const
+MeasurementPtr CompactMeasurementParser::GetParsedMeasurement() const
 {
 	return m_parsedMeasurement;
 }
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
-uint32_t CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags) const
+uint32_t CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags)
 {
 	unsigned int fullFlags = 0;
 
@@ -87,7 +88,7 @@ size_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffs
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offset, size_t& length)
+bool CompactMeasurementParser::TryParseMeasurement(const uint8_t* buffer, size_t& offset, size_t& length)
 {
 	uint8_t compactFlags;
 	uint16_t signalIndex;
@@ -99,8 +100,8 @@ bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offs
 
 	bool usingBaseTimeOffset;
 	size_t timeIndex;
-
-	size_t end = offset + length;
+	
+	const size_t end = offset + length;
 
 	// Ensure that we at least have enough
 	// data to read the compact state flags
@@ -114,7 +115,7 @@ bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offs
 	timeIndex = (compactFlags & CompactTimeIndexFlag) ? 1 : 0;
 
 	// If we are using base time offsets, ensure that it is defined
-	if (usingBaseTimeOffset && (m_baseTimeOffsets == 0 || m_baseTimeOffsets[timeIndex] == 0))
+	if (usingBaseTimeOffset && (m_baseTimeOffsets == nullptr || m_baseTimeOffsets[timeIndex] == 0))
 		return false;
 
 	// Ensure that we have enough data to read the rest of the measurement
@@ -122,7 +123,7 @@ bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offs
 		return false;
 
 	// Read the signal index from the buffer
-	signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset + 1));
+	signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(buffer + offset + 1));
 
 	// If the signal index is not found in the cache, we cannot parse the measurement
 	if (!m_signalIndexCache.Contains(signalIndex))
@@ -134,7 +135,7 @@ bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offs
 	offset += 3;
 
 	// Read the measurement value from the buffer
-	measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*(float32_t*)(buffer + offset));
+	measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*reinterpret_cast<const float32_t*>(buffer + offset));
 	offset += 4;
 
 	if (m_includeTime)
@@ -142,20 +143,20 @@ bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offs
 		if (!usingBaseTimeOffset)
 		{
 			// Read full 8-byte timestamp from the buffer
-			timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*(int64_t*)(buffer + offset));
+			timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*reinterpret_cast<const int64_t*>(buffer + offset));
 			offset += 8;
 		}
 		else if (!m_useMillisecondResolution)
 		{
 			// Read 4-byte offset from the buffer and apply the appropriate base time offset
-			timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*(uint32_t*)(buffer + offset));
+			timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*reinterpret_cast<const uint32_t*>(buffer + offset));
 			timestamp += m_baseTimeOffsets[timeIndex];
 			offset += 4;
 		}
 		else
 		{
 			// Read 2-byte offset from the buffer, convert from milliseconds to ticks, and apply the appropriate base time offset
-			timestamp = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset));
+			timestamp = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(buffer + offset));
 			timestamp *= 10000;
 			timestamp += m_baseTimeOffsets[timeIndex];
 			offset += 2;
@@ -164,12 +165,13 @@ bool CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, size_t& offs
 
 	length = end - offset;
 
-	m_parsedMeasurement.Flags = MapToFullFlags(compactFlags);
-	m_parsedMeasurement.SignalID = signalID;
-	m_parsedMeasurement.Source = measurementSource;
-	m_parsedMeasurement.ID = measurementID;
-	m_parsedMeasurement.Value = measurementValue;
-	m_parsedMeasurement.Timestamp = timestamp;
+	m_parsedMeasurement = NewSharedPtr<Measurement>();
+	m_parsedMeasurement->Flags = MapToFullFlags(compactFlags);
+	m_parsedMeasurement->SignalID = signalID;
+	m_parsedMeasurement->Source = measurementSource;
+	m_parsedMeasurement->ID = measurementID;
+	m_parsedMeasurement->Value = measurementValue;
+	m_parsedMeasurement->Timestamp = timestamp;
 
 	return true;
 }

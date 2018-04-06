@@ -7,6 +7,9 @@
     <ClInclude Include="Common\Convert.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Date.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClCompile Include="Common\EndianConverter.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -19,6 +22,15 @@
     <ClInclude Include="Common\Types.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Common\pugiconfig.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\pugixml.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClCompile Include="Common\pugixml.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">

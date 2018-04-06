@@ -39,7 +39,7 @@ namespace Transport
 	{
 	private:
 		EndianConverter m_endianConverter;
-		Measurement m_parsedMeasurement;
+		MeasurementPtr m_parsedMeasurement;
 		
 		SignalIndexCache& m_signalIndexCache;
 		int64_t* m_baseTimeOffsets;
@@ -48,7 +48,7 @@ namespace Transport
 
 		// Takes the 8-bit compact measurement flags and maps
 		// them to the full 32-bit measurement flags format.
-		uint32_t MapToFullFlags(uint8_t compactFlags) const;
+		static uint32_t MapToFullFlags(uint8_t compactFlags) ;
 
 		// Gets the byte length of measurements parsed by this parser.
 		size_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
@@ -58,12 +58,12 @@ namespace Transport
 		CompactMeasurementParser(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets = 0, bool includeTime = true, bool useMillisecondResolution = false);
 
 		// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
-		Measurement GetParsedMeasurement() const;
+		MeasurementPtr GetParsedMeasurement() const;
 
 		// Attempts to parse a measurement from the buffer. Return value of false indicates
 		// that there is not enough data to parse the measurement. Offset and length will be
 		// updated by this method to indicate how many bytes were used when parsing.
-		bool TryParseMeasurement(uint8_t* buffer, size_t& offset, size_t& length);
+		bool TryParseMeasurement(const uint8_t* buffer, size_t& offset, size_t& length);
 
 		// These constants represent each flag in the 8-bit compact measurement state flags.
 		static const uint8_t CompactDataRangeFlag       = 0x01;

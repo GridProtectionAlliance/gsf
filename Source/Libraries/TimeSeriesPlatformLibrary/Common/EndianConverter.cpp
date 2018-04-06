@@ -28,7 +28,7 @@ using namespace GSF::TimeSeries;
 // Creates a new instance of the EndianConverter.
 EndianConverter::EndianConverter()
 {
-	union
+	const union
 	{
 		uint32_t num;
 		uint8_t bytes[4];
@@ -42,7 +42,7 @@ EndianConverter::EndianConverter()
 
 // Swaps the bytes in a character array.
 // Used for conversion between different byte orders.
-void EndianConverter::ByteSwap(uint8_t* value, size_t length) const
+void EndianConverter::ByteSwap(uint8_t* value, size_t length)
 {
 	uint8_t *start, *end;
 	uint8_t temp;

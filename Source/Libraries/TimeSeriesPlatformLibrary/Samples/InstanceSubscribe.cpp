@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  Convert.h - Gbtc
+//  AdvancedSubscribe.cpp - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,38 +21,56 @@
 //
 //******************************************************************************************************
 
-#ifndef __COMMON_CONVERT_H
-#define __COMMON_CONVERT_H
+#include <iostream>
 
-#include <cstddef>
-#include <string>
+#include "SubscriberHandler.h"
 
-#include "Types.h"
+SubscriberHandler* Subscriber1;
+SubscriberHandler* Subscriber2;
 
-using namespace std;
-
-namespace GSF {
-namespace TimeSeries
+int main(int argc, char* argv[])
 {
-	// Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
-	void GetUnixTime(const int64_t gepTime, time_t& unixSOC, int16_t& milliseconds);
+	string hostname;
+	uint16_t port;
 
-	// Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
-	size_t TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks);
+	// Ensure that the necessary
+	// command line arguments are given.
+	if (argc < 3)
+	{
+		cout << "Usage:" << endl;
+		cout << "    AdvancedSubscribe HOSTNAME PORT" << endl;
+		return 0;
+	}
 
-	// Converts an object to a string
-	template <class T>
-	string ToString(const T& obj);
+	// Get hostname and port.
+	hostname = argv[1];
+	stringstream(argv[2]) >> port;
+
+	// Initialize the subscribers.
+	Subscriber1 = new SubscriberHandler("Subscriber1");
+    Subscriber2 = new SubscriberHandler("Subscriber2");
+
+	Subscriber1->Initialize(hostname, port);
+	Subscriber2->Initialize(hostname, port);
+
+	Subscriber1->SetFilterExpression("FILTER TOP 5 ActiveMeasurements WHERE SignalType = 'FREQ'");
+	Subscriber2->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHA'");
+
+	Subscriber1->Connect();
+	Subscriber2->Connect();
+
+	// Wait until the user presses enter before quitting.
+	string line;
+	getline(cin, line);
+
+	Subscriber1->Disconnect();
+	Subscriber2->Disconnect();
+
+	delete Subscriber1;
+	delete Subscriber2;
 	
-	// Converts 16 contiguous bytes of character data into a globally unique identifier
-	Guid ToGuid(const uint8_t* data, bool swapBytes);
-	Guid ToGuid(const char* data);
+	// Disconnect the subscriber to stop background threads.
+	cout << "Disconnected." << endl;
 
-	// Returns a non-empty nor null value
-	const char* Coalesce(const char* data, const char* nonEmptyValue);
-
-	// Converts an XML formatted time string to a common epoch time
-	time_t ParseXMLTimestamp(const char* time);
-}}
-
-#endif
+	return 0;
+}

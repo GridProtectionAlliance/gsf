@@ -124,7 +124,7 @@ namespace TimeSeries
 	{
 		ScopeLock lock(m_mutex);
 
-		while (m_queue.size() > 0)
+		while (!m_queue.empty())
 			m_queue.pop();
 	}
 	
@@ -145,7 +145,7 @@ namespace TimeSeries
 	{
 		UniqueLock lock(m_mutex);
 
-		while(m_queue.size() == 0 && !m_release)
+		while(m_queue.empty() && !m_release)
 			m_dataWaitHandle.wait(lock);
 	}
 	

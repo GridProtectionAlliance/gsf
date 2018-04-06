@@ -21,15 +21,24 @@
 //
 //******************************************************************************************************
 
+#include <iostream>
+
 #include "SubscriberInstance.h"
 #include "Constants.h"
+#include "../Common/Convert.h"
+#include "../Common/pugixml.hpp"
 
-SubscriberInstance::SubscriberInstance() :
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
+using namespace pugi;
+
+SubscriberInstance::SubscriberInstance() :  // NOLINT
     m_hostname("localhost"),
     m_port(6165),
     m_udpPort(0),
     m_autoReconnect(true),
-    m_maxRetries(-1),
+	m_autoParseMetadata(true),
+	m_maxRetries(-1),
     m_retryInterval(2000),
     m_filterExpression(SubscribeAllNoStatsExpression),
     m_startTime(""),
@@ -37,16 +46,13 @@ SubscriberInstance::SubscriberInstance() :
 {
     // Reference this SubscriberInstance in DataSubsciber user data
     m_subscriber.SetUserData(this);
-    m_subscriber.SetMetadataCompressed(false);
 }
 
-SubscriberInstance::~SubscriberInstance()
-{
-}
+SubscriberInstance::~SubscriberInstance() = default;
 
 // public functions
 
-void SubscriberInstance::Initialize(string hostname, uint16_t port, uint16_t udpPort)
+void SubscriberInstance::Initialize(const string& hostname, uint16_t port, uint16_t udpPort)
 {
     m_hostname = hostname;
     m_port = port;
@@ -61,6 +67,16 @@ bool SubscriberInstance::GetAutoReconnect() const
 void SubscriberInstance::SetAutoReconnect(bool autoReconnect)
 {
     m_autoReconnect = autoReconnect;
+}
+
+bool SubscriberInstance::GetAutoParseMetadata() const
+{
+	return m_autoParseMetadata;
+}
+
+void SubscriberInstance::SetAutoParseMetadata(bool autoParseMetadata)
+{
+	m_autoParseMetadata = autoParseMetadata;
 }
 
 int16_t SubscriberInstance::GetMaxRetries() const
@@ -83,13 +99,13 @@ void SubscriberInstance::SetRetyInterval(int16_t retryInterval)
     m_retryInterval = retryInterval;
 }
 
-void SubscriberInstance::EstablishHistoricalRead(string startTime, string stopTime)
+void SubscriberInstance::EstablishHistoricalRead(const string& startTime, const string& stopTime)
 {
     m_startTime = startTime;
     m_stopTime = stopTime;
 }
 
-void SubscriberInstance::SetFilterExpression(string filterExpression)
+void SubscriberInstance::SetFilterExpression(const string& filterExpression)
 {
     m_filterExpression = filterExpression;
 
@@ -138,9 +154,13 @@ void SubscriberInstance::Connect()
     {
         ConnectionEstablished();
 
-        // Request metadata upon successful connection, after metadata is handled
-        // the SubscriberInstance will then subscribe to the desired data
-        m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh);
+        // If automatically parsing metadata, request metadata upon successful connection,
+		// after metadata is handled the SubscriberInstance will then initiate subscribe;
+		// otherwise, initiate subscribe immediately
+		if (m_autoParseMetadata)
+			m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh);
+		else
+			m_subscriber.Subscribe(m_info);
     }
     else
     {
@@ -158,7 +178,7 @@ void SubscriberInstance::SetHistoricalReplayInterval(int32_t replayInterval)
     if (m_subscriber.IsSubscribed())
     {
         replayInterval = m_endianConverter.ConvertBigEndian(replayInterval);
-        m_subscriber.SendServerCommand(ServerCommand::UpdateProcessingInterval, (uint8_t*)&replayInterval, 0, 4);
+        m_subscriber.SendServerCommand(ServerCommand::UpdateProcessingInterval, reinterpret_cast<uint8_t*>(&replayInterval), 0, 4);
     }
 }
 
@@ -207,6 +227,198 @@ bool SubscriberInstance::IsSubscribed() const
     return m_subscriber.IsSubscribed();
 }
 
+void SubscriberInstance::IterateDeviceMetadata(DeviceMetadataIteratorHandlerFunction iteratorHandler, void* userData)
+{
+	m_devicesLock.lock();
+
+	for (auto const& item : m_devices)
+		iteratorHandler(item.second, userData);
+
+	m_devicesLock.unlock();
+}
+
+void SubscriberInstance::IterateMeasurementMetadata(MeasurementMetadataIteratorHandlerFunction iteratorHandler, void* userData)
+{
+	m_measurementsLock.lock();
+
+	for (auto const& item : m_measurements)
+		iteratorHandler(item.second, userData);
+
+	m_measurementsLock.unlock();
+}
+
+void SubscriberInstance::IterateConfigurationFrames(ConfigurationFrameIteratorHandlerFunction iteratorHandler, void* userData)
+{
+	m_configurationFramesLock.lock();
+
+	for (auto const& item : m_configurationFrames)
+		iteratorHandler(item.second, userData);
+
+	m_configurationFramesLock.unlock();
+}
+
+void IterateDevices(const DeviceMetadataPtr& device, void* userData)
+{
+	vector<string>* deviceAcronyms = static_cast<vector<string>*>(userData);
+	deviceAcronyms->push_back(device->Acronym);
+}
+
+bool SubscriberInstance::TryGetDeviceAcronyms(vector<string>& deviceAcronyms)
+{
+	deviceAcronyms.clear();
+	
+	IterateDeviceMetadata(&IterateDevices, &deviceAcronyms);
+
+	return !deviceAcronyms.empty();
+}
+
+bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, DeviceMetadataPtr& deviceMetadata)
+{
+	bool found = false;
+
+	m_devicesLock.lock();
+
+	const auto iterator = m_devices.find(deviceAcronym);
+
+	if (iterator != m_devices.end())
+	{
+		deviceMetadata = iterator->second;
+		found = true;
+	}
+
+	m_devicesLock.unlock();
+
+	return found;
+}
+
+bool SubscriberInstance::TryGetMeasurementMetdata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata)
+{
+	bool found = false;
+
+	m_measurementsLock.lock();
+
+	const auto iterator = m_measurements.find(signalID);
+
+	if (iterator != m_measurements.end())
+	{
+		measurementMetadata = iterator->second;
+		found = true;
+	}
+
+	m_measurementsLock.unlock();
+
+	return found;
+}
+
+bool SubscriberInstance::TryGetConfigurationFrame(const string& deviceAcronym, ConfigurationFramePtr& configurationFrame)
+{
+	bool found = false;
+
+	m_configurationFramesLock.lock();
+
+	const auto iterator = m_configurationFrames.find(deviceAcronym);
+
+	if (iterator != m_configurationFrames.end())
+	{
+		configurationFrame = iterator->second;
+		found = true;
+	}
+
+	m_configurationFramesLock.unlock();
+
+	return found;
+}
+
+bool SubscriberInstance::TryFindTargetConfigurationFrame(const Guid& signalID, ConfigurationFramePtr& targetFrame)
+{
+	bool found = false;
+
+	m_configurationFramesLock.lock();
+
+	for (auto const& frameRecord : m_configurationFrames)
+	{
+		const ConfigurationFramePtr currentFrame = frameRecord.second;
+		const auto iterator = currentFrame->Measurements.find(signalID);
+
+		if (iterator != currentFrame->Measurements.end())
+		{
+			targetFrame = currentFrame;
+			found = true;
+			break;
+		}
+	}
+
+	m_configurationFramesLock.unlock();
+
+	return found;
+}
+
+bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata)
+{
+	bool found = false;
+
+	if (sourceFrame->StatusFlags->SignalID == signalID)
+	{
+		measurementMetadata = sourceFrame->StatusFlags;
+		found = true;
+	}
+	else if (sourceFrame->Frequency->SignalID == signalID)
+	{
+		measurementMetadata = sourceFrame->Frequency;
+		found = true;
+	}
+	else
+	{
+		// Search phasors
+		for (auto const& phasor : sourceFrame->Phasors)
+		{
+			if (phasor->Angle->SignalID == signalID)
+			{
+				measurementMetadata = phasor->Angle;
+				found = true;
+				break;
+			}
+
+			if (phasor->Magnitude->SignalID == signalID)
+			{
+				measurementMetadata = phasor->Magnitude;
+				found = true;
+				break;
+			}
+		}
+
+		// Search analogs
+		if (!found)
+		{
+			for (auto const& analog : sourceFrame->Analogs)
+			{
+				if (analog->SignalID == signalID)
+				{
+					measurementMetadata = analog;
+					found = true;
+					break;
+				}
+			}
+		}
+
+		// Search digitals
+		if (!found)
+		{
+			for (auto const& digital : sourceFrame->Digitals)
+			{
+				if (digital->SignalID == signalID)
+				{
+					measurementMetadata = digital;
+					found = true;
+					break;
+				}
+			}
+		}
+	}
+
+	return found;
+}
+
 // protected functions
 
 // All the following protected functions are virtual so that derived
@@ -239,21 +451,9 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
 
     // Define desired filter expression
     info.FilterExpression = m_filterExpression;
-
-    // To set up a remotely synchronized subscription, set this flag
-    // to true and add the framesPerSecond parameter to the
-    // ExtraConnectionStringParameters. Additionally, the following
-    // example demonstrates the use of some other useful parameters
-    // when setting up remotely synchronized subscriptions.
-    //
-    //info.RemotelySynchronized = true;
-    //info.ExtraConnectionStringParameters = "framesPerSecond=30;timeResolution=10000;downsamplingMethod=Closest";
-
     info.RemotelySynchronized = false;
     info.Throttled = false;
-
     info.UdpDataChannel = false;
-
     info.IncludeTime = true;
     info.LagTime = 3.0;
     info.LeadTime = 1.0;
@@ -263,12 +463,12 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     return info;
 }
 
-void SubscriberInstance::StatusMessage(string message)
+void SubscriberInstance::StatusMessage(const string& message)
 {
     cout << message << endl << endl;
 }
 
-void SubscriberInstance::ErrorMessage(string message)
+void SubscriberInstance::ErrorMessage(const string& message)
 {
     cerr << message << endl << endl;
 }
@@ -277,11 +477,334 @@ void SubscriberInstance::DataStartTime(time_t unixSOC, int milliseconds)
 {
 }
 
-void SubscriberInstance::ReceivedMetadata(vector<uint8_t> payload)
+void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
+{
+	if (!m_autoParseMetadata)
+		return;
+
+	if (payload.empty())
+	{
+		ErrorMessage("Received empty payload for meta data refresh.");
+		return;
+	}
+
+	vector<uint8_t>* uncompressed;
+
+	// Step 1: Decompress meta-data if needed
+	if (IsMetadataCompressed())
+	{
+		// Perform zlib decompression on buffer
+		const MemoryStream payloadStream(payload);
+		Decompressor decompressor;
+		
+		decompressor.push(GZipStream());
+		decompressor.push(payloadStream);
+
+		uncompressed = new vector<uint8_t>();
+		CopyStream(decompressor, *uncompressed);
+	}
+	else
+	{
+		uncompressed = const_cast<vector<uint8_t>*>(&payload);
+	}
+
+	// Step 2: Load string into an XML parser
+	xml_document document;
+
+	const xml_parse_result result = document.load_buffer_inplace(static_cast<void*>(uncompressed->data()), uncompressed->size());
+
+	if (result.status != xml_parse_status::status_ok)
+	{
+		if (IsMetadataCompressed())
+			delete uncompressed;
+
+		stringstream errorMessageStream;
+		errorMessageStream << "Failed to parse meta data XML, status code = 0x" << hex << result.status;
+		ErrorMessage(errorMessageStream.str());
+		return;
+	}
+
+	// Find root node
+	xml_node rootNode = document.child("NewDataSet");
+
+	// Query DeviceDetail records from metadata
+	map<string, DeviceMetadataPtr> devices;
+
+	for (xml_node device = rootNode.child("DeviceDetail"); device; device = device.next_sibling("DeviceDetail"))
+	{
+		DeviceMetadataPtr deviceMetadata = NewSharedPtr<DeviceMetadata>();
+
+		deviceMetadata->Acronym = device.child_value("Acronym");
+		deviceMetadata->Name = device.child_value("Name");
+		deviceMetadata->UniqueID = ToGuid(device.child_value("UniqueID"));
+		deviceMetadata->AccessID = stoi(Coalesce(device.child_value("AccessID"), "0"));
+		deviceMetadata->ParentAcronym = device.child_value("ParentAcronym");
+		deviceMetadata->ProtocolName = device.child_value("ProtocolName");
+		deviceMetadata->FramesPerSecond = stoi(Coalesce(device.child_value("FramesPerSecond"), "30"));
+		deviceMetadata->CompanyAcronym = device.child_value("CompanyAcronym");
+		deviceMetadata->VendorAcronym = device.child_value("vendorAcronym");
+		deviceMetadata->VendorDeviceName = device.child_value("VendorDeviceName");
+		deviceMetadata->Longitude = stod(Coalesce(device.child_value("Longitude"), "0.0"));
+		deviceMetadata->Latitude = stod(Coalesce(device.child_value("Latitude"), "0.0"));
+		deviceMetadata->UpdatedOn = ParseXMLTimestamp(device.child_value("UpdatedOn"));
+
+		devices.insert(pair<string, DeviceMetadataPtr>(deviceMetadata->Acronym, deviceMetadata));
+	}
+
+	// Query MeasurementDetail records from metadata
+	map<Guid, MeasurementMetadataPtr> measurements;
+
+	for (xml_node device = rootNode.child("MeasurementDetail"); device; device = device.next_sibling("MeasurementDetail"))
+	{
+		MeasurementMetadataPtr measurementMetadata = NewSharedPtr<MeasurementMetadata>();
+
+		measurementMetadata->DeviceAcronym = device.child_value("DeviceAcronym");
+		measurementMetadata->ID = device.child_value("ID");
+		measurementMetadata->SignalID = ToGuid(device.child_value("SignalID"));
+		measurementMetadata->PointTag = device.child_value("PointTag");
+		measurementMetadata->Reference = SignalReference(string(device.child_value("SignalReference")));
+		measurementMetadata->PhasorSourceIndex = stoi(Coalesce(device.child_value("PhasorSourceIndex"), "0"));
+		measurementMetadata->Description = device.child_value("Description");
+		measurementMetadata->UpdatedOn = ParseXMLTimestamp(device.child_value("UpdatedOn"));
+
+		measurements.insert(pair<Guid, MeasurementMetadataPtr>(measurementMetadata->SignalID, measurementMetadata));
+
+		// Lookup associated device
+		auto iterator = devices.find(measurementMetadata->DeviceAcronym);
+
+		if (iterator != devices.end())
+		{
+			// Add measurement to device's measurement list
+			DeviceMetadataPtr& deviceMetaData = iterator->second;
+			deviceMetaData->Measurements.push_back(measurementMetadata);
+		}
+	}
+
+	// Query PhasorDetail records from metadata
+	int phasorCount = 0;
+
+	for (xml_node device = rootNode.child("PhasorDetail"); device; device = device.next_sibling("PhasorDetail"))
+	{
+		PhasorMetadataPtr phasorMetadata = NewSharedPtr<PhasorMetadata>();
+
+		phasorMetadata->DeviceAcronym = device.child_value("DeviceAcronym");
+		phasorMetadata->Label = device.child_value("Label");
+		phasorMetadata->Type = device.child_value("Type");
+		phasorMetadata->Phase = device.child_value("Phase");
+		phasorMetadata->SourceIndex = stoi(Coalesce(device.child_value("SourceIndex"), "0"));
+		phasorMetadata->UpdatedOn = ParseXMLTimestamp(device.child_value("UpdatedOn"));
+
+		// Create a new phasor reference
+		PhasorReferencePtr phasorReference = NewSharedPtr<PhasorReference>();
+		phasorReference->Phasor = phasorMetadata;
+
+		// Lookup associated device
+		auto iterator = devices.find(phasorMetadata->DeviceAcronym);
+
+		if (iterator == devices.end())
+		{
+			// If associated device was not found, continue on
+			stringstream errorMessageStream;
+			errorMessageStream << "Could not find device " << phasorMetadata->DeviceAcronym << " referenced by phasor " << phasorMetadata->Label;
+			ErrorMessage(errorMessageStream.str());
+			continue;
+		}
+
+		DeviceMetadataPtr& deviceMetadata = iterator->second;
+
+		// Lookup associated phasor measurements
+		int matchCount = 0;
+
+		for (auto const& measurementMetadata : deviceMetadata->Measurements)
+		{
+			// Check if source indexes also match - if so, we found an associated measurement
+			if (measurementMetadata->PhasorSourceIndex == phasorMetadata->SourceIndex)
+			{
+				// There should be two measurements that match DeviceAcronym and SourceIndex,
+				// specifically one for the angle and one for the magnitude for each phasor
+				if (measurementMetadata->Reference.Kind == SignalKind::Angle)
+				{
+					phasorReference->Angle = measurementMetadata;
+					matchCount++;
+				}
+				else if (measurementMetadata->Reference.Kind == SignalKind::Magnitude)
+				{
+					phasorReference->Magnitude = measurementMetadata;
+					matchCount++;
+				}
+				else
+				{
+					// Unexpected condition:
+					stringstream errorMessageStream;
+					errorMessageStream << "Encountered a " << measurementMetadata->Reference.Kind << " measurement that had a matching SourceIndex for phasor " << phasorMetadata->Label;
+					ErrorMessage(errorMessageStream.str());
+				}
+
+				// Stop looking if we have found both matches
+				if (matchCount >= 2)
+					break;
+			}
+		}
+
+		// Add phasor to associated device meta data record
+		deviceMetadata->Phasors.push_back(phasorReference);
+		phasorCount++;
+	}
+
+	// Construct a "configuration frame" for each of the devices
+	map<string, ConfigurationFramePtr> configurationFrames;	
+	ConstructConfigurationFrames(devices, measurements, configurationFrames);
+
+	// Replace the configuration frames list
+	m_configurationFramesLock.lock();
+	m_configurationFrames = configurationFrames;
+	m_configurationFramesLock.unlock();
+
+	// Replace the device metadata list
+	m_devicesLock.lock();
+	m_devices = devices;
+	m_devicesLock.unlock();
+
+	// Replace the measurement metadata list
+	m_measurementsLock.lock();
+	m_measurements = measurements;
+	m_measurementsLock.unlock();
+
+	stringstream message;
+	message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from GEP meta data";
+	StatusMessage(message.str());
+
+	// Release uncompressed buffer
+	if (IsMetadataCompressed())
+		delete uncompressed;
+
+	// Notify derived class that meta-data has been parsed and is now available
+	ParsedMetadata();
+}
+
+void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMetadataPtr>& devices, const map<Guid, MeasurementMetadataPtr>& measurements, map<string, ConfigurationFramePtr>& configurationFrames)
+{
+	for (auto const& deviceMapRecord : devices)
+	{
+		const DeviceMetadataPtr deviceMetadata = deviceMapRecord.second;
+		const vector<PhasorReferencePtr>& phasors = deviceMetadata->Phasors;
+		ConfigurationFramePtr configurationFrame = NewSharedPtr<ConfigurationFrame>();
+		MeasurementMetadataPtr measurement;
+
+		// Add single measurement definitions
+		configurationFrame->DeviceAcronym = deviceMetadata->Acronym;
+
+		if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Status, measurement))
+		{
+			configurationFrame->StatusFlags = measurement;
+			configurationFrame->Measurements.insert(measurement->SignalID);
+		}
+		
+		if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Frequency, measurement))
+		{
+			configurationFrame->Frequency = measurement;
+			configurationFrame->Measurements.insert(measurement->SignalID);
+		}
+
+		// Add phasor definitions
+		const int phasorCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Angle);
+
+		for (int i = 1; i <= phasorCount; i++)
+		{
+			bool found = false;
+
+			for (auto const& phasorReference : phasors)
+			{
+				if (phasorReference->Phasor->SourceIndex == i)
+				{
+					found = true;
+					configurationFrame->Phasors.push_back(phasorReference);
+					configurationFrame->Measurements.insert(phasorReference->Angle->SignalID);
+					configurationFrame->Measurements.insert(phasorReference->Magnitude->SignalID);
+					break;
+				}
+			}
+
+			if (!found)
+			{
+				// If no associated phasor reference was found,
+				// we add an empty one to make sure each phasor
+				// "position" has an entry in the config frame
+				configurationFrame->Phasors.push_back(NewSharedPtr<PhasorReference>());
+			}
+		}
+
+		// Add analog definitions
+		const int analogCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Analog);
+
+		for (int i = 1; i <= analogCount; i++)
+		{
+			if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Analog, i, measurement))
+			{
+				configurationFrame->Analogs.push_back(measurement);
+				configurationFrame->Measurements.insert(measurement->SignalID);
+			}
+		}
+			
+
+		// Add digital definitions
+		const int digitalCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Digital);
+
+		for (int i = 1; i <= digitalCount; i++)
+		{
+			if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Digital, i, measurement))
+			{
+				configurationFrame->Digitals.push_back(measurement);
+				configurationFrame->Measurements.insert(measurement->SignalID);
+			}
+		}
+
+		configurationFrames.insert(pair<string, ConfigurationFramePtr>(configurationFrame->DeviceAcronym, configurationFrame));
+	}
+}
+
+bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata)
+{
+	return TryFindMeasurement(measurements, kind, 0, measurementMetadata);
+}
+
+bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, int index, MeasurementMetadataPtr& measurementMetadata)
+{
+	for (auto const& measurement : measurements)
+	{
+		const SignalReference& reference = measurement->Reference;
+
+		if (reference.Kind == kind && (index == 0 || reference.Index == index))
+		{
+			measurementMetadata = measurement;
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+int SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind)
+{
+	int count = 0;
+
+	// Find largest signal reference index - this will be count
+	for (auto const& measurement : measurements)
+	{
+		const SignalReference& reference = measurement->Reference;
+
+		if (reference.Kind == kind && reference.Index > count)
+			count = reference.Index;
+	}
+
+	return count;
+}
+
+void SubscriberInstance::ParsedMetadata()
 {
 }
 
-void SubscriberInstance::ReceivedNewMeasurements(vector<Measurement> measurements)
+void SubscriberInstance::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {
 }
 
@@ -312,7 +835,7 @@ void SubscriberInstance::ConnectionTerminated()
 
 void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
     if (source->IsConnected())
     {
@@ -327,21 +850,21 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
     }
 }
 
-void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, string message)
+void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, const string& message)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     instance->StatusMessage(message);
 }
 
-void SubscriberInstance::HandleErrorMessage(DataSubscriber* source, string message)
+void SubscriberInstance::HandleErrorMessage(DataSubscriber* source, const string& message)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     instance->ErrorMessage(message);
 }
 
 void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t startTime)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     time_t unixSOC;
     int16_t milliseconds;
     
@@ -350,26 +873,27 @@ void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t sta
     instance->DataStartTime(unixSOC, milliseconds);
 }
 
-void SubscriberInstance::HandleMetadata(DataSubscriber* source, vector<uint8_t> payload)
+void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uint8_t>& payload)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     
     // Call virtual method to handle metadata payload
     instance->ReceivedMetadata(payload);
 
-    // Start subscription after successful user meta-data handling
-    source->Subscribe(instance->m_info);
+    // When auto-parsing metadata, start subscription after successful user meta-data handling
+	if (instance->m_autoParseMetadata)
+		source->Subscribe(instance->m_info);
 }
 
-void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, vector<Measurement> measurements)
+void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     instance->ReceivedNewMeasurements(measurements);
 }
 
 void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
     // Call virtual method to notify consumer that configuration has changed
     instance->ConfigurationChanged();
@@ -378,15 +902,15 @@ void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
     source->SendServerCommand(ServerCommand::MetadataRefresh);
 }
 
-void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, string message)
+void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, const string& message)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();   
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());   
     instance->StatusMessage(message);
     instance->HistoricalReadComplete();
 }
 
 void SubscriberInstance::HandleConnectionTerminated(DataSubscriber* source)
 {
-    SubscriberInstance* instance = (SubscriberInstance*)source->GetUserData();
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     instance->ConnectionTerminated();
 }

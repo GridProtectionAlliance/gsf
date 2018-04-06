@@ -40,7 +40,7 @@ namespace TimeSeries
 
 		// Swaps the bytes in a character array.
 		// Used for conversion between different byte orders.
-		void ByteSwap(uint8_t* value, size_t length) const;
+		static void ByteSwap(uint8_t* value, size_t length);
 
 	public:
 		// Creates a new instance.
@@ -74,7 +74,7 @@ namespace TimeSeries
 	T EndianConverter::ConvertBigEndian(T value) const
 	{
 		if (m_nativeOrder != EndianConverter::BigEndian)
-			ByteSwap((uint8_t*)&value, sizeof(T));
+			ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
 
 		return value;
 	}
@@ -85,7 +85,7 @@ namespace TimeSeries
 	T EndianConverter::ConvertLittleEndian(T value) const
 	{
 		if (m_nativeOrder != EndianConverter::LittleEndian)
-			ByteSwap((uint8_t*)&value, sizeof(T));
+			ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
 
 		return value;
 	}

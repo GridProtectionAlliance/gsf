@@ -39,6 +39,18 @@ found in:
 
 	...\gsf\Source\Applications\TimeSeries Platform Library Samples
 
+The GSF Time Series Platform Library uses zlib features of Boost, as a result
+compiling boost requires zlib source code that can be downloaded separately:
+	https://zlib.net/
+
+After unzipping the zlib source code, set the following Boost compile script
+environmental variables to the root of the zlib source code path, e.g.:
+
+	set ZLIB_SOURCE="C:\zlib-1.2.11"
+	set ZLIB_INCLUDE="C:\zlib-1.2.11"
+
+Once environmental variables are set for zlib paths, compile Boost as normal.
+
 ------------------------------------------------------------------------------
 Compiling in Linux
 ------------------------------------------------------------------------------

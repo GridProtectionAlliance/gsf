@@ -205,7 +205,7 @@ void ProcessMeasurements(DataSubscriber* source, vector<Measurement> newMeasurem
 	{
 		cout << Subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
-		if (newMeasurements.size() > 0)
+		if (!newMeasurements.empty())
 		{
 			if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
 				cout << "Timestamp: " << string(timestamp) << endl;
@@ -238,13 +238,13 @@ void Resubscribe(DataSubscriber* source)
 }
 
 // Callback which is called to display status messages from the subscriber.
-void DisplayStatusMessage(DataSubscriber* source, string message)
+void DisplayStatusMessage(DataSubscriber* source, const string& message)
 {
 	cout << message << endl << endl;
 }
 
 // Callback which is called to display error messages from the connector and subscriber.
-void DisplayErrorMessage(DataSubscriber* source, string message)
+void DisplayErrorMessage(DataSubscriber* source, const string& message)
 {
 	cerr << message << endl << endl;
 }

@@ -50,16 +50,12 @@ namespace Transport
 		string m_message;
 
 	public:
-		SubscriberException(string message)
+		SubscriberException(const string& message) noexcept
 		{
 			m_message = message;
 		}
 
-		~SubscriberException() throw()
-		{
-		}
-
-		const char* what() const throw()
+		const char* what() const noexcept
 		{
 			return &m_message[0];
 		}
@@ -69,7 +65,7 @@ namespace Transport
 	struct SubscriptionInfo
 	{
 		string FilterExpression;
-		void (*NewMeasurementsCallback)(DataSubscriber*, vector<Measurement>);
+		void (*NewMeasurementsCallback)(DataSubscriber*, const vector<MeasurementPtr>&);
 
 		bool RemotelySynchronized;
 		bool Throttled;
@@ -91,7 +87,7 @@ namespace Transport
 		string ExtraConnectionStringParameters;
 
 		SubscriptionInfo()
-			: NewMeasurementsCallback(0),
+			: NewMeasurementsCallback(nullptr),
 			  RemotelySynchronized(false),
 			  Throttled(false),
 			  UdpDataChannel(false),
@@ -113,11 +109,11 @@ namespace Transport
 		static const size_t PayloadHeaderSize = 8;
 
 		// Function pointer types
-		typedef void (*DispatcherFunction)(DataSubscriber*, vector<uint8_t>);
-		typedef void (*MessageCallback)(DataSubscriber*, string);
+		typedef void (*DispatcherFunction)(DataSubscriber*, const vector<uint8_t>&);
+		typedef void (*MessageCallback)(DataSubscriber*, const string&);
 		typedef void (*DataStartTimeCallback)(DataSubscriber*, int64_t);
-		typedef void (*MetadataCallback)(DataSubscriber*, vector<uint8_t>);
-		typedef void (*NewMeasurementsCallback)(DataSubscriber*, vector<Measurement>);
+		typedef void (*MetadataCallback)(DataSubscriber*, const vector<uint8_t>&);
+		typedef void (*NewMeasurementsCallback)(DataSubscriber*, const vector<MeasurementPtr>&);
 		typedef void (*ConfigurationChangedCallback)(DataSubscriber*);
 		typedef void (*ConnectionTerminatedCallback)(DataSubscriber*);
 
@@ -198,17 +194,17 @@ namespace Transport
 
 		// Dispatchers
 		void Dispatch(DispatcherFunction function);
-		void Dispatch(DispatcherFunction function, uint8_t* data, size_t offset, size_t length);
-		void DispatchStatusMessage(string message);
-		void DispatchErrorMessage(string message);
+		void Dispatch(DispatcherFunction function, const uint8_t* data, size_t offset, size_t length);
+		void DispatchStatusMessage(const string& message);
+		void DispatchErrorMessage(const string& message);
 
-		static void StatusMessageDispatcher(DataSubscriber* source, vector<uint8_t> data);
-		static void ErrorMessageDispatcher(DataSubscriber* source, vector<uint8_t> data);
-		static void DataStartTimeDispatcher(DataSubscriber* source, vector<uint8_t> data);
-		static void MetadataDispatcher(DataSubscriber* source, vector<uint8_t> data);
-		static void NewMeasurementsDispatcher(DataSubscriber* source, vector<uint8_t> data);
-		static void ProcessingCompleteDispatcher(DataSubscriber* source, vector<uint8_t> data);
-		static void ConfigurationChangedDispatcher(DataSubscriber* source, vector<uint8_t> data);
+		static void StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+		static void ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+		static void DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+		static void MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+		static void NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+		static void ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+		static void ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
 
 		// The connection terminated callback is a special case that
 		// must be called on its own separate thread so that it can
@@ -246,8 +242,8 @@ namespace Transport
 		void RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback);
 		void RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback);
 
-		// Gets or sets value that determines
-		// whether metadata transfer is compressed.
+		// Gets or sets value that determines whether
+		// the metadata transfer is compressed.
 		bool IsMetadataCompressed() const;
 		void SetMetadataCompressed(bool compressed);
 
@@ -289,7 +285,7 @@ namespace Transport
 		//   ServerCommand::PublishCommandMeasurements
 		void SendServerCommand(uint8_t commandCode);
 		void SendServerCommand(uint8_t commandCode, string message);
-		void SendServerCommand(uint8_t commandCode, uint8_t* data, size_t offset, size_t length);
+		void SendServerCommand(uint8_t commandCode, const uint8_t* data, size_t offset, size_t length);
 
 		// Convenience method to send the currently defined and/or supported
 		// operational modes to the server. Supported operational modes are
@@ -308,7 +304,7 @@ namespace Transport
 	class SubscriberConnector
 	{
 	private:
-		typedef void (*ErrorMessageCallback)(DataSubscriber*, string);
+		typedef void (*ErrorMessageCallback)(DataSubscriber*, const string&);
 		typedef void (*ReconnectCallback)(DataSubscriber*);
 
 		ErrorMessageCallback m_errorMessageCallback;
@@ -330,8 +326,8 @@ namespace Transport
 	public:
 		// Creates a new instance.
 		SubscriberConnector()
-			: m_errorMessageCallback(0),
-			  m_reconnectCallback(0),
+			: m_errorMessageCallback(nullptr),
+			  m_reconnectCallback(nullptr),
 			  m_port(0),
 			  m_maxRetries(-1),
 			  m_retryInterval(2000),
@@ -350,14 +346,14 @@ namespace Transport
 		void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
 
 		// Begin connection sequence.
-		bool Connect(DataSubscriber& subscriber);
+		bool Connect(DataSubscriber& subscriber) const;
 
 		// Cancel all current and
 		// future connection sequences.
 		void Cancel();
 
 		// Set the hostname of the publisher to connect to.
-		void SetHostname(string hostname);
+		void SetHostname(const string& hostname);
 
 		// Set the port that the publisher is listening on.
 		void SetPort(uint16_t port);

@@ -24,19 +24,24 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <boost/uuid/string_generator.hpp>
 
 #include "Convert.h"
+#include "Date.h"
 
 using namespace std;
+using namespace std::chrono;
+using namespace date;
+using namespace boost::uuids;
 using namespace GSF::TimeSeries;
 
-void GSF::TimeSeries::GetUnixTime(int64_t ticks, time_t& unixSOC, int16_t& milliseconds)
+void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, int16_t& milliseconds)
 {
 	// Unix dates are measured as the number of seconds since 1/1/1970
 	const int64_t BaseTimeOffset = 621355968000000000L;
 
-	unixSOC = (time_t)((ticks - BaseTimeOffset) / 10000000);
-	milliseconds = (int16_t)(ticks / 10000 % 1000);
+	unixSOC = static_cast<time_t>((ticks - BaseTimeOffset) / 10000000);
+	milliseconds = static_cast<int16_t>(ticks / 10000 % 1000);
 }
 
 size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks)
@@ -68,26 +73,107 @@ size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, 
 
 		switch (c)
 		{
-		case 'f':
-		{
-			stringstream temp;
-			temp << setw(3) << setfill('0') << milliseconds;
-			formatStream << temp.str();
-			break;
-		}
+			case 'f':
+			{
+				stringstream temp;
+				temp << setw(3) << setfill('0') << milliseconds;
+				formatStream << temp.str();
+				break;
+			}
 
-		case 't':
-			formatStream << ticks;
-			break;
+			case 't':
+				formatStream << ticks;
+				break;
 
-		default:
-			formatStream << '%' << c;
-			break;
+			default:
+				formatStream << '%' << c;
+				break;
 		}
 	}
 
 	struct tm timeinfo;
-	localtime_s(&timeinfo, &fromSeconds);
+	gmtime_s(&timeinfo, &fromSeconds);
 
 	return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
+}
+
+template <class T>
+string GSF::TimeSeries::ToString(const T& obj)
+{
+	stringstream stream;
+	stream << obj;
+	return stream.str();
+}
+
+Guid GSF::TimeSeries::ToGuid(const uint8_t* data, bool swapBytes)
+{
+	Guid id;
+	uint8_t swappedBytes[16];
+	uint8_t* encodedBytes;
+	
+	// Check if bytes need to be decoded in reverse order
+	if (swapBytes)
+	{
+		uint8_t copy[8];
+
+		for (size_t i = 0; i < 16; i++)
+		{
+			swappedBytes[i] = data[15 - i];
+
+			if (i < 8)
+				copy[i] = swappedBytes[i];
+		}
+
+		// Convert Microsoft encoding to RFC
+		swappedBytes[3] = copy[0];
+		swappedBytes[2] = copy[1];
+		swappedBytes[1] = copy[2];
+		swappedBytes[0] = copy[3];
+
+		swappedBytes[4] = copy[5];
+		swappedBytes[5] = copy[4];
+
+		swappedBytes[6] = copy[7];
+		swappedBytes[7] = copy[6];
+
+		encodedBytes = swappedBytes;
+	}
+	else
+	{
+		encodedBytes = const_cast<uint8_t*>(data);
+	}
+
+	for (Guid::iterator iter = id.begin(); iter != id.end(); ++iter, ++encodedBytes)
+		*iter = static_cast<Guid::value_type>(*encodedBytes);
+
+	return id;
+}
+
+Guid GSF::TimeSeries::ToGuid(const char* data)
+{
+	const string_generator generator;
+	return generator(data);
+}
+
+const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValue)
+{
+	if (data == nullptr)
+		return nonEmptyValue;
+
+	if (strlen(data) == 0)
+		return nonEmptyValue;
+
+	return data;
+}
+
+time_t GSF::TimeSeries::ParseXMLTimestamp(const char* time)
+{
+	istringstream in { time };
+	sys_seconds timestamp;
+	
+	// Parse an XML formatted timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00,
+	// using the Hinnant date library: https://github.com/HowardHinnant/date
+	in >> parse("%Y-%m-%dT%T%z", timestamp);
+
+	return system_clock::to_time_t(timestamp);
 }

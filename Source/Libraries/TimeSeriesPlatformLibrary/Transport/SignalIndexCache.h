@@ -66,7 +66,7 @@ namespace Transport
 
 		// Gets the first half of the human-readable measurement
 		// key associated with the given 16-bit runtime ID.
-		string GetSource(uint16_t signalIndex) const;
+		const string& GetSource(uint16_t signalIndex) const;
 
 		// Gets the second half of the human-readable measurement
 		// key associated with the given 16-bit runtime ID.
