@@ -60,14 +60,17 @@ int main(int argc, char* argv[])
 
         switch (i)
         {
-            case 1:
-                subscriber->SetFilterExpression("FILTER TOP 5 ActiveMeasurements WHERE SignalType = 'FREQ'");
+            case 0:
+                subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType = 'FREQ'");
                 break;
-            case 2:
+            case 1:
                 subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHA'");
                 break;
-            default:
+            case 2:
                 subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHM'");
+                break;
+            default:
+                subscriber->SetFilterExpression(SubscriberInstance::SubscribeAllNoStatsExpression);
                 break;
         }
 
