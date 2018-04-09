@@ -24,6 +24,7 @@
 #ifndef __COMMON_TYPES_H
 #define __COMMON_TYPES_H
 
+#include <cstddef>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/thread.hpp>
@@ -40,65 +41,65 @@ using namespace std;
 
 namespace GSF {
 namespace TimeSeries
-{	
-	template<class T>
-	using SharedPtr = boost::shared_ptr<T>;
+{
+    template<class T>
+    using SharedPtr = boost::shared_ptr<T>;
 
-	template<class T> SharedPtr<T> NewSharedPtr()
-	{
-		return boost::make_shared<T>();
-	}
+    template<class T> SharedPtr<T> NewSharedPtr()
+    {
+        return boost::make_shared<T>();
+    }
 
-	typedef boost::uuids::uuid Guid;
-	typedef boost::system::error_code ErrorCode;
-	typedef boost::system::system_error SystemError;
-	typedef boost::exception Exception;
-	typedef boost::thread Thread;
-	typedef boost::mutex Mutex;
-	typedef boost::condition_variable WaitHandle;
-	typedef boost::lock_guard<Mutex> ScopeLock;
-	typedef boost::unique_lock<Mutex> UniqueLock;
-	typedef boost::asio::ip::address IPAddress;
-	typedef boost::asio::ip::tcp::socket TcpSocket;
-	typedef boost::asio::ip::udp::socket UdpSocket;
-	typedef boost::asio::ip::tcp::resolver DnsResolver;	
-	typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> Decompressor;
-	typedef boost::iostreams::gzip_decompressor GZipStream;
+    typedef boost::uuids::uuid Guid;
+    typedef boost::system::error_code ErrorCode;
+    typedef boost::system::system_error SystemError;
+    typedef boost::exception Exception;
+    typedef boost::thread Thread;
+    typedef boost::mutex Mutex;
+    typedef boost::condition_variable WaitHandle;
+    typedef boost::lock_guard<Mutex> ScopeLock;
+    typedef boost::unique_lock<Mutex> UniqueLock;
+    typedef boost::asio::ip::address IPAddress;
+    typedef boost::asio::ip::tcp::socket TcpSocket;
+    typedef boost::asio::ip::udp::socket UdpSocket;
+    typedef boost::asio::ip::tcp::resolver DnsResolver;
+    typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> Decompressor;
+    typedef boost::iostreams::gzip_decompressor GZipStream;
 
-	struct MemoryStream : boost::iostreams::array_source
-	{
-		MemoryStream(const vector<uint8_t>& buffer) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer.data()), buffer.size())
-		{
-		}
+    struct MemoryStream : boost::iostreams::array_source
+    {
+        MemoryStream(const vector<uint8_t>& buffer) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer.data()), buffer.size())
+        {
+        }
 
-		MemoryStream(const uint8_t* buffer, size_t offset, size_t length) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer + offset), length)
-		{
-		}
-	};
+        MemoryStream(const uint8_t* buffer, size_t offset, size_t length) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer + offset), length)
+        {
+        }
+    };
 
-	inline void CopyStream(Decompressor& source, vector<uint8_t>& sink)
-	{
-		sink.assign(istreambuf_iterator<char>{ &source }, {});
-	}
+    inline void CopyStream(Decompressor& source, vector<uint8_t>& sink)
+    {
+        sink.assign(istreambuf_iterator<char>{ &source }, {});
+    }
 
-	// Floating-point types
-	typedef float float32_t;
-	typedef double float64_t;
+    // Floating-point types
+    typedef float float32_t;
+    typedef double float64_t;
 }}
 
 // Setup standard hash code for Guid
 namespace std  // NOLINT
 {
-	using namespace GSF::TimeSeries;
+    using namespace GSF::TimeSeries;
 
-	template<>
-	struct hash<Guid>
-	{
-		size_t operator () (const Guid& uid) const
-		{
-			return boost::hash<Guid>()(uid);
-		}
-	};
+    template<>
+    struct hash<Guid>
+    {
+        size_t operator () (const Guid& uid) const
+        {
+            return boost::hash<Guid>()(uid);
+        }
+    };
 }
 
 #endif

@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  AdvancedSubscribe.cpp - Gbtc
+//  InstanceSubscribe.cpp - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/06/2012 - Stephen C. Wills
+//  03/27/2018 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,52 +25,70 @@
 
 #include "SubscriberHandler.h"
 
-SubscriberHandler* Subscriber1;
-SubscriberHandler* Subscriber2;
+#define TotalInstances 3
+
+SubscriberHandler* Subscriber[TotalInstances];
 
 int main(int argc, char* argv[])
 {
-	string hostname;
-	uint16_t port;
+    string hostname;
+    uint16_t port;
 
-	// Ensure that the necessary
-	// command line arguments are given.
-	if (argc < 3)
-	{
-		cout << "Usage:" << endl;
-		cout << "    AdvancedSubscribe HOSTNAME PORT" << endl;
-		return 0;
-	}
+    // Ensure that the necessary
+    // command line arguments are given.
+    if (argc < 3)
+    {
+        cout << "Usage:" << endl;
+        cout << "    InstanceSubscribe HOSTNAME PORT" << endl;
+        return 0;
+    }
 
-	// Get hostname and port.
-	hostname = argv[1];
-	stringstream(argv[2]) >> port;
+    // Get hostname and port.
+    hostname = argv[1];
+    stringstream(argv[2]) >> port;
 
-	// Initialize the subscribers.
-	Subscriber1 = new SubscriberHandler("Subscriber1");
-    Subscriber2 = new SubscriberHandler("Subscriber2");
+    // Initialize the subscribers.
+    for (size_t i = 0; i < TotalInstances; i++)
+    {
+        stringstream name;
+        
+        name << "Subscriber" << (i + 1);
 
-	Subscriber1->Initialize(hostname, port);
-	Subscriber2->Initialize(hostname, port);
+        SubscriberHandler* subscriber = new SubscriberHandler(name.str());
 
-	Subscriber1->SetFilterExpression("FILTER TOP 5 ActiveMeasurements WHERE SignalType = 'FREQ'");
-	Subscriber2->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHA'");
+        subscriber->Initialize(hostname, port);
 
-	Subscriber1->Connect();
-	Subscriber2->Connect();
+        switch (i)
+        {
+            case 1:
+                subscriber->SetFilterExpression("FILTER TOP 5 ActiveMeasurements WHERE SignalType = 'FREQ'");
+                break;
+            case 2:
+                subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHA'");
+                break;
+            default:
+                subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHM'");
+                break;
+        }
 
-	// Wait until the user presses enter before quitting.
-	string line;
-	getline(cin, line);
+        subscriber->Connect();
 
-	Subscriber1->Disconnect();
-	Subscriber2->Disconnect();
+        Subscriber[i] = subscriber;
+    }
 
-	delete Subscriber1;
-	delete Subscriber2;
-	
-	// Disconnect the subscriber to stop background threads.
-	cout << "Disconnected." << endl;
+    // Wait until the user presses enter before quitting.
+    string line;
+    getline(cin, line);
 
-	return 0;
+    // Shutdown subscriber instances
+    for (size_t i = 0; i < TotalInstances; i++)
+    {
+        Subscriber[i]->Disconnect();
+        delete Subscriber[i];
+    }
+
+    // Disconnect the subscriber to stop background threads.
+    cout << "Disconnected." << endl;
+
+    return 0;
 }

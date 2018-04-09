@@ -28,34 +28,34 @@ using namespace GSF::TimeSeries;
 // Creates a new instance of the EndianConverter.
 EndianConverter::EndianConverter()
 {
-	const union
-	{
-		uint32_t num;
-		uint8_t bytes[4];
-	} endianTest = { 0x00000001 };
+    const union
+    {
+        uint32_t num;
+        uint8_t bytes[4];
+    } endianTest = { 0x00000001 };
 
-	if (endianTest.bytes[0] == 1)
-		m_nativeOrder = EndianConverter::LittleEndian;
-	else
-		m_nativeOrder = EndianConverter::BigEndian;
+    if (endianTest.bytes[0] == 1)
+        m_nativeOrder = EndianConverter::LittleEndian;
+    else
+        m_nativeOrder = EndianConverter::BigEndian;
 }
 
 // Swaps the bytes in a character array.
 // Used for conversion between different byte orders.
 void EndianConverter::ByteSwap(uint8_t* value, size_t length)
 {
-	uint8_t *start, *end;
-	uint8_t temp;
+    uint8_t *start, *end;
+    uint8_t temp;
 
-	for (start = value, end = value + length - 1; start < end; ++start, --end)
-	{
-		temp = *start;
-		*start = *end;
-		*end = temp;
-	}
+    for (start = value, end = value + length - 1; start < end; ++start, --end)
+    {
+        temp = *start;
+        *start = *end;
+        *end = temp;
+    }
 }
 
 int EndianConverter::NativeOrder() const
 {
-	return m_nativeOrder;
+    return m_nativeOrder;
 }

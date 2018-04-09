@@ -31,64 +31,64 @@
 namespace GSF {
 namespace TimeSeries
 {
-	// Converts values between the system's native byte
-	// order and the big and little endian byte orders.
-	class EndianConverter
-	{
-	private:
-		int m_nativeOrder;
+    // Converts values between the system's native byte
+    // order and the big and little endian byte orders.
+    class EndianConverter
+    {
+    private:
+        int m_nativeOrder;
 
-		// Swaps the bytes in a character array.
-		// Used for conversion between different byte orders.
-		static void ByteSwap(uint8_t* value, size_t length);
+        // Swaps the bytes in a character array.
+        // Used for conversion between different byte orders.
+        static void ByteSwap(uint8_t* value, size_t length);
 
-	public:
-		// Creates a new instance.
-		EndianConverter();
+    public:
+        // Creates a new instance.
+        EndianConverter();
 
-		// Converts between big endian and
-		// the system's native byte order.
-		template <class T>
-		T ConvertBigEndian(T value) const;
+        // Converts between big endian and
+        // the system's native byte order.
+        template <class T>
+        T ConvertBigEndian(T value) const;
 
-		// Converts between little endian and
-		// the system's native byte order.
-		template <class T>
-		T ConvertLittleEndian(T value) const;
+        // Converts between little endian and
+        // the system's native byte order.
+        template <class T>
+        T ConvertLittleEndian(T value) const;
 
-		// Returns an integer value indicating which byte order is
-		// the native byte order used by the system. The value is
-		// defined by the BigEndian and LittleEndian class constants.
-		int NativeOrder() const;
+        // Returns an integer value indicating which byte order is
+        // the native byte order used by the system. The value is
+        // defined by the BigEndian and LittleEndian class constants.
+        int NativeOrder() const;
 
-		// Class constant defining the big endian byte order.
-		static const int BigEndian = 0;
+        // Class constant defining the big endian byte order.
+        static const int BigEndian = 0;
 
-		// Class constant defining the little endian byte order.
-		static const int LittleEndian = 1;
-	};
-	
-	// Converts between big endian and
-	// the system's native byte order.
-	template <class T>
-	T EndianConverter::ConvertBigEndian(T value) const
-	{
-		if (m_nativeOrder != EndianConverter::BigEndian)
-			ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
+        // Class constant defining the little endian byte order.
+        static const int LittleEndian = 1;
+    };
 
-		return value;
-	}
-	
-	// Converts between little endian and
-	// the system's native byte order.
-	template <class T>
-	T EndianConverter::ConvertLittleEndian(T value) const
-	{
-		if (m_nativeOrder != EndianConverter::LittleEndian)
-			ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
+    // Converts between big endian and
+    // the system's native byte order.
+    template <class T>
+    T EndianConverter::ConvertBigEndian(T value) const
+    {
+        if (m_nativeOrder != EndianConverter::BigEndian)
+            ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
 
-		return value;
-	}
+        return value;
+    }
+
+    // Converts between little endian and
+    // the system's native byte order.
+    template <class T>
+    T EndianConverter::ConvertLittleEndian(T value) const
+    {
+        if (m_nativeOrder != EndianConverter::LittleEndian)
+            ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
+
+        return value;
+    }
 }}
 
 #endif

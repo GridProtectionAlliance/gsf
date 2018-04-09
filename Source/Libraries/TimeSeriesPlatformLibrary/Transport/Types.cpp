@@ -31,57 +31,98 @@
 using namespace GSF::TimeSeries;
 using namespace boost::algorithm;
 
-Measurement::Measurement() : 
-	Adder(0), 
-	Multiplier(1)
+Measurement::Measurement() :
+    Adder(0),
+    Multiplier(1)
 {
 }
 
 float64_t Measurement::AdjustedValue() const
 {
-	return Value * Multiplier + Adder;
+    return Value * Multiplier + Adder;
 }
 
 void Measurement::GetUnixTime(time_t& unixSOC, int16_t& milliseconds) const
 {
-	GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
+    GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
 }
 
 SignalReference::SignalReference() = default;
 
 SignalReference::SignalReference(const string& signal) : SignalID(Guid())
 {
-	// Signal reference may contain multiple dashes, we're interested in the last one
-	const int splitIndex = signal.find_last_of('-');
+    // Signal reference may contain multiple dashes, we're interested in the last one
+    const auto splitIndex = signal.find_last_of('-');
 
-	// Assign default values to fields
-	Index = 0;
+    // Assign default values to fields
+    Index = 0;
 
-	if (splitIndex > -1)
-	{
-		string signalType = to_upper_copy(trim_copy(signal.substr(splitIndex + 1)));
-		Acronym = to_upper_copy(trim_copy(signal.substr(0, splitIndex)));
+    if (splitIndex == string::npos)
+    {
+        // This represents an error - best we can do is assume entire string is the acronym
+        Acronym = to_upper_copy(trim_copy(signal));
+        Kind = SignalKind::Unknown;
+    }
+    else
+    {
+        string signalType = to_upper_copy(trim_copy(signal.substr(splitIndex + 1)));
+        Acronym = to_upper_copy(trim_copy(signal.substr(0, splitIndex)));
 
-		// If the length of the signal type acronym is greater than 2, then this
-		// is an indexed signal type (e.g., CORDOVA-PA2)
-		if (signalType.length() > 2)
-		{
-			Kind = ParseSignalKind(signalType.substr(0, 2));
+        // If the length of the signal type acronym is greater than 2, then this
+        // is an indexed signal type (e.g., CORDOVA-PA2)
+        if (signalType.length() > 2)
+        {
+            Kind = ParseSignalKind(signalType.substr(0, 2));
 
-			if (Kind != SignalKind::Unknown)
-				Index = stoi(signalType.substr(2));
-		}
-		else
-		{
-			Kind = ParseSignalKind(signalType);
-		}
-	}
-	else
-	{
-		// This represents an error - best we can do is assume entire string is the acronym
-		Acronym = to_upper_copy(trim_copy(signal));
-		Kind = SignalKind::Unknown;
-	}
+            if (Kind != SignalKind::Unknown)
+                Index = stoi(signalType.substr(2));
+        }
+        else
+        {
+            Kind = ParseSignalKind(signalType);
+        }
+    }
+}
+
+const char* GSF::TimeSeries::SignalKindDescription[] =
+{
+    "Angle",
+    "Magnitude",
+    "Frequency",
+    "DfDt",
+    "Status",
+    "Digital",
+    "Analog",
+    "Calculation",
+    "Statistic",
+    "Alarm",
+    "Quality",
+    "Unknown"
+};
+
+const char* GSF::TimeSeries::SignalKindAcronym[] =
+{
+    "PA",
+    "PM",
+    "FQ",
+    "DF",
+    "SF",
+    "DV",
+    "AV",
+    "CV",
+    "ST",
+    "AL",
+    "QF",
+    "??"
+};
+
+// SignalReference.ToString()
+ostream& GSF::TimeSeries::operator << (ostream& stream, const SignalReference& reference)
+{
+    if (reference.Index > 0)
+        return stream << reference.Acronym << "-" << SignalKindAcronym[reference.Kind] << reference.Index;
+
+    return stream << reference.Acronym << "-" << SignalKindAcronym[reference.Kind];
 }
 
 // Gets the "SignalKind" enum for the specified "acronym".
@@ -90,52 +131,38 @@ SignalReference::SignalReference(const string& signal) : SignalID(Guid())
 //  returns: The "SignalKind" for the specified "acronym".
 SignalKind GSF::TimeSeries::ParseSignalKind(string acronym)
 {
-	if (acronym == "PA") // Phase Angle
-		return SignalKind::Angle;
+    if (acronym == "PA") // Phase Angle
+        return SignalKind::Angle;
 
-	if (acronym == "PM") // Phase Magnitude
-		return SignalKind::Magnitude;
+    if (acronym == "PM") // Phase Magnitude
+        return SignalKind::Magnitude;
 
-	if (acronym == "FQ") // Frequency
-		return SignalKind::Frequency;
+    if (acronym == "FQ") // Frequency
+        return SignalKind::Frequency;
 
-	if (acronym == "DF") // dF/dt
-		return SignalKind::DfDt;
+    if (acronym == "DF") // dF/dt
+        return SignalKind::DfDt;
 
-	if (acronym == "SF") // Status Flags
-		return SignalKind::Status;
+    if (acronym == "SF") // Status Flags
+        return SignalKind::Status;
 
-	if (acronym == "DV") // Digital Value
-		return SignalKind::Digital;
+    if (acronym == "DV") // Digital Value
+        return SignalKind::Digital;
 
-	if (acronym == "AV") // Analog Value
-		return SignalKind::Analog;
+    if (acronym == "AV") // Analog Value
+        return SignalKind::Analog;
 
-	if (acronym == "CV") // Calculated Value
-		return SignalKind::Calculation;
+    if (acronym == "CV") // Calculated Value
+        return SignalKind::Calculation;
 
-	if (acronym == "ST") // Statistical Value
-		return SignalKind::Statistic;
+    if (acronym == "ST") // Statistical Value
+        return SignalKind::Statistic;
 
-	if (acronym == "AL") // Alarm Value
-		return SignalKind::Alarm;
+    if (acronym == "AL") // Alarm Value
+        return SignalKind::Alarm;
 
-	if (acronym == "QF") // Quality Flags
-		return SignalKind::Quality;
+    if (acronym == "QF") // Quality Flags
+        return SignalKind::Quality;
 
-	return SignalKind::Unknown;
+    return SignalKind::Unknown;
 }
-
-//MeasurementMetadata::MeasurementMetadata() = default;
-//
-//MeasurementMetadata::MeasurementMetadata(const MeasurementMetadata& value)
-//{
-//	DeviceAcronym = value.DeviceAcronym;
-//	ID = value.ID;
-//	SignalID = value.SignalID;
-//	PointTag = value.PointTag;
-//	Reference = value.Reference;
-//	PhasorSourceIndex = value.PhasorSourceIndex;
-//	Description = value.Description;
-//	UpdatedOn = value.UpdatedOn;
-//}

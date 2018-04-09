@@ -34,25 +34,25 @@ using namespace std;
 namespace GSF {
 namespace TimeSeries
 {
-	// Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
-	void GetUnixTime(const int64_t gepTime, time_t& unixSOC, int16_t& milliseconds);
+    // Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
+    void GetUnixTime(const int64_t gepTime, time_t& unixSOC, int16_t& milliseconds);
 
-	// Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
-	size_t TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks);
+    // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
+    size_t TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks);
 
-	// Converts an object to a string
-	template <class T>
-	string ToString(const T& obj);
-	
-	// Converts 16 contiguous bytes of character data into a globally unique identifier
-	Guid ToGuid(const uint8_t* data, bool swapBytes);
-	Guid ToGuid(const char* data);
+    // Converts an object to a string
+    template <class T>
+    string ToString(const T& obj);
 
-	// Returns a non-empty nor null value
-	const char* Coalesce(const char* data, const char* nonEmptyValue);
+    // Converts 16 contiguous bytes of character data into a globally unique identifier
+    Guid ToGuid(const uint8_t* data, bool swapBytes);
+    Guid ToGuid(const char* data);
 
-	// Converts an XML formatted time string to a common epoch time
-	time_t ParseXMLTimestamp(const char* time);
+    // Returns a non-empty nor null value
+    const char* Coalesce(const char* data, const char* nonEmptyValue);
+
+    // Converts an XML formatted time string to a common epoch time
+    time_t ParseXMLTimestamp(const char* time);
 }}
 
 #endif

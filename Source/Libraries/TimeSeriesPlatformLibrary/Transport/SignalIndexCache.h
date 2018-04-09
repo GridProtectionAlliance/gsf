@@ -34,55 +34,55 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
-	// Maps 16-bit runtime IDs to 128-bit globally unique IDs.
-	// Additionally provides reverse lookup and an extra mapping
-	// to human-readable measurement keys.
-	class SignalIndexCache
-	{
-	private:
-		map<uint16_t, size_t> m_reference;
-		vector<Guid> m_signalIDList;
-		vector<string> m_sourceList;
-		vector<uint32_t> m_idList;
+    // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
+    // Additionally provides reverse lookup and an extra mapping
+    // to human-readable measurement keys.
+    class SignalIndexCache
+    {
+    private:
+        map<uint16_t, size_t> m_reference;
+        vector<Guid> m_signalIDList;
+        vector<string> m_sourceList;
+        vector<uint32_t> m_idList;
 
-		map<Guid, uint16_t> m_signalIDCache;
+        map<Guid, uint16_t> m_signalIDCache;
 
-	public:
-		// Adds a measurement key to the cache.
-		void AddMeasurementKey(
-			uint16_t signalIndex,
-			Guid signalID,
-			string source,
-			uint32_t id);
+    public:
+        // Adds a measurement key to the cache.
+        void AddMeasurementKey(
+            uint16_t signalIndex,
+            Guid signalID,
+            string source,
+            uint32_t id);
 
-		// Empties the cache.
-		void Clear();
+        // Empties the cache.
+        void Clear();
 
-		// Determines whether an element with the given runtime ID exists in the signal index cache.
-		bool Contains(uint16_t signalIndex) const;
+        // Determines whether an element with the given runtime ID exists in the signal index cache.
+        bool Contains(uint16_t signalIndex) const;
 
-		// Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-		Guid GetSignalID(uint16_t signalIndex) const;
+        // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
+        Guid GetSignalID(uint16_t signalIndex) const;
 
-		// Gets the first half of the human-readable measurement
-		// key associated with the given 16-bit runtime ID.
-		const string& GetSource(uint16_t signalIndex) const;
+        // Gets the first half of the human-readable measurement
+        // key associated with the given 16-bit runtime ID.
+        const string& GetSource(uint16_t signalIndex) const;
 
-		// Gets the second half of the human-readable measurement
-		// key associated with the given 16-bit runtime ID.
-		uint32_t GetID(uint16_t signalIndex) const;
+        // Gets the second half of the human-readable measurement
+        // key associated with the given 16-bit runtime ID.
+        uint32_t GetID(uint16_t signalIndex) const;
 
-		// Gets the globally unique signal ID as well as the human-readable
-		// measurement key associated with the given 16-bit runtime ID.
-		void GetMeasurementKey(
-			uint16_t signalIndex,
-			Guid& signalID,
-			string& source,
-			uint32_t& id) const;
+        // Gets the globally unique signal ID as well as the human-readable
+        // measurement key associated with the given 16-bit runtime ID.
+        void GetMeasurementKey(
+            uint16_t signalIndex,
+            Guid& signalID,
+            string& source,
+            uint32_t& id) const;
 
-		// Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-		uint16_t GetSignalIndex(Guid signalID) const;
-	};
+        // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
+        uint16_t GetSignalIndex(Guid signalID) const;
+    };
 }}}
 
 #endif

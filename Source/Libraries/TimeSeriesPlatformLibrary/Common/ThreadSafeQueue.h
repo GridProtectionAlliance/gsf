@@ -33,141 +33,141 @@ using namespace boost;
 namespace GSF {
 namespace TimeSeries
 {
-	// Simple queue with locking mechanisms to make its operations thread-safe.
-	//
-	// The ThreadSafeQueue was designed for a multiple-producer/single-consumer
-	// scenario in order to synchronize an operation by dispatching it to a
-	// single thread and process in FIFO order.
-	//
-	// The use of multiple consumers may cause undesired effects.
-	template <class T>
-	class ThreadSafeQueue
-	{
-	private:
-		Mutex m_mutex;
-		WaitHandle m_dataWaitHandle;
-		queue<T> m_queue;
-		bool m_release;
+    // Simple queue with locking mechanisms to make its operations thread-safe.
+    //
+    // The ThreadSafeQueue was designed for a multiple-producer/single-consumer
+    // scenario in order to synchronize an operation by dispatching it to a
+    // single thread and process in FIFO order.
+    //
+    // The use of multiple consumers may cause undesired effects.
+    template <class T>
+    class ThreadSafeQueue
+    {
+    private:
+        Mutex m_mutex;
+        WaitHandle m_dataWaitHandle;
+        queue<T> m_queue;
+        bool m_release;
 
-	public:
-		// Creates a new instance.
-		ThreadSafeQueue()
-			: m_release(false)
-		{
-		}
+    public:
+        // Creates a new instance.
+        ThreadSafeQueue()
+            : m_release(false)
+        {
+        }
 
-		// Releases all threads waiting for data.
-		~ThreadSafeQueue();
+        // Releases all threads waiting for data.
+        ~ThreadSafeQueue();
 
-		// Inserts an item into the queue.
-		void Enqueue(T item);
+        // Inserts an item into the queue.
+        void Enqueue(T item);
 
-		// Removes an item from the
-		// queue and returns that item.
-		T Dequeue();
+        // Removes an item from the
+        // queue and returns that item.
+        T Dequeue();
 
-		// Empties the queue.
-		void Clear();
-		
-		// Returns the number of
-		// items left in the queue.
-		size_t Size();
+        // Empties the queue.
+        void Clear();
 
-		// Waits for data to be inserted into the queue.
-		// If there is already data in the queue,
-		// this method will not wait.
-		//
-		// Since the queue was designed for only a single consumer,
-		// calling this method from multiple threads may have undesired effects.
-		void WaitForData();
+        // Returns the number of
+        // items left in the queue.
+        size_t Size();
 
-		// Releases all threads waiting for data.
-		//
-		// Further calls to WaitForData will not wait regardless of the amount
-		// of data in the queue. To make the queue usable again, call Reset.
-		void Release();
+        // Waits for data to be inserted into the queue.
+        // If there is already data in the queue,
+        // this method will not wait.
+        //
+        // Since the queue was designed for only a single consumer,
+        // calling this method from multiple threads may have undesired effects.
+        void WaitForData();
 
-		// Resets the "release valve" for threads calling WaitForData.
-		void Reset();
-	};
-	
-	// Releases all threads waiting for data.
-	template <class T>
-	ThreadSafeQueue<T>::~ThreadSafeQueue()
-	{
-		Release();
-	}
-	
-	// Inserts an item into the queue.
-	template <class T>
-	void ThreadSafeQueue<T>::Enqueue(T item)
-	{
-		ScopeLock lock(m_mutex);
-		m_queue.push(item);
-		m_dataWaitHandle.notify_one();
-	}
-	
-	// Removes an item from the
-	// queue and returns that item.
-	template <class T>
-	T ThreadSafeQueue<T>::Dequeue()
-	{
-		ScopeLock lock(m_mutex);
-		T item = m_queue.front();
-		m_queue.pop();
-		return item;
-	}
-	
-	// Empties the queue.
-	template <class T>
-	void ThreadSafeQueue<T>::Clear()
-	{
-		ScopeLock lock(m_mutex);
+        // Releases all threads waiting for data.
+        //
+        // Further calls to WaitForData will not wait regardless of the amount
+        // of data in the queue. To make the queue usable again, call Reset.
+        void Release();
 
-		while (!m_queue.empty())
-			m_queue.pop();
-	}
-	
-	// Returns the number of
-	// items left in the queue.
-	template <class T>
-	size_t ThreadSafeQueue<T>::Size()
-	{
-		ScopeLock lock(m_mutex);
-		return m_queue.size();
-	}
-	
-	// Waits for data to be inserted into the queue.
-	// If there is already data in the queue,
-	// this method will not wait.
-	template <class T>
-	void ThreadSafeQueue<T>::WaitForData()
-	{
-		UniqueLock lock(m_mutex);
+        // Resets the "release valve" for threads calling WaitForData.
+        void Reset();
+    };
 
-		while(m_queue.empty() && !m_release)
-			m_dataWaitHandle.wait(lock);
-	}
-	
-	// Releases all threads waiting for data.
-	template <class T>
-	void ThreadSafeQueue<T>::Release()
-	{
-		ScopeLock lock(m_mutex);
+    // Releases all threads waiting for data.
+    template <class T>
+    ThreadSafeQueue<T>::~ThreadSafeQueue()
+    {
+        Release();
+    }
 
-		m_release = true;
-		m_dataWaitHandle.notify_all();
-	}
-	
-	// Resets the "release valve" for threads calling WaitForData.
-	// This can be called after Release so that the queue can be
-	// used again.
-	template <class T>
-	void ThreadSafeQueue<T>::Reset()
-	{
-		ScopeLock lock(m_mutex);
-		m_release = false;
-	}
+    // Inserts an item into the queue.
+    template <class T>
+    void ThreadSafeQueue<T>::Enqueue(T item)
+    {
+        ScopeLock lock(m_mutex);
+        m_queue.push(item);
+        m_dataWaitHandle.notify_one();
+    }
+
+    // Removes an item from the
+    // queue and returns that item.
+    template <class T>
+    T ThreadSafeQueue<T>::Dequeue()
+    {
+        ScopeLock lock(m_mutex);
+        T item = m_queue.front();
+        m_queue.pop();
+        return item;
+    }
+
+    // Empties the queue.
+    template <class T>
+    void ThreadSafeQueue<T>::Clear()
+    {
+        ScopeLock lock(m_mutex);
+
+        while (!m_queue.empty())
+            m_queue.pop();
+    }
+
+    // Returns the number of
+    // items left in the queue.
+    template <class T>
+    size_t ThreadSafeQueue<T>::Size()
+    {
+        ScopeLock lock(m_mutex);
+        return m_queue.size();
+    }
+
+    // Waits for data to be inserted into the queue.
+    // If there is already data in the queue,
+    // this method will not wait.
+    template <class T>
+    void ThreadSafeQueue<T>::WaitForData()
+    {
+        UniqueLock lock(m_mutex);
+
+        while (m_queue.empty() && !m_release)
+            m_dataWaitHandle.wait(lock);
+    }
+
+    // Releases all threads waiting for data.
+    template <class T>
+    void ThreadSafeQueue<T>::Release()
+    {
+        ScopeLock lock(m_mutex);
+
+        m_release = true;
+        m_dataWaitHandle.notify_all();
+    }
+
+    // Resets the "release valve" for threads calling WaitForData.
+    // This can be called after Release so that the queue can be
+    // used again.
+    template <class T>
+    void ThreadSafeQueue<T>::Reset()
+    {
+        ScopeLock lock(m_mutex);
+        m_release = false;
+    }
 }}
 
 #endif

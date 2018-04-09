@@ -32,23 +32,23 @@ using namespace GSF::TimeSeries::Transport;
 class SubscriberHandler : public SubscriberInstance
 {
 private:
-	string m_name;
+    string m_name;
 
 protected:
-	SubscriptionInfo CreateSubscriptionInfo() override;
-	void StatusMessage(const string& message) override;
-	void ErrorMessage(const string& message) override;
-	void DataStartTime(time_t unixSOC, int milliseconds) override;
-	void ReceivedMetadata(const vector<uint8_t>& payload) override;
-	void ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements) override;
-	void ParsedMetadata() override;
-	void ConfigurationChanged() override;
-	void HistoricalReadComplete() override;
-	void ConnectionEstablished() override;
-	void ConnectionTerminated() override;
+    SubscriptionInfo CreateSubscriptionInfo() override;
+    void StatusMessage(const string& message) override;
+    void ErrorMessage(const string& message) override;
+    void DataStartTime(time_t unixSOC, int milliseconds) override;
+    void ReceivedMetadata(const vector<uint8_t>& payload) override;
+    void ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements) override;
+    void ParsedMetadata() override;
+    void ConfigurationChanged() override;
+    void HistoricalReadComplete() override;
+    void ConnectionEstablished() override;
+    void ConnectionTerminated() override;
 
 public:
-	SubscriberHandler(const string& name);
+    SubscriberHandler(const string& name);
 };
 
 #endif

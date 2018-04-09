@@ -50,34 +50,34 @@ void DisplayErrorMessage(DataSubscriber* source, const string& message);
 // Measurements are transmitted via the TCP command channel.
 int main(int argc, char* argv[])
 {
-	string hostname;
-	uint16_t port;
+    string hostname;
+    uint16_t port;
 
-	// Ensure that the necessary
-	// command line arguments are given.
-	if (argc < 3)
-	{
-		cout << "Usage:" << endl;
-		cout << "    SimpleSubscribe HOSTNAME PORT" << endl;
-		return 0;
-	}
+    // Ensure that the necessary
+    // command line arguments are given.
+    if (argc < 3)
+    {
+        cout << "Usage:" << endl;
+        cout << "    SimpleSubscribe HOSTNAME PORT" << endl;
+        return 0;
+    }
 
-	// Get hostname and port.
-	hostname = argv[1];
-	stringstream(argv[2]) >> port;
+    // Get hostname and port.
+    hostname = argv[1];
+    stringstream(argv[2]) >> port;
 
-	// Run the subscriber.
-	RunSubscriber(hostname, port);
+    // Run the subscriber.
+    RunSubscriber(hostname, port);
 
-	// Wait until the user presses enter before quitting.
-	string line;
-	getline(cin, line);
+    // Wait until the user presses enter before quitting.
+    string line;
+    getline(cin, line);
 
-	// Disconnect the subscriber to stop background threads.
-	Subscriber.Disconnect();
-	cout << "Disconnected." << endl;
+    // Disconnect the subscriber to stop background threads.
+    Subscriber.Disconnect();
+    cout << "Disconnected." << endl;
 
-	return 0;
+    return 0;
 }
 
 // The proper procedure when creating and running a subscriber is:
@@ -87,66 +87,66 @@ int main(int argc, char* argv[])
 //   - Subscribe
 void RunSubscriber(string hostname, uint16_t port)
 {
-	// SubscriptionInfo is a helper object which allows the user
-	// to set up their subscription and reuse subscription settings.
-	SubscriptionInfo info;
-	info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
-	
-	// Register callbacks
-	Subscriber.RegisterStatusMessageCallback(&DisplayStatusMessage);
-	Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
-	Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
+    // SubscriptionInfo is a helper object which allows the user
+    // to set up their subscription and reuse subscription settings.
+    SubscriptionInfo info;
+    info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
 
-	cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
-	Subscriber.Connect(hostname, port);
+    // Register callbacks
+    Subscriber.RegisterStatusMessageCallback(&DisplayStatusMessage);
+    Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
+    Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
 
-	cout << "Connected! Subscribing to data..." << endl << endl;
-	Subscriber.Subscribe(info);
+    cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
+    Subscriber.Connect(hostname, port);
+
+    cout << "Connected! Subscribing to data..." << endl << endl;
+    Subscriber.Subscribe(info);
 }
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
 {
-	const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-	const size_t MaxTimestampSize = 80;
+    const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
+    const size_t MaxTimestampSize = 80;
 
-	static int processCount = 0;
-	size_t i;
+    static int processCount = 0;
+    size_t i;
 
-	char timestamp[MaxTimestampSize];
+    char timestamp[MaxTimestampSize];
 
-	// Only display messages every five
-	// seconds (assuming 30 calls per second).
-	if (processCount % 150 == 0)
-	{
-		cout << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
+    // Only display messages every five
+    // seconds (assuming 30 calls per second).
+    if (processCount % 150 == 0)
+    {
+        cout << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
-		if (!newMeasurements.empty())
-		{
-			if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0]->Timestamp))
-				cout << "Timestamp: " << string(timestamp) << endl;
+        if (!newMeasurements.empty())
+        {
+            if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0]->Timestamp))
+                cout << "Timestamp: " << string(timestamp) << endl;
 
-			cout << "Point\tValue" << endl;
+            cout << "Point\tValue" << endl;
 
-			for (i = 0; i < newMeasurements.size(); ++i)
-				cout << newMeasurements[i]->ID << '\t' << newMeasurements[i]->Value << endl;
+            for (i = 0; i < newMeasurements.size(); ++i)
+                cout << newMeasurements[i]->ID << '\t' << newMeasurements[i]->Value << endl;
 
-			cout << endl;
-		}
-	}
+            cout << endl;
+        }
+    }
 
-	++processCount;
+    ++processCount;
 }
 
 // Callback which is called to display status messages from the subscriber.
 void DisplayStatusMessage(DataSubscriber* source, const string& message)
 {
-	cout << message << endl << endl;
+    cout << message << endl << endl;
 }
 
 // Callback which is called to display error messages from the connector and subscriber.
 void DisplayErrorMessage(DataSubscriber* source, const string& message)
 {
-	cerr << message << endl << endl;
+    cerr << message << endl << endl;
 }

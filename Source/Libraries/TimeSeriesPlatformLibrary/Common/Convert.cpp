@@ -37,143 +37,143 @@ using namespace GSF::TimeSeries;
 
 void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, int16_t& milliseconds)
 {
-	// Unix dates are measured as the number of seconds since 1/1/1970
-	const int64_t BaseTimeOffset = 621355968000000000L;
+    // Unix dates are measured as the number of seconds since 1/1/1970
+    const int64_t BaseTimeOffset = 621355968000000000L;
 
-	unixSOC = static_cast<time_t>((ticks - BaseTimeOffset) / 10000000);
-	milliseconds = static_cast<int16_t>(ticks / 10000 % 1000);
+    unixSOC = static_cast<time_t>((ticks - BaseTimeOffset) / 10000000);
+    milliseconds = static_cast<int16_t>(ticks / 10000 % 1000);
 }
 
 size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks)
 {
-	time_t fromSeconds;
-	int16_t milliseconds;
+    time_t fromSeconds;
+    int16_t milliseconds;
 
-	GetUnixTime(ticks, fromSeconds, milliseconds);
+    GetUnixTime(ticks, fromSeconds, milliseconds);
 
-	stringstream formatStream;
-	size_t formatIndex = 0;
+    stringstream formatStream;
+    size_t formatIndex = 0;
 
-	while (formatIndex < format.size())
-	{
-		char c = format[formatIndex];
-		++formatIndex;
+    while (formatIndex < format.size())
+    {
+        char c = format[formatIndex];
+        ++formatIndex;
 
-		if (c != '%')
-		{
-			// Not a format specifier
-			formatStream << c;
-			continue;
-		}
+        if (c != '%')
+        {
+            // Not a format specifier
+            formatStream << c;
+            continue;
+        }
 
-		// Check for %f and %t format specifiers and handle them
-		// accordingly. All other specifiers get forwarded to strftime
-		c = format[formatIndex];
-		++formatIndex;
+        // Check for %f and %t format specifiers and handle them
+        // accordingly. All other specifiers get forwarded to strftime
+        c = format[formatIndex];
+        ++formatIndex;
 
-		switch (c)
-		{
-			case 'f':
-			{
-				stringstream temp;
-				temp << setw(3) << setfill('0') << milliseconds;
-				formatStream << temp.str();
-				break;
-			}
+        switch (c)
+        {
+            case 'f':
+            {
+                stringstream temp;
+                temp << setw(3) << setfill('0') << milliseconds;
+                formatStream << temp.str();
+                break;
+            }
 
-			case 't':
-				formatStream << ticks;
-				break;
+            case 't':
+                formatStream << ticks;
+                break;
 
-			default:
-				formatStream << '%' << c;
-				break;
-		}
-	}
+            default:
+                formatStream << '%' << c;
+                break;
+        }
+    }
 
-	struct tm timeinfo;
-	gmtime_s(&timeinfo, &fromSeconds);
+    struct tm timeinfo;
+    gmtime_s(&timeinfo, &fromSeconds);
 
-	return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
+    return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }
 
 template <class T>
 string GSF::TimeSeries::ToString(const T& obj)
 {
-	stringstream stream;
-	stream << obj;
-	return stream.str();
+    stringstream stream;
+    stream << obj;
+    return stream.str();
 }
 
 Guid GSF::TimeSeries::ToGuid(const uint8_t* data, bool swapBytes)
 {
-	Guid id;
-	uint8_t swappedBytes[16];
-	uint8_t* encodedBytes;
-	
-	// Check if bytes need to be decoded in reverse order
-	if (swapBytes)
-	{
-		uint8_t copy[8];
+    Guid id;
+    uint8_t swappedBytes[16];
+    uint8_t* encodedBytes;
 
-		for (size_t i = 0; i < 16; i++)
-		{
-			swappedBytes[i] = data[15 - i];
+    // Check if bytes need to be decoded in reverse order
+    if (swapBytes)
+    {
+        uint8_t copy[8];
 
-			if (i < 8)
-				copy[i] = swappedBytes[i];
-		}
+        for (size_t i = 0; i < 16; i++)
+        {
+            swappedBytes[i] = data[15 - i];
 
-		// Convert Microsoft encoding to RFC
-		swappedBytes[3] = copy[0];
-		swappedBytes[2] = copy[1];
-		swappedBytes[1] = copy[2];
-		swappedBytes[0] = copy[3];
+            if (i < 8)
+                copy[i] = swappedBytes[i];
+        }
 
-		swappedBytes[4] = copy[5];
-		swappedBytes[5] = copy[4];
+        // Convert Microsoft encoding to RFC
+        swappedBytes[3] = copy[0];
+        swappedBytes[2] = copy[1];
+        swappedBytes[1] = copy[2];
+        swappedBytes[0] = copy[3];
 
-		swappedBytes[6] = copy[7];
-		swappedBytes[7] = copy[6];
+        swappedBytes[4] = copy[5];
+        swappedBytes[5] = copy[4];
 
-		encodedBytes = swappedBytes;
-	}
-	else
-	{
-		encodedBytes = const_cast<uint8_t*>(data);
-	}
+        swappedBytes[6] = copy[7];
+        swappedBytes[7] = copy[6];
 
-	for (Guid::iterator iter = id.begin(); iter != id.end(); ++iter, ++encodedBytes)
-		*iter = static_cast<Guid::value_type>(*encodedBytes);
+        encodedBytes = swappedBytes;
+    }
+    else
+    {
+        encodedBytes = const_cast<uint8_t*>(data);
+    }
 
-	return id;
+    for (Guid::iterator iter = id.begin(); iter != id.end(); ++iter, ++encodedBytes)
+        *iter = static_cast<Guid::value_type>(*encodedBytes);
+
+    return id;
 }
 
 Guid GSF::TimeSeries::ToGuid(const char* data)
 {
-	const string_generator generator;
-	return generator(data);
+    const string_generator generator;
+    return generator(data);
 }
 
 const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValue)
 {
-	if (data == nullptr)
-		return nonEmptyValue;
+    if (data == nullptr)
+        return nonEmptyValue;
 
-	if (strlen(data) == 0)
-		return nonEmptyValue;
+    if (strlen(data) == 0)
+        return nonEmptyValue;
 
-	return data;
+    return data;
 }
 
 time_t GSF::TimeSeries::ParseXMLTimestamp(const char* time)
 {
-	istringstream in { time };
-	sys_seconds timestamp;
-	
-	// Parse an XML formatted timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00,
-	// using the Hinnant date library: https://github.com/HowardHinnant/date
-	in >> parse("%Y-%m-%dT%T%z", timestamp);
+    istringstream in { time };
+    sys_seconds timestamp;
 
-	return system_clock::to_time_t(timestamp);
+    // Parse an XML formatted timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00,
+    // using the Hinnant date library: https://github.com/HowardHinnant/date
+    in >> parse("%Y-%m-%dT%T%z", timestamp);
+
+    return system_clock::to_time_t(timestamp);
 }
