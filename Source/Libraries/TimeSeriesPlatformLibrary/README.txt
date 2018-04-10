@@ -71,6 +71,7 @@ GNU Make (http://www.gnu.org/software/make/)
 Boost C++ Libraries v1.66.0 (http://www.boost.org/)
 	- Boost.Asio
 	- Boost.Bind
+	- Boost.Iostreams
 	- Boost.System
 	- Boost.Thread
 	- Boost.Uuid
