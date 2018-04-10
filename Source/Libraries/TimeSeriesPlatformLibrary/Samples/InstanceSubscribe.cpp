@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
                 break;
         }
 
-        subscriber->Connect();
+        subscriber->ConnectAsync();
 
         Subscriber[i] = subscriber;
     }

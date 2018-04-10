@@ -35,7 +35,7 @@ DataSubscriber Subscriber;
 SubscriptionInfo Info;
 
 // Create helper objects for subscription.
-SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port);
+void SetupSubscriberConnector(SubscriberConnector& connector, string hostname, uint16_t port);
 SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
@@ -96,12 +96,10 @@ int main(int argc, char* argv[])
 //   - Subscribe
 void RunSubscriber(string hostname, uint16_t port)
 {
-    // The connector is declared here because it
-    // is only needed for the initial connection
-    SubscriberConnector connector;
+    SubscriberConnector& connector = Subscriber.GetSubscriberConnector();
 
     // Set up helper objects
-    connector = CreateSubscriberConnector(hostname, port);
+    SetupSubscriberConnector(connector, hostname, port);
     Info = CreateSubscriptionInfo();
 
     // Register callbacks
@@ -169,12 +167,10 @@ SubscriptionInfo CreateSubscriptionInfo()
     return info;
 }
 
-SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port)
+void SetupSubscriberConnector(SubscriberConnector& connector, string hostname, uint16_t port)
 {
     // SubscriberConnector is another helper object which allows the
     // user to modify settings for auto-reconnects and retry cycles.
-    SubscriberConnector connector;
-
     connector.RegisterErrorMessageCallback(&DisplayErrorMessage);
     connector.RegisterReconnectCallback(&Resubscribe);
 
@@ -183,8 +179,6 @@ SubscriberConnector CreateSubscriberConnector(string hostname, uint16_t port)
     connector.SetMaxRetries(5);
     connector.SetRetryInterval(1500);
     connector.SetAutoReconnect(true);
-
-    return connector;
 }
 
 // Callback which is called when the subscriber has

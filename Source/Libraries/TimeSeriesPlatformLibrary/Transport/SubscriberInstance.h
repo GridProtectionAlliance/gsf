@@ -80,7 +80,7 @@ namespace Transport
         static void HandleConnectionTerminated(DataSubscriber* source);
 
     protected:
-        virtual SubscriberConnector CreateSubscriberConnector();
+        virtual void SetupSubscriberConnector(SubscriberConnector& connector);
         virtual SubscriptionInfo CreateSubscriptionInfo();
         virtual void StatusMessage(const string& message);	// Defaults output to cout
         virtual void ErrorMessage(const string& message);	// Defaults output to cerr
@@ -159,6 +159,7 @@ namespace Transport
         // Starts the connection cycle to a GEP publisher. Upon connection, meta-data will be requested,
         // when received, a subscription will be established
         void Connect();
+        void ConnectAsync();
 
         // Disconnects from the GEP publisher
         void Disconnect();

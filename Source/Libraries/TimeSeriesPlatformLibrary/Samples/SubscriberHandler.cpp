@@ -146,8 +146,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
     char timestamp[MaxTimestampSize];
 
-    // Only display messages every five
-    // seconds (assuming 30 calls per second).
+    // Only display messages every few seconds
     if (processCount % 150 == 0)
     {
         stringstream message;

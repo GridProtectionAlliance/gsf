@@ -102,6 +102,72 @@ namespace Transport
         }
     };
 
+    // Helper class to provide retry and auto-reconnect functionality to the subscriber.
+    class SubscriberConnector
+    {
+    private:
+        typedef void(*ErrorMessageCallback)(DataSubscriber*, const string&);
+        typedef void(*ReconnectCallback)(DataSubscriber*);
+
+        ErrorMessageCallback m_errorMessageCallback;
+        ReconnectCallback m_reconnectCallback;
+
+        string m_hostname;
+        uint16_t m_port;
+
+        int m_maxRetries;
+        int m_retryInterval;
+        bool m_autoReconnect;
+
+        bool m_cancel;
+
+        // Auto-reconnect handler.
+        static void AutoReconnect(DataSubscriber* source);
+
+    public:
+        // Creates a new instance.
+        SubscriberConnector();
+
+        // Registers a callback to provide error messages each time
+        // the subscriber fails to connect during a connection sequence.
+        void RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback);
+
+        // Registers a callback to notify after an automatic reconnection attempt has been made.
+        // This callback will be called whether the connection was successful or not, so it is
+        // recommended to check the connected state of the subscriber using the IsConnected() method.
+        void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
+
+        // Begin connection sequence.
+        bool Connect(DataSubscriber& subscriber);
+
+        // Cancel all current and
+        // future connection sequences.
+        void Cancel();
+
+        // Set the hostname of the publisher to connect to.
+        void SetHostname(const string& hostname);
+
+        // Set the port that the publisher is listening on.
+        void SetPort(uint16_t port);
+
+        // Set the maximum number of retries during a connection sequence.
+        void SetMaxRetries(int maxRetries);
+
+        // Sets the interval of idle time (in milliseconds) between connection attempts.
+        void SetRetryInterval(int retryInterval);
+
+        // Sets flag that determines whether the subscriber should
+        // automatically attempt to reconnect when the connection is terminated.
+        void SetAutoReconnect(bool autoReconnect);
+
+        // Getters for configurable settings.
+        string GetHostname() const;
+        uint16_t GetPort() const;
+        int GetMaxRetries() const;
+        int GetRetryInterval() const;
+        bool GetAutoReconnect() const;
+    };
+
     class DataSubscriber
     {
     private:
@@ -126,6 +192,7 @@ namespace Transport
             DispatcherFunction Function;
         };
 
+        SubscriberConnector m_connector;
         SubscriptionInfo m_currentSubscription;
         EndianConverter m_endianConverter;
         IPAddress m_hostAddress;
@@ -170,6 +237,7 @@ namespace Transport
         MessageCallback m_processingCompleteCallback;
         ConfigurationChangedCallback m_configurationChangedCallback;
         ConnectionTerminatedCallback m_connectionTerminatedCallback;
+        ConnectionTerminatedCallback m_autoReconnectCallback;
 
         // Threads
         void RunCallbackThread();
@@ -211,6 +279,8 @@ namespace Transport
         // safely close all sockets and stop all subscriber threads
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
+        
+        void Disconnect(bool autoReconnect);
 
     public:
         // Creates a new instance of the data subscriber.
@@ -241,6 +311,7 @@ namespace Transport
         void RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback);
         void RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback);
         void RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback);
+        void RegisterAutoReconnectCallback(ConnectionTerminatedCallback autoReconnectCallback);
 
         // Gets or sets value that determines whether
         // the metadata transfer is compressed.
@@ -250,6 +321,8 @@ namespace Transport
         // Gets or sets user defined data reference
         void* GetUserData() const;
         void SetUserData(void* userData);
+
+        SubscriberConnector& GetSubscriberConnector();
 
         // Synchronously connects to publisher.
         void Connect(string hostname, uint16_t port);
@@ -298,82 +371,6 @@ namespace Transport
         long GetTotalMeasurementsReceived() const;
         bool IsConnected() const;
         bool IsSubscribed() const;
-    };
-
-    // Helper class to provide retry and auto-reconnect functionality to the subscriber.
-    class SubscriberConnector
-    {
-    private:
-        typedef void(*ErrorMessageCallback)(DataSubscriber*, const string&);
-        typedef void(*ReconnectCallback)(DataSubscriber*);
-
-        ErrorMessageCallback m_errorMessageCallback;
-        ReconnectCallback m_reconnectCallback;
-
-        string m_hostname;
-        uint16_t m_port;
-
-        int m_maxRetries;
-        int m_retryInterval;
-        bool m_autoReconnect;
-
-        bool m_cancel;
-
-        // Auto-reconnect handler.
-        static void AutoReconnect(DataSubscriber* source);
-        static map<DataSubscriber*, SubscriberConnector> s_connectors;
-
-    public:
-        // Creates a new instance.
-        SubscriberConnector()
-            : m_errorMessageCallback(nullptr),
-            m_reconnectCallback(nullptr),
-            m_port(0),
-            m_maxRetries(-1),
-            m_retryInterval(2000),
-            m_autoReconnect(true),
-            m_cancel(false)
-        {
-        }
-
-        // Registers a callback to provide error messages each time
-        // the subscriber fails to connect during a connection sequence.
-        void RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback);
-
-        // Registers a callback to notify after an automatic reconnection attempt has been made.
-        // This callback will be called whether the connection was successful or not, so it is
-        // recommended to check the connected state of the subscriber using the IsConnected() method.
-        void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
-
-        // Begin connection sequence.
-        bool Connect(DataSubscriber& subscriber) const;
-
-        // Cancel all current and
-        // future connection sequences.
-        void Cancel();
-
-        // Set the hostname of the publisher to connect to.
-        void SetHostname(const string& hostname);
-
-        // Set the port that the publisher is listening on.
-        void SetPort(uint16_t port);
-
-        // Set the maximum number of retries during a connection sequence.
-        void SetMaxRetries(int maxRetries);
-
-        // Sets the interval of idle time (in milliseconds) between connection attempts.
-        void SetRetryInterval(int retryInterval);
-
-        // Sets flag that determines whether the subscriber should
-        // automatically attempt to reconnect when the connection is terminated.
-        void SetAutoReconnect(bool autoReconnect);
-
-        // Getters for configurable settings.
-        string GetHostname() const;
-        uint16_t GetPort() const;
-        int GetMaxRetries() const;
-        int GetRetryInterval() const;
-        bool GetAutoReconnect() const;
     };
 }}}
 

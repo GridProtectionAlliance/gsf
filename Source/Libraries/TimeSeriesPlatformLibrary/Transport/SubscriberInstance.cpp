@@ -117,14 +117,17 @@ void SubscriberInstance::SetFilterExpression(const string& filterExpression)
     }
 }
 
+void SubscriberInstance::ConnectAsync()
+{
+    Thread(bind(&SubscriberInstance::Connect, this));
+}
+
 void SubscriberInstance::Connect()
 {
-    // The connector is declared here because it
-    // is only needed for the initial connection
-    SubscriberConnector connector;
+    SubscriberConnector& connector = m_subscriber.GetSubscriberConnector();
 
     // Set up helper objects (derived classes can override behavior and settings)
-    connector = CreateSubscriberConnector();
+    SetupSubscriberConnector(connector);
     m_info = CreateSubscriptionInfo();
 
     // Register callbacks
@@ -424,11 +427,10 @@ bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Gu
 // All the following protected functions are virtual so that derived
 // classes can customize behavior of the SubscriberInstance
 
-SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
+void SubscriberInstance::SetupSubscriberConnector(SubscriberConnector& connector)
 {
     // SubscriberConnector is another helper object which allows the
     // user to modify settings for auto-reconnects and retry cycles.
-    SubscriberConnector connector;
 
     // Register callbacks
     connector.RegisterErrorMessageCallback(&HandleErrorMessage);
@@ -439,8 +441,6 @@ SubscriberConnector SubscriberInstance::CreateSubscriberConnector()
     connector.SetMaxRetries(m_maxRetries);
     connector.SetRetryInterval(m_retryInterval);
     connector.SetAutoReconnect(m_autoReconnect);
-
-    return connector;
 }
 
 SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
@@ -636,7 +636,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
                 {
                     // Unexpected condition:
                     stringstream errorMessageStream;
-                    errorMessageStream << "Encountered a " << SignalKindDescription[measurementMetadata->Reference.Kind] << " measurement \"" << measurementMetadata->Reference << "\" that had a matching SourceIndex for phasor " << phasorMetadata->Label;
+                    errorMessageStream << "Encountered a " << SignalKindDescription[measurementMetadata->Reference.Kind] << " measurement \"" << measurementMetadata->Reference << "\" that had a matching SourceIndex for phasor: " << phasorMetadata->Label;
                     ErrorMessage(errorMessageStream.str());
                 }
 
@@ -671,7 +671,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     m_measurementsLock.unlock();
 
     stringstream message;
-    message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from GEP meta data";
+    message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from GEP meta data...";
     StatusMessage(message.str());
 
     // Release uncompressed buffer
@@ -810,22 +810,18 @@ void SubscriberInstance::ReceivedNewMeasurements(const vector<MeasurementPtr>& m
 
 void SubscriberInstance::ConfigurationChanged()
 {
-    StatusMessage("Configuration changed");
 }
 
 void SubscriberInstance::HistoricalReadComplete()
 {
-    StatusMessage("Historical read complete");
 }
 
 void SubscriberInstance::ConnectionEstablished()
 {
-    StatusMessage("Connection established");
 }
 
 void SubscriberInstance::ConnectionTerminated()
 {
-    StatusMessage("Connection terminated");
 }
 
 // private functions
@@ -846,7 +842,7 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
     else
     {
         source->Disconnect();
-        instance->StatusMessage("Connection retry attempts exceeded. Press enter to exit.");
+        instance->StatusMessage("Connection retry attempts exceeded.");
     }
 }
 

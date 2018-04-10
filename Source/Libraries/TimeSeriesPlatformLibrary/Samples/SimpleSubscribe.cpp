@@ -34,7 +34,7 @@ using namespace GSF::TimeSeries::Transport;
 
 DataSubscriber Subscriber;
 
-void RunSubscriber(string hostname, uint16_t port);
+bool RunSubscriber(string hostname, uint16_t port);
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
@@ -67,11 +67,12 @@ int main(int argc, char* argv[])
     stringstream(argv[2]) >> port;
 
     // Run the subscriber.
-    RunSubscriber(hostname, port);
-
-    // Wait until the user presses enter before quitting.
-    string line;
-    getline(cin, line);
+    if (RunSubscriber(hostname, port))
+    {
+        // Wait until the user presses enter before quitting.
+        string line;
+        getline(cin, line);
+    }
 
     // Disconnect the subscriber to stop background threads.
     Subscriber.Disconnect();
@@ -85,7 +86,7 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Connect to publisher
 //   - Subscribe
-void RunSubscriber(string hostname, uint16_t port)
+bool RunSubscriber(string hostname, uint16_t port)
 {
     // SubscriptionInfo is a helper object which allows the user
     // to set up their subscription and reuse subscription settings.
@@ -98,10 +99,39 @@ void RunSubscriber(string hostname, uint16_t port)
     Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
 
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
-    Subscriber.Connect(hostname, port);
 
-    cout << "Connected! Subscribing to data..." << endl << endl;
-    Subscriber.Subscribe(info);
+    string errorMessage;
+    bool connected = false;
+
+    try
+    {
+        Subscriber.Connect(hostname, port);
+        connected = true;
+    }
+    catch (SubscriberException& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (SystemError& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (...)
+    {
+        errorMessage = current_exception_diagnostic_information(true);
+    }
+
+    if (connected)
+    {
+        cout << "Connected! Subscribing to data..." << endl << endl;
+        Subscriber.Subscribe(info);
+    }
+    else
+    {
+        cerr << "Failed to connect to \"" << hostname << ":" << port << "\": " << errorMessage;
+    }
+
+    return connected;
 }
 
 // Callback which is called when the subscriber has
