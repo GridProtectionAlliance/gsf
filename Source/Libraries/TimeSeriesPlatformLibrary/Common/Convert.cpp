@@ -92,7 +92,12 @@ size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, 
     }
 
     struct tm timeinfo;
+
+#ifdef _WIN32
     gmtime_s(&timeinfo, &fromSeconds);
+#else
+    gmtime_r(&fromSeconds, &timeinfo);
+#endif
 
     return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }
