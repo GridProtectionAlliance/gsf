@@ -29,10 +29,12 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY Output)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY Libraries)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY Libraries)
 
-set (headerFiles Common/Convert.h Common/EndianConverter.h Common/Measurement.h
-		Common/ThreadSafeQueue.h Common/Types.h Common/Version.h Transport/CompactMeasurementParser.h
-		Transport/Constants.h Transport/DataSubscriber.h Transport/GatewayMeasurementParser.h
-		Transport/SignalIndexCache.h)
+set (headerFiles Common/Convert.h Common/EndianConverter.h
+                 Common/ThreadSafeQueue.h Common/Types.h
+                 Transport/CompactMeasurementParser.h Transport/Constants.h
+                 Transport/DataSubscriber.h Transport/SignalIndexCache.h
+                 Transport/SubscriberInstance.h Transport/Types.h
+                 Transport/Version.h)
 
 # Option to choose whether to build static or shared libraries
 option (BUILD_SHARED_LIBS "Build gsf using shared libraries" OFF)
@@ -45,12 +47,15 @@ endforeach (headerFile)
 
 # Build gsf library
 add_library (gsf Common/Convert.cpp Common/EndianConverter.cpp
-				Transport/CompactMeasurementParser.cpp
-				Transport/DataSubscriber.cpp Transport/SignalIndexCache.cpp)
-target_link_libraries (gsf boost_system boost_thread boost_date_time)
+                 Common/pugixml.cpp Transport/CompactMeasurementParser.cpp
+                 Transport/DataSubscriber.cpp Transport/SignalIndexCache.cpp
+                 Transport/SubscriberInstance.cpp Transport/Types.cpp)
+target_link_libraries (gsf boost_system boost_thread boost_date_time
+                           boost_iostreams pthread m)
 
 # Install headers and library
-install (DIRECTORY ${PROJECT_BINARY_DIR}/${HEADER_OUTPUT_DIRECTORY} DESTINATION include)
+install (DIRECTORY ${PROJECT_BINARY_DIR}/${HEADER_OUTPUT_DIRECTORY}
+         DESTINATION include)
 install (TARGETS gsf DESTINATION lib)
 
 
@@ -65,12 +70,20 @@ add_executable (SimpleSubscribe EXCLUDE_FROM_ALL Samples/SimpleSubscribe.cpp)
 target_link_libraries (SimpleSubscribe gsf)
 
 # AdvancedSubscribe sample
-add_executable (AdvancedSubscribe EXCLUDE_FROM_ALL Samples/AdvancedSubscribe.cpp)
+add_executable (AdvancedSubscribe EXCLUDE_FROM_ALL
+                Samples/AdvancedSubscribe.cpp)
 target_link_libraries (AdvancedSubscribe gsf)
 
 # AverageFrequencyCalculator sample
-add_executable (AverageFrequencyCalculator EXCLUDE_FROM_ALL Samples/AverageFrequencyCalculator.cpp)
+add_executable (AverageFrequencyCalculator EXCLUDE_FROM_ALL
+                Samples/AverageFrequencyCalculator.cpp)
 target_link_libraries (AverageFrequencyCalculator gsf)
 
+# InstanceSubscribe sample
+add_executable (InstanceSubscribe EXCLUDE_FROM_ALL
+                Samples/InstanceSubscribe.cpp Samples/SubscriberHandler.cpp)
+target_link_libraries (InstanceSubscribe gsf)
+
 # Build with 'make samples'
-add_custom_target (samples DEPENDS SimpleSubscribe AdvancedSubscribe AverageFrequencyCalculator)
+add_custom_target (samples DEPENDS SimpleSubscribe AdvancedSubscribe
+                   AverageFrequencyCalculator InstanceSubscribe)
