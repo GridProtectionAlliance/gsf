@@ -101,9 +101,9 @@ namespace TimeSeries
         Unknown			// Undetermined signal type
     };
 
-    const char* SignalKindDescription[];
+    extern const char* SignalKindDescription[];
 
-    const char* SignalKindAcronym[];
+    extern const char* SignalKindAcronym[];
 
     // Helper function to parse signal kind
     SignalKind ParseSignalKind(string acronym);
