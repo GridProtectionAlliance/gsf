@@ -31,13 +31,12 @@ link to the folder, e.g., mklink /D C:\Projects\boost C:\boost_1_66_0
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
-has been tested with version v1.66 of Boost, but will likely work with other
-versions as well.
+has been tested with version v1.66 of Boost.
 
-Note that you will need to build Boost in order to run the sample applications
-found in:
+Note that you will need to compile Boost in order to execute the sample
+applications found in:
 
-	...\gsf\Source\Applications\TimeSeries Platform Library Samples
+	...\gsf\Source\Applications\TimeSeries Platform Library\Samples
 
 The GSF Time Series Platform Library uses zlib features of Boost, as a result
 compiling boost requires zlib source code that can be downloaded separately:
