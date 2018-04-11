@@ -55,6 +55,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Web.Hosting;
 using GSF.Console;
 using GSF.Identity;
@@ -397,6 +399,249 @@ namespace GSF.IO
             }
 
             return Path.Combine(directory, $"{originalFileRoot} ({k}){fileExtension}");
+        }
+
+        /// <summary>
+        /// Sets the permissions of the file or directory at the given
+        /// <paramref name="path"/> to the object's inherited permissions.
+        /// </summary>
+        /// <param name="path">The path to the file or directory.</param>
+        /// <exception cref="FileNotFoundException">No file or directory was found at the given <paramref name="path"/>.</exception>
+        public static void ResetPermissions(string path)
+        {
+            // This removes access rule protection so that the permissions will
+            // be modified by the object's parents (the object's inherited permissions)
+            void ResetPermissions(ObjectSecurity objectSecurity) =>
+                objectSecurity.SetAccessRuleProtection(false, false);
+
+            string absolutePath = GetAbsolutePath(path);
+
+            if (Directory.Exists(absolutePath))
+            {
+                DirectorySecurity directorySecurity = new DirectorySecurity();
+                ResetPermissions(directorySecurity);
+                Directory.SetAccessControl(absolutePath, directorySecurity);
+            }
+            else if (File.Exists(absolutePath))
+            {
+                FileSecurity fileSecurity = new FileSecurity();
+                ResetPermissions(fileSecurity);
+                File.SetAccessControl(absolutePath, fileSecurity);
+            }
+            else
+            {
+                throw new FileNotFoundException($"Unable to find file or directory at the given path: {absolutePath}");
+            }
+        }
+
+        /// <summary>
+        /// Copies permissions from the object at the given <paramref name="sourcePath"/>
+        /// to the object at the given <paramref name="targetPath"/>.
+        /// </summary>
+        /// <param name="sourcePath">The path to the object from which to copy permissions.</param>
+        /// <param name="targetPath">The path to the object to which to apply permissions.</param>
+        /// <exception cref="FileNotFoundException">No file or directory was found at either the <paramref name="sourcePath"/> or <paramref name="targetPath"/>.</exception>
+        /// <exception cref="InvalidOperationException">The type of object at <paramref name="sourcePath"/> does not match the type of object at <paramref name="targetPath"/>.</exception>
+        public static void CopyPermissions(string sourcePath, string targetPath)
+        {
+            string sourceAbsolutePath = GetAbsolutePath(sourcePath);
+            string targetAbsolutePath = GetAbsolutePath(targetPath);
+
+            bool sourceIsDirectory = Directory.Exists(sourceAbsolutePath);
+            bool sourceIsFile = File.Exists(sourceAbsolutePath);
+            bool targetIsDirectory = Directory.Exists(sourceAbsolutePath);
+            bool targetIsFile = File.Exists(sourceAbsolutePath);
+
+            if (!sourceIsDirectory && !sourceIsFile)
+                throw new FileNotFoundException($"Unable to find file or directory at the given path: {sourceAbsolutePath}");
+
+            if (!targetIsDirectory && !targetIsFile)
+                throw new FileNotFoundException($"Unable to find file or directory at the given path: {targetAbsolutePath}");
+
+            if (sourceIsDirectory && targetIsFile)
+                throw new InvalidOperationException("Unable to copy permissions from a directory to a file");
+
+            if (sourceIsFile && targetIsDirectory)
+                throw new InvalidOperationException("Unable to copy permissions from a file to a directory");
+
+            if (sourceIsDirectory && targetIsDirectory)
+                CopyDirectoryPermissions(sourceAbsolutePath, targetAbsolutePath);
+            else if (sourceIsFile && targetIsFile)
+                CopyFilePermissions(sourceAbsolutePath, targetAbsolutePath);
+        }
+
+        /// <summary>
+        /// Copies the permissions of the directory at the given <paramref name="sourcePath"/>
+        /// to the directory at the given <paramref name="targetPath"/>.
+        /// </summary>
+        /// <param name="sourcePath">The path to the directory from which to copy permissions.</param>
+        /// <param name="targetPath">The path to the directory to which to apply permissions.</param>
+        public static void CopyDirectoryPermissions(string sourcePath, string targetPath)
+        {
+            string sourceAbsolutePath = GetAbsolutePath(sourcePath);
+            string targetAbsolutePath = GetAbsolutePath(targetPath);
+            DirectorySecurity sourceSecurity = Directory.GetAccessControl(sourceAbsolutePath);
+            DirectorySecurity targetSecurity = new DirectorySecurity();
+
+            // This prevents permissions modifications by the target directory's parents (the target's inherited permissions)
+            targetSecurity.SetAccessRuleProtection(true, false);
+
+            // Now apply ALL of the source directory's permissions to the target directory,
+            // including inherited permissions from the source directory's parents
+            foreach (FileSystemAccessRule rule in sourceSecurity.GetAccessRules(true, true, typeof(NTAccount)))
+                targetSecurity.AddAccessRule(rule);
+
+            Directory.SetAccessControl(targetAbsolutePath, targetSecurity);
+        }
+
+        /// <summary>
+        /// Copies the permissions of the file at the given <paramref name="sourcePath"/>
+        /// to the file at the given <paramref name="targetPath"/>.
+        /// </summary>
+        /// <param name="sourcePath">The path to the file from which to copy permissions.</param>
+        /// <param name="targetPath">The path to the file to which to apply permissions.</param>
+        public static void CopyFilePermissions(string sourcePath, string targetPath)
+        {
+            string sourceAbsolutePath = GetAbsolutePath(sourcePath);
+            string targetAbsolutePath = GetAbsolutePath(targetPath);
+            FileSecurity sourceSecurity = File.GetAccessControl(sourceAbsolutePath);
+            FileSecurity targetSecurity = new FileSecurity();
+
+            // This prevents permissions modifications by the target file's parents (the target's inherited permissions)
+            targetSecurity.SetAccessRuleProtection(true, false);
+
+            // Now apply ALL of the source file's permissions to the target directory,
+            // including inherited permissions from the source file's parents
+            foreach (FileSystemAccessRule rule in sourceSecurity.GetAccessRules(true, true, typeof(NTAccount)))
+                targetSecurity.AddAccessRule(rule);
+
+            File.SetAccessControl(targetAbsolutePath, targetSecurity);
+        }
+
+        /// <summary>
+        /// Replaces the permissions of the directory or file at the given <paramref name="targetPath"/>
+        /// with the inheritable permissions from the directory at the given <paramref name="sourcePath"/>.
+        /// </summary>
+        /// <param name="sourcePath">The path to the directory from which to derive inheritable permissions.</param>
+        /// <param name="targetPath">The path to the directory or file to which to apply the derived permissions.</param>
+        /// <exception cref="DirectoryNotFoundException">No directory was found at the given <paramref name="sourcePath"/>.</exception>
+        /// <exception cref="FileNotFoundException">No file or directory was found at the given <paramref name="targetPath"/>.</exception>
+        public static void ApplyInheritablePermissions(string sourcePath, string targetPath)
+        {
+            string sourceAbsolutePath = GetAbsolutePath(sourcePath);
+            string targetAbsolutePath = GetAbsolutePath(targetPath);
+
+            if (!Directory.Exists(sourceAbsolutePath))
+                throw new DirectoryNotFoundException($"Unable to find directory at the given path: {sourceAbsolutePath}");
+
+            if (Directory.Exists(targetAbsolutePath))
+                ApplyInheritableDirectoryPermissions(sourceAbsolutePath, targetAbsolutePath);
+            else if (File.Exists(targetAbsolutePath))
+                ApplyInheritableFilePermissions(sourceAbsolutePath, targetAbsolutePath);
+            else
+                throw new FileNotFoundException($"Unable to find file or directory at the given path: {targetAbsolutePath}");
+        }
+
+        /// <summary>
+        /// Replaces the permissions of the directory at the given <paramref name="targetPath"/>
+        /// with the inheritable permissions from the directory at the given <paramref name="sourcePath"/>.
+        /// </summary>
+        /// <param name="sourcePath">The path to the directory from which to derive inheritable permissions.</param>
+        /// <param name="targetPath">The path to the directory to which to apply the derived permissions.</param>
+        public static void ApplyInheritableDirectoryPermissions(string sourcePath, string targetPath)
+        {
+            string sourceAbsolutePath = GetAbsolutePath(sourcePath);
+            string targetAbsolutePath = GetAbsolutePath(targetPath);
+            DirectorySecurity sourceSecurity = Directory.GetAccessControl(sourceAbsolutePath);
+            DirectorySecurity targetSecurity = Directory.GetAccessControl(targetAbsolutePath);
+
+            IdentityReference targetOwner = targetSecurity.GetOwner(typeof(NTAccount));
+            IdentityReference targetGroup = targetSecurity.GetGroup(typeof(NTAccount));
+            targetSecurity = new DirectorySecurity();
+
+            // This prevents permissions modifications by the target directory's parents (the target's inherited permissions)
+            targetSecurity.SetAccessRuleProtection(true, false);
+
+            foreach (FileSystemAccessRule rule in sourceSecurity.GetAccessRules(true, true, typeof(NTAccount)))
+            {
+                InheritanceFlags inheritanceFlags = rule.InheritanceFlags;
+
+                // If the inheritance flags indicate that this rule
+                // is not inheritable by subfolders, skip it
+                if (!inheritanceFlags.HasFlag(InheritanceFlags.ContainerInherit))
+                    continue;
+
+                IdentityReference identityReference = rule.IdentityReference;
+                FileSystemRights fileSystemRights = rule.FileSystemRights;
+                AccessControlType accessControlType = rule.AccessControlType;
+
+                // If the rule is associated with the CREATOR OWNER identity, add an additional rule
+                // for the target's owner that applies only to the target directory (not inheritable)
+                if (identityReference.Value == "CREATOR OWNER")
+                    targetSecurity.AddAccessRule(new FileSystemAccessRule(targetOwner, fileSystemRights, accessControlType));
+
+                // If the rule is associated with the CREATOR GROUP identity, add an additional rule
+                // for the target's group that applies only to the target directory (not inheritable)
+                if (identityReference.Value == "CREATOR GROUP")
+                    targetSecurity.AddAccessRule(new FileSystemAccessRule(targetGroup, fileSystemRights, accessControlType));
+
+                // If the rule applies only to objects within the source directory,
+                // clear inheritance flags so it will not propagate to subfolders
+                // and files within the target directory
+                if (rule.PropagationFlags.HasFlag(PropagationFlags.NoPropagateInherit))
+                    inheritanceFlags = InheritanceFlags.None;
+
+                // Inherited permissions never inherit propagation flags
+                PropagationFlags propagationFlags = PropagationFlags.None;
+
+                targetSecurity.AddAccessRule(new FileSystemAccessRule(identityReference, fileSystemRights, inheritanceFlags, propagationFlags, accessControlType));
+            }
+
+            Directory.SetAccessControl(targetAbsolutePath, targetSecurity);
+        }
+
+        /// <summary>
+        /// Replaces the permissions of the file at the given <paramref name="targetPath"/>
+        /// with the inheritable permissions from the directory at the given <paramref name="sourcePath"/>.
+        /// </summary>
+        /// <param name="sourcePath">The path to the directory from which to derive inheritable permissions.</param>
+        /// <param name="targetPath">The path to the file to which to apply the derived permissions.</param>
+        public static void ApplyInheritableFilePermissions(string sourcePath, string targetPath)
+        {
+            string sourceAbsolutePath = GetAbsolutePath(sourcePath);
+            string targetAbsolutePath = GetAbsolutePath(targetPath);
+            DirectorySecurity sourceSecurity = Directory.GetAccessControl(sourceAbsolutePath);
+            FileSecurity targetSecurity = File.GetAccessControl(targetAbsolutePath);
+
+            IdentityReference targetOwner = targetSecurity.GetOwner(typeof(NTAccount));
+            IdentityReference targetGroup = targetSecurity.GetGroup(typeof(NTAccount));
+            targetSecurity = new FileSecurity();
+
+            // This prevents permissions modifications by the target file's parents (the target's inherited permissions)
+            targetSecurity.SetAccessRuleProtection(true, false);
+
+            foreach (FileSystemAccessRule rule in sourceSecurity.GetAccessRules(true, true, typeof(NTAccount)))
+            {
+                // If the inheritance flags indicate that this rule
+                // is not inheritable by subfolders, skip it
+                if (!rule.InheritanceFlags.HasFlag(InheritanceFlags.ObjectInherit))
+                    continue;
+
+                IdentityReference identityReference = rule.IdentityReference;
+                FileSystemRights fileSystemRights = rule.FileSystemRights;
+                AccessControlType accessControlType = rule.AccessControlType;
+
+                // If the rule is associated with the CREATOR OWNER identity or the CREATOR GROUP identity,
+                // the new rule must instead be associated with the actual owner or group of the target file
+                if (identityReference.Value == "CREATOR OWNER")
+                    identityReference = targetOwner;
+                else if (identityReference.Value == "CREATOR GROUP")
+                    identityReference = targetGroup;
+
+                targetSecurity.AddAccessRule(new FileSystemAccessRule(identityReference, fileSystemRights, accessControlType));
+            }
+
+            File.SetAccessControl(targetAbsolutePath, targetSecurity);
         }
 
         [DllImport("mpr.dll", EntryPoint = "WNetAddConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
