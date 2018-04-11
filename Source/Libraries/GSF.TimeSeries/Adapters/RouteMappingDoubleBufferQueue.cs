@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using GSF.Collections;
@@ -183,6 +184,7 @@ namespace GSF.TimeSeries.Adapters
 
         private class Producer
         {
+            [SuppressMessage("SonarQube.Immutability", "S3887", Justification = "Internal use only. Reference marked as read-only for future code update safety.")]
             public readonly List<IMeasurement> Measurements;
             public readonly DoubleBufferedQueueProducer<IMeasurement> QueueProducer;
 
@@ -263,6 +265,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="producerAdapters">all of the producers</param>
         /// <param name="consumerAdapters">all of the consumers</param>
+        [SuppressMessage("SonarQube.UnusedObject", "S1848", Justification = "Class instantiation of \"LocalCache\" attaches event handlers for adapters.")]
         public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
             if (producerAdapters == null)
@@ -273,6 +276,7 @@ namespace GSF.TimeSeries.Adapters
             // Attach to NewMeasurements event of all producer adapters that are new
             foreach (IAdapter producerAdapter in producerAdapters.NewAdapter)
             {
+                // ReSharper disable once ObjectCreationAsStatement
                 new LocalCache(this, producerAdapter);
             }
 

@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using GSF.Collections;
@@ -472,6 +473,7 @@ namespace GSF.TimeSeries.Adapters
         /// Initiates request for metadata refresh for <see cref="OutputAdapterBase"/>, if implemented.
         /// </summary>
         [AdapterCommand("Requests metadata refresh of output adapter.", "Administrator", "Editor")]
+        [SuppressMessage("SonarQube.Miscellaneous", "S1656", Justification = "Self assignment of \"InputSourceIDs\" initiates parse and load of source IDs.")]
         public void RefreshMetadata()
         {
             // Force a recalculation of input measurement keys so that system can appropriately update routing tables

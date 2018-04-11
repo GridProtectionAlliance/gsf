@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -45,6 +46,7 @@ namespace GSF.TimeSeries.Adapters
     /// Derived classes are expected to override <see cref="ConcentratorBase.PublishFrame"/> to handle time aligned measurements
     /// and call <see cref="OnNewMeasurements"/> for any new measurements that may get created.
     /// </remarks>
+    [SuppressMessage("SonarQube.Methods", "S1206", Justification = "Class life-cycle is controlled through library.")]
     public abstract class ActionAdapterBase : ConcentratorBase, IActionAdapter
     {
         #region [ Members ]

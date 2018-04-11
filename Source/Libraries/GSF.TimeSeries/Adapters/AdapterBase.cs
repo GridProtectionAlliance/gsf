@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -45,6 +46,7 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents the base class for any adapter.
     /// </summary>
+    [SuppressMessage("SonarQube.Methods", "S1206", Justification = "Class life-cycle is controlled through library.")]
     public abstract class AdapterBase : IAdapter
     {
         #region [ Members ]
