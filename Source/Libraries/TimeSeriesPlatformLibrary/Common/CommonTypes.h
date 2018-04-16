@@ -154,8 +154,8 @@ namespace TimeSeries
     struct Empty
     {
         static const string String;
-        static const Guid Guid;
-        static const IPAddress IPAddress;
+        static const GSF::TimeSeries::Guid Guid;
+        static const GSF::TimeSeries::IPAddress IPAddress;
     };
 }}
 

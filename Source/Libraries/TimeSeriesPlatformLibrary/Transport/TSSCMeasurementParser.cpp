@@ -263,9 +263,6 @@ void TSSCMeasurementParser::SetBuffer(const uint8_t* data, const int32_t offset,
 
 bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float_t& value)
 {
-    if (m_position > m_lastPosition)
-        DebugBreak();
-
     if (m_position == m_lastPosition && BitStreamIsEmpty())
     {
         ClearBitStream();
