@@ -30,6 +30,9 @@ using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
+// Repeatable random numbers desired for this testing adapter
+#pragma warning disable SCS0005 // Weak random generator
+
 namespace TestingAdapters
 {
     /// <summary>
@@ -82,6 +85,11 @@ namespace TestingAdapters
         /// </summary>
         public const bool DefaultValueWraps = false;
 
+        /// <summary>
+        /// Default value for the <see cref="RandomNumberSeed"/> property.
+        /// </summary>
+        public const int DefaultRandomNumberSeed = -1;
+
         // Fields
         private double m_minValue;
         private double m_maxValue;
@@ -91,6 +99,7 @@ namespace TestingAdapters
         private double m_maxMoveTime;
         private double m_publishRate;
         private bool m_valueWraps;
+        private int m_randomNumberSeed;
 
         private Timer m_timer;
         private double[] m_values;
@@ -253,6 +262,24 @@ namespace TestingAdapters
         }
 
         /// <summary>
+        /// Gets or sets the initial random number seed. Set to -1 for timer based seed.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultRandomNumberSeed),
+        Description("Defines the initial random number seed. Set to -1 for timer based seed.")]
+        public int RandomNumberSeed
+        {
+            get
+            {
+                return m_randomNumberSeed;
+            }
+            set
+            {
+                m_randomNumberSeed = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing
@@ -318,23 +345,26 @@ namespace TestingAdapters
             else
                 m_valueWraps = DefaultValueWraps;
 
+            if (!settings.TryGetValue("randomNumberSeed", out setting) || !int.TryParse(setting, out m_randomNumberSeed))
+                m_randomNumberSeed = DefaultRandomNumberSeed;
+
             if (m_minValue > m_maxValue)
-                throw new InvalidOperationException(string.Format("minValue({0}) cannot be less than maxValue({1})", m_minValue, m_maxValue));
+                throw new InvalidOperationException($"minValue({m_minValue}) cannot be less than maxValue({m_maxValue})");
 
             if (m_minHoldTime > m_maxHoldTime)
-                throw new InvalidOperationException(string.Format("minHoldTime({0}) cannot be less than maxHoldTime({1})", m_minHoldTime, m_maxHoldTime));
+                throw new InvalidOperationException($"minHoldTime({m_minHoldTime}) cannot be less than maxHoldTime({m_maxHoldTime})");
 
             if (m_minMoveTime > m_maxMoveTime)
-                throw new InvalidOperationException(string.Format("minMoveTime({0}) cannot be less than maxMoveTime({1})", m_minMoveTime, m_maxMoveTime));
+                throw new InvalidOperationException($"minMoveTime({m_minMoveTime}) cannot be less than maxMoveTime({m_maxMoveTime})");
 
             if (m_maxHoldTime <= 0.0D)
-                throw new InvalidOperationException(string.Format("maxHoldTime({0}) must be greater than zero", m_maxHoldTime));
+                throw new InvalidOperationException($"maxHoldTime({m_maxHoldTime}) must be greater than zero");
 
             if (m_maxMoveTime <= 0.0D)
-                throw new InvalidOperationException(string.Format("maxMoveTime({0}) must be greater than zero", m_maxMoveTime));
+                throw new InvalidOperationException($"maxMoveTime({m_maxMoveTime}) must be greater than zero");
 
             if (m_publishRate <= 0.0D)
-                throw new InvalidOperationException(string.Format("publishRate({0}) must be greater than zero", m_publishRate));
+                throw new InvalidOperationException($"publishRate({m_publishRate}) must be greater than zero");
         }
 
         /// <summary>
@@ -346,7 +376,19 @@ namespace TestingAdapters
         /// </returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} values generated between {1} and {2} so far...", ProcessedMeasurements, m_minValue, m_maxValue).CenterText(maxLength);
+            return $"{ProcessedMeasurements} values generated between {m_minValue} and {m_maxValue} so far...".CenterText(maxLength);
+        }
+
+        /// <summary>
+        /// Starts this adapter and initiates connection cycle to data input source.
+        /// </summary>
+        public override void Start()
+        {
+            // To accommodate connect on demand scenarios to recreate a data stream sequence,
+            // seed and re-initialize random number generator on start
+            Generator = m_randomNumberSeed == -1 ? new Random() : new Random(m_randomNumberSeed);
+
+            base.Start();
         }
 
         /// <summary>
@@ -369,6 +411,7 @@ namespace TestingAdapters
             m_accelerations = new double[OutputMeasurements.Length];
             m_lastHoldValues = new double[OutputMeasurements.Length];
 
+            // ReSharper disable once UnusedVariable
             using (Timer timer = m_timer)
             {
                 m_timer = new Timer();
@@ -553,7 +596,7 @@ namespace TestingAdapters
         #region [ Static ]
 
         // Static Fields
-        private static readonly Random Generator = new Random();
+        private static Random Generator = new Random();
 
         // Static Methods
         private static double ToRange(double value, double minimum, double range)
