@@ -26,7 +26,7 @@
 
 #include <queue>
 
-#include "Types.h"
+#include "CommonTypes.h"
 
 using namespace boost;
 

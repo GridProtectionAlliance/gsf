@@ -29,12 +29,12 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY Output)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY Libraries)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY Libraries)
 
-set (headerFiles Common/Convert.h Common/EndianConverter.h
-                 Common/ThreadSafeQueue.h Common/Types.h
+set (headerFiles Common/CommonTypes.h Common/Convert.h
+				 Common/EndianConverter.h Common/ThreadSafeQueue.h
                  Transport/CompactMeasurementParser.h Transport/Constants.h
                  Transport/DataSubscriber.h Transport/SignalIndexCache.h
-                 Transport/SubscriberInstance.h Transport/Types.h
-                 Transport/Version.h)
+                 Transport/SubscriberInstance.h Transport/TransportTypes.h
+                 Transport/TSSCMeasurementParser.h Transport/Version.h)
 
 # Option to choose whether to build static or shared libraries
 option (BUILD_SHARED_LIBS "Build gsf using shared libraries" OFF)
@@ -46,10 +46,12 @@ foreach (headerFile ${headerFiles})
 endforeach (headerFile)
 
 # Build gsf library
-add_library (gsf Common/Convert.cpp Common/EndianConverter.cpp
-                 Common/pugixml.cpp Transport/CompactMeasurementParser.cpp
-                 Transport/DataSubscriber.cpp Transport/SignalIndexCache.cpp
-                 Transport/SubscriberInstance.cpp Transport/Types.cpp)
+add_library (gsf Common/CommonTypes.cpp Common/Convert.cpp Common/pugixml.cpp
+                 Common/EndianConverter.cpp Transport/DataSubscriber.cpp
+                 Transport/CompactMeasurementParser.cpp
+				 Transport/SignalIndexCache.cpp Transport/TransportTypes.cpp
+				 Transport/SubscriberInstance.cpp
+				 Transport/TSSCMeasurementParser.cpp)
 target_link_libraries (gsf boost_system boost_thread boost_date_time
                            boost_iostreams pthread m)
 

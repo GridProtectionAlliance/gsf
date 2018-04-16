@@ -32,7 +32,8 @@ namespace Transport
     {
         static const uint8_t Synchronized = 0x01;
         static const uint8_t Compact = 0x02;
-        static const uint8_t CipherIndex = 0x03;
+        static const uint8_t CipherIndex = 0x04;
+        static const uint8_t Compressed = 0x08;
         static const uint8_t NoFlags = 0x00;
     };
 
@@ -74,6 +75,7 @@ namespace Transport
         static const uint32_t UseCommonSerializationFormat = 0x01000000;
         static const uint32_t ReceiveExternalMetadata = 0x02000000;
         static const uint32_t ReceiveInternalMetadata = 0x04000000;
+        static const uint32_t CompressPayloadData = 0x20000000;
         static const uint32_t CompressSignalIndexCache = 0x40000000;
         static const uint32_t CompressMetadata = 0x80000000;
         static const uint32_t NoFlags = 0x00000000;
@@ -92,6 +94,44 @@ namespace Transport
         static const uint32_t GZip = 0x00000020;
         static const uint32_t TSSC = 0x00000040;
         static const uint32_t None = 0x00000000;
+    };
+
+    // The encoding commands supported by TSSC
+    struct TSSCCodeWords
+    {
+        static const uint8_t EndOfStream = 0;
+
+        static const uint8_t PointIDXOR4 = 1;
+        static const uint8_t PointIDXOR8 = 2;
+        static const uint8_t PointIDXOR12 = 3;
+        static const uint8_t PointIDXOR16 = 4;
+
+        static const uint8_t TimeDelta1Forward = 5;
+        static const uint8_t TimeDelta2Forward = 6;
+        static const uint8_t TimeDelta3Forward = 7;
+        static const uint8_t TimeDelta4Forward = 8;
+        static const uint8_t TimeDelta1Reverse = 9;
+        static const uint8_t TimeDelta2Reverse = 10;
+        static const uint8_t TimeDelta3Reverse = 11;
+        static const uint8_t TimeDelta4Reverse = 12;
+        static const uint8_t Timestamp2 = 13;
+        static const uint8_t TimeXOR7Bit = 14;
+
+        static const uint8_t Quality2 = 15;
+        static const uint8_t Quality7Bit32 = 16;
+
+        static const uint8_t Value1 = 17;
+        static const uint8_t Value2 = 18;
+        static const uint8_t Value3 = 19;
+        static const uint8_t ValueZero = 20;
+        static const uint8_t ValueXOR4 = 21;
+        static const uint8_t ValueXOR8 = 22;
+        static const uint8_t ValueXOR12 = 23;
+        static const uint8_t ValueXOR16 = 24;
+        static const uint8_t ValueXOR20 = 25;
+        static const uint8_t ValueXOR24 = 26;
+        static const uint8_t ValueXOR28 = 27;
+        static const uint8_t ValueXOR32 = 28;
     };
 }}}
 

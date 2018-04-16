@@ -195,6 +195,16 @@ void SubscriberInstance::SetUserData(void* userData)
     m_userData = userData;
 }
 
+bool SubscriberInstance::IsPayloadDataCompressed() const
+{
+    return m_subscriber.IsPayloadDataCompressed();
+}
+
+void SubscriberInstance::SetPayloadDataCompressed(bool compressed)
+{
+    m_subscriber.SetPayloadDataCompressed(compressed);
+}
+
 bool SubscriberInstance::IsMetadataCompressed() const
 {
     return m_subscriber.IsMetadataCompressed();
@@ -203,6 +213,16 @@ bool SubscriberInstance::IsMetadataCompressed() const
 void SubscriberInstance::SetMetadataCompressed(bool compressed)
 {
     m_subscriber.SetMetadataCompressed(compressed);
+}
+
+bool SubscriberInstance::IsSignalIndexCacheCompressed() const
+{
+    return m_subscriber.IsSignalIndexCacheCompressed();
+}
+
+void SubscriberInstance::SetSignalIndexCacheCompressed(bool compressed)
+{
+    m_subscriber.SetSignalIndexCacheCompressed(compressed);
 }
 
 long SubscriberInstance::GetTotalCommandChannelBytesReceived() const

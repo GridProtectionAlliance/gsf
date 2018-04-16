@@ -177,10 +177,20 @@ namespace Transport
         void* GetUserData() const;
         void SetUserData(void* userData);
 
-        // Gets or sets value that determines if metadata transfer will be compressed,
-        // when true, metadata payload will be zlib compressed
+        // Gets or sets value that determines whether
+        // payload data is compressed using TSSC.
+        bool IsPayloadDataCompressed() const;
+        void SetPayloadDataCompressed(bool compressed);
+
+        // Gets or sets value that determines whether the
+        // metadata transfer is compressed using GZip.
         bool IsMetadataCompressed() const;
         void SetMetadataCompressed(bool compressed);
+
+        // Gets or sets value that determines whether the
+        // signal index cache is compressed using GZip.
+        bool IsSignalIndexCacheCompressed() const;
+        void SetSignalIndexCacheCompressed(bool compressed);
 
         // Statistical functions
         long GetTotalCommandChannelBytesReceived() const;

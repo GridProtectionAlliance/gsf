@@ -24,12 +24,23 @@
 #include <string>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <utility>
 
-#include "Types.h"
+#include "TransportTypes.h"
 #include "../Common/Convert.h"
 
 using namespace GSF::TimeSeries;
 using namespace boost::algorithm;
+
+SubscriberException::SubscriberException(string message) noexcept :
+    m_message(move(message))
+{
+}
+
+const char* SubscriberException::what() const noexcept
+{
+    return &m_message[0];
+}
 
 Measurement::Measurement() :
     Adder(0),

@@ -28,7 +28,7 @@
 #include <vector>
 #include <string>
 
-#include "../Common/Types.h"
+#include "../Common/CommonTypes.h"
 
 namespace GSF {
 namespace TimeSeries {
@@ -74,7 +74,7 @@ namespace Transport
 
         // Gets the globally unique signal ID as well as the human-readable
         // measurement key associated with the given 16-bit runtime ID.
-        void GetMeasurementKey(
+        bool GetMeasurementKey(
             uint16_t signalIndex,
             Guid& signalID,
             string& source,

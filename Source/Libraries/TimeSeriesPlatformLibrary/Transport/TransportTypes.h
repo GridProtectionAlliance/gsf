@@ -28,13 +28,24 @@
 #include <ctime>
 #include <unordered_set>
 
-#include "../Common/Types.h"
+#include "../Common/CommonTypes.h"
 
 using namespace std;
 
 namespace GSF {
 namespace TimeSeries
 {
+    // Simple exception type thrown by the data subscriber
+    class SubscriberException : public Exception
+    {
+    private:
+        string m_message;
+
+    public:
+        SubscriberException(string message) noexcept;
+        const char* what() const noexcept;
+    };
+    
     // Fundamental data type used by the Time Series Framework
     struct Measurement
     {

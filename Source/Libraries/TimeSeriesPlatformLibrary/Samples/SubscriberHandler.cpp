@@ -141,35 +141,33 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
     const size_t MaxTimestampSize = 80;
 
-    static int processCount = 0;
-    size_t i;
+    static long processCount = 0;
+    static char timestamp[MaxTimestampSize];
+    static const long interval = 5 * 60;
+    const long measurementCount = measurements.size();
+    const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
-    char timestamp[MaxTimestampSize];
+    processCount += measurementCount;
 
     // Only display messages every few seconds
-    if (processCount % 150 == 0)
+    if (showMessage)
     {
         stringstream message;
 
         message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
-        if (!measurements.empty())
-        {
-            if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-                message << "Timestamp: " << string(timestamp) << endl;
+        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
+            message << "Timestamp: " << string(timestamp) << endl;
 
-            message << "Point\tValue" << endl;
+        message << "Point\tValue" << endl;
 
-            for (i = 0; i < measurements.size(); ++i)
-                message << measurements[i]->ID << '\t' << measurements[i]->Value << endl;
+        for (const auto& measurement : measurements)
+            message << measurement->ID << '\t' << measurement->Value << endl;
 
-            message << endl;
-        }
+        message << endl;
 
         StatusMessage(message.str());
     }
-
-    ++processCount;
 }
 
 void SubscriberHandler::ConfigurationChanged()

@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common\CommonTypes.h" />
+    <ClCompile Include="Common\CommonTypes.cpp" />
     <ClInclude Include="Common\Convert.h" />
     <ClCompile Include="Common\Convert.cpp" />
     <ClInclude Include="Common\Date.h" />
@@ -28,7 +30,6 @@
     <ClInclude Include="Common\pugixml.hpp" />
     <ClCompile Include="Common\pugixml.cpp" />
     <ClInclude Include="Common\ThreadSafeQueue.h" />
-    <ClInclude Include="Common\Types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
@@ -40,8 +41,10 @@
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
     <ClInclude Include="Transport\SubscriberInstance.h" />
     <ClCompile Include="Transport\SubscriberInstance.cpp" />
-    <ClInclude Include="Transport\Types.h" />
-    <ClCompile Include="Transport\Types.cpp" />
+    <ClInclude Include="Transport\TSSCMeasurementParser.h" />
+    <ClCompile Include="Transport\TSSCMeasurementParser.cpp" />
+    <ClInclude Include="Transport\TransportTypes.h" />
+    <ClCompile Include="Transport\TransportTypes.cpp" />
     <ClInclude Include="Transport\Version.h" />
   </ItemGroup>
   <ItemGroup>

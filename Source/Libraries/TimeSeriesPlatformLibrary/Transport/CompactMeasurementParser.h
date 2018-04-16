@@ -26,9 +26,9 @@
 
 #include <cstddef>
 
-#include "../Common/EndianConverter.h"
-#include "Types.h"
+#include "TransportTypes.h"
 #include "SignalIndexCache.h"
+#include "../Common/EndianConverter.h"
 
 namespace GSF {
 namespace TimeSeries {

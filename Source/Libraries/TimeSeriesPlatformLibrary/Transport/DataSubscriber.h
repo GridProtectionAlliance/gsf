@@ -29,11 +29,11 @@
 #include <string>
 #include <vector>
 
-#include "../Common/Types.h"
+#include "TransportTypes.h"
+#include "SignalIndexCache.h"
+#include "TSSCMeasurementParser.h"
 #include "../Common/EndianConverter.h"
 #include "../Common/ThreadSafeQueue.h"
-#include "Types.h"
-#include "SignalIndexCache.h"
 
 using namespace boost::asio;
 
@@ -42,24 +42,6 @@ namespace TimeSeries {
 namespace Transport
 {
     class DataSubscriber;
-
-    // Simple exception type thrown by the data subscriber.
-    class SubscriberException : public Exception
-    {
-    private:
-        string m_message;
-
-    public:
-        SubscriberException(const string& message) noexcept
-        {
-            m_message = message;
-        }
-
-        const char* what() const noexcept
-        {
-            return &m_message[0];
-        }
-    };
 
     // Info structure used to configure subscriptions.
     struct SubscriptionInfo
@@ -171,7 +153,7 @@ namespace Transport
     class DataSubscriber
     {
     private:
-        static const int MaxPacketSize = 32768;
+        static const size_t MaxPacketSize = 32768;
         static const size_t PayloadHeaderSize = 8;
 
         // Function pointer types
@@ -188,15 +170,19 @@ namespace Transport
         struct CallbackDispatcher
         {
             DataSubscriber* Source;
-            vector<uint8_t> Data;
+            SharedPtr<vector<uint8_t>> Data;
             DispatcherFunction Function;
         };
+
+        typedef SharedPtr<CallbackDispatcher> CallbackDispatcherPtr;
 
         SubscriberConnector m_connector;
         SubscriptionInfo m_currentSubscription;
         EndianConverter m_endianConverter;
         IPAddress m_hostAddress;
+        bool m_compressPayloadData;
         bool m_compressMetadata;
+        bool m_compressSignalIndexCache;
         bool m_disconnecting;
         void* m_userData;
 
@@ -211,10 +197,13 @@ namespace Transport
         SignalIndexCache m_signalIndexCache;
         size_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
+        TSSCMeasurementParser m_tsscMeasurementParser;
+        bool m_tsscResetRequested;
+        uint16_t m_tsscSequenceNumber;
 
         // Callback thread members
         Thread m_callbackThread;
-        ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
+        ThreadSafeQueue<CallbackDispatcherPtr> m_callbackQueue;
 
         // Command channel
         Thread m_commandChannelResponseThread;
@@ -273,6 +262,9 @@ namespace Transport
         static void NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+        
+        static void ParseTSSCMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, vector<MeasurementPtr>& measurements);
+        static void ParseCompactMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements);
 
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
@@ -284,7 +276,7 @@ namespace Transport
 
     public:
         // Creates a new instance of the data subscriber.
-        DataSubscriber(bool compressMetadata = true);
+        DataSubscriber();
 
         // Releases all threads and sockets
         // tied up by the subscriber.
@@ -314,9 +306,19 @@ namespace Transport
         void RegisterAutoReconnectCallback(ConnectionTerminatedCallback autoReconnectCallback);
 
         // Gets or sets value that determines whether
-        // the metadata transfer is compressed.
+        // payload data is compressed using TSSC.
+        bool IsPayloadDataCompressed() const;
+        void SetPayloadDataCompressed(bool compressed);
+
+        // Gets or sets value that determines whether the
+        // metadata transfer is compressed using GZip.
         bool IsMetadataCompressed() const;
         void SetMetadataCompressed(bool compressed);
+
+        // Gets or sets value that determines whether the
+        // signal index cache is compressed using GZip.
+        bool IsSignalIndexCacheCompressed() const;
+        void SetSignalIndexCacheCompressed(bool compressed);
 
         // Gets or sets user defined data reference
         void* GetUserData() const;

@@ -42,6 +42,54 @@ using namespace std;
 namespace GSF {
 namespace TimeSeries
 {
+    struct Int8
+    {
+        static const int8_t MaxValue = static_cast<int8_t>(127);
+        static const int8_t MinValue = static_cast<int8_t>(-128);
+    };
+
+    struct UInt8
+    {
+        static const uint8_t MaxValue = static_cast<uint8_t>(255);
+        static const uint8_t MinValue = static_cast<uint8_t>(0);
+    };
+
+    struct Int16
+    {
+        static const int16_t MaxValue = static_cast<int16_t>(32767);
+        static const int16_t MinValue = static_cast<int16_t>(-32768);
+    };
+
+    struct UInt16
+    {
+        static const uint16_t MaxValue = static_cast<uint16_t>(65535);
+        static const uint16_t MinValue = static_cast<uint16_t>(0);
+    };
+
+    struct Int32
+    {
+        static const int32_t MaxValue = static_cast<int32_t>(2147483647);
+        static const int32_t MinValue = static_cast<int32_t>(-2147483647) - 1;
+    };
+
+    struct UInt32
+    {
+        static const uint32_t MaxValue = static_cast<uint32_t>(4294967295U);
+        static const uint32_t MinValue = static_cast<uint32_t>(0);
+    };
+
+    struct Int64
+    {
+        static const int64_t MaxValue = static_cast<int64_t>(9223372036854775807L);
+        static const int64_t MinValue = static_cast<int64_t>(-9223372036854775807L) - 1L;
+    };
+
+    struct UInt64
+    {
+        static const uint64_t MaxValue = static_cast<uint64_t>(18446744073709551615UL);
+        static const uint64_t MinValue = static_cast<uint64_t>(0UL);
+    };
+
     template<class T>
     using SharedPtr = boost::shared_ptr<T>;
 
@@ -49,6 +97,22 @@ namespace TimeSeries
     {
         return boost::make_shared<T>();
     }
+
+    template<class T, typename P1> SharedPtr<T> NewSharedPtr(P1 p1)
+    {
+        return boost::make_shared<T>(p1);
+    }
+
+    template<class T, typename P1, typename P2> SharedPtr<T> NewSharedPtr(P1 p1, P2 p2)
+    {
+        return boost::make_shared<T>(p1, p2);
+    }
+
+    template<typename T>
+    using Action = std::function<void(T)>;
+
+    template<typename T>
+    using Func = std::function<T(void)>;
 
     typedef boost::uuids::uuid Guid;
     typedef boost::system::error_code ErrorCode;
@@ -85,6 +149,14 @@ namespace TimeSeries
     // Floating-point types
     typedef float float32_t;
     typedef double float64_t;
+
+    // Empty types
+    struct Empty
+    {
+        static const string String;
+        static const Guid Guid;
+        static const IPAddress IPAddress;
+    };
 }}
 
 // Setup standard hash code for Guid

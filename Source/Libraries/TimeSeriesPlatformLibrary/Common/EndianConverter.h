@@ -26,7 +26,7 @@
 
 #include <cstddef>
 
-#include "Types.h"
+#include "CommonTypes.h"
 
 namespace GSF {
 namespace TimeSeries

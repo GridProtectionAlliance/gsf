@@ -204,14 +204,18 @@ bool SubscriberConnector::GetAutoReconnect() const
 
 // --- DataSubscriber ---
 
-DataSubscriber::DataSubscriber(bool compressMetadata) :
-    m_compressMetadata(compressMetadata),
+DataSubscriber::DataSubscriber() :
+    m_compressPayloadData(true),
+    m_compressMetadata(true),
+    m_compressSignalIndexCache(true),
     m_disconnecting(false),
     m_totalCommandChannelBytesReceived(0L),
     m_totalDataChannelBytesReceived(0L),
     m_totalMeasurementsReceived(0L),
     m_connected(false),
     m_subscribed(false),
+    m_tsscResetRequested(false),
+    m_tsscSequenceNumber(0),
     m_commandChannelSocket(m_commandChannelService),
     m_readBuffer(MaxPacketSize),
     m_writeBuffer(MaxPacketSize),
@@ -239,7 +243,7 @@ DataSubscriber::~DataSubscriber()
 // All callbacks are run from the callback thread from here.
 void DataSubscriber::RunCallbackThread()
 {
-    CallbackDispatcher dispatcher;
+    CallbackDispatcherPtr dispatcher;
 
     while (true)
     {
@@ -249,7 +253,7 @@ void DataSubscriber::RunCallbackThread()
             break;
 
         dispatcher = m_callbackQueue.Dequeue();
-        dispatcher.Function(dispatcher.Source, dispatcher.Data);
+        dispatcher->Function(dispatcher->Source, *dispatcher->Data);
     }
 }
 
@@ -257,7 +261,7 @@ void DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void DataSubscriber::RunCommandChannelResponseThread()
 {
-    async_read(m_commandChannelSocket, asio::buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
     m_commandChannelService.run();
 }
 
@@ -267,11 +271,6 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     const size_t PayloadHeaderSize = 8;
     const size_t PacketSizeOffset = 4;
 
-    stringstream errorMessageStream;
-
-    int32_t* packetSizePtr;
-    int32_t packetSize;
-
     if (m_disconnecting)
         return;
 
@@ -284,8 +283,11 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
 
     if (error)
     {
+        stringstream errorMessageStream;
+
         errorMessageStream << "Error reading data from command channel: ";
         errorMessageStream << SystemError(error).what();
+
         DispatchErrorMessage(errorMessageStream.str());
         return;
     }
@@ -293,9 +295,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     // Gather statistics
     m_totalCommandChannelBytesReceived += PayloadHeaderSize;
 
-    // Parse payload header
-    packetSizePtr = reinterpret_cast<int32_t*>(&m_readBuffer[PacketSizeOffset]);
-    packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
+    const int32_t packetSize = m_endianConverter.ConvertLittleEndian(*reinterpret_cast<int32_t*>(&m_readBuffer[PacketSizeOffset]));
 
     if (packetSize > static_cast<int32_t>(m_readBuffer.size()))
         m_readBuffer.resize(packetSize);
@@ -303,14 +303,12 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
     // requested size has been read or an error has occurred.
-    async_read(m_commandChannelSocket, asio::buffer(m_readBuffer, packetSize), bind(&DataSubscriber::ReadPacket, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), bind(&DataSubscriber::ReadPacket, this, _1, _2));
 }
 
 // Callback for async read of packets.
 void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
 {
-    stringstream errorMessageStream;
-
     if (m_disconnecting)
         return;
 
@@ -323,8 +321,11 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
 
     if (error)
     {
+        stringstream errorMessageStream;
+
         errorMessageStream << "Error reading data from command channel: ";
         errorMessageStream << SystemError(error).what();
+
         DispatchErrorMessage(errorMessageStream.str());
         return;
     }
@@ -336,7 +337,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
     ProcessServerResponse(&m_readBuffer[0], 0, bytesTransferred);
 
     // Read next payload header
-    async_read(m_commandChannelSocket, asio::buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
 }
 
 // If the user defines a separate UDP channel for their
@@ -481,19 +482,27 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, 
     string source;
     uint32_t id;
 
+    vector<uint8_t> uncompressed;
     stringstream sourceStream;
     char* sourceIter;
-    int i;
 
-    // Perform zlib decompression on buffer
-    vector<uint8_t> uncompressed;
-    const MemoryStream payloadStream(data, offset, length);
-    Decompressor decompressor;
+    if (m_compressSignalIndexCache)
+    {
+        const MemoryStream payloadStream(data, offset, length);
 
-    decompressor.push(GZipStream());
-    decompressor.push(payloadStream);
+        // Perform zlib decompression on buffer
+        Decompressor decompressor;
 
-    CopyStream(decompressor, uncompressed);
+        decompressor.push(GZipStream());
+        decompressor.push(payloadStream);
+
+        CopyStream(decompressor, uncompressed);
+    }
+    else
+    {
+        for (size_t i = offset; i < length; i++)
+            uncompressed.push_back(data[i]);
+    }
 
     // Begin by emptying the cache
     m_signalIndexCache.Clear();
@@ -506,7 +515,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, 
     // Set up signalIndexPtr before entering the loop
     signalIndexPtr = reinterpret_cast<uint16_t*>(referenceCountPtr + 1);
 
-    for (i = 0; i < referenceCount; ++i)
+    for (int32_t i = 0; i < referenceCount; ++i)
     {
         // Begin setting up pointers
         signalIDPtr = reinterpret_cast<uint8_t*>(signalIndexPtr + 1);
@@ -568,19 +577,21 @@ void DataSubscriber::Dispatch(DispatcherFunction function)
 // Dispatches the given function to the callback thread and provides the given data to that function when it is called.
 void DataSubscriber::Dispatch(DispatcherFunction function, const uint8_t* data, size_t offset, size_t length)
 {
-    CallbackDispatcher dispatcher;
-    vector<uint8_t> dataVector(length);
+    CallbackDispatcherPtr dispatcher = NewSharedPtr<CallbackDispatcher>();
+    SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
     size_t i;
+
+    dataVector->resize(length);
 
     if (data != nullptr)
     {
         for (i = 0; i < length; ++i)
-            dataVector[i] = data[offset + i];
+            dataVector->at(i) = data[offset + i];
     }
 
-    dispatcher.Source = this;
-    dispatcher.Data = dataVector;
-    dispatcher.Function = function;
+    dispatcher->Source = this;
+    dispatcher->Data = dataVector;
+    dispatcher->Function = function;
 
     m_callbackQueue.Enqueue(dispatcher);
 }
@@ -654,69 +665,178 @@ void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uin
 // Dispatcher function for new measurements. Decodes the measurements and provides them to the user via the new measurements callback.
 void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
 {
-    const NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
-    const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
+    if (source->m_newMeasurementsCallback == nullptr)
+        return;
+
     SubscriptionInfo& info = source->m_currentSubscription;
-
-    MeasurementPtr parsedMeasurement;
-    vector<MeasurementPtr> newMeasurements;
-
     uint8_t dataPacketFlags;
-    const int32_t* measurementCountPtr;
-    const int64_t* frameLevelTimestampPtr = nullptr;
-    int64_t frameLevelTimestamp = 0;
+    int64_t frameLevelTimestamp = -1;
 
     const uint8_t* buffer;
     size_t offset = 0;
-    size_t length;
 
     bool includeTime = info.IncludeTime;
 
     // Read data packet flags
-    dataPacketFlags = data[0];
-    ++offset;
+    dataPacketFlags = data[offset];
+    offset++;
 
     // Read frame-level timestamp, if available
     if (dataPacketFlags & DataPacketFlags::Synchronized)
     {
-        frameLevelTimestampPtr = reinterpret_cast<const int64_t*>(&data[offset]);
-        frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*frameLevelTimestampPtr);
+        frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&data[offset]));
         offset += 8;
-
         includeTime = false;
     }
 
     // Read measurement count and gather statistics
-    measurementCountPtr = reinterpret_cast<const int32_t*>(&data[offset]);
-    source->m_totalMeasurementsReceived += source->m_endianConverter.ConvertBigEndian(*measurementCountPtr);
+    const int32_t count = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int32_t*>(&data[offset]));
+    source->m_totalMeasurementsReceived += count;
     offset += 4;
 
     // Set up buffer and length for measurement parsing
     buffer = reinterpret_cast<const uint8_t*>(&data[0]);
-    length = data.size() - offset;
 
-    // Create measurement parser
-    CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, info.UseMillisecondResolution);
+    const NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
+    vector<MeasurementPtr> measurements;
 
-    if (newMeasurementsCallback != nullptr)
+    if (dataPacketFlags & DataPacketFlags::Compressed)
+        ParseTSSCMeasurements(source, buffer, offset, data.size(), measurements);
+    else
+        ParseCompactMeasurements(source, buffer, offset, data.size() - offset, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
+
+    newMeasurementsCallback(source, measurements);
+}
+
+void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, vector<MeasurementPtr>& measurements)
+{
+    MeasurementPtr measurement;
+    string errorMessage;
+
+    if (buffer[offset] != 85)
     {
-        while (length > 0)
+        stringstream errorMessageStream;
+
+        errorMessageStream << "TSSC version not recognized: 0x";
+        errorMessageStream << hex << static_cast<int>(buffer[offset]);
+
+        throw SubscriberException(errorMessageStream.str());
+    }
+    offset++;
+
+    const uint16_t sequenceNumber = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const uint16_t*>(&buffer[offset]));
+    offset += 2;
+
+    if (sequenceNumber == 0 && source->m_tsscSequenceNumber > 0)
+    {
+        if (!source->m_tsscResetRequested)
         {
-            if (!measurementParser.TryParseMeasurement(buffer, offset, length))
-            {
-                errorMessageCallback(source, "Error parsing measurement");
-                break;
-            }
-
-            parsedMeasurement = measurementParser.GetParsedMeasurement();
-
-            if (frameLevelTimestampPtr != nullptr)
-                parsedMeasurement->Timestamp = frameLevelTimestamp;
-
-            newMeasurements.push_back(parsedMeasurement);
+            stringstream statusMessageStream;
+            statusMessageStream << "TSSC algorithm reset before sequence number: ";
+            statusMessageStream << source->m_tsscSequenceNumber;
+            source->DispatchStatusMessage(statusMessageStream.str());
         }
 
-        newMeasurementsCallback(source, newMeasurements);
+        source->m_tsscMeasurementParser.Reset();
+        source->m_tsscSequenceNumber = 0;
+        source->m_tsscResetRequested = false;
+    }
+
+    if (source->m_tsscSequenceNumber != sequenceNumber)
+    {
+        if (!source->m_tsscResetRequested)
+        {
+            stringstream errorMessageStream;
+            errorMessageStream << "TSSC is out of sequence. Expecting: ";
+            errorMessageStream << source->m_tsscSequenceNumber;
+            errorMessageStream << ", Received: ";
+            errorMessageStream << sequenceNumber;
+            source->DispatchErrorMessage(errorMessageStream.str());
+        }
+
+        // Ignore packets until the reset has occurred.
+        return;
+    }
+
+    try
+    {
+        source->m_tsscMeasurementParser.SetBuffer(buffer, offset, length);
+
+        Guid signalID;
+        string measurementSource;
+        uint32_t measurementID;
+        uint16_t id;
+        int64_t time;
+        uint32_t quality;
+        float_t value;
+
+        while (source->m_tsscMeasurementParser.TryGetMeasurement(id, time, quality, value))
+        {
+            if (source->m_signalIndexCache.GetMeasurementKey(id, signalID, measurementSource, measurementID))
+            {
+                measurement = NewSharedPtr<Measurement>();
+
+                measurement->SignalID = signalID;
+                measurement->Source = measurementSource;
+                measurement->ID = measurementID;
+                measurement->Timestamp = time;
+                measurement->Flags = quality;
+                measurement->Value = value;
+
+                measurements.push_back(measurement);
+            }
+        }
+    }
+    catch (SubscriberException& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (...)
+    {
+        errorMessage = current_exception_diagnostic_information(true);
+    }
+
+    if (errorMessage.length() > 0)
+    {
+        stringstream errorMessageStream;
+        errorMessageStream << "Decompression failure: ";
+        errorMessageStream << errorMessage;
+        source->DispatchErrorMessage(errorMessageStream.str());
+    }
+
+    source->m_tsscSequenceNumber++;
+
+    // Do not increment to 0 on roll-over
+    if (source->m_tsscSequenceNumber == 0)
+        source->m_tsscSequenceNumber = 1;
+
+}
+
+void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
+{
+    MeasurementPtr measurement;
+
+    // Create measurement parser
+    CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, useMillisecondResolution);
+
+    while (length > 0)
+    {
+        if (!measurementParser.TryParseMeasurement(buffer, offset, length))
+        {
+            const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
+
+            if (errorMessageCallback)
+                errorMessageCallback(source, "Error parsing measurement");
+
+            break;
+        }
+
+        measurement = measurementParser.GetParsedMeasurement();
+
+        if (frameLevelTimestamp > -1)
+            measurement->Timestamp = frameLevelTimestamp;
+
+        measurements.push_back(measurement);
     }
 }
 
@@ -863,7 +983,20 @@ void DataSubscriber::RegisterAutoReconnectCallback(ConnectionTerminatedCallback 
     m_autoReconnectCallback = autoReconnectCallback;
 }
 
-// Returns true if metadata exchange is compressed.
+// Returns true if payload data is compressed (TSSC only).
+bool DataSubscriber::IsPayloadDataCompressed() const
+{
+    return m_compressPayloadData;
+}
+
+// Set the value which determines whether payload data is compressed.
+void DataSubscriber::SetPayloadDataCompressed(bool compressed)
+{
+    // This operational mode can only be changed before connect - dynamic updates not supported
+    m_compressPayloadData = compressed;
+}
+
+// Returns true if metadata exchange is compressed (GZip only).
 bool DataSubscriber::IsMetadataCompressed() const
 {
     return m_compressMetadata;
@@ -873,6 +1006,21 @@ bool DataSubscriber::IsMetadataCompressed() const
 void DataSubscriber::SetMetadataCompressed(bool compressed)
 {
     m_compressMetadata = compressed;
+
+    if (m_commandChannelSocket.is_open())
+        SendOperationalModes();
+}
+
+// Returns true if signal index cache exchange is compressed (GZip only).
+bool DataSubscriber::IsSignalIndexCacheCompressed() const
+{
+    return m_compressSignalIndexCache;
+}
+
+// Set the value which determines whether signal index cache exchange is compressed.
+void DataSubscriber::SetSignalIndexCacheCompressed(bool compressed)
+{
+    m_compressSignalIndexCache = compressed;
 
     if (m_commandChannelSocket.is_open())
         SendOperationalModes();
@@ -1073,6 +1221,9 @@ void DataSubscriber::Subscribe(SubscriptionInfo info)
         buffer[5 + i] = connectionStringPtr[i];
 
     SendServerCommand(ServerCommand::Subscribe, &buffer[0], 0, bufferSize);
+
+    // Reset TSSC decompressor on successful (re)subscription
+    m_tsscResetRequested = true;
 }
 
 // Returns the subscription info object used to define the most recent subscription.
@@ -1163,7 +1314,7 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data,
             m_writeBuffer[9 + i] = data[offset + i];
     }
 
-    async_write(m_commandChannelSocket, asio::buffer(m_writeBuffer, commandBufferSize), &WriteHandler);
+    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), &WriteHandler);
 }
 
 // Convenience method to send the currently defined
@@ -1173,13 +1324,18 @@ void DataSubscriber::SendOperationalModes()
     uint32_t operationalModes = OperationalModes::NoFlags;
     uint32_t bigEndianOperationalModes;
 
-    operationalModes |= CompressionModes::GZip;
+    operationalModes |= CompressionModes::GZip | CompressionModes::TSSC;
     operationalModes |= OperationalEncoding::UTF8;
     operationalModes |= OperationalModes::UseCommonSerializationFormat;
-    operationalModes |= OperationalModes::CompressSignalIndexCache;
+
+    if (m_compressPayloadData)
+        operationalModes |= OperationalModes::CompressPayloadData;
 
     if (m_compressMetadata)
         operationalModes |= OperationalModes::CompressMetadata;
+
+    if (m_compressSignalIndexCache)
+        operationalModes |= OperationalModes::CompressSignalIndexCache;
 
     bigEndianOperationalModes = m_endianConverter.ConvertBigEndian(operationalModes);
     SendServerCommand(ServerCommand::DefineOperationalModes, reinterpret_cast<uint8_t*>(&bigEndianOperationalModes), 0, 4);

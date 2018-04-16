@@ -62,49 +62,79 @@ bool SignalIndexCache::Contains(uint16_t signalIndex) const
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
 Guid SignalIndexCache::GetSignalID(uint16_t signalIndex) const
 {
-    const size_t vectorIndex = m_reference.find(signalIndex)->second;
-    return m_signalIDList[vectorIndex];
+    const auto result = m_reference.find(signalIndex);
+
+    if (result != m_reference.end())
+    {
+        const size_t vectorIndex = result->second;
+        return m_signalIDList[vectorIndex];
+    }
+
+    return Empty::Guid;
 }
 
 // Gets the first half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
 const string& SignalIndexCache::GetSource(uint16_t signalIndex) const
 {
-    const size_t vectorIndex = m_reference.find(signalIndex)->second;
-    return m_sourceList[vectorIndex];
+    const auto result = m_reference.find(signalIndex);
+
+    if (result != m_reference.end())
+    {
+        const size_t vectorIndex = result->second;
+        return m_sourceList[vectorIndex];
+    }
+
+    return Empty::String;
 }
 
 // Gets the second half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
 uint32_t SignalIndexCache::GetID(uint16_t signalIndex) const
 {
-    const size_t vectorIndex = m_reference.find(signalIndex)->second;
-    return m_idList[vectorIndex];
+    const auto result = m_reference.find(signalIndex);
+
+    if (result != m_reference.end())
+    {
+        const size_t vectorIndex = result->second;
+        return m_idList[vectorIndex];
+    }
+
+    return UInt32::MaxValue;
 }
 
 // Gets the globally unique signal ID as well as the human-readable
 // measurement key associated with the given 16-bit runtime ID.
-void SignalIndexCache::GetMeasurementKey(
+bool SignalIndexCache::GetMeasurementKey(
     uint16_t signalIndex,
     Guid& signalID,
     string& source,
     uint32_t& id) const
 {
-    const size_t vectorIndex = m_reference.find(signalIndex)->second;
+    const auto result = m_reference.find(signalIndex);
 
-    signalID = m_signalIDList[vectorIndex];
-    source = m_sourceList[vectorIndex];
-    id = m_idList[vectorIndex];
+    if (result != m_reference.end())
+    {
+        const size_t vectorIndex = result->second;
+
+        signalID = m_signalIDList[vectorIndex];
+        source = m_sourceList[vectorIndex];
+        id = m_idList[vectorIndex];
+
+        return true;
+    }
+
+    return false;
 }
 
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
 uint16_t SignalIndexCache::GetSignalIndex(Guid signalID) const
 {
-    const auto it = m_signalIDCache.find(signalID);
-    uint16_t signalIndex = 0xFFFF;
+    const auto result = m_signalIDCache.find(signalID);
+    uint16_t signalIndex = UInt16::MaxValue;
 
-    if (it != m_signalIDCache.end())
-        signalIndex = it->second;
+    if (result != m_signalIDCache.end())
+        signalIndex = result->second;
 
     return signalIndex;
 }
