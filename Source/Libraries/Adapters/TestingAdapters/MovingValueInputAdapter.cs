@@ -90,6 +90,11 @@ namespace TestingAdapters
         /// </summary>
         public const int DefaultRandomNumberSeed = -1;
 
+        /// <summary>
+        /// Default value for the <see cref="IncludeTime"/> property.
+        /// </summary>
+        public const bool DefaultIncludeTime = true;
+
         // Fields
         private double m_minValue;
         private double m_maxValue;
@@ -100,6 +105,7 @@ namespace TestingAdapters
         private double m_publishRate;
         private bool m_valueWraps;
         private int m_randomNumberSeed;
+        private bool m_includeTime;
 
         private Timer m_timer;
         private double[] m_values;
@@ -280,6 +286,33 @@ namespace TestingAdapters
         }
 
         /// <summary>
+        /// Gets or sets the flag that determines whether time will be included in the published measurements.
+        /// False will set all time values to zero.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultIncludeTime),
+        Description("Defines the flag that determines whether time will be included in the published measurements. False will set all time values to zero.")]
+        public bool IncludeTime
+        {
+            get
+            {
+                return m_includeTime;
+            }
+            set
+            {
+                m_includeTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether adapter will only connect when measurements are requested.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(false),
+        Description("Defines the flag that determines whether adapter will only connect when measurements are requested.")]
+        public bool ConnectOnDemand { get; set; } = false;
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing
@@ -347,6 +380,11 @@ namespace TestingAdapters
 
             if (!settings.TryGetValue("randomNumberSeed", out setting) || !int.TryParse(setting, out m_randomNumberSeed))
                 m_randomNumberSeed = DefaultRandomNumberSeed;
+
+            if (settings.TryGetValue("includeTime", out setting))
+                m_includeTime = setting.ParseBoolean();
+            else
+                m_includeTime = DefaultIncludeTime;
 
             if (m_minValue > m_maxValue)
                 throw new InvalidOperationException($"minValue({m_minValue}) cannot be less than maxValue({m_maxValue})");
@@ -478,7 +516,7 @@ namespace TestingAdapters
                     Advance(i, delta);
 
                 OnNewMeasurements(OutputMeasurements
-                    .Select((measurement, index) => Measurement.Clone(measurement, GetWrappedValue(index), nextPublication))
+                    .Select((measurement, index) => Measurement.Clone(measurement, GetWrappedValue(index), m_includeTime ? nextPublication : 0L))
                     .ToList<IMeasurement>());
 
                 m_lastPublication = nextPublication;
