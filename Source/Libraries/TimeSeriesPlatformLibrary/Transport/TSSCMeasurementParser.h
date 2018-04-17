@@ -79,6 +79,7 @@ namespace Transport
     class TSSCMeasurementParser
     {
     private:
+        vector<uint8_t> m_empty;
         vector<uint8_t>& m_data;
         int32_t m_position;
         int32_t m_lastPosition;

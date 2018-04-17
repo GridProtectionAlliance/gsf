@@ -224,7 +224,7 @@ void TSSCPointMetadata::AdaptCommands()
 }
 
 TSSCMeasurementParser::TSSCMeasurementParser() :
-    m_data({}),
+    m_data(m_empty),
     m_position(0),
     m_lastPosition(0),
     m_prevTimestamp1(0L),
@@ -241,6 +241,7 @@ TSSCMeasurementParser::TSSCMeasurementParser() :
 
 void TSSCMeasurementParser::Reset()
 {
+    m_data = m_empty;
     m_points.clear();
     m_lastPoint = NewSharedPtr<TSSCPointMetadata>(this);
     m_position = 0;
