@@ -161,6 +161,358 @@ namespace GSF.IO
 
         // Nested Types
 
+        private sealed class TrackedDirectory : IDisposable
+        {
+            #region [ Members ]
+
+            // Fields
+            private FileProcessor m_fileProcessor;
+            private SafeFileWatcher m_fileWatcher;
+            private FileEnumerator m_fileEnumerator;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public TrackedDirectory(FileProcessor fileProcessor, string path)
+            {
+                m_fileProcessor = fileProcessor;
+                Path = path;
+                CreateFileWatcher();
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public string Path { get; }
+
+            public bool IsEnumerating
+            {
+                get
+                {
+                    return m_fileEnumerator?.Active ?? false;
+                }
+            }
+
+            public List<string> ActivelyEnumeratedPaths
+            {
+                get
+                {
+                    return m_fileEnumerator.ActivelyVisitedPaths;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void EnumerateFiles(FileEnumerationStrategy fileEnumerationStrategy)
+            {
+                if (m_disposed)
+                    return;
+
+                if (IsEnumerating)
+                    throw new InvalidOperationException("Enumeration is already in progress.");
+
+                CancellationToken cancellationToken = new CancellationToken();
+                m_fileEnumerator = new FileEnumerator(Path, m_fileProcessor, cancellationToken);
+                m_fileEnumerator.Enumerate(fileEnumerationStrategy);
+            }
+
+            public void CancelEnumeration()
+            {
+                m_fileEnumerator?.Cancel();
+            }
+
+            public void CheckFileWatcher()
+            {
+                if (m_disposed)
+                    return;
+
+                if (!m_fileWatcher.EnableRaisingEvents)
+                {
+                    DisposeFileWatcher();
+                    CreateFileWatcher();
+                }
+            }
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="TrackedDirectory"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                if (m_disposed)
+                    return;
+
+                try
+                {
+                    CancelEnumeration();
+                    DisposeFileWatcher();
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
+
+            private void CreateFileWatcher()
+            {
+                m_fileWatcher = new SafeFileWatcher(Path);
+                m_fileWatcher.InternalBufferSize = m_fileProcessor.InternalBufferSize;
+                m_fileWatcher.IncludeSubdirectories = true;
+
+                m_fileWatcher.Created += m_fileProcessor.Watcher_Created;
+                m_fileWatcher.Changed += m_fileProcessor.Watcher_Changed;
+                m_fileWatcher.Renamed += m_fileProcessor.Watcher_Renamed;
+                m_fileWatcher.Deleted += m_fileProcessor.Watcher_Deleted;
+                m_fileWatcher.Error += m_fileProcessor.Watcher_Error;
+
+                //m_fileWatcher.EnableRaisingEvents = true;
+            }
+
+            private void DisposeFileWatcher()
+            {
+                m_fileWatcher.Created -= m_fileProcessor.Watcher_Created;
+                m_fileWatcher.Changed -= m_fileProcessor.Watcher_Changed;
+                m_fileWatcher.Renamed -= m_fileProcessor.Watcher_Renamed;
+                m_fileWatcher.Deleted -= m_fileProcessor.Watcher_Deleted;
+                m_fileWatcher.Error -= m_fileProcessor.Watcher_Error;
+                m_fileWatcher.Dispose();
+            }
+
+            #endregion
+        }
+
+        private class FileEnumerator
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly FileProcessor m_fileProcessor;
+            private readonly CancellationToken m_cancellationToken;
+            private string m_lastVisitedPath;
+            private bool m_active;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public FileEnumerator(string path, FileProcessor fileProcessor, CancellationToken cancellationToken)
+            {
+                Path = path;
+                m_fileProcessor = fileProcessor;
+                m_cancellationToken = cancellationToken;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public string Path { get; }
+            public FileEnumerator[] SubdirectoryEnumerators { get; private set; }
+
+            public bool Active
+            {
+                get
+                {
+                    return m_active || (SubdirectoryEnumerators?.Any(enumerator => enumerator.Active) ?? false);
+                }
+            }
+
+            public List<string> ActivelyVisitedPaths
+            {
+                get
+                {
+                    List<string> activelyVisitedPaths = new List<string>();
+                    BuildActivelyVisitedPaths(activelyVisitedPaths);
+                    return activelyVisitedPaths;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void Enumerate(FileEnumerationStrategy enumerationStrategy)
+            {
+                if (Active)
+                    throw new InvalidOperationException("Enumeration is already in progress.");
+
+                if ((object)LogicalThread.CurrentThread == null)
+                    throw new InvalidOperationException("Enumeration must be executed on a logical thread.");
+
+                m_active = true;
+
+                if (enumerationStrategy != FileEnumerationStrategy.ParallelSubdirectories)
+                {
+                    SubdirectoryEnumerators = new FileEnumerator[0];
+
+                    // If subdirectories do not need to be processed in parallel,
+                    // we can simply process a recursive call to enumerate all files
+                    IEnumerable<string> fileEnumerable = FilePath.EnumerateFiles(Path, exceptionHandler: m_fileProcessor.OnError);
+                    EnumerateNextFile(new EnumerableWrapper(fileEnumerable, m_cancellationToken));
+                }
+                else
+                {
+                    // To process subdirectories in parallel, we need to create a recursive structure
+                    // of enumerators to process each subdirectory on its own logical thread
+                    InitializeSubdirectoryEnumerators();
+                    EnumerateNextDirectory(0);
+                }
+            }
+
+            public void Cancel()
+            {
+                m_cancellationToken.Cancel();
+            }
+
+            // Initializes the FileEnumerators for subdirectories.
+            private void InitializeSubdirectoryEnumerators()
+            {
+                // Immediately enumerate all subdirectories so we can build the array of FileEnumerators.
+                // Using a fixed-size collection like an array greatly simplifies multithreaded access to the collection.
+                using (EnumerableWrapper wrapper = new EnumerableWrapper(EnumerateDirectories(), m_cancellationToken))
+                {
+                    List<string> subDirectories = new List<string>();
+
+                    while (wrapper.MoveNext())
+                        subDirectories.Add(wrapper.Current);
+
+                    SubdirectoryEnumerators = subDirectories
+                        .Select(path => new FileEnumerator(path, m_fileProcessor, m_cancellationToken))
+                        .ToArray();
+                }
+            }
+
+            // Enumerates the next subdirectory in the list of subdirectory enumerators.
+            private void EnumerateNextDirectory(int index)
+            {
+                try
+                {
+                    m_active = !m_cancellationToken.IsCancelled;
+
+                    if (!m_active)
+                        return;
+
+                    if (index >= SubdirectoryEnumerators.Length)
+                    {
+                        EnumerateNextFile(new EnumerableWrapper(EnumerateFiles(), m_cancellationToken));
+                        return;
+                    }
+
+                    // Create a new thread for the subdirectory since this code is only invoked if the file
+                    // processor is using the enumeration strategy for processing subdirectories in parallel
+                    LogicalThread subdirectoryThread = m_fileProcessor.m_threadScheduler.CreateThread();
+                    subdirectoryThread.Push(() => SubdirectoryEnumerators[index].Enumerate(FileEnumerationStrategy.ParallelSubdirectories));
+
+                    // Invoke the asynchronous call to enumerate the next directory
+                    LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(index + 1));
+
+                    m_lastVisitedPath = SubdirectoryEnumerators[index].Path;
+                }
+                catch
+                {
+                    m_active = false;
+                    throw;
+                }
+            }
+
+            // Enumerates the next file in the given enumerable.
+            private void EnumerateNextFile(EnumerableWrapper wrapper)
+            {
+                try
+                {
+                    m_active = AdvanceToNextMatch(wrapper);
+
+                    if (!m_active)
+                        return;
+
+                    ProcessCurrentFileAndEnumerateNextFile(wrapper);
+                }
+                catch
+                {
+                    m_active = false;
+                    wrapper.Dispose();
+                    throw;
+                }
+                finally
+                {
+                    if (wrapper.LastMove)
+                        wrapper.Dispose();
+                }
+            }
+
+            // Advances enumeration until the next file that matches the filter.
+            private bool AdvanceToNextMatch(EnumerableWrapper wrapper)
+            {
+                while (true)
+                {
+                    if (!wrapper.MoveNext())
+                        return false;
+
+                    if (m_fileProcessor.MatchesFilter(wrapper.Current))
+                        return true;
+
+                    Interlocked.Increment(ref m_fileProcessor.m_skippedFileCount);
+                }
+            }
+
+            // Processes the current file in the given enumerable.
+            private void ProcessCurrentFileAndEnumerateNextFile(EnumerableWrapper wrapper)
+            {
+                LogicalThread enumerationThread = LogicalThread.CurrentThread;
+                string filePath = wrapper.Current;
+
+                // Kick off the operation to process the current file,
+                // but don't enumerate to the next file until processing
+                // for the current file has begun
+                m_fileProcessor.m_processingThread.Push(1, () =>
+                {
+                    // Check the state of cancellation for the
+                    // enumeration thread on the processing
+                    // thread as well to speed up cancellation
+                    if (m_cancellationToken.IsCancelled)
+                        return;
+
+                    enumerationThread.Push(() => EnumerateNextFile(wrapper));
+                    m_fileProcessor.TouchAndProcess(filePath, false);
+                });
+            }
+
+            private IEnumerable<string> EnumerateDirectories()
+            {
+                IEnumerable<string> directoryEnumerable = Directory.EnumerateDirectories(Path);
+
+                return m_fileProcessor.OrderedEnumeration
+                    ? directoryEnumerable.OrderBy(dir => dir)
+                    : directoryEnumerable;
+            }
+
+            private IEnumerable<string> EnumerateFiles()
+            {
+                IEnumerable<string> fileEnumerable = Directory.EnumerateFiles(Path);
+
+                return m_fileProcessor.OrderedEnumeration
+                    ? fileEnumerable.OrderBy(dir => dir)
+                    : fileEnumerable;
+            }
+
+            private void BuildActivelyVisitedPaths(List<string> activelyVisitedPaths)
+            {
+                string lastVisitedPath = m_lastVisitedPath;
+
+                if (m_active && (object)lastVisitedPath != null)
+                    activelyVisitedPaths.Add(lastVisitedPath);
+
+                foreach (FileEnumerator enumerator in SubdirectoryEnumerators)
+                    enumerator.BuildActivelyVisitedPaths(activelyVisitedPaths);
+            }
+
+            #endregion
+        }
+
         private class EnumerableWrapper : IDisposable
         {
             #region [ Members ]
@@ -270,433 +622,6 @@ namespace GSF.IO
             #endregion
         }
 
-        [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "LogicalThreadLocal only needs disposal if being accessed from a non-logical thread")]
-        private class FileEnumerator
-        {
-            #region [ Members ]
-
-            // Fields
-            private FileProcessor m_fileProcessor;
-            private Dictionary<string, CancellationToken> m_cancellationTokens;
-            private int m_enumerationThreads;
-
-            private LogicalThread m_sequentialEnumerationThread;
-            private LogicalThreadLocal<bool> m_isActive;
-            private LogicalThreadLocal<Stack<Action>> m_wrapperStack;
-            private LogicalThreadLocal<Queue<Action>> m_directoryQueue;
-
-            private LogicalThread m_cleanProcessedFilesThread;
-            private LogicalThreadOperation m_cleanProcessedFilesOperation;
-
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets the number of active enumeration threads.
-            /// </summary>
-            public int EnumerationThreads
-            {
-                get
-                {
-                    return Interlocked.CompareExchange(ref m_enumerationThreads, 0, 0);
-                }
-            }
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Creates a new instance of the <see cref="FileEnumerator"/> class.
-            /// </summary>
-            /// <param name="fileProcessor">The file processor that created the file enumerator.</param>
-            public FileEnumerator(FileProcessor fileProcessor)
-            {
-                m_fileProcessor = fileProcessor;
-                m_cancellationTokens = new Dictionary<string, CancellationToken>();
-
-                m_sequentialEnumerationThread = m_fileProcessor.m_threadScheduler.CreateThread();
-                m_isActive = new LogicalThreadLocal<bool>();
-                m_wrapperStack = new LogicalThreadLocal<Stack<Action>>(() => new Stack<Action>());
-                m_directoryQueue = new LogicalThreadLocal<Queue<Action>>(() => new Queue<Action>());
-
-                m_cleanProcessedFilesThread = m_fileProcessor.m_threadScheduler.CreateThread();
-                m_cleanProcessedFilesOperation = new LogicalThreadOperation(m_cleanProcessedFilesThread, GetProcessedFiles, false);
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Initiates enumeration of the watch directories.
-            /// </summary>
-            /// <param name="directory">The directory to be enumerated.</param>
-            public void Enumerate(string directory)
-            {
-                CancellationToken cancellationToken;
-
-                lock (m_cancellationTokens)
-                {
-                    if (m_cancellationTokens.TryGetValue(directory, out cancellationToken))
-                        cancellationToken.Cancel();
-
-                    cancellationToken = new CancellationToken();
-                    m_cancellationTokens[directory] = cancellationToken;
-                }
-
-                switch (m_fileProcessor.EnumerationStrategy)
-                {
-                    // Sequential enumeration strategy kicks
-                    // off all its processing on a single thread
-                    case FileEnumerationStrategy.Sequential:
-                        m_sequentialEnumerationThread.Push(() =>
-                        {
-                            // Create the enumerable wrappers for file and directory enumeration
-                            EnumerableWrapper fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), cancellationToken);
-                            EnumerableWrapper directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), cancellationToken);
-
-                            if (m_isActive.Value)
-                            {
-                                // If the thread is already active,
-                                // push processing into the directory queue
-                                m_directoryQueue.Value.Enqueue(() =>
-                                {
-                                    m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-                                    EnumerateNextDirectory(directoryWrapper);
-                                });
-                            }
-                            else
-                            {
-                                // If the thread is inactive, mark it as active
-                                // and then begin processing the directory wrapper
-                                ActivateThread();
-                                m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-                                EnumerateNextDirectory(directoryWrapper);
-                            }
-                        });
-                        break;
-
-                    // Parallel processing kicks off new
-                    // enumerations on their own thread
-                    case FileEnumerationStrategy.ParallelWatchDirectories:
-                    case FileEnumerationStrategy.ParallelSubdirectories:
-                        m_fileProcessor.m_threadScheduler.CreateThread().Push(() =>
-                        {
-                            EnumerableWrapper fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), cancellationToken);
-                            EnumerableWrapper directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), cancellationToken);
-
-                            ActivateThread();
-                            m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-                            EnumerateNextDirectory(directoryWrapper);
-                        });
-                        break;
-                }
-
-                // Initiate the process to clean up the files
-                // in the collection of processed files
-                m_cleanProcessedFilesOperation.RunOnceAsync();
-            }
-
-            /// <summary>
-            /// Cancels enumeration for a specific directory.
-            /// </summary>
-            /// <param name="directory">The directory for which enumeration should be cancelled.</param>
-            public void Cancel(string directory)
-            {
-                CancellationToken cancellationToken;
-
-                lock (m_cancellationTokens)
-                {
-                    if (!m_cancellationTokens.TryGetValue(directory, out cancellationToken))
-                        return;
-
-                    m_cancellationTokens.Remove(directory);
-                }
-
-                cancellationToken.Cancel();
-            }
-
-            /// <summary>
-            /// Cancels all running enumeration operations.
-            /// </summary>
-            public void Cancel()
-            {
-                CancellationToken[] cancellationTokens;
-
-                lock (m_cancellationTokens)
-                {
-                    cancellationTokens = m_cancellationTokens.Values.ToArray();
-                    m_cancellationTokens.Clear();
-                }
-
-                foreach (CancellationToken cancellationToken in cancellationTokens)
-                    cancellationToken.Cancel();
-            }
-
-            // Handle the next directory in the enumeration.
-            private void EnumerateNextDirectory(EnumerableWrapper wrapper)
-            {
-                EnumerableWrapper fileWrapper;
-                EnumerableWrapper directoryWrapper;
-                string directory;
-
-                try
-                {
-                    // Advance directory enumeration
-                    if (!wrapper.MoveNext())
-                    {
-                        // No more directories, so dispose
-                        // and then move to the next wrapper
-                        wrapper.Dispose();
-                        EnumerateNextWrapper();
-                        return;
-                    }
-
-                    // Initialize the fileWrapper
-                    // and directoryWrapper
-                    directory = wrapper.Current;
-                    fileWrapper = null;
-                    directoryWrapper = null;
-                }
-                catch
-                {
-                    // If an error occurs, dispose of the
-                    // wrapper and then move to the next wrapper
-                    EnumerateNextWrapper();
-                    wrapper.Dispose();
-                    throw;
-                }
-
-                try
-                {
-                    switch (m_fileProcessor.EnumerationStrategy)
-                    {
-                        // Sequential and ParallelWatchDirectories strategies
-                        // place subdirectories on the current thread
-                        case FileEnumerationStrategy.Sequential:
-                        case FileEnumerationStrategy.ParallelWatchDirectories:
-                            // Create the fileWrapper and directoryWrapper objects
-                            fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), wrapper.CancellationToken);
-                            directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), wrapper.CancellationToken);
-
-                            // Push the current directory wrapper onto the stack
-                            m_wrapperStack.Value.Push(() => EnumerateNextDirectory(wrapper));
-
-                            // Push the subdirectory's file wrapper onto the stack
-                            m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-
-                            // Continue enumeration with the directory wrapper for the subdirectory
-                            LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(directoryWrapper));
-                            break;
-
-                        // ParallelSubdirectories strategy spawns new threads for subdirectories
-                        case FileEnumerationStrategy.ParallelSubdirectories:
-                            // Create the fileWrapper and directoryWrapper objects
-                            fileWrapper = new EnumerableWrapper(EnumerateFiles(directory), wrapper.CancellationToken);
-                            directoryWrapper = new EnumerableWrapper(EnumerateDirectories(directory), wrapper.CancellationToken);
-
-                            // Create a new thread, push the file wrapper onto the new thread's
-                            // stack, then enumerate the directory wrapper on the new thread
-                            m_fileProcessor.m_threadScheduler.CreateThread().Push(() =>
-                            {
-                                ActivateThread();
-                                m_wrapperStack.Value.Push(() => EnumerateNextFile(fileWrapper));
-                                EnumerateNextDirectory(directoryWrapper);
-                            });
-
-                            // Continue enumeration on this thread with the current directory wrapper
-                            LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(wrapper));
-                            break;
-
-                        // The only other file enumeration
-                        // strategy is no strategy at all
-                        default:
-                            // Clear out the stack and queue,
-                            // then dispose of the wrapper
-                            m_wrapperStack.Value.Clear();
-                            m_directoryQueue.Value.Clear();
-                            wrapper.Dispose();
-                            DeactivateThread();
-                            break;
-                    }
-                }
-                catch
-                {
-                    LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(wrapper));
-
-                    // If an exception occurs, dispose of the file
-                    // wrapper and directory wrapper, then continue
-                    // enumeration with the current directory wrapper
-                    if ((object)fileWrapper != null)
-                        fileWrapper.Dispose();
-
-                    if ((object)directoryWrapper != null)
-                        directoryWrapper.Dispose();
-
-                    throw;
-                }
-            }
-
-            // Handle the next file in the enumeration.
-            private void EnumerateNextFile(EnumerableWrapper wrapper)
-            {
-                LogicalThread enumerationThread;
-                Action enumerateNextFile;
-                string file;
-
-                try
-                {
-                    while (true)
-                    {
-                        // Advance enumeration until the
-                        // next file that matches the filter
-                        if (!wrapper.MoveNext())
-                            return;
-
-                        if (m_fileProcessor.MatchesFilter(wrapper.Current))
-                            break;
-
-                        Interlocked.Increment(ref m_fileProcessor.m_skippedFileCount);
-                    }
-
-                    // Prepare the callback to return execution to this thread
-                    enumerationThread = LogicalThread.CurrentThread;
-                    enumerateNextFile = () => EnumerateNextFile(wrapper);
-                    file = wrapper.Current;
-
-                    // Kick off the operation to process the current file,
-                    // but don't enumerate to the next file until processing
-                    // for the current file has begun
-                    m_fileProcessor.m_processingThread.Push(1, () =>
-                    {
-                        // Check the state of cancellation for the
-                        // enumeration thread on the processing
-                        // thread as well to speed up cancellation
-                        if (wrapper.CancellationToken.IsCancelled)
-                        {
-                            enumerationThread.Push(DeactivateThread);
-                            return;
-                        }
-
-                        enumerationThread.Push(enumerateNextFile);
-                        m_fileProcessor.TouchAndProcess(file, false);
-                    });
-                }
-                catch
-                {
-                    // If an exception occurs,
-                    // dispose of the enumerable wrapper
-                    wrapper.Dispose();
-                    throw;
-                }
-                finally
-                {
-                    // If there are no more files to enumerate,
-                    // dispose of the wrapper and move to the next wrapper
-                    if (!wrapper.LastMove)
-                    {
-                        EnumerateNextWrapper();
-                        wrapper.Dispose();
-                    }
-                }
-            }
-
-            // Advances to processing the next wrapper in the stack.
-            // If the stack is empty, processes the next wrapper in the queue.
-            // If there are no wrappers left, deactivate the thread.
-            private void EnumerateNextWrapper()
-            {
-                LogicalThread currentThread = LogicalThread.CurrentThread;
-
-                if (m_wrapperStack.Value.Count > 0)
-                    currentThread.Push(m_wrapperStack.Value.Pop());
-                else if (m_directoryQueue.Value.Count > 0)
-                    currentThread.Push(m_directoryQueue.Value.Dequeue());
-                else
-                    DeactivateThread();
-            }
-
-            // Activates the thread and increments
-            // the number of active threads.
-            private void ActivateThread()
-            {
-                m_isActive.Value = true;
-                Interlocked.Increment(ref m_enumerationThreads);
-            }
-
-            // Deactivates the thread and decrements
-            // the number of active threads.
-            private void DeactivateThread()
-            {
-                Interlocked.Decrement(ref m_enumerationThreads);
-                m_isActive.Value = false;
-            }
-
-            // Gets the list of processed files from the file processor
-            // and passes it to the cleaning thread for filtering.
-            private void GetProcessedFiles()
-            {
-                m_fileProcessor.m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
-                {
-                    string[] processedFiles = m_fileProcessor.m_processedFiles.ToArray();
-                    FilterProcessedFiles(processedFiles);
-                }));
-            }
-
-            // Filters the list of processed files to only the files that no longer
-            // exist, then passes them back to the processing thread for removal.
-            private void FilterProcessedFiles(string[] processedFiles)
-            {
-                m_cleanProcessedFilesThread.Push(() => m_cleanProcessedFilesOperation.ExecuteAction(() =>
-                {
-                    IList<string> trackedDirectories = m_fileProcessor.TrackedDirectories;
-
-                    string[] files = processedFiles
-                        .Where(file => trackedDirectories.Any(dir => file.StartsWith(dir, StringComparison.OrdinalIgnoreCase)))
-                        .Where(file => !File.Exists(file))
-                        .ToArray();
-
-                    RemoveProcessedFiles(files);
-                }));
-            }
-
-            // Removes the list of files that no longer exist,
-            // then deactivates the cleaning thread.
-            private void RemoveProcessedFiles(string[] files)
-            {
-                m_fileProcessor.m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
-                {
-                    foreach (string file in files)
-                    {
-                        m_fileProcessor.m_touchedFiles.Remove(file);
-                        m_fileProcessor.m_processedFiles.Remove(file);
-                    }
-
-                    m_cleanProcessedFilesOperation.RunIfPending();
-                }));
-            }
-
-            // Returns an object to enumerate subdirectories under a given path
-            private IEnumerable<string> EnumerateDirectories(string path)
-            {
-                return m_fileProcessor.m_orderedEnumeration
-                    ? Directory.EnumerateDirectories(path).OrderBy(dir => dir)
-                    : Directory.EnumerateDirectories(path);
-            }
-
-            // Returns an object to enumerate files under a given path
-            private IEnumerable<string> EnumerateFiles(string path)
-            {
-                return m_fileProcessor.m_orderedEnumeration
-                    ? Directory.EnumerateFiles(path).OrderBy(file => file)
-                    : Directory.EnumerateFiles(path);
-            }
-
-            #endregion
-        }
-
         // Constants
 
         /// <summary>
@@ -754,9 +679,11 @@ namespace GSF.IO
         private FileEnumerationStrategy m_enumerationStrategy;
         private bool m_orderedEnumeration;
 
-        private readonly object m_fileWatchersLock;
-        private readonly List<SafeFileWatcher> m_fileWatchers;
-        private readonly FileEnumerator m_enumerator;
+        private readonly object m_trackedDirectoriesLock;
+        private readonly List<TrackedDirectory> m_trackedDirectories;
+        private LogicalThread m_sequentialEnumerationThread;
+        private LogicalThread m_cleanProcessedFilesThread;
+        private LogicalThreadOperation m_cleanProcessedFilesOperation;
 
         private LogicalThreadScheduler m_threadScheduler;
         private LogicalThread m_processingThread;
@@ -795,12 +722,15 @@ namespace GSF.IO
             m_maxFragmentation = DefaultMaxFragmentation;
             m_enumerationStrategy = DefaultEnumerationStrategy;
 
-            m_fileWatchersLock = new object();
-            m_fileWatchers = new List<SafeFileWatcher>();
+            m_trackedDirectoriesLock = new object();
+            m_trackedDirectories = new List<TrackedDirectory>();
             m_threadScheduler = new LogicalThreadScheduler(2);
             m_threadScheduler.UnhandledException += (sender, args) => OnError(args.Argument);
             m_processingThread = m_threadScheduler.CreateThread();
             m_watcherThread = m_threadScheduler.CreateThread();
+            m_sequentialEnumerationThread = m_threadScheduler.CreateThread();
+            m_cleanProcessedFilesThread = m_threadScheduler.CreateThread();
+            m_cleanProcessedFilesOperation = new LogicalThreadOperation(m_cleanProcessedFilesThread, GetProcessedFiles, false);
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;
             m_waitObject = new ManualResetEvent(false);
@@ -812,9 +742,9 @@ namespace GSF.IO
             // TODO: Consider implementing a platform-independent equality comparer for ignoring case, though it would be a breaking change.
             m_processedFiles = new FileBackedHashSet<string>(Path.Combine(m_cachePath, m_processorID.ToString()), StringComparer.OrdinalIgnoreCase);
 
-            // Create the enumerator last since we are passing
-            // a reference to 'this' into its constructor
-            m_enumerator = new FileEnumerator(this);
+            // Fragmentation statistics are only valid for the lifetime of the process
+            // so go ahead and compact the processed files collection for good measure
+            Compact();
         }
 
         #endregion
@@ -878,9 +808,9 @@ namespace GSF.IO
             }
             set
             {
-                lock (m_fileWatchers)
+                lock (m_trackedDirectoriesLock)
                 {
-                    if (m_fileWatchers.Count > 0)
+                    if (m_trackedDirectories.Count > 0)
                         throw new InvalidOperationException("File processor is already tracking directories - modification of the cache path would be unsafe.");
 
                     if (m_cachePath != value)
@@ -989,23 +919,54 @@ namespace GSF.IO
         {
             get
             {
-                lock (m_fileWatchers)
+                lock (m_trackedDirectoriesLock)
                 {
-                    return m_fileWatchers
-                        .Select(watcher => watcher.Path)
+                    return m_trackedDirectories
+                        .Select(dir => dir.Path)
                         .ToList();
                 }
             }
         }
 
         /// <summary>
-        /// Gets the number of enumeration threads currently running.
+        /// Gets the list of paths that are being actively enumerated.
         /// </summary>
-        public int EnumerationThreads
+        public IList<string> ActivelyEnumeratedPaths
         {
             get
             {
-                return m_enumerator.EnumerationThreads;
+                lock (m_trackedDirectoriesLock)
+                {
+                    return m_trackedDirectories
+                        .SelectMany(dir => dir.ActivelyEnumeratedPaths)
+                        .ToList();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if the file processor is actively enumerating.
+        /// </summary>
+        public bool IsEnumerating
+        {
+            get
+            {
+                lock (m_trackedDirectoriesLock)
+                {
+                    return m_trackedDirectories.Any(dir => dir.IsEnumerating);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if the file processor is actively
+        /// purging processed files from the internal lookup table.
+        /// </summary>
+        public bool IsCleaning
+        {
+            get
+            {
+                return m_cleanProcessedFilesOperation.IsRunning;
             }
         }
 
@@ -1077,35 +1038,31 @@ namespace GSF.IO
         /// <param name="path">The path to the directory to be tracked.</param>
         public void AddTrackedDirectory(string path)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
             string fullPath = FilePath.GetAbsolutePath(path);
-            SafeFileWatcher watcher;
+            TrackedDirectory trackedDirectory;
 
-            if (!TrackedDirectories.Contains(fullPath, StringComparer.OrdinalIgnoreCase))
+            lock (m_trackedDirectoriesLock)
             {
-                watcher = new SafeFileWatcher(fullPath);
-                watcher.IncludeSubdirectories = true;
-                watcher.InternalBufferSize = m_internalBufferSize;
+                if (TrackedDirectories.Contains(fullPath))
+                    return;
 
-                watcher.Created += Watcher_Created;
-                watcher.Changed += Watcher_Changed;
-                watcher.Renamed += Watcher_Renamed;
-                watcher.Deleted += Watcher_Deleted;
-                watcher.Error += Watcher_Error;
+                if (m_trackedDirectories.Count == 0)
+                    m_fileWatchTimer.Start();
 
-                lock (m_fileWatchersLock)
-                {
-                    if (m_fileWatchers.Count == 0)
-                    {
-                        m_processingThread.Push(2, LoadProcessedFiles);
-                        m_fileWatchTimer.Start();
-                    }
-
-                    m_fileWatchers.Add(watcher);
-                }
-
-                watcher.EnableRaisingEvents = true;
-                m_enumerator.Enumerate(fullPath);
+                trackedDirectory = new TrackedDirectory(this, fullPath);
+                m_trackedDirectories.Add(trackedDirectory);
             }
+
+            FileEnumerationStrategy enumerationStrategy = m_enumerationStrategy;
+
+            LogicalThread enumerationThread = (enumerationStrategy == FileEnumerationStrategy.Sequential)
+                    ? m_sequentialEnumerationThread
+                    : m_threadScheduler.CreateThread();
+
+            enumerationThread.Push(() => trackedDirectory.EnumerateFiles(enumerationStrategy));
         }
 
         /// <summary>
@@ -1114,27 +1071,29 @@ namespace GSF.IO
         /// <param name="path">The path to the directory to stop tracking.</param>
         public void RemoveTrackedDirectory(string path)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
             string fullPath = FilePath.GetAbsolutePath(path);
 
-            List<SafeFileWatcher> fileWatchersToRemove;
-
-            lock (m_fileWatchers)
+            lock (m_trackedDirectoriesLock)
             {
-                fileWatchersToRemove = m_fileWatchers
-                    .Where(w => fullPath.Equals(w.Path, StringComparison.OrdinalIgnoreCase))
+                List<TrackedDirectory> trackedDirectoriesToRemove = m_trackedDirectories
+                    .Where(dir => fullPath.Equals(dir.Path, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                foreach (SafeFileWatcher watcher in fileWatchersToRemove)
-                    RemoveFileWatcher(watcher);
+                foreach (TrackedDirectory trackedDirectory in trackedDirectoriesToRemove)
+                {
+                    m_trackedDirectories.Remove(trackedDirectory);
+                    trackedDirectory.Dispose();
+                }
 
-                if (m_fileWatchers.Count == 0)
+                if (m_trackedDirectories.Count == 0)
                 {
                     m_fileWatchTimer.Stop();
                     m_processedFiles.Close();
                 }
             }
-
-            m_enumerator.Cancel(path);
         }
 
         /// <summary>
@@ -1142,11 +1101,32 @@ namespace GSF.IO
         /// </summary>
         public void EnumerateWatchDirectories()
         {
-            lock (m_fileWatchers)
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
+            List<TrackedDirectory> trackedDirectories;
+
+            lock (m_trackedDirectoriesLock)
             {
-                foreach (SafeFileWatcher fileWatcher in m_fileWatchers)
-                    m_enumerator.Enumerate(fileWatcher.Path);
+                trackedDirectories = new List<TrackedDirectory>(m_trackedDirectories);
             }
+
+            FileEnumerationStrategy enumerationStrategy = m_enumerationStrategy;
+
+            LogicalThread GetThread()
+            {
+                return (enumerationStrategy == FileEnumerationStrategy.Sequential)
+                    ? m_sequentialEnumerationThread
+                    : m_threadScheduler.CreateThread();
+            }
+
+            foreach (TrackedDirectory trackedDirectory in trackedDirectories)
+            {
+                if (!trackedDirectory.IsEnumerating)
+                    GetThread().Push(() => trackedDirectory.EnumerateFiles(enumerationStrategy));
+            }
+
+            m_cleanProcessedFilesOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -1156,6 +1136,9 @@ namespace GSF.IO
         /// <returns>True if the file matches the filter; false otherwise.</returns>
         public bool MatchesFilter(string filePath)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
             string[] filters = m_filter.Split(Path.PathSeparator);
 
             if (!FilePath.IsFilePatternMatch(filters, filePath, true))
@@ -1178,7 +1161,14 @@ namespace GSF.IO
         /// </summary>
         public void StopEnumeration()
         {
-            m_enumerator.Cancel();
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
+            lock (m_trackedDirectoriesLock)
+            {
+                foreach (TrackedDirectory trackedDirectory in m_trackedDirectories)
+                    trackedDirectory.CancelEnumeration();
+            }
         }
 
         /// <summary>
@@ -1186,10 +1176,13 @@ namespace GSF.IO
         /// </summary>
         public void ClearTrackedDirectories()
         {
-            lock (m_fileWatchers)
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
+            lock (m_trackedDirectoriesLock)
             {
-                while (m_fileWatchers.Count > 0)
-                    RemoveFileWatcher(m_fileWatchers[0]);
+                while (m_trackedDirectories.Count > 0)
+                    RemoveTrackedDirectory(m_trackedDirectories[0].Path);
             }
         }
 
@@ -1202,7 +1195,7 @@ namespace GSF.IO
             {
                 try
                 {
-                    m_enumerator.Cancel();
+                    StopEnumeration();
                     ClearTrackedDirectories();
 
                     if ((object)m_fileWatchTimer != null)
@@ -1347,77 +1340,63 @@ namespace GSF.IO
                 waitHandle.Unregister(null);
         }
 
-        // Loads the list of processed files from the cache.
-        private void LoadProcessedFiles()
+        // Gets the list of processed files from the file processor
+        // and passes it to the cleaning thread for filtering.
+        private void GetProcessedFiles()
         {
-            try
+            m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
             {
-                string cachePath = Path.Combine(m_cachePath, m_processorID.ToString());
-                List<string> processedFilesList;
-                byte[] signature;
-
-                if (File.Exists(cachePath))
-                {
-                    processedFilesList = new List<string>();
-                    signature = m_processedFiles.DefaultSignature;
-
-                    using (FileStream stream = File.OpenRead(cachePath))
-                    {
-                        // Read the signature from the start of the file
-                        if (stream.Read(signature, 0, signature.Length) <= 0)
-                            return;
-
-                        // Compare the signature to the default signature of the processedFiles hash set
-                        if (signature.SequenceEqual(m_processedFiles.DefaultSignature))
-                            return;
-
-                        // Signature of the file does not match that of the m_processedFiles hash set so
-                        // assume this is a text file with a list of the files that have been processed
-                        stream.Position = 0;
-
-                        // Read each line of the file into a list to
-                        // be consumed by the m_processedFiles hash set
-                        using (StreamReader reader = new StreamReader(stream, Encoding.Unicode))
-                        {
-                            while (!reader.EndOfStream)
-                            {
-                                string fullPath = reader.ReadLine();
-
-                                if (!string.IsNullOrEmpty(fullPath))
-                                    processedFilesList.Add(fullPath);
-                            }
-                        }
-                    }
-
-                    // Delete the existing file since it
-                    // does not have the right signature
-                    File.Delete(cachePath);
-
-                    // Copy files that we read from the text file
-                    // into the m_processedFiles hash set
-                    foreach (string fullPath in processedFilesList)
-                        m_processedFiles.Add(fullPath);
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = string.Format("Unable to load processed files cache due to exception: {0}", ex.Message);
-                OnError(new InvalidOperationException(message, ex));
-            }
+                string[] processedFiles = m_processedFiles.ToArray();
+                FilterProcessedFiles(processedFiles);
+            }));
         }
 
-        // Detaches from events, removes the given file watcher from
-        // the list of watchers, and disposes of the file watcher.
-        private void RemoveFileWatcher(SafeFileWatcher watcher)
+        // Filters the list of processed files to only the files that no longer
+        // exist, then passes them back to the processing thread for removal.
+        private void FilterProcessedFiles(string[] processedFiles)
         {
-            watcher.Created -= Watcher_Created;
-            watcher.Changed -= Watcher_Changed;
-            watcher.Renamed -= Watcher_Renamed;
-            watcher.Deleted -= Watcher_Deleted;
-            watcher.Error -= Watcher_Error;
+            m_cleanProcessedFilesThread.Push(() => m_cleanProcessedFilesOperation.ExecuteAction(() =>
+            {
+                IList<string> trackedDirectories = TrackedDirectories;
 
-            m_fileWatchers.Remove(watcher);
-            watcher.Dispose();
+                string[] files = processedFiles
+                    .Where(file => trackedDirectories.Any(dir => file.StartsWith(dir, StringComparison.OrdinalIgnoreCase)))
+                    .Where(file => !File.Exists(file))
+                    .ToArray();
+
+                RemoveProcessedFiles(files);
+            }));
+        }
+
+        // Removes the list of files that no longer exist,
+        // then deactivates the cleaning thread.
+        private void RemoveProcessedFiles(string[] files)
+        {
+            m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
+            {
+                foreach (string file in files)
+                {
+                    m_touchedFiles.Remove(file);
+                    m_processedFiles.Remove(file);
+                }
+
+                m_cleanProcessedFilesOperation.RunIfPending();
+            }));
+        }
+
+        // Defragments the lookup table to reduce disk space usage.
+        private void Compact()
+        {
+            if (LogicalThread.CurrentThread != m_processingThread)
+            {
+                m_processingThread.Push(Compact);
+                return;
+            }
+
+            DateTime lastCompactTime = DateTime.UtcNow;
+            m_processedFiles.Compact();
+            m_lastCompactTime = lastCompactTime;
+            m_lastCompactDuration = DateTime.UtcNow - m_lastCompactTime;
         }
 
         // Triggers the processing event for the given file.
@@ -1445,15 +1424,17 @@ namespace GSF.IO
         // Queues the created file for processing.
         private void Watcher_Created(object sender, FileSystemEventArgs args)
         {
+            string fullPath = args.FullPath;
+
             m_watcherThread.Push(() =>
             {
-                if (!MatchesFilter(args.FullPath))
+                if (!MatchesFilter(fullPath))
                 {
                     Interlocked.Increment(ref m_skippedFileCount);
                     return;
                 }
 
-                m_processingThread.Push(2, () => TouchAndProcess(args.FullPath, true));
+                m_processingThread.Push(2, () => TouchAndProcess(fullPath, true));
             });
         }
 
@@ -1463,14 +1444,16 @@ namespace GSF.IO
             if (!m_trackChanges)
                 return;
 
+            string fullPath = args.FullPath;
+
             m_watcherThread.Push(() =>
             {
-                if (MatchesFilter(args.FullPath))
+                if (MatchesFilter(fullPath))
                 {
                     m_processingThread.Push(2, () =>
                     {
-                        m_touchedFiles.Remove(args.FullPath);
-                        TouchAndProcess(args.FullPath, true);
+                        m_touchedFiles.Remove(fullPath);
+                        TouchAndProcess(fullPath, true);
                     });
                 }
                 else
@@ -1483,24 +1466,27 @@ namespace GSF.IO
         // Track renames so that files whose names are changed can be updated in the processed files list.
         private void Watcher_Renamed(object sender, RenamedEventArgs args)
         {
+            string oldFullPath = args.OldFullPath;
+            string fullPath = args.FullPath;
+
             m_watcherThread.Push(() =>
             {
-                bool oldMatch = MatchesFilter(args.OldFullPath);
-                bool newMatch = MatchesFilter(args.FullPath);
+                bool oldMatch = MatchesFilter(oldFullPath);
+                bool newMatch = MatchesFilter(fullPath);
 
                 if (!oldMatch && !newMatch)
                     return;
 
                 m_processingThread.Push(2, () =>
                 {
-                    if (oldMatch && m_touchedFiles.Remove(args.OldFullPath) && newMatch)
-                        m_touchedFiles.Add(args.FullPath, File.GetLastWriteTimeUtc(args.FullPath));
+                    if (oldMatch && m_touchedFiles.Remove(oldFullPath) && newMatch)
+                        m_touchedFiles.Add(fullPath, File.GetLastWriteTimeUtc(fullPath));
 
-                    if (oldMatch && m_processedFiles.Remove(args.OldFullPath))
-                        m_processedFiles.Add(args.FullPath);
+                    if (oldMatch && m_processedFiles.Remove(oldFullPath))
+                        m_processedFiles.Add(fullPath);
 
                     if (!oldMatch && newMatch)
-                        TouchAndProcess(args.FullPath, true);
+                        TouchAndProcess(fullPath, true);
                 });
             });
         }
@@ -1508,15 +1494,17 @@ namespace GSF.IO
         // Track deletes so that files can be removed from the processed files list.
         private void Watcher_Deleted(object sender, FileSystemEventArgs args)
         {
+            string fullPath = args.FullPath;
+
             m_watcherThread.Push(() =>
             {
-                if (!MatchesFilter(args.FullPath))
+                if (!MatchesFilter(fullPath))
                     return;
 
                 m_processingThread.Push(2, () =>
                 {
-                    m_touchedFiles.Remove(args.FullPath);
-                    m_processedFiles.Remove(args.FullPath);
+                    m_touchedFiles.Remove(fullPath);
+                    m_processedFiles.Remove(fullPath);
                 });
             });
         }
@@ -1533,44 +1521,12 @@ namespace GSF.IO
         {
             // Check each of the existing file watchers to determine whether an
             // error occurred that forced the file watcher to stop raising events
-            lock (m_fileWatchers)
+            lock (m_trackedDirectoriesLock)
             {
-                for (int i = 0; i < m_fileWatchers.Count; i++)
+                foreach (TrackedDirectory trackedDirectory in m_trackedDirectories)
                 {
-                    if (!m_fileWatchers[i].EnableRaisingEvents)
-                    {
-                        try
-                        {
-                            // This file watcher is no longer raising events so
-                            // attempt to create a new file watcher for that file path
-                            SafeFileWatcher newWatcher = new SafeFileWatcher(m_fileWatchers[i].Path);
-
-                            newWatcher.IncludeSubdirectories = true;
-                            newWatcher.Created += Watcher_Created;
-                            newWatcher.Changed += Watcher_Changed;
-                            newWatcher.Renamed += Watcher_Renamed;
-                            newWatcher.Deleted += Watcher_Deleted;
-                            newWatcher.Error += Watcher_Error;
-
-                            m_fileWatchers[i].Created -= Watcher_Created;
-                            m_fileWatchers[i].Changed -= Watcher_Changed;
-                            m_fileWatchers[i].Renamed -= Watcher_Renamed;
-                            m_fileWatchers[i].Deleted -= Watcher_Deleted;
-                            m_fileWatchers[i].Error -= Watcher_Error;
-                            m_fileWatchers[i].Dispose();
-
-                            m_fileWatchers[i] = newWatcher;
-                            newWatcher.EnableRaisingEvents = true;
-
-                            // Files may have been dropped or removed while the file watcher
-                            // was disconnected so we need to enumerate the files again
-                            m_enumerator.Enumerate(newWatcher.Path);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnError(ex);
-                        }
-                    }
+                    try { trackedDirectory.CheckFileWatcher(); }
+                    catch (Exception ex) { OnError(ex); }
                 }
             }
 
@@ -1578,12 +1534,7 @@ namespace GSF.IO
             m_processingThread.Push(1, () =>
             {
                 if (m_processedFiles.FragmentationCount > m_maxFragmentation)
-                {
-                    DateTime lastCompactTime = DateTime.UtcNow;
-                    m_processedFiles.Compact();
-                    m_lastCompactTime = lastCompactTime;
-                    m_lastCompactDuration = DateTime.UtcNow - m_lastCompactTime;
-                }
+                    Compact();
             });
         }
 
