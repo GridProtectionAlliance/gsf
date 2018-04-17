@@ -120,7 +120,7 @@ namespace Transport
         void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
 
         // Begin connection sequence.
-        bool Connect(DataSubscriber& subscriber);
+        bool Connect(DataSubscriber& subscriber, SubscriptionInfo info);
 
         // Cancel all current and
         // future connection sequences.
@@ -170,14 +170,12 @@ namespace Transport
         struct CallbackDispatcher
         {
             DataSubscriber* Source;
-            SharedPtr<vector<uint8_t>> Data;
+            Buffer Data;
             DispatcherFunction Function;
         };
 
-        typedef SharedPtr<CallbackDispatcher> CallbackDispatcherPtr;
-
         SubscriberConnector m_connector;
-        SubscriptionInfo m_currentSubscription;
+        SubscriptionInfo m_subscriptionInfo;
         EndianConverter m_endianConverter;
         IPAddress m_hostAddress;
         bool m_compressPayloadData;
@@ -203,7 +201,7 @@ namespace Transport
 
         // Callback thread members
         Thread m_callbackThread;
-        ThreadSafeQueue<CallbackDispatcherPtr> m_callbackQueue;
+        ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
 
         // Command channel
         Thread m_commandChannelResponseThread;
@@ -255,16 +253,16 @@ namespace Transport
         void DispatchStatusMessage(const string& message);
         void DispatchErrorMessage(const string& message);
 
-        static void StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
-        static void ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
-        static void DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
-        static void MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
-        static void NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
-        static void ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
-        static void ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& data);
+        static void StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
         
-        static void ParseTSSCMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, vector<MeasurementPtr>& measurements);
-        static void ParseCompactMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements);
+        static void ParseTSSCMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, size_t offset, vector<MeasurementPtr>& measurements);
+        static void ParseCompactMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, size_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements);
 
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
@@ -285,13 +283,14 @@ namespace Transport
         // Callback registration
         //
         // Callback functions are defined with the following signatures:
-        //   void ProcessStatusMessage(string message)
-        //   void ProcessErrorMessage(string message)
-        //   void ProcessDataStartTime(TimeSeriesFramework::int64_t startTime)
-        //   void ProcessMetadata(vector<TimeSeriesFramework::uint8_t> metadata)
-        //   void ProcessNewMeasurements(vector<TimeSeriesFramework::Measurement> newMeasurements)
-        //   void ProcessProcessingComplete(string message)
-        //   void ProcessConnectionTerminated()
+        //   void ProcessStatusMessage(DataSubscriber*, const string& message)
+        //   void ProcessErrorMessage(DataSubscriber*, const string& message)
+        //   void ProcessDataStartTime(DataSubscriber*, int64_t startTime)
+        //   void ProcessMetadata(DataSubscriber*, const vector<uint8_t>& metadata)
+        //   void ProcessNewMeasurements(DataSubscriber*, const vector<MeasurementPtr>& newMeasurements)
+        //   void ProcessProcessingComplete(DataSubscriber*, const string& message)
+        //   void ProcessConfigurationChanged(DataSubscriber*)
+        //   void ProcessConnectionTerminated(DataSubscriber*)
         //
         // Metadata is provided to the user as zlib-compressed XML,
         // and must be decompressed and interpreted before it can be used.
@@ -338,8 +337,11 @@ namespace Transport
         void Disconnect();
 
         // Subscribe to measurements to start receiving data.
+        void Subscribe();
         void Subscribe(SubscriptionInfo info);
-        SubscriptionInfo GetCurrentSubscription() const;
+        
+        void SetSubscriptionInfo(const SubscriptionInfo& info);
+        SubscriptionInfo GetSubscriptionInfo() const;
 
         // Cancel the current subscription to stop receiving data.
         void Unsubscribe();

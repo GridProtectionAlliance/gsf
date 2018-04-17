@@ -27,8 +27,8 @@
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-uint32_t Decode7BitUInt32(const uint8_t* stream, volatile int32_t& position);
-uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position);
+uint32_t Decode7BitUInt32(const uint8_t* stream, int32_t& position);
+uint64_t Decode7BitUInt64(const uint8_t* stream, int32_t& position);
 
 TSSCPointMetadata::TSSCPointMetadata(TSSCMeasurementParser* parent) :
     m_parent(parent),
@@ -48,6 +48,8 @@ TSSCPointMetadata::TSSCPointMetadata(TSSCMeasurementParser* parent) :
     PrevValue2(0),
     PrevValue3(0)
 {
+    for (size_t i = 0; i < CommandStatsLength; i++)
+        m_commandStats[i] = 0;
 }
 
 int32_t TSSCPointMetadata::ReadCode()
@@ -222,7 +224,7 @@ void TSSCPointMetadata::AdaptCommands()
 }
 
 TSSCMeasurementParser::TSSCMeasurementParser() :
-    m_data(nullptr),
+    m_data({}),
     m_position(0),
     m_lastPosition(0),
     m_prevTimestamp1(0L),
@@ -241,7 +243,6 @@ void TSSCMeasurementParser::Reset()
 {
     m_points.clear();
     m_lastPoint = NewSharedPtr<TSSCPointMetadata>(this);
-    m_data = nullptr;
     m_position = 0;
     m_lastPosition = 0;
     ClearBitStream();
@@ -253,12 +254,12 @@ void TSSCMeasurementParser::Reset()
     m_prevTimestamp2 = 0L;
 }
 
-void TSSCMeasurementParser::SetBuffer(const uint8_t* data, const int32_t offset, const int32_t length)
+void TSSCMeasurementParser::SetBuffer(const vector<uint8_t>& data, const int32_t offset)
 {
     ClearBitStream();
     m_data = data;
     m_position = offset;
-    m_lastPosition = length;
+    m_lastPosition = data.size();
 }
 
 bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float_t& value)
@@ -531,7 +532,7 @@ int64_t TSSCMeasurementParser::DecodeTimestamp(uint8_t code)
     }
     else
     {
-        timestamp = m_prevTimestamp1 ^ static_cast<int64_t>(Decode7BitUInt64(m_data, m_position));
+        timestamp = m_prevTimestamp1 ^ static_cast<int64_t>(Decode7BitUInt64(&m_data[0], m_position));
     }
 
     // Save the smallest delta time
@@ -579,7 +580,7 @@ uint32_t TSSCMeasurementParser::DecodeQuality(uint8_t code, const TSSCPointMetad
     }
     else
     {
-        quality = Decode7BitUInt32(m_data, m_position);
+        quality = Decode7BitUInt32(&m_data[0], m_position);
     }
 
     nextPoint->PrevQuality2 = nextPoint->PrevQuality1;
@@ -614,28 +615,15 @@ int32_t TSSCMeasurementParser::ReadBit()
 
 int32_t TSSCMeasurementParser::ReadBits4()
 {
-    int32_t bits = ReadBit() << 3;
-
-    bits |= ReadBit() << 2;
-    bits |= ReadBit() << 1;
-    bits |= ReadBit();
-
-    return bits;
+    return ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
 }
 
 int32_t TSSCMeasurementParser::ReadBits5()
 {
-    int32_t bits = ReadBit() << 4;
-
-    bits |= ReadBit() << 3;
-    bits |= ReadBit() << 2;
-    bits |= ReadBit() << 1;
-    bits |= ReadBit();
-
-    return bits;
+    return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
 }
 
-uint32_t Decode7BitUInt32(const uint8_t* stream, volatile int32_t& position)
+uint32_t Decode7BitUInt32(const uint8_t* stream, int32_t& position)
 {
     stream += position;    
     uint32_t value = *stream;
@@ -676,7 +664,7 @@ uint32_t Decode7BitUInt32(const uint8_t* stream, volatile int32_t& position)
     return value ^ 0x10204080;
 }
 
-uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
+uint64_t Decode7BitUInt64(const uint8_t* stream, int32_t& position)
 {
     stream += position;
     uint64_t value = *stream;
@@ -687,7 +675,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value;
     }
     
-    value ^= (static_cast<int64_t>(stream[1]) << 7);
+    value ^= (static_cast<uint64_t>(stream[1]) << 7);
     
     if (value < 16384UL)
     {
@@ -695,7 +683,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x80UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[2]) << 14);
+    value ^= (static_cast<uint64_t>(stream[2]) << 14);
     
     if (value < 2097152UL)
     {
@@ -703,7 +691,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x4080UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[3]) << 21);
+    value ^= (static_cast<uint64_t>(stream[3]) << 21);
     
     if (value < 268435456UL)
     {
@@ -711,7 +699,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x204080UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[4]) << 28);
+    value ^= (static_cast<uint64_t>(stream[4]) << 28);
     
     if (value < 34359738368UL)
     {
@@ -719,7 +707,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x10204080UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[5]) << 35);
+    value ^= (static_cast<uint64_t>(stream[5]) << 35);
     
     if (value < 4398046511104UL)
     {
@@ -727,7 +715,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x810204080UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[6]) << 42);
+    value ^= (static_cast<uint64_t>(stream[6]) << 42);
     
     if (value < 562949953421312UL)
     {
@@ -735,7 +723,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x40810204080UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[7]) << 49);
+    value ^= (static_cast<uint64_t>(stream[7]) << 49);
     
     if (value < 72057594037927936UL)
     {
@@ -743,7 +731,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, volatile int32_t& position)
         return value ^ 0x2040810204080UL;
     }
     
-    value ^= (static_cast<int64_t>(stream[8]) << 56);    
+    value ^= (static_cast<uint64_t>(stream[8]) << 56);    
     position += 9;
 
     return value ^ 0x102040810204080UL;

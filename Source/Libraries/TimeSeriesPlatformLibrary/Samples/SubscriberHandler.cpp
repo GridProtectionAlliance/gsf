@@ -22,7 +22,11 @@
 //******************************************************************************************************
 
 #include "SubscriberHandler.h"
+
+// TODO: These includes are just for temporary testing code
 #include "../Common/Convert.h"
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 using namespace std;
 using namespace GSF::TimeSeries;
@@ -117,12 +121,11 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
         int32_t qualityFlags = measurement->Flags;
 
         ConfigurationFramePtr configurationFrame;
+        MeasurementMetadataPtr measurementMetadata;
 
         // Find associated configuration for measurement
         if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
-        {
-            MeasurementMetadataPtr measurementMetadata;
-
+        {            
             // Lookup measurement metadata - it's faster to find metadata from within configuration frame
             if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
             {
@@ -134,6 +137,11 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
                 // TODO: Handle measurement processing here...
             }
+        }
+        else if (TryGetMeasurementMetdata(measurement->SignalID, measurementMetadata))
+        {
+            // Received measurement is not part of a defined configuration frame, e.g., a statistic
+            const SignalReference& reference = measurementMetadata->Reference;
         }
     }
 
@@ -158,6 +166,8 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
         if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
             message << "Timestamp: " << string(timestamp) << endl;
+        
+        message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
 
         message << "Point\tValue" << endl;
 

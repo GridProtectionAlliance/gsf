@@ -88,7 +88,7 @@ size_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffs
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool CompactMeasurementParser::TryParseMeasurement(const uint8_t* buffer, size_t& offset, size_t& length)
+bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer, size_t& offset, size_t& length)
 {
     uint8_t compactFlags;
     uint16_t signalIndex;
@@ -123,7 +123,7 @@ bool CompactMeasurementParser::TryParseMeasurement(const uint8_t* buffer, size_t
         return false;
 
     // Read the signal index from the buffer
-    signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(buffer + offset + 1));
+    signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(&buffer[offset + 1]));
 
     // If the signal index is not found in the cache, we cannot parse the measurement
     if (!m_signalIndexCache.Contains(signalIndex))
@@ -135,7 +135,7 @@ bool CompactMeasurementParser::TryParseMeasurement(const uint8_t* buffer, size_t
     offset += 3;
 
     // Read the measurement value from the buffer
-    measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*reinterpret_cast<const float32_t*>(buffer + offset));
+    measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*reinterpret_cast<const float32_t*>(&buffer[offset]));
     offset += 4;
 
     if (m_includeTime)
@@ -143,20 +143,20 @@ bool CompactMeasurementParser::TryParseMeasurement(const uint8_t* buffer, size_t
         if (!usingBaseTimeOffset)
         {
             // Read full 8-byte timestamp from the buffer
-            timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*reinterpret_cast<const int64_t*>(buffer + offset));
+            timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*reinterpret_cast<const int64_t*>(&buffer[offset]));
             offset += 8;
         }
         else if (!m_useMillisecondResolution)
         {
             // Read 4-byte offset from the buffer and apply the appropriate base time offset
-            timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*reinterpret_cast<const uint32_t*>(buffer + offset));
+            timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*reinterpret_cast<const uint32_t*>(&buffer[offset]));
             timestamp += m_baseTimeOffsets[timeIndex];
             offset += 4;
         }
         else
         {
             // Read 2-byte offset from the buffer, convert from milliseconds to ticks, and apply the appropriate base time offset
-            timestamp = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(buffer + offset));
+            timestamp = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(&buffer[offset]));
             timestamp *= 10000;
             timestamp += m_baseTimeOffsets[timeIndex];
             offset += 2;

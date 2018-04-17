@@ -79,7 +79,7 @@ namespace Transport
     class TSSCMeasurementParser
     {
     private:
-        const uint8_t* m_data;
+        vector<uint8_t>& m_data;
         int32_t m_position;
         int32_t m_lastPosition;
 
@@ -115,7 +115,7 @@ namespace Transport
         void Reset();
 
         // Sets the internal buffer to read data from.
-        void SetBuffer(const uint8_t* data, int32_t startPosition, int32_t endPosition);
+        void SetBuffer(const vector<uint8_t>& data, int32_t offset);
 
         // Reads the next measurement from the stream. If the end of the stream has been encountered, return false.
         bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float_t& value);

@@ -24,7 +24,7 @@
 #ifndef __VERSION_H
 #define __VERSION_H
 
-#define GSFTS_VERSION "0.9.1"
+#define GSFTS_VERSION "0.9.2"
 #define GSFTS_BUILD_DATE "April 2018"
 
 #endif

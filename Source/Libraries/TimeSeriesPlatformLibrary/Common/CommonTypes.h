@@ -108,6 +108,13 @@ namespace TimeSeries
         return boost::make_shared<T>(p1, p2);
     }
 
+    typedef SharedPtr<vector<uint8_t>> Buffer;
+
+    inline Buffer NewBuffer()
+    {
+        return NewSharedPtr<vector<uint8_t>>();
+    }
+
     template<typename T>
     using Action = std::function<void(T)>;
 

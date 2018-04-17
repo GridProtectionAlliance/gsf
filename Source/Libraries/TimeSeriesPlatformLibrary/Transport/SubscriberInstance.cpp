@@ -153,7 +153,7 @@ void SubscriberInstance::Connect()
     }
 
     // Connect and subscribe to publisher
-    if (connector.Connect(m_subscriber))
+    if (connector.Connect(m_subscriber, m_info))
     {
         ConnectionEstablished();
 
@@ -163,7 +163,7 @@ void SubscriberInstance::Connect()
         if (m_autoParseMetadata)
             m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh);
         else
-            m_subscriber.Subscribe(m_info);
+            m_subscriber.Subscribe();
     }
     else
     {
@@ -857,7 +857,7 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
     {
         instance->StatusMessage("Reconnected. Subscribing to data...");
         instance->ConnectionEstablished();
-        source->Subscribe(instance->m_info);
+        source->Subscribe();
     }
     else
     {
@@ -898,7 +898,7 @@ void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uin
 
     // When auto-parsing metadata, start subscription after successful user meta-data handling
     if (instance->m_autoParseMetadata)
-        source->Subscribe(instance->m_info);
+        source->Subscribe();
 }
 
 void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)

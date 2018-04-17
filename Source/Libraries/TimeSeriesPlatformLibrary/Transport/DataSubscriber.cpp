@@ -63,7 +63,7 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     if (!connector.m_cancel && connector.m_errorMessageCallback != nullptr)
         connector.m_errorMessageCallback(subscriber, "Publisher connection terminated. Attempting to reconnect...");
 
-    connector.Connect(*subscriber);
+    connector.Connect(*subscriber, subscriber->GetSubscriptionInfo());
 
     // Notify the user that reconnect attempt was completed.
     if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
@@ -84,10 +84,12 @@ void SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectC
 }
 
 // Begin connection sequence.
-bool SubscriberConnector::Connect(DataSubscriber& subscriber)
+bool SubscriberConnector::Connect(DataSubscriber& subscriber, SubscriptionInfo info)
 {
     if (m_autoReconnect)
         subscriber.RegisterAutoReconnectCallback(&AutoReconnect);
+
+    subscriber.SetSubscriptionInfo(info);
 
     m_cancel = false;
 
@@ -243,7 +245,7 @@ DataSubscriber::~DataSubscriber()
 // All callbacks are run from the callback thread from here.
 void DataSubscriber::RunCallbackThread()
 {
-    CallbackDispatcherPtr dispatcher;
+    CallbackDispatcher dispatcher;
 
     while (true)
     {
@@ -253,7 +255,7 @@ void DataSubscriber::RunCallbackThread()
             break;
 
         dispatcher = m_callbackQueue.Dequeue();
-        dispatcher->Function(dispatcher->Source, *dispatcher->Data);
+        dispatcher.Function(dispatcher.Source, *dispatcher.Data);
     }
 }
 
@@ -577,8 +579,8 @@ void DataSubscriber::Dispatch(DispatcherFunction function)
 // Dispatches the given function to the callback thread and provides the given data to that function when it is called.
 void DataSubscriber::Dispatch(DispatcherFunction function, const uint8_t* data, size_t offset, size_t length)
 {
-    CallbackDispatcherPtr dispatcher = NewSharedPtr<CallbackDispatcher>();
-    SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
+    CallbackDispatcher dispatcher;
+    Buffer dataVector = NewBuffer();
     size_t i;
 
     dataVector->resize(length);
@@ -589,9 +591,9 @@ void DataSubscriber::Dispatch(DispatcherFunction function, const uint8_t* data, 
             dataVector->at(i) = data[offset + i];
     }
 
-    dispatcher->Source = this;
-    dispatcher->Data = dataVector;
-    dispatcher->Function = function;
+    dispatcher.Source = this;
+    dispatcher.Data = dataVector;
+    dispatcher.Function = function;
 
     m_callbackQueue.Enqueue(dispatcher);
 }
@@ -615,100 +617,95 @@ void DataSubscriber::DispatchErrorMessage(const string& message)
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
-void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
     stringstream messageStream;
     size_t i;
 
-    for (i = 0; i < data.size(); ++i)
-        messageStream << data[i];
+    for (i = 0; i < buffer.size(); ++i)
+        messageStream << buffer[i];
 
     if (statusMessageCallback != nullptr)
         statusMessageCallback(source, messageStream.str());
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
-void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
     stringstream messageStream;
     size_t i;
 
-    for (i = 0; i < data.size(); ++i)
-        messageStream << data[i];
+    for (i = 0; i < buffer.size(); ++i)
+        messageStream << buffer[i];
 
     if (errorMessageCallback != nullptr)
         errorMessageCallback(source, messageStream.str());
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
-void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     const DataStartTimeCallback dataStartTimeCallback = source->m_dataStartTimeCallback;
     EndianConverter endianConverter = source->m_endianConverter;
-    const int64_t dataStartTime = endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&data[0]));
+    const int64_t dataStartTime = endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&buffer[0]));
 
     if (dataStartTimeCallback != nullptr)
         dataStartTimeCallback(source, dataStartTime);
 }
 
 // Dispatcher function for metadata. Provides encoded metadata to the user via the metadata callback.
-void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     const MetadataCallback metadataCallback = source->m_metadataCallback;
 
     if (metadataCallback != nullptr)
-        metadataCallback(source, data);
+        metadataCallback(source, buffer);
 }
 
 // Dispatcher function for new measurements. Decodes the measurements and provides them to the user via the new measurements callback.
-void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     if (source->m_newMeasurementsCallback == nullptr)
         return;
 
-    SubscriptionInfo& info = source->m_currentSubscription;
+    SubscriptionInfo& info = source->m_subscriptionInfo;
     uint8_t dataPacketFlags;
     int64_t frameLevelTimestamp = -1;
-
-    const uint8_t* buffer;
     size_t offset = 0;
 
     bool includeTime = info.IncludeTime;
 
     // Read data packet flags
-    dataPacketFlags = data[offset];
+    dataPacketFlags = buffer[offset];
     offset++;
 
     // Read frame-level timestamp, if available
     if (dataPacketFlags & DataPacketFlags::Synchronized)
     {
-        frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&data[offset]));
+        frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&buffer[offset]));
         offset += 8;
         includeTime = false;
     }
 
     // Read measurement count and gather statistics
-    const int32_t count = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int32_t*>(&data[offset]));
+    const int32_t count = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int32_t*>(&buffer[offset]));
     source->m_totalMeasurementsReceived += count;
     offset += 4;
-
-    // Set up buffer and length for measurement parsing
-    buffer = reinterpret_cast<const uint8_t*>(&data[0]);
 
     const NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
     vector<MeasurementPtr> measurements;
 
     if (dataPacketFlags & DataPacketFlags::Compressed)
-        ParseTSSCMeasurements(source, buffer, offset, data.size(), measurements);
+        ParseTSSCMeasurements(source, buffer, offset, measurements);
     else
-        ParseCompactMeasurements(source, buffer, offset, data.size() - offset, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
+        ParseCompactMeasurements(source, buffer, offset, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
 
     newMeasurementsCallback(source, measurements);
 }
 
-void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, vector<MeasurementPtr>& measurements)
+void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, size_t offset, vector<MeasurementPtr>& measurements)
 {
     MeasurementPtr measurement;
     string errorMessage;
@@ -760,7 +757,7 @@ void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const uint8_t
 
     try
     {
-        source->m_tsscMeasurementParser.SetBuffer(buffer, offset, length);
+        source->m_tsscMeasurementParser.SetBuffer(buffer, offset);
 
         Guid signalID;
         string measurementSource;
@@ -812,12 +809,14 @@ void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const uint8_t
 
 }
 
-void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const uint8_t* buffer, size_t offset, size_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
+void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, size_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
 {
     MeasurementPtr measurement;
 
     // Create measurement parser
     CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, useMillisecondResolution);
+
+    size_t length = buffer.size() - offset;
 
     while (length > 0)
     {
@@ -841,7 +840,7 @@ void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const uint
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
-void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     const MessageCallback processingCompleteCallback = source->m_processingCompleteCallback;
 
@@ -850,15 +849,15 @@ void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const 
         stringstream messageStream;
         size_t i;
 
-        for (i = 0; i < data.size(); ++i)
-            messageStream << data[i];
+        for (i = 0; i < buffer.size(); ++i)
+            messageStream << buffer[i];
 
         processingCompleteCallback(source, messageStream.str());
     }
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
-void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& data)
+void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     source->m_configurationChangedCallback(source);
 }
@@ -1133,8 +1132,14 @@ void DataSubscriber::Disconnect()
     Disconnect(false);
 }
 
-// Subscribe to publisher in order to start receiving data.
 void DataSubscriber::Subscribe(SubscriptionInfo info)
+{
+    SetSubscriptionInfo(info);
+    Subscribe();
+}
+
+// Subscribe to publisher in order to start receiving data.
+void DataSubscriber::Subscribe()
 {
     udp ipVersion = udp::v4();
 
@@ -1155,51 +1160,50 @@ void DataSubscriber::Subscribe(SubscriptionInfo info)
     if (m_subscribed)
         Unsubscribe();
 
-    m_currentSubscription = info;
     m_totalMeasurementsReceived = 0L;
 
-    if (info.NewMeasurementsCallback != nullptr)
-        m_newMeasurementsCallback = info.NewMeasurementsCallback;
+    if (m_subscriptionInfo.NewMeasurementsCallback != nullptr)
+        m_newMeasurementsCallback = m_subscriptionInfo.NewMeasurementsCallback;
 
-    connectionStream << "trackLatestMeasurements=" << info.Throttled << ";";
-    connectionStream << "includeTime=" << info.IncludeTime << ";";
-    connectionStream << "lagTime=" << info.LagTime << ";";
-    connectionStream << "leadTime=" << info.LeadTime << ";";
-    connectionStream << "useLocalClockAsRealTime=" << info.UseLocalClockAsRealTime << ";";
-    connectionStream << "processingInterval=" << info.ProcessingInterval << ";";
-    connectionStream << "useMillisecondResolution=" << info.UseMillisecondResolution << ";";
+    connectionStream << "trackLatestMeasurements=" << m_subscriptionInfo.Throttled << ";";
+    connectionStream << "includeTime=" << m_subscriptionInfo.IncludeTime << ";";
+    connectionStream << "lagTime=" << m_subscriptionInfo.LagTime << ";";
+    connectionStream << "leadTime=" << m_subscriptionInfo.LeadTime << ";";
+    connectionStream << "useLocalClockAsRealTime=" << m_subscriptionInfo.UseLocalClockAsRealTime << ";";
+    connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
+    connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
     connectionStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" GSFTS_VERSION "; buildDate=" GSFTS_BUILD_DATE "};";
 
-    if (!info.FilterExpression.empty())
-        connectionStream << "inputMeasurementKeys={" << info.FilterExpression << "};";
+    if (!m_subscriptionInfo.FilterExpression.empty())
+        connectionStream << "inputMeasurementKeys={" << m_subscriptionInfo.FilterExpression << "};";
 
-    if (info.UdpDataChannel)
+    if (m_subscriptionInfo.UdpDataChannel)
     {
         if (m_hostAddress.is_v6())
             ipVersion = udp::v6();
 
         // Attempt to bind to local UDP port
         m_dataChannelSocket.open(ipVersion);
-        m_dataChannelSocket.bind(udp::endpoint(ipVersion, info.DataChannelLocalPort));
+        m_dataChannelSocket.bind(udp::endpoint(ipVersion, m_subscriptionInfo.DataChannelLocalPort));
         m_dataChannelResponseThread = Thread(bind(&DataSubscriber::RunDataChannelResponseThread, this));
 
         if (!m_dataChannelSocket.is_open())
             throw SubscriberException("Failed to bind to local port");
 
-        connectionStream << "dataChannel={localport=" << info.DataChannelLocalPort << "};";
+        connectionStream << "dataChannel={localport=" << m_subscriptionInfo.DataChannelLocalPort << "};";
     }
 
-    if (!info.StartTime.empty())
-        connectionStream << "startTimeConstraint=" << info.StartTime << ";";
+    if (!m_subscriptionInfo.StartTime.empty())
+        connectionStream << "startTimeConstraint=" << m_subscriptionInfo.StartTime << ";";
 
-    if (!info.StopTime.empty())
-        connectionStream << "stopTimeConstraint=" << info.StopTime << ";";
+    if (!m_subscriptionInfo.StopTime.empty())
+        connectionStream << "stopTimeConstraint=" << m_subscriptionInfo.StopTime << ";";
 
-    if (!info.ConstraintParameters.empty())
-        connectionStream << "timeConstraintParameters=" << info.ConstraintParameters << ";";
+    if (!m_subscriptionInfo.ConstraintParameters.empty())
+        connectionStream << "timeConstraintParameters=" << m_subscriptionInfo.ConstraintParameters << ";";
 
-    if (!info.ExtraConnectionStringParameters.empty())
-        connectionStream << info.ExtraConnectionStringParameters << ";";
+    if (!m_subscriptionInfo.ExtraConnectionStringParameters.empty())
+        connectionStream << m_subscriptionInfo.ExtraConnectionStringParameters << ";";
 
     connectionString = connectionStream.str();
     connectionStringPtr = reinterpret_cast<uint8_t*>(&connectionString[0]);
@@ -1210,7 +1214,7 @@ void DataSubscriber::Subscribe(SubscriptionInfo info)
     bufferSize = 5 + connectionStringSize;
     buffer.resize(bufferSize, 0);
 
-    buffer[0] = DataPacketFlags::Compact | (info.RemotelySynchronized ? DataPacketFlags::Synchronized : DataPacketFlags::NoFlags);
+    buffer[0] = DataPacketFlags::Compact | (m_subscriptionInfo.RemotelySynchronized ? DataPacketFlags::Synchronized : DataPacketFlags::NoFlags);
 
     buffer[1] = bigEndianConnectionStringSizePtr[0];
     buffer[2] = bigEndianConnectionStringSizePtr[1];
@@ -1222,14 +1226,19 @@ void DataSubscriber::Subscribe(SubscriptionInfo info)
 
     SendServerCommand(ServerCommand::Subscribe, &buffer[0], 0, bufferSize);
 
-    // Reset TSSC decompressor on successful (re)subscription
+    // Reset TSSC decompresser on successful (re)subscription
     m_tsscResetRequested = true;
 }
 
 // Returns the subscription info object used to define the most recent subscription.
-SubscriptionInfo DataSubscriber::GetCurrentSubscription() const
+SubscriptionInfo DataSubscriber::GetSubscriptionInfo() const
 {
-    return m_currentSubscription;
+    return m_subscriptionInfo;
+}
+
+void DataSubscriber::SetSubscriptionInfo(const SubscriptionInfo& info)
+{
+    m_subscriptionInfo = info;
 }
 
 // Unsubscribe from publisher to stop receiving data.
@@ -1321,15 +1330,15 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data,
 // and/or supported operational modes to the server.
 void DataSubscriber::SendOperationalModes()
 {
-    uint32_t operationalModes = OperationalModes::NoFlags;
+    uint32_t operationalModes = CompressionModes::GZip;
     uint32_t bigEndianOperationalModes;
 
-    operationalModes |= CompressionModes::GZip | CompressionModes::TSSC;
     operationalModes |= OperationalEncoding::UTF8;
     operationalModes |= OperationalModes::UseCommonSerializationFormat;
 
-    if (m_compressPayloadData)
-        operationalModes |= OperationalModes::CompressPayloadData;
+    // TSSC compression only works with stateful connections
+    if (m_compressPayloadData && !m_subscriptionInfo.UdpDataChannel)
+        operationalModes |= OperationalModes::CompressPayloadData | CompressionModes::TSSC;
 
     if (m_compressMetadata)
         operationalModes |= OperationalModes::CompressMetadata;

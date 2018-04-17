@@ -109,10 +109,10 @@ void RunSubscriber(string hostname, uint16_t port)
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
 
     // Connect and subscribe to publisher
-    if (connector.Connect(Subscriber))
+    if (connector.Connect(Subscriber, Info))
     {
         cout << "Connected! Subscribing to data..." << endl << endl;
-        Subscriber.Subscribe(Info);
+        Subscriber.Subscribe();
     }
     else
     {
