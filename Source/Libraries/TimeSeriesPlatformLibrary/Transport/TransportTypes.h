@@ -195,6 +195,7 @@ namespace TimeSeries
     struct ConfigurationFrame
     {
         string DeviceAcronym;
+        MeasurementMetadataPtr QualityFlags; // This measurement may be null, see below **
         MeasurementMetadataPtr StatusFlags;
         MeasurementMetadataPtr Frequency;
         vector<PhasorReferencePtr> Phasors;
@@ -207,19 +208,58 @@ namespace TimeSeries
 
     typedef SharedPtr<ConfigurationFrame> ConfigurationFramePtr;
 
+    // ** QualityFlags Note **
+    //
+    // The quality flags measurement contains the unsigned 32-bit integer value as
+    // defined for the source protocol. In the case of IEEE C37.118, this will be the
+    // TimeQualityFlags and TimeQualityIndicatorCode per the standard. To read the
+    // value, look for the "Quality" signal kind and convert it to an uint32, e.g.:
+    //
+    //  for (auto &measurement : measurements)
+    //  {
+    //      const float64_t value = measurement->AdjustedValue();
+    //      ConfigurationFramePtr configurationFrame;
+    //      MeasurementMetadataPtr measurementMetadata;
+    //  
+    //      if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
+    //      {
+    //          if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
+    //          {
+    //              if (measurementMetadata->Reference.Kind == SignalKind::Quality)
+    //              {
+    //                  // Handle time quality flags
+    //                  uint32_t timeQualityFlags = static_cast<uint32_t>(value);
+    //              }
+    //          }
+    //      }
+    //  }
+    //
+    // These time quality flags are only defined once per data frame and a data frame can
+    // define multiple PMUs, e.g., in a data frame created by a PDC. When this C++ code
+    // parses the incoming metadata, it defines only one PMU per configuration frame
+    // structure. As a result, not all structures will have a quality flags defined, as
+    // the source PMU may have come from a parent PDC data frame. The quality flags
+    // measurement will only be defined when (1) the source was from a directly connected
+    // PMU, i.e., a source data frame with exactly one PMU, and (2) the source protocol
+    // supports a quality flags measurements, e.g., IEEE C37.118. Note that other source
+    // protocols, e.g., IEEE 1344, do not define a quality flags value. When the quality
+    // flags measurement is not available the QualityFlags measurement data pointer will
+    // be null and consuming code should check for this expected condition.
+
     //struct Phasor
     //{
     //	Measurement Angle;
     //	Measurement Magnitude;
     //};
-    //
-    //// Holds the actual values, in order, for a device frame at a specific timestamp
+    
+    // Holds the actual values, in order, for a device frame at a specific timestamp
     //struct DataFrame
     //{
     //	string DeviceAcronym;
     //	time_t SOC;
     //	int milliseconds;
     //	Measurement StatusFlags;
+    //  Measurement QualityFlags;
     //	Measurement Frequency;
     //	vector<Phasor> Phasors;
     //	vector<Measurement> Analogs;

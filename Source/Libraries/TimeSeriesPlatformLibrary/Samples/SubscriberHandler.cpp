@@ -112,7 +112,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
         int16_t milliseconds;
 
         // Get adjusted value
-        float64_t value = measurement->AdjustedValue();
+        const float64_t value = measurement->AdjustedValue();
 
         // Get time converted to UNIX second of century plus milliseconds
         measurement->GetUnixTime(soc, milliseconds);
@@ -125,7 +125,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
         // Find associated configuration for measurement
         if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
-        {            
+        {
             // Lookup measurement metadata - it's faster to find metadata from within configuration frame
             if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
             {

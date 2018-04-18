@@ -378,14 +378,17 @@ bool SubscriberInstance::TryFindTargetConfigurationFrame(const Guid& signalID, C
 
 bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata)
 {
+    if (sourceFrame == nullptr)
+        return false;
+
     bool found = false;
 
-    if (sourceFrame->StatusFlags->SignalID == signalID)
+    if (sourceFrame->StatusFlags && sourceFrame->StatusFlags->SignalID == signalID)
     {
         measurementMetadata = sourceFrame->StatusFlags;
         found = true;
     }
-    else if (sourceFrame->Frequency->SignalID == signalID)
+    else if (sourceFrame->Frequency && sourceFrame->Frequency->SignalID == signalID)
     {
         measurementMetadata = sourceFrame->Frequency;
         found = true;
@@ -395,14 +398,14 @@ bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Gu
         // Search phasors
         for (auto const& phasor : sourceFrame->Phasors)
         {
-            if (phasor->Angle->SignalID == signalID)
+            if (phasor->Angle && phasor->Angle->SignalID == signalID)
             {
                 measurementMetadata = phasor->Angle;
                 found = true;
                 break;
             }
 
-            if (phasor->Magnitude->SignalID == signalID)
+            if (phasor->Magnitude && phasor->Magnitude->SignalID == signalID)
             {
                 measurementMetadata = phasor->Magnitude;
                 found = true;
@@ -415,7 +418,7 @@ bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Gu
         {
             for (auto const& analog : sourceFrame->Analogs)
             {
-                if (analog->SignalID == signalID)
+                if (analog && analog->SignalID == signalID)
                 {
                     measurementMetadata = analog;
                     found = true;
@@ -429,12 +432,22 @@ bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Gu
         {
             for (auto const& digital : sourceFrame->Digitals)
             {
-                if (digital->SignalID == signalID)
+                if (digital && digital->SignalID == signalID)
                 {
                     measurementMetadata = digital;
                     found = true;
                     break;
                 }
+            }
+        }
+
+        // Check quality flags (rare)
+        if (!found)
+        {
+            if (sourceFrame->QualityFlags && sourceFrame->QualityFlags->SignalID == signalID)
+            {
+                measurementMetadata = sourceFrame->QualityFlags;
+                found = true;
             }
         }
     }
@@ -719,11 +732,29 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
             configurationFrame->StatusFlags = measurement;
             configurationFrame->Measurements.insert(measurement->SignalID);
         }
+        else
+        {
+            configurationFrame->StatusFlags = nullptr;
+        }
 
         if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Frequency, measurement))
         {
             configurationFrame->Frequency = measurement;
             configurationFrame->Measurements.insert(measurement->SignalID);
+        }
+        else
+        {
+            configurationFrame->Frequency = nullptr;
+        }
+
+        if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Quality, measurement))
+        {
+            configurationFrame->QualityFlags = measurement;
+            configurationFrame->Measurements.insert(measurement->SignalID);
+        }
+        else
+        {
+            configurationFrame->QualityFlags = nullptr;
         }
 
         // Add phasor definitions
@@ -750,7 +781,20 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 // If no associated phasor reference was found,
                 // we add an empty one to make sure each phasor
                 // "position" has an entry in the config frame
-                configurationFrame->Phasors.push_back(NewSharedPtr<PhasorReference>());
+                PhasorReferencePtr phasorReference = NewSharedPtr<PhasorReference>();
+
+                phasorReference->Phasor = NewSharedPtr<PhasorMetadata>();                
+                phasorReference->Phasor->DeviceAcronym = configurationFrame->DeviceAcronym;
+                phasorReference->Phasor->Label = "UNDEFINED";
+                phasorReference->Phasor->Type = "?";
+                phasorReference->Phasor->Phase = "+";
+                phasorReference->Phasor->SourceIndex = i;
+                phasorReference->Phasor->UpdatedOn = 0;
+                
+                phasorReference->Angle = nullptr;
+                phasorReference->Magnitude = nullptr;
+
+                configurationFrame->Phasors.push_back(phasorReference);
             }
         }
 
@@ -764,6 +808,27 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 configurationFrame->Analogs.push_back(measurement);
                 configurationFrame->Measurements.insert(measurement->SignalID);
             }
+            else
+            {
+                // If no associated analog measurement was found,
+                // we add an empty one to make sure each analog
+                // "position" has an entry in the config frame
+                measurement = NewSharedPtr<MeasurementMetadata>();
+                
+                measurement->DeviceAcronym = configurationFrame->DeviceAcronym;
+                measurement->ID = "__:-1";
+                measurement->SignalID = Empty::Guid;
+                measurement->PointTag = "UNDEFINED";
+                measurement->Reference.SignalID = Empty::Guid;
+                measurement->Reference.Acronym = measurement->DeviceAcronym;
+                measurement->Reference.Index = i;
+                measurement->Reference.Kind = SignalKind::Analog;
+                measurement->PhasorSourceIndex = 0;
+                measurement->Description = "";
+                measurement->UpdatedOn = 0;
+
+                configurationFrame->Analogs.push_back(measurement);
+            }
         }
 
 
@@ -776,6 +841,27 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
             {
                 configurationFrame->Digitals.push_back(measurement);
                 configurationFrame->Measurements.insert(measurement->SignalID);
+            }
+            else
+            {
+                // If no associated digital measurement was found,
+                // we add an empty one to make sure each digital
+                // "position" has an entry in the config frame
+                measurement = NewSharedPtr<MeasurementMetadata>();
+
+                measurement->DeviceAcronym = configurationFrame->DeviceAcronym;
+                measurement->ID = "__:-1";
+                measurement->SignalID = Empty::Guid;
+                measurement->PointTag = "UNDEFINED";
+                measurement->Reference.SignalID = Empty::Guid;
+                measurement->Reference.Acronym = measurement->DeviceAcronym;
+                measurement->Reference.Index = i;
+                measurement->Reference.Kind = SignalKind::Digital;
+                measurement->PhasorSourceIndex = 0;
+                measurement->Description = "";
+                measurement->UpdatedOn = 0;
+
+                configurationFrame->Digitals.push_back(measurement);
             }
         }
 

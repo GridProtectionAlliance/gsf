@@ -41,6 +41,10 @@ void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, int16_t&
     const int64_t BaseTimeOffset = 621355968000000000L;
 
     unixSOC = static_cast<time_t>((ticks - BaseTimeOffset) / 10000000);
+
+    if (unixSOC < 0)
+        unixSOC = 0;
+
     milliseconds = static_cast<int16_t>(ticks / 10000 % 1000);
 }
 
