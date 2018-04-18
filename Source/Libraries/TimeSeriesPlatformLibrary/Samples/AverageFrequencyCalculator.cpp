@@ -97,6 +97,7 @@ void RunSubscriber(string hostname, uint16_t port)
     // Register callbacks
     Subscriber.RegisterStatusMessageCallback(&DisplayStatusMessage);
     Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
+    Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
 
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
 
@@ -119,7 +120,6 @@ SubscriptionInfo CreateSubscriptionInfo()
     SubscriptionInfo info;
 
     info.FilterExpression = "FILTER ActiveMeasurements WHERE SignalType = 'FREQ'";
-    info.NewMeasurementsCallback = &ProcessMeasurements;
 
     // Uncomment to enable optional UDP data channel
     //info.UdpDataChannel = true;

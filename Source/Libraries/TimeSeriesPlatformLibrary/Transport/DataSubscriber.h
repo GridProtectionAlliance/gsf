@@ -47,7 +47,6 @@ namespace Transport
     struct SubscriptionInfo
     {
         string FilterExpression;
-        void(*NewMeasurementsCallback)(DataSubscriber*, const vector<MeasurementPtr>&);
 
         bool RemotelySynchronized;
         bool Throttled;
@@ -68,20 +67,7 @@ namespace Transport
 
         string ExtraConnectionStringParameters;
 
-        SubscriptionInfo()
-            : NewMeasurementsCallback(nullptr),
-            RemotelySynchronized(false),
-            Throttled(false),
-            UdpDataChannel(false),
-            DataChannelLocalPort(9500),
-            IncludeTime(true),
-            LagTime(10.0),
-            LeadTime(5.0),
-            UseLocalClockAsRealTime(false),
-            UseMillisecondResolution(false),
-            ProcessingInterval(-1)
-        {
-        }
+        SubscriptionInfo();
     };
 
     // Helper class to provide retry and auto-reconnect functionality to the subscriber.
@@ -106,6 +92,8 @@ namespace Transport
         // Auto-reconnect handler.
         static void AutoReconnect(DataSubscriber* source);
 
+        bool Connect(DataSubscriber& subscriber);
+
     public:
         // Creates a new instance.
         SubscriberConnector();
@@ -119,7 +107,7 @@ namespace Transport
         // recommended to check the connected state of the subscriber using the IsConnected() method.
         void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
 
-        // Begin connection sequence.
+        // Begin connection sequence
         bool Connect(DataSubscriber& subscriber, SubscriptionInfo info);
 
         // Cancel all current and

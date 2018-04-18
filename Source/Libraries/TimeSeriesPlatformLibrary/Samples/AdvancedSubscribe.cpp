@@ -105,6 +105,7 @@ void RunSubscriber(string hostname, uint16_t port)
     // Register callbacks
     Subscriber.RegisterStatusMessageCallback(&DisplayStatusMessage);
     Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
+    Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
 
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
 
@@ -141,7 +142,6 @@ SubscriptionInfo CreateSubscriptionInfo()
     //info.FilterExpression = "FILTER ActiveMeasurements WHERE Device = 'SHELBY' AND SignalType = 'FREQ'";
 
     info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
-    info.NewMeasurementsCallback = &ProcessMeasurements;
 
     // To set up a remotely synchronized subscription, set this flag
     // to true and add the framesPerSecond parameter to the

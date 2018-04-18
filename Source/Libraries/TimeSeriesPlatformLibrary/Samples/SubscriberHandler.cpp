@@ -54,7 +54,7 @@ SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
     //info.LeadTime = 1.0;
     //info.UseLocalClockAsRealTime = false;
 
-    // Other example properties (see SubscriptionInfo.h for all properties)
+    // Other example properties (see SubscriptionInfo class in DataSubscriber.h for all properties)
     //info.Throttled = false;
     //info.IncludeTime = true;
     //info.UseMillisecondResolution = true;

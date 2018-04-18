@@ -41,6 +41,22 @@ using namespace GSF::TimeSeries::Transport;
 // Convenience functions to perform simple conversions.
 void WriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
+// --- SubscriptionInfo ---
+
+SubscriptionInfo::SubscriptionInfo() :
+    RemotelySynchronized(false),
+    Throttled(false),
+    UdpDataChannel(false),
+    DataChannelLocalPort(9500),
+    IncludeTime(true),
+    LagTime(10.0),
+    LeadTime(5.0),
+    UseLocalClockAsRealTime(false),
+    UseMillisecondResolution(false),
+    ProcessingInterval(-1)
+{
+}
+
 // --- SubscriberConnector ---
 
 SubscriberConnector::SubscriberConnector() :
@@ -63,7 +79,7 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     if (!connector.m_cancel && connector.m_errorMessageCallback != nullptr)
         connector.m_errorMessageCallback(subscriber, "Publisher connection terminated. Attempting to reconnect...");
 
-    connector.Connect(*subscriber, subscriber->GetSubscriptionInfo());
+    connector.Connect(*subscriber);
 
     // Notify the user that reconnect attempt was completed.
     if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
@@ -83,13 +99,17 @@ void SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectC
     m_reconnectCallback = reconnectCallback;
 }
 
-// Begin connection sequence.
 bool SubscriberConnector::Connect(DataSubscriber& subscriber, SubscriptionInfo info)
+{
+    subscriber.SetSubscriptionInfo(info);
+    return Connect(subscriber);
+}
+
+// Begin connection sequence.
+bool SubscriberConnector::Connect(DataSubscriber& subscriber)
 {
     if (m_autoReconnect)
         subscriber.RegisterAutoReconnectCallback(&AutoReconnect);
-
-    subscriber.SetSubscriptionInfo(info);
 
     m_cancel = false;
 
@@ -1161,9 +1181,6 @@ void DataSubscriber::Subscribe()
         Unsubscribe();
 
     m_totalMeasurementsReceived = 0L;
-
-    if (m_subscriptionInfo.NewMeasurementsCallback != nullptr)
-        m_newMeasurementsCallback = m_subscriptionInfo.NewMeasurementsCallback;
 
     connectionStream << "trackLatestMeasurements=" << m_subscriptionInfo.Throttled << ";";
     connectionStream << "includeTime=" << m_subscriptionInfo.IncludeTime << ";";

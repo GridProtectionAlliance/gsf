@@ -48,7 +48,7 @@ TSSCPointMetadata::TSSCPointMetadata(TSSCMeasurementParser* parent) :
     PrevValue2(0),
     PrevValue3(0)
 {
-    for (size_t i = 0; i < CommandStatsLength; i++)
+    for (uint8_t i = 0; i < CommandStatsLength; i++)
         m_commandStats[i] = 0;
 }
 
@@ -448,7 +448,7 @@ bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, 
             default:
                 stringstream errorMessageStream;
 
-                errorMessageStream << "Invalid code received  ";
+                errorMessageStream << "Invalid code received ";
                 errorMessageStream << static_cast<int>(code);
                 errorMessageStream << " at position ";
                 errorMessageStream << static_cast<int>(m_position);
