@@ -269,7 +269,7 @@ namespace GSF.IO
                 m_fileWatcher.Deleted += m_fileProcessor.Watcher_Deleted;
                 m_fileWatcher.Error += m_fileProcessor.Watcher_Error;
 
-                //m_fileWatcher.EnableRaisingEvents = true;
+                m_fileWatcher.EnableRaisingEvents = true;
             }
 
             private void DisposeFileWatcher()
