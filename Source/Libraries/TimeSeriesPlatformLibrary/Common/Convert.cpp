@@ -35,7 +35,7 @@ using namespace date;
 using namespace boost::uuids;
 using namespace GSF::TimeSeries;
 
-void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, int16_t& milliseconds)
+void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
     const int64_t BaseTimeOffset = 621355968000000000L;
@@ -45,18 +45,18 @@ void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, int16_t&
     if (unixSOC < 0)
         unixSOC = 0;
 
-    milliseconds = static_cast<int16_t>(ticks / 10000 % 1000);
+    milliseconds = static_cast<uint16_t>(ticks / 10000 % 1000);
 }
 
-size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks)
+uint32_t GSF::TimeSeries::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
 {
     time_t fromSeconds;
-    int16_t milliseconds;
+    uint16_t milliseconds;
 
     GetUnixTime(ticks, fromSeconds, milliseconds);
 
     stringstream formatStream;
-    size_t formatIndex = 0;
+    uint32_t formatIndex = 0;
 
     while (formatIndex < format.size())
     {
@@ -80,7 +80,7 @@ size_t GSF::TimeSeries::TicksToString(char* ptr, size_t maxsize, string format, 
             case 'f':
             {
                 stringstream temp;
-                temp << setw(3) << setfill('0') << milliseconds;
+                temp << setw(3) << setfill('0') << static_cast<int>(milliseconds);
                 formatStream << temp.str();
                 break;
             }
@@ -125,7 +125,7 @@ Guid GSF::TimeSeries::ToGuid(const uint8_t* data, bool swapBytes)
     {
         uint8_t copy[8];
 
-        for (size_t i = 0; i < 16; i++)
+        for (uint32_t i = 0; i < 16; i++)
         {
             swappedBytes[i] = data[15 - i];
 

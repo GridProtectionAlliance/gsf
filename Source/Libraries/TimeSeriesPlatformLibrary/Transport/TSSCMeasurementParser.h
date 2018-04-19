@@ -119,7 +119,7 @@ namespace Transport
         void SetBuffer(const vector<uint8_t>& data, int32_t offset);
 
         // Reads the next measurement from the stream. If the end of the stream has been encountered, return false.
-        bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float_t& value);
+        bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value);
 
         int32_t ReadBit();
         int32_t ReadBits4();

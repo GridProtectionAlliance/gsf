@@ -38,7 +38,7 @@ protected:
     SubscriptionInfo CreateSubscriptionInfo() override;
     void StatusMessage(const string& message) override;
     void ErrorMessage(const string& message) override;
-    void DataStartTime(time_t unixSOC, int milliseconds) override;
+    void DataStartTime(time_t unixSOC, uint16_t milliseconds) override;
     void ReceivedMetadata(const vector<uint8_t>& payload) override;
     void ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements) override;
     void ParsedMetadata() override;

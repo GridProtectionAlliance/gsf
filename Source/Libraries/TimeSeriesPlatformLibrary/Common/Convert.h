@@ -35,10 +35,10 @@ namespace GSF {
 namespace TimeSeries
 {
     // Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
-    void GetUnixTime(const int64_t gepTime, time_t& unixSOC, int16_t& milliseconds);
+    void GetUnixTime(const int64_t gepTime, time_t& unixSOC, uint16_t& milliseconds);
 
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
-    size_t TicksToString(char* ptr, size_t maxsize, string format, int64_t ticks);
+    uint32_t TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks);
 
     // Converts an object to a string
     template <class T>

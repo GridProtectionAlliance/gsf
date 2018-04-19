@@ -35,7 +35,7 @@ using namespace GSF::TimeSeries::Transport;
 DataSubscriber Subscriber;
 
 bool RunSubscriber(string hostname, uint16_t port);
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements);
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
@@ -136,37 +136,38 @@ bool RunSubscriber(string hostname, uint16_t port)
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const size_t MaxTimestampSize = 80;
+    const uint32_t MaxTimestampSize = 80;
 
-    static int processCount = 0;
-    size_t i;
+    static long processCount = 0;
+    static char timestamp[MaxTimestampSize];
+    static const long interval = 5 * 60;
+    const long measurementCount = measurements.size();
+    const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
-    char timestamp[MaxTimestampSize];
+    processCount += measurementCount;
 
-    // Only display messages every five
-    // seconds (assuming 30 calls per second).
-    if (processCount % 150 == 0)
+    // Only display messages every few seconds
+    if (showMessage)
     {
-        cout << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
+        stringstream message;
 
-        if (!newMeasurements.empty())
-        {
-            if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0]->Timestamp))
-                cout << "Timestamp: " << string(timestamp) << endl;
+        message << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
-            cout << "Point\tValue" << endl;
+        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
+            message << "Timestamp: " << string(timestamp) << endl;
 
-            for (i = 0; i < newMeasurements.size(); ++i)
-                cout << newMeasurements[i]->ID << '\t' << newMeasurements[i]->Value << endl;
+        message << "Point\tValue" << endl;
 
-            cout << endl;
-        }
+        for (const auto& measurement : measurements)
+            message << measurement->ID << '\t' << measurement->Value << endl;
+
+        message << endl;
+
+        cout << message.str();
     }
-
-    ++processCount;
 }
 
 // Callback which is called to display status messages from the subscriber.

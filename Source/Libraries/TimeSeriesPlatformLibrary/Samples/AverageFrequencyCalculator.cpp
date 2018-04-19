@@ -41,7 +41,7 @@ SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
 void Resubscribe(DataSubscriber* source);
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements);
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
@@ -152,14 +152,14 @@ void SetupSubscriberConnector(SubscriberConnector& connector, string hostname, u
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
-    const double LoFrequency = 57.0;
-    const double HiFrequency = 62.0;
-    const double HzResolution = 1000.0; // three decimal places
+    const float64_t LoFrequency = 57.0F;
+    const float64_t HiFrequency = 62.0F;
+    const float64_t HzResolution = 1000.0; // three decimal places
 
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const size_t MaxTimestampSize = 80;
+    const uint32_t MaxTimestampSize = 80;
 
     static map<Guid, int> m_lastValues;
 
@@ -167,40 +167,39 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& n
     MeasurementPtr currentMeasurement;
     Guid signalID;
 
-    double frequency;
-    double frequencyTotal;
-    double maximumFrequency = LoFrequency;
-    double minimumFrequency = HiFrequency;
-    int adjustedFrequency;
-    int lastValue;
-    int total;
+    float64_t frequency;
+    float64_t frequencyTotal;
+    float64_t maximumFrequency = LoFrequency;
+    float64_t minimumFrequency = HiFrequency;
+    int32_t adjustedFrequency;
+    int32_t lastValue;
+    int32_t total;
 
     char timestamp[MaxTimestampSize];
-    size_t i;
 
     frequencyTotal = 0.0;
     total = 0;
 
     cout << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
-    if (!newMeasurements.empty())
+    if (!measurements.empty())
     {
-        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0]->Timestamp))
+        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
             cout << "Timestamp: " << string(timestamp) << endl;
 
         cout << "Point\tValue" << endl;
 
-        for (i = 0; i < newMeasurements.size(); ++i)
-            cout << newMeasurements[i]->ID << '\t' << newMeasurements[i]->Value << endl;
+        for (uint32_t i = 0; i < measurements.size(); ++i)
+            cout << measurements[i]->ID << '\t' << measurements[i]->Value << endl;
 
         cout << endl;
 
-        for (i = 0; i < newMeasurements.size(); ++i)
+        for (uint32_t i = 0; i < measurements.size(); ++i)
         {
-            currentMeasurement = newMeasurements[i];
+            currentMeasurement = measurements[i];
             frequency = currentMeasurement->Value;
             signalID = currentMeasurement->SignalID;
-            adjustedFrequency = static_cast<int>(frequency * HzResolution);
+            adjustedFrequency = static_cast<int32_t>(frequency * HzResolution);
 
             // Do some simple flat line avoidance...
             lastValueIter = m_lastValues.find(signalID);

@@ -71,7 +71,7 @@ namespace TimeSeries
 
         // Returns the number of
         // items left in the queue.
-        size_t Size();
+        uint32_t Size();
 
         // Waits for data to be inserted into the queue.
         // If there is already data in the queue,
@@ -131,7 +131,7 @@ namespace TimeSeries
     // Returns the number of
     // items left in the queue.
     template <class T>
-    size_t ThreadSafeQueue<T>::Size()
+    uint32_t ThreadSafeQueue<T>::Size()
     {
         ScopeLock lock(m_mutex);
         return m_queue.size();

@@ -84,7 +84,7 @@ void SubscriberHandler::ErrorMessage(const string& message)
     SubscriberInstance::ErrorMessage(status.str());
 }
 
-void SubscriberHandler::DataStartTime(time_t unixSOC, int milliseconds)
+void SubscriberHandler::DataStartTime(time_t unixSOC, uint16_t milliseconds)
 {
     // TODO: This reports timestamp of very first received measurement (if useful)
 }
@@ -103,13 +103,14 @@ void SubscriberHandler::ParsedMetadata()
     StatusMessage("Metadata successfully parsed.");
 }
 
+// ReSharper disable CppDeclaratorNeverUsed
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {
     // Start processing measurements
     for (auto &measurement : measurements)
     {
         time_t soc;
-        int16_t milliseconds;
+        uint16_t milliseconds;
 
         // Get adjusted value
         const float64_t value = measurement->AdjustedValue();
@@ -147,7 +148,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
     // TODO: *** Temporary Testing Code Below *** -- REMOVE BEFORE USE
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const size_t MaxTimestampSize = 80;
+    const uint32_t MaxTimestampSize = 80;
 
     static long processCount = 0;
     static char timestamp[MaxTimestampSize];

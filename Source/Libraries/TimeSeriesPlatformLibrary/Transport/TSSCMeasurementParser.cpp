@@ -263,7 +263,7 @@ void TSSCMeasurementParser::SetBuffer(const vector<uint8_t>& data, const int32_t
     m_lastPosition = data.size();
 }
 
-bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float_t& value)
+bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value)
 {
     if (m_position == m_lastPosition && BitStreamIsEmpty())
     {
@@ -271,7 +271,7 @@ bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, 
         id = 0;
         timestamp = 0;
         quality = 0;
-        value = 0;
+        value = 0.0F;
         return false;
     }
 
@@ -289,7 +289,7 @@ bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, 
         id = 0;
         timestamp = 0;
         quality = 0;
-        value = 0;
+        value = 0.0F;
         return false;
     }
 
@@ -463,7 +463,7 @@ bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, 
         nextPoint->PrevValue1 = valueRaw;
     }
 
-    value = *reinterpret_cast<float_t*>(&valueRaw);
+    value = *reinterpret_cast<float32_t*>(&valueRaw);
     m_lastPoint = nextPoint;
 
     return true;

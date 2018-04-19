@@ -51,7 +51,7 @@ namespace Transport
         static uint32_t MapToFullFlags(uint8_t compactFlags);
 
         // Gets the byte length of measurements parsed by this parser.
-        size_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
+        uint32_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
 
     public:
         // Creates a new instance of the compact measurement parser.
@@ -63,7 +63,7 @@ namespace Transport
         // Attempts to parse a measurement from the buffer. Return value of false indicates
         // that there is not enough data to parse the measurement. Offset and length will be
         // updated by this method to indicate how many bytes were used when parsing.
-        bool TryParseMeasurement(const vector<uint8_t>& buffer, size_t& offset, size_t& length);
+        bool TryParseMeasurement(const vector<uint8_t>& buffer, uint32_t& offset, uint32_t& length);
 
         // These constants represent each flag in the 8-bit compact measurement state flags.
         static const uint8_t CompactDataRangeFlag = 0x01;

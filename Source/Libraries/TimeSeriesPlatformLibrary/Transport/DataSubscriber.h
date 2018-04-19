@@ -83,8 +83,8 @@ namespace Transport
         string m_hostname;
         uint16_t m_port;
 
-        int m_maxRetries;
-        int m_retryInterval;
+        int32_t m_maxRetries;
+        int32_t m_retryInterval;
         bool m_autoReconnect;
 
         bool m_cancel;
@@ -121,10 +121,10 @@ namespace Transport
         void SetPort(uint16_t port);
 
         // Set the maximum number of retries during a connection sequence.
-        void SetMaxRetries(int maxRetries);
+        void SetMaxRetries(int32_t maxRetries);
 
         // Sets the interval of idle time (in milliseconds) between connection attempts.
-        void SetRetryInterval(int retryInterval);
+        void SetRetryInterval(int32_t retryInterval);
 
         // Sets flag that determines whether the subscriber should
         // automatically attempt to reconnect when the connection is terminated.
@@ -133,16 +133,16 @@ namespace Transport
         // Getters for configurable settings.
         string GetHostname() const;
         uint16_t GetPort() const;
-        int GetMaxRetries() const;
-        int GetRetryInterval() const;
+        int32_t GetMaxRetries() const;
+        int32_t GetRetryInterval() const;
         bool GetAutoReconnect() const;
     };
 
-    class DataSubscriber
+    class DataSubscriber  // NOLINT
     {
     private:
         static const size_t MaxPacketSize = 32768;
-        static const size_t PayloadHeaderSize = 8;
+        static const uint32_t PayloadHeaderSize = 8;
 
         // Function pointer types
         typedef void(*DispatcherFunction)(DataSubscriber*, const vector<uint8_t>&);
@@ -158,7 +158,7 @@ namespace Transport
         struct CallbackDispatcher
         {
             DataSubscriber* Source;
-            Buffer Data;
+            SharedPtr<vector<uint8_t>> Data;
             DispatcherFunction Function;
         };
 
@@ -173,15 +173,15 @@ namespace Transport
         void* m_userData;
 
         // Statistics counters
-        long m_totalCommandChannelBytesReceived;
-        long m_totalDataChannelBytesReceived;
-        long m_totalMeasurementsReceived;
+        uint64_t m_totalCommandChannelBytesReceived;
+        uint64_t m_totalDataChannelBytesReceived;
+        uint64_t m_totalMeasurementsReceived;
         bool m_connected;
         bool m_subscribed;
 
         // Measurement parsing
         SignalIndexCache m_signalIndexCache;
-        size_t m_timeIndex;
+        int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         TSSCMeasurementParser m_tsscMeasurementParser;
         bool m_tsscResetRequested;
@@ -220,24 +220,24 @@ namespace Transport
         void RunDataChannelResponseThread();
 
         // Command channel callbacks
-        void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
-        void ReadPacket(const ErrorCode& error, size_t bytesTransferred);
+        void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
+        void ReadPacket(const ErrorCode& error, uint32_t bytesTransferred);
 
         // Server response handlers
-        void HandleSucceeded(uint8_t commandCode, uint8_t* data, size_t offset, size_t length);
-        void HandleFailed(uint8_t commandCode, uint8_t* data, size_t offset, size_t length);
-        void HandleMetadataRefresh(uint8_t* data, size_t offset, size_t length);
-        void HandleDataPacket(uint8_t* data, size_t offset, size_t length);
-        void HandleDataStartTime(uint8_t* data, size_t offset, size_t length);
-        void HandleProcessingComplete(uint8_t* data, size_t offset, size_t length);
-        void HandleUpdateSignalIndexCache(uint8_t* data, size_t offset, size_t length);
-        void HandleUpdateBaseTimes(uint8_t* data, size_t offset, size_t length);
-        void HandleConfigurationChanged(uint8_t* data, size_t offset, size_t length);
-        void ProcessServerResponse(uint8_t* buffer, size_t offset, size_t length);
+        void HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleMetadataRefresh(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleDataStartTime(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleProcessingComplete(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleConfigurationChanged(uint8_t* data, uint32_t offset, uint32_t length);
+        void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
 
         // Dispatchers
         void Dispatch(DispatcherFunction function);
-        void Dispatch(DispatcherFunction function, const uint8_t* data, size_t offset, size_t length);
+        void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
         void DispatchStatusMessage(const string& message);
         void DispatchErrorMessage(const string& message);
 
@@ -249,8 +249,8 @@ namespace Transport
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
         
-        static void ParseTSSCMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, size_t offset, vector<MeasurementPtr>& measurements);
-        static void ParseCompactMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, size_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements);
+        static void ParseTSSCMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, uint32_t offset, vector<MeasurementPtr>& measurements);
+        static void ParseCompactMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, uint32_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements);
 
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
@@ -313,6 +313,9 @@ namespace Transport
 
         SubscriberConnector& GetSubscriberConnector();
 
+        void SetSubscriptionInfo(const SubscriptionInfo& info);
+        const SubscriptionInfo& GetSubscriptionInfo() const;
+
         // Synchronously connects to publisher.
         void Connect(string hostname, uint16_t port);
 
@@ -327,9 +330,6 @@ namespace Transport
         // Subscribe to measurements to start receiving data.
         void Subscribe();
         void Subscribe(SubscriptionInfo info);
-        
-        void SetSubscriptionInfo(const SubscriptionInfo& info);
-        SubscriptionInfo GetSubscriptionInfo() const;
 
         // Cancel the current subscription to stop receiving data.
         void Unsubscribe();
@@ -350,7 +350,7 @@ namespace Transport
         //   ServerCommand::PublishCommandMeasurements
         void SendServerCommand(uint8_t commandCode);
         void SendServerCommand(uint8_t commandCode, string message);
-        void SendServerCommand(uint8_t commandCode, const uint8_t* data, size_t offset, size_t length);
+        void SendServerCommand(uint8_t commandCode, const uint8_t* data, uint32_t offset, uint32_t length);
 
         // Convenience method to send the currently defined and/or supported
         // operational modes to the server. Supported operational modes are
@@ -358,9 +358,9 @@ namespace Transport
         void SendOperationalModes();
 
         // Functions for statistics gathering
-        long GetTotalCommandChannelBytesReceived() const;
-        long GetTotalDataChannelBytesReceived() const;
-        long GetTotalMeasurementsReceived() const;
+        uint64_t GetTotalCommandChannelBytesReceived() const;
+        uint64_t GetTotalDataChannelBytesReceived() const;
+        uint64_t GetTotalMeasurementsReceived() const;
         bool IsConnected() const;
         bool IsSubscribed() const;
     };

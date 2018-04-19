@@ -32,7 +32,8 @@ EndianConverter::EndianConverter()
     {
         uint32_t num;
         uint8_t bytes[4];
-    } endianTest = { 0x00000001 };
+    }
+    endianTest = { 0x00000001 };
 
     if (endianTest.bytes[0] == 1)
         m_nativeOrder = EndianConverter::LittleEndian;
@@ -42,7 +43,7 @@ EndianConverter::EndianConverter()
 
 // Swaps the bytes in a character array.
 // Used for conversion between different byte orders.
-void EndianConverter::ByteSwap(uint8_t* value, size_t length)
+void EndianConverter::ByteSwap(uint8_t* value, uint32_t length)
 {
     uint8_t *start, *end;
     uint8_t temp;

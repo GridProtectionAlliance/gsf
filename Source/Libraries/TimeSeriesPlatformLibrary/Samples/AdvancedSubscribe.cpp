@@ -40,7 +40,7 @@ SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
 void Resubscribe(DataSubscriber* source);
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements);
+void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
@@ -186,7 +186,7 @@ void SetupSubscriberConnector(SubscriberConnector& connector, string hostname, u
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const size_t MaxTimestampSize = 80;
+    const uint32_t MaxTimestampSize = 80;
 
     static long processCount = 0;
     static char timestamp[MaxTimestampSize];

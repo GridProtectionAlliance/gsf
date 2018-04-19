@@ -33,7 +33,7 @@ void SignalIndexCache::AddMeasurementKey(
     string source,
     uint32_t id)
 {
-    const size_t vectorIndex = m_signalIDList.size();
+    const uint32_t vectorIndex = m_signalIDList.size();
 
     m_reference[signalIndex] = vectorIndex;
     m_signalIDList.push_back(signalID);
@@ -66,7 +66,7 @@ Guid SignalIndexCache::GetSignalID(uint16_t signalIndex) const
 
     if (result != m_reference.end())
     {
-        const size_t vectorIndex = result->second;
+        const uint32_t vectorIndex = result->second;
         return m_signalIDList[vectorIndex];
     }
 
@@ -81,7 +81,7 @@ const string& SignalIndexCache::GetSource(uint16_t signalIndex) const
 
     if (result != m_reference.end())
     {
-        const size_t vectorIndex = result->second;
+        const uint32_t vectorIndex = result->second;
         return m_sourceList[vectorIndex];
     }
 
@@ -96,7 +96,7 @@ uint32_t SignalIndexCache::GetID(uint16_t signalIndex) const
 
     if (result != m_reference.end())
     {
-        const size_t vectorIndex = result->second;
+        const uint32_t vectorIndex = result->second;
         return m_idList[vectorIndex];
     }
 
@@ -115,7 +115,7 @@ bool SignalIndexCache::GetMeasurementKey(
 
     if (result != m_reference.end())
     {
-        const size_t vectorIndex = result->second;
+        const uint32_t vectorIndex = result->second;
 
         signalID = m_signalIDList[vectorIndex];
         source = m_sourceList[vectorIndex];

@@ -40,7 +40,7 @@ namespace TimeSeries
 
         // Swaps the bytes in a character array.
         // Used for conversion between different byte orders.
-        static void ByteSwap(uint8_t* value, size_t length);
+        static void ByteSwap(uint8_t* value, uint32_t length);
 
     public:
         // Creates a new instance.

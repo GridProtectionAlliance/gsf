@@ -68,9 +68,9 @@ uint32_t CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags)
 }
 
 // Gets the byte length of measurements parsed by this parser.
-size_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
+uint32_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
 {
-    size_t byteLength = 7;
+    uint32_t byteLength = 7;
 
     if (m_includeTime)
     {
@@ -88,31 +88,20 @@ size_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffs
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer, size_t& offset, size_t& length)
+bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer, uint32_t& offset, uint32_t& length)
 {
-    uint8_t compactFlags;
-    uint16_t signalIndex;
-    Guid signalID;
-    string measurementSource;
-    uint32_t measurementID;
-    float32_t measurementValue;
-    int64_t timestamp = 0;
-
-    bool usingBaseTimeOffset;
-    size_t timeIndex;
-
-    const size_t end = offset + length;
-
     // Ensure that we at least have enough
     // data to read the compact state flags
     if (length < 1)
         return false;
 
+    const uint32_t end = offset + length;
+
     // Read the compact state flags to determine
     // the size of the measurement being parsed
-    compactFlags = buffer[offset] & 0xFF;
-    usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag) != 0;
-    timeIndex = (compactFlags & CompactTimeIndexFlag) ? 1 : 0;
+    const uint8_t compactFlags = buffer[offset] & 0xFF;
+    const bool usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag) != 0;    
+    const int32_t timeIndex = (compactFlags & CompactTimeIndexFlag) ? 1 : 0;
 
     // If we are using base time offsets, ensure that it is defined
     if (usingBaseTimeOffset && (m_baseTimeOffsets == nullptr || m_baseTimeOffsets[timeIndex] == 0))
@@ -123,19 +112,23 @@ bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer
         return false;
 
     // Read the signal index from the buffer
-    signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(&buffer[offset + 1]));
+    const uint16_t signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(&buffer[offset + 1]));
 
     // If the signal index is not found in the cache, we cannot parse the measurement
     if (!m_signalIndexCache.Contains(signalIndex))
         return false;
 
-    // Now that we've validated our failure conditions,
-    // we can safely start advancing the offset
+    Guid signalID;
+    string measurementSource;
+    uint32_t measurementID;
+    int64_t timestamp = 0;
+
+    // Now that we've validated our failure conditions we can safely start advancing the offset
     m_signalIndexCache.GetMeasurementKey(signalIndex, signalID, measurementSource, measurementID);
     offset += 3;
 
     // Read the measurement value from the buffer
-    measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*reinterpret_cast<const float32_t*>(&buffer[offset]));
+    const float32_t measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*reinterpret_cast<const float32_t*>(&buffer[offset]));
     offset += 4;
 
     if (m_includeTime)

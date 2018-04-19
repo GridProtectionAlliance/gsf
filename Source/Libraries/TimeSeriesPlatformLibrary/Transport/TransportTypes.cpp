@@ -53,7 +53,7 @@ float64_t Measurement::AdjustedValue() const
     return Value * Multiplier + Adder;
 }
 
-void Measurement::GetUnixTime(time_t& unixSOC, int16_t& milliseconds) const
+void Measurement::GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const
 {
     GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
 }

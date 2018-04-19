@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     stringstream(argv[2]) >> port;
 
     // Initialize the subscribers.
-    for (size_t i = 0; i < TotalInstances; i++)
+    for (uint32_t i = 0; i < TotalInstances; i++)
     {
         stringstream name;
         
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     getline(cin, line);
 
     // Shutdown subscriber instances
-    for (size_t i = 0; i < TotalInstances; i++)
+    for (uint32_t i = 0; i < TotalInstances; i++)
     {
         Subscriber[i]->Disconnect();
         delete Subscriber[i];

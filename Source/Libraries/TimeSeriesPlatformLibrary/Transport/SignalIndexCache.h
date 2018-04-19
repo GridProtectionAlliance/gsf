@@ -40,11 +40,10 @@ namespace Transport
     class SignalIndexCache
     {
     private:
-        map<uint16_t, size_t> m_reference;
+        map<uint16_t, uint32_t> m_reference;
         vector<Guid> m_signalIDList;
         vector<string> m_sourceList;
         vector<uint32_t> m_idList;
-
         map<Guid, uint16_t> m_signalIDCache;
 
     public:

@@ -108,13 +108,6 @@ namespace TimeSeries
         return boost::make_shared<T>(p1, p2);
     }
 
-    typedef SharedPtr<vector<uint8_t>> Buffer;
-
-    inline Buffer NewBuffer()
-    {
-        return NewSharedPtr<vector<uint8_t>>();
-    }
-
     template<typename T>
     using Action = std::function<void(T)>;
 
@@ -143,7 +136,7 @@ namespace TimeSeries
         {
         }
 
-        MemoryStream(const uint8_t* buffer, size_t offset, size_t length) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer + offset), length)
+        MemoryStream(const uint8_t* buffer, uint32_t offset, uint32_t length) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer + offset), length)
         {
         }
     };

@@ -49,7 +49,7 @@ namespace Transport
         int16_t m_retryInterval;
         string m_filterExpression;
         DataSubscriber m_subscriber;
-        SubscriptionInfo m_info;
+        SubscriptionInfo m_subscriptionInfo;
         string m_startTime;
         string m_stopTime;
         EndianConverter m_endianConverter;
@@ -64,9 +64,9 @@ namespace Transport
         Mutex m_configurationFramesLock;
 
         static void ConstructConfigurationFrames(const map<string, DeviceMetadataPtr>& devices, const map<Guid, MeasurementMetadataPtr>& measurements, map<string, ConfigurationFramePtr>& configurationFrames);
-        static bool TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, int index, MeasurementMetadataPtr& measurementMetadata);
+        static bool TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
         static bool TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata);
-        static int GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
+        static uint16_t GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
 
         // Internal subscription event handlers
         static void HandleResubscribe(DataSubscriber* source);
@@ -84,7 +84,7 @@ namespace Transport
         virtual SubscriptionInfo CreateSubscriptionInfo();
         virtual void StatusMessage(const string& message);	// Defaults output to cout
         virtual void ErrorMessage(const string& message);	// Defaults output to cerr
-        virtual void DataStartTime(time_t unixSOC, int milliseconds);
+        virtual void DataStartTime(time_t unixSOC, uint16_t milliseconds);
         virtual void ReceivedMetadata(const vector<uint8_t>& payload);
         virtual void ParsedMetadata();
         virtual void ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements);
@@ -193,9 +193,9 @@ namespace Transport
         void SetSignalIndexCacheCompressed(bool compressed);
 
         // Statistical functions
-        long GetTotalCommandChannelBytesReceived() const;
-        long GetTotalDataChannelBytesReceived() const;
-        long GetTotalMeasurementsReceived() const;
+        uint64_t GetTotalCommandChannelBytesReceived() const;
+        uint64_t GetTotalDataChannelBytesReceived() const;
+        uint64_t GetTotalMeasurementsReceived() const;
         bool IsConnected() const;
         bool IsSubscribed() const;
 

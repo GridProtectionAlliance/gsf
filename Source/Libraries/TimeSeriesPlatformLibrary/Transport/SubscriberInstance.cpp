@@ -35,7 +35,7 @@ using namespace pugi;
 SubscriberInstance::SubscriberInstance() :  // NOLINT
     m_hostname("localhost"),
     m_port(6165),
-    m_udpPort(0),
+    m_udpPort(0U),
     m_autoReconnect(true),
     m_autoParseMetadata(true),
     m_maxRetries(-1),
@@ -112,8 +112,8 @@ void SubscriberInstance::SetFilterExpression(const string& filterExpression)
     // Resubscribe with new filter expression if already connected
     if (m_subscriber.IsSubscribed())
     {
-        m_info.FilterExpression = m_filterExpression;
-        m_subscriber.Subscribe(m_info);
+        m_subscriptionInfo.FilterExpression = m_filterExpression;
+        m_subscriber.Subscribe(m_subscriptionInfo);
     }
 }
 
@@ -128,7 +128,7 @@ void SubscriberInstance::Connect()
 
     // Set up helper objects (derived classes can override behavior and settings)
     SetupSubscriberConnector(connector);
-    m_info = CreateSubscriptionInfo();
+    m_subscriptionInfo = CreateSubscriptionInfo();
 
     // Register callbacks
     m_subscriber.RegisterStatusMessageCallback(&HandleStatusMessage);
@@ -142,18 +142,18 @@ void SubscriberInstance::Connect()
     if (!m_startTime.empty() && !m_stopTime.empty())
     {
         m_subscriber.RegisterProcessingCompleteCallback(&HandleProcessingComplete);
-        m_info.StartTime = m_startTime;
-        m_info.StopTime = m_stopTime;
+        m_subscriptionInfo.StartTime = m_startTime;
+        m_subscriptionInfo.StopTime = m_stopTime;
     }
 
     if (m_udpPort > 0)
     {
-        m_info.UdpDataChannel = true;
-        m_info.DataChannelLocalPort = m_udpPort;
+        m_subscriptionInfo.UdpDataChannel = true;
+        m_subscriptionInfo.DataChannelLocalPort = m_udpPort;
     }
 
     // Connect and subscribe to publisher
-    if (connector.Connect(m_subscriber, m_info))
+    if (connector.Connect(m_subscriber, m_subscriptionInfo))
     {
         ConnectionEstablished();
 
@@ -225,17 +225,17 @@ void SubscriberInstance::SetSignalIndexCacheCompressed(bool compressed)
     m_subscriber.SetSignalIndexCacheCompressed(compressed);
 }
 
-long SubscriberInstance::GetTotalCommandChannelBytesReceived() const
+uint64_t SubscriberInstance::GetTotalCommandChannelBytesReceived() const
 {
     return m_subscriber.GetTotalCommandChannelBytesReceived();
 }
 
-long SubscriberInstance::GetTotalDataChannelBytesReceived() const
+uint64_t SubscriberInstance::GetTotalDataChannelBytesReceived() const
 {
     return m_subscriber.GetTotalDataChannelBytesReceived();
 }
 
-long SubscriberInstance::GetTotalMeasurementsReceived() const
+uint64_t SubscriberInstance::GetTotalMeasurementsReceived() const
 {
     return m_subscriber.GetTotalMeasurementsReceived();
 }
@@ -488,8 +488,8 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     info.Throttled = false;
     info.UdpDataChannel = false;
     info.IncludeTime = true;
-    info.LagTime = 3.0;
-    info.LeadTime = 1.0;
+    info.LagTime = 3.0F;
+    info.LeadTime = 1.0F;
     info.UseLocalClockAsRealTime = false;
     info.UseMillisecondResolution = true;
 
@@ -506,7 +506,7 @@ void SubscriberInstance::ErrorMessage(const string& message)
     cerr << message << endl << endl;
 }
 
-void SubscriberInstance::DataStartTime(time_t unixSOC, int milliseconds)
+void SubscriberInstance::DataStartTime(time_t unixSOC, uint16_t milliseconds)
 {
 }
 
@@ -614,7 +614,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     }
 
     // Query PhasorDetail records from metadata
-    int phasorCount = 0;
+    uint16_t phasorCount = 0;
 
     for (xml_node device = rootNode.child("PhasorDetail"); device; device = device.next_sibling("PhasorDetail"))
     {
@@ -646,7 +646,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         DeviceMetadataPtr& deviceMetadata = iterator->second;
 
         // Lookup associated phasor measurements
-        int matchCount = 0;
+        uint16_t matchCount = 0;
 
         for (auto const& measurementMetadata : deviceMetadata->Measurements)
         {
@@ -758,9 +758,9 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
         }
 
         // Add phasor definitions
-        const int phasorCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Angle);
+        const uint16_t phasorCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Angle);
 
-        for (int i = 1; i <= phasorCount; i++)
+        for (uint16_t i = 1; i <= phasorCount; i++)
         {
             bool found = false;
 
@@ -799,9 +799,9 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
         }
 
         // Add analog definitions
-        const int analogCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Analog);
+        const uint16_t analogCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Analog);
 
-        for (int i = 1; i <= analogCount; i++)
+        for (uint16_t i = 1; i <= analogCount; i++)
         {
             if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Analog, i, measurement))
             {
@@ -823,7 +823,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 measurement->Reference.Acronym = measurement->DeviceAcronym;
                 measurement->Reference.Index = i;
                 measurement->Reference.Kind = SignalKind::Analog;
-                measurement->PhasorSourceIndex = 0;
+                measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
                 measurement->UpdatedOn = 0;
 
@@ -833,9 +833,9 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
 
 
         // Add digital definitions
-        const int digitalCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Digital);
+        const uint16_t digitalCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Digital);
 
-        for (int i = 1; i <= digitalCount; i++)
+        for (uint16_t i = 1; i <= digitalCount; i++)
         {
             if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Digital, i, measurement))
             {
@@ -857,7 +857,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 measurement->Reference.Acronym = measurement->DeviceAcronym;
                 measurement->Reference.Index = i;
                 measurement->Reference.Kind = SignalKind::Digital;
-                measurement->PhasorSourceIndex = 0;
+                measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
                 measurement->UpdatedOn = 0;
 
@@ -871,10 +871,10 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
 
 bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata)
 {
-    return TryFindMeasurement(measurements, kind, 0, measurementMetadata);
+    return TryFindMeasurement(measurements, kind, 0U, measurementMetadata);
 }
 
-bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, int index, MeasurementMetadataPtr& measurementMetadata)
+bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata)
 {
     for (auto const& measurement : measurements)
     {
@@ -890,9 +890,9 @@ bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>
     return false;
 }
 
-int SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind)
+uint16_t SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind)
 {
-    int count = 0;
+    uint16_t count = 0U;
 
     // Find largest signal reference index - this will be count
     for (auto const& measurement : measurements)
@@ -968,7 +968,7 @@ void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t sta
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
     time_t unixSOC;
-    int16_t milliseconds;
+    uint16_t milliseconds;
 
     GetUnixTime(startTime, unixSOC, milliseconds);
 

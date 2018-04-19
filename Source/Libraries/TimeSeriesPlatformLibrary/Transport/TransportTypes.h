@@ -91,7 +91,7 @@ namespace TimeSeries
         float64_t AdjustedValue() const;
 
         // Gets time in UNIX second of century and milliseconds
-        void GetUnixTime(time_t& unixSOC, int16_t& milliseconds) const;
+        void GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const;
     };
 
     typedef SharedPtr<Measurement> MeasurementPtr;
@@ -123,7 +123,7 @@ namespace TimeSeries
     {
         Guid SignalID;		// Unique UUID of this individual measurement (key to MeasurementMetadata.SignalID)
         string Acronym;		// Associated (parent) device for measurement (key to DeviceMetadata.Acronym / MeasurementMetadata.DeviceAcronym)
-        int16_t Index;		// For phasors, digitals and analogs - this is the ordered index, uses 1-based indexing
+        uint16_t Index;		// For phasors, digitals and analogs - this is the ordered index, uses 1-based indexing
         SignalKind Kind;	// Signal classification (e.g., phase angle, but not specific type of voltage or current)
 
         SignalReference();
@@ -140,7 +140,7 @@ namespace TimeSeries
         Guid SignalID;				// Unique UUID of this individual measurement (lookup key!)
         string PointTag;			// Well formatted tag name for historians, e.g., OSI-PI, etc.
         SignalReference Reference;	// Parsed signal reference structure
-        int PhasorSourceIndex;		// Measurement phasor index, if measurement represents a "Phasor"
+        uint16_t PhasorSourceIndex; // Measurement phasor index, if measurement represents a "Phasor"
         string Description;			// Detailed measurement description (free-form)
         time_t UpdatedOn;			// Time of last meta-data update
     };
@@ -153,7 +153,7 @@ namespace TimeSeries
         string Label;			// Channel name for "phasor" (covers two measurements)
         string Type;			// Phasor type, i.e., "V" for voltage or "I" for current
         string Phase;			// Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
-        int SourceIndex;		// Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
+        uint16_t SourceIndex;	// Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
         time_t UpdatedOn;		// Time of last meta-data update
     };
 
@@ -173,15 +173,15 @@ namespace TimeSeries
         string Acronym;				// Alpha-numeric device, e.g., pmu/station name (all-caps)
         string Name;				// User-defined device name / description (free-form)
         Guid UniqueID;			    // Device unique UUID (used for C37.118 v3 config frame)
-        int AccessID;				// ID code used for device connection / reference
+        uint16_t AccessID;			// ID code used for device connection / reference
         string ParentAcronym;		// Original PDC name (if useful / not assigned for directly connected devices)
         string ProtocolName;		// Original protocol name (if useful)
-        int FramesPerSecond;		// Device reporting rate, e.g., 30 fps
+        uint16_t FramesPerSecond;	// Device reporting rate, e.g., 30 fps
         string CompanyAcronym;		// Original device company name (if useful)
         string VendorAcronym;		// Original device vendor name (if useful / provided)
         string VendorDeviceName;	// Original vendor device name, e.g., PMU brand (if useful / provided)
-        double Longitude;			// Device longitude (if reported)
-        double Latitude;			// Device latitude (if reported)
+        float64_t Longitude;	    // Device longitude (if reported)
+        float64_t Latitude;		    // Device latitude (if reported)
         time_t UpdatedOn;			// Time of last meta-data update
 
         // Associated measurement and phasor meta-data
