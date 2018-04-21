@@ -32,6 +32,77 @@ using GSF.PQDIF.Physical;
 namespace GSF.PQDIF.Logical
 {
     /// <summary>
+    /// Types of data sources.
+    /// </summary>
+    public static class DataSourceType
+    {
+        /// <summary>
+        /// The ID for data source type Measure.
+        /// </summary>
+        public static readonly Guid Measure = new Guid("e6b51730-f747-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// The ID for data source type Manual.
+        /// </summary>
+        public static readonly Guid Manual = new Guid("e6b51731-f747-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// The ID for data source type Simulate.
+        /// </summary>
+        public static readonly Guid Simulate = new Guid("e6b51732-f747-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// The ID for data source type Benchmark.
+        /// </summary>
+        public static readonly Guid Benchmark = new Guid("e6b51733-f747-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// The ID for data source type Debug.
+        /// </summary>
+        public static readonly Guid Debug = new Guid("e6b51734-f747-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Gets information about the data source type identified by the given ID.
+        /// </summary>
+        /// <param name="dataSourceTypeID">Globally unique identifier for the data source type.</param>
+        /// <returns>The information about the data source type.</returns>
+        public static Identifier GetInfo(Guid dataSourceTypeID)
+        {
+            Identifier identifier;
+            return DataSourceTypeLookup.TryGetValue(dataSourceTypeID, out identifier) ? identifier : null;
+        }
+
+        /// <summary>
+        /// Converts the given data source type ID to a string containing the name of the data source type.
+        /// </summary>
+        /// <param name="dataSourceTypeID">The ID of the data source type to be converted to a string.</param>
+        /// <returns>A string containing the name of the data source type with the given ID.</returns>
+        public static string ToString(Guid dataSourceTypeID)
+        {
+            return GetInfo(dataSourceTypeID)?.Name ?? dataSourceTypeID.ToString();
+        }
+
+        private static Dictionary<Guid, Identifier> DataSourceTypeLookup
+        {
+            get
+            {
+                Tag dataSourceTypeTag = Tag.GetTag(DataSourceRecord.VendorIDTag);
+
+                if (s_dataSourceTypeTag != dataSourceTypeTag)
+                {
+                    s_dataSourceTypeLookup = dataSourceTypeTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                    s_dataSourceTypeTag = dataSourceTypeTag;
+                }
+
+                return s_dataSourceTypeLookup;
+            }
+        }
+
+        private static Tag s_dataSourceTypeTag;
+        private static Dictionary<Guid, Identifier> s_dataSourceTypeLookup;
+    }
+
+    /// <summary>
     /// Represents a data source record in a PQDIF file. The data source
     /// record contains information about the source of the data in an
     /// <see cref="ObservationRecord"/>.
@@ -72,7 +143,27 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the ID of the vendor of the data source.
+        /// Gets or sets the ID of the type of the data source.
+        /// </summary>
+        public Guid DataSourceTypeID
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection
+                    .GetScalarByTag(DataSourceTypeIDTag)
+                    .GetGuid();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement dataSourceTypeIDElement = collectionElement.GetOrAddScalar(DataSourceTypeIDTag);
+                dataSourceTypeIDElement.TypeOfValue = PhysicalType.Guid;
+                dataSourceTypeIDElement.SetGuid(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the ID of the vendor of the data source.
         /// </summary>
         public Guid VendorID
         {
@@ -96,7 +187,7 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the ID of the equipment.
+        /// Gets or sets the ID of the equipment.
         /// </summary>
         public Guid EquipmentID
         {
@@ -120,7 +211,7 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the name of the data source.
+        /// Gets or sets the name of the data source.
         /// </summary>
         public string DataSourceName
         {
@@ -139,7 +230,7 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the longitude at which the data source is located.
+        /// Gets or sets the longitude at which the data source is located.
         /// </summary>
         public uint Longitude
         {
@@ -164,7 +255,7 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the latitude at which the device is located.
+        /// Gets or sets the latitude at which the device is located.
         /// </summary>
         public uint Latitude
         {
@@ -204,6 +295,26 @@ namespace GSF.PQDIF.Logical
             }
         }
 
+        /// <summary>
+        /// Gets or sets the time that this data source record became effective.
+        /// </summary>
+        public DateTime Effective
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection
+                    .GetScalarByTag(EffectiveTag)
+                    .GetTimestamp();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement effectiveElement = collectionElement.GetOrAddScalar(EffectiveTag);
+                effectiveElement.TypeOfValue = PhysicalType.Timestamp;
+                effectiveElement.SetTimestamp(value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -214,17 +325,18 @@ namespace GSF.PQDIF.Logical
         /// </summary>
         public ChannelDefinition AddNewChannelDefinition()
         {
-            CollectionElement channelDefinitionsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelDefinitionsTag);
             CollectionElement channelDefinitionElement = new CollectionElement() { TagOfElement = OneChannelDefinitionTag };
             ChannelDefinition channelDefinition = new ChannelDefinition(channelDefinitionElement, this);
 
+            channelDefinition.Phase = Phase.None;
+            channelDefinition.QuantityMeasured = QuantityMeasured.None;
+            channelDefinitionElement.AddElement(new CollectionElement() { TagOfElement = ChannelDefinition.SeriesDefinitionsTag });
+
+            CollectionElement channelDefinitionsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelDefinitionsTag);
+
             if ((object)channelDefinitionsElement == null)
             {
-                channelDefinitionsElement = new CollectionElement()
-                {
-                    TagOfElement = ChannelDefinitionsTag
-                };
-
+                channelDefinitionsElement = new CollectionElement() { TagOfElement = ChannelDefinitionsTag };
                 m_physicalRecord.Body.Collection.AddElement(channelDefinitionsElement);
             }
 
@@ -275,7 +387,7 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Tag that identifies the data source type.
         /// </summary>
-        public static readonly Guid DataSourceTypeTag = new Guid("b48d8581-f5f5-11cf-9d89-0080c72e70a3");
+        public static readonly Guid DataSourceTypeIDTag = new Guid("b48d8581-f5f5-11cf-9d89-0080c72e70a3");
 
         /// <summary>
         /// Tag that identifies the vendor ID.
@@ -313,6 +425,28 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid EffectiveTag = new Guid("62f28183-f9c4-11cf-9d89-0080c72e70a3");
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a new data source record from scratch.
+        /// </summary>
+        /// <param name="dataSourceName">The name of the data source to be created.</param>
+        /// <returns>The new data source record.</returns>
+        public static DataSourceRecord CreateDataSourceRecord(string dataSourceName)
+        {
+            Guid recordTypeTag = Record.GetTypeAsTag(RecordType.DataSource);
+            Record physicalRecord = new Record(recordTypeTag);
+            DataSourceRecord dataSourceRecord = new DataSourceRecord(physicalRecord);
+
+            DateTime now = DateTime.UtcNow;
+            dataSourceRecord.DataSourceTypeID = DataSourceType.Simulate;
+            dataSourceRecord.DataSourceName = dataSourceName;
+            dataSourceRecord.Effective = now;
+
+            CollectionElement bodyElement = physicalRecord.Body.Collection;
+            bodyElement.AddElement(new CollectionElement() { TagOfElement = ChannelDefinitionsTag });
+
+            return dataSourceRecord;
+        }
 
         /// <summary>
         /// Creates a new data source record from the given physical record

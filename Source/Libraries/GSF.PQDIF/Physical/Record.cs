@@ -91,7 +91,24 @@ namespace GSF.PQDIF.Physical
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates an instance of <see cref="Record"/>.
+        /// Creates a new instance of the <see cref="Record"/> class.
+        /// </summary>
+        public Record()
+            : this(new RecordHeader(), new RecordBody())
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Record"/> class.
+        /// </summary>
+        /// <param name="recordTypeTag">The tag which identifies the type of the record.</param>
+        public Record(Guid recordTypeTag)
+            : this(new RecordHeader(recordTypeTag), new RecordBody(recordTypeTag))
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance of the <see cref="Record"/> class.
         /// </summary>
         /// <param name="header">The record header.</param>
         /// <param name="body">The record body.</param>
@@ -164,6 +181,13 @@ namespace GSF.PQDIF.Physical
 
         // Static Fields
         private static readonly Dictionary<Guid, RecordType> RecordTypeTagMap = CreateRecordTypeTagMap();
+
+        // Static Properties
+
+        /// <summary>
+        /// The standard signature used for all PQDIF records.
+        /// </summary>
+        public static Guid Signature { get; } = new Guid("4a111440-e49f-11cf-9900-505144494600");
 
         // Static Methods
 

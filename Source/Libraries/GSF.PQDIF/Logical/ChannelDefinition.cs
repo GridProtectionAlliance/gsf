@@ -500,17 +500,16 @@ namespace GSF.PQDIF.Logical
         /// </summary>
         public SeriesDefinition AddNewSeriesDefinition()
         {
-            CollectionElement seriesDefinitionsElement = m_physicalStructure.GetCollectionByTag(SeriesDefinitionsTag);
             CollectionElement seriesDefinitionElement = new CollectionElement() { TagOfElement = OneSeriesDefinitionTag };
             SeriesDefinition seriesDefinition = new SeriesDefinition(seriesDefinitionElement, this);
 
+            seriesDefinition.ValueTypeID = SeriesValueType.Val;
+
+            CollectionElement seriesDefinitionsElement = m_physicalStructure.GetCollectionByTag(SeriesDefinitionsTag);
+
             if ((object)seriesDefinitionsElement == null)
             {
-                seriesDefinitionsElement = new CollectionElement()
-                {
-                    TagOfElement = SeriesDefinitionsTag
-                };
-
+                seriesDefinitionsElement = new CollectionElement() { TagOfElement = SeriesDefinitionsTag };
                 m_physicalStructure.AddElement(seriesDefinitionsElement);
             }
 
@@ -622,6 +621,25 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies a single series definition within the collection.
         /// </summary>
         public static readonly Guid OneSeriesDefinitionTag = new Guid("b48d859a-f5f5-11cf-9d89-0080c72e70a3");
+
+        // Static Methods
+
+        /// <summary>
+        /// Creates a new channel definition belonging to the given data source record.
+        /// </summary>
+        /// <param name="dataSourceRecord">The data source record that the new channel definition belongs to.</param>
+        /// <returns>The new channel definition.</returns>
+        public static ChannelDefinition CreateChannelDefinition(DataSourceRecord dataSourceRecord)
+        {
+            ChannelDefinition channelDefinition = dataSourceRecord.AddNewChannelDefinition();
+            channelDefinition.Phase = Phase.None;
+            channelDefinition.QuantityMeasured = QuantityMeasured.None;
+
+            CollectionElement physicalStructure = channelDefinition.PhysicalStructure;
+            physicalStructure.AddElement(new CollectionElement() { TagOfElement = SeriesDefinitionsTag });
+
+            return channelDefinition;
+        }
 
         #endregion
     }

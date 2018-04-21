@@ -23,6 +23,8 @@
 //
 //******************************************************************************************************
 
+using System;
+
 namespace GSF.PQDIF.Physical
 {
     /// <summary>
@@ -41,6 +43,27 @@ namespace GSF.PQDIF.Physical
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="RecordBody"/> class.
+        /// </summary>
+        public RecordBody()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="RecordBody"/> class.
+        /// </summary>
+        /// <param name="rootTag">Tag of the collection root element of the record.</param>
+        public RecordBody(Guid rootTag)
+        {
+            m_collection = new CollectionElement();
+            m_collection.TagOfElement = rootTag;
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -51,7 +74,7 @@ namespace GSF.PQDIF.Physical
         {
             get
             {
-                return m_collection;
+                return m_collection ?? (m_collection = new CollectionElement());
             }
             set
             {

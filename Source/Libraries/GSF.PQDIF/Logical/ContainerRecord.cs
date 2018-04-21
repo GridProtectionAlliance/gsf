@@ -317,6 +317,27 @@ namespace GSF.PQDIF.Logical
         // Static Methods
 
         /// <summary>
+        /// Creates a new container record from scratch.
+        /// </summary>
+        /// <returns>The new container record.</returns>
+        public static ContainerRecord CreateContainerRecord()
+        {
+            Guid recordTypeTag = Record.GetTypeAsTag(RecordType.Container);
+            Record physicalRecord = new Record(recordTypeTag);
+            ContainerRecord containerRecord = new ContainerRecord(physicalRecord);
+
+            DateTime now = DateTime.UtcNow;
+            containerRecord.WriterMajorVersion = 1;
+            containerRecord.WriterMinorVersion = 5;
+            containerRecord.CompatibleMajorVersion = 1;
+            containerRecord.CompatibleMinorVersion = 0;
+            containerRecord.FileName = $"{now:yyyy-MM-dd_HH.mm.ss}.pqd";
+            containerRecord.Creation = now;
+
+            return containerRecord;
+        }
+
+        /// <summary>
         /// Creates a new container record from the given physical record
         /// if the physical record is of type container. Returns null if
         /// it is not.

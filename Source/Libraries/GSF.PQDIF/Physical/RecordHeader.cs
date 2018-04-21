@@ -51,6 +51,29 @@ namespace GSF.PQDIF.Physical
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="RecordHeader"/> class.
+        /// </summary>
+        public RecordHeader()
+        {
+            m_recordSignature = Record.Signature;
+            m_reserved = new byte[16];
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="RecordHeader"/> class.
+        /// </summary>
+        /// <param name="recordTypeTag">The tag which identifies the type of the record.</param>
+        public RecordHeader(Guid recordTypeTag)
+            : this()
+        {
+            m_recordTypeTag = recordTypeTag;
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>

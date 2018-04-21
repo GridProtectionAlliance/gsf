@@ -31,6 +31,42 @@ using GSF.PQDIF.Physical;
 
 namespace GSF.PQDIF.Logical
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Type of trigger which caused the observation.
+    /// </summary>
+    public enum TriggerMethod : uint
+    {
+        /// <summary>
+        /// No trigger.
+        /// </summary>
+        None = 0u,
+
+        /// <summary>
+        /// A specific channel (or channels) caused the trigger; should be
+        /// used with tagChannelTriggerIdx to specify which channels.
+        /// </summary>
+        Channel = 1u,
+
+        /// <summary>
+        /// Periodic data trigger.
+        /// </summary>
+        Periodic = 2u,
+
+        /// <summary>
+        /// External system trigger.
+        /// </summary>
+        External = 3u,
+
+        /// <summary>
+        /// Periodic statistical data.
+        /// </summary>
+        PeriodicStats = 4u
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents an observation record in a PQDIF file.
     /// </summary>
@@ -119,6 +155,26 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
+        /// Gets the creation time of the observation record.
+        /// </summary>
+        public DateTime CreateTime
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection
+                    .GetScalarByTag(TimeCreateTag)
+                    .GetTimestamp();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement timeCreateElement = collectionElement.GetOrAddScalar(TimeCreateTag);
+                timeCreateElement.TypeOfValue = PhysicalType.Timestamp;
+                timeCreateElement.SetTimestamp(value);
+            }
+        }
+
+        /// <summary>
         /// Gets the starting time of the data in the observation record.
         /// </summary>
         public DateTime StartTime
@@ -135,6 +191,79 @@ namespace GSF.PQDIF.Logical
                 ScalarElement timeStartElement = collectionElement.GetOrAddScalar(TimeStartTag);
                 timeStartElement.TypeOfValue = PhysicalType.Timestamp;
                 timeStartElement.SetTimestamp(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the type of trigger which caused the observation.
+        /// </summary>
+        public TriggerMethod TriggerMethod
+        {
+            get
+            {
+                return (TriggerMethod)m_physicalRecord.Body.Collection
+                    .GetScalarByTag(TriggerMethodTag)
+                    .GetUInt4();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement triggerMethodElement = collectionElement.GetOrAddScalar(TriggerMethodTag);
+                triggerMethodElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                triggerMethodElement.SetUInt4((uint)value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the time the observation was triggered.
+        /// </summary>
+        public DateTime TimeTriggered
+        {
+            get
+            {
+                ScalarElement timeTriggeredElement = m_physicalRecord.Body.Collection
+                    .GetScalarByTag(TimeTriggeredTag);
+
+                if ((object)timeTriggeredElement == null)
+                    return DateTime.MinValue;
+
+                return timeTriggeredElement.GetTimestamp();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement timeTriggeredElement = collectionElement.GetOrAddScalar(TimeTriggeredTag);
+                timeTriggeredElement.TypeOfValue = PhysicalType.Timestamp;
+                timeTriggeredElement.SetTimestamp(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the index into <see cref="ChannelInstancesTag"/> collection within this record which initiated the observation.
+        /// </summary>
+        public uint[] ChannelTriggerIndex
+        {
+            get
+            {
+                VectorElement channelTriggerIndexElement = m_physicalRecord.Body.Collection
+                    .GetVectorByTag(ChannelTriggerIndexTag);
+
+                if ((object)channelTriggerIndexElement == null)
+                    return new uint[0];
+
+                return Enumerable.Range(0, channelTriggerIndexElement.Size)
+                    .Select(index => channelTriggerIndexElement.GetUInt4(index))
+                    .ToArray();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement channelTriggerIndexElement = collectionElement.GetOrAddVector(ChannelTriggerIndexTag);
+                channelTriggerIndexElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                channelTriggerIndexElement.Size = value.Length;
+
+                for (int i = 0; i < value.Length; i++)
+                    channelTriggerIndexElement.SetUInt4(i, value[i]);
             }
         }
 
@@ -162,19 +291,19 @@ namespace GSF.PQDIF.Logical
         /// Adds a new channel instance to the collection
         /// of channel instances in this observation record.
         /// </summary>
-        public ChannelInstance AddNewChannelInstance()
+        public ChannelInstance AddNewChannelInstance(ChannelDefinition channelDefinition)
         {
-            CollectionElement channelInstancesElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelInstancesTag);
             CollectionElement channelInstanceElement = new CollectionElement() { TagOfElement = OneChannelInstanceTag };
             ChannelInstance channelInstance = new ChannelInstance(channelInstanceElement, this);
 
+            channelInstance.ChannelDefinitionIndex = (uint)channelDefinition.DataSource.ChannelDefinitions.IndexOf(channelDefinition);
+            channelInstanceElement.AddElement(new CollectionElement() { TagOfElement = ChannelInstance.SeriesInstancesTag });
+
+            CollectionElement channelInstancesElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelInstancesTag);
+
             if ((object)channelInstancesElement == null)
             {
-                channelInstancesElement = new CollectionElement()
-                {
-                    TagOfElement = ChannelInstancesTag
-                };
-
+                channelInstancesElement = new CollectionElement() { TagOfElement = ChannelInstancesTag };
                 m_physicalRecord.Body.Collection.AddElement(channelInstancesElement);
             }
 
@@ -234,6 +363,16 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid TriggerMethodTag = new Guid("3d786f8d-f76e-11cf-9d89-0080c72e70a3");
 
         /// <summary>
+        /// Tag that identifies the time the observation was triggered.
+        /// </summary>
+        public static readonly Guid TimeTriggeredTag = new Guid("3d786f8e-f76e-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the index into <see cref="ChannelInstancesTag"/> collection within this record. This specifies which channel(s) initiated the observation.
+        /// </summary>
+        public static readonly Guid ChannelTriggerIndexTag = new Guid("3d786f8f-f76e-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
         /// Tag that identifies the channel instances collection.
         /// </summary>
         public static readonly Guid ChannelInstancesTag = new Guid("3d786f91-f76e-11cf-9d89-0080c72e70a3");
@@ -244,6 +383,30 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid OneChannelInstanceTag = new Guid("3d786f92-f76e-11cf-9d89-0080c72e70a3");
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a new observation record from scratch with the given data source and settings.
+        /// </summary>
+        /// <param name="dataSource">The data source record that defines the channels in this observation record.</param>
+        /// <param name="settings">The monitor settings to be applied to this observation record.</param>
+        /// <returns>The new observation record.</returns>
+        public static ObservationRecord CreateObservationRecord(DataSourceRecord dataSource, MonitorSettingsRecord settings)
+        {
+            Guid recordTypeTag = Record.GetTypeAsTag(RecordType.Observation);
+            Record physicalRecord = new Record(recordTypeTag);
+            ObservationRecord observationRecord = new ObservationRecord(physicalRecord, dataSource, settings);
+
+            DateTime now = DateTime.UtcNow;
+            observationRecord.Name = now.ToString();
+            observationRecord.CreateTime = now;
+            observationRecord.StartTime = now;
+            observationRecord.TriggerMethod = TriggerMethod.None;
+
+            CollectionElement bodyElement = physicalRecord.Body.Collection;
+            bodyElement.AddElement(new CollectionElement() { TagOfElement = ChannelInstancesTag });
+
+            return observationRecord;
+        }
 
         /// <summary>
         /// Creates a new observation record from the given physical record

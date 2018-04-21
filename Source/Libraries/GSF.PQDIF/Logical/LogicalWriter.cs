@@ -259,8 +259,8 @@ namespace GSF.PQDIF.Logical
 
         private void ValidateDataSourceRecord(DataSourceRecord dataSourceRecord)
         {
-            if (!dataSourceRecord.PhysicalRecord.Body.Collection.GetElementsByTag(DataSourceRecord.DataSourceTypeTag).Any())
-                m_missingTags.Add(new MissingTag(RecordType.DataSource, "DataSourceTypeTag", DataSourceRecord.DataSourceTypeTag));
+            if (!dataSourceRecord.PhysicalRecord.Body.Collection.GetElementsByTag(DataSourceRecord.DataSourceTypeIDTag).Any())
+                m_missingTags.Add(new MissingTag(RecordType.DataSource, "DataSourceTypeTag", DataSourceRecord.DataSourceTypeIDTag));
 
             if (!dataSourceRecord.PhysicalRecord.Body.Collection.GetElementsByTag(DataSourceRecord.DataSourceNameTag).Any())
                 m_missingTags.Add(new MissingTag(RecordType.DataSource, "DataSourceNameTag", DataSourceRecord.DataSourceNameTag));

@@ -201,19 +201,17 @@ namespace GSF.PQDIF.Logical
         /// Adds a new channel setting to the collection
         /// of channel settings in this monitor settings record.
         /// </summary>
-        public ChannelSetting AddNewChannelSetting()
+        public ChannelSetting AddNewChannelSetting(ChannelDefinition channelDefinition)
         {
-            CollectionElement channelSettingsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
             CollectionElement channelSettingElement = new CollectionElement() { TagOfElement = OneChannelSettingTag };
             ChannelSetting channelSetting = new ChannelSetting(channelSettingElement, this);
+            channelSetting.ChannelDefinitionIndex = (uint)channelDefinition.DataSource.ChannelDefinitions.IndexOf(channelDefinition);
+
+            CollectionElement channelSettingsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
 
             if ((object)channelSettingsElement == null)
             {
-                channelSettingsElement = new CollectionElement()
-                {
-                    TagOfElement = OneChannelSettingTag
-                };
-
+                channelSettingsElement = new CollectionElement() { TagOfElement = OneChannelSettingTag };
                 m_physicalRecord.Body.Collection.AddElement(channelSettingsElement);
             }
 
@@ -296,6 +294,28 @@ namespace GSF.PQDIF.Logical
         public static double DefaultNominalFrequency { get; set; } = 60.0D;
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a new monitor settings record from scratch.
+        /// </summary>
+        /// <returns>The new monitor settings record.</returns>
+        public static MonitorSettingsRecord CreateMonitorSettingsRecord()
+        {
+            Guid recordTypeTag = Record.GetTypeAsTag(RecordType.MonitorSettings);
+            Record physicalRecord = new Record(recordTypeTag);
+            MonitorSettingsRecord monitorSettingsRecord = new MonitorSettingsRecord(physicalRecord);
+
+            DateTime now = DateTime.UtcNow;
+            monitorSettingsRecord.Effective = now;
+            monitorSettingsRecord.TimeInstalled = now;
+            monitorSettingsRecord.UseCalibration = false;
+            monitorSettingsRecord.UseTransducer = false;
+
+            CollectionElement bodyElement = physicalRecord.Body.Collection;
+            bodyElement.AddElement(new CollectionElement() { TagOfElement = ChannelSettingsArrayTag });
+
+            return monitorSettingsRecord;
+        }
 
         /// <summary>
         /// Creates a new monitor settings record from the given physical record
