@@ -235,26 +235,19 @@ namespace GSF.PQDIF.Logical
         /// </summary>
         public SeriesInstance AddNewSeriesInstance()
         {
-            CollectionElement seriesInstancesElement;
-            CollectionElement seriesInstanceElement;
-            SeriesDefinition seriesDefinition;
-            SeriesInstance seriesInstance;
-
             if (Definition.SeriesDefinitions.Count <= SeriesInstances.Count)
                 throw new InvalidOperationException("Cannot create a series instance without a corresponding series definition.");
 
-            seriesInstancesElement = m_physicalStructure.GetCollectionByTag(SeriesInstancesTag);
-            seriesInstanceElement = new CollectionElement() { TagOfElement = OneSeriesInstanceTag };
-            seriesDefinition = Definition.SeriesDefinitions[SeriesInstances.Count];
-            seriesInstance = new SeriesInstance(seriesInstanceElement, this, seriesDefinition);
+            CollectionElement seriesInstanceElement = new CollectionElement() { TagOfElement = OneSeriesInstanceTag };
+            SeriesDefinition seriesDefinition = Definition.SeriesDefinitions[SeriesInstances.Count];
+            SeriesInstance seriesInstance = new SeriesInstance(seriesInstanceElement, this, seriesDefinition);
+            seriesInstanceElement.AddOrUpdateVector(SeriesInstance.SeriesValuesTag, PhysicalType.UnsignedInteger1, new byte[0]);
+
+            CollectionElement seriesInstancesElement = m_physicalStructure.GetCollectionByTag(SeriesInstancesTag);
 
             if ((object)seriesInstancesElement == null)
             {
-                seriesInstancesElement = new CollectionElement()
-                {
-                    TagOfElement = SeriesInstancesTag
-                };
-
+                seriesInstancesElement = new CollectionElement() { TagOfElement = SeriesInstancesTag };
                 m_physicalStructure.AddElement(seriesInstancesElement);
             }
 

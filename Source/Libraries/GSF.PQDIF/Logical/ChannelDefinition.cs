@@ -504,6 +504,9 @@ namespace GSF.PQDIF.Logical
             SeriesDefinition seriesDefinition = new SeriesDefinition(seriesDefinitionElement, this);
 
             seriesDefinition.ValueTypeID = SeriesValueType.Val;
+            seriesDefinition.QuantityUnits = QuantityUnits.None;
+            seriesDefinition.QuantityCharacteristicID = QuantityCharacteristic.None;
+            seriesDefinition.StorageMethodID = StorageMethods.Values;
 
             CollectionElement seriesDefinitionsElement = m_physicalStructure.GetCollectionByTag(SeriesDefinitionsTag);
 
