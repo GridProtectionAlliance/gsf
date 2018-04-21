@@ -439,7 +439,7 @@ namespace GSF.IO
                 }
                 finally
                 {
-                    if (wrapper.LastMove)
+                    if (!wrapper.LastMove)
                         wrapper.Dispose();
                 }
             }
