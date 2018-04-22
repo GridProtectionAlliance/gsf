@@ -137,7 +137,7 @@ namespace GSF.PQDIF.Physical
                     return Encoding.Unicode.GetString(m_values)[index];
 
                 case PhysicalType.Integer1:
-                    return (sbyte)GetUInt1(index);
+                    return GetInt1(index);
 
                 case PhysicalType.Integer2:
                     return GetInt2(index);
@@ -149,7 +149,7 @@ namespace GSF.PQDIF.Physical
                     return GetUInt1(index);
 
                 case PhysicalType.UnsignedInteger2:
-                    return (ushort)GetInt2(index);
+                    return GetUInt2(index);
 
                 case PhysicalType.UnsignedInteger4:
                     return GetUInt4(index);
@@ -302,7 +302,7 @@ namespace GSF.PQDIF.Physical
         /// </summary>
         /// <param name="index">The index of the value.</param>
         /// <returns>The value as a 16-bit unsigned integer.</returns>
-        public ushort GetUInt2 (int index)
+        public ushort GetUInt2(int index)
         {
             if ((object)m_values == null)
                 throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");

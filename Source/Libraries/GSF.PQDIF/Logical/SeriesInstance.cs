@@ -359,7 +359,6 @@ namespace GSF.PQDIF.Logical
             StorageMethods storageMethods = Definition.StorageMethodID;
 
             bool incremented = (storageMethods & StorageMethods.Increment) != 0;
-            dynamic start, count, increment;
 
             bool scaled = (storageMethods & StorageMethods.Scaled) != 0;
             dynamic offset = ((object)SeriesOffset != null) ? SeriesOffset.Get() : 0;
@@ -374,12 +373,27 @@ namespace GSF.PQDIF.Logical
 
             if (incremented)
             {
-                start = valuesVector.Get(0);
-                count = valuesVector.Get(1);
-                increment = valuesVector.Get(2);
+                dynamic rateCount = valuesVector.Get(0);
 
-                for (int i = 0; i < count; i++)
-                    values.Add((object)(start + (i * increment)));
+                if (rateCount > 0)
+                {
+                    dynamic zero = rateCount - rateCount;
+                    dynamic one = rateCount / rateCount;
+                    dynamic start = zero;
+
+                    for (int i = 0; i < rateCount; i++)
+                    {
+                        int countIndex = (i * 2) + 1;
+                        int incrementIndex = (i * 2) + 2;
+                        dynamic count = valuesVector.Get(countIndex);
+                        dynamic increment = valuesVector.Get(incrementIndex);
+
+                        for (dynamic j = zero; j < count; j = j + one)
+                            values.Add((object)(start + j * increment));
+
+                        start = count * increment;
+                    }
+                }
             }
             else
             {
