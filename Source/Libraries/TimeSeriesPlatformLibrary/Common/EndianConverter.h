@@ -24,8 +24,6 @@
 #ifndef __ENDIAN_CONVERTER_H
 #define __ENDIAN_CONVERTER_H
 
-#include <cstddef>
-
 #include "CommonTypes.h"
 
 namespace GSF {

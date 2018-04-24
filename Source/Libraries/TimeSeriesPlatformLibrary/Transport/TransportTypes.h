@@ -117,7 +117,7 @@ namespace TimeSeries
     extern const char* SignalKindAcronym[];
 
     // Helper function to parse signal kind
-    SignalKind ParseSignalKind(string acronym);
+    SignalKind ParseSignalKind(const string& acronym);
 
     struct SignalReference
     {

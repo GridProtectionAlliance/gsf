@@ -43,8 +43,13 @@ const char* SubscriberException::what() const noexcept
 }
 
 Measurement::Measurement() :
+    ID(0),
+    SignalID(Empty::Guid),
+    Value(NAN),
     Adder(0),
-    Multiplier(1)
+    Multiplier(1),
+    Timestamp(0),
+    Flags(0)
 {
 }
 
@@ -58,7 +63,12 @@ void Measurement::GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const
     GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
 }
 
-SignalReference::SignalReference() = default;
+SignalReference::SignalReference() :
+    SignalID(Empty::Guid),
+    Index(0),
+    Kind(SignalKind::Unknown)
+{    
+}
 
 SignalReference::SignalReference(const string& signal) : SignalID(Guid())
 {
@@ -140,7 +150,7 @@ ostream& GSF::TimeSeries::operator << (ostream& stream, const SignalReference& r
 //  params:
 //	   acronym: Acronym of the desired "SignalKind"
 //  returns: The "SignalKind" for the specified "acronym".
-SignalKind GSF::TimeSeries::ParseSignalKind(string acronym)
+SignalKind GSF::TimeSeries::ParseSignalKind(const string& acronym)
 {
     if (acronym == "PA") // Phase Angle
         return SignalKind::Angle;

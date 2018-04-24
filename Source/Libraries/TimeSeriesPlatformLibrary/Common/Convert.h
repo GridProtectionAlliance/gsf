@@ -24,9 +24,7 @@
 #ifndef __COMMON_CONVERT_H
 #define __COMMON_CONVERT_H
 
-#include <cstddef>
 #include <string>
-
 #include "CommonTypes.h"
 
 using namespace std;
@@ -35,7 +33,7 @@ namespace GSF {
 namespace TimeSeries
 {
     // Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
-    void GetUnixTime(const int64_t gepTime, time_t& unixSOC, uint16_t& milliseconds);
+    void GetUnixTime(int64_t gepTime, time_t& unixSOC, uint16_t& milliseconds);
 
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks);

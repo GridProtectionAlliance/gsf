@@ -90,7 +90,7 @@ namespace Transport
         bool m_cancel;
 
         // Auto-reconnect handler.
-        static void AutoReconnect(DataSubscriber* source);
+        static void AutoReconnect(DataSubscriber* subscriber);
 
         bool Connect(DataSubscriber& subscriber);
 
@@ -108,7 +108,7 @@ namespace Transport
         void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
 
         // Begin connection sequence
-        bool Connect(DataSubscriber& subscriber, SubscriptionInfo info);
+        bool Connect(DataSubscriber& subscriber, const SubscriptionInfo& info);
 
         // Cancel all current and
         // future connection sequences.
@@ -160,6 +160,8 @@ namespace Transport
             DataSubscriber* Source;
             SharedPtr<vector<uint8_t>> Data;
             DispatcherFunction Function;
+
+            CallbackDispatcher();
         };
 
         SubscriberConnector m_connector;

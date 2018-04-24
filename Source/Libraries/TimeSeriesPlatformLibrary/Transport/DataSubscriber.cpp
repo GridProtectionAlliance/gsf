@@ -99,7 +99,7 @@ void SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectC
     m_reconnectCallback = reconnectCallback;
 }
 
-bool SubscriberConnector::Connect(DataSubscriber& subscriber, SubscriptionInfo info)
+bool SubscriberConnector::Connect(DataSubscriber& subscriber, const SubscriptionInfo& info)
 {
     subscriber.SetSubscriptionInfo(info);
     return Connect(subscriber);
@@ -226,16 +226,18 @@ bool SubscriberConnector::GetAutoReconnect() const
 
 // --- DataSubscriber ---
 
-DataSubscriber::DataSubscriber() :
+DataSubscriber::DataSubscriber() :  // NOLINT
     m_compressPayloadData(true),
     m_compressMetadata(true),
     m_compressSignalIndexCache(true),
     m_disconnecting(false),
+    m_userData(nullptr),
     m_totalCommandChannelBytesReceived(0UL),
     m_totalDataChannelBytesReceived(0UL),
     m_totalMeasurementsReceived(0UL),
     m_connected(false),
     m_subscribed(false),
+    m_timeIndex(0),
     m_tsscResetRequested(false),
     m_tsscSequenceNumber(0),
     m_commandChannelSocket(m_commandChannelService),
@@ -262,11 +264,16 @@ DataSubscriber::~DataSubscriber()
     Disconnect();
 }
 
+DataSubscriber::CallbackDispatcher::CallbackDispatcher() :
+    Source(nullptr),
+    Data(nullptr),
+    Function(nullptr)
+{
+}
+
 // All callbacks are run from the callback thread from here.
 void DataSubscriber::RunCallbackThread()
 {
-    CallbackDispatcher dispatcher;
-
     while (true)
     {
         m_callbackQueue.WaitForData();
@@ -274,7 +281,7 @@ void DataSubscriber::RunCallbackThread()
         if (m_disconnecting)
             break;
 
-        dispatcher = m_callbackQueue.Dequeue();
+        const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
         dispatcher.Function(dispatcher.Source, *dispatcher.Data);
     }
 }

@@ -24,8 +24,6 @@
 #ifndef __COMPACT_MEASUREMENT_PARSER_H
 #define __COMPACT_MEASUREMENT_PARSER_H
 
-#include <cstddef>
-
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "../Common/EndianConverter.h"
