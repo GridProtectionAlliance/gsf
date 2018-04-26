@@ -311,13 +311,17 @@ namespace GSF.IO
             #region [ Properties ]
 
             public string Path { get; }
-            public FileEnumerator[] SubdirectoryEnumerators { get; private set; }
+            public FileEnumerator[] SubdirectoryEnumerators { get; private set; } = new FileEnumerator[0];
 
             public bool Active
             {
                 get
                 {
-                    return m_active || (SubdirectoryEnumerators?.Any(enumerator => enumerator.Active) ?? false);
+                    if (m_active)
+                        return true;
+
+                    FileEnumerator[] subdirectoryEnumerators = SubdirectoryEnumerators;
+                    return m_active || subdirectoryEnumerators.Any(enumerator => enumerator.Active);
                 }
             }
 
@@ -396,7 +400,9 @@ namespace GSF.IO
                     if (!m_active)
                         return;
 
-                    if (index >= SubdirectoryEnumerators.Length)
+                    FileEnumerator[] subdirectoryEnumerators = SubdirectoryEnumerators;
+
+                    if (index >= subdirectoryEnumerators.Length)
                     {
                         EnumerateNextFile(new EnumerableWrapper(EnumerateFiles(), m_cancellationToken));
                         return;
@@ -405,12 +411,12 @@ namespace GSF.IO
                     // Create a new thread for the subdirectory since this code is only invoked if the file
                     // processor is using the enumeration strategy for processing subdirectories in parallel
                     LogicalThread subdirectoryThread = m_fileProcessor.m_threadScheduler.CreateThread();
-                    subdirectoryThread.Push(() => SubdirectoryEnumerators[index].Enumerate(FileEnumerationStrategy.ParallelSubdirectories));
+                    subdirectoryThread.Push(() => subdirectoryEnumerators[index].Enumerate(FileEnumerationStrategy.ParallelSubdirectories));
 
                     // Invoke the asynchronous call to enumerate the next directory
                     LogicalThread.CurrentThread.Push(() => EnumerateNextDirectory(index + 1));
 
-                    m_lastVisitedPath = SubdirectoryEnumerators[index].Path;
+                    m_lastVisitedPath = subdirectoryEnumerators[index].Path;
                 }
                 catch
                 {
@@ -506,7 +512,9 @@ namespace GSF.IO
                 if (m_active && (object)lastVisitedPath != null)
                     activelyVisitedPaths.Add(lastVisitedPath);
 
-                foreach (FileEnumerator enumerator in SubdirectoryEnumerators)
+                FileEnumerator[] subdirectoryEnumerators = SubdirectoryEnumerators;
+
+                foreach (FileEnumerator enumerator in subdirectoryEnumerators)
                     enumerator.BuildActivelyVisitedPaths(activelyVisitedPaths);
             }
 
