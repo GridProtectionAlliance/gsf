@@ -436,6 +436,7 @@ namespace GSF.IO
                         return;
 
                     ProcessCurrentFileAndEnumerateNextFile(wrapper);
+                    m_lastVisitedPath = wrapper.Current;
                 }
                 catch
                 {
@@ -453,15 +454,29 @@ namespace GSF.IO
             // Advances enumeration until the next file that matches the filter.
             private bool AdvanceToNextMatch(EnumerableWrapper wrapper)
             {
-                while (true)
+                List<string> skippedFiles = new List<string>();
+
+                try
                 {
-                    if (!wrapper.MoveNext())
-                        return false;
+                    while (true)
+                    {
+                        if (!wrapper.MoveNext())
+                            return false;
 
-                    if (m_fileProcessor.MatchesFilter(wrapper.Current))
-                        return true;
+                        if (m_fileProcessor.MatchesFilter(wrapper.Current))
+                            return true;
 
-                    Interlocked.Increment(ref m_fileProcessor.m_skippedFileCount);
+                        skippedFiles.Add(wrapper.Current);
+                        m_lastVisitedPath = wrapper.Current;
+                    }
+                }
+                finally
+                {
+                    m_fileProcessor.m_processingThread.Push(1, () =>
+                    {
+                        foreach (string filePath in skippedFiles)
+                            m_fileProcessor.TouchAndSkip(filePath);
+                    });
                 }
             }
 
@@ -1138,10 +1153,10 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Determines if the given file matches the file processor's filter.
+        /// Determines if the given file matches the filter string provided through the <see cref="Filter"/> property.
         /// </summary>
-        /// <param name="filePath">The path to the file to be tested against the filter.</param>
-        /// <returns>True if the file matches the filter; false otherwise.</returns>
+        /// <param name="filePath">The path to the file to be tested against the filter string.</param>
+        /// <returns>True if the file matches the filter string; false otherwise.</returns>
         public bool MatchesFilter(string filePath)
         {
             if (m_disposed)
@@ -1149,8 +1164,18 @@ namespace GSF.IO
 
             string[] filters = m_filter.Split(Path.PathSeparator);
 
-            if (!FilePath.IsFilePatternMatch(filters, filePath, true))
-                return false;
+            return FilePath.IsFilePatternMatch(filters, filePath, true);
+        }
+
+        /// <summary>
+        /// Determines if the given file matches the filter method provided through the <see cref="FilterMethod"/> property.
+        /// </summary>
+        /// <param name="filePath">The path to the file to be tested against the filter method.</param>
+        /// <returns>True if the file matches the filter method; false otherwise.</returns>
+        public bool MatchesFilterMethod(string filePath)
+        {
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
 
             try
             {
@@ -1241,7 +1266,27 @@ namespace GSF.IO
             if (!m_touchedFiles.TryGetValue(filePath, out lastKnownWriteTime) || lastKnownWriteTime < lastWriteTime)
             {
                 m_touchedFiles[filePath] = lastWriteTime;
+
+                if (!MatchesFilterMethod(filePath))
+                {
+                    Interlocked.Increment(ref m_skippedFileCount);
+                    return;
+                }
+
                 StartProcessLoop(filePath, raisedByFileWatcher);
+            }
+        }
+
+        // Checks and updates the touchedFiles lookup table, then increments the skipped file count.
+        private void TouchAndSkip(string filePath)
+        {
+            DateTime lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+            DateTime lastKnownWriteTime;
+
+            if (!m_touchedFiles.TryGetValue(filePath, out lastKnownWriteTime) || lastKnownWriteTime < lastWriteTime)
+            {
+                m_touchedFiles[filePath] = lastWriteTime;
+                Interlocked.Increment(ref m_skippedFileCount);
             }
         }
 
@@ -1438,7 +1483,7 @@ namespace GSF.IO
             {
                 if (!MatchesFilter(fullPath))
                 {
-                    Interlocked.Increment(ref m_skippedFileCount);
+                    m_processingThread.Push(1, () => TouchAndSkip(fullPath));
                     return;
                 }
 
@@ -1456,18 +1501,17 @@ namespace GSF.IO
 
             m_watcherThread.Push(() =>
             {
-                if (MatchesFilter(fullPath))
+                if (!MatchesFilter(fullPath))
                 {
-                    m_processingThread.Push(2, () =>
-                    {
-                        m_touchedFiles.Remove(fullPath);
-                        TouchAndProcess(fullPath, true);
-                    });
+                    m_processingThread.Push(1, () => TouchAndSkip(fullPath));
+                    return;
                 }
-                else
+
+                m_processingThread.Push(2, () =>
                 {
-                    Interlocked.Increment(ref m_skippedFileCount);
-                }
+                    m_touchedFiles.Remove(fullPath);
+                    TouchAndProcess(fullPath, true);
+                });
             });
         }
 
@@ -1479,22 +1523,24 @@ namespace GSF.IO
 
             m_watcherThread.Push(() =>
             {
-                bool oldMatch = MatchesFilter(oldFullPath);
-                bool newMatch = MatchesFilter(fullPath);
+                bool matchesFilter = MatchesFilter(fullPath);
+                int priority = matchesFilter ? 2 : 1;
 
-                if (!oldMatch && !newMatch)
-                    return;
-
-                m_processingThread.Push(2, () =>
+                m_processingThread.Push(priority, () =>
                 {
-                    if (oldMatch && m_touchedFiles.Remove(oldFullPath) && newMatch)
-                        m_touchedFiles.Add(fullPath, File.GetLastWriteTimeUtc(fullPath));
+                    if (m_touchedFiles.TryGetValue(oldFullPath, out DateTime lastWriteTime))
+                    {
+                        m_touchedFiles.Remove(oldFullPath);
+                        m_touchedFiles.Add(fullPath, lastWriteTime);
+                    }
 
-                    if (oldMatch && m_processedFiles.Remove(oldFullPath))
+                    if (m_processedFiles.Remove(oldFullPath))
                         m_processedFiles.Add(fullPath);
 
-                    if (!oldMatch && newMatch)
+                    if (matchesFilter)
                         TouchAndProcess(fullPath, true);
+                    else
+                        TouchAndSkip(fullPath);
                 });
             });
         }
@@ -1504,16 +1550,10 @@ namespace GSF.IO
         {
             string fullPath = args.FullPath;
 
-            m_watcherThread.Push(() =>
+            m_processingThread.Push(2, () =>
             {
-                if (!MatchesFilter(fullPath))
-                    return;
-
-                m_processingThread.Push(2, () =>
-                {
-                    m_touchedFiles.Remove(fullPath);
-                    m_processedFiles.Remove(fullPath);
-                });
+                m_touchedFiles.Remove(fullPath);
+                m_processedFiles.Remove(fullPath);
             });
         }
 
