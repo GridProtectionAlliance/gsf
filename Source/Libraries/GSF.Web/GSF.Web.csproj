@@ -288,6 +288,7 @@
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Scripts\jquery.jspanel.js" />
     <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\excanvas.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.colorhelpers.min.js" />
