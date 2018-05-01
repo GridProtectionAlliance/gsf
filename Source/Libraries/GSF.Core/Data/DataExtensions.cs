@@ -2364,6 +2364,10 @@ namespace GSF.Data
             if (underlyingType == typeof(Guid))
                 return (T)(object)Guid.Parse(value.ToString());
 
+            // Handle enums as a special case since they do not implement IConvertible
+            if (underlyingType.IsEnum)
+                return (T)Enum.Parse(underlyingType, value.ToString());
+
             return (T)Convert.ChangeType(value, underlyingType);
         }
 
@@ -2406,6 +2410,10 @@ namespace GSF.Data
             // Handle Guids as a special case since they do not implement IConvertible
             if (underlyingType == typeof(Guid))
                 return Guid.Parse(value.ToString());
+
+            // Handle enums as a special case since they do not implement IConvertible
+            if (underlyingType.IsEnum)
+                return Enum.Parse(underlyingType, value.ToString());
 
             return Convert.ChangeType(value, underlyingType);
         }
