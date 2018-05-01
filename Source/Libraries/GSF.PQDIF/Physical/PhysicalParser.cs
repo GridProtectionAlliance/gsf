@@ -28,6 +28,7 @@ using System.IO;
 using GSF.IO.Checksums;
 using Ionic.Zlib;
 using System.Collections.Generic;
+using System.Text;
 
 namespace GSF.PQDIF.Physical
 {
@@ -122,8 +123,26 @@ namespace GSF.PQDIF.Physical
         /// </summary>
         /// <param name="fileName">Name of the PQDIF file to be parsed.</param>
         public PhysicalParser(string fileName)
+            : this()
         {
             FileName = fileName;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="PhysicalParser"/> class.
+        /// </summary>
+        /// <param name="stream">The stream containing the PQDIF file data.</param>
+        /// <param name="leaveOpen">True to leave the stream open when closing the parser; otherwise false.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="stream"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="stream"/> is not both readable and seekable.</exception>
+        public PhysicalParser(Stream stream, bool leaveOpen = false)
+            : this()
+        {
+            Open(stream, leaveOpen);
+        }
+
+        private PhysicalParser()
+        {
             m_headerAddresses = new HashSet<long>();
             m_exceptionList = new List<Exception>();
         }
@@ -143,9 +162,6 @@ namespace GSF.PQDIF.Physical
             }
             set
             {
-                if ((object)value == null)
-                    throw new ArgumentNullException("value");
-
                 m_fileName = value;
             }
         }
@@ -164,6 +180,7 @@ namespace GSF.PQDIF.Physical
         /// <summary>
         /// Gets or sets the compression style used by the PQDIF file.
         /// </summary>
+        /// <exception cref="NotSupportedException"><see cref="CompressionStyle.TotalFile"/> compression has been deprecated by the standard and is not supported by this parser.</exception>
         public CompressionStyle CompressionStyle
         {
             get
@@ -173,7 +190,7 @@ namespace GSF.PQDIF.Physical
             set
             {
                 if (value == CompressionStyle.TotalFile)
-                    throw new ArgumentException("Total file compression has been deprecated and is not supported", "value");
+                    throw new NotSupportedException("Total file compression has been deprecated and is not supported");
 
                 m_compressionStyle = value;
             }
@@ -182,6 +199,7 @@ namespace GSF.PQDIF.Physical
         /// <summary>
         /// Gets or sets the compression algorithm used by the PQDIF file.
         /// </summary>
+        /// <exception cref="NotSupportedException"><see cref="CompressionAlgorithm.PKZIP"/> compression has been deprecated by the standard and is not supported by this parser.</exception>
         public CompressionAlgorithm CompressionAlgorithm
         {
             get
@@ -191,7 +209,7 @@ namespace GSF.PQDIF.Physical
             set
             {
                 if (value == CompressionAlgorithm.PKZIP)
-                    throw new ArgumentException("PKZIP compression has been deprecated and is not supported", "value");
+                    throw new NotSupportedException("PKZIP compression has been deprecated and is not supported");
 
                 m_compressionAlgorithm = value;
             }
@@ -233,9 +251,43 @@ namespace GSF.PQDIF.Physical
         /// <summary>
         /// Opens the PQDIF file.
         /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="FileName"/> has not been defined.</exception>
         public void Open()
         {
-            m_fileReader = new BinaryReader(File.OpenRead(m_fileName));
+            if ((object)m_fileName == null)
+                throw new InvalidOperationException("Unable to open PQDIF file when no file name has been defined.");
+
+            using (m_fileReader)
+            {
+                m_fileReader = new BinaryReader(File.OpenRead(m_fileName));
+            }
+
+            m_hasNextRecord = true;
+        }
+
+        /// <summary>
+        /// Opens a PQDIF file from a stream of data.
+        /// </summary>
+        /// <param name="stream">The stream from which to read the PQDIF file.</param>
+        /// <param name="leaveOpen">True to leave the stream open when closing the parser; false otherwise.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="stream"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="stream"/> is not both readable and seekable.</exception>
+        public void Open(Stream stream, bool leaveOpen = false)
+        {
+            if ((object)stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
+            if (!stream.CanRead)
+                throw new InvalidOperationException("Stream must be readable in order to parse PQDIF file data.");
+
+            if (!stream.CanSeek)
+                throw new InvalidOperationException("Stream must be seekable in order to parse PQDIF file data.");
+
+            using (m_fileReader)
+            {
+                m_fileReader = new BinaryReader(stream, Encoding.UTF8, leaveOpen);
+            }
+
             m_hasNextRecord = true;
         }
 

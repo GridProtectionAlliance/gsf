@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using GSF.PQDIF.Physical;
 
 namespace GSF.PQDIF.Logical
@@ -55,13 +56,41 @@ namespace GSF.PQDIF.Logical
             m_physicalParser = new PhysicalParser(fileName);
         }
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="LogicalParser"/> class.
+        /// </summary>
+        /// <param name="stream">The stream containing the PQDIF file data.</param>
+        /// <param name="leaveOpen">True if the stream should be closed when the parser is closed; false otherwise.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="stream"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="stream"/> is not both readable and seekable.</exception>
+        public LogicalParser(Stream stream, bool leaveOpen = false)
+        {
+            m_physicalParser = new PhysicalParser(null);
+            Open(stream, leaveOpen);
+        }
+
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets the file name of the PQDIF file to be parsed.
+        /// </summary>
+        public string FileName
+        {
+            get
+            {
+                return m_physicalParser.FileName;
+            }
+            set
+            {
+                m_physicalParser.FileName = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the container record from the PQDIF file. This is
-        /// parsed as soon as the parser is <see cref="Open"/>ed.
+        /// parsed as soon as the parser is <see cref="Open()"/>ed.
         /// </summary>
         public ContainerRecord ContainerRecord
         {
@@ -78,9 +107,27 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Opens the parser and parses the <see cref="ContainerRecord"/>.
         /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="FileName"/> has not been defined.</exception>
+        /// <exception cref="NotSupportedException">An unsupported compression mode was defined in the PQDIF file.</exception>
         public void Open()
         {
             m_physicalParser.Open();
+            m_containerRecord = ContainerRecord.CreateContainerRecord(m_physicalParser.NextRecord());
+            m_physicalParser.CompressionAlgorithm = m_containerRecord.CompressionAlgorithm;
+            m_physicalParser.CompressionStyle = m_containerRecord.CompressionStyle;
+        }
+
+        /// <summary>
+        /// Opens the parser and parses the <see cref="ContainerRecord"/>.
+        /// </summary>
+        /// <param name="stream">The stream containing the PQDIF file data.</param>
+        /// <param name="leaveOpen">True if the stream should be closed when the parser is closed; false otherwise.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="stream"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="stream"/> is not both readable and seekable.</exception>
+        /// <exception cref="NotSupportedException">An unsupported compression mode was defined in the PQDIF file.</exception>
+        public void Open(Stream stream, bool leaveOpen = false)
+        {
+            m_physicalParser.Open(stream, leaveOpen);
             m_containerRecord = ContainerRecord.CreateContainerRecord(m_physicalParser.NextRecord());
             m_physicalParser.CompressionAlgorithm = m_containerRecord.CompressionAlgorithm;
             m_physicalParser.CompressionStyle = m_containerRecord.CompressionStyle;
