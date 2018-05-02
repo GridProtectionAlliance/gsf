@@ -1019,36 +1019,45 @@ namespace GSF.Communication
                     throw new SocketException((int)error);
                 }
 
-                // Get the remote end point in case we need to display useful error messages
-                remoteEndPoint = acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
+                // At this point, we have determined that the server is up and running.
+                // We need to make sure the acceptArgs.AcceptAsync() method is called or
+                // else the server will continue running but stop accepting connections
 
-                if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
+                try
                 {
-                    // Reject client connection since limit has been reached.
-                    TerminateConnection(client, false);
-                }
-                else
-                {
-                    // Process the newly connected client.
-                    LoadTrustedCertificates();
-                    netStream = new NetworkStream(acceptArgs.AcceptSocket);
+                    // Get the remote end point in case we need to display useful error messages
+                    remoteEndPoint = acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
 
-                    client.Provider = new TlsSocket
+                    if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                     {
-                        Socket = acceptArgs.AcceptSocket,
-                        SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
-                    };
+                        // Reject client connection since limit has been reached.
+                        TerminateConnection(client, false);
+                    }
+                    else
+                    {
+                        // Process the newly connected client.
+                        LoadTrustedCertificates();
+                        netStream = new NetworkStream(acceptArgs.AcceptSocket, true);
 
-                    client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
-                    client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, client);
+                        client.Provider = new TlsSocket
+                        {
+                            Socket = acceptArgs.AcceptSocket,
+                            SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
+                        };
+
+                        client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
+                        client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, client);
+                    }
                 }
-
-                // Return to accepting new connections.
-                acceptArgs.AcceptSocket = null;
-
-                if (!m_tlsServer.AcceptAsync(acceptArgs))
+                finally
                 {
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
+                    // Return to accepting new connections.
+                    acceptArgs.AcceptSocket = null;
+
+                    if (!m_tlsServer.AcceptAsync(acceptArgs))
+                    {
+                        ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
+                    }
                 }
             }
             catch (ObjectDisposedException)
