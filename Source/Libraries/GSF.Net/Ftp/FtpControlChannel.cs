@@ -45,6 +45,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -314,7 +315,11 @@ namespace GSF.Net.Ftp
         {
             if ((object)m_connection == null)
                 return;
-            
+
+            // If the client receives an exception when establishing a data channel,
+            // it may not have checked for the server's response when handling the exception
+            FlushResponses();
+
             byte[] buff = Encoding.Default.GetBytes(cmd + Environment.NewLine);
             NetworkStream stream = m_connection.GetStream();
             m_sessionHost.OnCommandSent(cmd);
@@ -335,10 +340,44 @@ namespace GSF.Net.Ftp
                 m_lastResponse = new FtpResponse(m_connection.GetStream());
             }
 
-            foreach (string s in m_lastResponse.Respones)
+            foreach (string s in m_lastResponse.Responses)
             {
                 m_sessionHost.OnResponseReceived(s);
             }
+        }
+
+        /// <summary>
+        /// Flushes data from the control channel to get ready for the next response.
+        /// </summary>
+        public void FlushResponses()
+        {
+            StringBuilder responses = new StringBuilder();
+
+            lock (this)
+            {
+                NetworkStream stream = m_connection.GetStream();
+
+                while (stream.DataAvailable)
+                {
+                    int b = stream.ReadByte();
+
+                    if (b < 0)
+                        break;
+
+                    char c = Encoding.ASCII.GetChars(new[] { (byte)b })[0];
+                    responses.Append(c);
+                }
+            }
+
+            List<string> lines = responses
+                .ToString()
+                .Split('\n')
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Select(line => line + "\n")
+                .ToList();
+
+            foreach (string line in lines)
+                m_sessionHost.OnResponseReceived(line);
         }
 
         internal void REST(long offset)

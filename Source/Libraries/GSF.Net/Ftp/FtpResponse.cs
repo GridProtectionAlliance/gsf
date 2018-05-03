@@ -174,7 +174,7 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Gets FTP response queue.
         /// </summary>
-        public Queue Respones
+        public Queue Responses
         {
             get
             {
@@ -208,7 +208,7 @@ namespace GSF.Net.Ftp
             }
             else
             {
-                return '\0';
+                return '\n';
             }
         }
 
