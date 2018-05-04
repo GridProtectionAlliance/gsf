@@ -337,28 +337,36 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string serviceName;
-            string serviceAccount;
-            string servicePorts;
-            string groupName;
 
             logger.Log("Begin ServiceAccountAction");
 
             // Get properties from the installer session
-            serviceName = GetPropertyValue(session, "SERVICENAME");
-            serviceAccount = GetPropertyValue(session, "SERVICEACCOUNT");
-            servicePorts = GetPropertyValue(session, "HTTPSERVICEPORTS");
-            groupName = $"{serviceName} Admins";
+            string serviceName = GetPropertyValue(session, "SERVICENAME");
+            string serviceAccount = GetPropertyValue(session, "SERVICEACCOUNT");
+            string servicePorts = GetPropertyValue(session, "HTTPSERVICEPORTS");
+            string groupName = $"{serviceName} Admins";
+
+            // Determine if we're dealing with the local system account
+            bool isLocalSystem = (serviceAccount == "LocalSystem");
 
             // Create service admins group and add service account to that group as well as the Performance Log Users group
             try
             {
+                const string PerformanceLogUsersGroup = "Performance Log Users";
+                const string PerformanceMonitorUsersGroup = "Performance Monitor Users";
+
                 logger.Log($"Adding {serviceAccount} user to {groupName} group...");
                 UserInfo.CreateLocalGroup(groupName, $"Members in this group have the necessary rights to administrate the {serviceName} service.");
-                UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
-                UserInfo.AddUserToLocalGroup("Performance Log Users", serviceAccount);
-                UserInfo.AddUserToLocalGroup("Performance Monitor Users", serviceAccount);
-                AddPrivileges(serviceAccount, "SeServiceLogonRight");
+
+                // Don't attempt grant rights to the local system account because it already has them
+                if (!isLocalSystem)
+                {
+                    UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
+                    UserInfo.AddUserToLocalGroup(PerformanceLogUsersGroup, serviceAccount);
+                    UserInfo.AddUserToLocalGroup(PerformanceMonitorUsersGroup, serviceAccount);
+                    AddPrivileges(serviceAccount, "SeServiceLogonRight");
+                }
+
                 logger.Log($"Done adding {serviceAccount} user to {groupName} group.");
             }
             catch (Exception ex)
@@ -392,7 +400,8 @@ namespace GSF.InstallerActions
 
                 int index = acl.IndexOf("S:");
 
-                if (accountSID.StartsWith("S-") && !acl.Contains(accountSID))
+                // Don't attempt grant rights to the local system account because it already has them
+                if (!isLocalSystem && accountSID.StartsWith("S-") && !acl.Contains(accountSID))
                     acl = acl.Insert(index, $"(A;;RPWPCR;;;{accountSID})");
 
                 if (groupSID.StartsWith("S-") && !acl.Contains(groupSID))
@@ -413,7 +422,8 @@ namespace GSF.InstallerActions
                 logger.Log(EventLogEntryType.Error, ex);
             }
 
-            if (!string.IsNullOrEmpty(servicePorts))
+            // Don't attempt grant rights to the local system account because it already has them
+            if (!isLocalSystem && !string.IsNullOrEmpty(servicePorts))
             {
                 logger.Log("Adding namespace reservations for default web services...");
 
