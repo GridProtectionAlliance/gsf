@@ -603,5 +603,112 @@ namespace GSF.COMTRADE
             if (isFirstDigital && injectFracSecValue)
                 output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
         }
+
+        /// <summary>
+        /// Writes next COMTRADE record in ASCII format.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="timestamp">Record timestamp (implicitly castable as <see cref="DateTime"/>).</param>
+        /// <param name="analogValues">Values to write for analog channels.</param>
+        /// <param name="digitalValues">Values to write for digital channels.</param>
+        /// <param name="sample">User incremented sample index.</param>
+        /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>false</c>.</param>
+        /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
+        /// <remarks>
+        /// This function is primarily intended to write COMTRADE ASCII data records based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
+        /// </remarks>
+        public static void WriteNextRecordAscii(StreamWriter output, Schema schema, Ticks timestamp, double[] analogValues, bool[] digitalValues, uint sample, bool injectFracSecValue = false, ushort fracSecValue = 0x0000)
+        {
+            double[] values = analogValues
+                .Concat(digitalValues.Select(b => b ? 1.0D : 0.0D))
+                .ToArray();
+
+            WriteNextRecordAscii(output, schema, timestamp, values, sample, injectFracSecValue, fracSecValue);
+        }
+
+        /// <summary>
+        /// Writes next COMTRADE record in binary format.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="timestamp">Record timestamp (implicitly castable as <see cref="DateTime"/>).</param>
+        /// <param name="analogValues">Values to write for analog channels.</param>
+        /// <param name="digitalValues">Values to write for digital channels.</param>
+        /// <param name="sample">User incremented sample index.</param>
+        /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>false</c>.</param>
+        /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
+        /// <remarks>
+        /// This function is primarily intended to write COMTRADE binary data records based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
+        /// </remarks>
+        public static void WriteNextRecordBinary(Stream output, Schema schema, Ticks timestamp, double[] analogValues, bool[] digitalValues, uint sample, bool injectFracSecValue = false, ushort fracSecValue = 0x0000)
+        {
+            double[] digitalWords = GroupByWord(digitalValues);
+            double[] values = analogValues.Concat(digitalWords).ToArray();
+            WriteNextRecordBinary(output, schema, timestamp, values, sample, injectFracSecValue, fracSecValue);
+        }
+
+        /// <summary>
+        /// Writes next COMTRADE record in binary32 format.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="timestamp">Record timestamp (implicitly castable as <see cref="DateTime"/>).</param>
+        /// <param name="analogValues">Values to write for analog channels.</param>
+        /// <param name="digitalValues">Values to write for digital channels.</param>
+        /// <param name="sample">User incremented sample index.</param>
+        /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>false</c>.</param>
+        /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
+        /// <remarks>
+        /// This function is primarily intended to write COMTRADE binary32 data records based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
+        /// </remarks>
+        public static void WriteNextRecordBinary32(Stream output, Schema schema, Ticks timestamp, double[] analogValues, bool[] digitalValues, uint sample, bool injectFracSecValue = false, ushort fracSecValue = 0x0000)
+        {
+            double[] digitalWords = GroupByWord(digitalValues);
+            double[] values = analogValues.Concat(digitalWords).ToArray();
+            WriteNextRecordBinary32(output, schema, timestamp, values, sample, injectFracSecValue, fracSecValue);
+        }
+
+        /// <summary>
+        /// Writes next COMTRADE record in float32 format.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="schema">Source schema.</param>
+        /// <param name="timestamp">Record timestamp (implicitly castable as <see cref="DateTime"/>).</param>
+        /// <param name="analogValues">Values to write for analog channels.</param>
+        /// <param name="digitalValues">Values to write for digital channels.</param>
+        /// <param name="sample">User incremented sample index.</param>
+        /// <param name="injectFracSecValue">Determines if FRACSEC value should be automatically injected into stream as first digital - defaults to <c>false</c>.</param>
+        /// <param name="fracSecValue">FRACSEC value to inject into output stream - defaults to 0x0000.</param>
+        /// <remarks>
+        /// This function is primarily intended to write COMTRADE float32 data records based on synchrophasor data
+        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
+        /// it may be necessary to manually write records for other COMTRADE needs (e.g., non 16-bit digitals).
+        /// </remarks>
+        public static void WriteNextRecordFloat32(Stream output, Schema schema, Ticks timestamp, double[] analogValues, bool[] digitalValues, uint sample, bool injectFracSecValue = false, ushort fracSecValue = 0x0000)
+        {
+            double[] digitalWords = GroupByWord(digitalValues);
+            double[] values = analogValues.Concat(digitalWords).ToArray();
+            WriteNextRecordFloat32(output, schema, timestamp, values, sample, injectFracSecValue, fracSecValue);
+        }
+
+        private static double[] GroupByWord(bool[] digitalValues)
+        {
+            int index = 0;
+
+            return digitalValues
+                .Select(b => b ? 1 : 0)
+                .GroupBy(word => (index++) / 16)
+                .Select(grouping => grouping.Select((bit, i) => bit << i))
+                .Select(grouping => grouping.Aggregate((ushort)0, (word, bit) => (ushort)(word | bit)))
+                .Select(word => (double)word)
+                .ToArray();
+        }
     }
 }
