@@ -447,7 +447,10 @@ namespace GSF.IO
                 finally
                 {
                     if (!wrapper.LastMove)
+                    {
+                        m_active = false;
                         wrapper.Dispose();
+                    }
                 }
             }
 
@@ -495,7 +498,10 @@ namespace GSF.IO
                     // enumeration thread on the processing
                     // thread as well to speed up cancellation
                     if (m_cancellationToken.IsCancelled)
+                    {
+                        m_active = false;
                         return;
+                    }
 
                     enumerationThread.Push(() => EnumerateNextFile(wrapper));
                     m_fileProcessor.TouchAndProcess(filePath, false);
