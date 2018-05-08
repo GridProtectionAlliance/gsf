@@ -24,7 +24,11 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
+using GSF;
+using GSF.IO;
 
 namespace DataMigrationUtility
 {
@@ -34,11 +38,29 @@ namespace DataMigrationUtility
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            if (args.Any() && args.All(arg => arg != "-install"))
+            {
+                // Code added for automation of schema serialization
+                SerializeSchema(args[0]);
+                return;
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new DataMigrationUtilityScreen());
+        }
+
+        static void SerializeSchema(string connectionString)
+        {
+            Schema schema = new Schema(connectionString, TableType.Table);
+
+            using (FileStream stream = new FileStream(FilePath.GetAbsolutePath("SerializedSchema.bin"), FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                byte[] schemaData = Serialization.Serialize(schema, SerializationFormat.Binary);
+                stream.Write(schemaData, 0, schemaData.Length);
+            }
         }
     }
 }
