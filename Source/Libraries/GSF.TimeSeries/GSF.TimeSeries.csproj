@@ -198,6 +198,9 @@
   <ItemGroup>
     <None Include="Adapters\IaonAdapters.vsd" />
     <None Include="Adapters\IaonOverview.vsd" />
+    <None Include="Data\SQL Server\db-refresh.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Data\SQLite\db-update.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
