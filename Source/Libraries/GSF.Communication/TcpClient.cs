@@ -167,6 +167,7 @@ namespace GSF.Communication
             public int ConnectionAttempts;
 
             public CancellationToken Token = new CancellationToken();
+            public ICancellationToken TimeoutToken;
 
             public void Dispose()
             {
@@ -744,6 +745,15 @@ namespace GSF.Communication
                     // send and receive operations on the socket
                     connectState.NetworkStream = new NetworkStream(connectState.Socket, false);
                     connectState.NegotiateStream = new NegotiateStream(connectState.NetworkStream, true);
+
+                    connectState.TimeoutToken = new Action(() =>
+                    {
+                        SocketException ex = new SocketException((int)SocketError.TimedOut);
+                        OnConnectionException(ex);
+                        TerminateConnection(connectState.Token);
+                        connectState.Dispose();
+                    }).DelayAndExecute(15000);
+
                     connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
 #endif
                 }
@@ -874,6 +884,10 @@ namespace GSF.Communication
             {
                 // Get the connect state from the async result
                 connectState = (ConnectState)asyncResult.AsyncState;
+
+                // Attempt to cancel the timeout operation
+                if (!connectState.TimeoutToken.Cancel())
+                    return;
 
                 // Quit if this connection loop has been cancelled
                 if (connectState.Token.Cancelled)

@@ -803,6 +803,7 @@ namespace GSF.Communication
             TransportProvider<Socket> client = new TransportProvider<Socket>();
             SocketAsyncEventArgs receiveArgs = null;
             WindowsPrincipal clientPrincipal = null;
+            IPEndPoint remoteEndPoint = null;
             TcpClientInfo clientInfo;
 
             try
@@ -829,6 +830,7 @@ namespace GSF.Communication
                 // Process the newly connected client.
                 client.Provider = acceptArgs.AcceptSocket;
                 client.Provider.ReceiveBufferSize = ReceiveBufferSize;
+                remoteEndPoint = client.Provider.RemoteEndPoint as IPEndPoint;
 
                 // Set up SocketAsyncEventArgs for receive operations.
                 receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
@@ -838,9 +840,7 @@ namespace GSF.Communication
                 acceptArgs.AcceptSocket = null;
 
                 if (!m_tcpServer.AcceptAsync(acceptArgs))
-                {
                     ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
-                }
 
 #if !MONO
                 // Authenticate the connected client Windows credentials.
@@ -851,9 +851,14 @@ namespace GSF.Communication
 
                     try
                     {
-                        socketStream = new NetworkStream(client.Provider);
-                        authenticationStream = new NegotiateStream(socketStream);
+                        socketStream = new NetworkStream(client.Provider, false);
+                        authenticationStream = new NegotiateStream(socketStream, true);
+
+                        ICancellationToken timeoutToken = new Action(() => client.Provider.Dispose()).DelayAndExecute(15000);
                         authenticationStream.AuthenticateAsServer();
+
+                        if (!timeoutToken.Cancel())
+                            throw new SocketException((int)SocketError.TimedOut);
 
                         if (authenticationStream.RemoteIdentity is WindowsIdentity)
                             clientPrincipal = new WindowsPrincipal((WindowsIdentity)authenticationStream.RemoteIdentity);
@@ -940,22 +945,12 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                if ((object)client.Provider != null && (object)client.Provider.RemoteEndPoint != null)
-                {
-                    string clientAddress = ((IPEndPoint)client.Provider.RemoteEndPoint).Address.ToString();
-                    string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
-                    OnClientConnectingException(new Exception(errorMessage, ex));
-                }
-                else
-                {
-                    string errorMessage = $"Unable to accept connection to client [unknown]: {ex.Message}";
-                    OnClientConnectingException(new Exception(errorMessage, ex));
-                }
+                string clientAddress = remoteEndPoint?.Address.ToString() ?? "UNKNOWN";
+                string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
+                OnClientConnectingException(new Exception(errorMessage, ex));
 
                 if ((object)receiveArgs != null)
-                {
                     TerminateConnection(client, receiveArgs, false);
-                }
             }
         }
 

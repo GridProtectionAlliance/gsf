@@ -77,6 +77,11 @@ namespace GSF.Communication
             public SslStream SslStream;
 
             /// <summary>
+            /// The end point of the remote client connecting to this server.
+            /// </summary>
+            public IPEndPoint RemoteEndPoint;
+
+            /// <summary>
             /// Performs application-defined tasks associated with
             /// freeing, releasing, or resetting unmanaged resources.
             /// </summary>
@@ -93,11 +98,14 @@ namespace GSF.Communication
         private class TlsClientInfo
         {
             public TransportProvider<TlsSocket> Client;
+            public ICancellationToken TimeoutToken;
+
+            public int Sending;
             public object SendLock;
             public ConcurrentQueue<TlsServerPayload> SendQueue;
             public ShortSynchronizedOperation DumpPayloadsOperation;
-            public int Sending;
 
+            public NegotiateStream NegotiateStream;
             public WindowsPrincipal ClientPrincipal;
         }
 
@@ -995,7 +1003,6 @@ namespace GSF.Communication
         private void ProcessAccept(SocketAsyncEventArgs acceptArgs)
         {
             TransportProvider<TlsSocket> client = new TransportProvider<TlsSocket>();
-            IPEndPoint remoteEndPoint = null;
             NetworkStream netStream;
 
             try
@@ -1025,9 +1032,6 @@ namespace GSF.Communication
 
                 try
                 {
-                    // Get the remote end point in case we need to display useful error messages
-                    remoteEndPoint = acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
-
                     if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                     {
                         // Reject client connection since limit has been reached.
@@ -1042,11 +1046,43 @@ namespace GSF.Communication
                         client.Provider = new TlsSocket
                         {
                             Socket = acceptArgs.AcceptSocket,
-                            SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
+                            SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback),
+                            RemoteEndPoint = acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint
                         };
 
                         client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
-                        client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, client);
+
+                        TlsClientInfo clientInfo = new TlsClientInfo
+                        {
+                            Client = client,
+                            SendLock = new object(),
+                            SendQueue = new ConcurrentQueue<TlsServerPayload>()
+                        };
+
+                        // Create operation to dump send queue payloads when the queue grows too large.
+                        clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+                        {
+                            TlsServerPayload payload;
+
+                            // Check to see if the client has reached the maximum send queue size.
+                            if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
+                            {
+                                for (int i = 0; i < m_maxSendQueueSize; i++)
+                                {
+                                    if (clientInfo.SendQueue.TryDequeue(out payload))
+                                    {
+                                        payload.WaitHandle.Set();
+                                        payload.WaitHandle.Dispose();
+                                        payload.WaitHandle = null;
+                                    }
+                                }
+
+                                throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
+                            }
+                        }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
+
+                        clientInfo.TimeoutToken = new Action(() => client.Provider.Socket.Dispose()).DelayAndExecute(15000);
+                        client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, clientInfo);
                     }
                 }
                 finally
@@ -1067,13 +1103,10 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                if ((object)remoteEndPoint != null)
-                {
-                    string clientAddress = remoteEndPoint.Address.ToString();
-                    string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
-                    OnClientConnectingException(new Exception(errorMessage, ex));
-                }
-
+                IPEndPoint remoteEndPoint = client.Provider?.RemoteEndPoint;
+                string clientAddress = remoteEndPoint?.Address.ToString() ?? "UNKNOWN";
+                string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
+                OnClientConnectingException(new Exception(errorMessage, ex));
                 TerminateConnection(client, false);
             }
         }
@@ -1083,12 +1116,15 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessTlsAuthentication(IAsyncResult asyncResult)
         {
-            TransportProvider<TlsSocket> client = (TransportProvider<TlsSocket>)asyncResult.AsyncState;
-            IPEndPoint remoteEndPoint = client.Provider.Socket.RemoteEndPoint as IPEndPoint;
+            TlsClientInfo clientInfo = (TlsClientInfo)asyncResult.AsyncState;
+            TransportProvider<TlsSocket> client = clientInfo.Client;
             SslStream stream = client.Provider.SslStream;
 
             try
             {
+                if (!clientInfo.TimeoutToken.Cancel())
+                    throw new SocketException((int)SocketError.TimedOut);
+
                 stream.EndAuthenticateAsServer(asyncResult);
 
                 if (EnabledSslProtocols != SslProtocols.None)
@@ -1103,41 +1139,13 @@ namespace GSF.Communication
                 if (m_integratedSecurity)
                 {
 #if !MONO
-                    NegotiateStream negotiateStream = new NegotiateStream(stream, true);
-                    negotiateStream.BeginAuthenticateAsServer(ProcessIntegratedSecurityAuthentication, Tuple.Create(client, negotiateStream));
+                    clientInfo.NegotiateStream = new NegotiateStream(stream, true);
+                    clientInfo.TimeoutToken = new Action(() => client.Provider.Socket.Dispose()).DelayAndExecute(15000);
+                    clientInfo.NegotiateStream.BeginAuthenticateAsServer(ProcessIntegratedSecurityAuthentication, clientInfo);
 #endif
                 }
                 else
                 {
-                    TlsClientInfo clientInfo = new TlsClientInfo
-                    {
-                        Client = client,
-                        SendLock = new object(),
-                        SendQueue = new ConcurrentQueue<TlsServerPayload>()
-                    };
-
-                    // Create operation to dump send queue payloads when the queue grows too large.
-                    clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
-                    {
-                        TlsServerPayload payload;
-
-                        // Check to see if the client has reached the maximum send queue size.
-                        if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
-                        {
-                            for (int i = 0; i < m_maxSendQueueSize; i++)
-                            {
-                                if (clientInfo.SendQueue.TryDequeue(out payload))
-                                {
-                                    payload.WaitHandle.Set();
-                                    payload.WaitHandle.Dispose();
-                                    payload.WaitHandle = null;
-                                }
-                            }
-
-                            throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
-                        }
-                    }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
-
                     // We can proceed further with receiving data from the client.
                     m_clientInfoLookup.TryAdd(client.ID, clientInfo);
 
@@ -1148,12 +1156,10 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                if ((object)remoteEndPoint != null)
-                {
-                    string clientAddress = remoteEndPoint.Address.ToString();
-                    string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {CertificateChecker.ReasonForFailure ?? ex.Message}";
-                    OnClientConnectingException(new Exception(errorMessage, ex));
-                }
+                IPEndPoint remoteEndPoint = client.Provider.RemoteEndPoint;
+                string clientAddress = remoteEndPoint.Address.ToString();
+                string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {CertificateChecker.ReasonForFailure ?? ex.Message}";
+                OnClientConnectingException(new Exception(errorMessage, ex));
                 TerminateConnection(client, false);
             }
         }
@@ -1161,56 +1167,32 @@ namespace GSF.Communication
 #if !MONO
         private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
         {
-            Tuple<TransportProvider<TlsSocket>, NegotiateStream> state = (Tuple<TransportProvider<TlsSocket>, NegotiateStream>)asyncResult.AsyncState;
-            TransportProvider<TlsSocket> client = state.Item1;
-            IPEndPoint remoteEndPoint = client.Provider.Socket.RemoteEndPoint as IPEndPoint;
-            NegotiateStream negotiateStream = state.Item2;
-            WindowsPrincipal clientPrincipal = null;
+            TlsClientInfo clientInfo = (TlsClientInfo)asyncResult.AsyncState;
+            TransportProvider<TlsSocket> client = clientInfo.Client;
+            NegotiateStream negotiateStream = clientInfo.NegotiateStream;
+            IPEndPoint remoteEndPoint = client.Provider.RemoteEndPoint;
+            WindowsPrincipal clientPrincipal;
 
             try
             {
+                if (!clientInfo.TimeoutToken.Cancel())
+                    throw new SocketException((int)SocketError.TimedOut);
+
                 try
                 {
                     negotiateStream.EndAuthenticateAsServer(asyncResult);
 
                     if (negotiateStream.RemoteIdentity is WindowsIdentity)
+                    {
                         clientPrincipal = new WindowsPrincipal((WindowsIdentity)negotiateStream.RemoteIdentity);
+                        clientInfo.ClientPrincipal = clientPrincipal;
+                    }
                 }
                 catch (InvalidCredentialException)
                 {
                     if (!m_ignoreInvalidCredentials)
                         throw;
                 }
-
-                TlsClientInfo clientInfo = new TlsClientInfo
-                {
-                    Client = client,
-                    SendLock = new object(),
-                    SendQueue = new ConcurrentQueue<TlsServerPayload>(),
-                    ClientPrincipal = clientPrincipal
-                };
-
-                // Create operation to dump send queue payloads when the queue grows too large.
-                clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
-                {
-                    TlsServerPayload payload;
-
-                    // Check to see if the client has reached the maximum send queue size.
-                    if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
-                    {
-                        for (int i = 0; i < m_maxSendQueueSize; i++)
-                        {
-                            if (clientInfo.SendQueue.TryDequeue(out payload))
-                            {
-                                payload.WaitHandle.Set();
-                                payload.WaitHandle.Dispose();
-                                payload.WaitHandle = null;
-                            }
-                        }
-
-                        throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
-                    }
-                }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
 
                 // We can proceed further with receiving data from the client.
                 m_clientInfoLookup.TryAdd(client.ID, clientInfo);
@@ -1221,12 +1203,9 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                if ((object)remoteEndPoint != null)
-                {
-                    string clientAddress = remoteEndPoint.Address.ToString();
-                    string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {ex.Message}";
-                    OnClientConnectingException(new Exception(errorMessage, ex));
-                }
+                string clientAddress = remoteEndPoint.Address.ToString();
+                string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {ex.Message}";
+                OnClientConnectingException(new Exception(errorMessage, ex));
                 TerminateConnection(client, false);
             }
             finally

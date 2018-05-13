@@ -540,18 +540,17 @@ namespace GSF.ServiceProcess
         /// </summary>
         public void Connect()
         {
-            if ((object)m_remotingClient == null)
+            ClientBase remotingClient = m_remotingClient;
+
+            if ((object)remotingClient == null)
                 throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
             m_authenticationComplete = false;
 
             // Wait for connection.
-            m_remotingClient.Connect();
+            remotingClient.Connect();
 
-            const int MaxWaitPeriods = 50;   // Will wait a maximum of 5 seconds before assuming failure
-            int attempts = 0;
-
-            while (!m_authenticationComplete && m_remotingClient.Enabled && attempts++ < MaxWaitPeriods)
+            while (remotingClient.Enabled && !m_authenticationComplete)
             {
                 // Wait for authentication.
                 Thread.Sleep(100);
@@ -561,14 +560,10 @@ namespace GSF.ServiceProcess
                     return;
             }
 
-            // It is possible that local domain account will not be accepted and/or recognized by remote
-            // server when attempting to use integrated security - in these cases the sent client info
-            // message can be rejected so the ServiceHelper will neither respond with success or failure.
-            // We treat this as an authentication failure so that credentials can be requested.
-            if (attempts >= MaxWaitPeriods)
-                OnAuthenticationFailure();
+            if (!m_authenticationComplete)
+                UpdateStatus(UpdateType.Alarm, "Connection was terminated before completing authentication.\r\n\r\n");
 
-            if (m_remotingClient.Enabled)
+            if (remotingClient.Enabled)
                 m_attemptReconnection = true;
         }
 
@@ -777,7 +772,6 @@ namespace GSF.ServiceProcess
             status.Append(m_remotingClient.Status);
             status.AppendLine();
             UpdateStatus(UpdateType.Information, "{0}", status.ToString());
-            SendRequest(StatusMessageFilter);
         }
 
         private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
@@ -848,6 +842,7 @@ namespace GSF.ServiceProcess
                         UpdateStatus(UpdateType.Alarm, "{0}", response.Message);
                         break;
                     case "AUTHENTICATIONSUCCESS":
+                        SendRequest(StatusMessageFilter);
                         OnAuthenticationSuccess();
                         break;
                     case "AUTHENTICATIONFAILURE":

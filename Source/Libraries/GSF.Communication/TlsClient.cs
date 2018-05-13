@@ -64,6 +64,7 @@ namespace GSF.Communication
             public int ConnectionAttempts;
 
             public CancellationToken Token = new CancellationToken();
+            public ICancellationToken TimeoutToken;
 
             public void Dispose()
             {
@@ -909,7 +910,17 @@ namespace GSF.Communication
                 endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
                 if (!connectState.Token.Cancelled)
+                {
+                    connectState.TimeoutToken = new Action(() =>
+                    {
+                        SocketException ex = new SocketException((int)SocketError.TimedOut);
+                        OnConnectionException(ex);
+                        TerminateConnection(connectState.Token);
+                        connectState.Dispose();
+                    }).DelayAndExecute(15000);
+
                     connectState.SslStream.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, connectState);
+                }
             }
             catch (SocketException ex)
             {
@@ -968,6 +979,10 @@ namespace GSF.Communication
                 // Get the connect state from the async result
                 connectState = (ConnectState)asyncResult.AsyncState;
 
+                // Attempt to cancel the timeout operation
+                if (!connectState.TimeoutToken.Cancel())
+                    return;
+
                 // Quit if this connection loop has been cancelled
                 if (connectState.Token.Cancelled)
                     return;
@@ -995,6 +1010,15 @@ namespace GSF.Communication
 
                     // Create the NegotiateStream to begin authentication of the user's Windows credentials
                     connectState.NegotiateStream = new NegotiateStream(connectState.SslStream, true);
+
+                    connectState.TimeoutToken = new Action(() =>
+                    {
+                        SocketException ex = new SocketException((int)SocketError.TimedOut);
+                        OnConnectionException(ex);
+                        TerminateConnection(connectState.Token);
+                        connectState.Dispose();
+                    }).DelayAndExecute(15000);
+
                     connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
 #endif
                 }
@@ -1111,6 +1135,10 @@ namespace GSF.Communication
             {
                 // Get the connect state from the async result
                 connectState = (ConnectState)asyncResult.AsyncState;
+
+                // Attempt to cancel the timeout operation
+                if (!connectState.TimeoutToken.Cancel())
+                    return;
 
                 // Quit if this connection loop has been cancelled
                 if (connectState.Token.Cancelled)

@@ -109,11 +109,15 @@ namespace GSF.Communication
         /// <returns>Length of the payload.</returns>
         public static int ExtractLength(byte[] buffer, int length, byte[] marker)
         {
-            // Check to see if buffer is at least as big as the payload header and has the payload marker
-            if (length >= (marker.Length + LengthSegment) && HasHeader(buffer, marker))
-                return BitConverter.ToInt32(buffer, marker.Length);
+            // Check to see if buffer is at least as big as the payload header
+            if (length < (marker.Length + LengthSegment))
+                return -1;
 
-            return -1;
+            // Check to see if buffer has the payload marker
+            if (!HasHeader(buffer, marker))
+                return 0;
+
+            return BitConverter.ToInt32(buffer, marker.Length);
         }
     }
 }
