@@ -500,6 +500,7 @@ namespace GSF.IO
                     if (m_cancellationToken.IsCancelled)
                     {
                         m_active = false;
+                        wrapper.Dispose();
                         return;
                     }
 
