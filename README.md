@@ -5,6 +5,26 @@ The Grid Solutions Framework (GSF) is an extensive open source collection of .NE
 
 [![Build status](https://ci.appveyor.com/api/projects/status/oqyrl84ufu7bbhnm?svg=true)](https://ci.appveyor.com/project/ritchiecarroll/gsf)
 
+| Library | Downloads | Latest  Version |
+| --------- | ---------------------- |  ---------------------- |
+| [GSF.Core](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Core.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Core.svg) |
+| [GSF.Communication](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_Communication.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Communication.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Communication.svg) |
+| [GSF.Security](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_Security.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Security.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Security.svg) |
+| [GSF.ServiceProcess](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_ServiceProcess.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.ServiceProcess.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.ServiceProcess.svg) |
+| [GSF.TimeSeries](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.TimeSeries.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.TimeSeries.svg) |
+| [GSF.Web](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Web.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Web.svg) |
+| [GSF.Windows](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_Windows.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Windows.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Windows.svg) |
+| [GSF.Net](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Net.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Net.svg) |
+| [GSF.Media](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Media.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Media.svg) |
+| [GSF.Historian](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.Historian.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.Historian.svg) |
+| [GSF.PhasorProtocols](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.PhasorProtocols.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.PhasorProtocols.svg) |
+| [GSF.COMRADE](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_COMTRADE.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.COMTRADE.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.COMTRADE.svg) |
+| [GSF.PQDIF](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/R_Project_GridSolutionsFramework.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.PQDIF.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.PQDIF.svg) |
+| [GSF.SELEventParser](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_SELEventParser.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.SELEventParser.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.SELEventParser.svg) |
+| [GSF.EMAX](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_EMAX.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.EMAX.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.EMAX.svg) |
+| [GSF.ServiceModel](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_ServiceModel.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.ServiceModel.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.ServiceModel.svg) |
+| [GSF.ServiceBus](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/html/N_GSF_ServiceBus.htm) | ![NuGet](https://img.shields.io/nuget/dt/GSF.ServiceBus.svg) | ![NuGet Pre Release](https://img.shields.io/nuget/vpre/GSF.ServiceBus.svg) |
+
 [Time-series Application Components](http://www.gridprotectionalliance.org/docs/products/gsf/tsl-components-2015.pdf)
 
 Example Components:
