@@ -154,6 +154,11 @@ namespace GSF.Communication
         public const int DefaultMaxSendQueueSize = 500000;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="NoDelay"/> property.
+        /// </summary>
+        public const bool DefaultNoDelay = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ServerBase.ConfigurationString"/> property.
         /// </summary>
         public const string DefaultConfigurationString = "Port=8888";
@@ -177,6 +182,7 @@ namespace GSF.Communication
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
+        private bool m_noDelay;
         private Socket m_tlsServer;
         private SocketAsyncEventArgs m_acceptArgs;
         private readonly ConcurrentDictionary<Guid, TlsClientInfo> m_clientInfoLookup;
@@ -220,6 +226,7 @@ namespace GSF.Communication
             m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
+            m_noDelay = DefaultNoDelay;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TlsClientInfo>();
 
             m_acceptHandler = (sender, args) => ProcessAccept(args);
@@ -363,6 +370,24 @@ namespace GSF.Communication
             set
             {
                 m_maxSendQueueSize = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines if small packets are delivered to the remote host without delay.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultNoDelay),
+        Description("Determines if small packets are delivered to the remote host without delay.")]
+        public bool NoDelay
+        {
+            get
+            {
+                return m_noDelay;
+            }
+            set
+            {
+                m_noDelay = value;
             }
         }
 
@@ -727,6 +752,7 @@ namespace GSF.Communication
                 settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
+                settings["NoDelay", true].Update(m_noDelay);
                 config.Save();
             }
         }
@@ -754,6 +780,7 @@ namespace GSF.Communication
                 settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+                settings.Add("NoDelay", m_noDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
 
                 try
                 {
@@ -776,6 +803,7 @@ namespace GSF.Communication
                 IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
+                NoDelay = settings["NoDelay"].ValueAs(m_noDelay);
             }
 
             if (!FilePath.InApplicationPath(TrustedCertificatesPath))
@@ -811,14 +839,12 @@ namespace GSF.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
-                string integratedSecuritySetting;
-
                 // Initialize if unitialized.
                 if (!Initialized)
                     Initialize();
 
                 // Overwrite config file if integrated security exists in connection string.
-                if (m_configData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                if (m_configData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
                     m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
 #if MONO
@@ -826,8 +852,13 @@ namespace GSF.Communication
                 m_integratedSecurity = false;
 #endif
 
+                // Overwrite config file if no delay exists in connection string.
+                if (m_configData.TryGetValue("noDelay", out string noDelaySetting))
+                    m_noDelay = noDelaySetting.ParseBoolean();
+
                 // Bind server socket to local end-point and listen.
                 m_tlsServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                m_tlsServer.NoDelay = m_noDelay;
                 m_tlsServer.Listen(1);
 
                 // Begin accepting incoming connection asynchronously.
