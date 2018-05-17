@@ -3332,7 +3332,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 LogException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, $"Failed to send client response due to an exception: {ex.Message}\r\n\r\n");
+                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, $"Failed to send client response due to an exception: {ex.Message}\r\n\r\n");
             }
         }
 
@@ -3351,7 +3351,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 LogException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, $"Failed to update client status \"{status.ToNonNullString()}\" due to an exception: {ex.Message}\r\n\r\n");
+                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, $"Failed to update client status \"{status.ToNonNullString()}\" due to an exception: {ex.Message}\r\n\r\n");
             }
         }
 
