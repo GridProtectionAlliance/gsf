@@ -1647,6 +1647,7 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.ConfigurationString = "port=6165";
                     commandChannel.PayloadAware = true;
                     commandChannel.PersistSettings = true;
+                    commandChannel.NoDelay = true;
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;
@@ -1686,6 +1687,7 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.RequireClientCertificate = true;
                     commandChannel.CertificateChecker = m_certificateChecker;
                     commandChannel.PersistSettings = true;
+                    commandChannel.NoDelay = true;
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;

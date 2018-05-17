@@ -1686,6 +1686,7 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.MaxConnectionAttempts = 1;
                     commandChannel.ReceiveBufferSize = bufferSize;
                     commandChannel.SendBufferSize = bufferSize;
+                    commandChannel.NoDelay = true;
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;
@@ -1729,6 +1730,7 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.CertificateChecker = certificateChecker;
                     commandChannel.ReceiveBufferSize = bufferSize;
                     commandChannel.SendBufferSize = bufferSize;
+                    commandChannel.NoDelay = true;
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;
