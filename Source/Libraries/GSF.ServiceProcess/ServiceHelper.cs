@@ -4349,13 +4349,13 @@ namespace GSF.ServiceProcess
                         else
                         {
                             // Invalid command option specified.
-                            UpdateStatus(UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
                         }
                     }
                     else
                     {
                         // File already exists.
-                        UpdateStatus(UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", targetFile);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", targetFile);
                     }
                 }
             }
@@ -4443,13 +4443,13 @@ namespace GSF.ServiceProcess
                     else
                     {
                         // File does not exist.
-                        UpdateStatus(UpdateType.Alarm, "File '{0}' does not exist.\r\n\r\n", source);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "File '{0}' does not exist.\r\n\r\n", source);
                     }
                 }
                 else
                 {
                     // Invalid command option specified.
-                    UpdateStatus(UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
                 }
             }
         }
@@ -4609,9 +4609,9 @@ namespace GSF.ServiceProcess
             }
         }
 
-        private void RemoteTelnetSession(ClientRequestInfo requestinfo)
+        private void RemoteTelnetSession(ClientRequestInfo requestInfo)
         {
-            if ((object)m_remoteCommandProcess == null && requestinfo.Request.Arguments.ContainsHelpRequest)
+            if ((object)m_remoteCommandProcess == null && requestInfo.Request.Arguments.ContainsHelpRequest)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
@@ -4636,17 +4636,17 @@ namespace GSF.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
-                bool connectSession = requestinfo.Request.Arguments.Exists("connect");
-                bool disconnectSession = requestinfo.Request.Arguments.Exists("disconnect");
+                bool connectSession = requestInfo.Request.Arguments.Exists("connect");
+                bool disconnectSession = requestInfo.Request.Arguments.Exists("disconnect");
 
-                if ((object)m_remoteCommandProcess == null && connectSession && !string.IsNullOrEmpty(requestinfo.Request.Arguments["connect"]))
+                if ((object)m_remoteCommandProcess == null && connectSession && !string.IsNullOrEmpty(requestInfo.Request.Arguments["connect"]))
                 {
                     // User wants to establish a remote command session.
-                    string password = requestinfo.Request.Arguments["connect"];
+                    string password = requestInfo.Request.Arguments["connect"];
 
                     if (password == m_telnetSessionPassword)
                     {
@@ -4665,15 +4665,15 @@ namespace GSF.ServiceProcess
 
                         UpdateStatus(UpdateType.Information, "Remote command session established - status updates are suspended.\r\n\r\n");
 
-                        m_remoteCommandClientID = requestinfo.Sender.ClientID;
-                        SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Established"));
+                        m_remoteCommandClientID = requestInfo.Sender.ClientID;
+                        SendResponse(requestInfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Established"));
                     }
                     else
                     {
-                        UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
-                else if (string.Compare(requestinfo.Request.Command, "Telnet", StringComparison.OrdinalIgnoreCase) == 0 && (object)m_remoteCommandProcess != null && disconnectSession)
+                else if (string.Compare(requestInfo.Request.Command, "Telnet", StringComparison.OrdinalIgnoreCase) == 0 && (object)m_remoteCommandProcess != null && disconnectSession)
                 {
                     // User wants to terminate an established remote command session.                   
                     m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
@@ -4686,21 +4686,21 @@ namespace GSF.ServiceProcess
                     m_remoteCommandProcess = null;
 
                     m_remoteCommandClientID = Guid.Empty;
-                    SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Terminated"));
+                    SendResponse(requestInfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Terminated"));
 
-                    UpdateStatus(UpdateType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }
                 else if ((object)m_remoteCommandProcess != null)
                 {
                     // User has entered commands that must be redirected to the established command session.
-                    string input = requestinfo.Request.Command + " " + requestinfo.Request.Arguments;
+                    string input = requestInfo.Request.Command + " " + requestInfo.Request.Arguments;
                     m_remoteCommandProcess.StandardInput.WriteLine(input);
                 }
                 else
                 {
                     // User has provided insufficient information.
-                    requestinfo.Request = ClientRequest.Parse("Telnet /?");
-                    RemoteTelnetSession(requestinfo);
+                    requestInfo.Request = ClientRequest.Parse("Telnet /?");
+                    RemoteTelnetSession(requestInfo);
                 }
             }
         }
