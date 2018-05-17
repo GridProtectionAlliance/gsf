@@ -1041,7 +1041,7 @@ namespace PhasorProtocolAdapters
 
             // Initialize command channel if defined
             if (!string.IsNullOrEmpty(commandChannel))
-                this.CommandChannel = new TcpServer(commandChannel);
+                this.CommandChannel = new TcpServer(commandChannel) { NoDelay = true };
             else
                 this.CommandChannel = null;
 
