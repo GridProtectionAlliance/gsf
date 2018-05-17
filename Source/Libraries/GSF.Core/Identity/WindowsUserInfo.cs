@@ -25,6 +25,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices;
+using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -371,102 +372,37 @@ namespace GSF.Identity
         {
             get
             {
-                HashSet<string> groups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                string groupName;
+                if (!m_enabled)
+                    return Array.Empty<string>();
 
-                if (m_enabled)
+                using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
                 {
-                    if (m_isLocalAccount)
-                    {
-                        // Get fixed list of BUILTIN local groups
-                        string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
-
-                        // Get local groups that local user is a member of
-                        object localGroups = m_userEntry.Invoke("Groups");
-
-                        foreach (object localGroup in (IEnumerable)localGroups)
-                        {
-                            using (DirectoryEntry groupEntry = new DirectoryEntry(localGroup))
-                            {
-                                groupName = groupEntry.Name;
-
-                                if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
-                                    groups.Add(Environment.MachineName + "\\" + groupName);
-                                else
-                                    groups.Add("BUILTIN\\" + groupName);
-                            }
-                        }
-
-                        // Union this with a manual scan of local groups since "Groups" call will not derive
-                        // "NT AUTHORITY\Authenticated Users" which will miss "BUILTIN\Users" for authenticated
-                        // users. This will also catch other groups that may have been missed by "Groups" call.
-                        groups.UnionWith(LocalGroups);
-                    }
-                    else
-                    {
-                        // Get active directory groups that active directory user is a member of
-                        m_userEntry.RefreshCache(new[] { "TokenGroups" });
-
-                        foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
-                        {
-                            try
-                            {
-                                groupName = new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString();
-                                groups.Add(groupName);
-                            }
-                            catch (IdentityNotMappedException)
-                            {
-                                // This might happen when AD server is not accessible.
-                            }
-                            catch (SystemException)
-                            {
-                                // Ignoring group SID's that fail to translate to an active AD group, for whatever reason
-                            }
-                        }
-
-                        // Union this with local groups that active directory user is a member of. The
-                        // "TokenGroups" call doesn't get all of these :-p, generally this call only
-                        // returns some of the common "BUILTIN\*" groups.
-                        groups.UnionWith(LocalGroups);
-                    }
+                    return principal.GetAuthorizationGroups()
+                        .Select(groupPrincipal => groupPrincipal.Sid.ToString())
+                        .Select(SIDToAccountName)
+                        .ToArray();
                 }
-
-                return groups.ToArray();
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public string[] LocalGroups
         {
             get
             {
-                List<string> groups = new List<string>();
+                if (!m_enabled)
+                    return Array.Empty<string>();
 
-                // Get local groups that user is a member of
-                DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
-                string userPath = string.Format("WinNT://{0}/{1}", m_parent.Domain, m_parent.UserName);
-                string groupName;
-
-                string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
-
-                // Only enumerate groups
-                root.Children.SchemaFilter.Add("Group");
-
-                // Have to scan each local group for the AD user...
-                foreach (DirectoryEntry groupEntry in root.Children)
+                using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
                 {
-                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
-                    {
-                        groupName = groupEntry.Name;
-
-                        if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
-                            groups.Add(Environment.MachineName + "\\" + groupName);
-                        else
-                            groups.Add("BUILTIN\\" + groupName);
-                    }
+                    return principal.GetAuthorizationGroups()
+                        .Cast<GroupPrincipal>()
+                        .Where(groupPrincipal => groupPrincipal.GroupScope == GroupScope.Local)
+                        .Select(groupPrincipal => groupPrincipal.Sid.ToString())
+                        .Select(SIDToAccountName)
+                        .ToArray();
                 }
-
-                return groups.ToArray();
             }
         }
 
