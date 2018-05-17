@@ -327,6 +327,11 @@ namespace GSF.ServiceProcess
                 });
             }
 
+            public void UpdateFilters(Action<ClientFilter> updateAction)
+            {
+                m_thread.Push(HighPriority, () => updateAction(m_filter));
+            }
+
             public void ListFilters(ClientRequestInfo requestInfo)
             {
                 m_thread.Push(HighPriority, () =>
@@ -1503,6 +1508,8 @@ namespace GSF.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Filter", "Filters status messages coming from the service", UpdateClientFilter));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Quiet", "Suppresses status messages coming from the service", SuppressStatusUpdates, new[] { "suppress", "hush", "q" }));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Resume", "Unsuppresses status messages coming from the service", UnsuppressStatusUpdates, new[] { "unsuppress", "r" }));
 
                 // Enable file management commands if configured
                 if (m_supportFileManagementCommands)
@@ -4246,6 +4253,32 @@ namespace GSF.ServiceProcess
 
                 if (argsContainsList)
                     clientConfig.ListFilters(requestInfo);
+            });
+        }
+
+        private void SuppressStatusUpdates(ClientRequestInfo requestInfo)
+        {
+            const int HighPriority = 2;
+
+            // Use the status update thread to get the
+            // client's config, then update the filters
+            m_statusUpdateThread.Push(HighPriority, () =>
+            {
+                ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
+                clientConfig.UpdateFilters(clientFilter => clientFilter.PatternExclusionFilters.Add(string.Empty));
+            });
+        }
+
+        private void UnsuppressStatusUpdates(ClientRequestInfo requestInfo)
+        {
+            const int HighPriority = 2;
+
+            // Use the status update thread to get the
+            // client's config, then update the filters
+            m_statusUpdateThread.Push(HighPriority, () =>
+            {
+                ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
+                clientConfig.UpdateFilters(clientFilter => clientFilter.PatternExclusionFilters.RemoveWhere(string.IsNullOrEmpty));
             });
         }
 
