@@ -185,6 +185,29 @@ namespace GSF.IO.Checksums
         };
 
         // Static Methods
+
+        /// <summary>Calculates the CRC32 check-sum on specified portion of a buffer.</summary>
+        /// <param name="buffer">Data buffer to perform check-sum on.</param>
+        /// <param name="offset">Starts index in data buffer to begin check-sum.</param>
+        /// <param name="count">Total number of bytes from <paramref name="offset">offset</paramref> to
+        /// perform check-sum over.</param>
+        /// <returns>Computed CRC32 checksum over the specified portion of the buffer.</returns>
+        public static uint Compute(byte[] buffer, int offset, int count)
+        {
+            buffer.ValidateParameters(offset, count);
+
+            uint crc = CrcSeed;
+            int ending = offset + count;
+
+            while (offset < ending)
+            {
+                crc = CrcTable[(crc ^ buffer[offset]) & 0xFF] ^ (crc >> 8);
+                offset++;
+            }
+
+            return crc ^ CrcSeed;
+        }
+
         internal static uint ComputeCrc32(uint oldCrc, byte value)
         {
             return (uint)(CrcTable[(oldCrc ^ value) & 0xFF] ^ (oldCrc >> 8));
