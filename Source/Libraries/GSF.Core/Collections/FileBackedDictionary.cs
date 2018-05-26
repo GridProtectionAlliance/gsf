@@ -34,7 +34,7 @@ namespace GSF.Collections
     /// </summary>
     /// <typeparam name="TKey">The type of the keys in the lookup table.</typeparam>
     /// <typeparam name="TValue">The type of the values in the lookup table.</typeparam>
-    public class FileBackedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
+    public sealed class FileBackedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
     {
         #region [ Members ]
 
@@ -362,6 +362,15 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Opens the file backing this hash set in read-only mode.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">File is already open.</exception>
+        public void OpenRead()
+        {
+            m_lookupTable.OpenRead();
+        }
+
+        /// <summary>
         /// Adds an element with the provided key and value to the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <param name="key">The object to use as the key of the element to add.</param>
@@ -536,18 +545,7 @@ namespace GSF.Collections
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileBackedDictionary{TKey, TValue}"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-                Close();
+            m_lookupTable.Dispose();
         }
 
         /// <summary>

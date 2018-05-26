@@ -47,13 +47,13 @@ namespace GSF.Collections
         HashSet
     }
 
-    internal class FileBackedLookupTable<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
+    internal sealed class FileBackedLookupTable<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
     {
         #region [ Members ]
 
         // Nested Types
 
-        protected class HeaderNode
+        private class HeaderNode
         {
             public const int SignatureSize = 16;
             public const int FixedSize = SignatureSize + 4 * sizeof(long);
@@ -73,7 +73,7 @@ namespace GSF.Collections
             public long EndOfFilePointer;
         }
 
-        protected class JournalNode
+        private class JournalNode
         {
             public const int FixedSize = sizeof(int) + 3 * sizeof(long) + sizeof(int);
 
@@ -93,13 +93,13 @@ namespace GSF.Collections
             public int Checksum;
         }
 
-        protected class LookupNode
+        private class LookupNode
         {
             public long ItemPointer;
             public int Marker;
         }
 
-        protected class ItemNode
+        private class ItemNode
         {
             // Size of only the fixed size portion of
             // the item node (not including key and value)
@@ -364,7 +364,7 @@ namespace GSF.Collections
                         invalidPathChars = Path.GetInvalidPathChars();
 
                         if (value.Any(invalidPathChars.Contains))
-                            throw new ArgumentException("Path contains one or more invalid characters", nameof(value));
+                            throw new ArgumentException($"Path contains one or more invalid characters: {value}", nameof(value));
                     }
 
                     Close();
@@ -384,7 +384,7 @@ namespace GSF.Collections
             get
             {
                 if ((object)m_fileStream == null)
-                    Open();
+                    OpenImplicit();
 
                 return (int)m_headerNode.Count;
             }
@@ -401,7 +401,7 @@ namespace GSF.Collections
             get
             {
                 if ((object)m_fileStream == null)
-                    Open();
+                    OpenImplicit();
 
                 return (object)m_fileWriter == null;
             }
@@ -420,7 +420,7 @@ namespace GSF.Collections
                 byte[] signature;
 
                 if ((object)m_fileStream == null)
-                    Open();
+                    OpenImplicit();
 
                 signature = new byte[HeaderNode.SignatureSize];
                 Buffer.BlockCopy(m_headerNode.Signature, 0, signature, 0, HeaderNode.SignatureSize);
@@ -434,8 +434,7 @@ namespace GSF.Collections
                 if (value.Length > HeaderNode.SignatureSize)
                     throw new ArgumentException("Attempt was made to set signature to a value larger than the maximum signature size of " + HeaderNode.SignatureSize);
 
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 Buffer.BlockCopy(value, 0, m_headerNode.Signature, 0, value.Length);
                 Array.Clear(m_headerNode.Signature, value.Length, HeaderNode.SignatureSize - value.Length);
@@ -463,7 +462,7 @@ namespace GSF.Collections
                     throw new ArgumentNullException(nameof(key));
 
                 if (!TryGetValue(key, out value))
-                    throw new KeyNotFoundException("Item with the given key was not found in the lookup table");
+                    throw new KeyNotFoundException($"Item with the given key ({key}) was not found in the lookup table: {m_filePath}");
 
                 return value;
             }
@@ -478,8 +477,7 @@ namespace GSF.Collections
                 if ((object)key == null)
                     throw new ArgumentNullException(nameof(key));
 
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 Find(key, out lookupPointer, out itemPointer);
 
@@ -512,7 +510,7 @@ namespace GSF.Collections
             get
             {
                 if ((object)m_fileStream == null)
-                    Open();
+                    OpenImplicit();
 
                 // ReSharper disable once PossibleNullReferenceException
                 return m_fileStream.CacheSize;
@@ -520,7 +518,7 @@ namespace GSF.Collections
             set
             {
                 if ((object)m_fileStream == null)
-                    Open();
+                    OpenImplicit();
 
                 // ReSharper disable once PossibleNullReferenceException
                 m_fileStream.CacheSize = value;
@@ -565,10 +563,8 @@ namespace GSF.Collections
         /// <exception cref="InvalidOperationException">File is already open.</exception>
         public void Open()
         {
-            string directory;
-
             if ((object)m_fileStream != null)
-                throw new InvalidOperationException("File is already open");
+                throw new InvalidOperationException($"File is already open: {m_filePath}");
 
             m_headerNode = new HeaderNode(m_lookupTableType);
             m_journalNode = new JournalNode();
@@ -576,79 +572,110 @@ namespace GSF.Collections
             if (string.IsNullOrWhiteSpace(m_filePath))
                 m_filePath = Path.GetTempFileName();
 
-            try
+            string directory = Path.GetDirectoryName(m_filePath);
+
+            // Attempt to create the directory if it doesn't already exist
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            // Open the file in read/write mode
+            m_fileStream = new CachedFileStream(m_filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            m_fileWriter = new BinaryWriter(m_fileStream);
+            m_fileReader = new BinaryReader(m_fileStream);
+
+            if (m_fileStream.Length > HeaderNode.FixedSize + JournalNode.FixedSize)
             {
-                directory = Path.GetDirectoryName(m_filePath);
+                // Read the header node and the journal
+                // node from the start of the file
+                Read(m_headerNode);
+                Read(m_journalNode);
 
-                // Attempt to create the directory if it doesn't already exist
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                    Directory.CreateDirectory(directory);
-
-                // Open the file in read/write mode
-                m_fileStream = new CachedFileStream(m_filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                m_fileWriter = new BinaryWriter(m_fileStream);
-                m_fileReader = new BinaryReader(m_fileStream);
-
-                if (m_fileStream.Length > HeaderNode.FixedSize + JournalNode.FixedSize)
+                // If the journal node has an indicates that an operation was interrupted
+                // the last time this file was open, replay that operation to return the
+                // file to a consistent state
+                switch (m_journalNode.Operation)
                 {
-                    // Read the header node and the journal
-                    // node from the start of the file
-                    Read(m_headerNode);
-                    Read(m_journalNode);
+                    case JournalNode.Set:
+                        Set(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
+                        break;
 
-                    // If the journal node has an indicates that an operation was interrupted
-                    // the last time this file was open, replay that operation to return the
-                    // file to a consistent state
-                    switch (m_journalNode.Operation)
-                    {
-                        case JournalNode.Set:
-                            Set(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
-                            break;
+                    case JournalNode.Delete:
+                        Delete(m_journalNode.LookupPointer, m_journalNode.Sync);
+                        break;
 
-                        case JournalNode.Delete:
-                            Delete(m_journalNode.LookupPointer, m_journalNode.Sync);
-                            break;
+                    case JournalNode.GrowLookupSection:
+                        GrowLookupSection(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
+                        break;
 
-                        case JournalNode.GrowLookupSection:
-                            GrowLookupSection(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
-                            break;
+                    case JournalNode.RebuildLookupTable:
+                        RebuildLookupTable(m_journalNode.LookupPointer);
+                        break;
 
-                        case JournalNode.RebuildLookupTable:
-                            RebuildLookupTable(m_journalNode.LookupPointer);
-                            break;
+                    case JournalNode.WriteItemNodePointers:
+                        WriteItemNodePointers(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
+                        break;
 
-                        case JournalNode.WriteItemNodePointers:
-                            WriteItemNodePointers(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
-                            break;
+                    case JournalNode.Truncate:
+                        Truncate(m_journalNode.ItemPointer);
+                        break;
 
-                        case JournalNode.Truncate:
-                            Truncate(m_journalNode.ItemPointer);
-                            break;
-
-                        case JournalNode.Clear:
-                            Clear();
-                            break;
-                    }
-                }
-                else
-                {
-                    // This will bring the lookup table to its initial
-                    // state, with an empty lookup table and zero items
-                    Clear();
+                    case JournalNode.Clear:
+                        Clear();
+                        break;
                 }
             }
-            catch (UnauthorizedAccessException)
+            else
             {
-                // Open the file in read-only mode
+                // This will bring the lookup table to its initial
+                // state, with an empty lookup table and zero items
+                Clear();
+            }
+        }
+
+        /// <summary>
+        /// Opens the file backing this lookup table in read-only mode.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">File is already open or the file has a pending transaction that could not be completed.</exception>
+        /// <exception cref="FormatException">The format of the file is invalid.</exception>
+        public void OpenRead()
+        {
+            void InternalOpenRead()
+            {
+                if ((object)m_fileStream != null)
+                    throw new InvalidOperationException($"File is already open: {m_filePath}");
+
                 m_fileStream = new CachedFileStream(m_filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 m_fileReader = new BinaryReader(m_fileStream);
 
                 // Validate that the file format is valid
                 if (m_fileStream.Length <= HeaderNode.FixedSize + JournalNode.FixedSize)
-                    throw new FormatException("The format of the file is invalid");
+                    throw new FormatException($"The format of the file is invalid: {m_filePath}");
 
                 // Read the header node from the start of the file
+                m_headerNode = new HeaderNode(m_lookupTableType);
+                m_journalNode = new JournalNode();
                 Read(m_headerNode);
+                Read(m_journalNode);
+            }
+
+            InternalOpenRead();
+
+            try
+            {
+                // There may be undefined behavior when reading from a lookup table with a
+                // pending transaction so we aggressively attempt to complete the transaction
+                // and then reopen the file in read-only mode
+                while (m_journalNode.Operation != JournalNode.None)
+                {
+                    Close();
+                    Open();
+                    Close();
+                    InternalOpenRead();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to complete the pending transaction in [{m_filePath}]: {ex.Message}", ex);
             }
         }
 
@@ -669,13 +696,12 @@ namespace GSF.Collections
             if ((object)key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            if (IsReadOnly)
-                throw new NotSupportedException("Unable to modify read-only lookup table");
+            FailIfReadOnly();
 
             Find(key, out lookupPointer, out itemPointer);
 
             if (itemPointer >= m_headerNode.ItemSectionPointer)
-                throw new ArgumentException("An element with the same key already exists");
+                throw new ArgumentException($"An element with the same key ({key}) already exists: {m_filePath}");
 
             if (m_headerNode.Count + 1L > m_headerNode.Capacity * MaximumLoadFactor)
             {
@@ -755,8 +781,7 @@ namespace GSF.Collections
             if ((object)key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            if (IsReadOnly)
-                throw new NotSupportedException("Unable to modify read-only lookup table");
+            FailIfReadOnly();
 
             Find(key, out lookupPointer, out itemPointer);
 
@@ -783,8 +808,7 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 Find(key, out lookupPointer, out itemPointer);
 
@@ -811,8 +835,7 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
                 lookupNode = new LookupNode();
@@ -843,8 +866,7 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
 
@@ -875,8 +897,7 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
                 lookupNode = new LookupNode();
@@ -907,8 +928,7 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
-                if (IsReadOnly)
-                    throw new NotSupportedException("Unable to modify read-only lookup table");
+                FailIfReadOnly();
 
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
 
@@ -938,7 +958,7 @@ namespace GSF.Collections
                 throw new ArgumentNullException(nameof(key));
 
             if ((object)m_fileStream == null)
-                Open();
+                OpenImplicit();
 
             Find(key, out lookupPointer, out itemPointer);
 
@@ -963,7 +983,7 @@ namespace GSF.Collections
                 throw new ArgumentNullException(nameof(key));
 
             if ((object)m_fileStream == null)
-                Open();
+                OpenImplicit();
 
             Find(key, out lookupPointer, out itemPointer);
 
@@ -983,8 +1003,7 @@ namespace GSF.Collections
         /// <exception cref="NotSupportedException">The <see cref="FileBackedLookupTable{TKey, TValue}"/> is read-only. </exception>
         public void Clear()
         {
-            if (IsReadOnly)
-                throw new NotSupportedException("Unable to modify read-only lookup table");
+            FailIfReadOnly();
 
             if (m_journalNode.Operation != JournalNode.Clear)
             {
@@ -1025,7 +1044,7 @@ namespace GSF.Collections
             long count;
 
             if ((object)m_fileStream == null)
-                Open();
+                OpenImplicit();
 
             itemNode = new ItemNode();
             lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
@@ -1063,42 +1082,31 @@ namespace GSF.Collections
         /// </summary>
         public void Compact()
         {
-            byte[] bytes = null;
-
-            long item1;
-            long lookup1;
-            int length1;
-            bool orphan1;
-
-            long item2;
-            long lookup2;
-            int length2;
-            bool orphan2;
-
-            long item3;
-
-            if (IsReadOnly)
-                throw new NotSupportedException("Unable to modify read-only lookup table");
+            FailIfReadOnly();
 
             if (m_headerNode.ItemSectionPointer == m_headerNode.EndOfFilePointer)
                 return;
 
             // Initialize item1, lookup1, and item2 pointers
-            item1 = m_headerNode.ItemSectionPointer;
-            lookup1 = ReadLookupPointer(item1);
-            item2 = m_fileReader.ReadInt64();
+            long item1 = m_headerNode.ItemSectionPointer;
+            long lookup1 = ReadLookupPointer(item1);
+            long item2 = m_fileReader.ReadInt64();
 
             // Determine whether item1 is an orphaned node
-            orphan1 = ReadItemPointer(lookup1) != item1;
+            bool orphan1 = ReadItemPointer(lookup1) != item1;
+
+            // Byte array will be initialized to the
+            // right size and reused during compaction
+            byte[] bytes = null;
 
             while (item2 < m_headerNode.EndOfFilePointer)
             {
                 // Update lookup2 and item3 pointers
-                lookup2 = ReadLookupPointer(item2);
-                item3 = m_fileReader.ReadInt64();
+                long lookup2 = ReadLookupPointer(item2);
+                long item3 = m_fileReader.ReadInt64();
 
                 // Determine whether item2 is an orphaned node
-                orphan2 = ReadItemPointer(lookup2) != item2;
+                bool orphan2 = ReadItemPointer(lookup2) != item2;
 
                 if (!orphan1)
                 {
@@ -1118,8 +1126,8 @@ namespace GSF.Collections
                     else
                     {
                         // Determine the length of the two nodes
-                        length1 = (int)(item2 - item1);
-                        length2 = (int)(item3 - item2);
+                        int length1 = (int)(item2 - item1);
+                        int length2 = (int)(item3 - item2);
 
                         // Allocate enough memory to move item2
                         if ((object)bytes == null || bytes.Length < length2)
@@ -1209,18 +1217,17 @@ namespace GSF.Collections
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Close();
         }
 
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileBackedLookupTable{TKey, TValue}"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        private void OpenImplicit()
         {
-            if (disposing)
-                Close();
+            // When accessing the lookup table without explicitly opening the file,
+            // we cannot determine the level of access required by all operations
+            // that will be performed against the lookup table so we default to write
+            // access and fall back on read access if necessary
+            try { Open(); }
+            catch (UnauthorizedAccessException) { OpenRead(); }
         }
 
         private void Grow()
@@ -1659,7 +1666,9 @@ namespace GSF.Collections
                 node.Sync = 0;
                 node.LookupPointer = 0L;
                 node.ItemPointer = 0L;
-                Write(node);
+
+                if (!IsReadOnly)
+                    Write(node);
             }
         }
 
@@ -1749,7 +1758,7 @@ namespace GSF.Collections
             long count;
 
             if ((object)m_fileStream == null)
-                Open();
+                OpenImplicit();
 
             lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
             count = 0L;
@@ -1768,6 +1777,12 @@ namespace GSF.Collections
 
                 lookupPointer += LookupNodeSize;
             }
+        }
+
+        private void FailIfReadOnly()
+        {
+            if (IsReadOnly)
+                throw new NotSupportedException($"Unable to modify read-only lookup table: {m_filePath}");
         }
 
         /// <summary>

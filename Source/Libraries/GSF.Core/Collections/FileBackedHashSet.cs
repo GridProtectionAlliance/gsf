@@ -32,7 +32,7 @@ namespace GSF.Collections
     /// Represents a lookup table backed by a file, with very little memory overhead.
     /// </summary>
     /// <typeparam name="T">The type of the items in the lookup table.</typeparam>
-    public class FileBackedHashSet<T> : ISet<T>, IDisposable
+    public sealed class FileBackedHashSet<T> : ISet<T>, IDisposable
     {
         #region [ Members ]
 
@@ -307,6 +307,15 @@ namespace GSF.Collections
         public void Open()
         {
             m_lookupTable.Open();
+        }
+
+        /// <summary>
+        /// Opens the file backing this hash set in read-only mode.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">File is already open.</exception>
+        public void OpenRead()
+        {
+            m_lookupTable.OpenRead();
         }
 
         /// <summary>
@@ -665,18 +674,7 @@ namespace GSF.Collections
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileBackedHashSet{T}"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-                Close();
+            m_lookupTable.Dispose();
         }
 
         /// <summary>
