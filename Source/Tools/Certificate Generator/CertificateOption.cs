@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
+using GSF.Security.Cryptography.X509;
 
 namespace GSF.Security.CertificateGenerator
 {
@@ -9,40 +9,15 @@ namespace GSF.Security.CertificateGenerator
         public string CommonName { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime StartDate { get; set; }
-        public int KeyStrength { get; set; }
+        public CertificateSigningMode KeyType { get; set; }
         public short SignatureBit { get; set; }
 
         public CertificateOption()
         {
+            KeyType = CertificateSigningMode.RSA_2048_SHA2_256;
             CommonName = Environment.MachineName;
             EndDate = DateTime.Now.Date.AddYears(3);
             StartDate = DateTime.Now.Date.AddDays(-1);
-            KeyStrength = 2048;
-            SignatureBit = 256;
-        }
-
-        public IEnumerable<int> KeyStrengths
-        {
-            get
-            {
-                yield return 1024;
-                yield return 2048;
-                yield return 3072;
-                yield return 4096;
-            }
-        }
-
-
-        public IEnumerable<short> SignatureBits
-        {
-            get
-            {
-                yield return 160;
-                yield return 224;
-                yield return 256;
-                yield return 384;
-                yield return 512;
-            }
         }
 
         public bool Validate()

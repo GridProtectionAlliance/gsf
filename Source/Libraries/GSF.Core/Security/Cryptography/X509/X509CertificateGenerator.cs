@@ -437,7 +437,7 @@ namespace GSF.Security.Cryptography.X509
                 byte[] data = tbsCertificate.ToArray();
                 byte[] data2 = MakePFX(data, method);
 
-                return new X509Certificate2(data2, "", X509KeyStorageFlags.Exportable | (X509KeyStorageFlags)0x20); // X509KeyStorageFlags.EphemeralKeySet
+                return new X509Certificate2(data2, "", X509KeyStorageFlags.Exportable); 
             }
         }
 

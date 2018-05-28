@@ -1,7 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
+using GSF.Security.Cryptography.X509;
 
 namespace GSF.Security.CertificateGenerator
 {
@@ -27,11 +30,8 @@ namespace GSF.Security.CertificateGenerator
             dateTimePickerStartDate.DataBindings.Add("Value", m_opt, "StartDate", false, DataSourceUpdateMode.OnPropertyChanged);
             dateTimePickerEndDate.DataBindings.Add("Value", m_opt, "EndDate", false, DataSourceUpdateMode.OnPropertyChanged);
 
-            comboBoxSignatureBits.DataSource = new BindingSource { DataSource = new BindingList<short>(m_opt.SignatureBits.ToList()) };
-            comboBoxSignatureBits.DataBindings.Add("SelectedItem", m_opt, "SignatureBit", false, DataSourceUpdateMode.OnPropertyChanged);
-
-            CmbKeyStrengths.DataSource = new BindingSource { DataSource = new BindingList<int>(m_opt.KeyStrengths.ToList()) };
-            CmbKeyStrengths.DataBindings.Add("SelectedItem", m_opt, "KeyStrength", false, DataSourceUpdateMode.OnPropertyChanged);
+            CmbKeyStrengths.DataSource = new BindingSource { DataSource = Enum.GetValues(typeof(CertificateSigningMode)) };
+            CmbKeyStrengths.DataBindings.Add("SelectedItem", m_opt, "KeyType", false, DataSourceUpdateMode.OnPropertyChanged);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -43,7 +43,10 @@ namespace GSF.Security.CertificateGenerator
                     dlg.Filter = "Key File|*.pfx";
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
-                        CertificateMaker.GenerateSelfSignedCertificate(string.Format("CN={0}", m_opt.CommonName), m_opt.StartDate, m_opt.EndDate, m_opt.SignatureBit, m_opt.KeyStrength, txtPassword.Text, dlg.FileName);
+                        using (var cert = CertificateMaker.GenerateSelfSignedCertificate(m_opt.KeyType, m_opt.CommonName, m_opt.StartDate, m_opt.EndDate))
+                        {
+                            File.WriteAllBytes(dlg.FileName, cert.Export(X509ContentType.Pkcs12, txtPassword.Text));
+                        }
                         MessageBox.Show("Done!");
                     }
                 }

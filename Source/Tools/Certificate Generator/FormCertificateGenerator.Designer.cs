@@ -41,8 +41,6 @@ namespace GSF.Security.CertificateGenerator
             this.label5 = new System.Windows.Forms.Label();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.CmbKeyStrengths = new System.Windows.Forms.ComboBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.comboBoxSignatureBits = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.txtPassword = new System.Windows.Forms.TextBox();
@@ -51,7 +49,7 @@ namespace GSF.Security.CertificateGenerator
             // 
             // buttonCreateCertificate
             // 
-            this.buttonCreateCertificate.Location = new System.Drawing.Point(179, 170);
+            this.buttonCreateCertificate.Location = new System.Drawing.Point(179, 143);
             this.buttonCreateCertificate.Name = "buttonCreateCertificate";
             this.buttonCreateCertificate.Size = new System.Drawing.Size(118, 23);
             this.buttonCreateCertificate.TabIndex = 0;
@@ -114,7 +112,7 @@ namespace GSF.Security.CertificateGenerator
             // 
             this.CmbKeyStrengths.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.CmbKeyStrengths.FormattingEnabled = true;
-            this.CmbKeyStrengths.Location = new System.Drawing.Point(97, 117);
+            this.CmbKeyStrengths.Location = new System.Drawing.Point(97, 90);
             this.CmbKeyStrengths.Name = "CmbKeyStrengths";
             this.CmbKeyStrengths.Size = new System.Drawing.Size(200, 21);
             this.CmbKeyStrengths.TabIndex = 20;
@@ -122,28 +120,10 @@ namespace GSF.Security.CertificateGenerator
         "tional and high speed key exchange is desired. \r\n4096 will take minutes to gener" +
         "ate.");
             // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(11, 93);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(72, 13);
-            this.label7.TabIndex = 15;
-            this.label7.Text = "Signature Bits";
-            // 
-            // comboBoxSignatureBits
-            // 
-            this.comboBoxSignatureBits.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSignatureBits.FormattingEnabled = true;
-            this.comboBoxSignatureBits.Location = new System.Drawing.Point(97, 90);
-            this.comboBoxSignatureBits.Name = "comboBoxSignatureBits";
-            this.comboBoxSignatureBits.Size = new System.Drawing.Size(200, 21);
-            this.comboBoxSignatureBits.TabIndex = 16;
-            // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(11, 120);
+            this.label8.Location = new System.Drawing.Point(11, 93);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(68, 13);
             this.label8.TabIndex = 17;
@@ -152,7 +132,7 @@ namespace GSF.Security.CertificateGenerator
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(113, 170);
+            this.buttonCancel.Location = new System.Drawing.Point(113, 143);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(60, 23);
             this.buttonCancel.TabIndex = 19;
@@ -162,7 +142,7 @@ namespace GSF.Security.CertificateGenerator
             // 
             // txtPassword
             // 
-            this.txtPassword.Location = new System.Drawing.Point(97, 144);
+            this.txtPassword.Location = new System.Drawing.Point(97, 117);
             this.txtPassword.Name = "txtPassword";
             this.txtPassword.Size = new System.Drawing.Size(200, 20);
             this.txtPassword.TabIndex = 21;
@@ -171,7 +151,7 @@ namespace GSF.Security.CertificateGenerator
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(15, 147);
+            this.label1.Location = new System.Drawing.Point(15, 120);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(76, 13);
             this.label1.TabIndex = 22;
@@ -183,14 +163,12 @@ namespace GSF.Security.CertificateGenerator
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(312, 206);
+            this.ClientSize = new System.Drawing.Size(312, 177);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtPassword);
             this.Controls.Add(this.CmbKeyStrengths);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.label8);
-            this.Controls.Add(this.comboBoxSignatureBits);
-            this.Controls.Add(this.label7);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.dateTimePickerEndDate);
@@ -216,8 +194,6 @@ namespace GSF.Security.CertificateGenerator
         private Label label4;
         private Label label5;
         private ToolTip toolTip;
-        private Label label7;
-        private ComboBox comboBoxSignatureBits;
         private Label label8;
         private Button buttonCancel;
         private ComboBox CmbKeyStrengths;
