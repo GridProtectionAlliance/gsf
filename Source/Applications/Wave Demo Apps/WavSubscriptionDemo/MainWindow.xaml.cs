@@ -213,7 +213,7 @@ namespace WavSubscriptionDemo
         // Handles the "Help > Online Help" menu item's Click event.
         private void OnlineHelpMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("http://openpg.codeplex.com/wikipage?title=Wave%20Subscription");
+            Process.Start("https://github.com/GridProtectionAlliance/gsf/");
         }
 
         // Handles the "Help > About" menu item's Click event.
