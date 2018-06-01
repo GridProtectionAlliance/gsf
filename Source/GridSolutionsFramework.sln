@@ -11,11 +11,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		buildmono.sh = buildmono.sh
 		GridSolutionsFramework.testrunconfig = GridSolutionsFramework.testrunconfig
+		..\Build\Scripts\GridSolutionsFramework.version = ..\Build\Scripts\GridSolutionsFramework.version
 		GSF.Core.Tests.vsmdi = GSF.Core.Tests.vsmdi
 		GSF.snk = GSF.snk
+		..\LICENSE = ..\LICENSE
 		LICENSE.txt = LICENSE.txt
 		NOTICE.txt = NOTICE.txt
 		package.json = package.json
+		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.csproj", "{35027A69-1A76-4312-B57B-F5826F0B87AF}"
