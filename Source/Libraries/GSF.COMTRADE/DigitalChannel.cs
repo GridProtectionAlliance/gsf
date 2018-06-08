@@ -61,20 +61,18 @@ namespace GSF.COMTRADE
         /// </summary>
         /// <param name="lineImage">Line image to parse.</param>
         /// <param name="version">Target schema version.</param>
-        public DigitalChannel(string lineImage, int version = 1999)
+        /// <param name="useRelaxedValidation">Indicates whether to relax validation on the number of line image elements.</param>
+        public DigitalChannel(string lineImage, int version = 1999, bool useRelaxedValidation = false)
         {
             // Dn,ch_id,ph,ccbm,y
             string[] parts = lineImage.Split(',');
 
             m_version = version;
 
-            if (parts.Length == 3)
-            {
-                Index = int.Parse(parts[0].Trim());
-                Name = parts[1];
-                NormalState = parts[2].Trim().ParseBoolean();
-            }
-            else if (parts.Length == 5)
+            if (parts.Length < 3 || (!useRelaxedValidation && parts.Length != 3 && parts.Length != 5))
+                throw new InvalidOperationException($"Unexpected number of line image elements for digital channel definition: {parts.Length} - expected 3 or 5{Environment.NewLine}Image = {lineImage}");
+
+            if (parts.Length >= 5)
             {
                 Index = int.Parse(parts[0].Trim());
                 Name = parts[1];
@@ -84,7 +82,9 @@ namespace GSF.COMTRADE
             }
             else
             {
-                throw new InvalidOperationException($"Unexpected number of line image elements for digital channel definition: {parts.Length} - expected 3 or 5{Environment.NewLine}Image = {lineImage}");
+                Index = int.Parse(parts[0].Trim());
+                Name = parts[1];
+                NormalState = parts[2].Trim().ParseBoolean();
             }
         }
 

@@ -117,7 +117,8 @@ namespace GSF.COMTRADE
         /// <param name="lineImage">Line image to parse.</param>
         /// <param name="version">Target schema version.</param>
         /// <param name="targetFloatingPoint">Determines if file type is targeting floating point.</param>
-        public AnalogChannel(string lineImage, int version = 1999, bool targetFloatingPoint = false)
+        /// <param name="useRelaxedValidation">Indicates whether to relax validation on the number of line image elements.</param>
+        public AnalogChannel(string lineImage, int version = 1999, bool targetFloatingPoint = false, bool useRelaxedValidation = false)
         {
             // An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
             string[] parts = lineImage.Split(',');
@@ -125,31 +126,26 @@ namespace GSF.COMTRADE
             m_version = version;
             m_targetFloatingPoint = targetFloatingPoint;
 
-            if (parts.Length == 10 || parts.Length == 13)
-            {               
-                Index = int.Parse(parts[0].Trim());
-                Name = parts[1];
-                Units = parts[4];   // Assign Units before PhaseID
-                PhaseID = parts[2];
-                CircuitComponent = parts[3];
-                Multiplier = double.Parse(parts[5].Trim());
-                Adder = double.Parse(parts[6].Trim());
-                Skew = double.Parse(parts[7].Trim());
-                MinValue = double.Parse(parts[8].Trim());
-                MaxValue = double.Parse(parts[9].Trim());
-
-                if (parts.Length == 13)
-                {
-                    PrimaryRatio = double.Parse(parts[10].Trim());
-                    SecondaryRatio = double.Parse(parts[11].Trim());
-                    ScalingIdentifier = parts[12].Trim()[0];
-                }
-            }
-            else
-            {
+            if (parts.Length < 10 || (!useRelaxedValidation && parts.Length != 10 && parts.Length != 13))
                 throw new InvalidOperationException($"Unexpected number of line image elements for analog channel definition: {parts.Length} - expected 10 or 13{Environment.NewLine}Image = {lineImage}");
-            }
 
+            Index = int.Parse(parts[0].Trim());
+            Name = parts[1];
+            Units = parts[4];   // Assign Units before PhaseID
+            PhaseID = parts[2];
+            CircuitComponent = parts[3];
+            Multiplier = double.Parse(parts[5].Trim());
+            Adder = double.Parse(parts[6].Trim());
+            Skew = double.Parse(parts[7].Trim());
+            MinValue = double.Parse(parts[8].Trim());
+            MaxValue = double.Parse(parts[9].Trim());
+
+            if (parts.Length >= 13)
+            {
+                PrimaryRatio = double.Parse(parts[10].Trim());
+                SecondaryRatio = double.Parse(parts[11].Trim());
+                ScalingIdentifier = parts[12].Trim()[0];
+            }
         }
 
         #endregion

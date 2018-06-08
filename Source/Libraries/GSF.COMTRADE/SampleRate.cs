@@ -55,12 +55,13 @@ namespace GSF.COMTRADE
         /// Creates a new instance of the <see cref="SampleRate"/> from an existing line image.
         /// </summary>
         /// <param name="lineImage">Line image to parse.</param>
-        public SampleRate(string lineImage)
+        /// <param name="useRelaxedValidation">Indicates whether to relax validation on the number of line image elements.</param>
+        public SampleRate(string lineImage, bool useRelaxedValidation = false)
         {
             // samp,endsamp
             string[] parts = lineImage.Split(',');
 
-            if (parts.Length != 2)
+            if (parts.Length < 2 || (!useRelaxedValidation && parts.Length != 2))
                 throw new InvalidOperationException($"Unexpected number of line image elements for sample rate definition: {parts.Length} - expected 2{Environment.NewLine}Image = {lineImage}");
 
             Rate = double.Parse(parts[0].Trim());

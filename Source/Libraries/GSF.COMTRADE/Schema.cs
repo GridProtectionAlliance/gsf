@@ -175,6 +175,16 @@ namespace GSF.COMTRADE
         /// </summary>
         /// <param name="fileName">File name of configuration file to parse.</param>
         public Schema(string fileName)
+            : this(fileName, false)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Schema"/> from an existing configuration file name.
+        /// </summary>
+        /// <param name="fileName">File name of configuration file to parse.</param>
+        /// <param name="useRelaxedValidation">Indicates whether to relax validation on the number of line image elements.</param>
+        public Schema(string fileName, bool useRelaxedValidation)
         {
             if (!File.Exists(fileName))
                 throw new FileNotFoundException($"Configuration file \"{fileName}\" does not exist.");
@@ -189,13 +199,13 @@ namespace GSF.COMTRADE
             // Parse version line
             parts = lines[lineNumber++].Split(',');
 
-            if (parts.Length != 2 && parts.Length != 3)
+            if (parts.Length < 2 || (!useRelaxedValidation && parts.Length != 2 && parts.Length != 3))
                 throw new InvalidOperationException($"Unexpected number of line image elements for first configuration file line: {parts.Length} - expected 2 or 3{Environment.NewLine}Image = {lines[0]}");
 
             StationName = parts[0].Trim();
             DeviceID = parts[1].Trim();
 
-            if (parts.Length == 3 && !string.IsNullOrWhiteSpace(parts[2]))
+            if (parts.Length >= 3 && !string.IsNullOrWhiteSpace(parts[2]))
                 Version = int.Parse(parts[2].Trim());
             else
                 Version = 1991;
@@ -203,7 +213,7 @@ namespace GSF.COMTRADE
             // Parse totals line
             parts = lines[lineNumber++].Split(',');
 
-            if (parts.Length != 3)
+            if (parts.Length < 3 || (!useRelaxedValidation && parts.Length != 3))
                 throw new InvalidOperationException($"Unexpected number of line image elements for second configuration file line: {parts.Length} - expected 3{Environment.NewLine}Image = {lines[1]}");
 
             int totalChannels = int.Parse(parts[0].Trim());
@@ -223,7 +233,7 @@ namespace GSF.COMTRADE
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
 
             for (int i = 0; i < totalDigitalChannels; i++)
-                digitalChannels.Add(new DigitalChannel(lines[lineNumber++], Version));
+                digitalChannels.Add(new DigitalChannel(lines[lineNumber++], Version, useRelaxedValidation));
 
             DigitalChannels = digitalChannels.ToArray();
 
@@ -240,7 +250,7 @@ namespace GSF.COMTRADE
             List<SampleRate> sampleRates = new List<SampleRate>();
 
             for (int i = 0; i < totalSampleRates; i++)
-                sampleRates.Add(new SampleRate(lines[lineNumber++]));
+                sampleRates.Add(new SampleRate(lines[lineNumber++], useRelaxedValidation));
 
             SampleRates = sampleRates.ToArray();
 
@@ -258,7 +268,7 @@ namespace GSF.COMTRADE
             bool targetFloatingPoint = fileType == FileType.Float32;
 
             for (int i = 0; i < analogLineImages.Count; i++)
-                analogChannels.Add(new AnalogChannel(analogLineImages[i], Version, targetFloatingPoint));
+                analogChannels.Add(new AnalogChannel(analogLineImages[i], Version, targetFloatingPoint, useRelaxedValidation));
 
             AnalogChannels = analogChannels.ToArray();
 
