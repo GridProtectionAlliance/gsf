@@ -252,32 +252,32 @@ bool SubscriberInstance::IsSubscribed() const
 
 void SubscriberInstance::IterateDeviceMetadata(DeviceMetadataIteratorHandlerFunction iteratorHandler, void* userData)
 {
-    m_devicesLock.lock();
+    m_configurationUpdateLock.lock();
 
     for (auto const& item : m_devices)
         iteratorHandler(item.second, userData);
 
-    m_devicesLock.unlock();
+    m_configurationUpdateLock.unlock();
 }
 
 void SubscriberInstance::IterateMeasurementMetadata(MeasurementMetadataIteratorHandlerFunction iteratorHandler, void* userData)
 {
-    m_measurementsLock.lock();
+    m_configurationUpdateLock.lock();
 
     for (auto const& item : m_measurements)
         iteratorHandler(item.second, userData);
 
-    m_measurementsLock.unlock();
+    m_configurationUpdateLock.unlock();
 }
 
 void SubscriberInstance::IterateConfigurationFrames(ConfigurationFrameIteratorHandlerFunction iteratorHandler, void* userData)
 {
-    m_configurationFramesLock.lock();
+    m_configurationUpdateLock.lock();
 
     for (auto const& item : m_configurationFrames)
         iteratorHandler(item.second, userData);
 
-    m_configurationFramesLock.unlock();
+    m_configurationUpdateLock.unlock();
 }
 
 void IterateDevices(const DeviceMetadataPtr& device, void* userData)
@@ -299,7 +299,7 @@ bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, Devic
 {
     bool found = false;
 
-    m_devicesLock.lock();
+    m_configurationUpdateLock.lock();
 
     const auto iterator = m_devices.find(deviceAcronym);
 
@@ -309,7 +309,7 @@ bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, Devic
         found = true;
     }
 
-    m_devicesLock.unlock();
+    m_configurationUpdateLock.unlock();
 
     return found;
 }
@@ -318,7 +318,7 @@ bool SubscriberInstance::TryGetMeasurementMetdata(const Guid& signalID, Measurem
 {
     bool found = false;
 
-    m_measurementsLock.lock();
+    m_configurationUpdateLock.lock();
 
     const auto iterator = m_measurements.find(signalID);
 
@@ -328,7 +328,7 @@ bool SubscriberInstance::TryGetMeasurementMetdata(const Guid& signalID, Measurem
         found = true;
     }
 
-    m_measurementsLock.unlock();
+    m_configurationUpdateLock.unlock();
 
     return found;
 }
@@ -337,7 +337,7 @@ bool SubscriberInstance::TryGetConfigurationFrame(const string& deviceAcronym, C
 {
     bool found = false;
 
-    m_configurationFramesLock.lock();
+    m_configurationUpdateLock.lock();
 
     const auto iterator = m_configurationFrames.find(deviceAcronym);
 
@@ -347,7 +347,7 @@ bool SubscriberInstance::TryGetConfigurationFrame(const string& deviceAcronym, C
         found = true;
     }
 
-    m_configurationFramesLock.unlock();
+    m_configurationUpdateLock.unlock();
 
     return found;
 }
@@ -356,7 +356,7 @@ bool SubscriberInstance::TryFindTargetConfigurationFrame(const Guid& signalID, C
 {
     bool found = false;
 
-    m_configurationFramesLock.lock();
+    m_configurationUpdateLock.lock();
 
     for (auto const& frameRecord : m_configurationFrames)
     {
@@ -371,7 +371,7 @@ bool SubscriberInstance::TryFindTargetConfigurationFrame(const Guid& signalID, C
         }
     }
 
-    m_configurationFramesLock.unlock();
+    m_configurationUpdateLock.unlock();
 
     return found;
 }
@@ -688,20 +688,13 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     map<string, ConfigurationFramePtr> configurationFrames;
     ConstructConfigurationFrames(devices, measurements, configurationFrames);
 
-    // Replace the configuration frames list
-    m_configurationFramesLock.lock();
-    m_configurationFrames = configurationFrames;
-    m_configurationFramesLock.unlock();
+    m_configurationUpdateLock.lock();
 
-    // Replace the device metadata list
-    m_devicesLock.lock();
-    m_devices = devices;
-    m_devicesLock.unlock();
+    m_configurationFrames = configurationFrames;    // Replace the configuration frames list
+    m_devices = devices;                            // Replace the device metadata list
+    m_measurements = measurements;                  // Replace the measurement metadata list
 
-    // Replace the measurement metadata list
-    m_measurementsLock.lock();
-    m_measurements = measurements;
-    m_measurementsLock.unlock();
+    m_configurationUpdateLock.unlock();
 
     stringstream message;
     message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from GEP meta data...";
@@ -770,8 +763,13 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 {
                     found = true;
                     configurationFrame->Phasors.push_back(phasorReference);
-                    configurationFrame->Measurements.insert(phasorReference->Angle->SignalID);
-                    configurationFrame->Measurements.insert(phasorReference->Magnitude->SignalID);
+
+                    if (phasorReference->Angle)
+                        configurationFrame->Measurements.insert(phasorReference->Angle->SignalID);
+
+                    if (phasorReference->Magnitude)
+                        configurationFrame->Measurements.insert(phasorReference->Magnitude->SignalID);
+                    
                     break;
                 }
             }

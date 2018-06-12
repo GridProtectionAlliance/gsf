@@ -59,9 +59,7 @@ namespace Transport
         map<Guid, MeasurementMetadataPtr> m_measurements;
         map<string, ConfigurationFramePtr> m_configurationFrames;
 
-        Mutex m_devicesLock;
-        Mutex m_measurementsLock;
-        Mutex m_configurationFramesLock;
+        Mutex m_configurationUpdateLock;
 
         static void ConstructConfigurationFrames(const map<string, DeviceMetadataPtr>& devices, const map<Guid, MeasurementMetadataPtr>& measurements, map<string, ConfigurationFramePtr>& configurationFrames);
         static bool TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
