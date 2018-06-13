@@ -1229,6 +1229,7 @@ namespace GSF.IO
         /// <summary>
         /// Releases all the resources used by the <see cref="FileProcessor"/> object.
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_waitObject", Justification = "Thread pool threads could still be using this object.")]
         public void Dispose()
         {
             if (!m_disposed)
@@ -1252,8 +1253,10 @@ namespace GSF.IO
 
                     if ((object)m_waitObject != null)
                     {
+                        // DO NOT dispose of the wait object
+                        // We have to rely on the garbage collector to reclaim this
+                        // one or else we risk unhandled exceptions on the thread pool
                         m_waitObject.Set();
-                        m_waitObject.Dispose();
                         m_waitObject = null;
                     }
                 }
@@ -1303,6 +1306,10 @@ namespace GSF.IO
         {
             int retryCount = 0;
             Action delayAndProcess = null;
+            ManualResetEvent waitObject = m_waitObject;
+
+            if ((object)waitObject == null)
+                return;
 
             delayAndProcess = () =>
             {
@@ -1323,7 +1330,7 @@ namespace GSF.IO
                         else
                             delay = 60000;
 
-                        DelayAndExecute(delayAndProcess, delay);
+                        delayAndProcess.DelayAndExecute(waitObject, delay);
 
                         return;
                     }
@@ -1335,7 +1342,7 @@ namespace GSF.IO
             if (ProcessFile(filePath, raisedByFileWatcher))
             {
                 Interlocked.Increment(ref m_requeuedFileCount);
-                DelayAndExecute(delayAndProcess, 250);
+                delayAndProcess.DelayAndExecute(waitObject, 250);
             }
         }
 
@@ -1365,39 +1372,6 @@ namespace GSF.IO
                 m_processedFiles.Add(filePath);
 
             return false;
-        }
-
-        // Executes the given action after waiting the given number of milliseconds.
-        private void DelayAndExecute(Action action, int delay)
-        {
-            object waitHandleLock = new object();
-            RegisteredWaitHandle waitHandle = null;
-
-            WaitOrTimerCallback callback = (state, timeout) =>
-            {
-                if (Interlocked.Exchange(ref waitHandleLock, null) == null)
-                    waitHandle.Unregister(null);
-
-#if MONO
-                try
-                {
-                    timeout = !(m_waitObject?.WaitOne(0) ?? false);
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-#endif
-
-                if (!timeout)
-                    return;
-
-                action();
-            };
-
-            waitHandle = ThreadPool.RegisterWaitForSingleObject(m_waitObject, callback, null, delay, true);
-
-            if (Interlocked.Exchange(ref waitHandleLock, null) == null)
-                waitHandle.Unregister(null);
         }
 
         // Gets the list of processed files from the file processor
