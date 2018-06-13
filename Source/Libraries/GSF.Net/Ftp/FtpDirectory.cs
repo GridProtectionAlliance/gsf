@@ -51,6 +51,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -657,7 +658,10 @@ namespace GSF.Net.Ftp
             if ((object)m == null)
                 return false;
 
-            info.Name = m.Groups["name"].Value;
+            info.Name = new string(m.Groups["name"].Value
+                .TakeWhile(c => c != '\0')
+                .ToArray());
+
             info.FullPath = m_fullPath + info.Name;
 
             string dir = m.Groups["dir"].Value;
