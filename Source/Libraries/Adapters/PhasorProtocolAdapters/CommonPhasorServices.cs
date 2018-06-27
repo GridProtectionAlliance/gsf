@@ -840,25 +840,26 @@ namespace PhasorProtocolAdapters
             if (protocols.Columns.Contains("Category"))
             {
                 // Make sure new protocol types exist
-                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'GatewayTransport\'")) == 0)
-                {
-                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('GatewayTransport', 'Gateway Transport', 'Measurement', 'Gateway', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataSubscriber', " + (protocols.Rows.Count + 1) + ")");
-
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'WAV\'")) == 0)
-                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter', " + (protocols.Rows.Count + 2) + ")");
-
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'IeeeC37_118V2\'")) == 0)
-                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('IeeeC37_118V2', 'IEEE C37.118.2-2011', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 2)");
-
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'VirtualInput\'")) == 0)
-                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('VirtualInput', 'Virtual Device', 'Frame', 'Virtual', 'TestingAdapters.dll', 'TestingAdapters.VirtualInputAdapter', " + (protocols.Rows.Count + 4) + ")");
-                }
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'IeeeC37_118V2\'")) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('IeeeC37_118V2', 'IEEE C37.118.2-2011', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', " + (protocols.Rows.Count + 1) + ")");
 
                 if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'Iec61850_90_5\'")) == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('Iec61850_90_5', 'IEC 61850-90-5', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 12)");
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('Iec61850_90_5', 'IEC 61850-90-5', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', " + (protocols.Rows.Count + 2) + ")");
+
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'GatewayTransport\'")) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('GatewayTransport', 'Gateway Transport', 'Measurement', 'Gateway', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataSubscriber', " + (protocols.Rows.Count + 3) + ")");
+
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'Modbus\'")) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('Modbus', 'Modbus Poller', 'Measurement', 'Device', 'ModbusAdapters.dll', 'ModbusAdapters.ModbusPoller', " + (protocols.Rows.Count + 4) + ")");
 
                 if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'DNP3\'")) == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('DNP3', 'DNP3 (Master)', 'Measurement', 'Device', 'Dnp3Adapters.dll', 'Dnp3Adapters.Dnp3InputAdapter', 12)");
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('DNP3', 'DNP3 (Master)', 'Measurement', 'Device', 'Dnp3Adapters.dll', 'Dnp3Adapters.Dnp3InputAdapter', " + (protocols.Rows.Count + 5) + ")");
+
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'WAV\'")) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter', " + (protocols.Rows.Count + 6) + ")");
+
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym=\'VirtualInput\'")) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('VirtualInput', 'Virtual Device', 'Frame', 'Virtual', 'TestingAdapters.dll', 'TestingAdapters.VirtualInputAdapter', " + (protocols.Rows.Count + 7) + ")");
 
                 foreach (DataRow protocol in protocols.Rows)
                 {
