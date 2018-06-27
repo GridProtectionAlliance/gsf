@@ -25,16 +25,21 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF;
 using GSF.Configuration;
 using GSF.Diagnostics;
+using GSF.IO;
+using GSF.Reflection;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -44,6 +49,9 @@ using Modbus.Utility;
 using ModbusAdapters.Model;
 using Measurement = GSF.TimeSeries.Measurement;
 using Timer = System.Timers.Timer;
+
+#pragma warning disable SCS0006 // Weak hash
+#pragma warning disable SCS0018 // Path traversal
 
 namespace ModbusAdapters
 {
@@ -1032,6 +1040,62 @@ namespace ModbusAdapters
         private static void OnProgressUpdated(ModbusPoller instance, ProgressUpdate update)
         {
             ProgressUpdated?.Invoke(instance, new EventArgs<ProgressUpdate>(update));
+        }
+
+        /// <summary>
+        /// Restores embedded resource Modbus configurations.
+        /// </summary>
+        /// <param name="targetPath">Target locations for restoration.</param>
+        public static void RestoreConfigurations(string targetPath)
+        {
+            Assembly entryAssembly = AssemblyInfo.EntryAssembly.Assembly;
+
+            targetPath = FilePath.AddPathSuffix(targetPath);
+
+            foreach (string name in entryAssembly.GetManifestResourceNames().Where(name => name.EndsWith(".json")))
+            {
+                using (Stream resourceStream = entryAssembly.GetManifestResourceStream(name))
+                {
+                    if ((object)resourceStream != null)
+                    {
+                        string targetFileName = Path.Combine(targetPath, name);
+                        bool restoreFile = true;
+
+                        if (File.Exists(targetFileName))
+                        {
+                            string resourceMD5 = GetMD5HashFromStream(resourceStream);
+                            resourceStream.Seek(0, SeekOrigin.Begin);
+                            restoreFile = !resourceMD5.Equals(GetMD5HashFromFile(targetFileName));
+                        }
+
+                        if (restoreFile)
+                        {
+                            byte[] buffer = new byte[resourceStream.Length];
+                            resourceStream.Read(buffer, 0, (int)resourceStream.Length);
+
+                            string directory = Path.GetDirectoryName(targetFileName);
+
+                            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                                Directory.CreateDirectory(directory);
+
+                            using (StreamWriter writer = File.CreateText(targetFileName))
+                                writer.Write(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+                        }
+                    }
+                }
+            }
+        }
+
+        private static string GetMD5HashFromFile(string fileName)
+        {
+            using (FileStream stream = File.OpenRead(fileName))
+                return GetMD5HashFromStream(stream);
+        }
+
+        private static string GetMD5HashFromStream(Stream stream)
+        {
+            using (MD5 md5 = MD5.Create())
+                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
         }
 
         #endregion
