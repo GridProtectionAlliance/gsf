@@ -1466,8 +1466,6 @@ namespace GSF.TimeSeries.Adapters
                 // Wire up events
                 item.StatusMessage += item_StatusMessage;
                 item.ProcessException += item_ProcessException;
-                item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
-                item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
                 item.ConfigurationChanged += item_ConfigurationChanged;
                 item.Disposed += item_Disposed;
 
@@ -1565,6 +1563,11 @@ namespace GSF.TimeSeries.Adapters
                         // start and stop commands may be issued to the adapter
                         item.Initialized = true;
 
+                        // Now that the adapter is fully initialized,
+                        // attach to these events to react to updates at runtime
+                        item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
+                        item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
+
                         // If input measurement keys were not updated during initialize of the adapter,
                         // make sure to notify routing tables that adapter is ready for broadcast
                         OnInputMeasurementKeysUpdated();
@@ -1575,6 +1578,11 @@ namespace GSF.TimeSeries.Adapters
                     // Set item to its final initialized state so that
                     // start and stop commands may be issued to the adapter
                     item.Initialized = true;
+
+                    // Now that the adapter is fully initialized,
+                    // attach to these events to react to updates at runtime
+                    item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
+                    item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
 
                     // If input measurement keys were not updated during initialize of the adapter,
                     // make sure to notify routing tables that adapter is ready for broadcast

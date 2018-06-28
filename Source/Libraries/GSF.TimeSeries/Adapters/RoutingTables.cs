@@ -429,7 +429,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (!inputAdapter.AutoStart)
+                    if (inputAdapter.Initialized && !inputAdapter.AutoStart)
                     {
                         if (dependencyChain.Contains(inputAdapter))
                         {
@@ -452,7 +452,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (!actionAdapter.AutoStart)
+                    if (actionAdapter.Initialized && !actionAdapter.AutoStart)
                     {
                         if (dependencyChain.Contains(actionAdapter))
                         {
@@ -487,12 +487,12 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                 {
-                    if (!outputAdapter.AutoStart)
+                    if (outputAdapter.Initialized && !outputAdapter.AutoStart)
                     {
                         if (dependencyChain.Contains(outputAdapter))
                         {
-                            requestedInputSignals = new HashSet<MeasurementKey>(outputAdapter.OutputMeasurementKeys());
-                            requestedInputSignals.IntersectWith(inputSignals);
+                            requestedInputSignals = new HashSet<MeasurementKey>(outputAdapter.InputMeasurementKeys());
+                            requestedInputSignals.IntersectWith(outputSignals);
                             outputAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
                             outputAdapter.Enabled = true;
                         }
@@ -523,7 +523,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(inputAdapter) && inputMeasurementKeysRestriction.Overlaps(inputAdapter.OutputMeasurementKeys()))
+                    if (inputAdapter.Initialized && !dependencyChain.Contains(inputAdapter) && inputMeasurementKeysRestriction.Overlaps(inputAdapter.OutputMeasurementKeys()))
                         AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -532,7 +532,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(actionAdapter) && inputMeasurementKeysRestriction.Overlaps(actionAdapter.OutputMeasurementKeys()))
+                    if (actionAdapter.Initialized && !dependencyChain.Contains(actionAdapter) && inputMeasurementKeysRestriction.Overlaps(actionAdapter.OutputMeasurementKeys()))
                         AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -554,7 +554,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (inputAdapter.AutoStart && !dependencyChain.Contains(inputAdapter))
+                    if (inputAdapter.Initialized && inputAdapter.AutoStart && !dependencyChain.Contains(inputAdapter))
                         AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -563,7 +563,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (actionAdapter.AutoStart && !dependencyChain.Contains(actionAdapter))
+                    if (actionAdapter.Initialized && actionAdapter.AutoStart && !dependencyChain.Contains(actionAdapter))
                         AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -572,7 +572,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                 {
-                    if (outputAdapter.AutoStart && !dependencyChain.Contains(outputAdapter))
+                    if (outputAdapter.Initialized && outputAdapter.AutoStart && !dependencyChain.Contains(outputAdapter))
                         AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -594,7 +594,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (actionAdapter.RespectInputDemands && !dependencyChain.Contains(actionAdapter) && outputMeasurementKeys.Overlaps(actionAdapter.InputMeasurementKeys()))
+                    if (actionAdapter.Initialized && actionAdapter.RespectInputDemands && !dependencyChain.Contains(actionAdapter) && outputMeasurementKeys.Overlaps(actionAdapter.InputMeasurementKeys()))
                         AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -605,7 +605,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(outputAdapter) && outputMeasurementKeys.Overlaps(outputAdapter.InputMeasurementKeys()))
+                    if (outputAdapter.Initialized && !dependencyChain.Contains(outputAdapter) && outputMeasurementKeys.Overlaps(outputAdapter.InputMeasurementKeys()))
                         AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -626,7 +626,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(inputAdapter) && inputMeasurementKeys.Overlaps(inputAdapter.OutputMeasurementKeys()))
+                    if (inputAdapter.Initialized && !dependencyChain.Contains(inputAdapter) && inputMeasurementKeys.Overlaps(inputAdapter.OutputMeasurementKeys()))
                         AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -637,7 +637,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(actionAdapter))
+                    if (actionAdapter.Initialized && !dependencyChain.Contains(actionAdapter))
                     {
                         if (actionAdapter.RespectInputDemands && outputMeasurementKeys.Overlaps(actionAdapter.InputMeasurementKeys()))
                             AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
@@ -653,7 +653,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(outputAdapter) && outputMeasurementKeys.Overlaps(outputAdapter.InputMeasurementKeys()))
+                    if (outputAdapter.Initialized && !dependencyChain.Contains(outputAdapter) && outputMeasurementKeys.Overlaps(outputAdapter.InputMeasurementKeys()))
                         AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -673,7 +673,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (!dependencyChain.Contains(inputAdapter) && inputMeasurementKeys.Overlaps(inputAdapter.OutputMeasurementKeys()))
+                    if (inputAdapter.Initialized && !dependencyChain.Contains(inputAdapter) && inputMeasurementKeys.Overlaps(inputAdapter.OutputMeasurementKeys()))
                         AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
@@ -684,7 +684,7 @@ namespace GSF.TimeSeries.Adapters
                 // added to the chain as a result of this adapter being added to the chain
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (actionAdapter.RespectOutputDemands && !dependencyChain.Contains(actionAdapter) && inputMeasurementKeys.Overlaps(actionAdapter.OutputMeasurementKeys()))
+                    if (actionAdapter.Initialized && actionAdapter.RespectOutputDemands && !dependencyChain.Contains(actionAdapter) && inputMeasurementKeys.Overlaps(actionAdapter.OutputMeasurementKeys()))
                         AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
