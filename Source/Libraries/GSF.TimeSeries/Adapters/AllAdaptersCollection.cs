@@ -126,6 +126,20 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Wires events and initializes new <see cref="IAdapter"/> implementation.
+        /// </summary>
+        /// <param name="item">New <see cref="IAdapter"/> implementation.</param>
+        /// <remarks>
+        /// Derived classes should override if more events are defined.
+        /// </remarks>
+        protected override void InitializeItem(IAdapterCollection item)
+        {
+            base.InitializeItem(item);
+            item.InputMeasurementKeysUpdated += (sender, args) => OnInputMeasurementKeysUpdated();
+            item.OutputMeasurementsUpdated += (sender, args) => OnOutputMeasurementsUpdated();
+        }
+
+        /// <summary>
         /// Create newly defined adapters in the adapter collection configurations. 
         /// </summary>
         private void AddNewAdapters(DataSet dataSource)
