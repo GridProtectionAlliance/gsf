@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -187,7 +188,7 @@ namespace GSF.Web.Security
                     return false; // Let pipeline continue
 
                 // Abort pipeline with appropriate response
-                if (Options.IsAuthFailureRedirectResource(urlPath))
+                if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
                 {
                     string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
                     byte[] pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
@@ -217,6 +218,12 @@ namespace GSF.Web.Security
                 
                 return true; // Abort pipeline
             });
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsAjaxCall()
+        {
+            return Request.Headers.TryGetValue("X-Requested-With", out string[] values) && values.Any(value => value.Equals("XMLHttpRequest"));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
