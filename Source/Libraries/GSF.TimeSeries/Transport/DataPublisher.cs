@@ -3213,13 +3213,10 @@ namespace GSF.TimeSeries.Transport
                             // Track subscription in connection information
                             connection.Subscription = subscription;
 
-                            // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
-                            // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
-                            // remove subscribed points since assignment and use of input measurement keys is synchronized
-                            // within the client subscription class
                             if (addSubscription)
                             {
-                                // Adding client subscription to collection will automatically initialize it
+                                // Adding client subscription to collection will not automatically
+                                // initialize it because this class overrides the AutoInitialize property
                                 lock (this)
                                 {
                                     Add(subscription);
@@ -3234,6 +3231,10 @@ namespace GSF.TimeSeries.Transport
                             OnRequestTemporalSupport();
 
                             // Manually initialize client subscription
+                            // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
+                            // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
+                            // remove subscribed points since assignment and use of input measurement keys is synchronized
+                            // within the client subscription class
                             subscription.Initialize();
                             subscription.Initialized = true;
 
@@ -3245,10 +3246,8 @@ namespace GSF.TimeSeries.Transport
                             SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
 
                             // Spawn routing table recalculation
+                            OnInputMeasurementKeysUpdated();
                             m_routingTables.CalculateRoutingTables(null);
-
-                            // Make sure adapter is started
-                            subscription.Start();
 
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
@@ -3268,6 +3267,9 @@ namespace GSF.TimeSeries.Transport
                                     subscription.QueueMeasurementsForProcessing(cachedMeasurements);
                                 }
                             }
+
+                            // Make sure adapter is started
+                            subscription.Start();
 
                             // Notify any direct publisher consumers about the new client connection
                             try
