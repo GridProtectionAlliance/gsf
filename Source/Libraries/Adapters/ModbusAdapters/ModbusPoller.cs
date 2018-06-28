@@ -511,7 +511,7 @@ namespace ModbusAdapters
                             if (sequenceSettings.TryGetValue($"groupPointCount{j}", out setting))
                                 ushort.TryParse(setting, out group.PointCount);
 
-                            if (group.StartAddress > 0 && group.PointCount > 0)
+                            if (group.PointCount > 0)
                             {
                                 // Load any defined write sequence values
                                 if (sequence.Type == SequenceType.Write)
