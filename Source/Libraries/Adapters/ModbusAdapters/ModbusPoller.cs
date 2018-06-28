@@ -940,7 +940,7 @@ namespace ModbusAdapters
         public override string GetShortStatus(int maxLength)
         {
             if (!Enabled)
-                return "Polling for is disabled...".CenterText(maxLength);
+                return "Polling is disabled...".CenterText(maxLength);
 
             return $"Polling enabled for every {PollingRate:N0}ms".CenterText(maxLength);
         }
