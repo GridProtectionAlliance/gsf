@@ -1131,6 +1131,40 @@
             });
         }
 
+        function saveDeviceConfiguration(acronym, configuration) {
+            return $.ajax({
+                url: "/api/ModbusConfig/SaveDeviceConfiguration/" + acronym,
+                method: "POST",
+                contentType: "application/json; charset=UTF-8",
+                dataType: "json",
+                data: configuration
+            });
+        }
+
+        function loadDeviceConfiguration(acronym) {
+            return $.ajax({
+                url: "/api/ModbusConfig/LoadDeviceConfiguration/" + acronym,
+                method: "GET",
+                contentType: "application/json; charset=UTF-8"
+            });
+        }
+
+        function getConfigurationCacheFileName(acronym) {
+            return $.ajax({
+                url: "/api/ModbusConfig/GetConfigurationCacheFileName/" + acronym,
+                method: "GET",
+                contentType: "application/json; charset=UTF-8"
+            });
+        }
+
+        function getConfigurationCachePath() {
+            return $.ajax({
+                url: "/api/ModbusConfig/GetConfigurationCachePath",
+                method: "GET",
+                contentType: "application/json; charset=UTF-8"
+            });
+        }
+
         function saveDeviceConnection() {
             $("#saveDeviceConnectionDialog").hide();
 
@@ -1145,7 +1179,7 @@
                     device.Enabled = true;
 
                     // Save serialized mapping to server to it can be easily modified later
-                    dataHub.saveDeviceConfiguration(device.Acronym, JSON.stringify(viewModel.serializeMapping(), null, 4)).done(function() {
+                    saveDeviceConfiguration(device.Acronym, JSON.stringify(viewModel.serializeMapping(), null, 4)).done(function() {
                         dataHub.getModbusProtocolID().done(function(protocolID) {
                             device.ProtocolID = protocolID;
 
@@ -1209,7 +1243,7 @@
 
                 setTimeout(function() {
                     showInfoMessage("Loading existing configuration...");
-                    dataHub.loadDeviceConfiguration(device.Acronym).done(function(mapping) {
+                    loadDeviceConfiguration(device.Acronym).done(function(mapping) {
                         viewModel.loadSequenceMap(new Blob([mapping], { type : "application/json" }), false);
                         $("#loadMappingFileName").val("");
 
