@@ -418,6 +418,8 @@ namespace ModbusAdapters
                 {
                     if (disposing)
                     {
+                        StatisticsEngine.Unregister(m_deviceProxy);
+
                         DisposeConnections();
 
                         if ((object)m_pollingTimer != null)
