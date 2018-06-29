@@ -30,13 +30,17 @@ namespace ModbusAdapters
 {
     public class ModbusConfigController : ApiController
     {
+        #region [ Methods ]
+
         [HttpPost]
+        [Authorize(Roles = "Administrator,Editor")]
         public void SaveDeviceConfiguration([FromUri(Name = "id")] string acronym, [FromBody] string configuration)
         {
             File.WriteAllText(GetConfigurationCacheFileName(acronym), configuration);
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrator,Editor")]
         public string LoadDeviceConfiguration([FromUri(Name = "id")] string acronym)
         {
             string fileName = GetConfigurationCacheFileName(acronym);
@@ -44,18 +48,28 @@ namespace ModbusAdapters
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrator,Editor")]
         public string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym)
         {
             return Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrator,Editor")]
         public string GetConfigurationCachePath()
         {
             return ConfigurationCachePath;
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
         private static string s_configurationCachePath;
+
+
+        // Static Methods
 
         private static string ConfigurationCachePath
         {
@@ -83,5 +97,7 @@ namespace ModbusAdapters
                 return s_configurationCachePath;
             }
         }
+
+        #endregion
     }
 }
