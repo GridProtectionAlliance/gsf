@@ -1062,8 +1062,8 @@ namespace ModbusAdapters
                     {
                         string filePath = name;
                         
-                        //                             1         2        
-                        //                   012345678901234567890123456789
+                        //                                 1         2        
+                        //                       012345678901234567890123456789
                         if (filePath.StartsWith("ModbusAdapters.ModbusConfigs."))
                             filePath = filePath.Substring(29);
 
