@@ -1050,17 +1050,26 @@ namespace ModbusAdapters
         /// <param name="targetPath">Target locations for restoration.</param>
         public static void RestoreConfigurations(string targetPath)
         {
-            Assembly entryAssembly = AssemblyInfo.EntryAssembly.Assembly;
+            Assembly executingAssembly = AssemblyInfo.ExecutingAssembly.Assembly;
 
             targetPath = FilePath.AddPathSuffix(targetPath);
 
-            foreach (string name in entryAssembly.GetManifestResourceNames().Where(name => name.EndsWith(".json")))
+            foreach (string name in executingAssembly.GetManifestResourceNames().Where(name => name.EndsWith(".json")))
             {
-                using (Stream resourceStream = entryAssembly.GetManifestResourceStream(name))
+                using (Stream resourceStream = executingAssembly.GetManifestResourceStream(name))
                 {
                     if ((object)resourceStream != null)
                     {
-                        string targetFileName = Path.Combine(targetPath, name);
+                        string filePath = name;
+                        
+                        //                             1         2        
+                        //                   012345678901234567890123456789
+                        if (filePath.StartsWith("ModbusAdapters.ModbusConfigs."))
+                            filePath = filePath.Substring(29);
+
+                        filePath = $"{FilePath.GetFileNameWithoutExtension(filePath).Replace('.', Path.DirectorySeparatorChar).Replace("_", "")}.json";
+
+                        string targetFileName = Path.Combine(targetPath, filePath);
                         bool restoreFile = true;
 
                         if (File.Exists(targetFileName))
