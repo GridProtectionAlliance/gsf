@@ -58,7 +58,7 @@ namespace GSF.PhasorProtocols
         /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="AnalogValueBase"/>.</param>
         /// <param name="analogDefinition">The <see cref="IAnalogDefinition"/> associated with this <see cref="AnalogValueBase"/>.</param>
         protected AnalogValueBase(IDataCell parent, IAnalogDefinition analogDefinition)
-            : base(parent, analogDefinition)
+            : this(parent, analogDefinition, double.NaN)
         {
         }
 

@@ -58,7 +58,7 @@ namespace GSF.PhasorProtocols
         /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="DigitalValueBase"/>.</param>
         /// <param name="digitalDefinition">The <see cref="IDigitalDefinition"/> associated with this <see cref="DigitalValueBase"/>.</param>
         protected DigitalValueBase(IDataCell parent, IDigitalDefinition digitalDefinition)
-            : base(parent, digitalDefinition)
+            : this(parent, digitalDefinition, ushort.MaxValue)
         {
         }
 
