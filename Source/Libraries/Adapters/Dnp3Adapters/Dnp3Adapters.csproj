@@ -84,6 +84,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\..\Dependencies\Microsoft\VC_redist.x64.exe">
+      <Link>VC_redist.x64.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="ExampleConfigurations\comms.xml" />
     <Content Include="ExampleConfigurations\mapping.xml" />
   </ItemGroup>

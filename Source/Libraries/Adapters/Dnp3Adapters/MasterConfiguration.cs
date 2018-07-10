@@ -24,7 +24,7 @@
 //******************************************************************************************************
 
 using System;
-using DNP3.Interface;
+using Automatak.DNP3.Interface;
 
 namespace DNP3Adapters
 {
@@ -72,6 +72,6 @@ namespace DNP3Adapters
         /// <summary>
         /// DNP3 filter level for port messages
         /// </summary>
-        public System.UInt32 level = DNP3.Interface.LogLevels.NORMAL;
+        public System.UInt32 level = LogLevels.NORMAL;
     }
 }

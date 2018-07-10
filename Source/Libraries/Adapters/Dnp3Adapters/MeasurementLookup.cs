@@ -25,7 +25,7 @@
 
 using System;
 using System.Collections.Generic;
-using DNP3.Interface;
+using Automatak.DNP3.Interface;
 using GSF.TimeSeries;
 
 namespace DNP3Adapters
@@ -53,7 +53,7 @@ namespace DNP3Adapters
 
         public void Lookup(DoubleBitBinary meas, UInt16 index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, binaryMap, ConvertDoubleBinary, action);
+            GenericLookup(meas, index, doubleBitBinaryMap, ConvertDoubleBinary, action);
         }
 
         public void Lookup(Analog meas, UInt16 index, Action<IMeasurement> action)

@@ -26,7 +26,7 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using DNP3.Interface;
+using Automatak.DNP3.Interface;
 using GSF.TimeSeries;
 
 namespace DNP3Adapters
@@ -60,86 +60,66 @@ namespace DNP3Adapters
             }
         }
 
-        void ISOEHandler.LoadEvent(OctetString meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Binary>> values)
         {
-           
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(AnalogOutputStatus meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<DoubleBitBinary>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);            
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(BinaryOutputStatus meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Analog>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(FrozenCounter meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Counter>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(Counter meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<FrozenCounter>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(Analog meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryOutputStatus>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(DoubleBitBinary meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogOutputStatus>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
+            foreach (var indexedValue in values)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadEvent(Binary meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<OctetString>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadStatic(OctetString meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<TimeAndInterval>> values)
         {
-            
         }
 
-        void ISOEHandler.LoadStatic(AnalogOutputStatus meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryCommandEvent>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadStatic(BinaryOutputStatus meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogCommandEvent>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
-        void ISOEHandler.LoadStatic(FrozenCounter meas, ushort index)
+        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<SecurityStat>> values)
         {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
-
-        void ISOEHandler.LoadStatic(Counter meas, ushort index)
-        {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
-        }
-
-        void ISOEHandler.LoadStatic(Analog meas, ushort index)
-        {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
-        }
-
-        void ISOEHandler.LoadStatic(DoubleBitBinary meas, ushort index)
-        {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
-        }
-
-        void ISOEHandler.LoadStatic(Binary meas, ushort index)
-        {
-            m_lookup.Lookup(meas, index, m_Measurements.Add);
-        }
-
-        
     }
 }

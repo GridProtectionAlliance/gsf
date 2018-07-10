@@ -31,8 +31,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
-using DNP3.Adapter;
-using DNP3.Interface;
+using Automatak.DNP3.Adapter;
+using Automatak.DNP3.Interface;
 using GSF;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -49,6 +49,21 @@ namespace DNP3Adapters
         #region [ Members ]
 
         // Nested Types
+
+        private class ChannelListener : IChannelListener
+        {
+            private Action<ChannelState> m_onStateChange;
+
+            public ChannelListener(Action<ChannelState> onStateChange)
+            {
+                m_onStateChange = onStateChange;
+            }
+
+            public void OnStateChange(ChannelState state)
+            {
+                m_onStateChange(state);
+            }
+        }
 
         // Class used to proxy dnp3 manager log entries to Iaon session
         private class IaonProxyLogHandler : ILogHandler
@@ -69,18 +84,13 @@ namespace DNP3Adapters
                         {
                             // Expose errors through exception processor
                             InvalidOperationException exception;
-
-                            if (entry.keyValues.Count > 0)
-                                exception = new InvalidOperationException(FormatLogEntry(entry), new Exception(entry.keyValues.JoinKeyValuePairs()));
-                            else
-                                exception = new InvalidOperationException(FormatLogEntry(entry));
-
+                            exception = new InvalidOperationException(FormatLogEntry(entry));
                             s_statusProxy.OnProcessException(MessageLevel.Error, exception);
                         }
                         else
                         {
                             // For other messages, we just expose as a normal status
-                            string message = FormatLogEntry(entry, true);
+                            string message = FormatLogEntry(entry);
 
                             if ((entry.filter.Flags & LogFilters.WARNING) > 0)
                                 s_statusProxy.OnStatusMessage(MessageLevel.Warning, message);
@@ -93,27 +103,15 @@ namespace DNP3Adapters
                 }
             }
 
-            private static string FormatLogEntry(LogEntry entry, bool includeKeyValues = false)
+            private static string FormatLogEntry(LogEntry entry)
             {
                 StringBuilder entryText = new StringBuilder();
-
-                if (!string.IsNullOrWhiteSpace(entry.loggerName))
-                    entryText.AppendFormat("{0} - ", entry.loggerName);
 
                 entryText.Append(entry.message);
                 entryText.AppendFormat(" ({0})", LogFilters.GetFilterString(entry.filter.Flags));
 
-                if (entry.errorCode != 0)
-                    entryText.AppendFormat(" - error code {0}", entry.errorCode);
-
                 if (!string.IsNullOrWhiteSpace(entry.location))
                     entryText.AppendFormat(" @ {0}", entry.location);
-
-                if (includeKeyValues && entry.keyValues.Count > 0)
-                {
-                    entryText.AppendLine();
-                    entryText.AppendFormat("Key Values = {0}", entry.keyValues.JoinKeyValuePairs());
-                }
 
                 return entryText.ToString();
             }
@@ -122,12 +120,25 @@ namespace DNP3Adapters
         // Fields
         private string m_commsFilePath;             // Filename for the communication configuration file
         private string m_mappingFilePath;           // Filename for the measurement mapping configuration file
+        private TimeSpan m_pollingInterval;         // Interval, in seconds, at which the adapter will poll the DNP3 device
         private MasterConfiguration m_masterConfig; // Configuration for the master set during the Initialize call
         private MeasurementMap m_measurementMap;    // Configuration for the measurement map set during the Initialize call
         private TimeSeriesSOEHandler m_soeHandler;  // Time-series sequence of events handler
         private IChannel m_channel;                 // Communications channel set during the AttemptConnection call and used in AttemptDisconnect
         private bool m_active;                      // Flag that determines if the port/master has been added so that the resource can be cleaned up
         private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DNP3Adapters"/> class.
+        /// </summary>
+        public DNP3InputAdapter()
+        {
+            m_pollingInterval = TimeSpan.FromSeconds(2.0D);
+        }
 
         #endregion
 
@@ -164,6 +175,24 @@ namespace DNP3Adapters
             set
             {
                 m_mappingFilePath = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the interval, in seconds, at which the adapter will poll the DNP3 device.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(2.0D),
+        Description("Define the interval, in seconds, at which the adapter will poll the DNP3 device.")]
+        public double PollingInterval
+        {
+            get
+            {
+                return m_pollingInterval.TotalSeconds;
+            }
+            set
+            {
+                m_pollingInterval = TimeSpan.FromSeconds(value);
             }
         }
 
@@ -258,18 +287,19 @@ namespace DNP3Adapters
         public override void Initialize()
         {
             Dictionary<string, string> settings = Settings;
+            string setting;
+            double pollingInterval;
 
             base.Initialize();
 
-            settings.TryGetValue("CommsFilePath", out m_commsFilePath);
-
-            if (string.IsNullOrWhiteSpace(m_commsFilePath))
+            if (!settings.TryGetValue("CommsFilePath", out m_commsFilePath) || string.IsNullOrWhiteSpace(m_commsFilePath))
                 throw new ArgumentException("The required commsFile parameter was not specified");
 
-            settings.TryGetValue("MappingFilePath", out m_mappingFilePath);
-
-            if (string.IsNullOrWhiteSpace(m_mappingFilePath))
+            if (!settings.TryGetValue("MappingFilePath", out m_mappingFilePath) || string.IsNullOrWhiteSpace(m_mappingFilePath))
                 throw new ArgumentException("The required mappingFile parameter was not specified");
+
+            if (settings.TryGetValue("PollingInterval", out setting) && double.TryParse(setting, out pollingInterval))
+                PollingInterval = pollingInterval;
 
             m_masterConfig = ReadConfig<MasterConfiguration>(m_commsFilePath);
             m_measurementMap = ReadConfig<MeasurementMap>(m_mappingFilePath);
@@ -311,12 +341,17 @@ namespace DNP3Adapters
             string portName = tcpConfig.address + ":" + tcpConfig.port;
             TimeSpan minRetry = TimeSpan.FromMilliseconds(tcpConfig.minRetryMs);
             TimeSpan maxRetry = TimeSpan.FromMilliseconds(tcpConfig.maxRetryMs);
+            ChannelRetry channelRetry = new ChannelRetry(minRetry, maxRetry);
+            IChannelListener channelListener = new ChannelListener(state => OnStatusMessage(MessageLevel.Info, portName + " - Channel state change: " + state));
 
-            IChannel channel = s_manager.AddTCPClient(portName, tcpConfig.level, minRetry, maxRetry, tcpConfig.address, tcpConfig.port);
-            channel.AddStateListener(state => OnStatusMessage(MessageLevel.Info, portName + " - Channel state change: " + state));
+            IChannel channel = s_manager.AddTCPClient(portName, tcpConfig.level, channelRetry, tcpConfig.address, tcpConfig.port, channelListener);
             m_channel = channel;
 
-            IMaster master = channel.AddMaster(portName, m_soeHandler, m_masterConfig.master);
+            IMaster master = channel.AddMaster(portName, m_soeHandler, DefaultMasterApplication.Instance, m_masterConfig.master);
+
+            if (m_pollingInterval > TimeSpan.Zero)
+                master.AddClassScan(ClassField.AllClasses, m_pollingInterval, TaskConfig.Default);
+
             master.Enable();
             m_active = true;
         }
@@ -369,8 +404,7 @@ namespace DNP3Adapters
         static DNP3InputAdapter()
         {
             s_adapters = new List<DNP3InputAdapter>();
-            s_manager = DNP3ManagerFactory.CreateManager(Environment.ProcessorCount);
-            s_manager.AddLogHandler(new IaonProxyLogHandler());
+            s_manager = DNP3ManagerFactory.CreateManager(Environment.ProcessorCount, new IaonProxyLogHandler());
         }
 
         #endregion
