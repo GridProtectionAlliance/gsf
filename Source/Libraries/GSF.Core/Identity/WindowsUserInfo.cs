@@ -375,13 +375,24 @@ namespace GSF.Identity
                 if (!m_enabled)
                     return Array.Empty<string>();
 
-                using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
-                using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                try
                 {
-                    return principal.GetAuthorizationGroups()
-                        .Select(groupPrincipal => groupPrincipal.Sid.ToString())
-                        .Select(SIDToAccountName)
-                        .ToArray();
+                    using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                    using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                    {
+                        return principal.GetAuthorizationGroups()
+                            .Select(groupPrincipal => groupPrincipal.Sid.ToString())
+                            .Select(SIDToAccountName)
+                            .ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Publish(MessageLevel.Error, "Get Groups", ex.Message, null, ex);
+
+                    // TODO: Fix random, inexplicable errors when looking up
+                    // identities via System.DirectoryServices.AccountManagement
+                    return OldGetGroups();
                 }
             }
         }
@@ -393,15 +404,26 @@ namespace GSF.Identity
                 if (!m_enabled)
                     return Array.Empty<string>();
 
-                using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
-                using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                try
                 {
-                    return principal.GetAuthorizationGroups()
-                        .Cast<GroupPrincipal>()
-                        .Where(groupPrincipal => groupPrincipal.GroupScope == GroupScope.Local)
-                        .Select(groupPrincipal => groupPrincipal.Sid.ToString())
-                        .Select(SIDToAccountName)
-                        .ToArray();
+                    using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                    using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                    {
+                        return principal.GetAuthorizationGroups()
+                            .Cast<GroupPrincipal>()
+                            .Where(groupPrincipal => groupPrincipal.GroupScope == GroupScope.Local)
+                            .Select(groupPrincipal => groupPrincipal.Sid.ToString())
+                            .Select(SIDToAccountName)
+                            .ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Publish(MessageLevel.Error, "Get LocalGroups", ex.Message, null, ex);
+
+                    // TODO: Fix random, inexplicable errors when looking up
+                    // identities via System.DirectoryServices.AccountManagement
+                    return OldGetLocalGroups();
                 }
             }
         }
@@ -1438,6 +1460,109 @@ namespace GSF.Identity
 
             return sid;
         }
+
+        #region [ Old Group Lookup Functions ]
+
+        private string[] OldGetGroups()
+        {
+            HashSet<string> groups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string groupName;
+
+            if (m_enabled)
+            {
+                if (m_isLocalAccount)
+                {
+                    // Get fixed list of BUILTIN local groups
+                    string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
+
+                    // Get local groups that local user is a member of
+                    object localGroups = m_userEntry.Invoke("Groups");
+
+                    foreach (object localGroup in (IEnumerable)localGroups)
+                    {
+                        using (DirectoryEntry groupEntry = new DirectoryEntry(localGroup))
+                        {
+                            groupName = groupEntry.Name;
+
+                            if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                                groups.Add(Environment.MachineName + "\\" + groupName);
+                            else
+                                groups.Add("BUILTIN\\" + groupName);
+                        }
+                    }
+
+                    // Union this with a manual scan of local groups since "Groups" call will not derive
+                    // "NT AUTHORITY\Authenticated Users" which will miss "BUILTIN\Users" for authenticated
+                    // users. This will also catch other groups that may have been missed by "Groups" call.
+                    groups.UnionWith(LocalGroups);
+                }
+                else
+                {
+                    // Get active directory groups that active directory user is a member of
+                    m_userEntry.RefreshCache(new[] { "TokenGroups" });
+
+                    foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
+                    {
+                        try
+                        {
+                            groupName = new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString();
+                            groups.Add(groupName);
+                        }
+                        catch (IdentityNotMappedException)
+                        {
+                            // This might happen when AD server is not accessible.
+                        }
+                        catch (SystemException)
+                        {
+                            // Ignoring group SID's that fail to translate to an active AD group, for whatever reason
+                        }
+                    }
+
+                    // Union this with local groups that active directory user is a member of. The
+                    // "TokenGroups" call doesn't get all of these :-p, generally this call only
+                    // returns some of the common "BUILTIN\*" groups.
+                    groups.UnionWith(LocalGroups);
+                }
+            }
+
+            return groups.ToArray();
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
+        private string[] OldGetLocalGroups()
+        {
+            List<string> groups = new List<string>();
+
+            // Get local groups that user is a member of
+            DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
+            string userPath = string.Format("WinNT://{0}/{1}", m_parent.Domain, m_parent.UserName);
+            string groupName;
+
+            string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
+
+            // Only enumerate groups
+            root.Children.SchemaFilter.Add("Group");
+
+            // Have to scan each local group for the AD user...
+            foreach (DirectoryEntry groupEntry in root.Children)
+            {
+                if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
+                {
+                    groupName = groupEntry.Name;
+
+                    if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                        groups.Add(Environment.MachineName + "\\" + groupName);
+                    else
+                        groups.Add("BUILTIN\\" + groupName);
+                }
+            }
+
+            return groups.ToArray();
+        }
+
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(WindowsUserInfo), MessageClass.Component);
+
+        #endregion
 
         #endregion
     }
