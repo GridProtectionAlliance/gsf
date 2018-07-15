@@ -60,150 +60,69 @@
     {
         showMenu = "true";
     }
-    ViewBag.ShowMenu = showMenu.ParseBoolean();
 
+    ViewBag.ShowMenu = showMenu.ParseBoolean();
 }
 @section StyleSheets {
-<style>
-    html {
-        overflow-x: hidden;
-        height: 100%;
-    }
+    <style>
+        html {
+            overflow-x: hidden;
+            height: 100%;
+        }
 
-    body {
-        overflow-x: hidden;
-        overflow-y: hidden;
-        height: 100%;
-    }
+        body {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            height: 100%;
+        }
 
-    .col-md-3 {
-        padding-left: 0;
-        padding-right: 0;
-    }
+        .col-md-3 {
+            padding-left: 0;
+            padding-right: 0;
+        }
 
-    .list-group {
-        padding-left: 0px;
-        margin-left: 0px;
-    }
+        .list-group {
+            padding-left: 0px;
+            margin-left: 0px;
+        }
 
-    .list-group-item {
-        padding-left: 0px;
-        margin-left: 0px;
-    }
+        .list-group-item {
+            padding-left: 0px;
+            margin-left: 0px;
+        }
 
-    .panel-body {
-        padding: 0;
-    }
+        .panel-body {
+            padding: 0;
+        }
 
-    .panel-heading {
-        padding: 0;
-    }
+        .panel-heading {
+            padding: 0;
+        }
 
-    ul.nowrap {
-        overflow: auto;
-    }
+        ul.nowrap {
+            overflow: auto;
+        }
 
-    li.nowrap {
-        white-space: nowrap;
-    }
+        li.nowrap {
+            white-space: nowrap;
+        }
 
-    #toggleCanvasButton {
-        color: rgb(255, 255, 255);
-        padding-bottom: 0px;
-        padding-left: 3px;
-        font-size: small;
-        margin-left: -10px;
-    }
+        #toggleCanvasButton {
+            color: rgb(255, 255, 255);
+            padding-bottom: 0px;
+            padding-left: 3px;
+            font-size: small;
+            margin-left: -10px;
+        }
 
-    #toggleCanvasIcon {
-        -webkit-transition: all 1.0s ease;
-        -moz-transition: all 1.0s ease;
-        -o-transition: all 1.0s ease;
-        transition: all 1.0s ease;
-    }
-
-    .row-offcanvas.active #toggleCanvasIcon {
-        filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
-        -webkit-transform: scale(1, -1);
-        -moz-transform: scale(1, -1);
-        -ms-transform: scale(1, -1);
-        -o-transform: scale(1, -1);
-        transform: scale(1, -1);
-        padding-bottom: 1px;
-        padding-left: 1px;
-    }
-
-    @@media screen and (min-width: 1250px) {
         #toggleCanvasIcon {
-            filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1);
-            -webkit-transform: scale(-1, 1);
-            -moz-transform: scale(-1, 1);
-            -ms-transform: scale(-1, 1);
-            -o-transform: scale(-1, 1);
-            transform: scale(-1, 1);
+            -webkit-transition: all 1.0s ease;
+            -moz-transition: all 1.0s ease;
+            -o-transition: all 1.0s ease;
+            transition: all 1.0s ease;
         }
 
-        .row-offcanvas {
-            position: relative;
-            -webkit-transition: all .25s ease-out;
-            -moz-transition: all .25s ease-out;
-            transition: all .25s ease-out;
-        }
-
-        .row-offcanvas-right {
-            right: 20%;
-        }
-
-        .row-offcanvas-left {
-            left: 20%;
-        }
-
-        .row-offcanvas-right .sidebar-offcanvas {
-            right: -20%; /* 3 columns */
-            background-color: rgb(255, 255, 255);
-        }
-
-        .row-offcanvas-left .sidebar-offcanvas {
-            left: -20%; /* 3 columns */
-            background-color: rgb(255, 255, 255);
-        }
-
-        .row-offcanvas-right.active {
-            right: 0; /* 3 columns */
-        }
-
-        .row-offcanvas-left.active {
-            left: 0; /* 3 columns */
-        }
-
-        .row-offcanvas-right.active .sidebar-offcanvas {
-            background-color: rgb(254, 254, 254);
-        }
-
-        .row-offcanvas-left.active .sidebar-offcanvas {
-            background-color: rgb(254, 254, 254);
-        }
-
-        .row-offcanvas .content {
-            width: 80%; /* 9 columns */
-            -webkit-transition: all .25s ease-out;
-            -moz-transition: all .25s ease-out;
-            transition: all .25s ease-out;
-        }
-
-        .row-offcanvas.active .content {
-            width: 100%; /* 12 columns */
-        }
-
-        .sidebar-offcanvas {
-            position: absolute;
-            top: 0;
-            width: 20%; /* 3 columns */
-        }
-    }
-
-    @@media screen and (max-width: 1249px) {
-        #toggleCanvasIcon {
+        .row-offcanvas.active #toggleCanvasIcon {
             filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
             -webkit-transform: scale(1, -1);
             -moz-transform: scale(1, -1);
@@ -214,51 +133,130 @@
             padding-left: 1px;
         }
 
-        .row-offcanvas {
-            position: relative;
-            -webkit-transition: all .25s ease-out;
-            -moz-transition: all .25s ease-out;
-            transition: all .25s ease-out;
+        @@media screen and (min-width: 1250px) {
+            #toggleCanvasIcon {
+                filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1);
+                -webkit-transform: scale(-1, 1);
+                -moz-transform: scale(-1, 1);
+                -ms-transform: scale(-1, 1);
+                -o-transform: scale(-1, 1);
+                transform: scale(-1, 1);
+            }
+
+            .row-offcanvas {
+                position: relative;
+                -webkit-transition: all .25s ease-out;
+                -moz-transition: all .25s ease-out;
+                transition: all .25s ease-out;
+            }
+
+            .row-offcanvas-right {
+                right: 20%;
+            }
+
+            .row-offcanvas-left {
+                left: 20%;
+            }
+
+            .row-offcanvas-right .sidebar-offcanvas {
+                right: -20%; /* 3 columns */
+                background-color: rgb(255, 255, 255);
+            }
+
+            .row-offcanvas-left .sidebar-offcanvas {
+                left: -20%; /* 3 columns */
+                background-color: rgb(255, 255, 255);
+            }
+
+            .row-offcanvas-right.active {
+                right: 0; /* 3 columns */
+            }
+
+            .row-offcanvas-left.active {
+                left: 0; /* 3 columns */
+            }
+
+            .row-offcanvas-right.active .sidebar-offcanvas {
+                background-color: rgb(254, 254, 254);
+            }
+
+            .row-offcanvas-left.active .sidebar-offcanvas {
+                background-color: rgb(254, 254, 254);
+            }
+
+            .row-offcanvas .content {
+                width: 80%; /* 9 columns */
+                -webkit-transition: all .25s ease-out;
+                -moz-transition: all .25s ease-out;
+                transition: all .25s ease-out;
+            }
+
+            .row-offcanvas.active .content {
+                width: 100%; /* 12 columns */
+            }
+
+            .sidebar-offcanvas {
+                position: absolute;
+                top: 0;
+                width: 20%; /* 3 columns */
+            }
         }
 
-        .row-offcanvas-right {
-            right: 0;
-        }
+        @@media screen and (max-width: 1249px) {
+            #toggleCanvasIcon {
+                filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
+                -webkit-transform: scale(1, -1);
+                -moz-transform: scale(1, -1);
+                -ms-transform: scale(1, -1);
+                -o-transform: scale(1, -1);
+                transform: scale(1, -1);
+                padding-bottom: 1px;
+                padding-left: 1px;
+            }
 
-        .row-offcanvas-left {
-            left: 0;
-        }
+            .row-offcanvas {
+                position: relative;
+                -webkit-transition: all .25s ease-out;
+                -moz-transition: all .25s ease-out;
+                transition: all .25s ease-out;
+            }
 
-        .row-offcanvas-right .sidebar-offcanvas {
-            right: -50%; /* 6 columns */
-        }
+            .row-offcanvas-right {
+                right: 0;
+            }
 
-        .row-offcanvas-left .sidebar-offcanvas {
-            left: -50%; /* 6 columns */
-        }
+            .row-offcanvas-left {
+                left: 0;
+            }
 
-        .row-offcanvas-right.active {
-            right: 50%; /* 6 columns */
-        }
+            .row-offcanvas-right .sidebar-offcanvas {
+                right: -50%; /* 6 columns */
+            }
 
-        .row-offcanvas-left.active {
-            left: 50%; /* 6 columns */
-        }
+            .row-offcanvas-left .sidebar-offcanvas {
+                left: -50%; /* 6 columns */
+            }
 
-        .sidebar-offcanvas {
-            position: absolute;
-            top: 0;
-            width: 50%; /* 6 columns */
+            .row-offcanvas-right.active {
+                right: 50%; /* 6 columns */
+            }
+
+            .row-offcanvas-left.active {
+                left: 50%; /* 6 columns */
+            }
+
+            .sidebar-offcanvas {
+                position: absolute;
+                top: 0;
+                width: 50%; /* 6 columns */
+            }
         }
-    }
-</style>
+    </style>
 }
-
 <div class="container-fluid">
     <div class="row row-offcanvas row-offcanvas-left">
         <div ng-app="GraphMeasurements" ng-controller="MeasurementsCtrl">
             <div class="col-md-3 sidebar-offcanvas toggled" style="overflow-y: auto" id="sidebar" role="navigation">
-
                 <div class="panel-group">
                     <div class="panel panel-default">
                         <div class="panel-heading" style="padding: 5px">
@@ -267,18 +265,11 @@
                             </h4>
                         </div>
                         <div id="collapse1" class="panel-collapse collapse" style="margin: 5px">
-                            <label for="filterstring">Selected Measurements:</label>
-                            <textarea id="filterstring" class="form-control" ng-model="filterstring" ng-change="updateSettings()" readonly></textarea>
                             <label for="datapoints">Number of Data Points to Plot:</label>
-                            <input type="number" id="datapoints" ng-model="datapoints" ng-change="updateSettings()" class="form-control" />
-                            <label for="refreshinterval">Data Refresh Interval(ms):</label>
-                            <input type="number" id="refreshinterval" ng-model="refreshinterval" ng-change="updateSettings()" class="form-control" />
-                            <label for="statrefreshinterval">Stat Refresh Interval(ms):</label>
-                            <input type="number" id="statrefreshinterval" ng-model="statrefreshinterval" ng-change="updateSettings()" class="form-control" />
+                            <input type="number" id="datapoints" ng-model="dataPoints" ng-change="updateDataPoints()" class="form-control" />
                         </div>
                     </div>
                 </div>
-
                 <div class="panel-group">
                     <div class="panel panel-default">
                         <div class="panel-heading" style="padding: 5px">
@@ -295,7 +286,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div ng-repeat="parentDevice in deviceData" class="panel-group">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -309,21 +299,20 @@
                             <div id="dd{{parentDevice.parent}}" class="panel-collapse collapse in">
                                 <ul class="list-group nowrap" id="parent{{parentDevice.parent}}">
                                     <li class="list-group-item nowrap" ng-repeat="device in parentDevice.devices">
-                                        <img id="img{{ cleanIdentifier(device.Acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
-                                        <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{device.Name}}" data-toggle="collapse" data-target="#dd{{ cleanIdentifier(device.Acronym)}}">{{ cleanIdentifier(device.Acronym)}}</button>
-                                        <button id="btn{{ cleanIdentifier(device.Acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(device.Acronym)}}" style="font-size: xx-small;">Stats</button>
-                                        <div id="dd{{ cleanIdentifier(device.Acronym)}}" class="collapse">
+                                        <img id="img{{cleanIdentifier(device.Acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
+                                        <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{device.Name}}" data-toggle="collapse" data-target="#dd{{cleanIdentifier(device.Acronym)}}" ng-click="device.updateMeasurements()">{{device.Acronym}}</button>
+                                        <button id="btn{{cleanIdentifier(device.Acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(device.Acronym)}}" style="font-size: xx-small;">Stats</button>
+                                        <div id="dd{{cleanIdentifier(device.Acronym)}}" class="collapse">
                                             <table class="table" style="width: 15%; font-size: x-small;" id="tb{{cleanIdentifier(device.Acronym)}}">
                                                 <tr><th></th><th>ID</th><th>Stream</th><th>Signal</th><th></th></tr>
                                                 <tr title="{{measurement.Description}}" ng-repeat="measurement in device.measurements">
                                                     <td>
-                                                        <input type="checkbox" id="cb{{measurement.ID}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-click="updateFilter()" />
+                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-change="updateFilter(checked, measurement)" />
                                                     </td>
                                                     <td>{{measurement.ID.split(':')[1]}}</td>
                                                     <td>{{cleanSignalref(measurement)}}</td>
                                                     <td>{{measurement.SignalAcronym}}</td>
                                                     @*<td><button class="btn btn-xs badge" data-toggle="modal" data-target="#measmod{{measurement.SignalID}}" style="font-size: xx-small;">Stats</button></td>*@
-
                                                 </tr>
                                             </table>
                                         </div>
@@ -352,7 +341,6 @@
                                                     </div>
                                                 </div>
                                             </div>*@
-
                                         @*<div id="mod{{ cleanIdentifier(device.Acronym)}}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">
                                                 <div class="modal-dialog">
                                                     <div class="modal-content">
@@ -378,12 +366,10 @@
                                                     </div>
                                                 </div>
                                             </div>*@
-
                                     </li>
                                 </ul>
                             </div>
                         </div>
-
                         @*<div id="mod{{ cleanIdentifier(parentDevice.parent)}}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
@@ -409,13 +395,10 @@
                                     </div>
                                 </div>
                             </div>*@
-
                     </div>
                 </div>
-
             </div><!--/span-->
         </div>
-
         <div class="col-md-9 content">
             <div class="pull-left">
                 <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas" id="toggleCanvasButton" title="Toggle Menu"><span class="glyphicon glyphicon-expand" id="toggleCanvasIcon"></span></button>
@@ -426,561 +409,585 @@
             <div class="text-center" id="graphwrapper">
                 <div id="placeholder" style="width: 100%;"></div>
             </div>
-
         </div><!--/span-->
-
     </div><!--/row-->
-
 </div><!-- /.container -->
 <div id="modals">
-
 </div>
-
 @section Scripts {
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.crosshair.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.navigate.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.resize.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.selection.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.time.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.axislabels.min.js"></script>
-<script src="@Resources.Root/Shared/Scripts/angular.js"></script>
-<script src="@Resources.Root/Shared/Scripts/jstorage.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/jquery.subscriber.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.crosshair.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.navigate.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.resize.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.selection.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.time.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.axislabels.min.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/angular.js"></script>
+    <script src="@Resources.Root/Shared/Scripts/jstorage.js"></script>
+    <script>
+        // Need to define a global function to reset the filter so
+        // that it can be called by the click handler for a global button
+        var resetFilter;
 
-<script>
-    var plot;
-    var updateInterval = 250;
-    var plotData = [];
-    var plotDataTemplate = [];
-    var deviceData = [];
-    var measurementDetails = [];
-    var statFilter = "";
-    var stats = [];
-    var lightFilter = "";
-    var parentDevice = [];
-    var statRefreshInterval;
-    var dataRefreshInterval;
-    var dataPointNumber;
+        (function ($) {
+            var plot;
+            var plotData = [];
+            var graphMeasurements = angular.module('GraphMeasurements', []);
+            var root = "@Resources.Root";
 
-    var graphMeasurements = angular.module('GraphMeasurements', []);
-    var MeasurementsCtrl = graphMeasurements.controller('MeasurementsCtrl', function ($scope) {
-        $scope.filterstring = $.jStorage.get('filterStr');
-        $scope.datapoints = parseInt($.jStorage.get('dataPointNumber'));
-        $scope.refreshinterval = parseInt($.jStorage.get('dataRefreshInterval'));
-        $scope.statrefreshinterval = parseInt($.jStorage.get('statRefreshInterval'));
-        $scope.deviceData = [];
-        $scope.measurementDetails = [];
-        $scope.stats = [];
+            // Logs messages to an array so they can be
+            // observed on demand in the JavaScript console
+            function log(obj) {
+                const max = 500;
 
-        // once the metadata is recieved being querying and parsing data
-        $(window).on('metaDataReceived', function () {
-            dataHub.getDeviceDetails().done(function (data) {
+                if (window.log === undefined)
+                    window.log = [];
 
-                data.sort(function (a, b) {
-                    if (a.Acronym > b.Acronym) return 1;
-                    if (a.Acronym < b.Acronym) return -1;
+                window.log.push(obj);
 
-                    return 0;
+                if (window.log.length > max)
+                    window.log.splice(0, window.log.length - max);
+            }
+
+            // Removes invalid characters from an identifier
+            // so it can be used as an ID in HTML
+            function cleanIdentifier(identifier) {
+                return identifier.replace(/[!"#$%&'()*+,.\/:;<=>?@@[\\\]^`{|}~]/g, "-");
+            }
+
+            // Builds the plot upon which the chart will be displayed
+            function buildPlot() {
+                plot = $.plot("#placeholder", plotData, {
+                    series: {
+                        shadowSize: 0
+                    },
+                    yaxes: [
+                        {
+                            show: true,
+                            position: "left",
+                            axisLabel: "Frequency"
+                        },
+                        {
+                            show: true,
+                            position: "left",
+                            axisLabel: "Voltage"
+                        },
+                        {
+                            show: true,
+                            position: "right",
+                            axisLabel: "Current"
+                        },
+                        {
+                            show: true,
+                            position: "right",
+                            axisLabel: "Angle"
+                        },
+                        {
+                            show: true,
+                            position: "right",
+                            axisLabel: "Analog Data"
+                        }
+                    ],
+                    xaxis: {
+                        mode: "time",
+                        timeformat: "%H:%M:%S",
+                        timezone: "browser"
+                    },
+                    legend: {
+                        show: true,
+                        container: $('#legend'),
+                        noColumns: 1,
+                        margin: 5
+                    }
+                });
+            }
+
+            // Builds the stats modal for the device with the given acronym
+            function buildModal(acronym) {
+                $("#modals").append('<div id="' + acronym + '"></div>');
+                html = '<div id="mod' + acronym + '" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">';
+                html += '<div class="modal-dialog">';
+                html += '<div class="modal-content">';
+                html += '<div class="modal-header">';
+                html += '<a class="close" data-dismiss="modal">×</a>';
+                html += '<h4>' + acronym + ' Statistics</h4>'
+                html += '</div>';
+                html += '<div  class="modal-body" style="height: 300px; overflow-y: scroll" >';
+                html += '<table id="stat' + acronym + '" class="table" style="font-size: x-small">';
+                html += '<thead>Run-time Statistics:<thead />';
+                html += '<tr><th>Stat ID</th><th>Statistic</th><th>Value</th><th>TimeTag</th></tr>';
+                html += '</table>';
+                html += '</div>';
+                html += '<div class="modal-footer">';
+                html += '<span class="btn" data-dismiss="modal">Close</span>'; // close button
+                html += '</div>';  // footer
+                html += '</div>';  // modalWindow
+                $('#' + acronym).html(html);
+                $("#mod" + acronym).modal({ 'show': false });
+            }
+
+            // Explicitly sets heights of various components on
+            // the page to take up available screen space
+            function setHeights() {
+                const margin = 20;
+                const sidebarHeight = $(window).innerHeight() - $("#sidebar").offset().top - margin;
+                const chartHeight = $(window).innerHeight() - $("#graphwrapper").offset().top - margin;
+                $('#sidebar').css('height', sidebarHeight);
+                $('#graphwrapper').css('height', chartHeight);
+                $('#placeholder').css('height', chartHeight);
+            }
+
+            // Loads settings from local storage and prepares
+            // callback functions for the initial page load
+            function loadSettings($scope) {
+                $scope.dataPoints = 300;
+                $scope.selections = [];
+
+                if ($.jStorage.get("dataPoints") !== null)
+                    $scope.dataPoints = $.jStorage.get("dataPoints");
+
+                if ($.jStorage.get("selections") !== null)
+                    $scope.selections = $.jStorage.get("selections");
+
+                $scope.deviceCallbacks = {};
+                $scope.measurementCallbacks = {};
+
+                $.each($scope.selections, function (_, selection) {
+                    $scope.deviceCallbacks[selection.device] = function (device) {
+                        var identifier = cleanIdentifier(device.Acronym);
+                        $("#dd" + identifier).removeClass("collapse");
+                        device.updateMeasurements();
+                    }
+
+                    $scope.measurementCallbacks[selection.signalID] = function (measurement) {
+                        var cleanID = cleanIdentifier(measurement.ID);
+                        $("#cb" + cleanID).prop("checked", true);
+                        updateFilter($scope, true, measurement);
+                    }
                 });
 
-                $.each(data.map(function (d) { return d.ParentAcronym }).unique(), function (i, parentName) {
-                    $scope.deviceData.push({ parent: (parentName === '' ? 'Unknown': parentName), devices: $.grep(data, function (d) { if (d.ParentAcronym === parentName) return d; }) });
-                    buildModal((parentName === '' ? 'Unknown' : parentName));
-                    $.each($scope.deviceData[$scope.deviceData.length - 1].devices, function (j, device) {
-                        buildModal($scope.cleanIdentifier(device.Acronym));
-                    });
-                });
+                $('#datapoints').val($scope.dataPoints);
+            }
 
-                dataHub.getMeasurementDetails().done(function (measurementDetail) {
-                    measurementDetails = measurementDetail;
-                    measurementDetail.sort(function (a, b) {
-                        if (a.ID > b.ID) return 1;
-                        if (a.ID < b.ID) return -1;
+            // Updates the subscription filter for the data subscriber
+            function updateFilter($scope, checked, measurement) {
+                if (!hubIsConnected)
+                    return;
 
-                        return 0;
-                    });
+                if (checked) {
+                    $scope.selectedMeasurements[measurement.SignalID] = {
+                        selection: {
+                            device: measurement.DeviceAcronym,
+                            signalID: measurement.SignalID
+                        },
+                        plotData: {
+                            label: measurement.SignalReference.split("!")[measurement.SignalReference.split("!").length - 1] + " - " + measurement.SignalAcronym,
+                            yaxis: measurement.YAxis,
+                            data: []
+                        }
+                    };
+                }
+                else {
+                    delete $scope.selectedMeasurements[measurement.SignalID];
+                }
 
-                    $.each($scope.deviceData, function (j, dd) {
-                        dd.stats = [];
-                        $.each(dd.devices, function (k, device) {
-                            device.measurements = [];
-                            device.stats = [];
+                var selectedIDs = Object.keys($scope.selectedMeasurements);
+
+                if (selectedIDs.length > 0) {
+                    var filterStr = selectedIDs.join(";");
+                    $scope.dataSubscriber.subscribe({ FilterExpression: filterStr });
+                } else {
+                    $scope.dataSubscriber.unsubscribe();
+                }
+
+                plotData = Object.keys($scope.selectedMeasurements)
+                    .map(function (key) { return $scope.selectedMeasurements[key].plotData; });
+
+                plot.setData(plotData);
+                plot.setupGrid();
+                plot.draw();
+
+                $scope.selections = Object.keys($scope.selectedMeasurements)
+                    .map(function (key) { return $scope.selectedMeasurements[key].selection; });
+
+                $.jStorage.set("selections", $scope.selections);
+            }
+
+            // Queries metadata for the measurements associated with the given device
+            function getMeasurements($scope, device) {
+                if (!hubIsConnected)
+                    return;
+
+                $scope.dataSubscriber.getMetadata("MeasurementDetail", "DeviceAcronym = '" + device.Acronym + "' AND SignalAcronym <> 'STAT'")
+                    .fail(showErrorMessage)
+                    .done(function (data) {
+                        data.sort(function (m1, m2) {
+                            function signalIndex (measurement) {
+                                var matches = measurement.SignalReference.match(/[0-9]+$/);
+
+                                if (matches === null)
+                                    return 0;
+
+                                return Number(matches[0]);
+                            }
+
+                            function pointID (measurement) {
+                                return Number(measurement.ID.split(':')[1]);
+                            }
+
+                            var comparisons = [];
+                            comparisons.push({ m1: m1.SignalAcronym, m2: m2.SignalAcronym });
+                            comparisons.push({ m1: signalIndex(m1), m2: signalIndex(m2) });
+                            comparisons.push({ m1: pointID(m1), m2: pointID(m2) });
+
+                            for (var i = 0; i < comparisons.length; i++) {
+                                var comparison = comparisons[i];
+
+                                if (comparison.m1 < comparison.m2)
+                                    return -1;
+
+                                if (comparison.m1 > comparison.m2)
+                                    return 1;
+                            }
+
+                            return 0;
+                        });
+
+                        $.each(data, function (_, measurement) {
+                            if (measurement.SignalAcronym === "FREQ")
+                                measurement.YAxis = 1;
+                            else if (measurement.SignalAcronym === "VPHM")
+                                measurement.YAxis = 2;
+                            else if (measurement.SignalAcronym === "IPHM")
+                                measurement.YAxis = 3;
+                            else if (measurement.SignalAcronym === "Angle")
+                                measurement.YAxis = 4;
+                            else
+                                measurement.YAxis = 5;
+                        });
+
+                        device.measurements = data;
+                        $scope.$apply();
+
+                        // Handle the callbacks for automatic measurement auto-selection
+                        $.each(data, function (_, measurement) {
+                            var callback = $scope.measurementCallbacks[measurement.SignalID];
+
+                            if (callback !== undefined)
+                                callback(measurement);
                         });
                     });
+            }
 
-                    $.each(measurementDetail, function (i, md) {
-                        if (md.SignalAcronym != "DIGI" && md.SignalAcronym != "FLAG" && md.SignalAcronym != "QUAL" && md.SignalAcronym != "STAT" && md.SignalAcronym != "ALRM") {
-                            $.each($scope.deviceData, function (j, dd) {
-                                $.each(dd.devices, function (k, device) {
-                                    if (device.Acronym == md.DeviceAcronym) {
-                                        md.stats = [];
-                                        device.measurements.push(md);
-                                    }
-                                });
-                            });
+            // Queries metadata for all statistics and
+            // the modals to display stat information
+            function getStatistics($scope) {
+                $scope.dataSubscriber.getMetadata("MeasurementDetail", "SignalAcronym = 'STAT'")
+                    .fail(showErrorMessage)
+                    .done(function (data) {
+                        data.sort(function (m1, m2) {
+                            function category(measurement) {
+                                var matches = measurement.SignalReference.match(/!([^-]+)-ST[0-9]+$/);
 
-                            lightFilter += md.ID + ';';
+                                if (matches === null)
+                                    return null;
 
-                            var yaxisNum = 1;
-                            if (md.SignalAcronym == "VPHM") yaxisNum = 2;
-                            else if (md.SignalAcronym == "IPHM") yaxisNum = 3;
-                            else if (md.SignalAcronym == "Angle") yaxisNum = 4;
-                            else if (md.SignalAcronym == "ALOG") yaxisNum = 5;
+                                return matches[1];
+                            }
 
-                            plotDataTemplate.push({ label: md.SignalID, yaxis: yaxisNum, data: [] });
-                        }
-                        else if (md.SignalAcronym == "STAT") {
-                            if (md.Enabled == true) {
-                                statFilter += md.ID + ';';
-                                stats.push({ deviceAcronym: md.DeviceAcronym, id: md.SignalID, value: null, timestamp: null, description: md.Description });
-                                var index = stats.length - 1;
-                                if (parentDevice.indexOf(md.DeviceAcronym) != -1)
-                                    $('#stat' + md.DeviceAcronym).append('<tr><td>' + md.ID.split(":")[1] + '</td><td id="des' + md.SignalID + '">' + md.Description + '</td><td><span id="val' + md.SignalID + '" >' + stats[index].value + '</span></td><td><span id="time' + md.SignalID + '" >' + stats[index].timestamp + '</span></td></tr>');
-                                else if (md.DeviceAcronym != null) {
-                                    $('#stat' + $scope.cleanIdentifier(md.DeviceAcronym)).append('<tr><td>' + md.ID.split(":")[1] + '</td><td id="des' + md.SignalID + '">' + md.Description + '</td><td><span id="val' + md.SignalID + '" >' + stats[index].value + '</span></td><td><span id="time' + md.SignalID + '" >' + stats[index].timestamp + '</span></td></tr>');
+                            function signalIndex(measurement) {
+                                var matches = measurement.SignalReference.match(/[0-9]+$/);
+
+                                if (matches === null)
+                                    return null;
+
+                                return Number(matches[0]);
+                            }
+
+                            var comparisons = [];
+                            comparisons.push({ m1: category(m1), m2: category(m2) });
+                            comparisons.push({ m1: signalIndex(m1), m2: signalIndex(m2) });
+
+                            for (var i = 0; i < comparisons.length; i++) {
+                                var comparison = comparisons[i];
+
+                                if (comparison.m1 < comparison.m2)
+                                    return -1;
+
+                                if (comparison.m1 > comparison.m2)
+                                    return 1;
+                            }
+
+                            return 0;
+                        });
+
+                        $.each(data, function (_, measurement) {
+                            if (measurement.Enabled == true) {
+                                var stat = {
+                                    deviceAcronym: measurement.DeviceAcronym,
+                                    id: measurement.SignalID,
+                                    signalReference: measurement.SignalReference,
+                                    value: null,
+                                    timestamp: null,
+                                    description: measurement.Description
+                                };
+
+                                $scope.statLookup[measurement.SignalID] = stat;
+
+                                if (measurement.DeviceAcronym !== null) {
+                                    var splitSignalReference = measurement.SignalReference.split("!");
+                                    var statIdentifier = splitSignalReference[splitSignalReference.length - 1];
+                                    $('#stat' + $scope.cleanIdentifier(measurement.DeviceAcronym)).append('<tr><td>' + statIdentifier + '</td><td id="des' + measurement.SignalID + '">' + measurement.Description + '</td><td><span id="val' + measurement.SignalID + '" >' + stat.value + '</span></td><td><span id="time' + measurement.SignalID + '" >' + stat.timestamp + '</span></td></tr>');
                                 }
                             }
-                        }
-
-                    });
-
-                    getStats();
-
-                    $scope.$apply();
-
-                    checkCookie();
-
-                    dataHub.statSubscribe(statFilter);
-
-                    $('#devicelist').tooltip();
-
-                    dataHub.getMeasurements().done(function (data) {
-                        buildPlot(data);
-                        update();
-                    });
-
-                }).fail(function (error) {
-                    showErrorMessage(error);
-                });;
-
-
-
-            }).fail(function (error) {
-                showErrorMessage(error);
-            });
-
-        });
-
-        $scope.cleanIdentifier = function (identifier) {
-            return cleanIdentifier(identifier);
-        }
-
-        $scope.cleanSignalref = function (object) {
-            return cleanIdentifier(object.SignalReference);
-        }
-
-        $scope.updateFilter = function () {
-            updateFilter();
-        }
-
-        // function called to update settings on change from the inputs
-        $scope.updateSettings = function () {
-            dataRefreshInterval = $scope.refreshinterval;
-            statRefreshInterval = $scope.statrefreshinterval;
-            dataPointNumber = $scope.datapoints;
-            filterStr = $scope.filterstring;
-
-            $.jStorage.set("dataRefreshInterval", dataRefreshInterval);
-            $.jStorage.set("statRefreshInterval", statRefreshInterval);
-            $.jStorage.set("dataPointNumber", dataPointNumber);
-            $.jStorage.set("filterStr", filterStr);
-
-        };
-
-        $scope.getStats = function() {
-            if (!hubIsConnected)
-                return;
-
-            dataHub.getStats().done(function (data) {
-                $.each(data, function (iter, d) {
-                    var obj;
-                    $.each($scope.deviceData, function (index, parent) {
-                        $.each(parent.devices, function (_, device) {
-                            $.each(device.stats, function (_, stat) {
-                                if (stat.SignalID == d.ID)
-                                    obj = stat;
-                            });
-
                         });
 
-                    });
+                        $scope.$apply();
+                        $("#imgDIRECT_CONNECTED").hide();
+                        $("#btnDIRECT_CONNECTED").hide();
+                        $scope.statSubscriber.connect();
 
-                    if (obj != undefined) {
-                        obj.value = d.Value;
-                        obj.timestamp = d.Timestamp;
+                        // Handle the callbacks for automatic measurement auto-selection
+                        $.each($scope.deviceData, function (_, parent) {
+                            $.each(parent.devices, function (_, device) {
+                                var callback = $scope.deviceCallbacks[device.Acronym];
+
+                                if (callback !== undefined)
+                                    callback(device);
+                            });
+                        });
+                    });
+            }
+
+            // Queries metadata for all devices to fill in the measurement
+            // selection control on the left side of the page
+            function getDevices($scope) {
+                $scope.dataSubscriber.getMetadata("DeviceDetail", null, "Acronym")
+                    .fail(showErrorMessage)
+                    .done(function (data) {
+                        var parents = {};
+                        var parentAcronyms = [];
+
+                        $.each(data, function (_, device) {
+                            var parentAcronym = device.ParentAcronym;
+
+                            if (parentAcronym === "")
+                                parentAcronym = "DIRECT_CONNECTED";
+
+                            var parent = parents[parentAcronym];
+
+                            if (parent === undefined) {
+                                parent = parents[parentAcronym] = {
+                                    parent: parentAcronym,
+                                    devices: []
+                                };
+
+                                if (parentAcronym !== "DIRECT_CONNECTED")
+                                    parentAcronyms.push(parentAcronym);
+
+                                buildModal(parentAcronym);
+                            }
+
+                            device.updateMeasurements = function () {
+                                if (device.measurements !== undefined)
+                                    return;
+
+                                getMeasurements($scope, device);
+                            }
+
+                            parent.devices.push(device);
+                            buildModal($scope.cleanIdentifier(device.Acronym));
+                        });
+
+                        parentAcronyms.sort();
+
+                        if (parents["DIRECT_CONNECTED"] !== undefined)
+                            parentAcronyms.splice(0, 0, "DIRECT_CONNECTED");
+
+                        $scope.deviceData = parentAcronyms.map(function (acronym) { return parents[acronym]; });
+
+                        getStatistics($scope);
+                    });
+            }
+
+            // Updates the plot data to display the latest values in the chart
+            function updatePlotData($scope, measurements) {
+                $.each(measurements, function (_, measurement) {
+                    var selectedMeasurement = $scope.selectedMeasurements[measurement.signalID];
+
+                    if (selectedMeasurement === undefined)
+                        return;
+
+                    selectedMeasurement.plotData.data.push([measurement.timestamp, measurement.value]);
+                });
+
+                $.each(plotData, function (_, plotData) {
+                    var data = plotData.data;
+
+                    if (data.length > $scope.dataPoints)
+                        data.splice(0, data.length - $scope.dataPoints);
+                });
+
+                plot.setData(plotData);
+                plot.setupGrid();
+                plot.draw();
+            }
+
+            // Updates the stat data to display the latest values in the modals
+            function updateStatData($scope, measurements) {
+                $.each(measurements, function (_, measurement) {
+                    var stat = $scope.statLookup[measurement.signalID];
+
+                    if (stat === undefined)
+                        return;
+
+                    stat.value = measurement.value;
+                    stat.timestamp = measurement.timestamp;
+
+                    if (stat.deviceAcronym !== null) {
+                        if ($('#des' + measurement.signalID).text().indexOf("Boolean") >= 0)
+                            $('#val' + measurement.signalID).text(Boolean(measurement.value));
+                        else
+                            $('#val' + measurement.signalID).text(measurement.value);
+
+                        $('#time' + measurement.signalID).text(new Date(measurement.timestamp).formatDate(DateTimeFormat));
+
+                        if (/!(IS-ST8|SUB-ST1|PMU-ST4)$/.test(stat.signalReference)) {
+                            if (stat.value !== null && (stat.value === true || stat.value !== 0))
+                                $('#img' + cleanIdentifier(stat.deviceAcronym)).attr("src", root + "/Shared/Images/StatusLights/Small/greenlight.png");
+                            else
+                                $('#img' + cleanIdentifier(stat.deviceAcronym)).attr("src", root + "/Shared/Images/StatusLights/Small/redlight.png");
+                        }
                     }
                 });
 
                 $scope.$apply();
-            }).fail(function (error) {
-                showErrorMessage(error);
+            }
+
+            // Resets subscription state and initializes the subscribers from scratch -
+            // this happens every time the SignalR hub reconnects so we can refresh our state
+            function initializeSubscribers($scope) {
+                loadSettings($scope);
+
+                $scope.dataSubscriber = $.subscriber();
+                $scope.statSubscriber = $.subscriber();
+                $scope.selectedMeasurements = {};
+                $scope.statLookup = {};
+
+                $scope.updateFilter = function (checked, measurement) {
+                    updateFilter($scope, checked, measurement);
+                }
+
+                $scope.dataSubscriber.connectionEstablished = function () {
+                    $scope.dataSubscriber.sendCommand("MetadataRefresh")
+                        .fail(showErrorMessage);
+                }
+
+                $scope.dataSubscriber.metadataReceived = function () {
+                    getDevices($scope);
+                }
+
+                $scope.dataSubscriber.newMeasurements = function (measurements) {
+                    updatePlotData($scope, measurements);
+                }
+
+                $scope.dataSubscriber.statusMessage = function (message) {
+                    log("Data subscription: " + message);
+                }
+
+                $scope.dataSubscriber.processException = function (exception) {
+                    showErrorMessage("Data subscription: " + exception.Message);
+                }
+
+                $scope.statSubscriber.connectionEstablished = function () {
+                    $scope.statSubscriber.subscribe({ FilterExpression: "FILTER ActiveMeasurements WHERE SignalType = 'STAT'" });
+                }
+
+                $scope.statSubscriber.newMeasurements = function (measurements) {
+                    updateStatData($scope, measurements);
+                }
+
+                $scope.statSubscriber.statusMessage = function (message) {
+                    log("Stat subscription: " + message);
+                }
+
+                $scope.statSubscriber.processException = function (exception) {
+                    showErrorMessage("Stat subscription: " + exception.Message);
+                }
+
+                $scope.dataSubscriber.connect();
+            }
+
+            // Sets ups the angular controller for the graph measurements page
+            var MeasurementsCtrl = graphMeasurements.controller("MeasurementsCtrl", function ($scope) {
+                resetFilter = function () {
+                    $("input[type=checkbox]").prop("checked", false);
+                    $scope.selectedMeasurements = {};
+                    $scope.dataSubscriber.unsubscribe();
+
+                    plotData = [];
+                    plot.setData(plotData);
+                    plot.setupGrid();
+                    plot.draw();
+
+                    $scope.selections = [];
+                    $.jStorage.set("selections", null);
+                }
+
+                $scope.cleanIdentifier = function (identifier) {
+                    return cleanIdentifier(identifier);
+                }
+
+                $scope.cleanSignalref = function (object) {
+                    return cleanIdentifier(object.SignalReference);
+                }
+
+                // function called to update settings on change from the inputs
+                $scope.updateDataPoints = function () {
+                    $.jStorage.set("dataPoints", $scope.dataPoints);
+                };
+
+                $scope.formatDate = function (date) {
+                    return new Date(date).formatDate(DateTimeFormat);
+                }
+
+                $(window).on("hubConnected", function (event) {
+                    initializeSubscribers($scope);
+                });
+
+                if (hubIsConnected)
+                    initializeSubscribers($scope);
             });
 
-
-            setTimeout($scope.getStats, statRefreshInterval);
-        }
-
-        $scope.formatDate = function (date) {
-            return new Date(date).formatDate(DateTimeFormat);
-        }
-
-    });
-
-    $(window).on("messageVisibiltyChanged", function (event) {
-        setTimeout(function () {
-            setHeights();
-        }, 200);
-    });
-
-    // Register SignalR client functions before hub connection
-    $(window).on("beforeHubConnected", function (event) {
-        // Client function called from the dataHub when meta data gets recieved
-        dataHubClient.metaDataReceived = function () {
-            $(window).trigger('metaDataReceived');
-        }
-    });
-
-    $(document).ready(function () {
-        setHeights();
-
-        $(window).resize(function () { setHeights() });
-
-        $('[data-toggle=offcanvas]').click(function () {
-            if ($('.sidebar-offcanvas').css('background-color') == 'rgb(255, 255, 255)') {
-                $('.list-group-item').attr('tabindex', '-1');
-            } else {
-                $('.list-group-item').attr('tabindex', '');
-            }
-            $('.row-offcanvas').toggleClass('active');
-        });
-
-        $(window).on("hubConnected", function (event) {
-            dataHub.initializeSubscriptions();
-        });
-
-        $(window).on('beforeunload', function () {
-            if (!hubIsConnected)
-                return;
-
-            dataHub.terminateSubscriptions();
-        });
-
-
-
-    });
-
-
-
-    // this will get the first set of data and build the plot
-    function buildPlot(data) {
-        $.each(data, function (i, d) {
-            for (var j in plotData) {
-                if (plotData[j].label == d.ID) {
-                    plotData[j].data.push([d.Timestamp, d.Value]);
-                }
-            }
-        });
-
-
-        plot = $.plot("#placeholder", plotData, {
-            series: {
-                shadowSize: 0
-            },
-            yaxes: [{
-                show: true,
-                position: "left",
-                axisLabel: "Frequency"
-            }, {
-                show: true,
-                position: "left",
-                axisLabel: "Voltage"
-            }, {
-                show: true,
-                position: "right",
-                axisLabel: "Current"
-            }, {
-                show: true,
-                position: "right",
-                axisLabel: "Angle"
-            }, {
-                show: true,
-                position: "right",
-                axisLabel: "Analog Data"
-            }
-
-            ],
-            xaxis: {
-                mode: "time",
-                timeformat: "%H:%M:%S",
-                timezone: "browser"
-            },
-            legend: {
-                show: true,
-                container: $('#legend'),
-                labelFormatter: function (label, series) {
-                    for (var i in measurementDetails) {
-                        if (measurementDetails[i].SignalID == label)
-                            return measurementDetails[i].SignalReference.split("!")[measurementDetails[i].SignalReference.split("!").length - 1] + " - " + measurementDetails[i].SignalAcronym;
-                    }
-
-                },
-                noColumns: 1,
-                margin: 5
-            }
-        });
-
-    }
-
-    // used to populate statistic modals
-    function getStats() {
-        if (!hubIsConnected)
-            return;
-
-        dataHub.getStats().done(function (data) {
-            $.each(data, function (iter, d) {
-                for (var i in stats) {
-                    if (stats[i].id == d.ID) {
-                        stats[i].value = d.Value;
-                        stats[i].timestamp = d.Timestamp;
-
-                        if (stats[i].deviceAcronym != null) {
-                            if ($('#des' + d.ID).text().indexOf("Boolean") >= 0 ) $('#val' + d.ID).text(Boolean(d.Value));
-                            else $('#val' + d.ID).text(d.Value);
-                            $('#time' + d.ID).text(new Date(d.Timestamp).formatDate(DateTimeFormat));
-                            if (stats[i].description == "Device statistic for Number of measurements received from device during last reporting interval.") {
-                                if (stats[i].value != null && stats[i].value > 0) {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/greenlight.png");
-                                } else {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/redlight.png");
-                                }
-                            }
-                            if (stats[i].description == "Subscriber statistic for Number of processed measurements reported by the subscriber during last reporting interval.") {
-                                if (stats[i].value != null && stats[i].value > 0) {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/greenlight.png");
-                                } else {
-                                    $('#img' + cleanIdentifier(stats[i].deviceAcronym)).attr("src", "@Resources.Root/Shared/Images/StatusLights/Small/redlight.png");
-                                }
-                            }
-
-
-                        }
-
-                        break;
-                    }
-                }
-
-
-
-            });
-        }).fail(function (error) {
-            showErrorMessage(error);
-        });
-
-        setTimeout(getStats, statRefreshInterval);
-    }
-
-    // used to get data and update the plot
-    function update() {
-        if (!hubIsConnected)
-            return;
-
-        dataHub.getMeasurements().done(function (data) {
-
-            $.each(data, function (i, d) {
-                for (var j in plotData) {
-                    if (plotData[j].label == d.ID) {
-                        plotData[j].data.push([d.Timestamp, d.Value]);
-                    }
-                }
+            // Fix heights when error messages are displayed
+            $(window).on("messageVisibiltyChanged", function (event) {
+                setTimeout(function () {
+                    setHeights();
+                }, 200);
             });
 
-            for (var i = 0; i < plotData.length; ++i) {
-                var num = (plotData[i].data.length - dataPointNumber)
-                for (var j = 0; j < num; ++j)
-                    plotData[i].data.shift()
+            // Handles initial page load
+            $(document).ready(function () {
+                // Set heights before we build the plot
+                // so that we don't attempt to place a
+                // chart in an element with zero height
+                setHeights();
+                buildPlot();
 
-            }
+                $(window).resize(function () { setHeights() });
 
-            plot.setData(plotData);
-            plot.setupGrid()
-            plot.draw();
-            setTimeout(update, dataRefreshInterval);
-        }).fail(function (error) {
-            showErrorMessage(error);
-        });
-    }
-
-    // used to update the data subscriper filter string with a new filter string
-    function updateFilter() {
-        if (!hubIsConnected)
-            return;
-
-        var filterStr = "";
-
-
-        plotData = [];
-
-
-
-        $('input[type=checkbox]').each(function () {
-            var arr = this.value.split('#');
-            if (this.checked == true) {
-                filterStr += arr[0] + ";";
-                for (var i in plotDataTemplate) {
-                    if (plotDataTemplate[i].label == arr[1])
-                        plotData.push(plotDataTemplate[i]);
-                }
-            }
-        });
-
-        $.jStorage.set("filterStr", filterStr);
-        dataHub.updateFilters(filterStr);
-        plot.setData(plotData);
-        plot.setupGrid();
-        plot.draw();
-    }
-
-    // used to reset the data subscriper filter string to an empty filter string
-    function resetFilter() {
-        if (!hubIsConnected)
-            return;
-
-        var filterStr = "";
-
-        $.jStorage.set("filterStr", filterStr);
-
-        for (var i = 0; i < plotData.length; ++i) {
-            plotData[i].data = [];
-        }
-
-        $('input[type=checkbox]').each(function () {
-            if (this.checked == true)
-                this.checked = false;
-        });
-
-        dataHub.updateFilters(filterStr);
-        plot.setData(plotData);
-        plot.setupGrid()
-        plot.draw();
-    }
-
-    // used to build statistic modals
-    function buildModal(acronym) {
-        $("#modals").append('<div id="' + acronym + '"></div>');
-        html = '<div id="mod' + acronym + '" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">';
-        html += '<div class="modal-dialog">';
-        html += '<div class="modal-content">';
-        html += '<div class="modal-header">';
-        html += '<a class="close" data-dismiss="modal">×</a>';
-        html += '<h4>' + acronym + ' Statistics</h4>'
-        html += '</div>';
-        html += '<div  class="modal-body" style="height: 300px; overflow-y: scroll" >';
-        html += '<table id="stat' + acronym + '" class="table" style="font-size: x-small">';
-        html += '<thead>Run-time Statistics:<thead />';
-        html += '<tr><th>ID</th><th>Statistic</th><th>Value</th><th>TimeTag</th></tr>';
-        html += '</table>';
-        html += '</div>';
-        html += '<div class="modal-footer">';
-        html += '<span class="btn" data-dismiss="modal">Close</span>'; // close button
-        html += '</div>';  // footer
-        html += '</div>';  // modalWindow
-        $('#' + acronym).html(html);
-        $("#mod" + acronym).modal({ 'show': false });
-    }
-
-
-    // used to check cookie
-    function checkCookie() {
-        if (!hubIsConnected)
-            return;
-
-        if ($.jStorage.get("filterStr") != null)
-            filterStr = $.jStorage.get("filterStr").replace(/#/g, ';');
-        else
-            filterStr = '';
-        $('#filterstring').val(filterStr);
-        //console.log(filterStr);
-
-        if ($.jStorage.get("dataRefreshInterval") != null)
-            dataRefreshInterval = $.jStorage.get("dataRefreshInterval");
-        else
-            dataRefreshInterval = 250;
-        $('#refreshinterval').val(dataRefreshInterval);
-
-        if ($.jStorage.get("statRefreshInterval") != null)
-            statRefreshInterval = $.jStorage.get("statRefreshInterval");
-        else
-            statRefreshInterval = 10000;
-        $('#statrefreshinterval').val(statRefreshInterval);
-
-        if ($.jStorage.get("dataPointNumber") != null)
-            dataPointNumber = $.jStorage.get("dataPointNumber");
-        else
-            dataPointNumber = 300;
-        $('#datapoints').val(dataPointNumber);
-
-        var arr = filterStr.split(';');
-
-        for (var i in arr) {
-            $('input[type=checkbox]').each(function () {
-                if (this.id == 'cb' + arr[i]) {
-                    this.checked = true;
-                    var arr2 = this.value.split('#')
-                    for (var j in plotDataTemplate) {
-                        if (plotDataTemplate[j].label == arr2[1])
-                            plotData.push(plotDataTemplate[j]);
-
+                $('[data-toggle=offcanvas]').click(function () {
+                    if ($('.sidebar-offcanvas').css('background-color') == 'rgb(255, 255, 255)') {
+                        $('.list-group-item').attr('tabindex', '-1');
+                    } else {
+                        $('.list-group-item').attr('tabindex', '');
                     }
-
-                }
+                    $('.row-offcanvas').toggleClass('active');
+                });
             });
-        }
-
-        dataHub.updateFilters(filterStr);
-    }
-
-    // sets heights of various objects
-    function setHeights() {
-        const height = $(window).innerHeight();
-        $('#sidebar').css('height', height);
-        $('#graphwrapper').css('height', height);
-        $('#placeholder').css('height', height * 0.8);
-    }
-
-
-    Array.prototype.contains = function (v) {
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === v) return true;
-        }
-        return false;
-    };
-
-    Array.prototype.unique = function () {
-        var arr = [];
-        for (var i = 0; i < this.length; i++) {
-            if (!arr.contains(this[i])) {
-                arr.push(this[i]);
-            }
-        }
-        return arr;
-    }
-
-    cleanIdentifier = function (identifier) {
-        return identifier.replace(/[!"#$%&'()*+,.\/:;<=>?@@[\\\]^`{|}~]/g, "-");
-    }
-
-
-</script>
+        })(jQuery);
+    </script>
 }
 @{
     ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();

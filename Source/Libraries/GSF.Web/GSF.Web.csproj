@@ -225,6 +225,7 @@
     <Compile Include="Model\RazorView.cs" />
     <Compile Include="Security\SessionHandler.cs" />
     <Compile Include="Shared\SharedHub.cs" />
+    <Compile Include="Shared\SubscriberHub.cs" />
     <Compile Include="UI\ClientSideExtensions.cs" />
     <Compile Include="WebExtensions.cs" />
   </ItemGroup>
@@ -240,6 +241,10 @@
     <ProjectReference Include="..\GSF.ServiceModel\GSF.ServiceModel.csproj">
       <Project>{0622C318-5032-4D56-BB71-5CE64B502FB0}</Project>
       <Name>GSF.ServiceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GSF.TimeSeries\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
+      <Name>GSF.TimeSeries</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -288,6 +293,7 @@
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Scripts\jquery.subscriber.js" />
     <EmbeddedResource Include="Shared\Scripts\jquery.jspanel.js" />
     <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\excanvas.min.js" />
