@@ -253,11 +253,11 @@ namespace openPDC
         private string GetInternalPublisherConnectionString()
         {
             ConfigurationFile configurationFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection internalDataPublisher = configurationFile.Settings["internalDataPublisher"];
+            CategorizedSettingsElementCollection internalDataPublisher = configurationFile.Settings["internaldatapublisher"];
             string configurationString = internalDataPublisher["ConfigurationString"]?.Value ?? "";
             Dictionary<string, string> settings = configurationString.ParseKeyValuePairs();
 
-            if (!settings.TryGetValue("port", out string portSetting) || int.TryParse(portSetting, out int port))
+            if (!settings.TryGetValue("port", out string portSetting) || !int.TryParse(portSetting, out int port))
                 port = 6165;
 
             return $"server=localhost:{port}";
