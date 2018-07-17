@@ -76,6 +76,7 @@ namespace GSF.IO
         private readonly string m_fullPath;
         private readonly bool m_alreadyProcessed;
         private readonly bool m_raisedByFileWatcher;
+        private readonly Func<int> m_retryCounter;
         private bool m_requeue;
 
         #endregion
@@ -88,11 +89,13 @@ namespace GSF.IO
         /// <param name="fullPath">The full path to the file to be processed.</param>
         /// <param name="alreadyProcessed">Flag indicating whether this file has been processed before.</param>
         /// <param name="raisedByFileWatcher">Flag indicating whether this event was raised by the file watcher.</param>
-        public FileProcessorEventArgs(string fullPath, bool alreadyProcessed, bool raisedByFileWatcher)
+        /// <param name="retryCounter">The function that provides the value for <see cref="RetryCount"/>.</param>
+        public FileProcessorEventArgs(string fullPath, bool alreadyProcessed, bool raisedByFileWatcher, Func<int> retryCounter)
         {
             m_fullPath = fullPath;
             m_alreadyProcessed = alreadyProcessed;
             m_raisedByFileWatcher = raisedByFileWatcher;
+            m_retryCounter = retryCounter;
         }
 
         #endregion
@@ -129,6 +132,17 @@ namespace GSF.IO
             get
             {
                 return m_raisedByFileWatcher;
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of file processing attempts.
+        /// </summary>
+        public int RetryCount
+        {
+            get
+            {
+                return m_retryCounter();
             }
         }
 
@@ -1304,74 +1318,97 @@ namespace GSF.IO
         // Continues looping so long as the user continues requesting to requeue.
         private void StartProcessLoop(string filePath, bool raisedByFileWatcher)
         {
-            int retryCount = 0;
-            Action delayAndProcess = null;
             ManualResetEvent waitObject = m_waitObject;
 
             if ((object)waitObject == null)
                 return;
 
-            delayAndProcess = () =>
-            {
-                int priority = (++retryCount < 32) ? 2 : 1;
+            bool alreadyProcessed = m_processedFiles.Contains(filePath);
+            int retryCount = 0;
+            Func<int> retryCounter = () => retryCount;
+            FileProcessorEventArgs args = new FileProcessorEventArgs(filePath, alreadyProcessed, raisedByFileWatcher, retryCounter);
 
-                m_processingThread.Push(priority, () =>
+            Action delayAndProcess = null;
+
+            // 8 * 250 ms = 2 sec (cumulative: 2 sec)
+            const int FastRetryLimit = 8;
+            const int FastRetryDelay = 250;
+
+            // 13 * 1000 ms = 13 sec (cumulative: 15 sec)
+            const int QuickRetryLimit = 13 + FastRetryLimit;
+            const int QuickRetryDelay = 1000;
+
+            // 9 * 5000 ms = 45 sec (cumulative: 60 sec)
+            const int RelaxedRetryLimit = 9 + QuickRetryLimit;
+            const int RelaxedRetryDelay = 5000;
+
+            // After 60 seconds, continue with the slow retry delay
+            const int SlowRetryDelay = 60000;
+
+            Action reprocessAction = () =>
+            {
+                ProcessFile(args);
+
+                if (args.Requeue)
                 {
                     int delay;
 
-                    if (ProcessFile(filePath, raisedByFileWatcher))
-                    {
-                        if (retryCount < 8)
-                            delay = 250;
-                        else if (retryCount < 23)
-                            delay = 1000;
-                        else if (retryCount < 32)
-                            delay = 5000;
-                        else
-                            delay = 60000;
+                    if (retryCount < FastRetryLimit)
+                        delay = FastRetryDelay;
+                    else if (retryCount < QuickRetryLimit)
+                        delay = QuickRetryDelay;
+                    else if (retryCount < RelaxedRetryLimit)
+                        delay = RelaxedRetryDelay;
+                    else
+                        delay = SlowRetryDelay;
 
-                        delayAndProcess.DelayAndExecute(waitObject, delay);
+                    delayAndProcess.DelayAndExecute(waitObject, delay);
 
-                        return;
-                    }
+                    return;
+                }
 
-                    Interlocked.Decrement(ref m_requeuedFileCount);
-                });
+                Interlocked.Decrement(ref m_requeuedFileCount);
             };
 
-            if (ProcessFile(filePath, raisedByFileWatcher))
+            delayAndProcess = () =>
             {
-                Interlocked.Increment(ref m_requeuedFileCount);
-                delayAndProcess.DelayAndExecute(waitObject, 250);
-            }
+                int priority = (++retryCount < RelaxedRetryLimit) ? 2 : 1;
+                m_processingThread.Push(priority, reprocessAction);
+            };
+
+            ProcessFile(args);
+
+            if (!args.Requeue)
+                return;
+
+            Interlocked.Increment(ref m_requeuedFileCount);
+            delayAndProcess.DelayAndExecute(waitObject, 250);
         }
 
         // Attempts to processes the given file.
         // Returns true if the user requested to requeue the file.
-        private bool ProcessFile(string filePath, bool raisedByFileWatcher)
+        private void ProcessFile(FileProcessorEventArgs args)
         {
-            bool alreadyProcessed;
+            string filePath = args.FullPath;
 
-            // If the file processor is disposed or the
-            // file no longer exists, return immediately
+            // Requeue is requested by the user so
+            // we must reset it before raising the event
+            args.Requeue = false;
+
             if (m_disposed || !File.Exists(filePath))
-                return false;
+                return;
 
-            // Process the file at the given file path
-            alreadyProcessed = m_processedFiles.Contains(filePath);
+            OnProcessing(args);
 
-            // If the user requests to requeue the file, return true
-            if (OnProcessing(filePath, alreadyProcessed, raisedByFileWatcher))
-                return true;
+            // If the user requests to requeue the file,
+            // we don't consider the file processed yet
+            if (args.Requeue)
+                return;
 
             Interlocked.Increment(ref m_processedFileCount);
 
-            // Update the list of processed files
-            // and save it back to the cache
-            if (!alreadyProcessed)
+            if (!args.AlreadyProcessed)
                 m_processedFiles.Add(filePath);
-
-            return false;
         }
 
         // Gets the list of processed files from the file processor
@@ -1434,18 +1471,9 @@ namespace GSF.IO
         }
 
         // Triggers the processing event for the given file.
-        private bool OnProcessing(string fullPath, bool alreadyProcessed, bool raisedByFileWatcher)
+        private void OnProcessing(FileProcessorEventArgs args)
         {
-            FileProcessorEventArgs args;
-
-            if ((object)Processing != null)
-            {
-                args = new FileProcessorEventArgs(fullPath, alreadyProcessed, raisedByFileWatcher);
-                Processing(this, args);
-                return args.Requeue;
-            }
-
-            return false;
+            Processing?.Invoke(this, args);
         }
 
         // Triggers the error event with the given exception.
