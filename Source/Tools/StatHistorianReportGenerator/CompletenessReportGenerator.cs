@@ -29,8 +29,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Xml.Linq;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Historian;
 using GSF.Historian.Files;
+using GSF.IO;
 using GSF.Units;
 using Root.Reports;
 using Encoder = System.Drawing.Imaging.Encoder;
@@ -52,6 +57,15 @@ namespace StatHistorianReportGenerator
             public double[] TimeQualityErrors;
             public double[] MeasurementsReceived;
             public double[] MeasurementsExpected;
+        }
+
+        private class DataAvailability
+        {
+            [PrimaryKey(true)]
+            public int ID { get; set; }
+            public float GoodAvailableData { get; set; }
+            public float BadAvailableData { get; set; }
+            public float TotalAvailableData { get; set; }
         }
 
         // Constants
@@ -285,8 +299,11 @@ namespace StatHistorianReportGenerator
             double verticalMillimeters;
 
             ReadStatistics();
+
             if (m_generateCsvReport && m_reportFilePath != null)
                 GenerateCsvReportFunction(m_reportFilePath);
+
+            PopulateDataAvailabilityTable();
 
             // Page one
             verticalMillimeters = PageMarginMillimeters;
@@ -314,6 +331,83 @@ namespace StatHistorianReportGenerator
             InsertDetailsList(report, fontDefinition, pageTwo, verticalMillimeters, now, 2);
 
             return report;
+        }
+
+        private void PopulateDataAvailabilityTable()
+        {
+            const int DefaultRecordDepth = 14;
+
+            try
+            {
+                string configFile = GetConfigurationFileName();
+
+                if (!File.Exists(configFile))
+                    throw new FileNotFoundException($"Config file \"{configFile}\" was not found.");
+
+                XDocument serviceConfig = XDocument.Load(configFile);
+
+                // ReSharper disable once AssignNullToNotNullAttribute
+                string connectionString = serviceConfig
+                    .Descendants("systemSettings")
+                    .SelectMany(systemSettings => systemSettings.Elements("add"))
+                    .Where(element => "ConnectionString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                    .Select(element => (string)element.Attribute("value"))
+                    .FirstOrDefault();
+
+                string dataProviderString = serviceConfig
+                    .Descendants("systemSettings")
+                    .SelectMany(systemSettings => systemSettings.Elements("add"))
+                    .Where(element => "DataProviderString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                    .Select(element => (string)element.Attribute("value"))
+                    .FirstOrDefault();
+
+                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                {
+                    TableOperations<DataAvailability> dataAvailabilityTable = new TableOperations<DataAvailability>(connection);
+                    DataAvailability[] records = dataAvailabilityTable.QueryRecords().ToArray();
+
+                    if (records.Length == 0)
+                    {
+                        records = new DataAvailability[DefaultRecordDepth];
+
+                        for (int i = 0; i < records.Length; i++)
+                            records[i] = dataAvailabilityTable.NewRecord();
+                    }
+
+                    for (int i = records.Length - 1; i >= 0; i--)
+                    {
+                        List<DeviceStats>[] levels = GetLevels(ReportDays - (i + 1));
+                        DataAvailability record = records[i];
+
+                        record.GoodAvailableData = levels[4].Count;
+                        record.BadAvailableData = levels.Take(4).Sum(level => level.Count);
+                        record.TotalAvailableData = levels.Sum(level => level.Count);
+
+                        dataAvailabilityTable.AddNewOrUpdateRecord(record);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO: Someone needs to add a logger to this tool :-(
+                System.Diagnostics.Debug.WriteLine($"Failed to populate data availability table: {ex.Message}");
+            }
+        }
+
+        private static string GetConfigurationFileName()
+        {
+            string[] knownConfigurationFileNames = { "openPDC.exe.config", "SIEGate.exe.config", "openHistorian.exe.config", "substationSBG.exe.config", "openMIC.exe.config", "PDQTracker.exe.config" };
+
+            // Search for the file name in the list of known configuration files
+            foreach (string fileName in knownConfigurationFileNames)
+            {
+                string absolutePath = FilePath.GetAbsolutePath(fileName);
+
+                if (File.Exists(absolutePath))
+                    return absolutePath;
+            }
+
+            return ConfigurationFile.Current.Configuration.FilePath;
         }
 
         private void GenerateCsvReportFunction(string filepath)
