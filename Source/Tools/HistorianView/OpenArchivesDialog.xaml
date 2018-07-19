@@ -24,7 +24,7 @@
             Click the "Finish" button when finished.
         </TextBlock>
 
-        <DataGrid Name="ArchiveDataGrid" Margin="10" AutoGenerateColumns="False" CanUserAddRows="False">
+        <DataGrid Name="ArchiveDataGrid" Margin="10" MaxHeight="500" AutoGenerateColumns="False" CanUserAddRows="False">
             <DataGrid.ItemsSource>
                 <hv:ArchiveCollection x:Name="Archives" />
             </DataGrid.ItemsSource>
