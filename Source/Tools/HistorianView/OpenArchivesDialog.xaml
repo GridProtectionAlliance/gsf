@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:hv="clr-namespace:HistorianView"
-        Title="Manage Open Archive Files" Width="640" SizeToContent="Height" WindowStartupLocation="CenterOwner" Icon="jar_view.ico">
+        Title="Manage Open Archive Files" Width="640" SizeToContent="Height" WindowStartupLocation="CenterOwner" Icon="jar_view.ico" LayoutUpdated="Window_LayoutUpdated">
     <StackPanel>
         <TextBlock Margin="10" TextAlignment="Center" TextWrapping="Wrap" FontSize="16" FontWeight="Bold">
             Manage archives opened by the Historian Trending Tool.

@@ -250,6 +250,12 @@ namespace HistorianView
             }
         }
 
+        private void Window_LayoutUpdated(object sender, System.EventArgs e)
+        {
+            if (WindowState == WindowState.Normal)
+                SizeToContent = SizeToContent.Height;
+        }
+
         #endregion
     }
 }
