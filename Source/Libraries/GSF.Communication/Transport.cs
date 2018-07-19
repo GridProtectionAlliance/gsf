@@ -295,12 +295,14 @@ namespace GSF.Communication
 
         /// <summary>
         /// Derives the desired <see cref="IPStack"/> from the "interface" setting in the connection string key/value pairs.
+        /// If interface is not specified, <see cref="IPStack"/> is derived from the server value in connectionStringEntries
         /// </summary>
         /// <param name="connectionStringEntries">Connection string key/value pairs.</param>
         /// <returns>Desired <see cref="IPStack"/> based on "interface" setting.</returns>
         /// <remarks>
         /// The "interface" setting will be added to the <paramref name="connectionStringEntries"/> if it
-        /// doesn't exist, in this case return value will be <see cref="IPStack.Default"/>.
+        /// doesn't exist. in this case the return value will be based off of the "server" value. If the server parameter 
+        /// doesn't exist, the return value will be <see cref="IPStack.Default"/>.
         /// </remarks>
         public static IPStack GetInterfaceIPStack(Dictionary<string, string> connectionStringEntries)
         {
@@ -310,6 +312,9 @@ namespace GSF.Communication
                 return IsIPv6IP(ipAddress) ? IPStack.IPv6 : IPStack.IPv4;
 
             connectionStringEntries.Add("interface", string.Empty);
+
+            if (connectionStringEntries.TryGetValue("server", out ipAddress))
+                return IsIPv6IP(ipAddress) ? IPStack.IPv6 : IPStack.IPv4;
 
             return IPStack.Default;
         }
