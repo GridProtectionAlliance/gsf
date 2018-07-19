@@ -396,7 +396,8 @@ namespace StatHistorianReportGenerator
 
         private static string GetConfigurationFileName()
         {
-            string[] knownConfigurationFileNames = { "openPDC.exe.config", "SIEGate.exe.config", "openHistorian.exe.config", "substationSBG.exe.config", "openMIC.exe.config", "PDQTracker.exe.config" };
+            // Please God, oh please, find a better way to do this: 
+            string[] knownConfigurationFileNames = { "openPDC.exe.config", "SIEGate.exe.config", "openHistorian.exe.config", "substationSBG.exe.config", "openMIC.exe.config", "PDQTracker.exe.config", "openECA.exe.config" };
 
             // Search for the file name in the list of known configuration files
             foreach (string fileName in knownConfigurationFileNames)
