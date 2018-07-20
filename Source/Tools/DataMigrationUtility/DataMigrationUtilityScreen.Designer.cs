@@ -107,18 +107,21 @@ namespace DataMigrationUtility
             this.GroupBox.Controls.Add(this.Version);
             this.GroupBox.Controls.Add(this.ToConnectStringLabel);
             this.GroupBox.Controls.Add(this.FromConnectStringLabel);
-            this.GroupBox.Location = new System.Drawing.Point(12, 12);
+            this.GroupBox.Location = new System.Drawing.Point(18, 18);
+            this.GroupBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.GroupBox.Name = "GroupBox";
-            this.GroupBox.Size = new System.Drawing.Size(621, 202);
+            this.GroupBox.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.GroupBox.Size = new System.Drawing.Size(932, 311);
             this.GroupBox.TabIndex = 0;
             this.GroupBox.TabStop = false;
             // 
             // ClearDestinationTables
             // 
             this.ClearDestinationTables.AutoSize = true;
-            this.ClearDestinationTables.Location = new System.Drawing.Point(181, 180);
+            this.ClearDestinationTables.Location = new System.Drawing.Point(272, 277);
+            this.ClearDestinationTables.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ClearDestinationTables.Name = "ClearDestinationTables";
-            this.ClearDestinationTables.Size = new System.Drawing.Size(312, 17);
+            this.ClearDestinationTables.Size = new System.Drawing.Size(467, 24);
             this.ClearDestinationTables.TabIndex = 13;
             this.ClearDestinationTables.Text = "Delete existing data in destination database before migration.";
             this.ClearDestinationTables.UseVisualStyleBackColor = true;
@@ -127,9 +130,10 @@ namespace DataMigrationUtility
             // ExampleConnectionStringLinkLabel
             // 
             this.ExampleConnectionStringLinkLabel.AutoSize = true;
-            this.ExampleConnectionStringLinkLabel.Location = new System.Drawing.Point(16, 181);
+            this.ExampleConnectionStringLinkLabel.Location = new System.Drawing.Point(24, 278);
+            this.ExampleConnectionStringLinkLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ExampleConnectionStringLinkLabel.Name = "ExampleConnectionStringLinkLabel";
-            this.ExampleConnectionStringLinkLabel.Size = new System.Drawing.Size(148, 13);
+            this.ExampleConnectionStringLinkLabel.Size = new System.Drawing.Size(221, 20);
             this.ExampleConnectionStringLinkLabel.TabIndex = 12;
             this.ExampleConnectionStringLinkLabel.TabStop = true;
             this.ExampleConnectionStringLinkLabel.Text = "Example Connection Strings...";
@@ -139,11 +143,12 @@ namespace DataMigrationUtility
             // 
             this.ToConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ToConnectString.Location = new System.Drawing.Point(16, 122);
+            this.ToConnectString.Location = new System.Drawing.Point(24, 188);
+            this.ToConnectString.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ToConnectString.Multiline = true;
             this.ToConnectString.Name = "ToConnectString";
             this.ToConnectString.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ToConnectString.Size = new System.Drawing.Size(470, 56);
+            this.ToConnectString.Size = new System.Drawing.Size(703, 84);
             this.ToConnectString.TabIndex = 11;
             // 
             // ToDataType
@@ -151,9 +156,10 @@ namespace DataMigrationUtility
             this.ToDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ToDataType.FormattingEnabled = true;
-            this.ToDataType.Location = new System.Drawing.Point(314, 96);
+            this.ToDataType.Location = new System.Drawing.Point(471, 148);
+            this.ToDataType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ToDataType.Name = "ToDataType";
-            this.ToDataType.Size = new System.Drawing.Size(144, 21);
+            this.ToDataType.Size = new System.Drawing.Size(214, 28);
             this.ToDataType.TabIndex = 9;
             this.ToDataType.SelectedIndexChanged += new System.EventHandler(this.DataType_SelectedIndexChanged);
             // 
@@ -163,10 +169,11 @@ namespace DataMigrationUtility
             this.ToDataTypeLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.ToDataTypeLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ToDataTypeLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.ToDataTypeLabel.Location = new System.Drawing.Point(249, 98);
+            this.ToDataTypeLabel.Location = new System.Drawing.Point(374, 151);
+            this.ToDataTypeLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ToDataTypeLabel.Name = "ToDataTypeLabel";
             this.ToDataTypeLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.ToDataTypeLabel.Size = new System.Drawing.Size(62, 18);
+            this.ToDataTypeLabel.Size = new System.Drawing.Size(93, 28);
             this.ToDataTypeLabel.TabIndex = 8;
             this.ToDataTypeLabel.Text = "Data Type:";
             this.ToDataTypeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -175,11 +182,12 @@ namespace DataMigrationUtility
             // 
             this.FromConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.FromConnectString.Location = new System.Drawing.Point(16, 37);
+            this.FromConnectString.Location = new System.Drawing.Point(24, 57);
+            this.FromConnectString.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.FromConnectString.Multiline = true;
             this.FromConnectString.Name = "FromConnectString";
             this.FromConnectString.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.FromConnectString.Size = new System.Drawing.Size(470, 56);
+            this.FromConnectString.Size = new System.Drawing.Size(703, 84);
             this.FromConnectString.TabIndex = 5;
             // 
             // FromDataType
@@ -187,9 +195,10 @@ namespace DataMigrationUtility
             this.FromDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FromDataType.FormattingEnabled = true;
-            this.FromDataType.Location = new System.Drawing.Point(314, 11);
+            this.FromDataType.Location = new System.Drawing.Point(471, 17);
+            this.FromDataType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.FromDataType.Name = "FromDataType";
-            this.FromDataType.Size = new System.Drawing.Size(144, 21);
+            this.FromDataType.Size = new System.Drawing.Size(214, 28);
             this.FromDataType.TabIndex = 3;
             this.FromDataType.SelectedIndexChanged += new System.EventHandler(this.DataType_SelectedIndexChanged);
             // 
@@ -199,10 +208,11 @@ namespace DataMigrationUtility
             this.FromDataTypeLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.FromDataTypeLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FromDataTypeLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.FromDataTypeLabel.Location = new System.Drawing.Point(249, 13);
+            this.FromDataTypeLabel.Location = new System.Drawing.Point(374, 20);
+            this.FromDataTypeLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.FromDataTypeLabel.Name = "FromDataTypeLabel";
             this.FromDataTypeLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.FromDataTypeLabel.Size = new System.Drawing.Size(62, 18);
+            this.FromDataTypeLabel.Size = new System.Drawing.Size(93, 28);
             this.FromDataTypeLabel.TabIndex = 2;
             this.FromDataTypeLabel.Text = "Data Type:";
             this.FromDataTypeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -210,9 +220,10 @@ namespace DataMigrationUtility
             // LinkToTest
             // 
             this.LinkToTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.LinkToTest.Location = new System.Drawing.Point(461, 99);
+            this.LinkToTest.Location = new System.Drawing.Point(692, 152);
+            this.LinkToTest.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.LinkToTest.Name = "LinkToTest";
-            this.LinkToTest.Size = new System.Drawing.Size(32, 16);
+            this.LinkToTest.Size = new System.Drawing.Size(48, 25);
             this.LinkToTest.TabIndex = 10;
             this.LinkToTest.TabStop = true;
             this.LinkToTest.Text = "Test";
@@ -221,9 +232,10 @@ namespace DataMigrationUtility
             // LinkFromTest
             // 
             this.LinkFromTest.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.LinkFromTest.Location = new System.Drawing.Point(461, 14);
+            this.LinkFromTest.Location = new System.Drawing.Point(692, 22);
+            this.LinkFromTest.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.LinkFromTest.Name = "LinkFromTest";
-            this.LinkFromTest.Size = new System.Drawing.Size(32, 16);
+            this.LinkFromTest.Size = new System.Drawing.Size(48, 25);
             this.LinkFromTest.TabIndex = 4;
             this.LinkFromTest.TabStop = true;
             this.LinkFromTest.Text = "Test";
@@ -235,9 +247,10 @@ namespace DataMigrationUtility
             this.WarningLabelBold.AutoSize = true;
             this.WarningLabelBold.Font = new System.Drawing.Font("Arial", 7.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.WarningLabelBold.ForeColor = System.Drawing.Color.DarkRed;
-            this.WarningLabelBold.Location = new System.Drawing.Point(497, 104);
+            this.WarningLabelBold.Location = new System.Drawing.Point(746, 160);
+            this.WarningLabelBold.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.WarningLabelBold.Name = "WarningLabelBold";
-            this.WarningLabelBold.Size = new System.Drawing.Size(55, 12);
+            this.WarningLabelBold.Size = new System.Drawing.Size(82, 18);
             this.WarningLabelBold.TabIndex = 17;
             this.WarningLabelBold.Text = "WARNING:";
             // 
@@ -245,26 +258,29 @@ namespace DataMigrationUtility
             // 
             this.WarningLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.WarningLabel.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.WarningLabel.Location = new System.Drawing.Point(497, 104);
+            this.WarningLabel.Location = new System.Drawing.Point(746, 160);
+            this.WarningLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.WarningLabel.Name = "WarningLabel";
-            this.WarningLabel.Size = new System.Drawing.Size(120, 74);
+            this.WarningLabel.Size = new System.Drawing.Size(180, 114);
             this.WarningLabel.TabIndex = 17;
             this.WarningLabel.Text = "                  To maintain data integrity, ensure you have selected the correc" +
     "t source and destination databases.";
             // 
             // UseToForRI
             // 
-            this.UseToForRI.Location = new System.Drawing.Point(125, 99);
+            this.UseToForRI.Location = new System.Drawing.Point(188, 152);
+            this.UseToForRI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.UseToForRI.Name = "UseToForRI";
-            this.UseToForRI.Size = new System.Drawing.Size(130, 18);
+            this.UseToForRI.Size = new System.Drawing.Size(195, 28);
             this.UseToForRI.TabIndex = 7;
             this.UseToForRI.Text = "Use for Ref. Integrity";
             // 
             // UseFromForRI
             // 
-            this.UseFromForRI.Location = new System.Drawing.Point(125, 14);
+            this.UseFromForRI.Location = new System.Drawing.Point(188, 22);
+            this.UseFromForRI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.UseFromForRI.Name = "UseFromForRI";
-            this.UseFromForRI.Size = new System.Drawing.Size(130, 18);
+            this.UseFromForRI.Size = new System.Drawing.Size(195, 28);
             this.UseFromForRI.TabIndex = 1;
             this.UseFromForRI.Text = "Use for Ref. Integrity";
             // 
@@ -276,10 +292,11 @@ namespace DataMigrationUtility
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.Cancel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Cancel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.Cancel.Location = new System.Drawing.Point(500, 48);
+            this.Cancel.Location = new System.Drawing.Point(750, 74);
+            this.Cancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Cancel.Name = "Cancel";
             this.Cancel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Cancel.Size = new System.Drawing.Size(105, 25);
+            this.Cancel.Size = new System.Drawing.Size(158, 38);
             this.Cancel.TabIndex = 15;
             this.Cancel.Text = "E&xit";
             this.Cancel.UseVisualStyleBackColor = false;
@@ -292,10 +309,11 @@ namespace DataMigrationUtility
             this.Import.Cursor = System.Windows.Forms.Cursors.Default;
             this.Import.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Import.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.Import.Location = new System.Drawing.Point(501, 17);
+            this.Import.Location = new System.Drawing.Point(752, 26);
+            this.Import.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Import.Name = "Import";
             this.Import.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Import.Size = new System.Drawing.Size(105, 25);
+            this.Import.Size = new System.Drawing.Size(158, 38);
             this.Import.TabIndex = 14;
             this.Import.Text = "&Migrate";
             this.Import.UseVisualStyleBackColor = false;
@@ -308,10 +326,11 @@ namespace DataMigrationUtility
             this.Version.Cursor = System.Windows.Forms.Cursors.Default;
             this.Version.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Version.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.Version.Location = new System.Drawing.Point(492, 78);
+            this.Version.Location = new System.Drawing.Point(738, 120);
+            this.Version.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.Version.Name = "Version";
             this.Version.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Version.Size = new System.Drawing.Size(123, 13);
+            this.Version.Size = new System.Drawing.Size(184, 20);
             this.Version.TabIndex = 16;
             this.Version.Text = "Version: x.x.x";
             this.Version.TextAlign = System.Drawing.ContentAlignment.TopCenter;
@@ -322,10 +341,11 @@ namespace DataMigrationUtility
             this.ToConnectStringLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.ToConnectStringLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ToConnectStringLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.ToConnectStringLabel.Location = new System.Drawing.Point(16, 99);
+            this.ToConnectStringLabel.Location = new System.Drawing.Point(24, 152);
+            this.ToConnectStringLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ToConnectStringLabel.Name = "ToConnectStringLabel";
             this.ToConnectStringLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.ToConnectStringLabel.Size = new System.Drawing.Size(117, 18);
+            this.ToConnectStringLabel.Size = new System.Drawing.Size(176, 28);
             this.ToConnectStringLabel.TabIndex = 6;
             this.ToConnectStringLabel.Text = "&To Connect String:";
             this.ToConnectStringLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -336,10 +356,11 @@ namespace DataMigrationUtility
             this.FromConnectStringLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.FromConnectStringLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FromConnectStringLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.FromConnectStringLabel.Location = new System.Drawing.Point(16, 14);
+            this.FromConnectStringLabel.Location = new System.Drawing.Point(24, 22);
+            this.FromConnectStringLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.FromConnectStringLabel.Name = "FromConnectStringLabel";
             this.FromConnectStringLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.FromConnectStringLabel.Size = new System.Drawing.Size(117, 18);
+            this.FromConnectStringLabel.Size = new System.Drawing.Size(176, 28);
             this.FromConnectStringLabel.TabIndex = 0;
             this.FromConnectStringLabel.Text = "&From Connect String:";
             this.FromConnectStringLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -348,11 +369,13 @@ namespace DataMigrationUtility
             // 
             this.ExcludedTablesTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ExcludedTablesTextBox.Location = new System.Drawing.Point(95, 220);
+            this.ExcludedTablesTextBox.Location = new System.Drawing.Point(142, 338);
+            this.ExcludedTablesTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ExcludedTablesTextBox.Name = "ExcludedTablesTextBox";
-            this.ExcludedTablesTextBox.Size = new System.Drawing.Size(535, 20);
+            this.ExcludedTablesTextBox.Size = new System.Drawing.Size(800, 26);
             this.ExcludedTablesTextBox.TabIndex = 2;
-            this.ExcludedTablesTextBox.Text = "Runtime,ErrorLog,AuditLog,AccessLog,AlarmLog,TrackedChange";
+            this.ExcludedTablesTextBox.Text = "Runtime,ErrorLog,AuditLog,AccessLog,AlarmDevice,AlarmLog,AlarmState,DataAvailabil" +
+    "ity,TrackedChange";
             // 
             // CommaSeparateValuesLabel
             // 
@@ -360,9 +383,10 @@ namespace DataMigrationUtility
             this.CommaSeparateValuesLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.CommaSeparateValuesLabel.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.CommaSeparateValuesLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.CommaSeparateValuesLabel.Location = new System.Drawing.Point(92, 236);
+            this.CommaSeparateValuesLabel.Location = new System.Drawing.Point(138, 363);
+            this.CommaSeparateValuesLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.CommaSeparateValuesLabel.Name = "CommaSeparateValuesLabel";
-            this.CommaSeparateValuesLabel.Size = new System.Drawing.Size(518, 18);
+            this.CommaSeparateValuesLabel.Size = new System.Drawing.Size(777, 28);
             this.CommaSeparateValuesLabel.TabIndex = 6;
             this.CommaSeparateValuesLabel.Text = "Comma separate table names.";
             this.CommaSeparateValuesLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -373,9 +397,10 @@ namespace DataMigrationUtility
             this.ExcludeTablesLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.ExcludeTablesLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ExcludeTablesLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.ExcludeTablesLabel.Location = new System.Drawing.Point(9, 221);
+            this.ExcludeTablesLabel.Location = new System.Drawing.Point(14, 340);
+            this.ExcludeTablesLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ExcludeTablesLabel.Name = "ExcludeTablesLabel";
-            this.ExcludeTablesLabel.Size = new System.Drawing.Size(83, 18);
+            this.ExcludeTablesLabel.Size = new System.Drawing.Size(124, 28);
             this.ExcludeTablesLabel.TabIndex = 1;
             this.ExcludeTablesLabel.Text = "Exclude Tables:";
             this.ExcludeTablesLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -385,11 +410,12 @@ namespace DataMigrationUtility
             this.Messages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.Messages.Location = new System.Drawing.Point(9, 368);
+            this.Messages.Location = new System.Drawing.Point(14, 566);
+            this.Messages.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Messages.Multiline = true;
             this.Messages.Name = "Messages";
             this.Messages.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.Messages.Size = new System.Drawing.Size(621, 133);
+            this.Messages.Size = new System.Drawing.Size(930, 202);
             this.Messages.TabIndex = 5;
             this.Messages.Text = "Messages:";
             // 
@@ -397,18 +423,20 @@ namespace DataMigrationUtility
             // 
             this.OverallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.OverallProgress.Location = new System.Drawing.Point(9, 336);
+            this.OverallProgress.Location = new System.Drawing.Point(14, 517);
+            this.OverallProgress.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.OverallProgress.Name = "OverallProgress";
-            this.OverallProgress.Size = new System.Drawing.Size(621, 24);
+            this.OverallProgress.Size = new System.Drawing.Size(932, 37);
             this.OverallProgress.TabIndex = 9;
             // 
             // ProgressBar
             // 
             this.ProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ProgressBar.Location = new System.Drawing.Point(9, 304);
+            this.ProgressBar.Location = new System.Drawing.Point(14, 468);
+            this.ProgressBar.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ProgressBar.Name = "ProgressBar";
-            this.ProgressBar.Size = new System.Drawing.Size(621, 24);
+            this.ProgressBar.Size = new System.Drawing.Size(932, 37);
             this.ProgressBar.TabIndex = 8;
             // 
             // ProgressLabel
@@ -419,10 +447,11 @@ namespace DataMigrationUtility
             this.ProgressLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.ProgressLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ProgressLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.ProgressLabel.Location = new System.Drawing.Point(9, 285);
+            this.ProgressLabel.Location = new System.Drawing.Point(14, 438);
+            this.ProgressLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ProgressLabel.Name = "ProgressLabel";
             this.ProgressLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.ProgressLabel.Size = new System.Drawing.Size(621, 15);
+            this.ProgressLabel.Size = new System.Drawing.Size(932, 23);
             this.ProgressLabel.TabIndex = 7;
             this.ProgressLabel.Text = "Progress:";
             // 
@@ -432,9 +461,10 @@ namespace DataMigrationUtility
             this.PreserveAutoIncValues.Checked = true;
             this.PreserveAutoIncValues.CheckState = System.Windows.Forms.CheckState.Checked;
             this.PreserveAutoIncValues.Font = new System.Drawing.Font("Arial", 8F);
-            this.PreserveAutoIncValues.Location = new System.Drawing.Point(12, 261);
+            this.PreserveAutoIncValues.Location = new System.Drawing.Point(18, 402);
+            this.PreserveAutoIncValues.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.PreserveAutoIncValues.Name = "PreserveAutoIncValues";
-            this.PreserveAutoIncValues.Size = new System.Drawing.Size(329, 18);
+            this.PreserveAutoIncValues.Size = new System.Drawing.Size(467, 22);
             this.PreserveAutoIncValues.TabIndex = 3;
             this.PreserveAutoIncValues.Text = "Preserve auto-increment field values while migrating database.";
             this.PreserveAutoIncValues.UseVisualStyleBackColor = true;
@@ -447,10 +477,11 @@ namespace DataMigrationUtility
             this.Serialize.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.Serialize.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Serialize.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.Serialize.Location = new System.Drawing.Point(505, 257);
+            this.Serialize.Location = new System.Drawing.Point(758, 395);
+            this.Serialize.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Serialize.Name = "Serialize";
             this.Serialize.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Serialize.Size = new System.Drawing.Size(105, 25);
+            this.Serialize.Size = new System.Drawing.Size(158, 38);
             this.Serialize.TabIndex = 4;
             this.Serialize.Text = "&Serialize";
             this.Serialize.UseVisualStyleBackColor = false;
@@ -460,10 +491,10 @@ namespace DataMigrationUtility
             // DataMigrationUtilityScreen
             // 
             this.AcceptButton = this.Import;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(639, 507);
+            this.ClientSize = new System.Drawing.Size(958, 780);
             this.Controls.Add(this.Serialize);
             this.Controls.Add(this.PreserveAutoIncValues);
             this.Controls.Add(this.ExcludedTablesTextBox);
@@ -475,8 +506,9 @@ namespace DataMigrationUtility
             this.Controls.Add(this.ProgressLabel);
             this.Controls.Add(this.GroupBox);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(655, 545);
+            this.MinimumSize = new System.Drawing.Size(972, 808);
             this.Name = "DataMigrationUtilityScreen";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Data Migration Utility";
