@@ -785,7 +785,15 @@ namespace GSF.Communication
                         connectState.Dispose();
                     }).DelayAndExecute(15000);
 
-                    connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
+                    try
+                    {
+                        connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
+                    }
+                    catch
+                    {
+                        connectState.TimeoutToken.Cancel();
+                        throw;
+                    }
 #endif
                 }
                 else

@@ -951,7 +951,15 @@ namespace GSF.Communication
                         connectState.Dispose();
                     }).DelayAndExecute(15000);
 
-                    connectState.SslStream.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, connectState);
+                    try
+                    {
+                        connectState.SslStream.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, connectState);
+                    }
+                    catch
+                    {
+                        connectState.TimeoutToken.Cancel();
+                        throw;
+                    }
                 }
             }
             catch (SocketException ex)
@@ -1051,7 +1059,15 @@ namespace GSF.Communication
                         connectState.Dispose();
                     }).DelayAndExecute(15000);
 
-                    connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
+                    try
+                    {
+                        connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
+                    }
+                    catch
+                    {
+                        connectState.TimeoutToken.Cancel();
+                        throw;
+                    }
 #endif
                 }
                 else

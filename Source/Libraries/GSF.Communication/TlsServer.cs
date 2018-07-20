@@ -1034,6 +1034,7 @@ namespace GSF.Communication
         private void ProcessAccept(SocketAsyncEventArgs acceptArgs)
         {
             TransportProvider<TlsSocket> client = new TransportProvider<TlsSocket>();
+            TlsClientInfo clientInfo = null;
             NetworkStream netStream;
 
             try
@@ -1083,7 +1084,7 @@ namespace GSF.Communication
 
                         client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
 
-                        TlsClientInfo clientInfo = new TlsClientInfo
+                        clientInfo = new TlsClientInfo
                         {
                             Client = client,
                             SendLock = new object(),
@@ -1112,7 +1113,7 @@ namespace GSF.Communication
                             }
                         }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
 
-                        clientInfo.TimeoutToken = new Action(() => client.Provider.Socket.Dispose()).DelayAndExecute(15000);
+                        clientInfo.TimeoutToken = new Action(() => client.Provider?.Socket.Dispose()).DelayAndExecute(15000);
                         client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, clientInfo);
                     }
                 }
@@ -1133,6 +1134,9 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
+                // Exception occurred so make sure we cancel the timeout
+                clientInfo?.TimeoutToken.Cancel();
+
                 // Notify of the exception.
                 IPEndPoint remoteEndPoint = client.Provider?.RemoteEndPoint;
                 string clientAddress = remoteEndPoint?.Address.ToString() ?? "UNKNOWN";
@@ -1171,7 +1175,7 @@ namespace GSF.Communication
                 {
 #if !MONO
                     clientInfo.NegotiateStream = new NegotiateStream(stream, true);
-                    clientInfo.TimeoutToken = new Action(() => client.Provider.Socket.Dispose()).DelayAndExecute(15000);
+                    clientInfo.TimeoutToken = new Action(() => client.Provider?.Socket.Dispose()).DelayAndExecute(15000);
                     clientInfo.NegotiateStream.BeginAuthenticateAsServer(ProcessIntegratedSecurityAuthentication, clientInfo);
 #endif
                 }
@@ -1186,6 +1190,9 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
+                // Exception occurred so make sure we cancel the timeout
+                clientInfo.TimeoutToken.Cancel();
+
                 // Notify of the exception.
                 IPEndPoint remoteEndPoint = client.Provider.RemoteEndPoint;
                 string clientAddress = remoteEndPoint.Address.ToString();

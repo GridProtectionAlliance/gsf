@@ -878,13 +878,14 @@ namespace GSF.Communication
                 {
                     NetworkStream socketStream = null;
                     NegotiateStream authenticationStream = null;
+                    ICancellationToken timeoutToken = null;
 
                     try
                     {
                         socketStream = new NetworkStream(client.Provider, false);
                         authenticationStream = new NegotiateStream(socketStream, true);
 
-                        ICancellationToken timeoutToken = new Action(() => client.Provider.Dispose()).DelayAndExecute(15000);
+                        timeoutToken = new Action(() => client.Provider?.Dispose()).DelayAndExecute(15000);
                         authenticationStream.AuthenticateAsServer();
 
                         if (!timeoutToken.Cancel())
@@ -900,6 +901,7 @@ namespace GSF.Communication
                     }
                     finally
                     {
+                        timeoutToken?.Cancel();
                         socketStream?.Dispose();
                         authenticationStream?.Dispose();
                     }
