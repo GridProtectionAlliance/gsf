@@ -52,12 +52,12 @@ namespace GSF
         /// <summary>
         /// Gets the start value of the range.
         /// </summary>
-        private T Start { get; }
+        public T Start { get; }
 
         /// <summary>
         /// Gets the end value of the range.
         /// </summary>
-        private T End { get; }
+        public T End { get; }
 
         #endregion
 
