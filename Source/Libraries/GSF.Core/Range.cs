@@ -332,8 +332,8 @@ namespace GSF
     /// </summary>
     /// <remarks>
     /// This class provides flexibility in allowing the user to define their own state and how it is merged.
-    /// Beause of potentially undesirable behavior which could result from merging objects inherited from this class,
-    /// the class has been sealed to prevent inheritance.
+    /// Because of potentially undesirable behavior which could result from merging objects inherited from
+    /// this class, the class has been sealed to prevent inheritance.
     /// </remarks>
     public sealed class Range<TRange, TState>
     {
@@ -533,7 +533,7 @@ namespace GSF
         /// Merges all ranges in a collection of ranges.
         /// </summary>
         /// <param name="ranges">The collection of ranges to be merged.</param>
-        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="TRange"/>.</param>
         /// <returns>A range that is the result of merging all ranges in the collection.</returns>
         public static Range<TRange, TState> Merge(IEnumerable<Range<TRange, TState>> ranges, Comparer<TRange> comparer)
         {
@@ -544,7 +544,7 @@ namespace GSF
         /// Merges all ranges in a collection of ranges.
         /// </summary>
         /// <param name="ranges">The collection of ranges to be merged.</param>
-        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="TRange"/>.</param>
         /// <returns>A range that is the result of merging all ranges in the collection.</returns>
         public static Range<TRange, TState> Merge(IEnumerable<Range<TRange, TState>> ranges, Comparison<TRange> comparison)
         {
@@ -567,7 +567,7 @@ namespace GSF
         /// collection and returns the resulting collection of ranges.
         /// </summary>
         /// <param name="ranges">The collection of ranges.</param>
-        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="TRange"/>.</param>
         /// <returns>The collection of merged ranges.</returns>
         public static IEnumerable<Range<TRange, TState>> MergeConsecutiveOverlapping(IEnumerable<Range<TRange, TState>> ranges, IComparer<TRange> comparer)
         {
@@ -579,7 +579,7 @@ namespace GSF
         /// collection and returns the resulting collection of ranges.
         /// </summary>
         /// <param name="ranges">The collection of ranges.</param>
-        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="TRange"/>.</param>
         /// <returns>The collection of merged ranges.</returns>
         public static IEnumerable<Range<TRange, TState>> MergeConsecutiveOverlapping(IEnumerable<Range<TRange, TState>> ranges, Comparison<TRange> comparison)
         {
@@ -623,7 +623,7 @@ namespace GSF
         /// collection and returns the resulting collection of ranges.
         /// </summary>
         /// <param name="ranges">The collection of ranges.</param>
-        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="TRange"/>.</param>
         /// <returns>The collection of merged ranges.</returns>
         /// <remarks>This method does not preserve the order of the source collection.</remarks>
         public static IEnumerable<Range<TRange, TState>> MergeAllOverlapping(IEnumerable<Range<TRange, TState>> ranges, Comparison<TRange> comparison)
@@ -636,7 +636,7 @@ namespace GSF
         /// collection and returns the resulting collection of ranges.
         /// </summary>
         /// <param name="ranges">The collection of ranges.</param>
-        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="TRange"/>.</param>
         /// <returns>The collection of merged ranges.</returns>
         /// <remarks>This method does not preserve the order of the source collection.</remarks>
         public static IEnumerable<Range<TRange, TState>> MergeAllOverlapping(IEnumerable<Range<TRange, TState>> ranges, IComparer<TRange> comparer)
@@ -650,7 +650,7 @@ namespace GSF
     /// <summary>
     /// Represents a type of object that is mergeable with another type of object.
     /// </summary>
-    /// <typeparam name="T">The type of object to be merged wtih.</typeparam>
+    /// <typeparam name="T">The type of object to be merged with.</typeparam>
     /// <remarks>
     /// This interface was primarily designed for objects which are mergeable with other objects of the same type.
     /// Therefore, <typeparamref name="T"/> should typically be the actual type of the object.
