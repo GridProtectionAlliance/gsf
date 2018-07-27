@@ -480,7 +480,7 @@ namespace MetadataAdapters
                         initSyncProgress(metadata.Tables.Cast<DataTable>().Sum(dataTable => (long)dataTable.Rows.Count) + 3);
 
                         // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
-                        string sourcePrefix = UseSourcePrefixNames ? Name + "!" : "";
+                        string sourcePrefix = UseSourcePrefixNames ? ParentDeviceAcronym + "!" : "";
                         Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                         string deviceAcronym, signalTypeAcronym;
                         int deviceID;
