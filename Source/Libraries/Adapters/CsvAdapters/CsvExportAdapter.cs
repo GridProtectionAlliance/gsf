@@ -258,7 +258,7 @@ namespace CsvAdapters
         {
             string timestamp = measurement.Timestamp.ToString(TimestampFormat);
             string id = measurement.Key.SignalID.ToString();
-            string value = measurement.Value.ToString();
+            string value = measurement.AdjustedValue.ToString();
             return string.Join(",", timestamp, id, value);
         }
 
