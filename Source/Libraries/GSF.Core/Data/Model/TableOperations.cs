@@ -37,6 +37,7 @@ using GSF.ComponentModel;
 using GSF.Reflection;
 using ExpressionEvaluator;
 
+// ReSharper disable UnusedMember.Global
 // ReSharper disable StaticMemberInGenericType
 // ReSharper disable UnusedMember.Local
 // ReSharper disable AssignNullToNotNullAttribute
@@ -103,13 +104,6 @@ namespace GSF.Data.Model
         private const string FieldListSuffixToken = "<!FLS/>";
 
         // Fields
-        private readonly AdoDataConnection m_connection;
-        private Action<Exception> m_exceptionHandler;
-        private DataTable m_primaryKeyCache;
-        private string m_lastSortField;
-        private RecordRestriction m_lastRestriction;
-        private RecordRestriction m_rootQueryRestriction;
-        private bool m_useCaseSensitiveFieldNames;
         private readonly string m_selectCountSql;
         private readonly string m_selectSetSql;
         private readonly string m_selectSetWhereSql;
@@ -122,6 +116,8 @@ namespace GSF.Data.Model
         private readonly string m_deleteSql;
         private readonly string m_deleteWhereSql;
         private readonly string m_searchFilterSql;
+        private string m_lastSortField;
+        private RecordRestriction m_lastRestriction;
 
         #endregion
 
@@ -154,7 +150,7 @@ namespace GSF.Data.Model
             if ((object)connection == null)
                 throw new ArgumentNullException(nameof(connection));
 
-            m_connection = connection;
+            Connection = connection;
             m_selectCountSql = s_selectCountSql;
             m_selectSetSql = s_selectSetSql;
             m_selectSetWhereSql = s_selectSetWhereSql;
@@ -167,7 +163,7 @@ namespace GSF.Data.Model
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
             m_searchFilterSql = s_searchFilterSql;
-            m_rootQueryRestriction = s_rootQueryRestriction?.Clone();
+            RootQueryRestriction = s_rootQueryRestriction?.Clone();
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
@@ -224,7 +220,7 @@ namespace GSF.Data.Model
                 foreach (Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string> expressionAmendment in s_expressionAmendments)
                 {
                     // See if expression amendment applies to current database type
-                    if (expressionAmendment.Item1 != m_connection.DatabaseType)
+                    if (expressionAmendment.Item1 != Connection.DatabaseType)
                         continue;
 
                     // Get expression amendment properties
@@ -268,23 +264,22 @@ namespace GSF.Data.Model
                 }
 
                 // Remove any remaining tokens from instance expressions
-                Func<string, string> removeRemainingTokens = sql => sql
-                    .Replace(TableNamePrefixToken, "")
+                string RemoveRemainingTokens(string sql) => sql.Replace(TableNamePrefixToken, "")
                     .Replace(TableNameSuffixToken, "")
                     .Replace(FieldListPrefixToken, "")
                     .Replace(FieldListSuffixToken, "");
 
-                m_selectCountSql = removeRemainingTokens(m_selectCountSql);
-                m_selectSetSql = removeRemainingTokens(m_selectSetSql);
-                m_selectSetWhereSql = removeRemainingTokens(m_selectSetWhereSql);
-                m_selectKeysSql = removeRemainingTokens(m_selectKeysSql);
-                m_selectKeysWhereSql = removeRemainingTokens(m_selectKeysWhereSql);
-                m_selectRowSql = removeRemainingTokens(m_selectRowSql);
-                m_addNewSql = removeRemainingTokens(m_addNewSql);
-                m_updateSql = removeRemainingTokens(m_updateSql);
-                m_updateWhereSql = removeRemainingTokens(m_updateWhereSql);
-                m_deleteSql = removeRemainingTokens(m_deleteSql);
-                m_deleteWhereSql = removeRemainingTokens(m_deleteWhereSql);
+                m_selectCountSql = RemoveRemainingTokens(m_selectCountSql);
+                m_selectSetSql = RemoveRemainingTokens(m_selectSetSql);
+                m_selectSetWhereSql = RemoveRemainingTokens(m_selectSetWhereSql);
+                m_selectKeysSql = RemoveRemainingTokens(m_selectKeysSql);
+                m_selectKeysWhereSql = RemoveRemainingTokens(m_selectKeysWhereSql);
+                m_selectRowSql = RemoveRemainingTokens(m_selectRowSql);
+                m_addNewSql = RemoveRemainingTokens(m_addNewSql);
+                m_updateSql = RemoveRemainingTokens(m_updateSql);
+                m_updateWhereSql = RemoveRemainingTokens(m_updateWhereSql);
+                m_deleteSql = RemoveRemainingTokens(m_deleteSql);
+                m_deleteWhereSql = RemoveRemainingTokens(m_deleteWhereSql);
 
                 // Execute replacements on any provided custom run-time tokens
                 if ((object)customTokens != null)
@@ -335,10 +330,7 @@ namespace GSF.Data.Model
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="connection"/> cannot be <c>null</c>.</exception>
-        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, IEnumerable<KeyValuePair<string, string>> customTokens = null) : this(connection, customTokens)
-        {
-            m_exceptionHandler = exceptionHandler;
-        }
+        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, IEnumerable<KeyValuePair<string, string>> customTokens = null) : this(connection, customTokens) => ExceptionHandler = exceptionHandler;
 
         #endregion
 
@@ -347,7 +339,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets <see cref="AdoDataConnection"/> instance associated with this <see cref="TableOperations{T}"/> used for database operations.
         /// </summary>
-        public AdoDataConnection Connection => m_connection;
+        public AdoDataConnection Connection { get; }
 
         /// <summary>
         /// Gets the table name defined for the modeled table, includes any escaping as defined in model.
@@ -375,17 +367,7 @@ namespace GSF.Data.Model
         /// encountered exceptions will be passed to handler for processing. Otherwise, exceptions will be thrown
         /// on the call stack.
         /// </remarks>
-        public Action<Exception> ExceptionHandler
-        {
-            get
-            {
-                return m_exceptionHandler;
-            }
-            set
-            {
-                m_exceptionHandler = value;
-            }
-        }
+        public Action<Exception> ExceptionHandler { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if field names should be treated as case sensitive. Defaults to <c>false</c>.
@@ -394,47 +376,17 @@ namespace GSF.Data.Model
         /// In cases where modeled table fields have applied <see cref="UseEscapedNameAttribute"/>, this flag will be used
         /// to properly update escaped field names that may be case sensitive.
         /// </remarks>
-        public bool UseCaseSensitiveFieldNames
-        {
-            get
-            {
-                return m_useCaseSensitiveFieldNames;
-            }
-            set
-            {
-                m_useCaseSensitiveFieldNames = value;
-            }
-        }
+        public bool UseCaseSensitiveFieldNames { get; set; }
 
         /// <summary>
         /// Gets or sets primary key cache.
         /// </summary>
-        public DataTable PrimaryKeyCache
-        {
-            get
-            {
-                return m_primaryKeyCache;
-            }
-            set
-            {
-                m_primaryKeyCache = value;
-            }
-        }
+        public DataTable PrimaryKeyCache { get; set; }
 
         /// <summary>
         /// Gets or sets root record restriction that applies to query table operations.
         /// </summary>
-        public RecordRestriction RootQueryRestriction
-        {
-            get
-            {
-                return m_rootQueryRestriction;
-            }
-            set
-            {
-                m_rootQueryRestriction = value;
-            }
-        }
+        public RecordRestriction RootQueryRestriction { get; set; }
 
         #endregion
 
@@ -453,23 +405,20 @@ namespace GSF.Data.Model
                 return s_createRecordInstance(new CurrentScope
                 {
                     TableOperations = this,
-                    Connection = m_connection
+                    Connection = Connection
                 });
             }
             catch (Exception ex)
             {
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw;
 
-                m_exceptionHandler(ex);
+                ExceptionHandler(ex);
                 return null;
             }
         }
 
-        object ITableOperations.NewRecord()
-        {
-            return NewRecord();
-        }
+        object ITableOperations.NewRecord() => NewRecord();
 
         /// <summary>
         /// Applies the default values on the specified modeled table <paramref name="record"/>
@@ -485,23 +434,21 @@ namespace GSF.Data.Model
                 {
                     Instance = record,
                     TableOperations = this,
-                    Connection = m_connection
+                    Connection = Connection
                 });
             }
             catch (Exception ex)
             {
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw;
 
-                m_exceptionHandler(ex);
+                ExceptionHandler(ex);
             }
         }
 
         void ITableOperations.ApplyRecordDefaults(object value)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot apply defaults for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             ApplyRecordDefaults(record);
@@ -520,23 +467,21 @@ namespace GSF.Data.Model
                 {
                     Instance = record,
                     TableOperations = this,
-                    Connection = m_connection
+                    Connection = Connection
                 });
             }
             catch (Exception ex)
             {
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw;
 
-                m_exceptionHandler(ex);
+                ExceptionHandler(ex);
             }
         }
 
         void ITableOperations.ApplyRecordUpdates(object value)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot apply updates for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             ApplyRecordUpdates(record);
@@ -556,15 +501,9 @@ namespace GSF.Data.Model
         /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
         /// </para>
         /// </remarks>
-        public T QueryRecord(RecordRestriction restriction)
-        {
-            return QueryRecord(null, restriction);
-        }
+        public T QueryRecord(RecordRestriction restriction) => QueryRecord(null, restriction);
 
-        object ITableOperations.QueryRecord(RecordRestriction restriction)
-        {
-            return QueryRecord(restriction);
-        }
+        object ITableOperations.QueryRecord(RecordRestriction restriction) => QueryRecord(restriction);
 
         /// <summary>
         /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>,
@@ -582,15 +521,9 @@ namespace GSF.Data.Model
         /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
         /// </para>
         /// </remarks>
-        public T QueryRecord(string orderByExpression, RecordRestriction restriction)
-        {
-            return QueryRecords(orderByExpression, restriction, 1).FirstOrDefault();
-        }
+        public T QueryRecord(string orderByExpression, RecordRestriction restriction) => QueryRecords(orderByExpression, restriction, 1).FirstOrDefault();
 
-        object ITableOperations.QueryRecord(string orderByExpression, RecordRestriction restriction)
-        {
-            return QueryRecord(orderByExpression, restriction);
-        }
+        object ITableOperations.QueryRecord(string orderByExpression, RecordRestriction restriction) => QueryRecord(orderByExpression, restriction);
 
         /// <summary>
         /// Queries database and returns a single modeled table record for the specified SQL filter
@@ -627,15 +560,9 @@ namespace GSF.Data.Model
         /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
         /// </para>
         /// </remarks>
-        public T QueryRecordWhere(string filterExpression, params object[] parameters)
-        {
-            return QueryRecord(new RecordRestriction(filterExpression, parameters));
-        }
+        public T QueryRecordWhere(string filterExpression, params object[] parameters) => QueryRecord(new RecordRestriction(filterExpression, parameters));
 
-        object ITableOperations.QueryRecordWhere(string filterExpression, params object[] parameters)
-        {
-            return QueryRecordWhere(filterExpression, parameters);
-        }
+        object ITableOperations.QueryRecordWhere(string filterExpression, params object[] parameters) => QueryRecordWhere(filterExpression, parameters);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified parameters.
@@ -650,14 +577,14 @@ namespace GSF.Data.Model
         public IEnumerable<T> QueryRecords(string orderByExpression = null, RecordRestriction restriction = null, int limit = -1)
         {
             if (string.IsNullOrWhiteSpace(orderByExpression))
-                orderByExpression = s_primaryKeyFields;
+                orderByExpression = UpdateFieldNames(s_primaryKeyFields);
 
             string sqlExpression = null;
 
             try
             {
-                if ((object)m_rootQueryRestriction != null)
-                    restriction = m_rootQueryRestriction + restriction;
+                if ((object)RootQueryRestriction != null)
+                    restriction = RootQueryRestriction + restriction;
 
                 if (limit < 1)
                 {
@@ -665,38 +592,35 @@ namespace GSF.Data.Model
                     if ((object)restriction == null)
                     {
                         sqlExpression = string.Format(m_selectSetSql, orderByExpression);
-                        return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(LoadRecord);
+                        return Connection.RetrieveData(sqlExpression).AsEnumerable().Select(LoadRecord);
                     }
 
                     sqlExpression = string.Format(m_selectSetWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(LoadRecord);
+                    return Connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(LoadRecord);
                 }
 
                 if ((object)restriction == null)
                 {
                     sqlExpression = string.Format(m_selectSetSql, orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(LoadRecord);
+                    return Connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(LoadRecord);
                 }
 
                 sqlExpression = string.Format(m_selectSetWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(LoadRecord);
+                return Connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(LoadRecord);
             }
             catch (Exception ex)
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return Enumerable.Empty<T>();
             }
         }
 
-        IEnumerable ITableOperations.QueryRecords(string orderByExpression, RecordRestriction restriction, int limit)
-        {
-            return QueryRecords(orderByExpression, restriction, limit);
-        }
+        IEnumerable ITableOperations.QueryRecords(string orderByExpression, RecordRestriction restriction, int limit) => QueryRecords(orderByExpression, restriction, limit);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified <paramref name="restriction"/>.
@@ -709,15 +633,9 @@ namespace GSF.Data.Model
         /// specifying the <see cref="RecordRestriction"/> parameter.
         /// </para>
         /// </remarks>
-        public IEnumerable<T> QueryRecords(RecordRestriction restriction)
-        {
-            return QueryRecords(null, restriction);
-        }
+        public IEnumerable<T> QueryRecords(RecordRestriction restriction) => QueryRecords(null, restriction);
 
-        IEnumerable ITableOperations.QueryRecords(RecordRestriction restriction)
-        {
-            return QueryRecords(restriction);
-        }
+        IEnumerable ITableOperations.QueryRecords(RecordRestriction restriction) => QueryRecords(restriction);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified SQL filter expression
@@ -751,15 +669,9 @@ namespace GSF.Data.Model
         /// specifying the <see cref="RecordRestriction"/> parameter.
         /// </para>
         /// </remarks>
-        public IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters)
-        {
-            return QueryRecords(new RecordRestriction(filterExpression, parameters));
-        }
+        public IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecords(new RecordRestriction(filterExpression, parameters));
 
-        IEnumerable ITableOperations.QueryRecordsWhere(string filterExpression, params object[] parameters)
-        {
-            return QueryRecordsWhere(filterExpression, parameters);
-        }
+        IEnumerable ITableOperations.QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(filterExpression, parameters);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified sorting, paging and search parameters.
@@ -781,15 +693,9 @@ namespace GSF.Data.Model
         /// is generated by <see cref="GetSearchRestriction(string)"/> using <paramref name="searchText"/>.
         /// </para>
         /// </remarks>
-        public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText)
-        {
-            return QueryRecords(sortField, ascending, page, pageSize, GetSearchRestriction(searchText));
-        }
+        public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText) => QueryRecords(sortField, ascending, page, pageSize, GetSearchRestriction(searchText));
 
-        IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText)
-        {
-            return QueryRecords(sortField, ascending, page, pageSize, searchText);
-        }
+        IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText) => QueryRecords(sortField, ascending, page, pageSize, searchText);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified sorting and paging parameters.
@@ -812,35 +718,35 @@ namespace GSF.Data.Model
             if (string.IsNullOrWhiteSpace(sortField))
                 sortField = s_fieldNames[s_primaryKeyProperties[0].Name];
 
-            if ((object)m_primaryKeyCache == null || !sortField.Equals(m_lastSortField, StringComparison.OrdinalIgnoreCase) || restriction != m_lastRestriction)
+            if ((object)PrimaryKeyCache == null || !sortField.Equals(m_lastSortField, StringComparison.OrdinalIgnoreCase) || restriction != m_lastRestriction)
             {
                 string orderByExpression = $"{sortField}{(ascending ? "" : " DESC")}";
                 string sqlExpression = null;
 
                 try
                 {
-                    if ((object)m_rootQueryRestriction != null)
-                        restriction = m_rootQueryRestriction + restriction;
+                    if ((object)RootQueryRestriction != null)
+                        restriction = RootQueryRestriction + restriction;
 
                     if ((object)restriction == null)
                     {
                         sqlExpression = string.Format(m_selectKeysSql, orderByExpression);
-                        m_primaryKeyCache = m_connection.RetrieveData(sqlExpression);
+                        PrimaryKeyCache = Connection.RetrieveData(sqlExpression);
                     }
                     else
                     {
                         sqlExpression = string.Format(m_selectKeysWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                        m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters);
+                        PrimaryKeyCache = Connection.RetrieveData(sqlExpression, restriction.Parameters);
                     }
                 }
                 catch (Exception ex)
                 {
                     InvalidOperationException opex = new InvalidOperationException($"Exception during record query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}\": {ex.Message}", ex);
 
-                    if ((object)m_exceptionHandler == null)
+                    if ((object)ExceptionHandler == null)
                         throw opex;
 
-                    m_exceptionHandler(opex);
+                    ExceptionHandler(opex);
                     return Enumerable.Empty<T>();
                 }
 
@@ -848,13 +754,10 @@ namespace GSF.Data.Model
                 m_lastRestriction = restriction;
             }
 
-            return m_primaryKeyCache.AsEnumerable().ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
+            return PrimaryKeyCache.AsEnumerable().ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
         }
 
-        IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction)
-        {
-            return QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
+        IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction) => QueryRecords(sortField, ascending, page, pageSize, restriction);
 
         /// <summary>
         /// Gets the record count for the modeled table based on search parameter.
@@ -865,10 +768,7 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="QueryRecordCount(RecordRestriction)"/> where restriction
         /// is generated by <see cref="GetSearchRestriction(string)"/>
         /// </remarks>
-        public int QueryRecordCount(string searchText)
-        {
-            return QueryRecordCount(GetSearchRestriction(searchText));
-        }
+        public int QueryRecordCount(string searchText) => QueryRecordCount(GetSearchRestriction(searchText));
 
         /// <summary>
         /// Gets the record count for the specified <paramref name="restriction"/> - or - total record
@@ -885,26 +785,26 @@ namespace GSF.Data.Model
 
             try
             {
-                if ((object)m_rootQueryRestriction != null)
-                    restriction = m_rootQueryRestriction + restriction;
+                if ((object)RootQueryRestriction != null)
+                    restriction = RootQueryRestriction + restriction;
 
                 if ((object)restriction == null)
                 {
                     sqlExpression = m_selectCountSql;
-                    return m_connection.ExecuteScalar<int>(sqlExpression);
+                    return Connection.ExecuteScalar<int>(sqlExpression);
                 }
 
                 sqlExpression = $"{m_selectCountSql} WHERE {UpdateFieldNames(restriction.FilterExpression)}";
-                return m_connection.ExecuteScalar<int>(sqlExpression, restriction.Parameters);
+                return Connection.ExecuteScalar<int>(sqlExpression, restriction.Parameters);
             }
             catch (Exception ex)
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record count query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return -1;
             }
         }
@@ -939,10 +839,7 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="QueryRecordCount(RecordRestriction)"/>.
         /// </para>
         /// </remarks>
-        public int QueryRecordCountWhere(string filterExpression, params object[] parameters)
-        {
-            return QueryRecordCount(new RecordRestriction(filterExpression, parameters));
-        }
+        public int QueryRecordCountWhere(string filterExpression, params object[] parameters) => QueryRecordCount(new RecordRestriction(filterExpression, parameters));
 
         /// <summary>
         /// Creates a new modeled table record queried from the specified <paramref name="primaryKeys"/>.
@@ -953,24 +850,21 @@ namespace GSF.Data.Model
         {
             try
             {
-                return LoadRecord(m_connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(primaryKeys)));
+                return LoadRecord(Connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(primaryKeys)));
             }
             catch (Exception ex)
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{m_selectRowSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return null;
             }
         }
 
-        object ITableOperations.LoadRecord(params object[] primaryKeys)
-        {
-            return LoadRecord(primaryKeys);
-        }
+        object ITableOperations.LoadRecord(params object[] primaryKeys) => LoadRecord(primaryKeys);
 
         /// <summary>
         /// Creates a new modeled table record queried from the specified <paramref name="row"/>.
@@ -997,10 +891,10 @@ namespace GSF.Data.Model
                     {
                         InvalidOperationException opex = new InvalidOperationException($"Exception during record load field assignment for \"{typeof(T).Name}.{property.Name} = {row[s_fieldNames[property.Name]]}\": {ex.Message}", ex);
 
-                        if ((object)m_exceptionHandler == null)
+                        if ((object)ExceptionHandler == null)
                             throw opex;
 
-                        m_exceptionHandler(opex);
+                        ExceptionHandler(opex);
                     }
                 }
 
@@ -1010,18 +904,15 @@ namespace GSF.Data.Model
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} from data row: {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return null;
             }
         }
 
-        object ITableOperations.LoadRecord(DataRow row)
-        {
-            return LoadRecord(row);
-        }
+        object ITableOperations.LoadRecord(DataRow row) => LoadRecord(row);
 
         /// <summary>
         /// Converts the given collection of <paramref name="records"/> into a <see cref="DataTable"/>.
@@ -1048,10 +939,7 @@ namespace GSF.Data.Model
             return dataTable;
         }
 
-        DataTable ITableOperations.ToDataTable(IEnumerable records)
-        {
-            return ToDataTable(records.Cast<T>());
-        }
+        DataTable ITableOperations.ToDataTable(IEnumerable records) => ToDataTable(records.Cast<T>());
 
         /// <summary>
         /// Deletes the record referenced by the specified <paramref name="primaryKeys"/>.
@@ -1062,10 +950,10 @@ namespace GSF.Data.Model
         {
             try
             {
-                int affectedRecords = m_connection.ExecuteNonQuery(m_deleteSql, GetInterpretedPrimaryKeys(primaryKeys));
+                int affectedRecords = Connection.ExecuteNonQuery(m_deleteSql, GetInterpretedPrimaryKeys(primaryKeys));
 
                 if (affectedRecords > 0)
-                    m_primaryKeyCache = null;
+                    PrimaryKeyCache = null;
 
                 return affectedRecords;
             }
@@ -1073,10 +961,10 @@ namespace GSF.Data.Model
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{m_deleteSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return 0;
             }
         }
@@ -1086,16 +974,11 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="record">Record to delete.</param>
         /// <returns>Number of rows affected.</returns>
-        public int DeleteRecord(T record)
-        {
-            return DeleteRecord(GetPrimaryKeys(record));
-        }
+        public int DeleteRecord(T record) => DeleteRecord(GetPrimaryKeys(record));
 
         int ITableOperations.DeleteRecord(object value)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot delete record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return DeleteRecord(record);
@@ -1106,10 +989,7 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be deleted.</param>
         /// <returns>Number of rows affected.</returns>
-        public int DeleteRecord(DataRow row)
-        {
-            return DeleteRecord(GetPrimaryKeys(row));
-        }
+        public int DeleteRecord(DataRow row) => DeleteRecord(GetPrimaryKeys(row));
 
         /// <summary>
         /// Deletes the records referenced by the specified <paramref name="restriction"/>.
@@ -1127,10 +1007,10 @@ namespace GSF.Data.Model
             try
             {
                 sqlExpression = $"{m_deleteWhereSql}{UpdateFieldNames(restriction.FilterExpression)}";
-                int affectedRecords = m_connection.ExecuteNonQuery(sqlExpression, restriction.Parameters);
+                int affectedRecords = Connection.ExecuteNonQuery(sqlExpression, restriction.Parameters);
 
                 if (affectedRecords > 0)
-                    m_primaryKeyCache = null;
+                    PrimaryKeyCache = null;
 
                 return affectedRecords;
             }
@@ -1138,10 +1018,10 @@ namespace GSF.Data.Model
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction.Parameters)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return 0;
             }
         }
@@ -1176,10 +1056,7 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="DeleteRecord(RecordRestriction)"/>.
         /// </para>
         /// </remarks>
-        public int DeleteRecordWhere(string filterExpression, params object[] parameters)
-        {
-            return DeleteRecord(new RecordRestriction(filterExpression, parameters));
-        }
+        public int DeleteRecordWhere(string filterExpression, params object[] parameters) => DeleteRecord(new RecordRestriction(filterExpression, parameters));
 
         /// <summary>
         /// Updates the database with the specified modeled table <paramref name="record"/>,
@@ -1203,15 +1080,15 @@ namespace GSF.Data.Model
                 {
                     Instance = record,
                     TableOperations = this,
-                    Connection = m_connection
+                    Connection = Connection
                 });
             }
             catch (Exception ex)
             {
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw;
 
-                m_exceptionHandler(ex);
+                ExceptionHandler(ex);
                 return 0;
             }
 
@@ -1225,16 +1102,16 @@ namespace GSF.Data.Model
                     foreach (PropertyInfo property in s_primaryKeyProperties)
                         values.Add(GetInterpretedPropertyValue(property, record));
 
-                    return m_connection.ExecuteNonQuery(m_updateSql, values.ToArray());
+                    return Connection.ExecuteNonQuery(m_updateSql, values.ToArray());
                 }
                 catch (Exception ex)
                 {
                     InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{m_updateSql}, {ValueList(values)}\": {ex.Message}", ex);
 
-                    if ((object)m_exceptionHandler == null)
+                    if ((object)ExceptionHandler == null)
                         throw opex;
 
-                    m_exceptionHandler(opex);
+                    ExceptionHandler(opex);
                     return 0;
                 }
             }
@@ -1255,25 +1132,23 @@ namespace GSF.Data.Model
                     updateWhereOffsets.Add($"{{{updateFieldIndex + i}}}");
 
                 sqlExpression = $"{m_updateWhereSql}{string.Format(UpdateFieldNames(restriction.FilterExpression), updateWhereOffsets.ToArray())}";
-                return m_connection.ExecuteNonQuery(sqlExpression, values.ToArray());
+                return Connection.ExecuteNonQuery(sqlExpression, values.ToArray());
             }
             catch (Exception ex)
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{sqlExpression}, {ValueList(values)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return 0;
             }
         }
 
         int ITableOperations.UpdateRecord(object value, RecordRestriction restriction)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return UpdateRecord(record);
@@ -1317,16 +1192,11 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="UpdateRecord(T, RecordRestriction)"/>.
         /// </para>
         /// </remarks>
-        public int UpdateRecordWhere(T record, string filterExpression, params object[] parameters)
-        {
-            return UpdateRecord(record, new RecordRestriction(filterExpression, parameters));
-        }
+        public int UpdateRecordWhere(T record, string filterExpression, params object[] parameters) => UpdateRecord(record, new RecordRestriction(filterExpression, parameters));
 
         int ITableOperations.UpdateRecordWhere(object value, string filterExpression, params object[] parameters)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return UpdateRecordWhere(record, filterExpression, parameters);
@@ -1344,10 +1214,7 @@ namespace GSF.Data.Model
         /// Record restriction is only used for custom update expressions or in cases where modeled
         /// table has no defined primary keys.
         /// </remarks>
-        public int UpdateRecord(DataRow row, RecordRestriction restriction = null)
-        {
-            return UpdateRecord(LoadRecord(row), restriction);
-        }
+        public int UpdateRecord(DataRow row, RecordRestriction restriction = null) => UpdateRecord(LoadRecord(row), restriction);
 
         /// <summary>
         /// Updates the database with the specified <paramref name="row"/> referenced by the
@@ -1387,10 +1254,7 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="UpdateRecord(DataRow, RecordRestriction)"/>.
         /// </para>
         /// </remarks>
-        public int UpdateRecordWhere(DataRow row, string filterExpression, params object[] parameters)
-        {
-            return UpdateRecord(row, new RecordRestriction(filterExpression, parameters));
-        }
+        public int UpdateRecordWhere(DataRow row, string filterExpression, params object[] parameters) => UpdateRecord(row, new RecordRestriction(filterExpression, parameters));
 
         /// <summary>
         /// Adds the specified modeled table <paramref name="record"/> to the database.
@@ -1406,10 +1270,10 @@ namespace GSF.Data.Model
                 foreach (PropertyInfo property in s_addNewProperties)
                     values.Add(GetInterpretedPropertyValue(property, record));
 
-                int affectedRecords = m_connection.ExecuteNonQuery(m_addNewSql, values.ToArray());
+                int affectedRecords = Connection.ExecuteNonQuery(m_addNewSql, values.ToArray());
 
                 if (affectedRecords > 0)
-                    m_primaryKeyCache = null;
+                    PrimaryKeyCache = null;
 
                 return affectedRecords;
             }
@@ -1417,19 +1281,17 @@ namespace GSF.Data.Model
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception during record insert for {typeof(T).Name} \"{m_addNewSql}, {ValueList(values)}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return 0;
             }
         }
 
         int ITableOperations.AddNewRecord(object value)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot add new record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return AddNewRecord(record);
@@ -1440,10 +1302,7 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be added.</param>
         /// <returns>Number of rows affected.</returns>
-        public int AddNewRecord(DataRow row)
-        {
-            return AddNewRecord(LoadRecord(row));
-        }
+        public int AddNewRecord(DataRow row) => AddNewRecord(LoadRecord(row));
 
         /// <summary>
         /// Adds the specified modeled table <paramref name="record"/> to the database if the
@@ -1452,16 +1311,11 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="record">Record to add or update.</param>
         /// <returns>Number of rows affected.</returns>
-        public int AddNewOrUpdateRecord(T record)
-        {
-            return s_primaryKeyProperties.All(property => Common.IsDefaultValue(property.GetValue(record))) ? AddNewRecord(record) : UpdateRecord(record);
-        }
+        public int AddNewOrUpdateRecord(T record) => s_primaryKeyProperties.All(property => Common.IsDefaultValue(property.GetValue(record))) ? AddNewRecord(record) : UpdateRecord(record);
 
         int ITableOperations.AddNewOrUpdateRecord(object value)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot add new or update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return AddNewOrUpdateRecord(record);
@@ -1487,19 +1341,17 @@ namespace GSF.Data.Model
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception loading primary key fields for {typeof(T).Name} \"{s_primaryKeyProperties.Select(property => property.Name).ToDelimitedString(", ")}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return new object[0];
             }
         }
 
         object[] ITableOperations.GetPrimaryKeys(object value)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot get primary keys for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return GetPrimaryKeys(record);
@@ -1525,10 +1377,10 @@ namespace GSF.Data.Model
             {
                 InvalidOperationException opex = new InvalidOperationException($"Exception loading primary key fields for {typeof(T).Name} \"{s_primaryKeyProperties.Select(property => property.Name).ToDelimitedString(", ")}\": {ex.Message}", ex);
 
-                if ((object)m_exceptionHandler == null)
+                if ((object)ExceptionHandler == null)
                     throw opex;
 
-                m_exceptionHandler(opex);
+                ExceptionHandler(opex);
                 return new object[0];
             }
         }
@@ -1575,10 +1427,7 @@ namespace GSF.Data.Model
         /// <returns><c>true</c> if attribute was found; otherwise, <c>false</c>.</returns>
         public bool TryGetFieldAttribute<TAttribute>(string fieldName, out TAttribute attribute) where TAttribute : Attribute
         {
-            string propertyName;
-            PropertyInfo property;
-
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && property.TryGetAttribute(out attribute))
+            if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property) && property.TryGetAttribute(out attribute))
                 return true;
 
             attribute = default(TAttribute);
@@ -1595,13 +1444,10 @@ namespace GSF.Data.Model
         /// <exception cref="ArgumentException"><paramref name="attributeType"/> is not an <see cref="Attribute"/>.</exception>
         public bool TryGetFieldAttribute(string fieldName, Type attributeType, out Attribute attribute)
         {
-            string propertyName;
-            PropertyInfo property;
-
             if (!attributeType.IsInstanceOfType(typeof(Attribute)))
                 throw new ArgumentException($"The specified type \"{attributeType.Name}\" is not an Attribute.", nameof(attributeType));
 
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && property.TryGetAttribute(attributeType, out attribute))
+            if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property) && property.TryGetAttribute(attributeType, out attribute))
                 return true;
 
             attribute = null;
@@ -1614,10 +1460,7 @@ namespace GSF.Data.Model
         /// <typeparam name="TAttribute">Type of attribute to search for.</typeparam>
         /// <param name="fieldName">Name of field to use for attribute lookup.</param>
         /// <returns><c>true</c> if field has attribute; otherwise, <c>false</c>.</returns>
-        public bool FieldHasAttribute<TAttribute>(string fieldName) where TAttribute : Attribute
-        {
-            return FieldHasAttribute(fieldName, typeof(TAttribute));
-        }
+        public bool FieldHasAttribute<TAttribute>(string fieldName) where TAttribute : Attribute => FieldHasAttribute(fieldName, typeof(TAttribute));
 
         /// <summary>
         /// Determines if the specified field has an associated attribute.
@@ -1628,14 +1471,10 @@ namespace GSF.Data.Model
         /// <exception cref="ArgumentException"><paramref name="attributeType"/> is not an <see cref="Attribute"/>.</exception>
         public bool FieldHasAttribute(string fieldName, Type attributeType)
         {
-            string propertyName;
-            PropertyInfo property;
-            HashSet<Type> attributes;
-
             if (!attributeType.IsSubclassOf(typeof(Attribute)))
                 throw new ArgumentException($"The specified type \"{attributeType.Name}\" is not an Attribute.", nameof(attributeType));
 
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && s_attributes.TryGetValue(property, out attributes))
+            if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property) && s_attributes.TryGetValue(property, out HashSet<Type> attributes))
                 return attributes.Contains(attributeType);
 
             return false;
@@ -1649,10 +1488,7 @@ namespace GSF.Data.Model
         /// <returns>Field value or <c>null</c> if field is not found.</returns>
         public object GetFieldValue(T record, string fieldName)
         {
-            string propertyName;
-            PropertyInfo property;
-
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property))
+            if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property))
                 return property.GetValue(record);
 
             return typeof(T).GetProperty(fieldName)?.GetValue(record);
@@ -1660,9 +1496,7 @@ namespace GSF.Data.Model
 
         object ITableOperations.GetFieldValue(object value, string fieldName)
         {
-            T record = value as T;
-
-            if (record == null)
+            if (!(value is T record))
                 throw new ArgumentException($"Cannot get \"{fieldName}\" field value for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return GetFieldValue(record, fieldName);
@@ -1674,7 +1508,7 @@ namespace GSF.Data.Model
         /// <param name="fieldName">Field name to retrieve.</param>
         /// <param name="value">Field value to use.</param>
         /// <returns>
-        /// If field has been been modeled with a <see cref="FieldDataTypeAttribute"/> that matches active database type,
+        /// If field has been modeled with a <see cref="FieldDataTypeAttribute"/> that matches active database type,
         /// intermediate <see cref="IDbDataParameter"/> value; otherwise, <paramref name="value"/>.
         /// </returns>
         /// <remarks>
@@ -1687,10 +1521,7 @@ namespace GSF.Data.Model
             if ((object)s_fieldDataTypeTargets == null)
                 return value;
 
-            string propertyName;
-            PropertyInfo property;
-
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property))
+            if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property))
                 return GetInterpretedValue(property, value);
 
             return value;
@@ -1703,10 +1534,7 @@ namespace GSF.Data.Model
         /// <returns>Field <see cref="Type"/> or <c>null</c> if field is not found.</returns>
         public Type GetFieldType(string fieldName)
         {
-            string propertyName;
-            PropertyInfo property;
-
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property))
+            if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property))
                 return property.PropertyType;
 
             return null;
@@ -1748,10 +1576,7 @@ namespace GSF.Data.Model
         /// Calculates the size of the current primary key cache, in number of records.
         /// </summary>
         /// <returns>Number of records in the current primary key cache.</returns>
-        public int GetPrimaryKeyCacheSize()
-        {
-            return m_primaryKeyCache?.Rows.Count ?? 0;
-        }
+        public int GetPrimaryKeyCacheSize() => PrimaryKeyCache?.Rows.Count ?? 0;
 
         /// <summary>
         /// Clears the primary key cache for this <see cref="TableOperations{T}"/> instance.
@@ -1767,10 +1592,7 @@ namespace GSF.Data.Model
         /// should be called so that primary key cache can be reloaded.
         /// </para>
         /// </remarks>
-        public void ClearPrimaryKeyCache()
-        {
-            m_primaryKeyCache = null;
-        }
+        public void ClearPrimaryKeyCache() => PrimaryKeyCache = null;
 
         // Derive raw field values or IDbCommandParameter values with specific DbType if a primary key
         // field data type has been targeted for specific database type
@@ -1804,15 +1626,14 @@ namespace GSF.Data.Model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetInterpretedValue(PropertyInfo property, object value)
         {
-            Dictionary<DatabaseType, DbType> fieldDataTypeTargets;
-            DbType fieldDataType;
-
-            if (s_fieldDataTypeTargets.TryGetValue(property, out fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(m_connection.DatabaseType, out fieldDataType))
+            if (s_fieldDataTypeTargets.TryGetValue(property, out Dictionary<DatabaseType, DbType> fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(Connection.DatabaseType, out DbType fieldDataType))
+            {
                 return new IntermediateParameter
                 {
                     Value = value,
                     DbType = fieldDataType
-                };
+                };                
+            }
 
             return value;
         }
@@ -1824,10 +1645,8 @@ namespace GSF.Data.Model
             if ((object)s_escapedTableNameTargets == null)
                 return s_tableName;
 
-            bool useAnsiQuotes;
-
-            if (s_escapedTableNameTargets.TryGetValue(m_connection.DatabaseType, out useAnsiQuotes))
-                return m_connection.EscapeIdentifier(s_tableName, useAnsiQuotes);
+            if (s_escapedTableNameTargets.TryGetValue(Connection.DatabaseType, out bool useAnsiQuotes))
+                return Connection.EscapeIdentifier(s_tableName, useAnsiQuotes);
 
             return s_tableName;
         }
@@ -1842,10 +1661,8 @@ namespace GSF.Data.Model
             if ((object)escapedFieldNameTargets == null && !s_escapedFieldNameTargets.TryGetValue(fieldName, out escapedFieldNameTargets))
                 return fieldName;
 
-            bool useAnsiQuotes;
-
-            if (escapedFieldNameTargets.TryGetValue(m_connection.DatabaseType, out useAnsiQuotes))
-                return m_connection.EscapeIdentifier(fieldName, useAnsiQuotes);
+            if (escapedFieldNameTargets.TryGetValue(Connection.DatabaseType, out bool useAnsiQuotes))
+                return Connection.EscapeIdentifier(fieldName, useAnsiQuotes);
 
             return fieldName;
         }
@@ -1857,9 +1674,7 @@ namespace GSF.Data.Model
             if ((object)s_escapedFieldNameTargets == null)
                 return fieldName;
 
-            Dictionary<DatabaseType, bool> escapedFieldNameTargets;
-
-            if (!s_escapedFieldNameTargets.TryGetValue(fieldName, out escapedFieldNameTargets))
+            if (!s_escapedFieldNameTargets.TryGetValue(fieldName, out _))
                 return fieldName;
 
             return fieldName.Substring(1, fieldName.Length - 2);
@@ -1877,7 +1692,7 @@ namespace GSF.Data.Model
                     string derivedFieldName = GetEscapedFieldName(fieldName, escapedFieldNameTarget.Value);
                     string ansiEscapedFieldName = $"\"{fieldName}\"";
 
-                    if (m_useCaseSensitiveFieldNames)
+                    if (UseCaseSensitiveFieldNames)
                     {
                         if (!derivedFieldName.Equals(ansiEscapedFieldName))
                             filterExpression = filterExpression.Replace(ansiEscapedFieldName, derivedFieldName);
@@ -1953,27 +1768,19 @@ namespace GSF.Data.Model
             s_tableName = typeof(T).Name;
 
             // Check for overridden table name
-            TableNameAttribute tableNameAttribute;
-
-            if (typeof(T).TryGetAttribute(out tableNameAttribute) && !string.IsNullOrWhiteSpace(tableNameAttribute.TableName))
+            if (typeof(T).TryGetAttribute(out TableNameAttribute tableNameAttribute) && !string.IsNullOrWhiteSpace(tableNameAttribute.TableName))
                 s_tableName = tableNameAttribute.TableName;
 
             // Check for escaped table name targets
-            UseEscapedNameAttribute[] useEscapedNameAttributes;
-
-            if (typeof(T).TryGetAttributes(out useEscapedNameAttributes))
+            if (typeof(T).TryGetAttributes(out UseEscapedNameAttribute[] useEscapedNameAttributes))
                 s_escapedTableNameTargets = DeriveEscapedNameTargets(useEscapedNameAttributes);
 
             // Check for expression amendments
-            AmendExpressionAttribute[] amendExpressionAttributes;
-
-            if (typeof(T).TryGetAttributes(out amendExpressionAttributes))
+            if (typeof(T).TryGetAttributes(out AmendExpressionAttribute[] amendExpressionAttributes))
                 s_expressionAmendments = DeriveExpressionAmendments(amendExpressionAttributes);
 
             // Check for root query restriction
-            RootQueryRestrictionAttribute rootQueryRestrictionAttribute;
-
-            if (typeof(T).TryGetAttribute(out rootQueryRestrictionAttribute))
+            if (typeof(T).TryGetAttribute(out RootQueryRestrictionAttribute rootQueryRestrictionAttribute))
                 s_rootQueryRestriction = new RecordRestriction(rootQueryRestrictionAttribute.FilterExpression, rootQueryRestrictionAttribute.Parameters);
 
             s_properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -1989,14 +1796,11 @@ namespace GSF.Data.Model
             foreach (PropertyInfo property in s_properties.Values)
             {
                 string fieldName = s_fieldNames[property.Name];
-                PrimaryKeyAttribute primaryKeyAttribute;
-                SearchableAttribute searchableAttribute;
-                FieldDataTypeAttribute[] fieldDataTypeAttributes;
 
-                property.TryGetAttribute(out primaryKeyAttribute);
-                property.TryGetAttribute(out searchableAttribute);
+                property.TryGetAttribute(out PrimaryKeyAttribute primaryKeyAttribute);
+                property.TryGetAttribute(out SearchableAttribute searchableAttribute);
 
-                if (property.TryGetAttributes(out fieldDataTypeAttributes))
+                if (property.TryGetAttributes(out FieldDataTypeAttribute[] fieldDataTypeAttributes))
                 {
                     if ((object)s_fieldDataTypeTargets == null)
                         s_fieldDataTypeTargets = new Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>>();
@@ -2161,14 +1965,8 @@ namespace GSF.Data.Model
         [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public static TypeRegistry TypeRegistry
         {
-            get
-            {
-                return s_typeRegistry ?? (s_typeRegistry = ValueExpressionParser.DefaultTypeRegistry.Clone());
-            }
-            set
-            {
-                s_typeRegistry = value;
-            }
+            get => s_typeRegistry ?? (s_typeRegistry = ValueExpressionParser.DefaultTypeRegistry.Clone());
+            set => s_typeRegistry = value;
         }
 
         // Static Methods
@@ -2234,9 +2032,7 @@ namespace GSF.Data.Model
 
         private static string GetFieldName(PropertyInfo property)
         {
-            FieldNameAttribute fieldNameAttribute;
-
-            if (property.TryGetAttribute(out fieldNameAttribute) && !string.IsNullOrEmpty(fieldNameAttribute?.FieldName))
+            if (property.TryGetAttribute(out FieldNameAttribute fieldNameAttribute) && !string.IsNullOrEmpty(fieldNameAttribute?.FieldName))
                 return fieldNameAttribute.FieldName;
 
             return property.Name;
