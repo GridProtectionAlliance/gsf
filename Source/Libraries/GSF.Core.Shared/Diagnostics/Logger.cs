@@ -94,7 +94,7 @@ namespace GSF.Diagnostics
                 int depth = m_threadStackDetails.Count;
                 if (depth >= s_stackDisposalStackMessages.Length)
                 {
-                    GrowStackDisposal(depth);
+                    GrowStackDisposal(depth + 1);
                 }
                 return s_stackDisposalStackMessages[depth];
             }
@@ -105,7 +105,7 @@ namespace GSF.Diagnostics
                 int depth = m_logMessageSuppressionStack.Count;
                 if (depth >= s_stackDisposalSuppressionFlags.Length)
                 {
-                    GrowStackDisposal(depth);
+                    GrowStackDisposal(depth + 1);
                 }
                 return s_stackDisposalSuppressionFlags[depth];
             }
