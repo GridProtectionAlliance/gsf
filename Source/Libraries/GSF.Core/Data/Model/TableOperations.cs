@@ -35,6 +35,7 @@ using System.Text;
 using GSF.Collections;
 using GSF.ComponentModel;
 using GSF.Reflection;
+using GSF.Security.Cryptography;
 using ExpressionEvaluator;
 
 // ReSharper disable UnusedMember.Global
@@ -885,7 +886,12 @@ namespace GSF.Data.Model
                 {
                     try
                     {
-                        property.SetValue(record, row.ConvertField(s_fieldNames[property.Name], property.PropertyType), null);
+                        object value = row.ConvertField(s_fieldNames[property.Name], property.PropertyType);
+
+                        if ((object)s_encryptDataTargets != null && value != null && s_encryptDataTargets.TryGetValue(property, out string keyReference))
+                            value = value.ToString().Decrypt(keyReference, CipherStrength.Aes256);
+
+                        property.SetValue(record, value, null);
                     }
                     catch (Exception ex)
                     {
@@ -1503,22 +1509,38 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Gets the value for the specified field, returning intermediate <see cref="IDbDataParameter"/> values as needed.
+        /// Gets the value for the specified field, encrypting or returning any intermediate <see cref="IDbDataParameter"/>
+        /// values as needed.
         /// </summary>
         /// <param name="fieldName">Field name to retrieve.</param>
         /// <param name="value">Field value to use.</param>
         /// <returns>
-        /// If field has been modeled with a <see cref="FieldDataTypeAttribute"/> that matches active database type,
-        /// intermediate <see cref="IDbDataParameter"/> value; otherwise, <paramref name="value"/>.
+        /// Value for the specified field, encrypting or returning any intermediate <see cref="IDbDataParameter"/> values as needed.
         /// </returns>
         /// <remarks>
+        /// <para>
+        /// This function will need to be used when calling overloads that take a <see cref="RecordRestriction"/> or composite format
+        /// filter expression where the <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/> have been modeled
+        /// on a field referenced by one of the <see cref="RecordRestriction"/> parameters. Since the record restrictions are used
+        /// with a free-form expression, the <see cref="TableOperations{T}"/> class cannot be aware of the fields accessed in the
+        /// expression without attempting to parse the expression which would be time consuming and error prone; as a result, users
+        /// will need to be aware of calling this function when using record restriction that references fields that are either marked
+        /// for encryption or use a specific field data-type attribute.
+        /// </para>
+        /// <para>
+        /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="EncryptDataAttribute"/>,
+        /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data
+        /// type will be properly encrypted prior to executing the database function.
+        /// </para>
+        /// <para>
         /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="FieldDataTypeAttribute"/>,
         /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data type
         /// will be properly set prior to executing the database function.
+        /// </para>
         /// </remarks>
         public object GetInterpretedFieldValue(string fieldName, object value)
         {
-            if ((object)s_fieldDataTypeTargets == null)
+            if ((object)s_fieldDataTypeTargets == null && (object)s_encryptDataTargets == null)
                 return value;
 
             if (s_propertyNames.TryGetValue(fieldName, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property))
@@ -1599,7 +1621,7 @@ namespace GSF.Data.Model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object[] GetInterpretedPrimaryKeys(object[] primaryKeys)
         {
-            if ((object)s_fieldDataTypeTargets == null)
+            if ((object)s_fieldDataTypeTargets == null && (object)s_encryptDataTargets == null)
                 return primaryKeys;
 
             object[] interpretedKeys = new object[s_primaryKeyProperties.Length];
@@ -1617,7 +1639,7 @@ namespace GSF.Data.Model
         {
             object value = property.GetValue(record);
 
-            if ((object)s_fieldDataTypeTargets == null)
+            if ((object)s_fieldDataTypeTargets == null && (object)s_encryptDataTargets == null)
                 return value;
 
             return GetInterpretedValue(property, value);
@@ -1626,6 +1648,9 @@ namespace GSF.Data.Model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetInterpretedValue(PropertyInfo property, object value)
         {
+            if (s_encryptDataTargets.TryGetValue(property, out string keyReference) && value != null)
+                value = value.ToString().Encrypt(keyReference, CipherStrength.Aes256);
+
             if (s_fieldDataTypeTargets.TryGetValue(property, out Dictionary<DatabaseType, DbType> fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(Connection.DatabaseType, out DbType fieldDataType))
             {
                 return new IntermediateParameter
@@ -1722,6 +1747,7 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_updateProperties;
         private static readonly PropertyInfo[] s_primaryKeyProperties;
         private static readonly Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>> s_fieldDataTypeTargets;
+        private static readonly Dictionary<PropertyInfo, string> s_encryptDataTargets;
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
@@ -1799,6 +1825,14 @@ namespace GSF.Data.Model
 
                 property.TryGetAttribute(out PrimaryKeyAttribute primaryKeyAttribute);
                 property.TryGetAttribute(out SearchableAttribute searchableAttribute);
+
+                if (property.TryGetAttribute(out EncryptDataAttribute encryptDataAttribute) && property.PropertyType == typeof(string))
+                {
+                    if ((object)s_encryptDataTargets == null)
+                        s_encryptDataTargets = new Dictionary<PropertyInfo, string>();
+
+                    s_encryptDataTargets[property] = encryptDataAttribute.KeyReference;
+                }
 
                 if (property.TryGetAttributes(out FieldDataTypeAttribute[] fieldDataTypeAttributes))
                 {

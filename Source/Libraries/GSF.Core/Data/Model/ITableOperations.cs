@@ -623,18 +623,34 @@ namespace GSF.Data.Model
         object GetFieldValue(object record, string fieldName);
 
         /// <summary>
-        /// Gets the value for the specified field, returning intermediate <see cref="IDbDataParameter"/> values as needed.
+        /// Gets the value for the specified field, encrypting or returning any intermediate <see cref="IDbDataParameter"/>
+        /// values as needed.
         /// </summary>
         /// <param name="fieldName">Field name to retrieve.</param>
         /// <param name="value">Field value to use.</param>
         /// <returns>
-        /// If field has been been modeled with a <see cref="FieldDataTypeAttribute"/> that matches active database type,
-        /// intermediate <see cref="IDbDataParameter"/> value; otherwise, <paramref name="value"/>.
+        /// Value for the specified field, encrypting or returning any intermediate <see cref="IDbDataParameter"/> values as needed.
         /// </returns>
         /// <remarks>
+        /// <para>
+        /// This function will need to be used when calling overloads that take a <see cref="RecordRestriction"/> or composite format
+        /// filter expression where the <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/> have been modeled
+        /// on a field referenced by one of the <see cref="RecordRestriction"/> parameters. Since the record restrictions are used
+        /// with a free-form expression, the <see cref="TableOperations{T}"/> class cannot be aware of the fields accessed in the
+        /// expression without attempting to parse the expression which would be time consuming and error prone; as a result, users
+        /// will need to be aware of calling this function when using record restriction that references fields that are either marked
+        /// for encryption or use a specific field data-type attribute.
+        /// </para>
+        /// <para>
+        /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="EncryptDataAttribute"/>,
+        /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data
+        /// type will be properly encrypted prior to executing the database function.
+        /// </para>
+        /// <para>
         /// If a <see cref="RecordRestriction"/> parameter references a field that is modeled with a <see cref="FieldDataTypeAttribute"/>,
         /// this function will need to be called, replacing the restriction parameter with the returned value, so that the field data type
         /// will be properly set prior to executing the database function.
+        /// </para>
         /// </remarks>
         object GetInterpretedFieldValue(string fieldName, object value);
 
