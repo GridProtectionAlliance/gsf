@@ -1648,10 +1648,10 @@ namespace GSF.Data.Model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetInterpretedValue(PropertyInfo property, object value)
         {
-            if (s_encryptDataTargets.TryGetValue(property, out string keyReference) && value != null)
+            if ((object)s_encryptDataTargets != null && s_encryptDataTargets.TryGetValue(property, out string keyReference) && value != null)
                 value = value.ToString().Encrypt(keyReference, CipherStrength.Aes256);
 
-            if (s_fieldDataTypeTargets.TryGetValue(property, out Dictionary<DatabaseType, DbType> fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(Connection.DatabaseType, out DbType fieldDataType))
+            if ((object)s_fieldDataTypeTargets != null && s_fieldDataTypeTargets.TryGetValue(property, out Dictionary<DatabaseType, DbType> fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(Connection.DatabaseType, out DbType fieldDataType))
             {
                 return new IntermediateParameter
                 {
