@@ -49,7 +49,7 @@
 
         <!-- Setting PopupShowuserStatusDoc XAML Starts -->
 
-        <tsf:TsfPopup x:Name="ShowuserStatusDoc" Topmost="False" MinHeight="380">
+        <tsf:TsfPopup x:Name="ShowuserStatusDoc" Topmost="False" MinHeight="540">
 
             <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
                 <Grid>
@@ -57,25 +57,17 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    
+
                     <TabControl VerticalAlignment="Stretch">
                         <TabItem Header="IEEE C37.118">
                             <Grid Margin="5">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="45" MinWidth="1" MaxWidth="50" />
                                     <ColumnDefinition Width="155" MinWidth="1" MaxWidth="165" />
-                                    <ColumnDefinition Width="450" MinWidth="1" MaxWidth="1005"/>
+                                    <ColumnDefinition Width="600" MinWidth="1" MaxWidth="1005"/>
                                 </Grid.ColumnDefinitions>
 
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -120,20 +112,203 @@
                                 <TextBlock Text="Reserved for security" Grid.Row="7" Grid.Column="1"/>
                                 <TextBlock Text="presently set to 0." Grid.Row="7" Grid.Column="2"/>
 
-                                <TextBlock Text="05-04" Grid.Row="8" Grid.Column="0"/>
-                                <TextBlock Text="Unlocked time" Grid.Row="8" Grid.Column="1"/>
-                                <TextBlock Text="00 = sync locked, best quality." Grid.Row="8" Grid.Column="2"/>
-                                <TextBlock Text="01 = Unlocked for 10 s " Grid.Row="9" Grid.Column="2"/>
-                                <TextBlock Text="10 = Unlocked for 100 s" Grid.Row="10" Grid.Column="2"/>
-                                <TextBlock Text="11 = Unlocked over 1000 s" Grid.Row="11" Grid.Column="2"/>
+                                <TextBlock VerticalAlignment="Top" Text="05-04" Grid.Row="8" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Unlocked time" Grid.Row="8" Grid.Column="1"/>
+                                <StackPanel Grid.Row="8" Grid.Column="2">
+                                    <TextBlock Text="00 = sync locked, best quality." />
+                                    <TextBlock Text="01 = Unlocked for 10 s " />
+                                    <TextBlock Text="10 = Unlocked for 100 s" />
+                                    <TextBlock Text="11 = Unlocked over 1000 s" />
+                                </StackPanel>
 
-                                <TextBlock Text="03-00" Grid.Row="12" Grid.Column="0"/>
-                                <TextBlock Text="Trigger reason" Grid.Row="12" Grid.Column="1"/>
-                                <TextBlock Text="1111–1000:           Available for user definition" Grid.Row="12" Grid.Column="2"/>
-                                <TextBlock Text="0111: Digital                         0110: Reserved" Grid.Row="13" Grid.Column="2"/>
-                                <TextBlock Text="0101: df/dt high                   0100: Frequency high/low" Grid.Row="14" Grid.Column="2"/>
-                                <TextBlock Text="0011: Phase-angle diff         0010: Magnitude high" Grid.Row="15" Grid.Column="2"/>
-                                <TextBlock Text="0011: 0001: Magnitude low 0000: Manual" Grid.Row="16" Grid.Column="2"/>
+                                <TextBlock VerticalAlignment="Top" Text="03-00" Grid.Row="9" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Trigger reason" Grid.Row="9" Grid.Column="1"/>
+                                <Grid Grid.Row="9" Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Margin="5,0" Text="1111–1000: Available for user definition" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
+                                    <TextBlock Margin="5,0" Text="0111: Digital" Grid.Row="1" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="0101: df/dt high" Grid.Row="2" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="0011: Phase-angle diff" Grid.Row="3" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="0011: 0001: Magnitude low" Grid.Row="4" Grid.Column="0" />
+
+                                    <TextBlock Margin="5,0" Text="0110: Reserved" Grid.Row="1" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0100: Frequency high/low" Grid.Row="2" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0010: Magnitude high" Grid.Row="3" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0000: Manual" Grid.Row="4" Grid.Column="1" />
+                                </Grid>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="IEEE C37.118.2">
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="45" MinWidth="1" MaxWidth="50" />
+                                    <ColumnDefinition Width="155" MinWidth="1" MaxWidth="165" />
+                                    <ColumnDefinition Width="600" MinWidth="1" MaxWidth="1005"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Bit(s)" Grid.Row="0" Grid.Column="0" FontWeight="Bold" />
+                                <TextBlock Text="Description" Grid.Row="0" Grid.Column="1" FontWeight="Bold"/>
+                                <TextBlock Text="Comment" Grid.Row="0" Grid.Column="2" FontWeight="Bold"/>
+
+                                <TextBlock VerticalAlignment="Top" Text="15-14" Grid.Row="1" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Data error" Grid.Row="1" Grid.Column="1"/>
+                                <Grid Grid.Row="1" Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Margin="5,0" Text="00" Grid.Row="0" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="01" Grid.Row="1" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="10" Grid.Row="2" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="11" Grid.Row="3" Grid.Column="0" />
+
+                                    <TextBlock Margin="5,0" Text="Good measurement data, no errors" Grid.Row="0" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="PMU error. No information about data" Grid.Row="1" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="PMU in test mode (do not use values) or absent data tags have been inserted (do not use values)" Grid.Row="2" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="PMU error (do not use values)" Grid.Row="3" Grid.Column="1" />
+                                </Grid>
+
+                                <TextBlock VerticalAlignment="Top" Text="13" Grid.Row="2" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="PMU sync" Grid.Row="2" Grid.Column="1"/>
+                                <TextBlock VerticalAlignment="Top" Text="0 when in sync with a UTC traceable time source" Grid.Row="2" Grid.Column="2"/>
+
+                                <TextBlock VerticalAlignment="Top" Text="12" Grid.Row="3" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Data sorting" Grid.Row="3" Grid.Column="1"/>
+                                <TextBlock VerticalAlignment="Top" Text="0 by time stamp, 1 by arrival" Grid.Row="3" Grid.Column="2"/>
+
+                                <TextBlock VerticalAlignment="Top" Text="11" Grid.Row="4" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="PMU trigger detected" Grid.Row="4" Grid.Column="1"/>
+                                <TextBlock VerticalAlignment="Top" Text="0 when no trigger" Grid.Row="4" Grid.Column="2"/>
+
+                                <TextBlock VerticalAlignment="Top" Text="10" Grid.Row="5" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Configuration changed" Grid.Row="5" Grid.Column="1"/>
+                                <TextBlock VerticalAlignment="Top" Text="set to 1 for 1 min to advise configuration will change, and clear to 0 when change effected." Grid.Row="5" Grid.Column="2"/>
+
+                                <TextBlock VerticalAlignment="Top" Text="09" Grid.Row="6" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Data modified" Grid.Row="6" Grid.Column="1"/>
+                                <TextBlock VerticalAlignment="Top" Text="1 if data modified by post processing, 0 otherwise" Grid.Row="6" Grid.Column="2"/>
+
+                                <TextBlock VerticalAlignment="Top" Text="08-06" Grid.Row="7" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="PMU Time quality" Grid.Row="7" Grid.Column="1"/>
+                                <Grid Grid.Row="7" Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Margin="5,0" FontWeight="Bold" Text="Binary" Grid.Row="0" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="111" Grid.Row="1" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="110" Grid.Row="2" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="101" Grid.Row="3" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="100" Grid.Row="4" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="011" Grid.Row="5" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="010" Grid.Row="6" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="001" Grid.Row="7" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="000" Grid.Row="8" Grid.Column="0" />
+
+                                    <TextBlock Margin="5,0" FontWeight="Bold" Text="hex" Grid.Row="0" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="7" Grid.Row="1" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="6" Grid.Row="2" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="5" Grid.Row="3" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="4" Grid.Row="4" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="3" Grid.Row="5" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="2" Grid.Row="6" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="1" Grid.Row="7" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0" Grid.Row="8" Grid.Column="1" />
+
+                                    <TextBlock Margin="5,0" FontWeight="Bold" Text="Value (worst-case accuracy)" Grid.Row="0" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error > 10 ms or time error unknown" Grid.Row="1" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error &lt; 10 ms" Grid.Row="2" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error &lt; 1 ms" Grid.Row="3" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error &lt; 100 μs" Grid.Row="4" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error &lt; 10 μs" Grid.Row="5" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error &lt; 1 μs" Grid.Row="6" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Estimated maximum time error &lt; 100 ns" Grid.Row="7" Grid.Column="2" />
+                                    <TextBlock Margin="5,0" Text="Not used (indicates code from previous version of profile)" Grid.Row="8" Grid.Column="2" />
+                                </Grid>
+
+                                <TextBlock VerticalAlignment="Top" Text="05-04" Grid.Row="8" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Unlocked time" Grid.Row="8" Grid.Column="1"/>
+                                <StackPanel Grid.Row="8" Grid.Column="2">
+                                    <TextBlock Text="00 = sync locked, best quality." />
+                                    <TextBlock Text="01 = Unlocked for 10 s " />
+                                    <TextBlock Text="10 = Unlocked for 100 s" />
+                                    <TextBlock Text="11 = Unlocked over 1000 s" />
+                                </StackPanel>
+
+                                <TextBlock VerticalAlignment="Top" Text="03-00" Grid.Row="9" Grid.Column="0"/>
+                                <TextBlock VerticalAlignment="Top" Text="Trigger reason" Grid.Row="9" Grid.Column="1"/>
+                                <Grid Grid.Row="9" Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Margin="5,0" Text="1111–1000: Available for user definition" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
+                                    <TextBlock Margin="5,0" Text="0111: Digital" Grid.Row="1" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="0101: df/dt high" Grid.Row="2" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="0011: Phase-angle diff" Grid.Row="3" Grid.Column="0" />
+                                    <TextBlock Margin="5,0" Text="0011: 0001: Magnitude low" Grid.Row="4" Grid.Column="0" />
+
+                                    <TextBlock Margin="5,0" Text="0110: Reserved" Grid.Row="1" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0100: Frequency high/low" Grid.Row="2" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0010: Magnitude high" Grid.Row="3" Grid.Column="1" />
+                                    <TextBlock Margin="5,0" Text="0000: Manual" Grid.Row="4" Grid.Column="1" />
+                                </Grid>
                             </Grid>
                         </TabItem>
                         <TabItem Header="IEEE 1344">
@@ -141,7 +316,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="45" MinWidth="1" MaxWidth="50" />
                                     <ColumnDefinition Width="155" MinWidth="1" MaxWidth="165" />
-                                    <ColumnDefinition Width="450" MinWidth="1" MaxWidth="1005"/>
+                                    <ColumnDefinition Width="600" MinWidth="1" MaxWidth="1005"/>
                                 </Grid.ColumnDefinitions>
 
                                 <Grid.RowDefinitions>
@@ -194,7 +369,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="45" MinWidth="1" MaxWidth="50" />
                                     <ColumnDefinition Width="155" MinWidth="1" MaxWidth="165" />
-                                    <ColumnDefinition Width="450" MinWidth="1" MaxWidth="1005"/>
+                                    <ColumnDefinition Width="600" MinWidth="1" MaxWidth="1005"/>
                                 </Grid.ColumnDefinitions>
 
                                 <Grid.RowDefinitions>
