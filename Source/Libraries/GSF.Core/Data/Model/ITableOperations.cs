@@ -406,6 +406,40 @@ namespace GSF.Data.Model
         int QueryRecordCountWhere(string filterExpression, params object[] parameters);
 
         /// <summary>
+        /// Locally searches retrieved table records as queried from database for the specified sorting and paging parameters
+        /// against fields modeled with <see cref="SearchableAttribute"/>.
+        /// </summary>
+        /// <param name="sortField">Field name to order-by.</param>
+        /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
+        /// <param name="page">Page number of records to return (1-based).</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <param name="searchText">Text to search.</param>
+        /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
+        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <remarks>
+        /// This function is used for record paging. Function executes record search locally after query from database, this
+        /// way <see cref="SearchableAttribute"/> functionality will work even with fields that are modeled with the
+        /// <see cref="EncryptDataAttribute"/> and use the <see cref="SearchType.LikeExpression"/>. Primary keys for this
+        /// function will not be cached server-side and this function will be slower and more expensive than calls to similar
+        /// calls to <see cref="QueryRecords(string, bool, int, int, string)"/>. Usage should be restricted to cases where
+        /// searching field data that has been modeled with the <see cref="EncryptDataAttribute"/>.
+        /// </remarks>
+        IEnumerable SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison = StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Determines if any <paramref name="record"/> fields modeled with the <see cref="SearchableAttribute"/> match any of the
+        /// specified <paramref name="searchValues"/>.
+        /// </summary>
+        /// <param name="record">Modeled table record.</param>
+        /// <param name="searchValues">Values to search.</param>
+        /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
+        /// <returns>
+        /// <c>true</c> if any <paramref name="record"/> fields modeled with <see cref="SearchableAttribute"/> match any of the
+        /// specified <paramref name="searchValues"/>; otherwise, <c>false</c>.
+        /// </returns>
+        bool IsSearchMatch(object record, string[] searchValues, StringComparison comparison = StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Creates a new modeled table record queried from the specified <paramref name="primaryKeys"/>.
         /// </summary>
         /// <param name="primaryKeys">Primary keys values of the record to load.</param>

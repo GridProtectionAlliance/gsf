@@ -902,6 +902,100 @@ namespace GSF.Data.Model
         public int QueryRecordCountWhere(string filterExpression, params object[] parameters) => QueryRecordCount(new RecordRestriction(filterExpression, parameters));
 
         /// <summary>
+        /// Locally searches retrieved table records as queried from database for the specified sorting and paging parameters
+        /// against fields modeled with <see cref="SearchableAttribute"/>.
+        /// </summary>
+        /// <param name="sortField">Field name to order-by.</param>
+        /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
+        /// <param name="page">Page number of records to return (1-based).</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <param name="searchText">Text to search.</param>
+        /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
+        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <remarks>
+        /// This function is used for record paging. Function executes record search locally after query from database, this
+        /// way <see cref="SearchableAttribute"/> functionality will work even with fields that are modeled with the
+        /// <see cref="EncryptDataAttribute"/> and use the <see cref="SearchType.LikeExpression"/>. Primary keys for this
+        /// function will not be cached server-side and this function will be slower and more expensive than calls to similar
+        /// calls to <see cref="QueryRecords(string, bool, int, int, string)"/>. Usage should be restricted to cases where
+        /// searching field data that has been modeled with the <see cref="EncryptDataAttribute"/>.
+        /// </remarks>
+        public IEnumerable<T> SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(m_searchFilterSql) || string.IsNullOrWhiteSpace(searchText))
+                return null;
+
+            if (string.IsNullOrWhiteSpace(sortField))
+                sortField = s_fieldNames[s_primaryKeyProperties[0].Name];
+
+            searchText = searchText.Trim();
+
+            string[] searchValues = searchText.RemoveDuplicateWhiteSpace().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // TODO: Check if sort field is encrypted, if so, handle order by in linq expression
+            string orderByExpression = $"{sortField}{(ascending ? "" : " DESC")}";
+
+            return QueryRecords(orderByExpression).Where(record => IsSearchMatch(record, searchValues, comparison)).ToPagedList(page, pageSize);
+        }
+
+        IEnumerable ITableOperations.SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison) => SearchRecords(sortField, ascending, page, pageSize, searchText, comparison);
+
+        /// <summary>
+        /// Determines if any <paramref name="record"/> fields modeled with the <see cref="SearchableAttribute"/> match any of the
+        /// specified <paramref name="searchValues"/>.
+        /// </summary>
+        /// <param name="record">Modeled table record.</param>
+        /// <param name="searchValues">Values to search.</param>
+        /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
+        /// <returns>
+        /// <c>true</c> if any <paramref name="record"/> fields modeled with <see cref="SearchableAttribute"/> match any of the
+        /// specified <paramref name="searchValues"/>; otherwise, <c>false</c>.
+        /// </returns>
+        public bool IsSearchMatch(T record, string[] searchValues, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        {
+            if ((object)s_searchTargets == null)
+                return false;
+
+            foreach (KeyValuePair<PropertyInfo, SearchType> searchTarget in s_searchTargets)
+            {
+                PropertyInfo property = searchTarget.Key;
+                SearchType searchType = searchTarget.Value;
+                Func<string, string, bool> isSearchMatch;
+
+                if (property.PropertyType == typeof(string))
+                {
+                    if (searchType == SearchType.Default)
+                        searchType = SearchType.LikeExpression;
+
+                    if (searchType == SearchType.LikeExpression)
+                        isSearchMatch = (fieldValue, searchValue) => fieldValue.IndexOf(searchValue, comparison) >= 0;
+                    else
+                        isSearchMatch = (fieldValue, searchValue) => fieldValue.Equals(searchValue, comparison);
+                }
+                else
+                {
+                    isSearchMatch = (fieldValue, searchValue) => fieldValue.Equals(searchValue);
+                }
+
+                foreach (string searchValue in searchValues)
+                {
+                    if (isSearchMatch(property.GetValue(record)?.ToString() ?? "", searchValue))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool ITableOperations.IsSearchMatch(object value, string[] searchValues, StringComparison comparison)
+        {
+            if (!(value is T record))
+                throw new ArgumentException($"Cannot execute search match for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return IsSearchMatch(record, searchValues, comparison);
+        }
+
+        /// <summary>
         /// Creates a new modeled table record queried from the specified <paramref name="primaryKeys"/>.
         /// </summary>
         /// <param name="primaryKeys">Primary keys values of the record to load.</param>
@@ -1662,61 +1756,61 @@ namespace GSF.Data.Model
 
             searchText = searchText.Trim();
 
-            string[] keyWords = searchText.RemoveDuplicateWhiteSpace().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] searchValues = searchText.RemoveDuplicateWhiteSpace().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (keyWords.Length == 1 && (object)s_encryptedSearchTargets == null)
+            if (searchValues.Length == 1 && (object)s_encryptedSearchTargets == null)
                 return new RecordRestriction(m_searchFilterSql, $"%{searchText}%", searchText);
 
-            StringBuilder multiKeyWordFilter = new StringBuilder();
+            StringBuilder searchValueFilter = new StringBuilder();
 
             if ((object)s_encryptedSearchTargets == null)
             {
-                for (int i = 0; i < keyWords.Length * 2; i += 2)
+                for (int i = 0; i < searchValues.Length * 2; i += 2)
                 {
                     if (i > 0)
-                        multiKeyWordFilter.Append(" AND ");
+                        searchValueFilter.Append(" AND ");
 
-                    multiKeyWordFilter.Append('(');
-                    multiKeyWordFilter.AppendFormat(m_searchFilterSql, $"{{{i}}}", $"{{{i + 1}}}");
-                    multiKeyWordFilter.Append(')');
+                    searchValueFilter.Append('(');
+                    searchValueFilter.AppendFormat(m_searchFilterSql, $"{{{i}}}", $"{{{i + 1}}}");
+                    searchValueFilter.Append(')');
                 }
 
-                return new RecordRestriction(multiKeyWordFilter.ToString(), keyWords.SelectMany(keyWord => new object[] { $"%{keyWord}%", keyWord }).ToArray());
+                return new RecordRestriction(searchValueFilter.ToString(), searchValues.SelectMany(searchValue => new object[] { $"%{searchValue}%", searchValue }).ToArray());
             }
 
             // Handle searches that include encrypted fields
             List<object> parameters = new List<object>();
 
-            for (int i = 0; i < keyWords.Length; i++)
+            for (int i = 0; i < searchValues.Length; i++)
             {
                 if (i > 0)
-                    multiKeyWordFilter.Append(" AND ");
+                    searchValueFilter.Append(" AND ");
 
-                multiKeyWordFilter.Append('(');
+                searchValueFilter.Append('(');
                 List<object> offsets = new List<object>();
                 int index = parameters.Count;
 
                 offsets.Add($"{{{index++}}}");
-                parameters.Add($"%{keyWords[i]}%");
+                parameters.Add($"%{searchValues[i]}%");
 
                 offsets.Add($"{{{index++}}}");
-                parameters.Add(keyWords[i]);
+                parameters.Add(searchValues[i]);
 
                 foreach (PropertyInfo property in s_encryptedSearchTargets)
                 {
                     offsets.Add($"{{{index++}}}");
 
                     if (s_encryptDataTargets.TryGetValue(property, out string keyReference))
-                        parameters.Add(keyWords[i].Encrypt(keyReference, CipherStrength.Aes256));
+                        parameters.Add(searchValues[i].Encrypt(keyReference, CipherStrength.Aes256));
                     else
                         parameters.Add(null);
                 }
 
-                multiKeyWordFilter.AppendFormat(m_searchFilterSql, offsets.ToArray());
-                multiKeyWordFilter.Append(')');
+                searchValueFilter.AppendFormat(m_searchFilterSql, offsets.ToArray());
+                searchValueFilter.Append(')');
             }
 
-            return new RecordRestriction(multiKeyWordFilter.ToString(), parameters.ToArray());
+            return new RecordRestriction(searchValueFilter.ToString(), parameters.ToArray());
         }
 
         /// <summary>
@@ -1873,6 +1967,7 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_primaryKeyProperties;
         private static readonly Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>> s_fieldDataTypeTargets;
         private static readonly Dictionary<PropertyInfo, string> s_encryptDataTargets;
+        private static readonly Dictionary<PropertyInfo, SearchType> s_searchTargets;
         private static readonly List<PropertyInfo> s_encryptedSearchTargets;
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
@@ -2038,6 +2133,11 @@ namespace GSF.Data.Model
                         else
                             searchFilterSql.Append($"{fieldName}={{1}}");
                     }
+
+                    if ((object)s_searchTargets == null)
+                        s_searchTargets = new Dictionary<PropertyInfo, SearchType>();
+
+                    s_searchTargets[property] = searchableAttribute.SearchType;
                 }
 
                 s_attributes.Add(property, new HashSet<Type>(property.CustomAttributes.Select(attributeData => attributeData.AttributeType)));
