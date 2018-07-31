@@ -36,6 +36,11 @@ namespace GSF.Data.Model
     public sealed class EncryptDataAttribute : Attribute
     {
         /// <summary>
+        /// Default key reference value.
+        /// </summary>
+        public const string DefaultKeyReference = "DefaultTableOperationsKey";
+
+        /// <summary>
         /// Gets reference name used to lookup encryption key and initialization vector;
         /// new keys will be created for reference if it does not exist.
         /// </summary>
@@ -47,9 +52,20 @@ namespace GSF.Data.Model
         /// <summary>
         /// Creates a new <see cref="EncryptDataAttribute"/>.
         /// </summary>
-        /// <param name="keyReference">Reference name used to lookup encryption key and initialization vector.</param>
-        public EncryptDataAttribute(string keyReference = "DefaultTableOperationsKey")
+        public EncryptDataAttribute()
         {
+            KeyReference = DefaultKeyReference;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="EncryptDataAttribute"/> with a specified <paramref name="keyReference"/> value.
+        /// </summary>
+        /// <param name="keyReference">Reference name used to lookup encryption key and initialization vector.</param>
+        public EncryptDataAttribute(string keyReference)
+        {
+            if (string.IsNullOrWhiteSpace(keyReference))
+                throw new ArgumentNullException(nameof(keyReference), "Key reference cannot be null, empty or whitespace.");
+
             KeyReference = keyReference;
         }
     }
