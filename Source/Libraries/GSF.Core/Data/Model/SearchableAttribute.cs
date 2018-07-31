@@ -53,6 +53,11 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets or sets type of search that should be used for field queried.
         /// </summary>
+        /// <remarks>
+        /// Modeled fields marked with both <see cref="SearchableAttribute"/> and <see cref="EncryptDataAttribute"/>
+        /// will only be searched using <see cref="Model.SearchType.FullValueMatch"/>, regardless of specified value
+        /// as encryption is handled locally by <see cref="TableOperations{T}"/>.
+        /// </remarks>
         public SearchType SearchType
         {
             get;
@@ -70,6 +75,11 @@ namespace GSF.Data.Model
         /// Creates a new <see cref="SearchableAttribute"/> with specified <paramref name="searchType"/>.
         /// </summary>
         /// <param name="searchType">Type of search that should be used for field queried.</param>
+        /// <remarks>
+        /// Modeled fields marked with both <see cref="SearchableAttribute"/> and <see cref="EncryptDataAttribute"/>
+        /// will only be searched using <see cref="Model.SearchType.FullValueMatch"/>, regardless of any specified
+        /// <paramref name="searchType"/> as encryption is handled locally by <see cref="TableOperations{T}"/>.
+        /// </remarks>
         public SearchableAttribute(SearchType searchType)
         {
             SearchType = searchType;

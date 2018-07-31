@@ -65,6 +65,13 @@ namespace GSF.Data.Model
         /// <summary>
         /// Defines restriction parameter values.
         /// </summary>
+        /// <remarks>
+        /// If any of the <see cref="Parameters"/> reference a table field that is modeled with either an
+        /// <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="TableOperations{T}.GetInterpretedFieldValue"/> will need to be called, replacing the
+        /// target parameter with the returned value so that the field value will be properly set prior
+        /// to executing any database function.
+        /// </remarks>
         public readonly object[] Parameters;
 
         #endregion
@@ -88,10 +95,11 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
-        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
-        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="TableOperations{T}.GetInterpretedFieldValue"/>
-        /// function will need to be called, replacing the target parameter with the returned value, so that
-        /// the field data type will be properly set prior to executing any database function.
+        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with either
+        /// an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="TableOperations{T}.GetInterpretedFieldValue"/> will need to be called, replacing the
+        /// target parameter with the returned value so that the field value will be properly set prior to
+        /// executing any database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
