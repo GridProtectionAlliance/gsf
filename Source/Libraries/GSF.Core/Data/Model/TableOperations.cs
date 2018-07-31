@@ -1631,7 +1631,7 @@ namespace GSF.Data.Model
                 return new RecordRestriction(multiKeyWordFilter.ToString(), keyWords.SelectMany(keyWord => new object[] { $"%{keyWord}%", keyWord }).ToArray());
             }
 
-            // Handle searches that include encrypted fields - only exact full match search can be employed on encrypted field data
+            // Handle searches that include encrypted fields
             List<object> parameters = new List<object>();
 
             for (int i = 0; i < keyWords.Length; i++)
@@ -1820,7 +1820,7 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_primaryKeyProperties;
         private static readonly Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>> s_fieldDataTypeTargets;
         private static readonly Dictionary<PropertyInfo, string> s_encryptDataTargets;
-        private static readonly HashSet<PropertyInfo> s_encryptedSearchTargets;
+        private static readonly List<PropertyInfo> s_encryptedSearchTargets;
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
@@ -1968,7 +1968,7 @@ namespace GSF.Data.Model
                     {
                         // Can only perform full value match on encrypted fields
                         if ((object)s_encryptedSearchTargets == null)
-                            s_encryptedSearchTargets = new HashSet<PropertyInfo>();
+                            s_encryptedSearchTargets = new List<PropertyInfo>();
 
                         s_encryptedSearchTargets.Add(property);
                         searchFilterSql.Append($"{fieldName}={{{s_encryptedSearchTargets.Count + 1}}}");
