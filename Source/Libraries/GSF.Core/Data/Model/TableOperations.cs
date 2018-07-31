@@ -52,7 +52,8 @@ namespace GSF.Data.Model
     {
         #region [ Members ]
 
-        // Nested Types
+        #region [ Nested Types ]
+
         private class CurrentScope : ValueExpressionScopeBase<T>
         {
             // Define instance variables exposed to ValueExpressionAttributeBase expressions
@@ -90,6 +91,8 @@ namespace GSF.Data.Model
             public byte Scale { get; set; }
             public int Size { get; set; }
         }
+
+        #endregion
 
         // Constants
         private const string SelectCountSqlFormat = "SELECT COUNT(*) FROM {0}";
@@ -387,6 +390,12 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets or sets root record restriction that applies to query table operations.
         /// </summary>
+        /// <remarks>
+        /// If any of the <see cref="RecordRestriction.Parameters"/> reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
+        /// </remarks>
         public RecordRestriction RootQueryRestriction { get; set; }
 
         #endregion
@@ -501,6 +510,12 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/>
         /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
         /// </para>
+        /// <para>
+        /// If any of the <paramref name="restriction"/> parameters reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
+        /// </para>
         /// </remarks>
         public T QueryRecord(RecordRestriction restriction) => QueryRecord(null, restriction);
 
@@ -520,6 +535,12 @@ namespace GSF.Data.Model
         /// <para>
         /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/>
         /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
+        /// </para>
+        /// <para>
+        /// If any of the <paramref name="restriction"/> parameters reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
         /// </remarks>
         public T QueryRecord(string orderByExpression, RecordRestriction restriction) => QueryRecords(orderByExpression, restriction, 1).FirstOrDefault();
@@ -547,10 +568,10 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
-        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
-        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
-        /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set prior to executing the database function.
+        /// If any of the specified <paramref name="parameters"/> reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -573,7 +594,15 @@ namespace GSF.Data.Model
         /// <param name="limit">Limit of number of record to return.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
+        /// <para>
         /// If no record <paramref name="restriction"/> or <paramref name="limit"/> is provided, all rows will be returned.
+        /// </para>
+        /// <para>
+        /// If any of the <paramref name="restriction"/> parameters reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
+        /// </para>
         /// </remarks>
         public IEnumerable<T> QueryRecords(string orderByExpression = null, RecordRestriction restriction = null, int limit = -1)
         {
@@ -633,6 +662,12 @@ namespace GSF.Data.Model
         /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/> only
         /// specifying the <see cref="RecordRestriction"/> parameter.
         /// </para>
+        /// <para>
+        /// If any of the <paramref name="restriction"/> parameters reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
+        /// </para>
         /// </remarks>
         public IEnumerable<T> QueryRecords(RecordRestriction restriction) => QueryRecords(null, restriction);
 
@@ -656,10 +691,10 @@ namespace GSF.Data.Model
         /// values to an executed <see cref="IDbCommand"/> query.
         /// </para>
         /// <para>
-        /// If any of the <paramref name="parameters"/> reference a table field that is modeled with a
-        /// <see cref="FieldDataTypeAttribute"/>, the <see cref="GetInterpretedFieldValue"/> function will need
-        /// to be called, replacing the target parameter with the returned value, so that the field data type
-        /// will be properly set prior to executing the database function.
+        /// If any of the specified <paramref name="parameters"/> reference a table field that is modeled with
+        /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
+        /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
+        /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
         /// <para>
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
@@ -1576,22 +1611,59 @@ namespace GSF.Data.Model
 
             string[] keyWords = searchText.RemoveDuplicateWhiteSpace().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (keyWords.Length == 1)
+            if (keyWords.Length == 1 && (object)s_encryptedSearchTargets == null)
                 return new RecordRestriction(m_searchFilterSql, $"%{searchText}%", searchText);
 
             StringBuilder multiKeyWordFilter = new StringBuilder();
 
-            for (int i = 0; i < keyWords.Length * 2; i+=2)
+            if ((object)s_encryptedSearchTargets == null)
+            {
+                for (int i = 0; i < keyWords.Length * 2; i += 2)
+                {
+                    if (i > 0)
+                        multiKeyWordFilter.Append(" AND ");
+
+                    multiKeyWordFilter.Append('(');
+                    multiKeyWordFilter.AppendFormat(m_searchFilterSql, $"{{{i}}}", $"{{{i + 1}}}");
+                    multiKeyWordFilter.Append(')');
+                }
+
+                return new RecordRestriction(multiKeyWordFilter.ToString(), keyWords.SelectMany(keyWord => new object[] { $"%{keyWord}%", keyWord }).ToArray());
+            }
+
+            // Handle searches that include encrypted fields - only exact full match search can be employed on encrypted field data
+            List<object> parameters = new List<object>();
+
+            for (int i = 0; i < keyWords.Length; i++)
             {
                 if (i > 0)
                     multiKeyWordFilter.Append(" AND ");
 
                 multiKeyWordFilter.Append('(');
-                multiKeyWordFilter.AppendFormat(m_searchFilterSql, $"{{{i}}}", $"{{{i + 1}}}");
+                List<object> offsets = new List<object>();
+                int index = parameters.Count;
+
+                offsets.Add($"{{{index++}}}");
+                parameters.Add($"%{keyWords[i]}%");
+
+                offsets.Add($"{{{index++}}}");
+                parameters.Add(keyWords[i]);
+
+                foreach (PropertyInfo property in s_encryptedSearchTargets)
+                {
+                    offsets.Add($"{{{index++}}}");
+
+                    if (s_encryptDataTargets.TryGetValue(property, out string keyReference))
+                        parameters.Add(keyWords[i].Encrypt(keyReference, CipherStrength.Aes256));
+                    else
+                        parameters.Add(null);
+                }
+
+                multiKeyWordFilter.AppendFormat(m_searchFilterSql, offsets.ToArray());
                 multiKeyWordFilter.Append(')');
             }
 
-            return new RecordRestriction(multiKeyWordFilter.ToString(), keyWords.SelectMany(keyWord => new object[] { $"%{keyWord}%", keyWord }).ToArray());
+            return new RecordRestriction(multiKeyWordFilter.ToString(), parameters.ToArray());
         }
 
         /// <summary>
@@ -1648,7 +1720,7 @@ namespace GSF.Data.Model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetInterpretedValue(PropertyInfo property, object value)
         {
-            if ((object)s_encryptDataTargets != null && s_encryptDataTargets.TryGetValue(property, out string keyReference) && value != null)
+            if ((object)s_encryptDataTargets != null && value != null && s_encryptDataTargets.TryGetValue(property, out string keyReference))
                 value = value.ToString().Encrypt(keyReference, CipherStrength.Aes256);
 
             if ((object)s_fieldDataTypeTargets != null && s_fieldDataTypeTargets.TryGetValue(property, out Dictionary<DatabaseType, DbType> fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(Connection.DatabaseType, out DbType fieldDataType))
@@ -1748,6 +1820,7 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_primaryKeyProperties;
         private static readonly Dictionary<PropertyInfo, Dictionary<DatabaseType, DbType>> s_fieldDataTypeTargets;
         private static readonly Dictionary<PropertyInfo, string> s_encryptDataTargets;
+        private static readonly HashSet<PropertyInfo> s_encryptedSearchTargets;
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
@@ -1822,16 +1895,21 @@ namespace GSF.Data.Model
             foreach (PropertyInfo property in s_properties.Values)
             {
                 string fieldName = s_fieldNames[property.Name];
+                bool targetedForEncryption = false;
 
                 property.TryGetAttribute(out PrimaryKeyAttribute primaryKeyAttribute);
                 property.TryGetAttribute(out SearchableAttribute searchableAttribute);
 
                 if (property.TryGetAttribute(out EncryptDataAttribute encryptDataAttribute) && property.PropertyType == typeof(string))
                 {
+                    if (!string.IsNullOrWhiteSpace(encryptDataAttribute.KeyReference))
+                        throw new ArgumentOutOfRangeException(nameof(EncryptDataAttribute.KeyReference), "EncryptData key reference cannot be null or empty.");
+
                     if ((object)s_encryptDataTargets == null)
                         s_encryptDataTargets = new Dictionary<PropertyInfo, string>();
 
                     s_encryptDataTargets[property] = encryptDataAttribute.KeyReference;
+                    targetedForEncryption = true;
                 }
 
                 if (property.TryGetAttributes(out FieldDataTypeAttribute[] fieldDataTypeAttributes))
@@ -1886,7 +1964,16 @@ namespace GSF.Data.Model
                     if (searchFilterSql.Length > 0)
                         searchFilterSql.Append(" OR ");
 
-                    if (searchableAttribute.SearchType == SearchType.Default)
+                    if (targetedForEncryption)
+                    {
+                        // Can only perform full value match on encrypted fields
+                        if ((object)s_encryptedSearchTargets == null)
+                            s_encryptedSearchTargets = new HashSet<PropertyInfo>();
+
+                        s_encryptedSearchTargets.Add(property);
+                        searchFilterSql.Append($"{fieldName}={{{s_encryptedSearchTargets.Count + 1}}}");
+                    }
+                    else if (searchableAttribute.SearchType == SearchType.Default)
                     {
                         if (property.PropertyType == typeof(string))
                             searchFilterSql.Append($"{fieldName} LIKE {{0}}");
