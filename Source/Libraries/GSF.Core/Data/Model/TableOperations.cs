@@ -21,6 +21,11 @@
 //
 //******************************************************************************************************
 
+using ExpressionEvaluator;
+using GSF.Collections;
+using GSF.ComponentModel;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,11 +37,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using GSF.Collections;
-using GSF.ComponentModel;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using ExpressionEvaluator;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable StaticMemberInGenericType
@@ -808,6 +808,9 @@ namespace GSF.Data.Model
                 m_lastRestriction = restriction;
             }
 
+            if (FieldIsEncrypted(sortField))
+                return LocalOrderBy(PrimaryKeyCache.AsEnumerable().Select(row => LoadRecord(row.ItemArray)).Where(record => record != null), sortField, ascending).ToPagedList(page, pageSize);
+
             return PrimaryKeyCache.AsEnumerable().ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
         }
 
@@ -913,12 +916,12 @@ namespace GSF.Data.Model
         /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
-        /// This function is used for record paging. Function executes record search locally after query from database, this
-        /// way <see cref="SearchableAttribute"/> functionality will work even with fields that are modeled with the
-        /// <see cref="EncryptDataAttribute"/> and use the <see cref="SearchType.LikeExpression"/>. Primary keys for this
-        /// function will not be cached server-side and this function will be slower and more expensive than calls to similar
-        /// calls to <see cref="QueryRecords(string, bool, int, int, string)"/>. Usage should be restricted to cases where
-        /// searching field data that has been modeled with the <see cref="EncryptDataAttribute"/>.
+        /// This function is used for record paging. Records are searched locally after query from database, this way
+        /// <see cref="SearchableAttribute"/> functionality will work even with fields that are modeled with the
+        /// <see cref="EncryptDataAttribute"/> and use the <see cref="SearchType.LikeExpression"/>. Primary keys for
+        /// this function will not be cached server-side and this function will be slower and more expensive than similar
+        /// calls to <see cref="QueryRecords(string, bool, int, int, string)"/>. Usage should be restricted to cases
+        /// where searching field data that has been modeled with the <see cref="EncryptDataAttribute"/>.
         /// </remarks>
         public IEnumerable<T> SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
         {
@@ -931,11 +934,15 @@ namespace GSF.Data.Model
             searchText = searchText.Trim();
 
             string[] searchValues = searchText.RemoveDuplicateWhiteSpace().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            bool sortFieldIsEncrypted = FieldIsEncrypted(sortField);
+            string orderByExpression = sortFieldIsEncrypted ? null : $"{sortField}{(ascending ? "" : " DESC")}";
 
-            // TODO: Check if sort field is encrypted, if so, handle order by in linq expression
-            string orderByExpression = $"{sortField}{(ascending ? "" : " DESC")}";
+            IEnumerable<T> queryResult = QueryRecords(orderByExpression).Where(record => IsSearchMatch(record, comparison, searchValues));
 
-            return QueryRecords(orderByExpression).Where(record => IsSearchMatch(record, searchValues, comparison)).ToPagedList(page, pageSize);
+            if (sortFieldIsEncrypted)
+                queryResult = LocalOrderBy(queryResult, sortField, ascending, comparison.GetComparer());
+
+            return queryResult.ToPagedList(page, pageSize);
         }
 
         IEnumerable ITableOperations.SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison) => SearchRecords(sortField, ascending, page, pageSize, searchText, comparison);
@@ -946,12 +953,29 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="record">Modeled table record.</param>
         /// <param name="searchValues">Values to search.</param>
-        /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
         /// <returns>
         /// <c>true</c> if any <paramref name="record"/> fields modeled with <see cref="SearchableAttribute"/> match any of the
         /// specified <paramref name="searchValues"/>; otherwise, <c>false</c>.
         /// </returns>
-        public bool IsSearchMatch(T record, string[] searchValues, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        /// <remarks>
+        /// String comparisons will be ordinal ignoring case.
+        /// </remarks>
+        public bool IsSearchMatch(T record, params string[] searchValues) => IsSearchMatch(record, StringComparison.OrdinalIgnoreCase, searchValues);
+
+        bool ITableOperations.IsSearchMatch(object record, params string[] searchValues) => ((ITableOperations)this).IsSearchMatch(record, StringComparison.OrdinalIgnoreCase, searchValues);
+        
+        /// <summary>
+        /// Determines if any <paramref name="record"/> fields modeled with the <see cref="SearchableAttribute"/> match any of the
+        /// specified <paramref name="searchValues"/>.
+        /// </summary>
+        /// <param name="record">Modeled table record.</param>
+        /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields.</param>
+        /// <param name="searchValues">Values to search.</param>
+        /// <returns>
+        /// <c>true</c> if any <paramref name="record"/> fields modeled with <see cref="SearchableAttribute"/> match any of the
+        /// specified <paramref name="searchValues"/>; otherwise, <c>false</c>.
+        /// </returns>
+        public bool IsSearchMatch(T record, StringComparison comparison, params string[] searchValues)
         {
             if ((object)s_searchTargets == null)
                 return false;
@@ -987,12 +1011,12 @@ namespace GSF.Data.Model
             return false;
         }
 
-        bool ITableOperations.IsSearchMatch(object value, string[] searchValues, StringComparison comparison)
+        bool ITableOperations.IsSearchMatch(object value, StringComparison comparison, params string[] searchValues)
         {
             if (!(value is T record))
                 throw new ArgumentException($"Cannot execute search match for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
-            return IsSearchMatch(record, searchValues, comparison);
+            return IsSearchMatch(record, comparison, searchValues);
         }
 
         /// <summary>
@@ -1950,6 +1974,24 @@ namespace GSF.Data.Model
             }
 
             return filterExpression;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool FieldIsEncrypted(string fieldName)
+        {
+            return (object)s_encryptDataTargets != null && 
+                   s_propertyNames.TryGetValue(fieldName, out string propertyName) && 
+                   s_properties.TryGetValue(propertyName, out PropertyInfo property) && 
+                   s_encryptDataTargets.ContainsKey(property);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private IEnumerable<T> LocalOrderBy(IEnumerable<T> queryResults, string sortField, bool ascending, StringComparer comparer = null)
+        {
+            // Execute order-by locally on unencrypted data
+            return ascending ?
+                queryResults.OrderBy(record => GetFieldValue(record, sortField) as string, comparer ?? StringComparer.OrdinalIgnoreCase) :
+                queryResults.OrderByDescending(record => GetFieldValue(record, sortField) as string, comparer ?? StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
