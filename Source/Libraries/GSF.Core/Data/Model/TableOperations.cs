@@ -52,8 +52,7 @@ namespace GSF.Data.Model
     {
         #region [ Members ]
 
-        #region [ Nested Types ]
-
+        // Nested Types
         private class CurrentScope : ValueExpressionScopeBase<T>
         {
             // Define instance variables exposed to ValueExpressionAttributeBase expressions
@@ -91,8 +90,6 @@ namespace GSF.Data.Model
             public byte Scale { get; set; }
             public int Size { get; set; }
         }
-
-        #endregion
 
         // Constants
         private const string SelectCountSqlFormat = "SELECT COUNT(*) FROM {0}";
@@ -385,6 +382,11 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets or sets primary key cache.
         /// </summary>
+        /// <remarks>
+        /// Primary keys values are stored in data table without interpretation. It may be necessary to call
+        /// <see cref="GetInterpretedFieldValue"/> for models with primary key fields that are marked with
+        /// either <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/> before use.
+        /// </remarks>
         public DataTable PrimaryKeyCache { get; set; }
 
         /// <summary>
@@ -811,11 +813,11 @@ namespace GSF.Data.Model
                     }
 
                     // If sort field is encrypted, execute a local sort and update primary key cache
-                    if (sortFieldIsEncrypted && s_propertyNames.TryGetValue(sortField, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property))
+                    if (sortFieldIsEncrypted && s_propertyNames.TryGetValue(sortField, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo sortFieldProperty))
                     {
                         // Reduce properties to load only primary key fields and sort field
-                        HashSet<PropertyInfo> properties = new HashSet<PropertyInfo>(s_primaryKeyProperties) { property };
-                        IEnumerable<T> sortResult = LocalOrderBy(PrimaryKeyCache.AsEnumerable().Select(row => LoadRecord(Connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(row.ItemArray)), properties)).Where(record => record != null), sortField, ascending);
+                        HashSet<PropertyInfo> properties = new HashSet<PropertyInfo>(s_primaryKeyProperties) { sortFieldProperty };
+                        IEnumerable<T> sortResult = LocalOrderBy(PrimaryKeyCache.AsEnumerable().Select(row => LoadRecordFromCachedKeys(row.ItemArray, properties)).Where(record => record != null), sortField, ascending);
                         DataTable sortedKeyCache = new DataTable(s_tableName);
 
                         foreach (DataColumn column in PrimaryKeyCache.Columns)
@@ -843,7 +845,7 @@ namespace GSF.Data.Model
             }
 
             // Paginate on cached data rows so paging does no work except to skip through records, then only load records for a given page of data 
-            return PrimaryKeyCache.AsEnumerable().ToPagedList(page, pageSize, PrimaryKeyCache.Rows.Count).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
+            return PrimaryKeyCache.AsEnumerable().ToPagedList(page, pageSize, PrimaryKeyCache.Rows.Count).Select(row => LoadRecordFromCachedKeys(row.ItemArray)).Where(record => record != null);
         }
 
         IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction) => QueryRecords(sortField, ascending, page, pageSize, restriction);
@@ -1102,6 +1104,26 @@ namespace GSF.Data.Model
         }
 
         object ITableOperations.LoadRecord(params object[] primaryKeys) => LoadRecord(primaryKeys);
+
+        // Cached keys are not decrypted, so any needed record interpretation steps should skip encryption
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private T LoadRecordFromCachedKeys(object[] primaryKeys, IEnumerable<PropertyInfo> properties = null)
+        {
+            try
+            {
+                return LoadRecord(Connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(primaryKeys, true)), properties ?? s_properties.Values);
+            }
+            catch (Exception ex)
+            {
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record load from primary key cache for {typeof(T).Name} \"{m_selectRowSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
+
+                if ((object)ExceptionHandler == null)
+                    throw opex;
+
+                ExceptionHandler(opex);
+                return null;
+            }
+        }
 
         /// <summary>
         /// Creates a new modeled table record queried from the specified <paramref name="row"/>.
@@ -1630,6 +1652,12 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data.</param>
         /// <returns>Primary key values from the specified <paramref name="row"/>.</returns>
+        /// <remarks>
+        /// Function returns raw data from <paramref name="row"/> without interpretation, it may be
+        /// necessary to call <see cref="GetInterpretedFieldValue"/> for models with primary key
+        /// fields that are marked with either <see cref="EncryptDataAttribute"/> or
+        /// <see cref="FieldDataTypeAttribute"/>.
+        /// </remarks>
         public object[] GetPrimaryKeys(DataRow row)
         {
             try
@@ -1927,7 +1955,7 @@ namespace GSF.Data.Model
         // Derive raw or encrypted field values or IDbCommandParameter values with specific DbType if
         // a primary key field data type has been targeted for specific database type
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object[] GetInterpretedPrimaryKeys(object[] primaryKeys)
+        private object[] GetInterpretedPrimaryKeys(object[] primaryKeys, bool skipEncryption = false)
         {
             if ((object)s_fieldDataTypeTargets == null && (object)s_encryptDataTargets == null)
                 return primaryKeys;
@@ -1935,7 +1963,7 @@ namespace GSF.Data.Model
             object[] interpretedKeys = new object[s_primaryKeyProperties.Length];
 
             for (int i = 0; i < interpretedKeys.Length; i++)
-                interpretedKeys[i] = GetInterpretedValue(s_primaryKeyProperties[i], primaryKeys[i]);
+                interpretedKeys[i] = GetInterpretedValue(s_primaryKeyProperties[i], primaryKeys[i], skipEncryption);
 
             return interpretedKeys;
         }
@@ -1954,9 +1982,9 @@ namespace GSF.Data.Model
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object GetInterpretedValue(PropertyInfo property, object value)
+        private object GetInterpretedValue(PropertyInfo property, object value, bool skipEncryption = false)
         {
-            if ((object)s_encryptDataTargets != null && value != null && s_encryptDataTargets.TryGetValue(property, out string keyReference))
+            if (!skipEncryption && (object)s_encryptDataTargets != null && value != null && s_encryptDataTargets.TryGetValue(property, out string keyReference))
                 value = value.ToString().Encrypt(keyReference, CipherStrength.Aes256);
 
             if ((object)s_fieldDataTypeTargets != null && s_fieldDataTypeTargets.TryGetValue(property, out Dictionary<DatabaseType, DbType> fieldDataTypeTargets) && (object)fieldDataTypeTargets != null && fieldDataTypeTargets.TryGetValue(Connection.DatabaseType, out DbType fieldDataType))

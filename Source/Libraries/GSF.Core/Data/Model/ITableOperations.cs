@@ -88,10 +88,15 @@ namespace GSF.Data.Model
             get;
             set;
         }
-        
+
         /// <summary>
         /// Gets or sets primary key cache.
         /// </summary>
+        /// <remarks>
+        /// Primary keys values are stored in data table without interpretation. It may be necessary to call
+        /// <see cref="GetInterpretedFieldValue"/> for models with primary key fields that are marked with
+        /// either <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/> before use.
+        /// </remarks>
         DataTable PrimaryKeyCache
         {
             get;
@@ -729,6 +734,12 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data.</param>
         /// <returns>Primary key values from the specified <paramref name="row"/>.</returns>
+        /// <remarks>
+        /// Function returns raw data from <paramref name="row"/> without interpretation, it may be
+        /// necessary to call <see cref="GetInterpretedFieldValue"/> for models with primary key
+        /// fields that are marked with either <see cref="EncryptDataAttribute"/> or
+        /// <see cref="FieldDataTypeAttribute"/>.
+        /// </remarks>
         object[] GetPrimaryKeys(DataRow row);
 
         /// <summary>
