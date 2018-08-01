@@ -105,6 +105,21 @@ namespace GSF
     /// </summary>
     public static partial class StringExtensions
     {
+        private static readonly Dictionary<StringComparison, StringComparer> s_comparisonComparers = new Dictionary<StringComparison, StringComparer>
+        {
+            [StringComparison.CurrentCulture] = StringComparer.CurrentCulture,
+            [StringComparison.CurrentCultureIgnoreCase] = StringComparer.CurrentCultureIgnoreCase,
+            [StringComparison.InvariantCulture] = StringComparer.InvariantCulture,
+            [StringComparison.InvariantCultureIgnoreCase] = StringComparer.InvariantCultureIgnoreCase,
+            [StringComparison.Ordinal] = StringComparer.Ordinal,
+            [StringComparison.OrdinalIgnoreCase] = StringComparer.OrdinalIgnoreCase
+        };
+
+        /// <summary>
+        /// Gets appropriate <see cref="StringComparer"/> for the specified <see cref="StringComparison"/>.
+        /// </summary>
+        public static StringComparer GetComparer(this StringComparison comparison) => s_comparisonComparers[comparison];
+
         /// <summary>
         /// Parses a string intended to represent a boolean value.
         /// </summary>
