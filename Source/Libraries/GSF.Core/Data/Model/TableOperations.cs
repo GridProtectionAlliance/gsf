@@ -723,6 +723,7 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified sorting, paging and search parameters.
+        /// Search executed against fields modeled with <see cref="SearchableAttribute"/>.
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
         /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
@@ -735,6 +736,11 @@ namespace GSF.Data.Model
         /// This function is used for record paging. Primary keys are cached server-side, typically per user session,
         /// to maintain desired per-page sort order. Call <see cref="ClearPrimaryKeyCache"/> to manually clear cache
         /// when table contents are known to have changed.
+        /// </para>
+        /// <para>
+        /// If the specified <paramref name="sortField"/> has been marked with <see cref="EncryptDataAttribute"/>,
+        /// establishing the primary key cache operation will take longer to execute since query data will need to
+        /// be downloaded locally and decrypted so the proper sort order can be determined.
         /// </para>
         /// <para>
         /// This is a convenience call to <see cref="QueryRecords(string, bool, int, int, RecordRestriction)"/> where restriction
@@ -766,15 +772,26 @@ namespace GSF.Data.Model
         /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
         /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
+        /// <para>
+        /// If the specified <paramref name="sortField"/> has been marked with <see cref="EncryptDataAttribute"/>,
+        /// establishing the primary key cache operation will take longer to execute since query data will need to
+        /// be downloaded locally and decrypted so the proper sort order can be determined.
+        /// </para>
         /// </remarks>
         public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction = null)
         {
             if (string.IsNullOrWhiteSpace(sortField))
                 sortField = s_fieldNames[s_primaryKeyProperties[0].Name];
 
+            bool sortFieldIsEncrypted = FieldIsEncrypted(sortField);
+
+            // Records that have been deleted since primary key cache was established will return null and be filtered out which will throw
+            // off the record count. Local delete operations automatically clear the primary key cache, however, if record set is known to
+            // have changed outside purview of this class, the "ClearPrimaryKeyCache()" method should be manually called so that primary key
+            // cache can be reestablished.
             if ((object)PrimaryKeyCache == null || !sortField.Equals(m_lastSortField, StringComparison.OrdinalIgnoreCase) || restriction != m_lastRestriction)
             {
-                string orderByExpression = $"{sortField}{(ascending ? "" : " DESC")}";
+                string orderByExpression = sortFieldIsEncrypted ? s_fieldNames[s_primaryKeyProperties[0].Name] : $"{sortField}{(ascending ? "" : " DESC")}";
                 string sqlExpression = null;
 
                 try
@@ -792,6 +809,23 @@ namespace GSF.Data.Model
                         sqlExpression = string.Format(m_selectKeysWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
                         PrimaryKeyCache = Connection.RetrieveData(sqlExpression, restriction.Parameters);
                     }
+
+                    // If sort field is encrypted, execute a local sort and update primary key cache
+                    if (sortFieldIsEncrypted && s_propertyNames.TryGetValue(sortField, out string propertyName) && s_properties.TryGetValue(propertyName, out PropertyInfo property))
+                    {
+                        // Reduce properties to load only primary key fields and sort field
+                        HashSet<PropertyInfo> properties = new HashSet<PropertyInfo>(s_primaryKeyProperties) { property };
+                        IEnumerable<T> sortResult = LocalOrderBy(PrimaryKeyCache.AsEnumerable().Select(row => LoadRecord(Connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(row.ItemArray)), properties)).Where(record => record != null), sortField, ascending);
+                        DataTable sortedKeyCache = new DataTable(s_tableName);
+
+                        foreach (DataColumn column in PrimaryKeyCache.Columns)
+                            sortedKeyCache.Columns.Add(column.ColumnName, column.DataType);
+
+                        foreach (T record in sortResult)
+                            sortedKeyCache.Rows.Add(GetPrimaryKeys(record));
+
+                        PrimaryKeyCache = sortedKeyCache;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -808,16 +842,15 @@ namespace GSF.Data.Model
                 m_lastRestriction = restriction;
             }
 
-            if (FieldIsEncrypted(sortField))
-                return LocalOrderBy(PrimaryKeyCache.AsEnumerable().Select(row => LoadRecord(row.ItemArray)).Where(record => record != null), sortField, ascending).ToPagedList(page, pageSize);
-
-            return PrimaryKeyCache.AsEnumerable().ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
+            // Paginate on cached data rows so paging does no work except to skip through records, then only load records for a given page of data 
+            return PrimaryKeyCache.AsEnumerable().ToPagedList(page, pageSize, PrimaryKeyCache.Rows.Count).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
         }
 
         IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction) => QueryRecords(sortField, ascending, page, pageSize, restriction);
 
         /// <summary>
         /// Gets the record count for the modeled table based on search parameter.
+        /// Search executed against fields modeled with <see cref="SearchableAttribute"/>.
         /// </summary>
         /// <param name="searchText">Text to search.</param>
         /// <returns>Record count for the modeled table based on search parameter.</returns>
@@ -905,25 +938,29 @@ namespace GSF.Data.Model
         public int QueryRecordCountWhere(string filterExpression, params object[] parameters) => QueryRecordCount(new RecordRestriction(filterExpression, parameters));
 
         /// <summary>
-        /// Locally searches retrieved table records as queried from database for the specified sorting and paging parameters
-        /// against fields modeled with <see cref="SearchableAttribute"/>.
+        /// Locally searches retrieved table records after queried from database for the specified sorting and search parameters.
+        /// Search executed against fields modeled with <see cref="SearchableAttribute"/>.
+        /// Function only typically used for record models that apply the <see cref="EncryptDataAttribute"/>.
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
         /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
-        /// <param name="page">Page number of records to return (1-based).</param>
-        /// <param name="pageSize">Current page size.</param>
         /// <param name="searchText">Text to search.</param>
         /// <param name="comparison"><see cref="StringComparison"/> to use when searching string fields; defaults to ordinal ignore case.</param>
-        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <returns>An array of modeled table row instances for the queried records that match the search.</returns>
         /// <remarks>
-        /// This function is used for record paging. Records are searched locally after query from database, this way
-        /// <see cref="SearchableAttribute"/> functionality will work even with fields that are modeled with the
-        /// <see cref="EncryptDataAttribute"/> and use the <see cref="SearchType.LikeExpression"/>. Primary keys for
-        /// this function will not be cached server-side and this function will be slower and more expensive than similar
-        /// calls to <see cref="QueryRecords(string, bool, int, int, string)"/>. Usage should be restricted to cases
-        /// where searching field data that has been modeled with the <see cref="EncryptDataAttribute"/>.
+        /// <para>
+        /// This function searches records locally after query from database, this way <see cref="SearchableAttribute"/> functionality will work
+        /// even with fields that are modeled with the <see cref="EncryptDataAttribute"/> and use the <see cref="SearchType.LikeExpression"/>.
+        /// Primary keys for this function will not be cached server-side and this function will be slower and more expensive than similar calls
+        /// to <see cref="QueryRecords(string, bool, int, int, string)"/>. Usage should be restricted to cases searching for field data that has
+        /// been modeled with the <see cref="EncryptDataAttribute"/>.
+        /// </para>
+        /// <para>
+        /// This function does not paginate records, instead a full list of search records is returned. User can cache returned records and page
+        /// through them using the <see cref="GetPageOfRecords"/> function. As a result, usage should be restricted to smaller data sets. 
+        /// </para>
         /// </remarks>
-        public IEnumerable<T> SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        public T[] SearchRecords(string sortField, bool ascending, string searchText, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
         {
             if (string.IsNullOrWhiteSpace(m_searchFilterSql) || string.IsNullOrWhiteSpace(searchText))
                 return null;
@@ -942,10 +979,11 @@ namespace GSF.Data.Model
             if (sortFieldIsEncrypted)
                 queryResult = LocalOrderBy(queryResult, sortField, ascending, comparison.GetComparer());
 
-            return queryResult.ToPagedList(page, pageSize);
+            return queryResult.ToArray();
         }
 
-        IEnumerable ITableOperations.SearchRecords(string sortField, bool ascending, int page, int pageSize, string searchText, StringComparison comparison) => SearchRecords(sortField, ascending, page, pageSize, searchText, comparison);
+        // ReSharper disable once CoVariantArrayConversion
+        object[] ITableOperations.SearchRecords(string sortField, bool ascending, string searchText, StringComparison comparison) => SearchRecords(sortField, ascending, searchText, comparison);
 
         /// <summary>
         /// Determines if any <paramref name="record"/> fields modeled with the <see cref="SearchableAttribute"/> match any of the
@@ -1020,6 +1058,27 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Gets the specified <paramref name="page"/> of records from the provided source <paramref name="records"/> array.
+        /// </summary>
+        /// <param name="records">Source records array.</param>
+        /// <param name="page">Desired page of records.</param>
+        /// <param name="pageSize">Desired page size.</param>
+        /// <returns>A page of records.</returns>
+        public IEnumerable<T> GetPageOfRecords(T[] records, int page, int pageSize) => records.ToPagedList(page, pageSize, records.Length);
+
+        IEnumerable ITableOperations.GetPageOfRecords(object[] records, int page, int pageSize)
+        {
+            try
+            {
+                return GetPageOfRecords(records.Cast<T>().ToArray(), page, pageSize);
+            }
+            catch (InvalidCastException ex)
+            {
+                throw new ArgumentException($"One of the provided records cannot be converted to type \"{typeof(T).Name}\": {ex.Message}", nameof(records), ex);
+            }            
+        }
+
+        /// <summary>
         /// Creates a new modeled table record queried from the specified <paramref name="primaryKeys"/>.
         /// </summary>
         /// <param name="primaryKeys">Primary keys values of the record to load.</param>
@@ -1049,7 +1108,11 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be loaded.</param>
         /// <returns>New modeled table record queried from the specified <paramref name="row"/>.</returns>
-        public T LoadRecord(DataRow row)
+        public T LoadRecord(DataRow row) => LoadRecord(row, s_properties.Values);
+
+        // This is the primary function where records are loaded from a DataRow into a modeled record of type T
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private T LoadRecord(DataRow row, IEnumerable<PropertyInfo> properties)
         {
             try
             {
@@ -1059,7 +1122,7 @@ namespace GSF.Data.Model
                 if (s_hasPrimaryKeyIdentityField && GetPrimaryKeys(row).All(Common.IsDefaultValue))
                     return null;
 
-                foreach (PropertyInfo property in s_properties.Values)
+                foreach (PropertyInfo property in properties)
                 {
                     try
                     {
@@ -1665,6 +1728,7 @@ namespace GSF.Data.Model
         /// <typeparam name="TAttribute">Type of attribute to search for.</typeparam>
         /// <param name="fieldName">Name of field to use for attribute lookup.</param>
         /// <returns><c>true</c> if field has attribute; otherwise, <c>false</c>.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public bool FieldHasAttribute<TAttribute>(string fieldName) where TAttribute : Attribute => FieldHasAttribute(fieldName, typeof(TAttribute));
 
         /// <summary>
@@ -1769,9 +1833,10 @@ namespace GSF.Data.Model
         /// <returns><see cref="RecordRestriction"/> based on fields marked with <see cref="SearchableAttribute"/> and specified <paramref name="searchText"/>.</returns>
         /// <remarks>
         /// Any fields marked with both <see cref="SearchableAttribute"/> and <see cref="EncryptDataAttribute"/> will be automatically managed, i.e.,
-        /// the returned <see cref="RecordRestriction"/> parameters will already apply any field based encryption as needed. Note that fields marked
-        /// for encryption will only be searched using <see cref="SearchType.FullValueMatch"/>, regardless of any otherwise specified value in the
-        /// <see cref="SearchableAttribute"/> as encryption is handled locally.
+        /// the returned <see cref="RecordRestriction"/> parameters will already apply any field based encryption as needed. Database query functions
+        /// executed for fields marked for encryption will only be searched using <see cref="SearchType.FullValueMatch"/>, regardless of any otherwise
+        /// specified value in the <see cref="SearchableAttribute"/> as encryption is handled locally. However, the <see cref="SearchRecords"/> function
+        /// can be used to find data in encrypted fields that are marked for search with a <see cref="SearchType.LikeExpression"/>.
         /// </remarks>
         public RecordRestriction GetSearchRestriction(string searchText)
         {

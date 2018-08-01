@@ -54,9 +54,11 @@ namespace GSF.Data.Model
         /// Gets or sets type of search that should be used for field queried.
         /// </summary>
         /// <remarks>
-        /// Modeled fields marked with both <see cref="SearchableAttribute"/> and <see cref="EncryptDataAttribute"/>
-        /// will only be searched using <see cref="Model.SearchType.FullValueMatch"/>, regardless of specified value
-        /// as encryption is handled locally by <see cref="TableOperations{T}"/>.
+        /// Database query functions executed against modeled fields marked with both <see cref="SearchableAttribute"/> and
+        /// <see cref="EncryptDataAttribute"/> will only be searched using <see cref="Model.SearchType.FullValueMatch"/>,
+        /// regardless of specified value as encryption is handled locally by <see cref="TableOperations{T}"/>. However, the
+        /// <see cref="TableOperations{T}.SearchRecords"/> function can be used to find data in encrypted fields that are
+        /// marked for search with a <see cref="Model.SearchType.LikeExpression"/>.
         /// </remarks>
         public SearchType SearchType
         {
@@ -76,9 +78,11 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="searchType">Type of search that should be used for field queried.</param>
         /// <remarks>
-        /// Modeled fields marked with both <see cref="SearchableAttribute"/> and <see cref="EncryptDataAttribute"/>
-        /// will only be searched using <see cref="Model.SearchType.FullValueMatch"/>, regardless of any specified
-        /// <paramref name="searchType"/> as encryption is handled locally by <see cref="TableOperations{T}"/>.
+        /// Database query functions executed against modeled fields marked with both <see cref="SearchableAttribute"/> and
+        /// <see cref="EncryptDataAttribute"/> will only be searched using <see cref="Model.SearchType.FullValueMatch"/>,
+        /// regardless of specified <paramref name="searchType"/> as encryption is handled locally by instances of the
+        /// <see cref="TableOperations{T}"/>. However, the <see cref="TableOperations{T}.SearchRecords"/> function can be used
+        /// to find data in encrypted fields that are marked for search with a <see cref="Model.SearchType.LikeExpression"/>.
         /// </remarks>
         public SearchableAttribute(SearchType searchType)
         {
