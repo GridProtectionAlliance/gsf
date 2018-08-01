@@ -45,9 +45,16 @@ namespace GSF.Collections
         /// <param name="source">Source enumeration to paginate.</param>
         /// <param name="page">Page number (1-based).</param>
         /// <param name="pageSize">Page size.</param>
-        public PagedList(IEnumerable<T> source, int page, int pageSize)
+        /// <param name="count">Total records in source if known.</param>
+        /// <remarks>
+        /// If count is known or can be calculated early, specify the value in the
+        /// <paramref name="count"/> parameter as an optimization to prevent a full
+        /// enumeration on <paramref name="source"/> to get a count.
+        /// </remarks>
+        public PagedList(IEnumerable<T> source, int page, int pageSize, int count = -1)
         {
-            TotalCount = source.Count(); // For many enumeration sources, Count() will map to Length or Count
+            // For many enumeration sources, Count() will map to Length or Count
+            TotalCount = count > -1 ? count : source.Count(); 
             PageCount = CalculatePageCount(pageSize, TotalCount);
             Page = page < 1 ? 0 : page - 1;
             PageSize = pageSize;
