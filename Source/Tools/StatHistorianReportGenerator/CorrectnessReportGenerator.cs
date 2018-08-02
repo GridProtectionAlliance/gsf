@@ -36,6 +36,9 @@ using GSF.Historian.Files;
 using Root.Reports;
 using Encoder = System.Drawing.Imaging.Encoder;
 
+// ReSharper disable RedundantAssignment
+// ReSharper disable UnusedMethodReturnValue.Local
+// ReSharper disable UnusedParameter.Local
 namespace StatHistorianReportGenerator
 {
     public class CorrectnessReportGenerator
@@ -80,7 +83,7 @@ namespace StatHistorianReportGenerator
 
         private class Aggregate
         {
-            private double[] m_values;
+            private readonly double[] m_values;
 
             public Aggregate(int valueCount)
             {
@@ -278,7 +281,7 @@ namespace StatHistorianReportGenerator
             // Create the statistics reader for reading statistics from the archive
             using (StatisticsReader statisticsReader = new StatisticsReader())
             {
-                // Create the archive locator to
+                // Create the archive locater to
                 // determine the location of the archive
                 locator = new ArchiveLocator()
                 {
@@ -474,7 +477,7 @@ namespace StatHistorianReportGenerator
             rowHeightMillimeters = (TableHeightMillimeters - ((RowCount - 1) * RowPadding)) / RowCount;
 
             // Get the text for the labels in the first column of the table
-            labelText = new string[]
+            labelText = new[]
             {
                 "",
                 "Good",
@@ -502,7 +505,7 @@ namespace StatHistorianReportGenerator
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 5));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 5));
 
-            dayOneText = new string[]
+            dayOneText = new[]
             {
                 (m_reportDate - TimeSpan.FromDays(4.0D)).ToString("MM/dd"),
                 ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
@@ -530,7 +533,7 @@ namespace StatHistorianReportGenerator
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 4));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 4));
 
-            dayTwoText = new string[]
+            dayTwoText = new[]
             {
                 (m_reportDate - TimeSpan.FromDays(3.0D)).ToString("MM/dd"),
                 ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
@@ -558,7 +561,7 @@ namespace StatHistorianReportGenerator
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 3));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 3));
 
-            dayThreeText = new string[]
+            dayThreeText = new[]
             {
                 (m_reportDate - TimeSpan.FromDays(2.0D)).ToString("MM/dd"),
                 ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
@@ -586,7 +589,7 @@ namespace StatHistorianReportGenerator
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 2));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 2));
 
-            dayFourText = new string[]
+            dayFourText = new[]
             {
                 (m_reportDate - TimeSpan.FromDays(1.0D)).ToString("MM/dd"),
                 ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
@@ -614,7 +617,7 @@ namespace StatHistorianReportGenerator
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 1));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 1));
 
-            dayFiveText = new string[]
+            dayFiveText = new[]
             {
                 (m_reportDate).ToString("MM/dd"),
                 ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
@@ -701,7 +704,7 @@ namespace StatHistorianReportGenerator
                                      "Correctness: Percentage of good measurements over total measurements received, per device.";
 
             // Break the definitions text into lines
-            string[] lines = definitionsText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = definitionsText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
             // Set font size and line spacing
             font.rSizePoint = FontSize;
@@ -782,8 +785,8 @@ namespace StatHistorianReportGenerator
             signalHeaderFont.bBold = true;
 
             // Set up the column header and the initial values for the column widths
-            deviceHeaders = new string[] { "Name", "Correctness", "Data Errors", "Time Errors", "Device Errors" };
-            signalHeaders = new string[] { "Name", "Latched", "Unreasonable", "Total" };
+            deviceHeaders = new[] { "Name", "Correctness", "Data Errors", "Time Errors", "Device Errors" };
+            signalHeaders = new[] { "Name", "Latched", "Unreasonable", "Total" };
             deviceColumnWidthMillimeters = deviceHeaders.Select(deviceHeaderFont.rGetTextWidthMM).ToArray();
             signalColumnWidthMillimeters = signalHeaders.Select(deviceHeaderFont.rGetTextWidthMM).ToArray();
 

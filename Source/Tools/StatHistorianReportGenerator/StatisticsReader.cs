@@ -138,7 +138,7 @@ namespace StatHistorianReportGenerator
         /// </remarks>
         public Dictionary<MetadataRecord, IEnumerable<IDataPoint>> Read(string statisticSuffix, int signalIndex)
         {
-            string signalReferenceEnding = string.Format("!{0}-ST{1}", statisticSuffix, signalIndex);
+            string signalReferenceEnding = $"!{statisticSuffix}-ST{signalIndex}";
 
             return m_metadataRecords
                 .Where(record => record.Synonym1.EndsWith(signalReferenceEnding))

@@ -29,17 +29,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
-using System.Xml.Linq;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Diagnostics;
 using GSF.Historian;
 using GSF.Historian.Files;
-using GSF.IO;
 using GSF.Units;
 using Root.Reports;
 using Encoder = System.Drawing.Imaging.Encoder;
 
+// ReSharper disable UnusedMember.Local
+// ReSharper disable RedundantAssignment
+// ReSharper disable AssignNullToNotNullAttribute
+// ReSharper disable UnusedMethodReturnValue.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace StatHistorianReportGenerator
 {
     /// <summary>
@@ -339,29 +342,7 @@ namespace StatHistorianReportGenerator
 
             try
             {
-                string configFile = GetConfigurationFileName();
-
-                if (!File.Exists(configFile))
-                    throw new FileNotFoundException($"Config file \"{configFile}\" was not found.");
-
-                XDocument serviceConfig = XDocument.Load(configFile);
-
-                // ReSharper disable once AssignNullToNotNullAttribute
-                string connectionString = serviceConfig
-                    .Descendants("systemSettings")
-                    .SelectMany(systemSettings => systemSettings.Elements("add"))
-                    .Where(element => "ConnectionString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                    .Select(element => (string)element.Attribute("value"))
-                    .FirstOrDefault();
-
-                string dataProviderString = serviceConfig
-                    .Descendants("systemSettings")
-                    .SelectMany(systemSettings => systemSettings.Elements("add"))
-                    .Where(element => "DataProviderString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                    .Select(element => (string)element.Attribute("value"))
-                    .FirstOrDefault();
-
-                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                using (AdoDataConnection connection = Program.GetDatabaseConnection())
                 {
                     TableOperations<DataAvailability> dataAvailabilityTable = new TableOperations<DataAvailability>(connection);
                     DataAvailability[] records = dataAvailabilityTable.QueryRecords().ToArray();
@@ -389,26 +370,8 @@ namespace StatHistorianReportGenerator
             }
             catch (Exception ex)
             {
-                // TODO: Someone needs to add a logger to this tool :-(
-                System.Diagnostics.Debug.WriteLine($"Failed to populate data availability table: {ex.Message}");
+                Program.Log.Publish(MessageLevel.Error, "PopulateDataAvailabilityTable", "Failed to populate data availability table.", exception: ex);
             }
-        }
-
-        private static string GetConfigurationFileName()
-        {
-            // Please God, oh please, find a better way to do this: 
-            string[] knownConfigurationFileNames = { "openPDC.exe.config", "SIEGate.exe.config", "openHistorian.exe.config", "substationSBG.exe.config", "openMIC.exe.config", "PDQTracker.exe.config", "openECA.exe.config" };
-
-            // Search for the file name in the list of known configuration files
-            foreach (string fileName in knownConfigurationFileNames)
-            {
-                string absolutePath = FilePath.GetAbsolutePath(fileName);
-
-                if (File.Exists(absolutePath))
-                    return absolutePath;
-            }
-
-            return ConfigurationFile.Current.Configuration.FilePath;
         }
 
         private void GenerateCsvReportFunction(string filepath)
@@ -426,7 +389,7 @@ namespace StatHistorianReportGenerator
 
                 foreach (DeviceStats stats in levels[level])
                 {
-                    writer.WriteLine($"{stats.Name},{(stats.MeasurementsReceived[ReportDays - 1] / stats.MeasurementsExpected[ReportDays - 1]).ToString("P2")},{stats.DataQualityErrors[ReportDays - 1]},{stats.TimeQualityErrors[ReportDays - 1]},{m_reportDate.ToString("d/M/yyyy")}");
+                    writer.WriteLine($"{stats.Name},{(stats.MeasurementsReceived[ReportDays - 1] / stats.MeasurementsExpected[ReportDays - 1]):P2},{stats.DataQualityErrors[ReportDays - 1]},{stats.TimeQualityErrors[ReportDays - 1]},{m_reportDate:d/M/yyyy}");
                 }
             }
 
@@ -468,7 +431,7 @@ namespace StatHistorianReportGenerator
             // Create the statistics reader for reading statistics from the archive
             using (StatisticsReader statisticsReader = new StatisticsReader())
             {
-                // Create the archive locator to
+                // Create the archive locater to
                 // determine the location of the archive
                 locator = new ArchiveLocator()
                 {
@@ -486,9 +449,9 @@ namespace StatHistorianReportGenerator
                 statisticsReader.ArchiveFilePath = locator.ArchiveFilePath;
                 statisticsReader.Open();
 
-                m_systemUpTime = statisticsReader.Read("SYSTEM", 15)
-                    .Where(kvp => kvp.Key.GeneralFlags.Enabled)
-                    .SingleOrDefault().Value?
+                m_systemUpTime = statisticsReader
+                    .Read("SYSTEM", 15)
+                    .SingleOrDefault(kvp => kvp.Key.GeneralFlags.Enabled).Value?
                     .LastOrDefault()?.Value ?? 0.0F;
 
                 measurementsReceived = statisticsReader.Read("PMU", 4);
@@ -679,9 +642,9 @@ namespace StatHistorianReportGenerator
             rowHeightMillimeters = (TableHeightMillimeters - ((RowCount - 1) * RowPadding)) / RowCount;
 
             // Get the text for the labels in the first column of the table
-            labelText = new string[] { "" }
-                .Concat(Enumerable.Range(0, 5).Select(level => string.Format("L{0}: {1}", level, levelAliases[level])).Reverse())
-                .Concat(new string[] { "Total" })
+            labelText = new[] { "" }
+                .Concat(Enumerable.Range(0, 5).Select(level => $"L{level}: {levelAliases[level]}").Reverse())
+                .Concat(new[] { "Total" })
                 .ToArray();
 
             labelFonts = labelText
@@ -698,9 +661,9 @@ namespace StatHistorianReportGenerator
                 .Max();
 
             // Get the text for the device counts in the second column of the table
-            dayOneText = new string[] { (m_reportDate - TimeSpan.FromDays(4.0D)).ToString("MM/dd") }
+            dayOneText = new[] { (m_reportDate - TimeSpan.FromDays(4.0D)).ToString("MM/dd") }
                 .Concat(levels.Select(level => level.Count.ToString()).Reverse())
-                .Concat(new string[] { levels.Sum(level => level.Count).ToString() })
+                .Concat(new[] { levels.Sum(level => level.Count).ToString() })
                 .ToArray();
 
             dayOneFonts = dayOneText
@@ -719,9 +682,9 @@ namespace StatHistorianReportGenerator
             // Get the text for the device counts in the third column of the table
             levels = GetLevels(ReportDays - 3);
 
-            dayTwoText = new string[] { (m_reportDate - TimeSpan.FromDays(3.0D)).ToString("MM/dd") }
+            dayTwoText = new[] { (m_reportDate - TimeSpan.FromDays(3.0D)).ToString("MM/dd") }
                 .Concat(levels.Select(level => level.Count.ToString()).Reverse())
-                .Concat(new string[] { levels.Sum(level => level.Count).ToString() })
+                .Concat(new[] { levels.Sum(level => level.Count).ToString() })
                 .ToArray();
 
             dayTwoFonts = dayTwoText
@@ -740,9 +703,9 @@ namespace StatHistorianReportGenerator
             // Get the text for the device counts in the fourth column of the table
             levels = GetLevels(ReportDays - 2);
 
-            dayThreeText = new string[] { (m_reportDate - TimeSpan.FromDays(2.0D)).ToString("MM/dd") }
+            dayThreeText = new[] { (m_reportDate - TimeSpan.FromDays(2.0D)).ToString("MM/dd") }
                 .Concat(levels.Select(level => level.Count.ToString()).Reverse())
-                .Concat(new string[] { levels.Sum(level => level.Count).ToString() })
+                .Concat(new[] { levels.Sum(level => level.Count).ToString() })
                 .ToArray();
 
             dayThreeFonts = dayThreeText
@@ -761,9 +724,9 @@ namespace StatHistorianReportGenerator
             // Get the text for the device counts in the fifth column of the table
             levels = GetLevels(ReportDays - 1);
 
-            dayFourText = new string[] { (m_reportDate - TimeSpan.FromDays(1.0D)).ToString("MM/dd") }
+            dayFourText = new[] { (m_reportDate - TimeSpan.FromDays(1.0D)).ToString("MM/dd") }
                 .Concat(levels.Select(level => level.Count.ToString()).Reverse())
-                .Concat(new string[] { levels.Sum(level => level.Count).ToString() })
+                .Concat(new[] { levels.Sum(level => level.Count).ToString() })
                 .ToArray();
 
             dayFourFonts = dayFourText
@@ -782,9 +745,9 @@ namespace StatHistorianReportGenerator
             // Get the text for the device counts in the sixth column of the table
             levels = GetLevels(ReportDays);
 
-            dayFiveText = new string[] { (m_reportDate).ToString("MM/dd") }
+            dayFiveText = new[] { (m_reportDate).ToString("MM/dd") }
                 .Concat(levels.Select(level => level.Count.ToString()).Reverse())
-                .Concat(new string[] { levels.Sum(level => level.Count).ToString() })
+                .Concat(new[] { levels.Sum(level => level.Count).ToString() })
                 .ToArray();
 
             dayFiveFonts = dayFiveText
@@ -860,16 +823,16 @@ namespace StatHistorianReportGenerator
             int lengthWithoutWord;
             double lineHeightMillimeters;
 
-            string definitionsText = string.Format("Level 4: {0} - Devices which are reporting as expected, with a completeness of at least {1:0.##}% on the report date.", m_level4Alias, m_level4Threshold) + Environment.NewLine +
-                string.Format("Level 3: {0} - Devices with a completeness of at least {1:0.##}% on the report date.", m_level3Alias, m_level3Threshold) + Environment.NewLine +
-                string.Format("Level 2: Poor - Devices which reported on the report date, but had an completeness below {0:0.##}%.", m_level3Threshold) + Environment.NewLine +
+            string definitionsText = $"Level 4: {m_level4Alias} - Devices which are reporting as expected, with a completeness of at least {m_level4Threshold:0.##}% on the report date." + Environment.NewLine +
+                                     $"Level 3: {m_level3Alias} - Devices with a completeness of at least {m_level3Threshold:0.##}% on the report date." + Environment.NewLine +
+                                     $"Level 2: Poor - Devices which reported on the report date, but had an completeness below {m_level3Threshold:0.##}%." + Environment.NewLine +
                 "Level 1: Offline - Devices which did not report on the report date, but have reported at some time during the 30 days prior to the report date." + Environment.NewLine +
                 "Level 0: Failed - Devices which have not reported during the 30 days prior to the report date." + Environment.NewLine +
                 "Completeness: Percentage of measurements received over total measurements expected, per device." + Environment.NewLine +
                 "Acceptable Availability: Devices which are in Level 4 or Level 3.";
 
             // Break the definitions text into lines
-            string[] lines = definitionsText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = definitionsText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
             // Set font size and line spacing
             font.rSizePoint = FontSize;
@@ -1029,7 +992,7 @@ namespace StatHistorianReportGenerator
             columnHeaderFont.bBold = true;
 
             // Set up the column header and the initial values for the column widths
-            columnHeaders = new string[] { "Name", "Completeness", "Data Errors", "Time Errors" };
+            columnHeaders = new[] { "Name", "Completeness", "Data Errors", "Time Errors" };
             columnWidthMillimeters = columnHeaders.Select(columnHeaderFont.rGetTextWidthMM).ToArray();
 
             for (int level = 0; level < levels.Length; level++)
@@ -1044,7 +1007,7 @@ namespace StatHistorianReportGenerator
                 for (int device = 0; device < levels[level].Count; device++)
                 {
                     // Populate the device details with data for each device
-                    deviceDetails[device] = new string[]
+                    deviceDetails[device] = new[]
                     {
                         levels[level][device].Name,
                         (levels[level][device].MeasurementsReceived[ReportDays - 1] / levels[level][device].MeasurementsExpected[ReportDays - 1]).ToString("0.##%"),
@@ -1052,7 +1015,7 @@ namespace StatHistorianReportGenerator
                         levels[level][device].TimeQualityErrors[ReportDays - 1].ToString("#,##0")
                     };
 
-                    // Update the column widths if they need to be widened to accomodate the data
+                    // Update the column widths if they need to be widened to accommodate the data
                     columnWidthMillimeters = columnWidthMillimeters.Zip(deviceDetails[device], (currentWidth, text) => Math.Max(currentWidth, rowFont.rGetTextWidthMM(text))).ToArray();
                 }
             }
@@ -1207,7 +1170,7 @@ namespace StatHistorianReportGenerator
                 if (levels[i].Count > 0)
                 {
                     point = new DataPoint();
-                    point.SetValueXY(string.Format("L{0} ({1:N0}%)", i, 100.0D * levels[i].Count / totalDeviceCount), levels[i].Count);
+                    point.SetValueXY($"L{i} ({100.0D * levels[i].Count / totalDeviceCount:N0}%)", levels[i].Count);
                     point.Color = colors[i];
                     point.Font = new Font(FontFamily.GenericSansSerif, 40.0F);
                     series.Points.Add(point);
@@ -1289,7 +1252,7 @@ namespace StatHistorianReportGenerator
 
         private Color[] GetLevelColors()
         {
-            return new Color[]
+            return new[]
             {
                 Color.LightGray,
                 Color.FromArgb(255, 255, 50, 50),
@@ -1301,7 +1264,7 @@ namespace StatHistorianReportGenerator
 
         private string[] GetLevelAliases()
         {
-            return new string[]
+            return new[]
             {
                 "Failed",
                 "Offline",
