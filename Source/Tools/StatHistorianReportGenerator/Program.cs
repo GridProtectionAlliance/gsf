@@ -69,8 +69,11 @@ namespace StatHistorianReportGenerator
 
             Logger.FileWriter.SetPath(logPath);
             Logger.FileWriter.SetLoggingFileCount(100);
+            Logger.SuppressFirstChanceExceptionLogMessages();
 
             Log = Logger.CreatePublisher(typeof(Program), MessageClass.Application);
+
+            Log.Publish(MessageLevel.Info, "ApplicationStart");
 
             try
             {

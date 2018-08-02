@@ -344,6 +344,9 @@ namespace StatHistorianReportGenerator
             {
                 using (AdoDataConnection connection = Program.GetDatabaseConnection())
                 {
+                    if ((object)connection == null)
+                        return;
+
                     TableOperations<DataAvailability> dataAvailabilityTable = new TableOperations<DataAvailability>(connection);
                     DataAvailability[] records = dataAvailabilityTable.QueryRecords().ToArray();
 
@@ -367,6 +370,10 @@ namespace StatHistorianReportGenerator
                         dataAvailabilityTable.AddNewOrUpdateRecord(record);
                     }
                 }
+            }
+            catch (InvalidOperationException ex)
+            {
+                Program.Log.Publish(MessageLevel.Info, "PopulateDataAvailabilityTable", "Failed to populate data availability table.", "Table may not exist in host configuration.", ex);
             }
             catch (Exception ex)
             {
