@@ -32,6 +32,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using GSF.Console;
 using GSF.Diagnostics;
 using GSF.IO;
 using LogFileViewer.Filters;
@@ -116,6 +117,11 @@ namespace LogFileViewer
         {
             typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] { true });
             LoadFilters();
+
+            Arguments args = new Arguments(Environment.CommandLine, true);
+
+            if (args.Count > 0)
+                LoadFiles(args.OrderedArgs, false);
         }
 
         private void RefreshDataSource()
