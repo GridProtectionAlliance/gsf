@@ -191,11 +191,15 @@ namespace GSF.Security
         public const string DefaultPasswordRequirementsError = "Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter";
 
         /// <summary>
+        /// Default value for <see cref="UseDatabaseLogging"/>.
+        /// </summary>
+        public const bool DefaultUseDatabaseLogging = true;
+
+        /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
         /// </summary>
         public new const int ProviderID = 1;
 
-        private Exception m_lastException;
         private bool m_successfulPassThroughAuthentication;
         private string m_passwordRequirementsRegex;
         private string m_passwordRequirementsError;
@@ -228,6 +232,7 @@ namespace GSF.Security
 
             m_passwordRequirementsRegex = DefaultPasswordRequirementsRegex;
             m_passwordRequirementsError = DefaultPasswordRequirementsError;
+            UseDatabaseLogging = DefaultUseDatabaseLogging;
         }
 
         #endregion
@@ -239,14 +244,22 @@ namespace GSF.Security
         /// </summary>
         public Exception LastException
         {
-            get
-            {
-                return m_lastException;
-            }
-            set
-            {
-                m_lastException = value;
-            }
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="LogAuthenticationAttempt"/> and <see cref="LogError"/> should
+        /// write to the database. Defaults to <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// Setting this flag to <c>false</c> may be necessary in cases where a database has been setup to use authentication
+        /// but does not include an "AccessLog" or "ErrorLog" table.
+        /// </remarks>
+        public bool UseDatabaseLogging
+        {
+            get;
+            set;
         }
 
         #endregion
@@ -269,6 +282,7 @@ namespace GSF.Security
             settings.Add("LdapPath", "", "Specifies the LDAP path used to initialize the security provider.");
             settings.Add("PasswordRequirementsRegex", DefaultPasswordRequirementsRegex, "Regular expression used to validate new passwords for database users.");
             settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
+            settings.Add("UseDatabaseLogging", DefaultUseDatabaseLogging, "Flag that determines if provider should write logs to the database.");
 
             m_passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(m_passwordRequirementsRegex);
             m_passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(m_passwordRequirementsError);
@@ -318,9 +332,10 @@ namespace GSF.Security
                     UpdatePrimaryKey(securityContext.Tables[SecurityGroupTable], "SecurityGroupID");
                     UpdatePrimaryKey(securityContext.Tables[ApplicationRoleTable], "ApplicationRoleID");
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Just going to fall back on slower "Select" function if this fails...
+                    Logger.SwallowException(ex, "Failed to update primary key from cached security context, falling back on slower select function.", additionalFlags: MessageFlags.PerformanceIssue);
                 }
 
                 // Validate that needed security tables exist in the data set
@@ -546,7 +561,7 @@ namespace GSF.Security
             }
             catch (Exception ex)
             {
-                m_lastException = ex;
+                LastException = ex;
                 LogError(ex.Source, ex.ToString());
                 throw;
             }
@@ -626,13 +641,14 @@ namespace GSF.Security
             {
                 // Writing data will fail for read-only databases;
                 // all we can do is track last exception in this case
-                m_lastException = ex;
+                LastException = ex;
+                Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "Authenticate", "Failed to log authentication attempt to database.", "Database or AccessLog table may be read-only or inaccessible.", ex);
             }
 
             // If an exception occurred during authentication, rethrow it after logging authentication attempt
             if ((object)authenticationException != null)
             {
-                m_lastException = authenticationException;
+                LastException = authenticationException;
                 LogError(authenticationException.Source, authenticationException.ToString());
                 throw authenticationException;
             }
@@ -714,12 +730,13 @@ namespace GSF.Security
             }
             catch (SecurityException ex)
             {
-                m_lastException = ex;
+                LastException = ex;
+                Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "ChangePassword", "Security exception occurred during attempt to change password.", exception: ex);
                 throw;
             }
             catch (Exception ex)
             {
-                m_lastException = ex;
+                LastException = ex;
                 LogError(ex.Source, ex.ToString());
                 throw;
             }
@@ -750,6 +767,7 @@ namespace GSF.Security
                 // Attempt to write success or failure to the event log
                 try
                 {
+                    Log.Publish(MessageLevel.Info, MessageFlags.SecurityMessage, "AuthenticationAttempt", message);
                     LogEvent(ApplicationName, message, entryType, 1);
                 }
                 catch (Exception ex)
@@ -760,7 +778,7 @@ namespace GSF.Security
                 // Attempt to write success or failure to the database - we allow caller to catch any possible exceptions here so that
                 // database exceptions can be tracked separately (via LastException property) from other login exceptions, e.g., when
                 // a read-only database is being used or current user only has read-only access to database.
-                if (!string.IsNullOrWhiteSpace(SettingsCategory))
+                if (!string.IsNullOrWhiteSpace(SettingsCategory) && UseDatabaseLogging)
                 {
                     AdoDataConnection database = new AdoDataConnection(SettingsCategory);
 
@@ -784,21 +802,28 @@ namespace GSF.Security
         {
             if (!string.IsNullOrWhiteSpace(SettingsCategory) && !string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(message))
             {
-                try
-                {
-                    AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+                Log.Publish(MessageLevel.Error, MessageFlags.SecurityMessage, source, message);
 
-                    using (IDbConnection connection = database.Connection)
+                if (UseDatabaseLogging)
+                {
+                    try
                     {
-                        connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
-                    }
+                        AdoDataConnection database = new AdoDataConnection(SettingsCategory);
 
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    // All we can do is track last exception in this case
-                    m_lastException = ex;
+                        using (IDbConnection connection = database.Connection)
+                        {
+                            connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
+                        }
+
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Writing data will fail for read-only databases;
+                        // all we can do is track last exception in this case
+                        LastException = ex;
+                        Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "LogErrorToDatabase", "Failed to log error to database.", "Database or ErrorLog table may be read-only or inaccessible.", ex);
+                    }
                 }
             }
 
@@ -903,6 +928,25 @@ namespace GSF.Security
                     {
                         userRoleCache[UserData.Username] = currentRoles.ToArray();
                         userRoleCache.WaitForSave();
+
+                        MessageLevel level;
+
+                        switch (entryType)
+                        {
+                            case EventLogEntryType.SuccessAudit:
+                            case EventLogEntryType.Information:
+                                level = MessageLevel.Info;
+                                break;
+                            case EventLogEntryType.FailureAudit:
+                            case EventLogEntryType.Warning:
+                                level = MessageLevel.Warning;
+                                break;
+                            default:
+                                level = MessageLevel.Error;
+                                break;
+                        }
+
+                        Log.Publish(level, MessageFlags.SecurityMessage, "UserRoleAccessChanged", message);
                     }
                 }
             }
@@ -924,6 +968,8 @@ namespace GSF.Security
         public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurityContextRefreshed;
 
         // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AdoSecurityProvider), MessageClass.Component);
+
         private static readonly string[] s_securityTables =
         {
             UserAccountTable,                   // User accounts
