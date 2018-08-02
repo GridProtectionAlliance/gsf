@@ -21,13 +21,15 @@
 //
 //******************************************************************************************************
 
+using System.Collections;
+
 namespace GSF.Collections
 {
     /// <summary>
     /// Defines an interface for <see cref="PagedList{T}"/> instances that is usable
     /// regardless of any specified type.
     /// </summary>
-    public interface IPagedList
+    public interface IPagedList : IList
     {
         /// <summary>
         /// Gets total count of elements in enumeration.
