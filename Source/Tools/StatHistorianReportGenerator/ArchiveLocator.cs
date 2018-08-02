@@ -24,12 +24,14 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Security;
+using System.Xml.Linq;
 using GSF;
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.IO;
 using Microsoft.Win32;
 
+// ReSharper disable UnusedMember.Global
 namespace StatHistorianReportGenerator
 {
     /// <summary>
@@ -212,13 +214,13 @@ namespace StatHistorianReportGenerator
             CategorizedSettingsElement archiveLocationSetting = systemSettings["ArchiveLocation"];
 
             if ((object)archiveLocationSetting != null)
-                m_archiveLocation = archiveLocationSetting.Value;
+                m_archiveLocation = FilePath.GetAbsolutePath(archiveLocationSetting.Value);
 
             if (string.IsNullOrEmpty(m_archiveLocation) && !TryLocateArchive(out m_archiveLocation))
-                throw new DirectoryNotFoundException(string.Format("Unable to locate {0} archive. Please check the configuration file to set the archive location.", m_archiveName.ToNonNullString().ToUpper()));
+                throw new DirectoryNotFoundException($"Unable to locate {m_archiveName.ToNonNullString().ToUpper()} archive. Please check the configuration file to set the archive location.");
         }
 
-        // Attempts to locate the archive by searchign the registry and well-known locations.
+        // Attempts to locate the archive by searching the registry and well-known locations.
         private bool TryLocateArchive(out string archiveLocation)
         {
             if (IsArchiveLocation(m_archiveLocationName))
@@ -227,7 +229,36 @@ namespace StatHistorianReportGenerator
                 return true;
             }
 
-            return SearchRegistry(out archiveLocation) || SearchProgramFiles(out archiveLocation);
+            return SearchConfigFiles(out archiveLocation) || SearchRegistry(out archiveLocation) || SearchProgramFiles(out archiveLocation);
+        }
+
+        // Searches local config files to find the archive location.
+        private bool SearchConfigFiles(out string archiveLocation)
+        {
+            try
+            {
+                XDocument serviceConfig = XDocument.Load(GetConfigurationFileName());
+
+                string archiveFileName = serviceConfig
+                    .Descendants($"{ArchiveName.ToLowerInvariant()}ArchiveFile")
+                    .SelectMany(systemSettings => systemSettings.Elements("add"))
+                    .Where(element => "FileName".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                    .Select(element => (string)element.Attribute("value"))
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrWhiteSpace(archiveFileName) && File.Exists(archiveFileName))
+                {
+                    archiveLocation = Path.GetDirectoryName(archiveFileName);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.Log.Publish(MessageLevel.Warning, "SearchConfigFiles", "Failed search local config files for archive location.", exception: ex);
+            }
+
+            archiveLocation = null;
+            return false;
         }
 
         // Searches the registry to find the archive location.
@@ -249,11 +280,12 @@ namespace StatHistorianReportGenerator
                         .Select(installPath => Path.Combine(installPath, m_archiveLocationName))
                         .FirstOrDefault(IsArchiveLocation);
 
-                    return !string.IsNullOrEmpty(archiveLocation);
+                    return !string.IsNullOrWhiteSpace(archiveLocation);
                 }
             }
-            catch (SecurityException)
+            catch (Exception ex)
             {
+                Program.Log.Publish(MessageLevel.Warning, "SearchRegistry", "Failed search registry for archive location.", exception: ex);
             }
 
             archiveLocation = null;
@@ -269,13 +301,11 @@ namespace StatHistorianReportGenerator
                     .Select(programPath => Path.Combine(programPath, m_archiveLocationName))
                     .FirstOrDefault(IsArchiveLocation);
 
-                return !string.IsNullOrEmpty(archiveLocation);
+                return !string.IsNullOrWhiteSpace(archiveLocation);
             }
-            catch (IOException)
+            catch (Exception ex)
             {
-            }
-            catch (UnauthorizedAccessException)
-            {
+                Program.Log.Publish(MessageLevel.Warning, "SearchProgramFiles", "Failed search program files for archive location.", exception: ex);
             }
 
             archiveLocation = null;
@@ -299,11 +329,9 @@ namespace StatHistorianReportGenerator
                         && File.Exists(Path.Combine(fullPath, IntercomFileName));
                 }
             }
-            catch (IOException)
+            catch (Exception ex)
             {
-            }
-            catch (UnauthorizedAccessException)
-            {
+                Program.Log.Publish(MessageLevel.Warning, "IsArchiveLocation", "Failed test path for valid archive location.", exception: ex);
             }
 
             return false;
@@ -312,6 +340,9 @@ namespace StatHistorianReportGenerator
         #endregion
 
         #region [ Static ]
+
+        // Static Properties
+        public static string HostConfigFile;
 
         // Static Methods
 
@@ -326,6 +357,62 @@ namespace StatHistorianReportGenerator
             {
                 return null;
             }
+        }
+
+        public static string GetConfigurationFileName()
+        {
+            if (!string.IsNullOrEmpty(HostConfigFile) && File.Exists(HostConfigFile))
+                return HostConfigFile;
+
+            // Will be faster to load known config file, try a few common ones first
+            string[] knownConfigurationFileNames =
+            {
+                "openPDC.exe.config",
+                "SIEGate.exe.config",
+                "openHistorian.exe.config",
+                "substationSBG.exe.config",
+                "openMIC.exe.config",
+                "PDQTracker.exe.config",
+                "openECA.exe.config"
+            };
+
+            // Search for the file name in the list of known configuration files
+            foreach (string fileName in knownConfigurationFileNames)
+            {
+                string absolutePath = FilePath.GetAbsolutePath(fileName);
+
+                if (File.Exists(absolutePath))
+                    return absolutePath;
+            }
+
+            // Fall back on manual search
+            foreach (string configFile in FilePath.GetFileList($"{FilePath.AddPathSuffix(FilePath.GetAbsolutePath(""))}*.exe.config"))
+            {
+                try
+                {
+                    XDocument serviceConfig = XDocument.Load(configFile);
+
+                    string applicationName = serviceConfig
+                        .Descendants("securityProvider")
+                        .SelectMany(systemSettings => systemSettings.Elements("add"))
+                        .Where(element => "ApplicationName".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                        .Select(element => (string)element.Attribute("value"))
+                        .FirstOrDefault();
+
+                    if (string.IsNullOrWhiteSpace(applicationName))
+                        continue;
+
+                    if (applicationName.Trim().Equals(FilePath.GetFileNameWithoutExtension(configFile), StringComparison.OrdinalIgnoreCase))
+                        return configFile;
+                }
+                catch (Exception ex)
+                {
+                    // Just move on to the next config file if XML parsing fails
+                    Program.Log.Publish(MessageLevel.Warning, "GetConfigurationFileName", $"Failed parse config file \"{configFile}\".", exception: ex);
+                }
+            }
+
+            return ConfigurationFile.Current.Configuration.FilePath;
         }
 
         #endregion
