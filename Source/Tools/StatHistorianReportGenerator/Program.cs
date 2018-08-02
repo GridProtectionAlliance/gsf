@@ -32,6 +32,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using GSF;
 using GSF.Console;
 using GSF.Data;
 using GSF.Diagnostics;
@@ -264,10 +265,8 @@ namespace StatHistorianReportGenerator
                         message.IsBodyHtml = true;
                         message.Body = "<div>\r\n" + "The attached report requires a portable document format (PDF) reader, such as the " + "<a href=\"http://get.adobe.com/reader/\">Adobe Acrobat PDF Reader</a>.\r\n" + "</div>\r\n" + "<br><br>\r\n" + "<div>\r\n" + $"<i>E-mail generated at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff} UTC.</i>\r\n" + "</div>";
 
-                        if (TryGetValue(args, "generateCsvReport", out string generateCsvReportString) && bool.TryParse(generateCsvReportString, out bool generateCsvReport) && generateCsvReport)
-                        {
+                        if (TryGetValue(args, "generateCsvReport", out string generateCsvReport) && generateCsvReport.ParseBoolean())
                             message.Attachments += ";" + Path.ChangeExtension(reportFilePath, ".csv");
-                        }
 
                         if (TryGetValue(args, "username", out string username) &&
                             TryGetValue(args, "password", out string password) &&
@@ -311,7 +310,6 @@ namespace StatHistorianReportGenerator
             {
                 XDocument serviceConfig = XDocument.Load(ArchiveLocator.GetConfigurationFileName());
 
-                // ReSharper disable once AssignNullToNotNullAttribute
                 connectionString = serviceConfig
                     .Descendants("systemSettings")
                     .SelectMany(systemSettings => systemSettings.Elements("add"))
@@ -326,6 +324,9 @@ namespace StatHistorianReportGenerator
                     .Select(element => (string)element.Attribute("value"))
                     .FirstOrDefault();
             }
+
+            if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(dataProviderString))
+                return null;
 
             return new AdoDataConnection(connectionString, dataProviderString);
         }
