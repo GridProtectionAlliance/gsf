@@ -160,10 +160,9 @@ namespace GSF.Security.Model
         public string UpdatedBy { get; set; }
 
         /// <summary>
-        /// Determined when loading into memory.
+        /// User account name, converted from security ID as needed.
         /// </summary>
         [NonRecordField]
         public string AccountName => UserInfo.SIDToAccountName(Name);
     }
-
 }
