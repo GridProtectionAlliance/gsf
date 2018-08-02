@@ -163,11 +163,7 @@ namespace GSF.Security.Model
         /// Determined when loading into memory.
         /// </summary>
         [NonRecordField]
-        public string AccountName
-        {
-            get { return UserInfo.SIDToAccountName(Name); }
-        }
-
+        public string AccountName => UserInfo.SIDToAccountName(Name);
     }
 
 }

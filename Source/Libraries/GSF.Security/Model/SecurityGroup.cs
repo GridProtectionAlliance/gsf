@@ -26,6 +26,7 @@ using System.ComponentModel.DataAnnotations;
 using GSF.ComponentModel;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
+using GSF.Identity;
 
 namespace GSF.Security.Model
 {
@@ -86,5 +87,11 @@ namespace GSF.Security.Model
         [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
         [UpdateValueExpression("UserInfo.CurrentUserID")]
         public string UpdatedBy { get; set; }
+
+        /// <summary>
+        /// Determined when loading into memory.
+        /// </summary>
+        [NonRecordField]
+        public string AccountName => UserInfo.SIDToAccountName(Name);
     }
 }
