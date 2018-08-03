@@ -228,10 +228,10 @@ namespace DynamicCalculator
         }
 
         /// <summary>
-        /// Queues database operation for immediate execution.
+        /// Queues database operation for execution. Operation will execute immediately if not already running.
         /// </summary>
-        [AdapterCommand("Queues database operation for immediate execution.", "Administrator", "Editor")]
-        public void QueueOperation() => m_databaseOperation?.RunOnceAsync();
+        [AdapterCommand("Queues database operation for execution. Operation will execute immediately if not already running.", "Administrator", "Editor")]
+        public void QueueOperation() => m_databaseOperation?.RunOnce();
 
         private void DatabaseOperation()
         {
