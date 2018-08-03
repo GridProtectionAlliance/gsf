@@ -32,6 +32,8 @@ using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InheritdocConsiderUsage
 namespace DynamicCalculator
 {
     /// <summary>
