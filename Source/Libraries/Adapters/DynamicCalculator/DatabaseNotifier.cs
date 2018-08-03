@@ -184,7 +184,7 @@ namespace DynamicCalculator
                 DatabaseCommandParameters = DefaultDatabaseCommandParameters;
 
             // Define synchronized monitoring operation
-            m_databaseOperation = new ShortSynchronizedOperation(MonitoringOperation, exception => OnProcessException(MessageLevel.Warning, exception));
+            m_databaseOperation = new ShortSynchronizedOperation(DatabaseOperation, exception => OnProcessException(MessageLevel.Warning, exception));
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace DynamicCalculator
             }
         }
 
-        private void MonitoringOperation()
+        private void DatabaseOperation()
         {
             using (AdoDataConnection connection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
             {
