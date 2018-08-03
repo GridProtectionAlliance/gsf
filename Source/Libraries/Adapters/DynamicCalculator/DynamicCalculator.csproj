@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseNotifier.cs" />
     <Compile Include="EmailNotifier.cs" />
     <Compile Include="DynamicCalculator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
