@@ -123,6 +123,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\CancellationToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\CompatibleCancellationToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\DedicatedSynchronizedOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\DelayedSynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\DisposableCallback.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\EventTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ICancellationToken.cs" />
