@@ -353,10 +353,7 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets primary keys of input measurements the dynamic calculator expects.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of input measurements the dynamic calculator expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override MeasurementKey[] InputMeasurementKeys
         {
             get
