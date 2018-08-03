@@ -69,29 +69,6 @@ namespace DynamicCalculator
     {
         #region [ Members ]
 
-        // Nested Types
-        private class DelayedSynchronizedOperation : SynchronizedOperationBase
-        {
-            private Action m_delayedAction;
-
-            public DelayedSynchronizedOperation(Action action, Action<Exception> exceptionAction)
-                : base(action, exceptionAction)
-            {
-                m_delayedAction = () =>
-                {
-                    if (ExecuteAction())
-                        ExecuteActionAsync();
-                };
-            }
-
-            public int Delay { get; set; }
-
-            protected override void ExecuteActionAsync()
-            {
-                m_delayedAction.DelayAndExecute(Delay);
-            }
-        }
-
         // Constants
 
         /// <summary>
@@ -120,7 +97,7 @@ namespace DynamicCalculator
         private readonly ExpressionContext m_expressionContext;
         private IDynamicExpression m_expression;
 
-        private DelayedSynchronizedOperation m_timerOperation;
+        private readonly DelayedSynchronizedOperation m_timerOperation;
 
         #endregion
 
