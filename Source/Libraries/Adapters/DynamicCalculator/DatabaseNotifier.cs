@@ -62,7 +62,7 @@ namespace DynamicCalculator
         /// Gets or sets the boolean expression used to determine if the database operation should be executed.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Define the boolean expression used to determine if the database operation should be executed.")]
+        [Description("Defines the boolean expression used to determine if the database operation should be executed.")]
         public new string ExpressionText // Redeclared to provide a more relevant description for this adapter
         {
             get => base.ExpressionText;
@@ -204,6 +204,12 @@ namespace DynamicCalculator
             }
         }
 
+        /// <summary>
+        /// Queues database operation for immediate execution.
+        /// </summary>
+        [AdapterCommand("Queues database operation for immediate execution.", "Administrator", "Editor")]
+        public void QueueOperation() => m_databaseOperation?.RunOnceAsync();
+
         private void DatabaseOperation()
         {
             using (AdoDataConnection connection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
@@ -220,13 +226,12 @@ namespace DynamicCalculator
                 };
 
                 List<object> parameters = new List<object>();
-                string commandParameters = parameterTemplate.Execute(substitutions);
-                string[] splitParameters = commandParameters.Split(',');
+                string[] commandParameters = parameterTemplate.Execute(substitutions).Split(',');
 
                 // Do some basic typing on command parameters
-                foreach (string splitParameter in splitParameters)
+                foreach (string commandParameter in commandParameters)
                 {
-                    string parameter = splitParameter.Trim();
+                    string parameter = commandParameter.Trim();
 
                     if (parameter.StartsWith("'") && parameter.EndsWith("'"))
                         parameters.Add(parameter.Length > 2 ? parameter.Substring(1, parameter.Length - 2) : "");
