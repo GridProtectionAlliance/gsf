@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
 using GSF;
 using GSF.Net.Smtp;
 using GSF.TimeSeries.Adapters;
@@ -41,6 +42,9 @@ namespace DynamicCalculator
 
         // Fields
         private readonly Mail m_mailClient;
+        private long m_expressionSuccesses;
+        private long m_expressionFailures;
+        private long m_totalEmailOperations;
 
         #endregion
 
@@ -287,6 +291,26 @@ namespace DynamicCalculator
             }
         }
 
+        /// <summary>
+        /// Returns the detailed status of the data input source.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.AppendFormat("      Expression Successes: {0:N0}", m_expressionSuccesses);
+                status.AppendLine();
+                status.AppendFormat("       Expression Failures: {0:N0}", m_expressionFailures);
+                status.AppendLine();
+                status.AppendFormat("   Total E-mail Operations: {0:N0}", m_totalEmailOperations);
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -355,11 +379,17 @@ namespace DynamicCalculator
         /// </summary>
         /// <param name="value">The value calculated by the <see cref="DynamicCalculator"/>.</param>
         protected override void HandleCalculatedValue(object value)
-        {
-            bool result = value.ToString().ParseBoolean();
-
-            if (result)
+        {            
+            if (value.ToString().ParseBoolean())
+            {
+                m_expressionSuccesses++;
                 m_mailClient.Send();
+                m_totalEmailOperations++;
+            }
+            else
+            {
+                m_expressionFailures++;
+            }
         }
 
         #endregion
