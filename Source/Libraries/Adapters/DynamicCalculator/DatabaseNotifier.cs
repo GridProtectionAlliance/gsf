@@ -199,8 +199,6 @@ namespace DynamicCalculator
 
             if (settings.TryGetValue(nameof(DatabaseMinimumWriteInterval), out setting) && double.TryParse(setting, out double interval))
                 DatabaseMinimumWriteInterval = interval;
-            else
-                DatabaseMinimumWriteInterval = DelayedSynchronizedOperation.DefaultDelay;
 
             // Define synchronized monitoring operation
             m_databaseOperation = new DelayedSynchronizedOperation(DatabaseOperation, exception => OnProcessException(MessageLevel.Warning, exception));
