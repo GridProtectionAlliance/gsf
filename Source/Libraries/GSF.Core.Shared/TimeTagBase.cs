@@ -325,8 +325,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator ==(TimeTagBase value1, TimeTagBase value2)
         {
@@ -336,8 +336,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator ==(DateTime value1, TimeTagBase value2)
         {
@@ -347,8 +347,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator ==(TimeTagBase value1, DateTime value2)
         {
@@ -362,8 +362,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator !=(TimeTagBase value1, TimeTagBase value2)
         {
@@ -373,8 +373,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator !=(DateTime value1, TimeTagBase value2)
         {
@@ -384,8 +384,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator !=(TimeTagBase value1, DateTime value2)
         {
@@ -399,8 +399,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator <(TimeTagBase value1, TimeTagBase value2)
         {
@@ -410,8 +410,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator <(DateTime value1, TimeTagBase value2)
         {
@@ -421,8 +421,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator <(TimeTagBase value1, DateTime value2)
         {
@@ -436,8 +436,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator <=(TimeTagBase value1, TimeTagBase value2)
         {
@@ -447,8 +447,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator <=(DateTime value1, TimeTagBase value2)
         {
@@ -458,8 +458,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator <=(TimeTagBase value1, DateTime value2)
         {
@@ -473,8 +473,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator >(TimeTagBase value1, TimeTagBase value2)
         {
@@ -484,8 +484,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator >(DateTime value1, TimeTagBase value2)
         {
@@ -495,8 +495,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator >(TimeTagBase value1, DateTime value2)
         {
@@ -510,8 +510,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator >=(TimeTagBase value1, TimeTagBase value2)
         {
@@ -521,8 +521,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator >=(DateTime value1, TimeTagBase value2)
         {
@@ -532,8 +532,8 @@ namespace GSF
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
         /// </summary>
-        /// <param name="value1">Value 1 in the comparision.</param>
-        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <param name="value1">Value 1 in the comparison.</param>
+        /// <param name="value2">Value 2 in the comparison.</param>
         /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
         public static bool operator >=(TimeTagBase value1, DateTime value2)
         {

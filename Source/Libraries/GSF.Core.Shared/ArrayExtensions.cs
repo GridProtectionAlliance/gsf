@@ -531,18 +531,18 @@ namespace GSF
             if (length1 != length2)
                 return length1.CompareTo(length2);
 
-            int comparision = 0;
+            int comparison = 0;
 
             // Compares elements of arrays that are of equal size.
             for (int x = 0; x < length1; x++)
             {
-                comparision = source[x].CompareTo(other[x]);
+                comparison = source[x].CompareTo(other[x]);
 
-                if (comparision != 0)
+                if (comparison != 0)
                     break;
             }
 
-            return comparision;
+            return comparison;
         }
 
         /// <summary>
@@ -630,18 +630,18 @@ namespace GSF
             // if ((int.MaxValue - otherOffset - count) < 0)
             //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum array size");
 
-            int comparision = 0;
+            int comparison = 0;
 
             // Compares elements of arrays that are of equal size.
             for (int x = 0; x < count; x++)
             {
-                comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
+                comparison = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
 
-                if (comparision != 0)
+                if (comparison != 0)
                     break;
             }
 
-            return comparision;
+            return comparison;
         }
 
         // Handling byte arrays as a special case for combining multiple buffers since this can
