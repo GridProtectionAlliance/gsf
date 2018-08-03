@@ -49,7 +49,7 @@ namespace DynamicCalculator
         private const string DefaultDatabaseProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter";
         private const string DefaultDatabaseCommand = "sp_LogSsamEvent";
         private const string DefaultDatabaseCommandParameters = "1,1,'FL_PMU_{Acronym}_HEARTBEAT','','{Acronym} adapter heartbeat at {Timestamp} UTC',''";
-        private const double DefaultDatabaseMinimumWriteInterval = DelayedSynchronizedOperation.DefaultDelay / 1000.0D;
+        private const double DefaultDatabaseMaximumWriteInterval = DelayedSynchronizedOperation.DefaultDelay / 1000.0D;
 
         // Fields
         private DelayedSynchronizedOperation m_databaseOperation;
@@ -120,12 +120,12 @@ namespace DynamicCalculator
         }
 
         /// <summary>
-        /// Gets or sets the minimum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.
+        /// Gets or sets the maximum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the minimum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.")]
-        [DefaultValue(DefaultDatabaseMinimumWriteInterval)]
-        public double DatabaseMinimumWriteInterval
+        [Description("Defines the maximum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.")]
+        [DefaultValue(DefaultDatabaseMaximumWriteInterval)]
+        public double DatabaseMaximumWriteInterval
         {
             get;
             set;
@@ -198,15 +198,15 @@ namespace DynamicCalculator
             else
                 DatabaseCommandParameters = DefaultDatabaseCommandParameters;
 
-            if (settings.TryGetValue(nameof(DatabaseMinimumWriteInterval), out setting) && double.TryParse(setting, out double interval))
-                DatabaseMinimumWriteInterval = interval;
+            if (settings.TryGetValue(nameof(DatabaseMaximumWriteInterval), out setting) && double.TryParse(setting, out double interval))
+                DatabaseMaximumWriteInterval = interval;
             else
-                DatabaseMinimumWriteInterval = DefaultDatabaseMinimumWriteInterval;
+                DatabaseMaximumWriteInterval = DefaultDatabaseMaximumWriteInterval;
 
             // Define synchronized monitoring operation
             m_databaseOperation = new DelayedSynchronizedOperation(DatabaseOperation, exception => OnProcessException(MessageLevel.Warning, exception))
             {
-                Delay = (int)(DatabaseMinimumWriteInterval * 1000.0D)
+                Delay = (int)(DatabaseMaximumWriteInterval * 1000.0D)
             };
         }
 
