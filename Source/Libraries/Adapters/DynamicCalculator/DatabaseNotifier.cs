@@ -51,7 +51,7 @@ namespace DynamicCalculator
         private const string DefaultDatabaseCommandParameters = "1,1,'FL_PMU_{Acronym}_HEARTBEAT','','{Acronym} adapter heartbeat at {Timestamp} UTC',''";
 
         // Fields
-        private ShortSynchronizedOperation m_databaseOperation;
+        private DelayedSynchronizedOperation m_databaseOperation;
         private long m_expressionSuccesses;
         private long m_expressionFailures;
         private long m_totalDatabaseOperations;
@@ -116,6 +116,18 @@ namespace DynamicCalculator
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets or sets the minimum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the minimum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.")]
+        [DefaultValue(DelayedSynchronizedOperation.DefaultDelay)]
+        public double DatabaseMinimumWriteInterval
+        {
+            get => m_databaseOperation.Delay / 1000.0D;
+            set => m_databaseOperation.Delay = (int)(value * 1000.0D);
         }
 
         /// <summary>
@@ -185,8 +197,13 @@ namespace DynamicCalculator
             else
                 DatabaseCommandParameters = DefaultDatabaseCommandParameters;
 
+            if (settings.TryGetValue(nameof(DatabaseMinimumWriteInterval), out setting) && double.TryParse(setting, out double interval))
+                DatabaseMinimumWriteInterval = interval;
+            else
+                DatabaseMinimumWriteInterval = DelayedSynchronizedOperation.DefaultDelay;
+
             // Define synchronized monitoring operation
-            m_databaseOperation = new ShortSynchronizedOperation(DatabaseOperation, exception => OnProcessException(MessageLevel.Warning, exception));
+            m_databaseOperation = new DelayedSynchronizedOperation(DatabaseOperation, exception => OnProcessException(MessageLevel.Warning, exception));
         }
 
         /// <summary>
