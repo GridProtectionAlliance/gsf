@@ -265,10 +265,11 @@ namespace GSF.Data.Model
                 }
 
                 // Remove any remaining tokens from instance expressions
-                string RemoveRemainingTokens(string sql) => sql.Replace(TableNamePrefixToken, "")
-                    .Replace(TableNameSuffixToken, "")
-                    .Replace(FieldListPrefixToken, "")
-                    .Replace(FieldListSuffixToken, "");
+                string RemoveRemainingTokens(string sql) => sql
+                        .Replace(TableNamePrefixToken, "")
+                        .Replace(TableNameSuffixToken, "")
+                        .Replace(FieldListPrefixToken, "")
+                        .Replace(FieldListSuffixToken, "");
 
                 m_selectCountSql = RemoveRemainingTokens(m_selectCountSql);
                 m_selectSetSql = RemoveRemainingTokens(m_selectSetSql);
@@ -331,7 +332,8 @@ namespace GSF.Data.Model
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="connection"/> cannot be <c>null</c>.</exception>
-        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, IEnumerable<KeyValuePair<string, string>> customTokens = null) : this(connection, customTokens) => ExceptionHandler = exceptionHandler;
+        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, IEnumerable<KeyValuePair<string, string>> customTokens = null)
+            : this(connection, customTokens) => ExceptionHandler = exceptionHandler;
 
         #endregion
 
@@ -375,7 +377,8 @@ namespace GSF.Data.Model
         /// </summary>
         /// <remarks>
         /// In cases where modeled table fields have applied <see cref="UseEscapedNameAttribute"/>, this flag will be used
-        /// to properly update escaped field names that may be case sensitive.
+        /// to properly update escaped field names that may be case sensitive. For example, escaped field names in Oracle
+        /// are case sensitive. This value is typically <c>false</c>.
         /// </remarks>
         public bool UseCaseSensitiveFieldNames { get; set; }
 
@@ -383,9 +386,24 @@ namespace GSF.Data.Model
         /// Gets or sets primary key cache.
         /// </summary>
         /// <remarks>
-        /// Primary keys values are stored in data table without interpretation. It may be necessary to call
-        /// <see cref="GetInterpretedFieldValue"/> for models with primary key fields that are marked with
-        /// either <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/> before use.
+        /// <para>
+        /// The <see cref="QueryRecords(string, bool, int, int, string)"/> overloads that include paging parameters
+        /// cache the sorted and filtered primary keys of queried records between calls so that paging is fast and
+        /// efficient. Since the primary keys are cached, an instance of the <see cref="TableOperations{T}"/> should
+        /// exist per user session when using query functions that support pagination. In web based implementations,
+        /// the primary cache should be stored with user session state data and then restored between instances of
+        /// the <see cref="TableOperations{T}"/> that are created along with a connection that is opened per page.
+        /// </para>
+        /// <para>
+        /// The function <see cref="ClearPrimaryKeyCache"/> should be called to manually clear cache when table
+        /// contents are known to have changed. Note that calls to any <see cref="DeleteRecord(T)"/> overloads will
+        /// automatically clear any existing primary key cache.
+        /// </para>
+        /// <para>
+        /// Primary keys values are stored in data table without interpretation, i.e., in their raw form as queried
+        /// from the database. Primary key data in cache will be encrypted for models with primary key fields that
+        /// are marked with the <see cref="EncryptDataAttribute"/>
+        /// </para>
         /// </remarks>
         public DataTable PrimaryKeyCache { get; set; }
 
@@ -415,6 +433,16 @@ namespace GSF.Data.Model
         /// </para>
         /// </remarks>
         public RecordRestriction RootQueryRestriction { get; set; }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to update operations.
+        /// </summary>
+        public bool ApplyRootQueryRestrictionToUpdates { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to delete operations.
+        /// </summary>
+        public bool ApplyRootQueryRestrictionToDeletes { get; set; } = true;
 
         #endregion
 
@@ -1211,7 +1239,17 @@ namespace GSF.Data.Model
             return dataTable;
         }
 
-        DataTable ITableOperations.ToDataTable(IEnumerable records) => ToDataTable(records.Cast<T>());
+        DataTable ITableOperations.ToDataTable(IEnumerable records)
+        {
+            try
+            {
+                return ToDataTable(records.Cast<T>());
+            }
+            catch (InvalidCastException ex)
+            {
+                throw new ArgumentException($"One of the provided records cannot be converted to type \"{typeof(T).Name}\": {ex.Message}", nameof(records), ex);
+            }
+        }
 
         /// <summary>
         /// Deletes the record referenced by the specified <paramref name="primaryKeys"/>.
@@ -1267,6 +1305,10 @@ namespace GSF.Data.Model
         /// Deletes the records referenced by the specified <paramref name="restriction"/>.
         /// </summary>
         /// <param name="restriction">Record restriction to apply</param>
+        /// <param name="applyRootQueryRestriction">
+        /// Flag that determines if any existing <see cref="RootQueryRestriction"/> should be applied. Defaults to
+        /// <see cref="ApplyRootQueryRestrictionToDeletes"/> setting.
+        /// </param>
         /// <returns>Number of rows affected.</returns>
         /// <remarks>
         /// If any of the <paramref name="restriction"/> parameters reference a table field that is modeled with
@@ -1275,7 +1317,7 @@ namespace GSF.Data.Model
         /// returned value so that the field value will be properly set prior to executing the database function.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="restriction"/> cannot be <c>null</c>.</exception>
-        public int DeleteRecord(RecordRestriction restriction)
+        public int DeleteRecord(RecordRestriction restriction, bool? applyRootQueryRestriction = null)
         {
             if ((object)restriction == null)
                 throw new ArgumentNullException(nameof(restriction));
@@ -1284,6 +1326,9 @@ namespace GSF.Data.Model
 
             try
             {
+                if ((object)RootQueryRestriction != null && (applyRootQueryRestriction ?? ApplyRootQueryRestrictionToDeletes))
+                    restriction = RootQueryRestriction + restriction;
+
                 sqlExpression = $"{m_deleteWhereSql}{UpdateFieldNames(restriction.FilterExpression)}";
                 int affectedRecords = Connection.ExecuteNonQuery(sqlExpression, restriction.Parameters);
 
@@ -1331,7 +1376,7 @@ namespace GSF.Data.Model
         /// will be updated to reflect what is defined in the user model.
         /// </para>
         /// <para>
-        /// This is a convenience call to <see cref="DeleteRecord(RecordRestriction)"/>.
+        /// This is a convenience call to <see cref="DeleteRecord(RecordRestriction, bool?)"/>.
         /// </para>
         /// </remarks>
         public int DeleteRecordWhere(string filterExpression, params object[] parameters) => DeleteRecord(new RecordRestriction(filterExpression, parameters));
@@ -1343,6 +1388,10 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="record">Record to update.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <param name="applyRootQueryRestriction">
+        /// Flag that determines if any existing <see cref="RootQueryRestriction"/> should be applied. Defaults to
+        /// <see cref="ApplyRootQueryRestrictionToUpdates"/> setting.
+        /// </param>
         /// <returns>Number of rows affected.</returns>
         /// <remarks>
         /// <para>
@@ -1356,7 +1405,7 @@ namespace GSF.Data.Model
         /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
         /// </remarks>
-        public int UpdateRecord(T record, RecordRestriction restriction = null)
+        public int UpdateRecord(T record, RecordRestriction restriction = null, bool? applyRootQueryRestriction = null)
         {
             List<object> values = new List<object>();
 
@@ -1406,6 +1455,9 @@ namespace GSF.Data.Model
 
             try
             {
+                if ((object)RootQueryRestriction != null && (applyRootQueryRestriction ?? ApplyRootQueryRestrictionToUpdates))
+                    restriction = RootQueryRestriction + restriction;
+
                 foreach (PropertyInfo property in s_updateProperties)
                     values.Add(GetInterpretedPropertyValue(property, record));
 
@@ -1432,12 +1484,12 @@ namespace GSF.Data.Model
             }
         }
 
-        int ITableOperations.UpdateRecord(object value, RecordRestriction restriction)
+        int ITableOperations.UpdateRecord(object value, RecordRestriction restriction, bool? applyRootQueryRestriction)
         {
             if (!(value is T record))
                 throw new ArgumentException($"Cannot update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
-            return UpdateRecord(record);
+            return UpdateRecord(record, restriction, applyRootQueryRestriction);
         }
 
         /// <summary>
@@ -1475,7 +1527,7 @@ namespace GSF.Data.Model
         /// will be updated to reflect what is defined in the user model.
         /// </para>
         /// <para>
-        /// This is a convenience call to <see cref="UpdateRecord(T, RecordRestriction)"/>.
+        /// This is a convenience call to <see cref="UpdateRecord(T, RecordRestriction, bool?)"/>.
         /// </para>
         /// </remarks>
         public int UpdateRecordWhere(T record, string filterExpression, params object[] parameters) => UpdateRecord(record, new RecordRestriction(filterExpression, parameters));

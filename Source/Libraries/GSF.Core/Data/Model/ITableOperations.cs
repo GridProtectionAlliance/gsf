@@ -38,10 +38,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets the table name defined for the modeled table, includes any escaping as defined in model.
         /// </summary>
-        string TableName
-        {
-            get;
-        }
+        string TableName { get; }
 
         /// <summary>
         /// Gets the table name defined for the modeled table without any escape characters.
@@ -49,18 +46,12 @@ namespace GSF.Data.Model
         /// <remarks>
         /// A table name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
         /// </remarks>
-        string UnescapedTableName
-        {
-            get;
-        }
+        string UnescapedTableName { get; }
 
         /// <summary>
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
         /// </summary>
-        bool HasPrimaryKeyIdentityField
-        {
-            get;
-        }
+        bool HasPrimaryKeyIdentityField { get; }
 
         /// <summary>
         /// Gets or sets delegate used to handle table operation exceptions.
@@ -70,38 +61,43 @@ namespace GSF.Data.Model
         /// encountered exceptions will be passed to handler for processing. Otherwise, exceptions will be thrown
         /// on the call stack.
         /// </remarks>
-        Action<Exception> ExceptionHandler
-        {
-            get;
-            set;
-        }
+        Action<Exception> ExceptionHandler { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if field names should be treated as case sensitive. Defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
         /// In cases where modeled table fields have applied <see cref="UseEscapedNameAttribute"/>, this flag will be used
-        /// to properly update escaped field names that may be case sensitive.
+        /// to properly update escaped field names that may be case sensitive. For example, escaped field names in Oracle
+        /// are case sensitive. This value is typically <c>false</c>.
         /// </remarks>
-        bool UseCaseSensitiveFieldNames
-        {
-            get;
-            set;
-        }
+        bool UseCaseSensitiveFieldNames { get; set; }
 
         /// <summary>
         /// Gets or sets primary key cache.
         /// </summary>
         /// <remarks>
-        /// Primary keys values are stored in data table without interpretation. It may be necessary to call
-        /// <see cref="GetInterpretedFieldValue"/> for models with primary key fields that are marked with
-        /// either <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/> before use.
+        /// <para>
+        /// The <see cref="QueryRecords(string, bool, int, int, string)"/> overloads that include paging parameters
+        /// cache the sorted and filtered primary keys of queried records between calls so that paging is fast and
+        /// efficient. Since the primary keys are cached, an instance of the <see cref="TableOperations{T}"/> should
+        /// exist per user session when using query functions that support pagination. In web based implementations,
+        /// the primary cache should be stored with user session state data and then restored between instances of
+        /// the <see cref="TableOperations{T}"/> that are created along with a connection that is opened per page.
+        /// </para>
+        /// <para>
+        /// The function <see cref="ClearPrimaryKeyCache"/> should be called to manually clear cache when table
+        /// contents are known to have changed. Note that calls to any <see cref="DeleteRecord(object)"/> overload
+        /// will automatically clear any existing primary key cache.
+        /// </para>
+        /// <para>
+        /// Primary keys values are stored in data table without interpretation, i.e., in their raw form as queried
+        /// from the database. Primary key data in cache will be encrypted for models with primary key fields that
+        /// are marked with the <see cref="EncryptDataAttribute"/>
+        /// </para>
         /// </remarks>
-        DataTable PrimaryKeyCache
-        {
-            get;
-            set;
-        }
+        DataTable PrimaryKeyCache { get; set; }
+
         /// <summary>
         /// Gets or sets root record restriction that applies to query table operations.
         /// </summary>
@@ -117,17 +113,27 @@ namespace GSF.Data.Model
         /// filtering records for a specific user or context.
         /// </para>
         /// <para>
+        /// A root query restriction can be manually assigned to a <see cref="TableOperations{T}"/> instance or
+        /// automatically assigned by marking a model with the <see cref="RootQueryRestrictionAttribute"/>.
+        /// </para>
+        /// <para>
         /// If any of the <see cref="RecordRestriction.Parameters"/> reference a table field that is modeled with
         /// either an <see cref="EncryptDataAttribute"/> or <see cref="FieldDataTypeAttribute"/>, then the function
         /// <see cref="GetInterpretedFieldValue"/> will need to be called, replacing the target parameter with the
         /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
         /// </remarks>
-        RecordRestriction RootQueryRestriction
-        {
-            get;
-            set;
-        }
+        RecordRestriction RootQueryRestriction { get; set; }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to update operations.
+        /// </summary>
+        bool ApplyRootQueryRestrictionToUpdates { get; set; }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to delete operations.
+        /// </summary>
+        bool ApplyRootQueryRestrictionToDeletes { get; set; }
 
         /// <summary>
         /// Creates a new modeled record instance, applying any modeled default values as specified by a
@@ -429,6 +435,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Locally searches retrieved table records after queried from database for the specified sorting and search parameters.
         /// Search executed against fields modeled with <see cref="SearchableAttribute"/>.
+        /// Function only typically used for record models that apply the <see cref="EncryptDataAttribute"/>.
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
         /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
@@ -533,6 +540,10 @@ namespace GSF.Data.Model
         /// Deletes the records referenced by the specified <paramref name="restriction"/>.
         /// </summary>
         /// <param name="restriction">Record restriction to apply</param>
+        /// <param name="applyRootQueryRestriction">
+        /// Flag that determines if any existing <see cref="RootQueryRestriction"/> should be applied. Defaults to
+        /// <see cref="ApplyRootQueryRestrictionToDeletes"/> setting.
+        /// </param>
         /// <returns>Number of rows affected.</returns>
         /// <remarks>
         /// If any of the <paramref name="restriction"/> parameters reference a table field that is modeled with
@@ -541,7 +552,7 @@ namespace GSF.Data.Model
         /// returned value so that the field value will be properly set prior to executing the database function.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="restriction"/> cannot be <c>null</c>.</exception>
-        int DeleteRecord(RecordRestriction restriction);
+        int DeleteRecord(RecordRestriction restriction, bool? applyRootQueryRestriction = null);
 
         /// <summary>
         /// Deletes the records referenced by the specified SQL filter expression and parameters.
@@ -570,7 +581,7 @@ namespace GSF.Data.Model
         /// will be updated to reflect what is defined in the user model.
         /// </para>
         /// <para>
-        /// This is a convenience call to <see cref="DeleteRecord(RecordRestriction)"/>.
+        /// This is a convenience call to <see cref="DeleteRecord(RecordRestriction, bool?)"/>.
         /// </para>
         /// </remarks>
         int DeleteRecordWhere(string filterExpression, params object[] parameters);
@@ -582,6 +593,10 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="record">Record to update.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <param name="applyRootQueryRestriction">
+        /// Flag that determines if any existing <see cref="RootQueryRestriction"/> should be applied. Defaults to
+        /// <see cref="ApplyRootQueryRestrictionToUpdates"/> setting.
+        /// </param>
         /// <returns>Number of rows affected.</returns>
         /// <remarks>
         /// <para>
@@ -595,7 +610,7 @@ namespace GSF.Data.Model
         /// returned value so that the field value will be properly set prior to executing the database function.
         /// </para>
         /// </remarks>
-        int UpdateRecord(object record, RecordRestriction restriction = null);
+        int UpdateRecord(object record, RecordRestriction restriction = null, bool? applyRootQueryRestriction = null);
 
         /// <summary>
         /// Updates the database with the specified modeled table <paramref name="record"/>
@@ -632,7 +647,7 @@ namespace GSF.Data.Model
         /// will be updated to reflect what is defined in the user model.
         /// </para>
         /// <para>
-        /// This is a convenience call to <see cref="UpdateRecord(object, RecordRestriction)"/>.
+        /// This is a convenience call to <see cref="UpdateRecord(object, RecordRestriction, bool?)"/>.
         /// </para>
         /// </remarks>
         int UpdateRecordWhere(object record, string filterExpression, params object[] parameters);
@@ -862,9 +877,9 @@ namespace GSF.Data.Model
         RecordRestriction GetSearchRestriction(string searchText);
 
         /// <summary>
-        /// Calculates the size of the current primary key cache.
+        /// Calculates the size of the current primary key cache, in number of records.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Number of records in the current primary key cache.</returns>
         int GetPrimaryKeyCacheSize();
 
        /// <summary>
