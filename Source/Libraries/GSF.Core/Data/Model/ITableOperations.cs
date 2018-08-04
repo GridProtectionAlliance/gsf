@@ -129,8 +129,15 @@ namespace GSF.Data.Model
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to update operations.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
         /// to <c>false</c> since update operations against a modeled record already take into account primary key fields.
+        /// </para>
+        /// <para>
+        /// This flag can be manually set per <see cref="TableOperations{T}"/> instance or handled automatically by marking
+        /// a model with the <see cref="RootQueryRestrictionAttribute"/> and assigning a value to the attribute property
+        /// <see cref="RootQueryRestrictionAttribute.ApplyToUpdates"/>.
+        /// </para>
         /// </remarks>
         bool ApplyRootQueryRestrictionToUpdates { get; set; }
 
@@ -138,8 +145,15 @@ namespace GSF.Data.Model
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to delete operations.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
         /// to <c>false</c> since delete operations against a modeled record already take into account primary key fields.
+        /// </para>
+        /// <para>
+        /// This flag can be manually set per <see cref="TableOperations{T}"/> instance or handled automatically by marking
+        /// a model with the <see cref="RootQueryRestrictionAttribute"/> and assigning a value to the attribute property
+        /// <see cref="RootQueryRestrictionAttribute.ApplyToDeletes"/>.
+        /// </para>
         /// </remarks>
         bool ApplyRootQueryRestrictionToDeletes { get; set; }
 

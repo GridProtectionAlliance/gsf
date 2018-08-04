@@ -62,6 +62,26 @@ namespace GSF.Data.Model
         /// </summary>
         public readonly object[] Parameters;
 
+        /// <summary>
+        /// Gets or sets flag that determines if root query restriction should be applied to update operations.
+        /// </summary>
+        /// <remarks>
+        /// If root query restriction only references primary key fields, then this property value should be
+        /// set to <c>false</c> since update operations against a modeled record already take into account
+        /// primary key fields.
+        /// </remarks>
+        public bool ApplyToUpdates;
+
+        /// <summary>
+        /// Gets or sets flag that determines if root query restriction should be applied to delete operations.
+        /// </summary>
+        /// <remarks>
+        /// If root query restriction only references primary key fields, then this property value should be
+        /// set to <c>false</c> since delete operations against a modeled record already take into account
+        /// primary key fields.
+        /// </remarks>
+        public bool ApplyToDeletes;
+
         #endregion
 
         #region [ Constructors ]

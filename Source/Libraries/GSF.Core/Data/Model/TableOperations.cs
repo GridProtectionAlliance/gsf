@@ -164,7 +164,14 @@ namespace GSF.Data.Model
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
             m_searchFilterSql = s_searchFilterSql;
-            RootQueryRestriction = s_rootQueryRestriction?.Clone();
+
+            // Establish any modeled root query restriction parameters
+            if ((object)s_rootQueryRestrictionAttribute != null)
+            {
+                RootQueryRestriction = new RecordRestriction(s_rootQueryRestrictionAttribute.FilterExpression, s_rootQueryRestrictionAttribute.Parameters);
+                ApplyRootQueryRestrictionToUpdates = s_rootQueryRestrictionAttribute.ApplyToUpdates;
+                ApplyRootQueryRestrictionToDeletes = s_rootQueryRestrictionAttribute.ApplyToDeletes;
+            }
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
@@ -438,8 +445,15 @@ namespace GSF.Data.Model
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to update operations.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
         /// to <c>false</c> since update operations against a modeled record already take into account primary key fields.
+        /// </para>
+        /// <para>
+        /// This flag can be manually set per <see cref="TableOperations{T}"/> instance or handled automatically by marking
+        /// a model with the <see cref="RootQueryRestrictionAttribute"/> and assigning a value to the attribute property
+        /// <see cref="RootQueryRestrictionAttribute.ApplyToUpdates"/>.
+        /// </para>
         /// </remarks>
         public bool ApplyRootQueryRestrictionToUpdates { get; set; }
 
@@ -447,8 +461,15 @@ namespace GSF.Data.Model
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to delete operations.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
         /// to <c>false</c> since delete operations against a modeled record already take into account primary key fields.
+        /// </para>
+        /// <para>
+        /// This flag can be manually set per <see cref="TableOperations{T}"/> instance or handled automatically by marking
+        /// a model with the <see cref="RootQueryRestrictionAttribute"/> and assigning a value to the attribute property
+        /// <see cref="RootQueryRestrictionAttribute.ApplyToDeletes"/>.
+        /// </para>
         /// </remarks>
         public bool ApplyRootQueryRestrictionToDeletes { get; set; }
 
@@ -2171,7 +2192,7 @@ namespace GSF.Data.Model
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
-        private static readonly RecordRestriction s_rootQueryRestriction;
+        private static readonly RootQueryRestrictionAttribute s_rootQueryRestrictionAttribute;
         private static readonly string s_selectCountSql;
         private static readonly string s_selectSetSql;
         private static readonly string s_selectSetWhereSql;
@@ -2226,9 +2247,8 @@ namespace GSF.Data.Model
                 s_expressionAmendments = DeriveExpressionAmendments(amendExpressionAttributes);
 
             // Check for root query restriction
-            if (typeof(T).TryGetAttribute(out RootQueryRestrictionAttribute rootQueryRestrictionAttribute))
-                s_rootQueryRestriction = new RecordRestriction(rootQueryRestrictionAttribute.FilterExpression, rootQueryRestrictionAttribute.Parameters);
-
+            typeof(T).TryGetAttribute(out s_rootQueryRestrictionAttribute);
+                
             s_properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
                 .Where(property => !property.AttributeExists<PropertyInfo, NonRecordFieldAttribute>())
