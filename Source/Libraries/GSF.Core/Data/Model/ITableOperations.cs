@@ -128,11 +128,19 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to update operations.
         /// </summary>
+        /// <remarks>
+        /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
+        /// to <c>false</c> since update operations against a modeled record already take into account primary key fields.
+        /// </remarks>
         bool ApplyRootQueryRestrictionToUpdates { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to delete operations.
         /// </summary>
+        /// <remarks>
+        /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
+        /// to <c>false</c> since delete operations against a modeled record already take into account primary key fields.
+        /// </remarks>
         bool ApplyRootQueryRestrictionToDeletes { get; set; }
 
         /// <summary>

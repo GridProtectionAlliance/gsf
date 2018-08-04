@@ -437,12 +437,20 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to update operations.
         /// </summary>
-        public bool ApplyRootQueryRestrictionToUpdates { get; set; } = true;
+        /// <remarks>
+        /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
+        /// to <c>false</c> since update operations against a modeled record already take into account primary key fields.
+        /// </remarks>
+        public bool ApplyRootQueryRestrictionToUpdates { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if <see cref="RootQueryRestriction"/> should be applied to delete operations.
         /// </summary>
-        public bool ApplyRootQueryRestrictionToDeletes { get; set; } = true;
+        /// <remarks>
+        /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
+        /// to <c>false</c> since delete operations against a modeled record already take into account primary key fields.
+        /// </remarks>
+        public bool ApplyRootQueryRestrictionToDeletes { get; set; }
 
         #endregion
 
@@ -1417,6 +1425,9 @@ namespace GSF.Data.Model
                     TableOperations = this,
                     Connection = Connection
                 });
+
+                if ((object)RootQueryRestriction != null && (applyRootQueryRestriction ?? ApplyRootQueryRestrictionToUpdates))
+                    restriction = RootQueryRestriction + restriction;
             }
             catch (Exception ex)
             {
@@ -1455,9 +1466,6 @@ namespace GSF.Data.Model
 
             try
             {
-                if ((object)RootQueryRestriction != null && (applyRootQueryRestriction ?? ApplyRootQueryRestrictionToUpdates))
-                    restriction = RootQueryRestriction + restriction;
-
                 foreach (PropertyInfo property in s_updateProperties)
                     values.Add(GetInterpretedPropertyValue(property, record));
 
