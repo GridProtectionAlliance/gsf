@@ -66,8 +66,8 @@ namespace GSF.Data.Model
         /// Gets or sets flag that determines if root query restriction should be applied to update operations.
         /// </summary>
         /// <remarks>
-        /// If root query restriction only references primary key fields, then this property value should be
-        /// set to <c>false</c> since update operations against a modeled record already take into account
+        /// If root query restriction only references primary key fields, then this property value should
+        /// be set to <c>false</c> since default update operations for a modeled record already work against
         /// primary key fields.
         /// </remarks>
         public bool ApplyToUpdates;
@@ -76,8 +76,8 @@ namespace GSF.Data.Model
         /// Gets or sets flag that determines if root query restriction should be applied to delete operations.
         /// </summary>
         /// <remarks>
-        /// If root query restriction only references primary key fields, then this property value should be
-        /// set to <c>false</c> since delete operations against a modeled record already take into account
+        /// If root query restriction only references primary key fields, then this property value should
+        /// be set to <c>false</c> since default delete operations for a modeled record already work against
         /// primary key fields.
         /// </remarks>
         public bool ApplyToDeletes;

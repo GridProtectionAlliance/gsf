@@ -447,7 +447,7 @@ namespace GSF.Data.Model
         /// <remarks>
         /// <para>
         /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
-        /// to <c>false</c> since update operations against a modeled record already take into account primary key fields.
+        /// to <c>false</c> since default update operations for a modeled record work already against primary key fields.
         /// </para>
         /// <para>
         /// This flag can be manually set per <see cref="TableOperations{T}"/> instance or handled automatically by marking
@@ -463,7 +463,7 @@ namespace GSF.Data.Model
         /// <remarks>
         /// <para>
         /// If <see cref="RootQueryRestriction"/> only references primary key fields, then this property value should be set
-        /// to <c>false</c> since delete operations against a modeled record already take into account primary key fields.
+        /// to <c>false</c> since default delete operations for a modeled record already work against primary key fields.
         /// </para>
         /// <para>
         /// This flag can be manually set per <see cref="TableOperations{T}"/> instance or handled automatically by marking
