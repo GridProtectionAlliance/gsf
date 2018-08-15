@@ -368,7 +368,7 @@ namespace DataMigrationUtility
                             destination.Text = "Data Source=tnsName; User ID=schemaUserName; Password=schemaPassword; DataProviderString={AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter}";
                         break;
                     case DatabaseType.SQLite:
-                        destination.Text = "Data Source=databaseName.db; Version=3; Foreign Keys=True; FailIfMissing=True; DataProviderString={AssemblyName={System.Data.SQLite, Version=1.0.99.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter}";
+                        destination.Text = "Data Source=databaseName.db; Version=3; Foreign Keys=True; FailIfMissing=True; DataProviderString={AssemblyName={System.Data.SQLite, Version=1.0.109.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter}";
                         break;
                     default:
                         destination.Text = "";
