@@ -470,6 +470,28 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InstanceSubscribe", "Applic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadImpedanceCalcs", "Tools\LoadImpedanceCalcs\LoadImpedanceCalcs.csproj", "{9F2E9010-4135-48B7-9D19-D3EB1B182BF6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLite", "SQLite", "{F589AE5C-ABB4-4FDE-BD36-B365F9E493DD}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\SQLite\System.Data.SQLite.dll = Dependencies\SQLite\System.Data.SQLite.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OSI", "OSI", "{3FC7828F-0C9A-4216-AFDC-CE0844D56F1D}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\OSI\OSIsoft.AFSDK.dll = Dependencies\OSI\OSIsoft.AFSDK.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Postgres", "Postgres", "{ABA14388-844D-4CE8-8EF4-2D77F702935F}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\Postgres\Npgsql.dll = Dependencies\Postgres\Npgsql.dll
+		Dependencies\Postgres\Npgsql.xml = Dependencies\Postgres\Npgsql.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UTK", "UTK", "{A7E4DCAA-FB9F-4050-B661-308495C391E6}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\UTK\UTKEventLocation.zip = Dependencies\UTK\UTKEventLocation.zip
+		Dependencies\UTK\UTKLogo.png = Dependencies\UTK\UTKLogo.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{5ce3d6f4-d38d-4f71-acb6-79681cfe47df}*SharedItemsImports = 13
@@ -1800,6 +1822,10 @@ Global
 		{3AB7FB78-65FE-4526-991F-532F39D9A26A} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
 		{87F19B27-127E-4241-A442-345AC1F71FE0} = {FD32F5EF-6A51-455E-9022-19A46EE9D730}
 		{9F2E9010-4135-48B7-9D19-D3EB1B182BF6} = {1B63485E-46C7-4185-B968-216A02396B88}
+		{F589AE5C-ABB4-4FDE-BD36-B365F9E493DD} = {13006BBE-434A-4027-940B-EAD752844137}
+		{3FC7828F-0C9A-4216-AFDC-CE0844D56F1D} = {13006BBE-434A-4027-940B-EAD752844137}
+		{ABA14388-844D-4CE8-8EF4-2D77F702935F} = {13006BBE-434A-4027-940B-EAD752844137}
+		{A7E4DCAA-FB9F-4050-B661-308495C391E6} = {13006BBE-434A-4027-940B-EAD752844137}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}
