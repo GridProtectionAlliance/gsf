@@ -64,6 +64,33 @@ namespace GSF.NumericalAnalysis
         }
 
         /// <summary>
+        /// Computes the standard deviation over a sequence of <see cref="double"/> values.
+        /// </summary>
+        /// <param name="source">Source data sample.</param>
+        /// <param name="selector">Used to map value from enumerable of object to enumerable of doubles</param>
+        /// <param name="calculateForSample">Set to <c>true</c> to calculate for estimated population size, or <c>false</c> for full population.</param>
+        /// <returns>The standard deviation of the sequence.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
+        public static double StandardDeviation<T>(this IEnumerable<T> source, Func<T, double> selector, bool calculateForSample = false)
+        {
+            if ((object)source == null)
+                throw new ArgumentNullException(nameof(source), "source is null");
+
+            double[] values = source as double[] ?? source.Select(selector).ToArray();
+            int sampleCount = values.Length - (calculateForSample ? 1 : 0);
+
+            if (sampleCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(source), "Not enough sample values provided to produce a result");
+
+            double sampleAverage = values.Average();
+            double totalVariance = values.Select(item => item - sampleAverage).Select(deviation => deviation * deviation).Sum();
+
+            return Math.Sqrt(totalVariance / sampleCount);
+        }
+
+
+        /// <summary>
         /// Computes the standard deviation over a sequence of <see cref="decimal"/> values.
         /// </summary>
         /// <param name="source">Source data sample.</param>
@@ -77,6 +104,32 @@ namespace GSF.NumericalAnalysis
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             decimal[] values = source as decimal[] ?? source.ToArray();
+            int sampleCount = values.Length - (calculateForSample ? 1 : 0);
+
+            if (sampleCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(source), "Not enough sample values provided to produce a result");
+
+            decimal sampleAverage = values.Average();
+            decimal totalVariance = values.Select(item => item - sampleAverage).Select(deviation => deviation * deviation).Sum();
+
+            return (decimal)Math.Sqrt((double)(totalVariance / sampleCount));
+        }
+
+        /// <summary>
+        /// Computes the standard deviation over a sequence of <see cref="decimal"/> values.
+        /// </summary>
+        /// <param name="source">Source data sample.</param>
+        /// <param name="selector">Used to map value from enumerable of object to enumerable of doubles</param>
+        /// <param name="calculateForSample">Set to <c>true</c> to calculate for estimated population size, or <c>false</c> for full population.</param>
+        /// <returns>The standard deviation of the sequence.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
+        public static decimal StandardDeviation<T>(this IEnumerable<T> source, Func<T, decimal> selector, bool calculateForSample = false)
+        {
+            if ((object)source == null)
+                throw new ArgumentNullException(nameof(source), "source is null");
+
+            decimal[] values = source as decimal[] ?? source.Select(selector).ToArray();
             int sampleCount = values.Length - (calculateForSample ? 1 : 0);
 
             if (sampleCount < 1)
@@ -112,5 +165,33 @@ namespace GSF.NumericalAnalysis
 
             return (float)Math.Sqrt(totalVariance / sampleCount);
         }
+
+        /// <summary>
+        /// Computes the standard deviation over a sequence of <see cref="float"/> values.
+        /// </summary>
+        /// <param name="source">Source data sample.</param>
+        /// <param name="selector">Used to map value from enumerable of object to enumerable of doubles</param>
+        /// <param name="calculateForSample">Set to <c>true</c> to calculate for estimated population size, or <c>false</c> for full population.</param>
+        /// <returns>The standard deviation of the sequence.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
+        public static float StandardDeviation<T>(this IEnumerable<T> source, Func<T, float> selector, bool calculateForSample = false)
+        {
+            if ((object)source == null)
+                throw new ArgumentNullException(nameof(source), "source is null");
+
+            float[] values = source as float[] ?? source.Select(selector).ToArray();
+            int sampleCount = values.Length - (calculateForSample ? 1 : 0);
+
+            if (sampleCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(source), "Not enough sample values provided to produce a result");
+
+            float sampleAverage = values.Average();
+            float totalVariance = values.Select(item => item - sampleAverage).Select(deviation => deviation * deviation).Sum();
+
+            return (float)Math.Sqrt(totalVariance / sampleCount);
+        }
+
+
     }
 }
