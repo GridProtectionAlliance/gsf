@@ -3245,21 +3245,18 @@ namespace GSF.TimeSeries.Transport
                             byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);
                             SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
 
-                            // Spawn routing table recalculation
-                            OnInputMeasurementKeysUpdated();
-                            m_routingTables.CalculateRoutingTables(null);
-
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();
 
-                            // If client has subscribed to any cached measurements, queue them up for the client
-                            IActionAdapter adapter;
-                            LatestMeasurementCache cache;
+                            // The subscription adapter must be started before sending
+                            // cached measurements or else they will be ignored
+                            subscription.Start();
 
-                            if (TryGetAdapterByName("LatestMeasurementCache", out adapter))
+                            // If client has subscribed to any cached measurements, queue them up for the client
+                            if (TryGetAdapterByName("LatestMeasurementCache", out IActionAdapter cacheAdapter))
                             {
-                                cache = adapter as LatestMeasurementCache;
+                                LatestMeasurementCache cache = cacheAdapter as LatestMeasurementCache;
 
                                 if ((object)cache != null)
                                 {
@@ -3268,8 +3265,12 @@ namespace GSF.TimeSeries.Transport
                                 }
                             }
 
-                            // Make sure adapter is started
-                            subscription.Start();
+                            // Spawn routing table recalculation after sending cached measurements--
+                            // there is a bit of a race condition that could cause the subscriber to
+                            // miss some data points that arrive during the routing table calculation,
+                            // but data will not be provided out of order (except maybe on resubscribe)
+                            OnInputMeasurementKeysUpdated();
+                            m_routingTables.CalculateRoutingTables(null);
 
                             // Notify any direct publisher consumers about the new client connection
                             try
