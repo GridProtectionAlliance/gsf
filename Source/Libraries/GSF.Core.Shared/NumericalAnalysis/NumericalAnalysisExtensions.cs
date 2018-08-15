@@ -78,7 +78,7 @@ namespace GSF.NumericalAnalysis
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
-            return source.Select(selector).StandardDeviation();
+            return source.Select(selector).StandardDeviation(calculateForSample);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace GSF.NumericalAnalysis
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
-            return source.Select(selector).StandardDeviation();
+            return source.Select(selector).StandardDeviation(calculateForSample);
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace GSF.NumericalAnalysis
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
-            return source.Select(selector).StandardDeviation();
+            return source.Select(selector).StandardDeviation(calculateForSample);
         }
     }
 }
