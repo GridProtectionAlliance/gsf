@@ -1516,6 +1516,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
                     device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
                     device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
+                    device.VendorDeviceID = PdcVendorDeviceID == 0 ? (int?)null : PdcVendorDeviceID;
                     device.FramesPerSecond = PdcFrameRate;
                     device.SkipDisableRealTimeData = SkipDisableRealTimeData;
                     device.ConnectionString = GenerateConnectionString();
