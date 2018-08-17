@@ -448,8 +448,8 @@ namespace GSF.IO
 
             bool sourceIsDirectory = Directory.Exists(sourceAbsolutePath);
             bool sourceIsFile = File.Exists(sourceAbsolutePath);
-            bool targetIsDirectory = Directory.Exists(sourceAbsolutePath);
-            bool targetIsFile = File.Exists(sourceAbsolutePath);
+            bool targetIsDirectory = Directory.Exists(targetAbsolutePath);
+            bool targetIsFile = File.Exists(targetAbsolutePath);
 
             if (!sourceIsDirectory && !sourceIsFile)
                 throw new FileNotFoundException($"Unable to find file or directory at the given path: {sourceAbsolutePath}");
