@@ -1812,8 +1812,10 @@ namespace GSF.TimeSeries.Transport
 
             if (!settings.TryGetValue("BypassStatistics", out setting) || !setting.ParseBoolean())
             {
+                EventHandler statisticsCalculated = (sender, args) => ResetMeasurementsPerSecondCounters();
                 StatisticsEngine.Register(this, "Subscriber", "SUB");
-                StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
+                StatisticsEngine.Calculated += statisticsCalculated;
+                Disposed += (sender, args) => StatisticsEngine.Calculated -= statisticsCalculated;
             }
             else
             {
