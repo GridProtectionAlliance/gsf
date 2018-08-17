@@ -260,7 +260,12 @@ namespace openPDC
             if (!settings.TryGetValue("port", out string portSetting) || !int.TryParse(portSetting, out int port))
                 port = 6165;
 
-            return $"server=localhost:{port}";
+            if (settings.TryGetValue("interface", out string interfaceSetting))
+                interfaceSetting = $"Interface={interfaceSetting}";
+            else
+                interfaceSetting = string.Empty;
+
+            return $"Server=localhost:{port};{interfaceSetting};BypassStatistics=true";
         }
 
         private SubscriptionInfo ToSubscriptionInfo(JObject obj)
