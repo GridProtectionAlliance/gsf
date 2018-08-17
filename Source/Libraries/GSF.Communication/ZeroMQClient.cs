@@ -676,7 +676,7 @@ namespace GSF.Communication
             {
                 ZException zmqex = ex as ZException;
 
-                if ((object)zmqex != null && (zmqex.ErrNo == ZError.EAGAIN || zmqex.ErrNo == ZError.ETERM))
+                if ((object)zmqex != null && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
                     ThreadPool.QueueUserWorkItem(state => Disconnect());
                 else
                     base.OnSendDataException(ex);
