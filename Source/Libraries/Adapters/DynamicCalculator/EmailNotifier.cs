@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Text;
 using GSF;
 using GSF.Net.Smtp;
+using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
 namespace DynamicCalculator
@@ -69,14 +70,8 @@ namespace DynamicCalculator
         Description("Define the boolean expression used to determine if an e-mail should be sent.")]
         public new string ExpressionText
         {
-            get
-            {
-                return base.ExpressionText;
-            }
-            set
-            {
-                base.ExpressionText = value;
-            }
+            get => base.ExpressionText;
+            set => base.ExpressionText = value;
         }
 
         /// <summary>
@@ -87,14 +82,8 @@ namespace DynamicCalculator
         Description("Define the e-mail address of the message sender.")]
         public string From
         {
-            get
-            {
-                return m_mailClient.From;
-            }
-            set
-            {
-                m_mailClient.From = value;
-            }
+            get => m_mailClient.From;
+            set => m_mailClient.From = value;
         }
 
         /// <summary>
@@ -106,14 +95,8 @@ namespace DynamicCalculator
         DefaultValue("")]
         public string ToRecipients
         {
-            get
-            {
-                return m_mailClient.ToRecipients;
-            }
-            set
-            {
-                m_mailClient.ToRecipients = value;
-            }
+            get => m_mailClient.ToRecipients;
+            set => m_mailClient.ToRecipients = value;
         }
 
         /// <summary>
@@ -124,14 +107,8 @@ namespace DynamicCalculator
         DefaultValue("")]
         public string CcRecipients
         {
-            get
-            {
-                return m_mailClient.CcRecipients;
-            }
-            set
-            {
-                m_mailClient.CcRecipients = value;
-            }
+            get => m_mailClient.CcRecipients;
+            set => m_mailClient.CcRecipients = value;
         }
 
         /// <summary>
@@ -142,14 +119,8 @@ namespace DynamicCalculator
         DefaultValue("")]
         public string BccRecipients
         {
-            get
-            {
-                return m_mailClient.BccRecipients;
-            }
-            set
-            {
-                m_mailClient.BccRecipients = value;
-            }
+            get => m_mailClient.BccRecipients;
+            set => m_mailClient.BccRecipients = value;
         }
 
         /// <summary>
@@ -159,14 +130,8 @@ namespace DynamicCalculator
         Description("Define the subject of the e-mail message.")]
         public string Subject
         {
-            get
-            {
-                return m_mailClient.Subject;
-            }
-            set
-            {
-                m_mailClient.Subject = value;
-            }
+            get => m_mailClient.Subject;
+            set => m_mailClient.Subject = value;
         }
 
         /// <summary>
@@ -176,14 +141,8 @@ namespace DynamicCalculator
         Description("Define the body of the e-mail message.")]
         public string Body
         {
-            get
-            {
-                return m_mailClient.Body;
-            }
-            set
-            {
-                m_mailClient.Body = value;
-            }
+            get => m_mailClient.Body;
+            set => m_mailClient.Body = value;
         }
 
         /// <summary>
@@ -194,14 +153,8 @@ namespace DynamicCalculator
         Description("Define the name or IP address of the SMTP server to be used for sending the e-mail message.")]
         public string SmtpServer
         {
-            get
-            {
-                return m_mailClient.SmtpServer;
-            }
-            set
-            {
-                m_mailClient.SmtpServer = value;
-            }
+            get => m_mailClient.SmtpServer;
+            set => m_mailClient.SmtpServer = value;
         }
 
         /// <summary>
@@ -212,14 +165,8 @@ namespace DynamicCalculator
         DefaultValue(false)]
         public bool IsBodyHtml
         {
-            get
-            {
-                return m_mailClient.IsBodyHtml;
-            }
-            set
-            {
-                m_mailClient.IsBodyHtml = value;
-            }
+            get => m_mailClient.IsBodyHtml;
+            set => m_mailClient.IsBodyHtml = value;
         }
 
         /// <summary>
@@ -230,14 +177,8 @@ namespace DynamicCalculator
         DefaultValue("")]
         public string Username
         {
-            get
-            {
-                return m_mailClient.Username;
-            }
-            set
-            {
-                m_mailClient.Username = value;
-            }
+            get => m_mailClient.Username;
+            set => m_mailClient.Username = value;
         }
 
         /// <summary>
@@ -248,14 +189,8 @@ namespace DynamicCalculator
         DefaultValue("")]
         public string Password
         {
-            get
-            {
-                return m_mailClient.Password;
-            }
-            set
-            {
-                m_mailClient.Password = value;
-            }
+            get => m_mailClient.Password;
+            set => m_mailClient.Password = value;
         }
 
         /// <summary>
@@ -266,29 +201,28 @@ namespace DynamicCalculator
         DefaultValue(false)]
         public bool EnableSSL
         {
-            get
-            {
-                return m_mailClient.EnableSSL;
-            }
-            set
-            {
-                m_mailClient.EnableSSL = value;
-            }
+            get => m_mailClient.EnableSSL;
+            set => m_mailClient.EnableSSL = value;
+        }
+
+
+        /// <summary>
+        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override IMeasurement[] OutputMeasurements // Redeclared to hide property - not relevant to this adapter
+        {
+            get => base.OutputMeasurements;
+            set => base.OutputMeasurements = value;
         }
 
         /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
         /// </summary>
-        public new TimestampSource TimestampSource
+        public new TimestampSource TimestampSource // Redeclared to hide property - not relevant to this adapter
         {
-            get
-            {
-                return base.TimestampSource;
-            }
-            set
-            {
-                base.TimestampSource = value;
-            }
+            get => base.TimestampSource;
+            set => base.TimestampSource = value;
         }
 
         /// <summary>
@@ -300,6 +234,8 @@ namespace DynamicCalculator
             {
                 StringBuilder status = new StringBuilder();
 
+                status.Append(base.Status);
+                status.AppendLine();
                 status.AppendFormat("      Expression Successes: {0:N0}", m_expressionSuccesses);
                 status.AppendLine();
                 status.AppendFormat("       Expression Failures: {0:N0}", m_expressionFailures);

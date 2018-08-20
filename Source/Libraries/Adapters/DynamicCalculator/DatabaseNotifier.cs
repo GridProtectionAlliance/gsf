@@ -30,6 +30,7 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.Parsing;
 using GSF.Threading;
+using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
 // ReSharper disable UnusedMember.Global
@@ -132,6 +133,16 @@ namespace DynamicCalculator
         }
 
         /// <summary>
+        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override IMeasurement[] OutputMeasurements // Redeclared to hide property - not relevant to this adapter
+        {
+            get => base.OutputMeasurements;
+            set => base.OutputMeasurements = value;
+        }
+
+        /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -150,6 +161,8 @@ namespace DynamicCalculator
             {
                 StringBuilder status = new StringBuilder();
 
+                status.Append(base.Status);
+                status.AppendLine();
                 status.AppendFormat("      Expression Successes: {0:N0}", m_expressionSuccesses);
                 status.AppendLine();
                 status.AppendFormat("       Expression Failures: {0:N0}", m_expressionFailures);
