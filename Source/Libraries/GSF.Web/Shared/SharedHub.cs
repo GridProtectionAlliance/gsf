@@ -23,12 +23,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GSF.Data.Model;
 using GSF.Security;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using System.Threading.Tasks;
+using GSF.Collections;
+using GSF.Data;
+using GSF.Diagnostics;
+using GSF.TimeSeries.Statistics;
 using GSF.Web.Shared.Model;
 
 namespace GSF.Web.Shared
@@ -119,6 +124,16 @@ namespace GSF.Web.Shared
         // Static Fields
         private static Action<string, UpdateType> s_logStatusMessageFunction;
         private static Action<Exception> s_logExceptionFunction;
+        private static readonly LogPublisher s_log;
+        private static readonly Dictionary<Guid, Statistic> s_statisticReferences;
+        private static Statistic[] s_statistics;
+        
+        // Static Constructor
+        static SharedHub()
+        {
+            s_log = Logger.CreatePublisher(typeof(SharedHub), MessageClass.Component);
+            s_statisticReferences = new Dictionary<Guid, Statistic>();
+        }
 
         // Static Properties
 
@@ -126,6 +141,28 @@ namespace GSF.Web.Shared
         /// Gets current default Node ID for security.
         /// </summary>
         public static readonly Guid DefaultNodeID = AdoSecurityProvider.DefaultNodeID;
+
+        // Static Methods
+
+        // Ideally this function should be called after all statistic engine sources have been registered
+        private void InitializeStatistics()
+        {
+            if (s_statistics?.Length > 0)
+                return;
+
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    TableOperations<Statistic> statistics = new TableOperations<Statistic>(connection);
+                    s_statistics = statistics.QueryRecords().ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                s_log.Publish(MessageLevel.Error, "InitializeStatistics", exception: ex);
+            }
+        }
 
         #endregion
 
@@ -346,6 +383,41 @@ namespace GSF.Web.Shared
         public void UpdateVendorDevice(VendorDevice vendorDevice)
         {
             DataContext.Table<VendorDevice>().UpdateRecord(vendorDevice);
+        }
+
+        #endregion
+
+        #region [ Statistic Formatting Operations ]
+
+        /// <summary>
+        /// If measurement is a statistic, returns the associated Statistic record; otherwise, returns <c>null</c>.
+        /// </summary>
+        /// <param name="measurementMetadata">Record of measurement metadata used to lookup Statistic record.</param>
+        /// <returns>Associated Statistic record, if measurement is a statistic; otherwise, returns <c>null</c>.</returns>
+        public Statistic GetStatistic(dynamic measurementMetadata)
+        {
+            InitializeStatistics();
+
+            Guid signalID = measurementMetadata.SignalID;
+
+            return s_statisticReferences.GetOrAdd(signalID, _ =>
+            {
+                string signalReference = measurementMetadata.SignalReference;
+
+                if (string.IsNullOrWhiteSpace(signalReference))
+                    return null;
+
+                if (!StatisticsEngine.TryLookupStatisticSource(signalReference, out string source, out int signalIndex))
+                    return null;
+
+                foreach (Statistic statistic in s_statistics)
+                {
+                    if (statistic.Source.Equals(source, StringComparison.OrdinalIgnoreCase) && statistic.SignalIndex == signalIndex)
+                        return statistic;
+                }
+
+                return null;
+            });
         }
 
         #endregion

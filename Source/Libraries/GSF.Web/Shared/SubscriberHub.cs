@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.TimeSeries;
@@ -36,7 +35,7 @@ using GSF.Web.Security;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
 
-namespace openPDC
+namespace GSF.Web.Shared
 {
     /// <summary>
     /// SignalR hub that exposes server-side functions for the subscriber API.
@@ -50,7 +49,7 @@ namespace openPDC
 
         private sealed class Connection : IDisposable
         {
-            public Dictionary<string, Subscriber> SubscriberLookup;
+            public readonly Dictionary<string, Subscriber> SubscriberLookup;
             private bool m_disposed;
 
             public Connection()
@@ -79,7 +78,44 @@ namespace openPDC
         {
             public DataSubscriber DataSubscriber;
             public DataSet Metadata;
+
+            private Dictionary<Guid, Tuple<string, string>> m_formats;
             private bool m_disposed;
+
+            public void SetFormat(Guid signalID, string format, string dataType)
+            {
+                if ((object)m_formats == null)
+                    m_formats = new Dictionary<Guid, Tuple<string, string>>();
+
+                m_formats[signalID] = new Tuple<string, string>(format, dataType);
+            }
+
+            public bool TryGetFormat(Guid signalID, out string format, out string dataType)
+            {
+                format = null;
+                dataType = null;
+
+                if ((object)m_formats == null)
+                    return false;
+
+                if (m_formats.TryGetValue(signalID, out Tuple<string, string> tuple))
+                {
+                    format = tuple.Item1;
+                    dataType = tuple.Item2;
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void RemoveFormat(Guid signalID)
+            {
+                if ((object)m_formats == null)
+                    return;
+
+                if (m_formats.ContainsKey(signalID))
+                    m_formats.Remove(signalID);
+            }
 
             public void Dispose()
             {
@@ -159,6 +195,32 @@ namespace openPDC
                 rows = rows.Take(takeCount);
 
             return rows.Select(FromDataRow);
+        }
+
+        /// <summary>
+        /// Defines a string format to apply for a given measurement.
+        /// </summary>
+        /// <param name="subscriberID">The ID of the subscriber.</param>
+        /// <param name="signalID">Measurement Signal ID to which to apply the format.</param>
+        /// <param name="format">String format to apply, e.g., "{0:N3} seconds".</param>
+        /// <param name="dataType">Fully qualified data type for measurement, defaults to "System.Double" if <c>null</c>.</param>
+        /// <remarks>
+        /// <para>
+        /// Set <paramref name="format"/> to <c>null</c> to remove any existing formatting.
+        /// </para>
+        /// <para>
+        /// Conversion of double-precision measurement floating point value to specified
+        /// <paramref name="dataType"/> will be attempted when type is provided.
+        /// </para>
+        /// </remarks>
+        public void SetMeasurementFormat(string subscriberID, Guid signalID, string format, string dataType)
+        {
+            Subscriber subscriber = GetOrCreate(subscriberID);
+
+            if (string.IsNullOrWhiteSpace(format))
+                subscriber.RemoveFormat(signalID);
+            else
+                subscriber.SetFormat(signalID, format, dataType);
         }
 
         /// <summary>
@@ -312,16 +374,45 @@ namespace openPDC
             return obj;
         }
 
-        private object FromMeasurement(IMeasurement measurement)
+        private object ToJsonMeasurement(Subscriber subscriber, IMeasurement measurement)
         {
+            Guid signalID = measurement.ID;
+            double value = measurement.AdjustedValue;
             dynamic obj = new JObject();
-            obj.signalID = measurement.ID;
-            obj.value = measurement.Value;
 
-            DateTime timestamp = measurement.Timestamp;
-            DateTime epoch = UnixTimeTag.BaseTicks;
-            obj.timestamp = (timestamp - epoch).TotalMilliseconds;
+            obj.signalID = signalID;
+
+            if (subscriber.TryGetFormat(signalID, out string format, out string dataType))
+                obj.value = string.Format(format, ConvertValueToType(value, dataType));
+            else
+                obj.value = value;
+
+            obj.timestamp = (measurement.Timestamp - UnixTimeTag.BaseTicks).ToMilliseconds();
+
             return obj;
+        }
+
+        private object ConvertValueToType(double value, string dataType)
+        {
+            if (string.IsNullOrWhiteSpace(dataType))
+                dataType = "System.Double";
+
+            try
+            {
+                switch (dataType)
+                {
+                    case "System.Double":
+                        return value;
+                    case "System.DateTime":
+                        return new DateTime((long)value);
+                }
+
+                return Convert.ChangeType(value, Type.GetType(dataType) ?? typeof(double));
+            }
+            catch
+            {
+                return value;
+            }
         }
 
         private void Subscriber_ConnectionEstablished(string connectionID, string subscriberID)
@@ -336,8 +427,10 @@ namespace openPDC
 
         private void Subscriber_NewMeasurements(string connectionID, string subscriberID, ICollection<IMeasurement> measurements)
         {
+            Subscriber subscriber = GetOrCreate(subscriberID);
+
             object data = measurements
-                .Select(FromMeasurement)
+                .Select(measurement => ToJsonMeasurement(subscriber, measurement))
                 .ToArray();
 
             Clients.Client(connectionID).NewMeasurements(subscriberID, data);
@@ -369,7 +462,7 @@ namespace openPDC
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<string, Connection> s_connectionLookup;
+        private static readonly ConcurrentDictionary<string, Connection> s_connectionLookup;
 
         // Static Constructor
         static SubscriberHub()

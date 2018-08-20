@@ -261,6 +261,10 @@
             return server.unsubscribe(subscriberID);
         }
 
+        subscriber.setMeasurementFormat = function (signalID, format, dataType) {
+            return server.setMeasurementFormat(subscriberID, signalID, format, dataType);
+        }
+
         subscriber.disconnect = function () {
             return server.disconnect(subscriberID);
         }

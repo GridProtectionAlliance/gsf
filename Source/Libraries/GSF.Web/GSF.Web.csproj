@@ -160,6 +160,7 @@
     <Compile Include="Security\IAntiForgeryAdditionalDataProvider.cs" />
     <Compile Include="Security\ValidateRequestVerificationTokenAttribute.cs" />
     <Compile Include="Shared\Model\Company.cs" />
+    <Compile Include="Shared\Model\Statistic.cs" />
     <Compile Include="Shared\Model\Vendor.cs" />
     <Compile Include="Shared\Model\VendorDevice.cs" />
     <Compile Include="Shared\Resources.cs" />

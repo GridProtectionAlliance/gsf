@@ -1,4 +1,3 @@
-// ReSharper disable CheckNamespace
 #pragma warning disable 1591
 
 using System;
@@ -6,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 using GSF.ComponentModel;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
-using GSF.Web.Model;
 
 namespace GSF.Web.Shared.Model
 {

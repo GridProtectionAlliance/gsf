@@ -1153,6 +1153,56 @@ namespace GSF.TimeSeries.Statistics
         }
 
         /// <summary>
+        /// Attempts to lookup statistic source and signal index from a measurement <paramref name="signalReference"/>.
+        /// </summary>
+        /// <param name="signalReference">Signal reference.</param>
+        /// <param name="sourceCategory">Statistic source category as defined in Statistics table Source column.</param>
+        /// <param name="signalIndex">Statistic signal index as defined in Statistics table SignalIndex column.</param>
+        /// <returns><c>true</c> if lookup succeeds; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// The statistic source acronyms used in measurement signal references are defined dynamically by
+        /// statistic sources during registration. This function returns the source category, as defined in
+        /// the Statistic table, for a given signal reference to allow for reverse lookups. As a result,
+        /// user will need to make sure that all statistic sources have been registered before calling
+        /// this function in order to receive accurate results.
+        /// </remarks>
+        public static bool TryLookupStatisticSource(string signalReference, out string sourceCategory, out int signalIndex)
+        {
+            sourceCategory = null;
+            signalIndex = 0;
+
+            if (string.IsNullOrWhiteSpace(signalReference))
+                return false;
+
+            int statSuffix = signalReference.LastIndexOf('!');
+
+            if (statSuffix < 0)
+                return false;
+
+            int statIndex = signalReference.LastIndexOf("-ST", StringComparison.Ordinal);
+
+            if (statIndex < 0)
+                return false;
+
+            string acronym = signalReference.Substring(statSuffix + 1, statIndex - statSuffix - 1);
+            signalIndex = Convert.ToInt32(signalReference.Substring(statIndex + 3));
+
+            lock (StatisticSources)
+            {
+                foreach (StatisticSource statisticSource in StatisticSources)
+                {
+                    if (statisticSource.SourceAcronym.Equals(acronym, StringComparison.OrdinalIgnoreCase))
+                    {
+                        sourceCategory = statisticSource.SourceCategory;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Determines whether the given signal reference matches the
         /// signal reference regular expression using the given suffix.
         /// </summary>

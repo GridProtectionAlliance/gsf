@@ -108,10 +108,7 @@ namespace GSF.Security.Model
         /// <summary>
         /// Change password on date field - for DB authentication only.
         /// </summary>
-        public DateTime? ChangePasswordOn
-        {
-            get; set;
-        }
+        public DateTime? ChangePasswordOn { get; set; }
 
         /// <summary>
         /// Use Active Directory authentication field.
@@ -124,10 +121,7 @@ namespace GSF.Security.Model
         /// User locked-out field.
         /// </summary>
         [Label("Locked Out")]
-        public bool LockedOut
-        {
-            get; set;
-        }
+        public bool LockedOut { get; set; }
 
         /// <summary>
         /// Created on field.
