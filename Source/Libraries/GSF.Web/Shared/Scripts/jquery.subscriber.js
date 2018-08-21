@@ -237,6 +237,7 @@
          *     ConstraintParameters - additional constraint parameters supplied to temporal adapters in a temporal session
          *     ProcessingInterval - interval at which measurements will be provided; 0 indicates "as fast as possible" (default: -1)
          *     ExtraConnectionStringParameters - connection string defining custom parameters for further subscription customization
+         *     FormatRecords - collection of format records to apply to measurements where each record is { signalID, format, dataType }
          *
          *     // Only applies to synchronized subscriptions:
          *     RemotelySynchronized - determines whether data is concentrated remotely by the publisher or locally by the subscriber
@@ -263,6 +264,14 @@
 
         subscriber.setMeasurementFormat = function (signalID, format, dataType) {
             return server.setMeasurementFormat(subscriberID, signalID, format, dataType);
+        }
+
+        /**
+         * formatRecords: an array of formatRecord objects
+         *               { signalID, format, dataType }
+         */
+        subscriber.setMeasurementFormats = function (formatRecords) {
+            return server.setMeasurementFormat(subscriberID, formatRecords);
         }
 
         subscriber.disconnect = function () {

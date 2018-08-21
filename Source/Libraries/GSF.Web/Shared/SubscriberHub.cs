@@ -110,11 +110,11 @@ namespace GSF.Web.Shared
 
             public void RemoveFormat(Guid signalID)
             {
-                if ((object)m_formats == null)
+                if ((object)m_formats == null || !m_formats.ContainsKey(signalID))
                     return;
 
-                if (m_formats.ContainsKey(signalID))
-                    m_formats.Remove(signalID);
+                if (m_formats.Remove(signalID) && m_formats.Count == 0)
+                    m_formats = null;
             }
 
             public void Dispose()
@@ -201,7 +201,7 @@ namespace GSF.Web.Shared
         /// Defines a string format to apply for a given measurement.
         /// </summary>
         /// <param name="subscriberID">The ID of the subscriber.</param>
-        /// <param name="signalID">Measurement Signal ID to which to apply the format.</param>
+        /// <param name="signalID">Measurement signal ID to which to apply the format.</param>
         /// <param name="format">String format to apply, e.g., "{0:N3} seconds".</param>
         /// <param name="dataType">Fully qualified data type for measurement, defaults to "System.Double" if <c>null</c>.</param>
         /// <remarks>
@@ -224,6 +224,43 @@ namespace GSF.Web.Shared
         }
 
         /// <summary>
+        /// Defines string formats to apply for the collection of format records.
+        /// </summary>
+        /// <param name="subscriberID">The ID of the subscriber.</param>
+        /// <param name="formatRecords">Collection of format records.</param>
+        /// <remarks>
+        /// This is simply a bulk operation for <see cref="SetMeasurementFormat"/>.
+        /// Each format record should be a Json object similar to the following:
+        /// <code>
+        /// {
+        ///     "signalID":"4B1DEE7C-72EC-41EA-AAF3-7E8094355740",
+        ///     "format":"{0:N3} seconds",
+        ///     "dataType":"System.Double"
+        /// }
+        /// </code>
+        /// Where
+        ///  - "signalID" is the measurement signal ID to which to apply the format
+        ///  - "format" is the string format to apply, and
+        ///  - "dataType" is the fully qualified data type for measurement
+        /// </remarks>
+        public void SetMeasurementFormats(string subscriberID, IEnumerable<dynamic> formatRecords)
+        {
+            Subscriber subscriber = GetOrCreate(subscriberID);
+
+            foreach (dynamic formatRecord in formatRecords)
+            {
+                Guid signalID = formatRecord.signalID;
+                string format = formatRecord.format;
+                string dataType = formatRecord.dataType;
+
+                if (string.IsNullOrWhiteSpace(format))
+                    subscriber.RemoveFormat(signalID);
+                else
+                    subscriber.SetFormat(signalID, format, dataType);
+            }
+        }
+
+        /// <summary>
         /// Subscribes to the internal data publisher.
         /// </summary>
         /// <param name="subscriberID">The ID of the subscriber.</param>
@@ -231,7 +268,7 @@ namespace GSF.Web.Shared
         public void Subscribe(string subscriberID, JObject data)
         {
             Subscriber subscriber = GetOrCreate(subscriberID);
-            SubscriptionInfo subscriptionInfo = ToSubscriptionInfo(data);
+            SubscriptionInfo subscriptionInfo = ToSubscriptionInfo(subscriberID, data);
             subscriber.DataSubscriber.Subscribe(subscriptionInfo);
         }
 
@@ -330,10 +367,15 @@ namespace GSF.Web.Shared
             return $"Server=localhost:{port};{interfaceSetting};BypassStatistics=true";
         }
 
-        private SubscriptionInfo ToSubscriptionInfo(JObject obj)
+        private SubscriptionInfo ToSubscriptionInfo(string subscriberID, JObject obj)
         {
             dynamic info = obj;
-            bool synchronized = info.synchronized ?? false;
+            bool synchronized = info.Synchronized ?? false;
+
+            IEnumerable<dynamic> formatRecords = info.FormatRecords;
+
+            if (formatRecords != null)
+                SetMeasurementFormats(subscriberID, formatRecords);
 
             if (synchronized)
                 return ToSynchronizedSubscriptionInfo(obj);

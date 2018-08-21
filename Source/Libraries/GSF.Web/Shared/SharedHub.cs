@@ -35,6 +35,7 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.TimeSeries.Statistics;
 using GSF.Web.Shared.Model;
+using Newtonsoft.Json.Linq;
 
 namespace GSF.Web.Shared
 {
@@ -144,7 +145,6 @@ namespace GSF.Web.Shared
 
         // Static Methods
 
-        // Ideally this function should be called after all statistic engine sources have been registered
         private void InitializeStatistics()
         {
             if (s_statistics?.Length > 0)
@@ -392,23 +392,27 @@ namespace GSF.Web.Shared
         /// <summary>
         /// If measurement is a statistic, returns the associated Statistic record; otherwise, returns <c>null</c>.
         /// </summary>
-        /// <param name="measurementMetadata">Record of measurement metadata used to lookup Statistic record.</param>
+        /// <param name="metadataRecord">Record of measurement metadata used to lookup Statistic record.</param>
         /// <returns>Associated Statistic record, if measurement is a statistic; otherwise, returns <c>null</c>.</returns>
-        public Statistic GetStatistic(dynamic measurementMetadata)
+        /// <remarks>
+        /// For best results, this function should be called after all statistic engine sources have been registered.
+        /// <paramref name="metadataRecord"/> object expected to contain a "SignalID" and "SignalReference" property.
+        /// </remarks>
+        public Statistic GetStatistic(dynamic metadataRecord)
         {
-            InitializeStatistics();
-
-            Guid signalID = measurementMetadata.SignalID;
+            Guid signalID = metadataRecord.SignalID;
 
             return s_statisticReferences.GetOrAdd(signalID, _ =>
             {
-                string signalReference = measurementMetadata.SignalReference;
+                string signalReference = metadataRecord.SignalReference;
 
                 if (string.IsNullOrWhiteSpace(signalReference))
                     return null;
 
                 if (!StatisticsEngine.TryLookupStatisticSource(signalReference, out string source, out int signalIndex))
                     return null;
+
+                InitializeStatistics();
 
                 foreach (Statistic statistic in s_statistics)
                 {
@@ -418,6 +422,34 @@ namespace GSF.Web.Shared
 
                 return null;
             });
+        }
+
+        /// <summary>
+        /// Gets the format records for statistics associated with the <paramref name="metadata"/>.
+        /// </summary>
+        /// <param name="metadata">Collection of measurement metadata.</param>
+        /// <returns>Array of statistical records for the <paramref name="metadata"/>.</returns>
+        /// <remarks>
+        /// This is usually used in conjunction with a call to <see cref="SubscriberHub.SetMeasurementFormats"/>
+        /// or applied to the "FormatRecords" property of a Json <c>subscriptionInfo</c> object.
+        /// Records in <paramref name="metadata"/> array expected to contain a "SignalID" and "SignalReference" property.
+        /// </remarks>
+        public IEnumerable<object> GetStatisticFormatRecords(IEnumerable<dynamic> metadata)
+        {
+            return metadata.Select(ToJsonFormatRecord).ToArray();
+        }
+
+        private object ToJsonFormatRecord(dynamic metadataRecord)
+        {
+            Statistic statistic = GetStatistic(metadataRecord);
+            Guid signalID = metadataRecord.SignalID;
+            dynamic obj = new JObject();
+
+            obj.signalID = signalID;
+            obj.format = statistic?.DisplayFormat ?? "{0:N3}";
+            obj.dataType = statistic?.DataType;
+
+            return obj;
         }
 
         #endregion
