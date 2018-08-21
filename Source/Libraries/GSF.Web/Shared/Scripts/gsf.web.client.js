@@ -229,7 +229,7 @@ function joinKeyValuePairs (source, parameterDelimiter, keyValueDelimiter, start
             else
                 value = value ? value.toString() : "";
 
-            if (value.indexOf(parameterDelimiter) >= 0 || value.indexOf(keyValueDelimiter) >= 0)
+            if (value.indexOf(parameterDelimiter) >= 0 || value.indexOf(keyValueDelimiter) >= 0 || value.indexOf(startValueDelimiter) >= 0 || value.indexOf(endValueDelimiter) >= 0)
                 value = startValueDelimiter + value + endValueDelimiter;
 
             values.push(key + keyValueDelimiter + value);
