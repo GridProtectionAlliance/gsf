@@ -529,7 +529,12 @@ namespace GSF.TimeSeries.UI.ViewModels
                     // that fired the event, and then rejoin the key value pairs.
                     settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
                     settings[parameter.Name] = parameter.Value.ToString();
-                    CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
+
+                    // Build the new connection string and validate that it can still be parsed
+                    string connectionString = settings.JoinKeyValuePairs();
+                    connectionString.ParseKeyValuePairs();
+
+                    CurrentItem.ConnectionString = connectionString;
                 }
                 finally
                 {
