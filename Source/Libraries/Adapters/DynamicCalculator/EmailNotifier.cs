@@ -40,6 +40,12 @@ namespace DynamicCalculator
     public class EmailNotifier : DynamicCalculator
     {
         #region [ Members ]
+        
+        // Constants
+        private const string DefaultExpressionText = "x > 0";
+        private const int DefaultFramesPerSecond = 30;
+        private const double DefaultLagTime = 5.0D;
+        private const double DefaultLeadTime = 5.0D;
 
         // Fields
         private readonly Mail m_mailClient;
@@ -66,9 +72,10 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the textual representation of the boolean expression.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the boolean expression used to determine if an e-mail should be sent.")]
-        public new string ExpressionText
+        [ConnectionStringParameter]
+        [Description("Define the boolean expression used to determine if an e-mail should be sent.")]
+        [DefaultValue(DefaultExpressionText)]
+        public new string ExpressionText // Redeclared to provide a more relevant description and example value for this adapter
         {
             get => base.ExpressionText;
             set => base.ExpressionText = value;
@@ -205,6 +212,56 @@ namespace DynamicCalculator
             set => m_mailClient.EnableSSL = value;
         }
 
+        /// <summary>
+        /// Gets or sets the number of frames per second.
+        /// </summary>
+        /// <remarks>
+        /// Valid frame rates for a <see cref="ConcentratorBase"/> are greater than 0 frames per second.
+        /// </remarks>
+        [ConnectionStringParameter]
+        [Description("Defines the number of frames per second expected by the adapter.")]
+        [DefaultValue(DefaultFramesPerSecond)]
+        public new int FramesPerSecond // Redeclared to provide a default value since property is not commonly used
+        {
+            get => base.FramesPerSecond;
+            set => base.FramesPerSecond = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        [ConnectionStringParameter]
+        [Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
+        [DefaultValue(DefaultLagTime)]
+        public new double LagTime // Redeclared to provide a default value since property is not commonly used
+        {
+            get => base.LagTime;
+            set => base.LagTime = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
+        [ConnectionStringParameter]
+        [Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
+        [DefaultValue(DefaultLeadTime)]
+        public new double LeadTime // Redeclared to provide a default value since property is not commonly used
+        {
+            get => base.LeadTime;
+            set => base.LeadTime = value;
+        }
 
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
@@ -224,6 +281,11 @@ namespace DynamicCalculator
             get => base.TimestampSource;
             set => base.TimestampSource = value;
         }
+
+        /// <summary>
+        /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
+        /// </summary>
+        protected override bool ExpectsOutputMeasurement => false;
 
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -257,14 +319,24 @@ namespace DynamicCalculator
         public override void Initialize()
         {
             const string MissingRequiredMailSetting = "Missing required e-mail setting: \"{0}\"";
-            Dictionary<string, string> settings;
-            string setting;
+            Dictionary<string, string> settings = Settings;
+
+            if (!settings.TryGetValue(nameof(ExpressionText), out _))
+                settings[nameof(ExpressionText)] = DefaultExpressionText;
+
+            if (!settings.TryGetValue(nameof(FramesPerSecond), out _))
+                settings[nameof(FramesPerSecond)] = DefaultFramesPerSecond.ToString();
+
+            if (!settings.TryGetValue(nameof(LagTime), out _))
+                settings[nameof(LagTime)] = DefaultLagTime.ToString();
+
+            if (!settings.TryGetValue(nameof(LeadTime), out _))
+                settings[nameof(LeadTime)] = DefaultLeadTime.ToString();
 
             base.Initialize();
-            settings = Settings;
 
             // Load required mail settings
-            if (settings.TryGetValue("from", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue("from", out string setting) && !string.IsNullOrWhiteSpace(setting))
                 From = setting;
             else
                 throw new ArgumentException(string.Format(MissingRequiredMailSetting, "from"));

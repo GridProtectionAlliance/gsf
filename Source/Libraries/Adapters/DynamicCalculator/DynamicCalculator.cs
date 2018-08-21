@@ -344,6 +344,11 @@ namespace DynamicCalculator
             }
         }
 
+        /// <summary>
+        /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
+        /// </summary>
+        protected virtual bool ExpectsOutputMeasurement => true;
+
         private new Ticks RealTime
         {
             get
@@ -379,20 +384,20 @@ namespace DynamicCalculator
             settings = Settings;
             base.Initialize();
 
-            if (OutputMeasurements?.Length != 1)
+            if (ExpectsOutputMeasurement && OutputMeasurements?.Length != 1)
                 throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
 
             // Load required parameters
-
-            if (!settings.TryGetValue("expressionText", out setting))
-                throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
-
-            ExpressionText = settings["expressionText"];
 
             if (!settings.TryGetValue("variableList", out setting))
                 throw new ArgumentException(string.Format(ErrorMessage, "variableList"));
 
             VariableList = settings["variableList"];
+
+            if (!settings.TryGetValue("expressionText", out setting))
+                throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
+
+            ExpressionText = settings["expressionText"];
 
             // Load optional parameters
 
