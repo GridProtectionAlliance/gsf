@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
@@ -47,6 +46,7 @@ namespace DynamicCalculator
         #region [ Members ]
 
         // Constants
+        private const string DefaultDatabaseConnectionString = "";
         private const string DefaultDatabaseProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter";
         private const string DefaultDatabaseCommand = "sp_LogSsamEvent";
         private const string DefaultDatabaseCommandParameters = "1,1,'FL_PMU_{Acronym}_HEARTBEAT','','{Acronym} adapter heartbeat at {Timestamp} UTC',''";
@@ -74,10 +74,11 @@ namespace DynamicCalculator
         }
 
         /// <summary>
-        /// Gets or sets the connection string used for database operation.
+        /// Gets or sets the connection string used for database operation. Leave blank to use local configuration database defined in "systemSettings".
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the connection string used for database operation.")]
+        [Description("Defines the connection string used for database operation. Leave blank to use local configuration database defined in \"systemSettings\".")]
+        [DefaultValue(DefaultDatabaseConnectionString)]
         public string DatabaseConnnectionString
         {
             get;
@@ -183,19 +184,16 @@ namespace DynamicCalculator
         /// </summary>
         public override void Initialize()
         {
-            const string MissingRequiredDatabaseSetting = "Missing required database setting: \"{0}\"";
-
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
 
-            // Load required database settings
+            // Load optional database settings
             if (settings.TryGetValue(nameof(DatabaseConnnectionString), out string setting) && !string.IsNullOrWhiteSpace(setting))
                 DatabaseConnnectionString = setting;
             else
-                throw new ArgumentException(string.Format(MissingRequiredDatabaseSetting, nameof(DatabaseConnnectionString)));
+                DatabaseConnnectionString = DefaultDatabaseConnectionString;
 
-            // Load optional database settings
             if (settings.TryGetValue(nameof(DatabaseProviderString), out setting) && !string.IsNullOrWhiteSpace(setting))
                 DatabaseProviderString = setting;
             else
@@ -248,7 +246,7 @@ namespace DynamicCalculator
 
         private void DatabaseOperation()
         {
-            using (AdoDataConnection connection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+            using (AdoDataConnection connection = string.IsNullOrWhiteSpace(DatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
             {
                 TemplatedExpressionParser parameterTemplate = new TemplatedExpressionParser
                 {
