@@ -350,7 +350,7 @@ namespace GSF
             if (pairs == null)
                 throw new ArgumentNullException(nameof(pairs));
 
-            char[] delimiters = { parameterDelimiter, keyValueDelimiter };
+            char[] delimiters = { parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter };
             List<string> values = new List<string>();
             string value;
 
