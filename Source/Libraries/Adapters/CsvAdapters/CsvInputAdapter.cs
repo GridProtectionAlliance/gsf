@@ -63,7 +63,12 @@ namespace CsvAdapters
         private bool m_transverse;
         private bool m_autoRepeat;
         private Timer m_looseTimer;
+
         private PrecisionInputTimer m_precisionTimer;
+        private long[] m_subsecondDistribution;
+        private long m_previousSecond;
+        private int m_previousFrameIndex;
+
         private bool m_disposed;
 
         #endregion
@@ -455,7 +460,7 @@ namespace CsvAdapters
                 }
                 else
                 {
-                    throw new InvalidOperationException("Column mappings must be defined when using transverse format: e.g., columnMappings={0=Timestamp; 1=PPA:12; 2=PPA13}.");
+                    throw new InvalidOperationException("Column mappings must be defined when using transverse format: e.g., columnMappings={0=Timestamp; 1=PPA:12; 2=PPA:13}.");
                 }
             }
 
@@ -532,7 +537,7 @@ namespace CsvAdapters
 
         private void ProcessMeasurements()
         {
-            while (Enabled && ReadNextRecord(m_precisionTimer.LastFrameTime))
+            while (Enabled && ReadToFrame(m_precisionTimer.LastFrameTime))
             {
                 // When high resolution input timing is requested, we only need to wait for the next signal...
                 m_precisionTimer.FrameWaitHandle.Wait();
@@ -556,6 +561,65 @@ namespace CsvAdapters
                 if (m_autoRepeat)
                     Start();
             }
+        }
+
+        // Attempt to read as many records as necessary
+        // to reach the target frame index
+        private bool ReadToFrame(long targetFrameTime)
+        {
+            long CalculateFrameTime()
+            {
+                long subseconds = m_subsecondDistribution[m_previousFrameIndex];
+                return m_previousSecond + subseconds;
+            }
+
+            bool JumpToFrameTime()
+            {
+                TimeSpan targetFrameSpan = TimeSpan.FromTicks(targetFrameTime);
+                TimeSpan targetFrameSecond = TimeSpan.FromSeconds(Math.Truncate(targetFrameSpan.TotalSeconds));
+                TimeSpan targetFrameSubsecond = targetFrameSpan - targetFrameSecond;
+                m_previousSecond = targetFrameSecond.Ticks;
+                m_previousFrameIndex = (int)Math.Round(targetFrameSubsecond.TotalSeconds * m_precisionTimer.FramesPerSecond);
+
+                long frameTime = CalculateFrameTime();
+                return ReadNextRecord(frameTime);
+            }
+
+            try
+            {
+                if ((object)m_subsecondDistribution == null)
+                {
+                    m_subsecondDistribution = Ticks.SubsecondDistribution(m_precisionTimer.FramesPerSecond)
+                        .Select(subsecond => (long)subsecond)
+                        .ToArray();
+
+                    return JumpToFrameTime();
+                }
+
+                if (targetFrameTime - m_previousSecond > TimeSpan.FromSeconds(5.0D).Ticks)
+                    return JumpToFrameTime();
+
+                long currentFrameTime = CalculateFrameTime();
+
+                while (currentFrameTime < targetFrameTime)
+                {
+                    m_previousFrameIndex = (m_previousFrameIndex + 1) % m_precisionTimer.FramesPerSecond;
+
+                    if (m_previousFrameIndex == 0)
+                        m_previousSecond += Ticks.PerSecond;
+
+                    currentFrameTime = CalculateFrameTime();
+
+                    if (!ReadNextRecord(currentFrameTime))
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, ex);
+            }
+
+            return true;
         }
 
         // Attempt to read the next record

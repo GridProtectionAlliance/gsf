@@ -61,6 +61,7 @@ namespace DynamicCalculator
         private long m_expressionSuccesses;
         private long m_expressionFailures;
         private long m_totalDatabaseOperations;
+        private object m_lastDatabaseOperationResult;
 
         #endregion
 
@@ -231,6 +232,8 @@ namespace DynamicCalculator
                 status.AppendLine();
                 status.AppendFormat(" Total Database Operations: {0:N0}", m_totalDatabaseOperations);
                 status.AppendLine();
+                status.AppendFormat("  Last DB Operation Result: {0}", m_lastDatabaseOperationResult?.ToString() ?? "null");
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -356,7 +359,7 @@ namespace DynamicCalculator
                         parameters.Add(parameter);
                 }
 
-                connection.ExecuteScalar(DatabaseCommand, parameters.ToArray());
+                m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommand, parameters.ToArray());
             }
 
             m_totalDatabaseOperations++;
