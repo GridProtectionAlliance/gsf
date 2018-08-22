@@ -295,7 +295,7 @@ namespace DynamicCalculator
         /// Set to zero to disable the timer and calculate values upon receipt of input data.
         /// </remarks>
         [ConnectionStringParameter,
-        Description("Define the interval, in seconds, at which the adapter should calculate values."),
+        Description("Define the interval, in seconds, at which the adapter should calculate values. Zero value executes calculations at received data rate."),
         DefaultValue(0)]
         public double CalculationInterval
         {
@@ -348,6 +348,53 @@ namespace DynamicCalculator
         /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
         /// </summary>
         protected virtual bool ExpectsOutputMeasurement => true;
+        
+        /// <summary>
+        /// Returns the detailed status of the data input source.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+                status.AppendLine();
+                status.AppendFormat("           Expression Text: {0}", ExpressionText);
+                status.AppendLine();
+                status.AppendFormat("             Variable List: {0}", VariableList);
+                status.AppendLine();
+                status.AppendFormat("         Use Latest Values: {0}", UseLatestValues);
+                status.AppendLine();
+                status.AppendFormat("      Calculation Interval: {0}", CalculationInterval == 0.0D ? "At received data rate" : $"{CalculationInterval:N3} seconds");
+                status.AppendLine();
+                status.AppendFormat("          Timestamp Source: {0}", TimestampSource);
+                status.AppendLine();
+                status.AppendFormat("            Sentinel Value: {0}", SentinelValue);
+                status.AppendLine();
+
+                List<string> imports = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(Imports))
+                {
+                    foreach (string typeDef in Imports.Split(';'))
+                    {
+                        Dictionary<string, string> parsedTypeDef = typeDef.ParseKeyValuePairs(',');
+
+                        if (parsedTypeDef.TryGetValue("typeName", out string typeName))
+                            imports.Add(typeName);
+                    }
+                }
+
+                if (imports.Count == 0)
+                    imports.Add("None Defined");
+
+                status.AppendFormat("       Imported .NET Types: {0}", string.Join(", ", imports));
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
 
         private new Ticks RealTime
         {
