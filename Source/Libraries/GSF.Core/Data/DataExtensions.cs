@@ -2770,8 +2770,9 @@ namespace GSF.Data
             {
                 command.CommandType = CommandType.StoredProcedure;
 
-                // Force parameters to have no name- cannot determine proper name in a database abstract way.
-                // As a result, callers must specify proper number of parameters, in order.
+                // Force parameters for stored procedures to have no name - cannot determine proper
+                // name in a database abstract way. As a result, callers must specify proper number
+                // of parameters for stored procedure, in order.
                 foreach (IDbDataParameter parameter in command.Parameters)
                     parameter.ParameterName = null;
             }
