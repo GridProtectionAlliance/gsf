@@ -2643,16 +2643,30 @@ namespace GSF.Data
             }
         }
 
+        // Note: It is still possible for this to function fail with something like: dbo.[My Stored Proc]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsStoredProcedure(string sql)
         {
-            sql = sql.TrimStart();
+            sql = sql.Trim();
 
-            // Check for common SQL command
-            return !sql.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase) && 
-                   !sql.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) && 
-                   !sql.StartsWith("UPDATE ", StringComparison.OrdinalIgnoreCase) && 
-                   !sql.StartsWith("DELETE ", StringComparison.OrdinalIgnoreCase);
+            // If there are no spaces, must be a stored procedure name
+            if (!sql.Any(char.IsWhiteSpace))
+                return true;
+
+            char start = sql[0];
+            char end = sql[sql.Length - 1];
+
+            // Check for escaped identifier
+            if (start == '[' && end == ']')     // SQL Server
+                return true;
+
+            if (start == '`' && end == '`')     // MySQL
+                return true;
+
+            if (start == '\"' && end == '\"')   // ANSI
+                return true;
+
+            return false;
         }
 
         /// <summary>
