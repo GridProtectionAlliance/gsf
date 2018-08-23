@@ -23,17 +23,17 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Transport.TSSC;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 // ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries.Transport
@@ -411,9 +411,7 @@ namespace GSF.TimeSeries.Transport
             // so that the base class does not overwrite our setting
             InputMeasurementKeys = inputMeasurementKeys;
 
-            if (Settings.TryGetValue("publishInterval", out setting))
-                m_publishInterval = int.Parse(setting);
-            else
+            if (!Settings.TryGetValue("publishInterval", out setting) || !double.TryParse(setting, out m_publishInterval))
                 m_publishInterval = -1;
 
             if (Settings.TryGetValue("includeTime", out setting))
