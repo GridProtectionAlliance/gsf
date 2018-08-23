@@ -73,6 +73,7 @@ using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -2607,10 +2608,7 @@ namespace GSF.Data
                     throw new ArgumentNullException(nameof(command), "command.CommandText is null");
 
                 // Add parameters for standard SQL expressions (i.e., non stored procedure expressions)
-                if (commandText.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase) ||
-                    commandText.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) ||
-                    commandText.StartsWith("UPDATE ", StringComparison.OrdinalIgnoreCase) ||
-                    commandText.StartsWith("DELETE ", StringComparison.OrdinalIgnoreCase))
+                if (!IsStoredProcedure(commandText))
                 {
                     command.AddParametersWithValues(commandText, values);
                     return;
@@ -2643,28 +2641,18 @@ namespace GSF.Data
                     ((DbParameter)command.Parameters[i]).Value = values[i];
                 }
             }
+        }
 
-            #region [ Old Code ]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsStoredProcedure(string sql)
+        {
+            sql = sql.TrimStart();
 
-            // The following rarely used functionality is now subsumed by the AddParametersWithValues extension. The
-            // original code had expected an array of IDbDataParameter objects instead of values making usage differ
-            // based on parameter types which was not very useful. JRC
-
-            //{
-            //    // We assume the command to be of type Text if it begins with one of the common SQL keywords.
-            //    command.CommandType = CommandType.Text;
-
-            //    for (int i = 0; i < parameters.Length; i++)
-            //    {
-            //        command.Parameters.Add(parameters[i]);
-            //    }
-            //}
-            //else
-            //{
-            // If not we make the command a StoredProcedure type - most common use of parameterized execution.
-            //}
-
-            #endregion
+            // Check for common SQL command
+            return !sql.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase) && 
+                   !sql.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) && 
+                   !sql.StartsWith("UPDATE ", StringComparison.OrdinalIgnoreCase) && 
+                   !sql.StartsWith("DELETE ", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -2777,6 +2765,16 @@ namespace GSF.Data
             IDbCommand command = connection.CreateCommand();
 
             command.AddParametersWithValues(sql, values);
+
+            if (IsStoredProcedure(sql))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                // Force parameters to have no name- cannot determine proper name in a database abstract way.
+                // As a result, callers must specify proper number of parameters, in order.
+                foreach (IDbDataParameter parameter in command.Parameters)
+                    parameter.ParameterName = null;
+            }
 
             return command;
         }
