@@ -91,6 +91,26 @@ namespace GSF.Data
         /// </summary>
         public const int DefaultTimeoutDuration = 30;
 
+        // Defines a list of keywords used to identify PL/SQL blocks.
+        private static readonly string[] s_plsqlIdentifiers = 
+        {
+            "CREATE FUNCTION", "CREATE OR REPLACE FUNCTION",
+            "CREATE PROCEDURE", "CREATE OR REPLACE PROCEDURE",
+            "CREATE PACKAGE", "CREATE OR REPLACE PACKAGE",
+            "DECLARE", "BEGIN"
+        };
+
+        private static readonly Regex s_sqlParameterRegex;
+        private static readonly Regex s_sqlCommentRegex;
+        private static readonly Regex s_sqlIdentifierRegex;
+
+        static DataExtensions()
+        {
+            s_sqlParameterRegex = new Regex(@"^[:@][a-zA-Z]\w*$", RegexOptions.Compiled);
+            s_sqlCommentRegex = new Regex(@"/\*.*\*/|--.*(?=\n)", RegexOptions.Multiline);
+            s_sqlIdentifierRegex = new Regex(@"^(\S+|(\S+|\[.+\])(\.\S+|\.\[.+\])*|(\S+|\`.+\`)(\.\S+|\.\`.+\`)*|(\S+|\"".+\"")(\.\S+|\.\"".+\"")*)$", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.ExplicitCapture);
+        }
+
         #region [ SQL Encoding String Extension ]
 
         /// <summary>
@@ -908,7 +928,6 @@ namespace GSF.Data
             using (IDbCommand command = connection.CreateCommand())
             {
                 StringBuilder statementBuilder = new StringBuilder();
-                Regex comment = new Regex(@"/\*.*\*/|--.*(?=\n)", RegexOptions.Multiline);
 
                 while ((object)line != null)
                 {
@@ -919,7 +938,7 @@ namespace GSF.Data
                     {
                         // Remove comments and execute the statement.
                         statement = statementBuilder.ToString();
-                        command.CommandText = comment.Replace(statement, " ").Trim();
+                        command.CommandText = s_sqlCommentRegex.Replace(statement, " ").Trim();
                         command.ExecuteNonQuery();
                         statementBuilder.Clear();
                     }
@@ -966,7 +985,6 @@ namespace GSF.Data
             using (IDbCommand command = connection.CreateCommand())
             {
                 StringBuilder statementBuilder = new StringBuilder();
-                Regex comment = new Regex(@"/\*.*\*/|--.*(?=\n)", RegexOptions.Multiline);
 
                 while ((object)line != null)
                 {
@@ -981,7 +999,7 @@ namespace GSF.Data
                         statementBuilder.Append(line);
                         statementBuilder.Append('\n');
                         statement = statementBuilder.ToString();
-                        statement = comment.Replace(statement, " ").Trim();
+                        statement = s_sqlCommentRegex.Replace(statement, " ").Trim();
 
                         if (statement.EndsWith(delimiter, StringComparison.Ordinal))
                         {
@@ -1029,7 +1047,6 @@ namespace GSF.Data
             using (IDbCommand command = connection.CreateCommand())
             {
                 StringBuilder statementBuilder = new StringBuilder();
-                Regex comment = new Regex(@"/\*.*\*/|--.*(?=\n)", RegexOptions.Multiline);
 
                 while ((object)line != null)
                 {
@@ -1040,7 +1057,7 @@ namespace GSF.Data
                     statementBuilder.Append(line);
                     statementBuilder.Append('\n');
                     statement = statementBuilder.ToString();
-                    statement = comment.Replace(statement, " ").Trim();
+                    statement = s_sqlCommentRegex.Replace(statement, " ").Trim();
 
                     // Determine whether the statement is a PL/SQL block.
                     // If the statement is a PL/SQL block, the delimiter
@@ -1066,12 +1083,6 @@ namespace GSF.Data
                 }
             }
         }
-
-        // Defines a list of keywords used to identify PL/SQL blocks.
-        private static readonly string[] s_plsqlIdentifiers = { "CREATE FUNCTION", "CREATE OR REPLACE FUNCTION",
-                                                                "CREATE PROCEDURE", "CREATE OR REPLACE PROCEDURE",
-                                                                "CREATE PACKAGE", "CREATE OR REPLACE PACKAGE",
-                                                                "DECLARE", "BEGIN" };
 
         #endregion
 
@@ -2643,30 +2654,11 @@ namespace GSF.Data
             }
         }
 
-        // Note: It is still possible for this to function fail with something like: dbo.[My Stored Proc]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsStoredProcedure(string sql)
         {
-            sql = sql.Trim();
-
-            // If there are no spaces, must be a stored procedure name
-            if (!sql.Any(char.IsWhiteSpace))
-                return true;
-
-            char start = sql[0];
-            char end = sql[sql.Length - 1];
-
-            // Check for escaped identifier
-            if (start == '[' && end == ']')     // SQL Server
-                return true;
-
-            if (start == '`' && end == '`')     // MySQL
-                return true;
-
-            if (start == '\"' && end == '\"')   // ANSI
-                return true;
-
-            return false;
+            // No lock required for this use case: https://docs.microsoft.com/en-us/dotnet/standard/base-types/thread-safety-in-regular-expressions
+            return s_sqlIdentifierRegex.IsMatch(sql.Trim());
         }
 
         /// <summary>
@@ -2731,7 +2723,7 @@ namespace GSF.Data
                 string[] tokens = sql.Split(' ', '(', ')', ',', '=')
                     .Where(token => token.StartsWith(":", StringComparison.Ordinal) || token.StartsWith("@", StringComparison.Ordinal) && !token.StartsWith("@@", StringComparison.Ordinal))
                     .Distinct()
-                    .Where(IsValidToken)
+                    .Where(IsValidParameter)
                     .ToArray();
 
                 int i = 0;
@@ -2749,10 +2741,10 @@ namespace GSF.Data
             command.CommandText = sql;
         }
 
-        private static bool IsValidToken(string token)
+        private static bool IsValidParameter(string token)
         {
-            const string Pattern = @"^[:@][a-zA-Z]\w*$";
-            return Regex.IsMatch(token, Pattern);
+            // No lock required for this use case: https://docs.microsoft.com/en-us/dotnet/standard/base-types/thread-safety-in-regular-expressions
+            return s_sqlParameterRegex.IsMatch(token);
         }
 
         /// <summary>
