@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EnabledState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RadixCodec.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BitMath.cs" />

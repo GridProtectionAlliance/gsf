@@ -35,7 +35,7 @@ namespace GSF.Security.Cryptography
     public static partial class Cipher
     {
         // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
-        private static readonly bool s_managedEncryption;
+        private static bool s_managedEncryption;
         
         /// <summary>
         /// Gets a flag that determines if system will allow use of managed, i.e., non-FIPS compliant, security algorithms.

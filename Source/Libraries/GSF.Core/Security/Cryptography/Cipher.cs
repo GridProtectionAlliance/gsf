@@ -438,6 +438,7 @@ namespace GSF.Security.Cryptography
             s_textEncoding = Encoding.Unicode;
 #endif
             KeyIVCache localKeyIVCache;
+            EnabledState useFIPSModules = EnabledState.Auto;
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
             int maximumRetryAttempts = DefaultMaximumRetryAttempts;
@@ -446,13 +447,18 @@ namespace GSF.Security.Cryptography
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[CryptoServicesSettingsCategory];
 
+            settings.Add("UseFIPSModules", useFIPSModules, "Determines if security functions should use FIPS cryptographic modules. Value is one of \"Auto\", \"On\" or \"Off\". Defaults to \"Auto\" which reads FIPS setting from registry.");
             settings.Add("CryptoCache", localCacheFileName, "Path and file name of cryptographic key and initialization vector cache.");
             settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.");
             settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.");
 
+            useFIPSModules = settings["UseFIPSModules"].ValueAs(useFIPSModules);
             localCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(localCacheFileName));
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+
+            if (useFIPSModules != EnabledState.Auto)
+                s_managedEncryption = useFIPSModules == EnabledState.Off; // FIPS Off means use managed encryption
 
             s_keyIVCache = new Lazy<KeyIVCache>(() =>
             {
@@ -468,9 +474,9 @@ namespace GSF.Security.Cryptography
 #if DNF45 && !MONO
                     ReloadOnChange = true,
 #else
-                // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                // automatic runtime reloading of key/iv data cached by another application.
-                ReloadOnChange = false,
+                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                    // automatic runtime reloading of key/iv data cached by another application.
+                    ReloadOnChange = false,
 #endif
                     AutoSave = false
                 };
@@ -518,9 +524,9 @@ namespace GSF.Security.Cryptography
 #if DNF45 && !MONO
                         ReloadOnChange = true,
 #else
-                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                    // automatic runtime reloading of key/iv data cached by another application.
-                    ReloadOnChange = false,
+                        // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                        // automatic runtime reloading of key/iv data cached by another application.
+                        ReloadOnChange = false,
 #endif
                         AutoSave = true
                     };
