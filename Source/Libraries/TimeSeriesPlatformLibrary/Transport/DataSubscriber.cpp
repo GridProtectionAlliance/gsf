@@ -430,14 +430,17 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
         case ServerCommand::RotateCipherKeys:
             // Each of these responses come with a message that will
             // be delivered to the user via the status message callback.
-            messageStart = reinterpret_cast<char*>(data + offset);
-            messageEnd = messageStart + messageLength;
-            messageStream << "Received success code in response to server command 0x" << hex << static_cast<int>(commandCode) << ": ";
+            if (data != nullptr)
+            {
+                messageStart = reinterpret_cast<char*>(data + offset);
+                messageEnd = messageStart + messageLength;
+                messageStream << "Received success code in response to server command 0x" << hex << static_cast<int>(commandCode) << ": ";
 
-            for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
-                messageStream << *messageIter;
+                for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
+                    messageStream << *messageIter;
 
-            DispatchStatusMessage(messageStream.str());
+                DispatchStatusMessage(messageStream.str());
+            }
             break;
 
         default:
@@ -453,6 +456,9 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
 // Handles failure messages from the server.
 void DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length)
 {
+    if (data == nullptr)
+        return;
+
     const uint32_t messageLength = length / sizeof(char);
     stringstream messageStream;
 
@@ -497,6 +503,9 @@ void DataSubscriber::HandleProcessingComplete(uint8_t* data, uint32_t offset, ui
 // Cache signal IDs sent by the server into the signal index cache.
 void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset, uint32_t length)
 {
+    if (data == nullptr)
+        return;
+
     const bool swapBytes = m_endianConverter.NativeOrder() == EndianConverter::LittleEndian;
 
     uint32_t* referenceCountPtr;
@@ -586,6 +595,9 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
 // Updates base time offsets.
 void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint32_t length)
 {
+    if (data == nullptr)
+        return;
+
     int32_t* timeIndexPtr = reinterpret_cast<int32_t*>(data + offset);
     int64_t* timeOffsetsPtr = reinterpret_cast<int64_t*>(timeIndexPtr + 1);
 
@@ -648,43 +660,65 @@ void DataSubscriber::DispatchErrorMessage(const string& message)
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
 void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
+    if (source == nullptr)
+        return;
+    
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
-    stringstream messageStream;
-
-    for (uint32_t i = 0; i < buffer.size(); ++i)
-        messageStream << buffer[i];
-
+    
     if (statusMessageCallback != nullptr)
-        statusMessageCallback(source, messageStream.str());
+    {
+        stringstream messageStream;
+
+        for (uint32_t i = 0; i < buffer.size(); ++i)
+            messageStream << buffer[i];
+
+        if (statusMessageCallback != nullptr)
+            statusMessageCallback(source, messageStream.str());
+    }
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
 void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
-    stringstream messageStream;
+    if (source == nullptr)
+        return;
 
-    for (uint32_t i = 0; i < buffer.size(); ++i)
-        messageStream << buffer[i];
+    const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 
     if (errorMessageCallback != nullptr)
-        errorMessageCallback(source, messageStream.str());
+    {
+        stringstream messageStream;
+
+        for (uint32_t i = 0; i < buffer.size(); ++i)
+            messageStream << buffer[i];
+
+        if (errorMessageCallback != nullptr)
+            errorMessageCallback(source, messageStream.str());
+    }
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
 void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
+    if (source == nullptr)
+        return;
+
     const DataStartTimeCallback dataStartTimeCallback = source->m_dataStartTimeCallback;
-    EndianConverter endianConverter = source->m_endianConverter;
-    const int64_t dataStartTime = endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&buffer[0]));
 
     if (dataStartTimeCallback != nullptr)
+    {
+        EndianConverter endianConverter = source->m_endianConverter;
+        const int64_t dataStartTime = endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&buffer[0]));
         dataStartTimeCallback(source, dataStartTime);
+    }
 }
 
 // Dispatcher function for metadata. Provides encoded metadata to the user via the metadata callback.
 void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
+    if (source == nullptr)
+        return;
+
     const MetadataCallback metadataCallback = source->m_metadataCallback;
 
     if (metadataCallback != nullptr)
@@ -694,46 +728,53 @@ void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uin
 // Dispatcher function for new measurements. Decodes the measurements and provides them to the user via the new measurements callback.
 void DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source->m_newMeasurementsCallback == nullptr)
+    if (source == nullptr)
         return;
 
-    SubscriptionInfo& info = source->m_subscriptionInfo;
-    uint8_t dataPacketFlags;
-    int64_t frameLevelTimestamp = -1;
-    uint32_t offset = 0;
-
-    bool includeTime = info.IncludeTime;
-
-    // Read data packet flags
-    dataPacketFlags = buffer[offset];
-    offset++;
-
-    // Read frame-level timestamp, if available
-    if (dataPacketFlags & DataPacketFlags::Synchronized)
-    {
-        frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&buffer[offset]));
-        offset += 8;
-        includeTime = false;
-    }
-
-    // Read measurement count and gather statistics
-    const uint32_t count = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const uint32_t*>(&buffer[offset]));
-    source->m_totalMeasurementsReceived += count;
-    offset += 4;
-
     const NewMeasurementsCallback newMeasurementsCallback = source->m_newMeasurementsCallback;
-    vector<MeasurementPtr> measurements;
 
-    if (dataPacketFlags & DataPacketFlags::Compressed)
-        ParseTSSCMeasurements(source, buffer, offset, measurements);
-    else
-        ParseCompactMeasurements(source, buffer, offset, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
+    if (newMeasurementsCallback != nullptr)
+    {
+        SubscriptionInfo& info = source->m_subscriptionInfo;
+        uint8_t dataPacketFlags;
+        int64_t frameLevelTimestamp = -1;
+        uint32_t offset = 0;
 
-    newMeasurementsCallback(source, measurements);
+        bool includeTime = info.IncludeTime;
+
+        // Read data packet flags
+        dataPacketFlags = buffer[offset];
+        offset++;
+
+        // Read frame-level timestamp, if available
+        if (dataPacketFlags & DataPacketFlags::Synchronized)
+        {
+            frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const int64_t*>(&buffer[offset]));
+            offset += 8;
+            includeTime = false;
+        }
+
+        // Read measurement count and gather statistics
+        const uint32_t count = source->m_endianConverter.ConvertBigEndian(*reinterpret_cast<const uint32_t*>(&buffer[offset]));
+        source->m_totalMeasurementsReceived += count;
+        offset += 4;
+
+        vector<MeasurementPtr> measurements;
+
+        if (dataPacketFlags & DataPacketFlags::Compressed)
+            ParseTSSCMeasurements(source, buffer, offset, measurements);
+        else
+            ParseCompactMeasurements(source, buffer, offset, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
+
+        newMeasurementsCallback(source, measurements);
+    }
 }
 
 void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, uint32_t offset, vector<MeasurementPtr>& measurements)
 {
+    if (source == nullptr)
+        return;
+
     MeasurementPtr measurement;
     string errorMessage;
 
@@ -837,6 +878,11 @@ void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const vector<
 
 void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, uint32_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
 {
+    if (source == nullptr)
+        return;
+
+    const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
+
     MeasurementPtr measurement;
 
     // Create measurement parser
@@ -848,9 +894,7 @@ void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const vect
     {
         if (!measurementParser.TryParseMeasurement(buffer, offset, length))
         {
-            const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
-
-            if (errorMessageCallback)
+            if (errorMessageCallback != nullptr)
                 errorMessageCallback(source, "Error parsing measurement");
 
             break;
@@ -868,6 +912,9 @@ void DataSubscriber::ParseCompactMeasurements(DataSubscriber* source, const vect
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
 void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
+    if (source == nullptr)
+        return;
+
     const MessageCallback processingCompleteCallback = source->m_processingCompleteCallback;
 
     if (processingCompleteCallback != nullptr)
@@ -884,7 +931,13 @@ void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
 void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    source->m_configurationChangedCallback(source);
+    if (source == nullptr)
+        return;
+
+    const ConfigurationChangedCallback configurationChangedCallback = source->m_configurationChangedCallback;
+
+    if (configurationChangedCallback != nullptr)
+        source->m_configurationChangedCallback(source);
 }
 
 // Dispatcher for connection terminated. This is called from its own separate thread
