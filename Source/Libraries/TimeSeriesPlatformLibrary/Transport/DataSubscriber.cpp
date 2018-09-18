@@ -672,8 +672,7 @@ void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vecto
         for (uint32_t i = 0; i < buffer.size(); ++i)
             messageStream << buffer[i];
 
-        if (statusMessageCallback != nullptr)
-            statusMessageCallback(source, messageStream.str());
+        statusMessageCallback(source, messageStream.str());
     }
 }
 
@@ -692,8 +691,7 @@ void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector
         for (uint32_t i = 0; i < buffer.size(); ++i)
             messageStream << buffer[i];
 
-        if (errorMessageCallback != nullptr)
-            errorMessageCallback(source, messageStream.str());
+        errorMessageCallback(source, messageStream.str());
     }
 }
 
