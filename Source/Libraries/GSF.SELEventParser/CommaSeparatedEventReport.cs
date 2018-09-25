@@ -19,19 +19,21 @@
 //  11/01/2016 - Billy Ernest
 //       Created original version of source code modeled after "Event Report" class
 //  08/04/2017 - F. Russell Robertson
-//       Refactored class to utilize new StringParser Class in GSF, new GSF string extensions and Log4Net
+//       Re-factored class to utilize new StringParser Class in GSF, new GSF string extensions and Log4Net
 //		 Added SectionsDefinions Class and support for new ByteSum class
+//  08/30/2018 - F. Russell Robertson
+//      Fixed settings parsing error found by LG&E for SEL 421 produced file with complete re-write of settings block parser
+//         -- As before, error persists that for the SEL devices produce multi-line values for keys, ONLY the first line of values is captured.
+//         -- Now only one settings region for settings key:value pairs.  No duplication in keys have been found.
+//      Added options to not process digital data or settings to reduce parsing time for those only interested in analog data
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Text;
 using GSF.Parsing;
-
 
 namespace GSF.SELEventParser
 {
@@ -64,134 +66,32 @@ namespace GSF.SELEventParser
         }
 
         // Fields
-
         private const string m_triggerFieldName = "TRIG";   //this is the field name that is the trigger and must separate the analog and digital data
-
-        private Header m_header;
-
-        private Firmware m_firmware;
-        private AnalogSection m_analogSection;
-        private double m_averageFrequency;
-        private double m_samplesPerCycleAnalog;
-        private double m_samplesPerCycleDigital;
-        private double m_numberOfCycles;
-        private double m_nominalFrequency = 60D;
-        private string m_event;
-        private int m_triggerIndex;
-        private int m_expectedAnalogCount;
-        private int m_expectedDigitalCount;
-        private int m_expectedDataRecordValues;
-        private int m_expectedSampleCount;
-
-        private int m_initialReadingIndex;
-        private Dictionary<string, string> m_Settings;
-        private string[] m_settingsRegions;
+        private const string DoubleQuote = "\"";
 
         #endregion
 
         #region [ Properties ]
 
-        public Header Header
-        {
-            get { return m_header; }
-            set { m_header = value; }
-        }
-
-        public Firmware Firmware
-        {
-            get { return m_firmware; }
-            set { m_firmware = value; }
-        }
-
-        public AnalogSection AnalogSection
-        {
-            get { return m_analogSection; }
-            set { m_analogSection = value; }
-        }
-
-        public double FrequencyAverage
-        {
-            get { return m_averageFrequency; }
-            set { m_averageFrequency = value; }
-        }
-
-        public double FrequencyNominal
-        {
-            get { return m_nominalFrequency; }
-            set { m_nominalFrequency = value; }
-        }
-
-        public double SamplesPerCycleAnalog
-        {
-            get { return m_samplesPerCycleAnalog; }
-            set { m_samplesPerCycleAnalog = value; }
-        }
-
-        public double SamplesPerCycleDigital
-        {
-            get { return m_samplesPerCycleDigital; }
-            set { m_samplesPerCycleDigital = value; }
-        }
-
-        public double NumberOfCycles
-        {
-            get { return m_numberOfCycles; }
-            set { m_numberOfCycles = value; }
-        }
-
-        public string Event
-        {
-            get { return m_event; }
-            set { m_event = value; }
-        }
-
-        public int TriggerIndex
-        {
-            get { return m_triggerIndex; }
-            set { m_triggerIndex = value; }
-        }
-
-        public int InitialReadingIndex
-        {
-            get { return m_initialReadingIndex; }
-            set { m_initialReadingIndex = value; }
-        }
-
-        public Dictionary<string, string> Settings
-        {
-            get { return m_Settings; }
-            set { m_Settings = value; }
-        }
-
-        public string[] SettingsRegions
-        {
-            get { return m_settingsRegions; }
-            set { m_settingsRegions = value; }
-        }
-
-        public int ExpectedAnalogCount
-        {
-            get { return m_expectedAnalogCount; }
-            set { m_expectedAnalogCount = value; }
-        }
-
-        public int ExpectedDigitalCount
-        {
-            get { return m_expectedDigitalCount; }
-            set { m_expectedDigitalCount = value; }
-        }
-
-        public int ExpectedDataRecordValueCount
-        {
-            get { return m_expectedDataRecordValues; }
-            set { m_expectedDataRecordValues = value; }
-        }
-
-        public int ExpectedSampleCount
-        {
-            get { return m_expectedSampleCount; }
-            set { m_expectedSampleCount = value; }
-        }
+        public Dictionary<string, string> Settings { get; set; }
+        public Header Header { get; set; }
+        public Firmware Firmware { get; set; }
+        public AnalogSection AnalogSection { get; set; }
+        public double FrequencyAverage { get; set; }
+        public double FrequencyNominal { get; set; } = 60D;
+        public double SamplesPerCycleAnalog { get; set; }
+        public double SamplesPerCycleDigital { get; set; }
+        public double NumberOfCycles { get; set; }
+        public string Event { get; set; }
+        public int TriggerIndex { get; set; }
+        public int InitialReadingIndex { get; set; }
+        public string[] SettingsRegions { get; set; }
+        public int ExpectedAnalogCount { get; set; }
+        public int ExpectedDigitalCount { get; set; }
+        public int ExpectedDataRecordValueCount { get; set; }
+        public int ExpectedSampleCount { get; set; }
+        public bool ProcessSettings { get; set; } = false;
+        public bool ProcessDigitals { get; set; } = false;
 
         #endregion
 
@@ -210,8 +110,8 @@ namespace GSF.SELEventParser
 
             valueKey = string.Concat(groupName.Trim(), ":", valueKey.Trim());
 
-            if (m_Settings.ContainsKey(valueKey))
-                return m_Settings[valueKey];
+            if (Settings.ContainsKey(valueKey))
+                return Settings[valueKey];
 
             return string.Empty;
         }
@@ -227,8 +127,8 @@ namespace GSF.SELEventParser
             if (string.IsNullOrEmpty(fullKey))
                 return string.Empty;
 
-            if (m_Settings.ContainsKey(fullKey))
-                return m_Settings[fullKey];
+            if (Settings.ContainsKey(fullKey))
+                return Settings[fullKey];
 
             return string.Empty;
         }
@@ -247,11 +147,13 @@ namespace GSF.SELEventParser
         /// Parses CEV files.
         /// </summary>
         /// <param name="lines">The string array of SEL.cev lines to process</param>
+        /// <param name="processSettings">Set to TRUE to process settings block</param>
+        /// <param name="processDigitals">Set to TRUE to process digital values block</param>
         /// <param name="fileIdentifier">For error logging, an identifier of the file being processed -- typically the filename.</param>
         /// <param name="maxFileDuration">Set to a positive value limit the number of data records processed.</param>
         /// <remarks>Removed lineIndex since file must be processed in sequence. </remarks>
         /// <returns>Data model representing the comma separated event report.</returns>
-        public static CommaSeparatedEventReport Parse(string[] lines, string fileIdentifier = "", double maxFileDuration = 0.0D)
+        public static CommaSeparatedEventReport Parse(string[] lines, bool processDigitals = true, bool processSettings = false, string fileIdentifier = "", double maxFileDuration = 0.0D)
         {
             //OnDebugMessage(string.Format("Parsing SEL CEV file: {0}", fileIdentifier));
 
@@ -261,9 +163,12 @@ namespace GSF.SELEventParser
                 return null;
             }
 
-            CommaSeparatedEventReport commaSeparatedEventReport = new CommaSeparatedEventReport();
-            commaSeparatedEventReport.Firmware = new Firmware();
-            commaSeparatedEventReport.Header = new Header();
+            CommaSeparatedEventReport cSER = new CommaSeparatedEventReport();
+            cSER.Firmware = new Firmware();
+            cSER.Header = new Header();
+
+            cSER.ProcessSettings = processSettings;
+            cSER.ProcessDigitals = processDigitals;
 
             int lineIndex = 0;      //relative to the first line in the file
             string inString = string.Empty;
@@ -272,7 +177,12 @@ namespace GSF.SELEventParser
             string[] headerFields = null;
             string[] lastHeaderFields = null;
 
-            //advance to first header record
+            //------------------------------------------------  THE HEADER BLOCK --------------------------------------------------------
+
+            //Header Section -- 7 records expected
+            //It's reasonable to assume that for a file to be valid it must contain the correct number of headers in the proper order
+            //Returns null if header is significantly malformed.
+            //However, it will try to survive bad bytesum checks
 
             while (lineIndex < lines.Length)
             {
@@ -286,11 +196,6 @@ namespace GSF.SELEventParser
                 OnDebugMessage(string.Format("No SEL CEV data found. Nothing to do processing file {0} of length {1}", fileIdentifier, lines.Length.ToString()));
                 return null;
             }
-
-            //Header Section -- 7 records expected
-            //It's reasonable to assume that for a file to be valid it must contain the correct number of headers in the proper order
-            //Returns null if header is significantly malformed.
-            //However, it will try to survive bad bytesum checks
 
             while (headerRecordNumber < 8)
             {
@@ -336,7 +241,7 @@ namespace GSF.SELEventParser
                             }
 
                             if (headerFields.Length > 2)
-                                commaSeparatedEventReport.Firmware.ID = headerFields[1].Trim();
+                                cSER.Firmware.ID = headerFields[1].Trim();
 
                             headerRecordNumber++;
                             //lastHeaderFields = headerFields;
@@ -381,9 +286,9 @@ namespace GSF.SELEventParser
                                 }
                                 else
                                 {
-                                    commaSeparatedEventReport.Header.EventTime = new DateTime(values[2], values[0], values[1], values[3], values[4], values[5]);
-                                    if (commaSeparatedEventReport.Header.EventTime.CompareTo(Convert.ToDateTime("01/01/2000")) < 0)
-                                        OnDebugMessage(string.Format("The event time of {0} is prior to January 1, 2000.", commaSeparatedEventReport.Header.EventTime.ToShortDateString()));
+                                    cSER.Header.EventTime = new DateTime(values[2], values[0], values[1], values[3], values[4], values[5]);
+                                    if (cSER.Header.EventTime.CompareTo(Convert.ToDateTime("01/01/2000")) < 0)
+                                        OnDebugMessage(string.Format("The event time of {0} is prior to January 1, 2000.", cSER.Header.EventTime.ToShortDateString()));
                                 }
                             }
 
@@ -424,35 +329,35 @@ namespace GSF.SELEventParser
                             }
 
                             //For completeness, not needed
-                            commaSeparatedEventReport.Header.SerialNumber = 0;
-                            commaSeparatedEventReport.Header.RelayID = "";
-                            commaSeparatedEventReport.Header.StationID = "";
+                            cSER.Header.SerialNumber = 0;
+                            cSER.Header.RelayID = "";
+                            cSER.Header.StationID = "";
 
                             //set key class properties
                             //nominal frequency is based on average found.
 
-                            commaSeparatedEventReport.FrequencyAverage = Convert.ToDouble(headerFields[StringParser.FindIndex("FREQ", lastHeaderFields)]);
-                            if (commaSeparatedEventReport.FrequencyAverage > 48D && commaSeparatedEventReport.FrequencyAverage < 52D)
-                                commaSeparatedEventReport.FrequencyNominal = 50D;
+                            cSER.FrequencyAverage = Convert.ToDouble(headerFields[StringParser.FindIndex("FREQ", lastHeaderFields)]);
+                            if (cSER.FrequencyAverage > 48D && cSER.FrequencyAverage < 52D)
+                                cSER.FrequencyNominal = 50D;
                             else
-                                commaSeparatedEventReport.FrequencyNominal = 60D;
-                            commaSeparatedEventReport.Event = headerFields[StringParser.FindIndex("EVENT", lastHeaderFields)];
+                                cSER.FrequencyNominal = 60D;
+                            cSER.Event = headerFields[StringParser.FindIndex("EVENT", lastHeaderFields)];
 
                             int labelIndex = StringParser.FindIndex("SAM/CYC_A", lastHeaderFields);
                             if (labelIndex > 0)
-                                commaSeparatedEventReport.SamplesPerCycleAnalog = Convert.ToDouble(headerFields[labelIndex]);
+                                cSER.SamplesPerCycleAnalog = Convert.ToDouble(headerFields[labelIndex]);
                             labelIndex = StringParser.FindIndex("SAM/CYC_D", lastHeaderFields);
                             if (labelIndex > 0)
-                                commaSeparatedEventReport.SamplesPerCycleDigital = Convert.ToDouble(headerFields[labelIndex]);
+                                cSER.SamplesPerCycleDigital = Convert.ToDouble(headerFields[labelIndex]);
                             labelIndex = StringParser.FindIndex("NUM_OF_CYC", lastHeaderFields);
                             if (labelIndex > 0)
-                                commaSeparatedEventReport.NumberOfCycles = Convert.ToDouble(headerFields[labelIndex]);
+                                cSER.NumberOfCycles = Convert.ToDouble(headerFields[labelIndex]);
                             labelIndex = StringParser.FindIndex("NUM_CH_A", lastHeaderFields);
                             if (labelIndex > 0)
-                                commaSeparatedEventReport.ExpectedAnalogCount = Convert.ToInt32(headerFields[labelIndex]);
+                                cSER.ExpectedAnalogCount = Convert.ToInt32(headerFields[labelIndex]);
                             labelIndex = StringParser.FindIndex("NUM_CH_D", lastHeaderFields);
                             if (labelIndex > 0)
-                                commaSeparatedEventReport.ExpectedDigitalCount = Convert.ToInt32(headerFields[labelIndex]);
+                                cSER.ExpectedDigitalCount = Convert.ToInt32(headerFields[labelIndex]);
 
                             headerRecordNumber++;
                             lastHeaderFields = headerFields;
@@ -508,11 +413,9 @@ namespace GSF.SELEventParser
                     OnDebugMessage(string.Format("Only partial CEV header data found. Processing of SEL CEV file: {0} aborted at line {1}", fileIdentifier, lineIndex.ToString()));
                     return null;
                 }
-                //else
-                //    OnDebugMessage(string.Format("Successfully parsed header record {0} in SEL CEV file: {1}", headerRecordNumber - 1, fileIdentifier));
             }
 
-            commaSeparatedEventReport.InitialReadingIndex = lineIndex;
+            cSER.InitialReadingIndex = lineIndex;
 
             //determine the number of analog data fields based on the position of "TRIG" (the trigger field name) and setup up Analog Section
             int triggerFieldPosition = Array.FindIndex(headerFields, x => x.ToUpper().Contains(m_triggerFieldName));
@@ -534,23 +437,23 @@ namespace GSF.SELEventParser
                 return null;
             }
 
-            commaSeparatedEventReport.AnalogSection = new AnalogSection();
+            cSER.AnalogSection = new AnalogSection();
 
             //loop through the expected analog fields, add all the fields but "TRIG" (the trigger field name)
 
-            if (commaSeparatedEventReport.ExpectedAnalogCount <= 0)
-                commaSeparatedEventReport.ExpectedAnalogCount = triggerFieldPosition;
+            if (cSER.ExpectedAnalogCount <= 0)
+                cSER.ExpectedAnalogCount = triggerFieldPosition;
 
             //expected value count = analogs + trigger + digitals + bytesum (analogs plus 3)
-            commaSeparatedEventReport.ExpectedDataRecordValueCount = commaSeparatedEventReport.ExpectedAnalogCount + 3;
+            cSER.ExpectedDataRecordValueCount = cSER.ExpectedAnalogCount + 3;
 
             //for speed, the scaling factors, if any are used, are pre-positioned
-            double[] scalingFactors = new double[commaSeparatedEventReport.ExpectedAnalogCount];
+            double[] scalingFactors = new double[cSER.ExpectedAnalogCount];
             bool scalingRequired = false;
             for (int fieldIndex = 0; fieldIndex < triggerFieldPosition; fieldIndex++)
             {
-                commaSeparatedEventReport.AnalogSection.AnalogChannels.Add(new Channel<double>());
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[fieldIndex].Name = headerFields[fieldIndex];
+                cSER.AnalogSection.AnalogChannels.Add(new Channel<double>());
+                cSER.AnalogSection.AnalogChannels[fieldIndex].Name = headerFields[fieldIndex];
                 if (headerFields[fieldIndex].ToUpper().Contains("KV"))
                 {
                     scalingFactors[fieldIndex] = 1000D;
@@ -564,20 +467,20 @@ namespace GSF.SELEventParser
             int digitalChannelCount = 0;
             foreach (string channel in headerFields[triggerFieldPosition + 1].QuoteUnwrap().RemoveDuplicateWhiteSpace().Trim().Split(' '))
             {
-                commaSeparatedEventReport.AnalogSection.DigitalChannels.Add(new Channel<bool?>());
-                commaSeparatedEventReport.AnalogSection.DigitalChannels[commaSeparatedEventReport.AnalogSection.DigitalChannels.Count - 1].Name = channel;
+                cSER.AnalogSection.DigitalChannels.Add(new Channel<bool?>());
+                cSER.AnalogSection.DigitalChannels[cSER.AnalogSection.DigitalChannels.Count - 1].Name = channel;
                 digitalChannelCount++;
             }
 
-            if (commaSeparatedEventReport.ExpectedDigitalCount <= 0)
-                commaSeparatedEventReport.ExpectedDigitalCount = digitalChannelCount;
-            else if (digitalChannelCount != commaSeparatedEventReport.ExpectedDigitalCount)
+            if (cSER.ExpectedDigitalCount <= 0)
+                cSER.ExpectedDigitalCount = digitalChannelCount;
+            else if (digitalChannelCount != cSER.ExpectedDigitalCount)
                 OnDebugMessage(string.Format("Processing SEL CEV header record 8, the field names for data, the {0} digital channel names found does not match the expected number of {1}",
-                  commaSeparatedEventReport.ExpectedDigitalCount, digitalChannelCount));
+                  cSER.ExpectedDigitalCount, digitalChannelCount));
 
             //find the trigger record within the data section, Carry on if none found.
             int triggerIndexRelative = 0;   //relative to the first data line
-            for (lineIndex = commaSeparatedEventReport.InitialReadingIndex; lineIndex < lines.Length; lineIndex++)
+            for (lineIndex = cSER.InitialReadingIndex; lineIndex < lines.Length; lineIndex++)
             {
                 if (string.IsNullOrEmpty(lines[lineIndex]) || lines[lineIndex].Trim().Length == 0)
                 {
@@ -589,7 +492,7 @@ namespace GSF.SELEventParser
                 string[] s = lines[lineIndex].Split(',');                 //use the split function for speed
                 if (s.Length > triggerFieldPosition && s[triggerFieldPosition].Trim().Length > 0)
                 {
-                    commaSeparatedEventReport.TriggerIndex = triggerIndexRelative;
+                    cSER.TriggerIndex = triggerIndexRelative;
                     break;
                 }
                 if (s.Length > 0 && s[0].ToUpper().Contains("SETTINGS"))  //we're done with data and no trigger was found.
@@ -613,30 +516,31 @@ namespace GSF.SELEventParser
             //   commaSeparatedEventReport.AnalogSection.AnalogChannels.Count, commaSeparatedEventReport.AnalogSection.DigitalChannels.Count, fileIdentifier,
             //   commaSeparatedEventReport.Header.EventTime.ToLongDateString(), triggerIndexRelative.ToString()));
 
-            int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / commaSeparatedEventReport.FrequencyNominal / commaSeparatedEventReport.SamplesPerCycleAnalog));
+
+            int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / cSER.FrequencyNominal / cSER.SamplesPerCycleAnalog));
             //Time (in ticks) is relative to the trigger line (record).
             //Negative in advance of the trigger record, Zero at the trigger record, Positive following the trigger recored.
             int lineTicks = -1 * triggerIndexRelative * timeStepTicks;
+
             //Log significant time-based info
             //OnDebugMessage(string.Format("Starting line tics: {0} Incremental tics per record: {1}", lineTicks, timeStepTicks));
 
-
             //set data record limit
-            int dataRecordLimit = (int)Math.Round(maxFileDuration * commaSeparatedEventReport.FrequencyNominal * commaSeparatedEventReport.SamplesPerCycleAnalog);
+            int dataRecordLimit = (int)Math.Round(maxFileDuration * cSER.FrequencyNominal * cSER.SamplesPerCycleAnalog);
 
             if (dataRecordLimit > 0)
-                dataRecordLimit = ((lines.Length - commaSeparatedEventReport.InitialReadingIndex) > dataRecordLimit) ? dataRecordLimit : lines.Length - commaSeparatedEventReport.InitialReadingIndex;
+                dataRecordLimit = ((lines.Length - cSER.InitialReadingIndex) > dataRecordLimit) ? dataRecordLimit : lines.Length - cSER.InitialReadingIndex;
             else
-                dataRecordLimit = lines.Length - commaSeparatedEventReport.InitialReadingIndex;
+                dataRecordLimit = lines.Length - cSER.InitialReadingIndex;
 
-            //------------------------------------------------  THE DATA --------------------------------------------------------
+            //------------------------------------------------  THE DATA BLOCK --------------------------------------------------------
             //Now loop through the lines to get the data
             //Empty lines are ignored (i.e., time is not incremented) [OnDebugMessage]
             //For radically malformed lines time is incremented and all analogs are set to NaN and digitals set to null [OnDebugMessage]
             //Data field order and type are set by the header and do not vary with the data region
 
             int dataRecordCount = 0;
-            for (lineIndex = commaSeparatedEventReport.InitialReadingIndex; lineIndex < commaSeparatedEventReport.InitialReadingIndex + dataRecordLimit; lineIndex++)
+            for (lineIndex = cSER.InitialReadingIndex; lineIndex < cSER.InitialReadingIndex + dataRecordLimit; lineIndex++)
             {
                 string[] data = StringParser.ParseStandardCSV(lines[lineIndex]);
                 dataRecordCount++;
@@ -651,20 +555,19 @@ namespace GSF.SELEventParser
                     break;
 
                 //increment time
-                commaSeparatedEventReport.AnalogSection.TimeChannel.Samples.Add(commaSeparatedEventReport.Header.EventTime.AddTicks(lineTicks));
+                cSER.AnalogSection.TimeChannel.Samples.Add(cSER.Header.EventTime.AddTicks(lineTicks));
                 lineTicks += timeStepTicks;
 
-                if (data.Length != commaSeparatedEventReport.ExpectedDataRecordValueCount)
+                if (data.Length != cSER.ExpectedDataRecordValueCount)
                 {
                     OnDebugMessage(string.Format("Data record {0} in SEL CEV file: {1} did not contain the anticipated values.", dataRecordCount, fileIdentifier));
-                    //OnDebugMessage(string.Format("Data record {0} in SEL CEV file: {1} did not contain the anticipated {2) values.  Setting all analog and digital values to NaN or null and continuing.",
-                    //    dataRecordCount.ToString(), fileIdentifier, Convert.ToString(commaSeparatedEventReport.ExpetedDataRecordValueCount)));
+
                     //let's try to survive it.
-                    foreach (var analogChannel in commaSeparatedEventReport.AnalogSection.AnalogChannels)
+                    foreach (var analogChannel in cSER.AnalogSection.AnalogChannels)
                     {
                         analogChannel.Samples.Add(Double.NaN);    //what are the consequences here??
                     }
-                    foreach (Channel<bool?> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
+                    foreach (Channel<bool?> channel in cSER.AnalogSection.DigitalChannels)
                     {
                         channel.Samples.Add(null);
                     }
@@ -678,13 +581,12 @@ namespace GSF.SELEventParser
 
                 if (!byteSum.Match)
                 {
-                    //todo: Append AnalogSection to include data quality
                     OnDebugMessage(string.Format("Byte sum does not match for data record {0} in SEL CEV file {1}. This record processed as if it is valid.", dataRecordCount, fileIdentifier));
                 }
 
                 //LOAD ANALOG DATA (overall record tests above are sufficient to verify expected number of values)
                 int channelIndex = 0;
-                foreach (var analogChannel in commaSeparatedEventReport.AnalogSection.AnalogChannels)
+                foreach (var analogChannel in cSER.AnalogSection.AnalogChannels)
                 {
                     double value = 0D;
                     if (!double.TryParse(data[channelIndex], out value))
@@ -699,59 +601,61 @@ namespace GSF.SELEventParser
                     //analogChannel.Samples.Add(Convert.ToDouble(lines[lineIndex].Split(',')[channelIndex]) * (lineFields[channelIndex++].ToUpper().Contains("KV") ? 1000 : 1));
                 }
 
-                //if (dataRecordCount == 1)  //log the first recored for debug
-                //    OnDebugMessage("Data record 1: " + lines[lineIndex]);
-
-                //LOAD DIGITAL DATA
-                char[] hexDigitals = data[commaSeparatedEventReport.AnalogSection.AnalogChannels.Count + 1].QuoteUnwrap().Trim().ToCharArray(); //digitals always on the other side of "TRIG"
-
-                if (hexDigitals.Length == 0)
-                    continue;
-
-                if (hexDigitals.Length * 4 < commaSeparatedEventReport.AnalogSection.DigitalChannels.Count)
+                if (cSER.ProcessDigitals)
                 {
-                    OnDebugMessage(string.Format("The expected {0} digital channels were not found for data record {1} in SEL CEV file {2}.  {3} were found.  Setting digitals to null and continuing.",
-                        hexDigitals.Length * 4, dataRecordCount, fileIdentifier, commaSeparatedEventReport.AnalogSection.DigitalChannels.Count));
-                    foreach (Channel<bool?> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
-                    {
-                        channel.Samples.Add(null);
-                    }
-                    continue;  //get next line
-                }
 
-                channelIndex = 0;
-                int hexCharIndex = 0;
-                if (commaSeparatedEventReport.AnalogSection.DigitalChannels.Count > 0)
-                {
-                    foreach (Channel<bool?> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)  //loop through the channels and add the values
+                    //LOAD DIGITAL DATA
+                    char[] hexDigitals = data[cSER.AnalogSection.AnalogChannels.Count + 1].QuoteUnwrap().Trim().ToCharArray(); //digitals always on the other side of "TRIG"
+
+                    if (hexDigitals.Length == 0)
+                        continue;
+
+                    if (hexDigitals.Length * 4 < cSER.AnalogSection.DigitalChannels.Count)
                     {
-                        hexCharIndex = channelIndex / 4;
-                        if (hexDigitals[hexCharIndex].IsHex())
+                        OnDebugMessage(string.Format("The expected {0} digital channels were not found for data record {1} in SEL CEV file {2}.  {3} were found.  Setting digitals to null and continuing.",
+                            hexDigitals.Length * 4, dataRecordCount, fileIdentifier, cSER.AnalogSection.DigitalChannels.Count));
+                        foreach (Channel<bool?> channel in cSER.AnalogSection.DigitalChannels)
                         {
-                            BitArray ba = hexDigitals[hexCharIndex].ConvertHexToBitArray();
-                            //OnDebugMessage(string.Format("dig channel:{0} hex:{1}, position:{2}, value:{3}", channelIndex, hexDigitals[hexCharIndex], channelIndex % 4, ba[channelIndex % 4].ToString()));  //validation of correct digital logic
-                            channel.Samples.Add(ba[channelIndex % 4]);
-                        }
-                        else
                             channel.Samples.Add(null);
+                        }
+                        continue;  //get next line
+                    }
 
-                        channelIndex++;
+                    channelIndex = 0;
+                    int hexCharIndex = 0;
+                    if (cSER.AnalogSection.DigitalChannels.Count > 0)
+                    {
+                        foreach (Channel<bool?> channel in cSER.AnalogSection.DigitalChannels)  //loop through the channels and add the values
+                        {
+                            hexCharIndex = channelIndex / 4;
+                            if (hexDigitals[hexCharIndex].IsHex())
+                            {
+                                BitArray ba = hexDigitals[hexCharIndex].ConvertHexToBitArray();
+                                //OnDebugMessage(string.Format("dig channel:{0} hex:{1}, position:{2}, value:{3}", channelIndex, hexDigitals[hexCharIndex], channelIndex % 4, ba[channelIndex % 4].ToString()));  //validation of correct digital logic
 
+                                channel.Samples.Add(ba[channelIndex % 4]);
+                            }
+                            else
+                                channel.Samples.Add(null);
+
+                            channelIndex++;
+
+                        }
                     }
                 }
 
             }
 
-            //------------------------------  END DATA SECTION -----------------------------------------
-
-            if (lineIndex >= commaSeparatedEventReport.InitialReadingIndex + dataRecordLimit)  //we've looped through all the lines, no trigger && no SETTINGS
-                OnDebugMessage(string.Format("Reached data record limit of {0} prior to finding SETTINGS as data section terminator in SEL CEV file: {1}", dataRecordLimit, fileIdentifier));
-
-            commaSeparatedEventReport.ExpectedSampleCount = dataRecordCount;
+            cSER.ExpectedSampleCount = dataRecordCount;
             //OnDebugMessage(string.Format("Successfully processed {0} data records in SEL CEV file: {1}", dataRecordCount, fileIdentifier));
 
-            if (lineIndex >= lines.Length)
-                return commaSeparatedEventReport;  //we're done.
+            //------------------------------  END DATA BLOCK -----------------------------------------
+
+            //Directed to not process settings or lines.Length busted.
+            if (!cSER.ProcessSettings || lineIndex > lines.Length)
+            {
+                return cSER;
+            }
 
             //advance to 'SETTINGS' if we're not there already
             if (!lines[lineIndex].Contains("SETTINGS"))
@@ -768,121 +672,176 @@ namespace GSF.SELEventParser
             if (lineIndex >= lines.Length)  //we've looped through all the lines no settings found to add
             {
                 OnDebugMessage(string.Format("No settings were found following the SETTINGS line terminator was found at end of data section in SEL CEV file: {0}", fileIdentifier));
-                //we're done
-                return commaSeparatedEventReport;
+                return cSER;
             }
 
-            //advance to the first non-null settings line
-            lineIndex++;
-            while (lineIndex < lines.Length && (lines[lineIndex].Trim().Length == 0 || lines[lineIndex].Trim() == "\""))
-                lineIndex++;
+
+            //------------------------------  SETTINGS BLOCK -----------------------------------------
 
             List<SectionDefinition> settingsRegions = new List<SectionDefinition>();
-            string sectionName = "Settings";  //always first
-            int startLine = lineIndex;
+            string sectionName = "Settings";
 
+            //verify that settings are within quotes -- start line
+            int startSettingsLine = -1;
             while (lineIndex < lines.Length)
             {
-                string test = lines[lineIndex].ToUpper().Trim();
-                if (test.Contains("SETTINGS") || test.Contains("VARIABLES") || test.Contains("EQUATIONS"))
+                if (lines[lineIndex].Trim().Equals(DoubleQuote))
                 {
-                    settingsRegions.Add(new SectionDefinition(sectionName, startLine, lineIndex - startLine));
-                    int p = lines[lineIndex].IndexOf(':');
-                    if (p < 0)
-                    {
-                        sectionName = lines[lineIndex].RemoveCharacters(char.IsWhiteSpace);  //no terminating colon, assume just the name.
-                        lines[lineIndex] = string.Empty;
-                    }
-                    else
-                    {
-                        int q = lines[lineIndex].IndexOf(":=");
-                        if (q < 0)
-                            q = lines[lineIndex].IndexOf('=');
-
-                        if (q < 0) //no data this line.
-                        {
-                            sectionName = lines[lineIndex].Substring(0, p).RemoveCharacters(char.IsWhiteSpace);
-                            lines[lineIndex] = string.Empty;
-                        }
-                        else
-                        {
-                            lines[lineIndex] = lines[lineIndex].Substring(p + 1);
-                        }
-                    }
-                    startLine = lineIndex;
+                    startSettingsLine = lineIndex;
+                    lineIndex++;
+                    break;
                 }
                 lineIndex++;
             }
-            settingsRegions.Add(new SectionDefinition(sectionName, startLine, lines.Length - startLine));   //handle the last one.
 
-            //Now build the dictionary of settings.
-            //The key for settings takes the form "RegionName:Settings" -- with all white spaces removed from RegionNames
-
-            string[] regions = new string[settingsRegions.Count];
-            Dictionary<string, string> settingValues = new Dictionary<string, string>();
-
-            int i = 0;
-            foreach (SectionDefinition sd in settingsRegions)
+            int endSettingsLine = -1;
+            //verify that settings are within quotes; i.e,. look for the next quote character
+            while (lineIndex < lines.Length)
             {
-                for (int j = sd.StartLine; j < sd.StartLine + sd.Length; ++j)
+                if (lines[lineIndex].IndexOf(DoubleQuote) > -1)
                 {
-                    string test = lines[j].Trim().RemoveDuplicateWhiteSpace();
-                    if (test.Length == 0)
-                        continue; //get the next line
-
-                    while (test.Contains("="))
-                    {
-                        int p, q, r, s = 0;
-                        string value = string.Empty;
-
-                        p = test.IndexOf(":=");
-                        q = p + 2;
-                        if (p < 0)
-                        {
-                            p = test.IndexOf("=");
-                            q = p + 1;
-                        }
-
-                        string key = string.Concat(sd.Name, ":", test.Substring(0, p).Trim());
-
-                        if (q < test.Length)
-                        {
-                            r = test.IndexOf(":=", q);   //find the next one
-                            if (r < 0)
-                                r = test.IndexOf('=', q);
-
-                            if (r > 0)
-                            {
-                                s = test.IndexOfPrevious(char.IsWhiteSpace, r - 2);  //go back past the space
-                                if (s < q)
-                                    value = "0";
-                                else
-                                    value = test.Substring(q, s - q).Trim();
-                            }
-                            else //we're at the end of the line
-                            {
-                                value = test.Substring(q).Trim();
-                                test = "";
-                            }
-
-                            if (settingValues.ContainsKey(key))
-                                OnDebugMessage(string.Format("Settings already contains key:{0}", key));
-                            else
-                                settingValues.Add(key, value);
-                        }
-
-                        test = test.Substring(s);
-                    }
+                    endSettingsLine = lineIndex;
+                    break;
                 }
-                regions[i++] = sd.Name;
+                lineIndex++;
             }
 
-            //OnDebugMessage(string.Format("Successfully found {0} settings groups and a total of {1} settings.", regions.Length, settingValues.Count));
+            if (startSettingsLine < 0 || endSettingsLine < 0)
+            {
+                OnDebugMessage(string.Format("The settings block in the CEV file as malformed.  Processing of this section skipped: {0}", fileIdentifier));
+                return cSER;
+            }
 
-            commaSeparatedEventReport.SettingsRegions = regions;
-            commaSeparatedEventReport.Settings = settingValues;
+            lineIndex = startSettingsLine;
 
-            return commaSeparatedEventReport;
+            //Settings format differs strongly by SEL make and model
+            //Data structure accommodates multiple settings Regions.  However, for now all data is placed in the single region called "settings"
+            //Parses the key-value pairs and builds a dictionary from them without regard to headings
+            //For test data sets provided, have yet to see a key repeated in a file regardless of the number of sections
+            //Keys and values are assumed to be on the same line and are separated by the 2 character string ":="
+            // (note: for some SEL devices, value strings are multi-line and this parser does not yet handle this case)
+
+            settingsRegions.Add(new SectionDefinition(sectionName, startSettingsLine, endSettingsLine - startSettingsLine));
+            Dictionary<string, string> settingValues = new Dictionary<string, string>();
+            string[] regions = new string[1];
+            regions[0] = sectionName;
+
+            while (lineIndex <= endSettingsLine)  //there may be content in the last settings line
+            {
+                if (lines[lineIndex].Length < 2 || lines[lineIndex].IndexOf(":=") == -1)  //skip it
+                {
+                    lineIndex++;
+                    continue;
+                }
+
+                int[] keySeparaterIndicies = StringParser.IndicesOfToken(lines[lineIndex], ":=");
+
+
+                if (keySeparaterIndicies == null || keySeparaterIndicies.Length == 0)
+                {
+                    lineIndex++;
+                    continue;
+                }
+
+                for (int j = 0; j < keySeparaterIndicies.Length; j++)
+                {
+                    int index = keySeparaterIndicies[j];
+
+                    string key = PreviousToken(lines[lineIndex], index);
+                    if (string.IsNullOrEmpty(key))
+                        continue;
+
+                    string value = string.Empty;
+
+                    if (j < keySeparaterIndicies.Length - 1 && lines[lineIndex].Length > index + 3)
+                            value = NextToken(lines[lineIndex], index + 2);
+                    else
+                        value = lines[lineIndex].Substring(index + 2).Trim();
+
+                    if (string.IsNullOrEmpty(value))
+                        value = "0.0";
+
+                    if (settingValues.ContainsKey(key))
+                        OnDebugMessage(string.Format("Settings already contains key:{0}", key));
+                    else
+                        settingValues.Add(key, value);
+                }         
+                lineIndex++;
+            }
+
+            cSER.SettingsRegions = regions;
+            cSER.Settings = settingValues;
+            return cSER;
+        }
+
+        /// <summary>
+        /// Gets the settings token in the CEV file that follows the index provided
+        /// </summary>
+        /// <param name="inString">the text string for this line</param>
+        /// <param name="startIndex">the provided index</param>
+        /// <returns></returns>
+        private static string NextToken(string inString, int startIndex)
+        {
+            if (string.IsNullOrEmpty(inString))
+                return string.Empty;
+
+            if (startIndex < 0 || startIndex > inString.Length - 1)
+                return string.Empty;
+
+            int tokenStartIndex = -1;
+            int tokenLength = -1;
+
+            bool haveToken = false;
+            for (int i = startIndex; i < inString.Length; i++)
+            {
+                if (inString[i] <= 32 || inString[i] == ':')
+                {
+                    if (haveToken)
+                    {
+                        //done
+                        tokenLength = i - tokenStartIndex;
+                        break;
+                    }
+                    continue;
+                }
+
+                if (!haveToken)
+                {
+                    tokenStartIndex = i;
+                    haveToken = true;
+                }
+            }
+
+            //there is no next token
+            if (tokenStartIndex == -1)
+                return string.Empty;
+
+            if (tokenLength == -1)
+                tokenLength = inString.Length - tokenStartIndex;
+
+            return inString.Substring(tokenStartIndex, tokenLength);
+        }
+
+        /// <summary>
+        /// Gets the settings token in the CEV file previous to the provided index
+        /// </summary>
+        /// <param name="inString">The string for this line</param>
+        /// <param name="startIndex">the provided index</param>
+        /// <returns></returns>
+        private static string PreviousToken(string inString, int startIndex)
+        {
+            if (string.IsNullOrEmpty(inString))
+                return string.Empty;
+
+            if (startIndex < 0 || startIndex > inString.Length - 1)
+                return string.Empty;
+
+            inString = inString.Reverse();
+
+            startIndex = inString.Length - startIndex;
+            string value = NextToken(inString, startIndex);
+
+            return value.Reverse();
         }
 
         private static bool TryConvertInt32(string[] data, out int[] values, int length = 0)
