@@ -202,7 +202,7 @@ namespace DNP3Adapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(1.0D),
-        Description("Define the time interval, in seconds, to insert between consecutive data points for with the same ID and timestamp.")]
+        Description("Define the time interval, in milliseconds, to insert between consecutive data points for with the same ID and timestamp.")]
         public double TimestampDifferentiation
         {
             get
