@@ -86,7 +86,7 @@ namespace DNP3Adapters
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
             m.Value = meas.Value ? 1.0 : 0.0;
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 
@@ -109,7 +109,7 @@ namespace DNP3Adapters
                     m.Value = 3.0;
                     break;
             }
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 
@@ -118,7 +118,7 @@ namespace DNP3Adapters
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
             m.Value = meas.Value;
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 
@@ -127,7 +127,7 @@ namespace DNP3Adapters
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
             m.Value = meas.Value;
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 
@@ -136,7 +136,7 @@ namespace DNP3Adapters
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
             m.Value = meas.Value;
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 
@@ -145,7 +145,7 @@ namespace DNP3Adapters
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
             m.Value = meas.Value ? 1.0 : 0.0;
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 
@@ -154,7 +154,7 @@ namespace DNP3Adapters
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
             m.Value = meas.Value;
-            m.Timestamp = DateTime.UtcNow;
+            m.Timestamp = meas.Timestamp;
             return m;
         }
 

@@ -197,6 +197,26 @@ namespace DNP3Adapters
         }
 
         /// <summary>
+        /// Gets or sets the time interval, in milliseconds, to insert between consecutive
+        /// data points for a given signal that were received at the exact same time.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(1.0D),
+        Description("Define the time interval, in seconds, to insert between consecutive data points for with the same ID and timestamp.")]
+        public double TimestampDifferentiation
+        {
+            get
+            {
+                return m_soeHandler?.TimestampDifferentiation.TotalMilliseconds ?? 0.0D;
+            }
+            set
+            {
+                if ((object)m_soeHandler != null)
+                    m_soeHandler.TimestampDifferentiation = TimeSpan.FromMilliseconds(value);
+            }
+        }
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing
@@ -289,6 +309,7 @@ namespace DNP3Adapters
             Dictionary<string, string> settings = Settings;
             string setting;
             double pollingInterval;
+            double timestampDifferentiation;
 
             base.Initialize();
 
@@ -306,6 +327,11 @@ namespace DNP3Adapters
 
             m_soeHandler = new TimeSeriesSOEHandler(new MeasurementLookup(m_measurementMap));
             m_soeHandler.NewMeasurements += OnNewMeasurements;
+
+            // The TimestampDifferentiation property is a passthrough to the m_soeHandler.TimestampDifferentiation,
+            // so m_soeHandler must be initialized before reading this property from the connection string
+            if (settings.TryGetValue("TimestampDifferentiation", out setting) && double.TryParse(setting, out timestampDifferentiation))
+                TimestampDifferentiation = timestampDifferentiation;
 
             lock (s_adapters)
             {
