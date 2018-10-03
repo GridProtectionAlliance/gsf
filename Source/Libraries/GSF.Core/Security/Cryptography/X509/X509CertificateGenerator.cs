@@ -302,7 +302,6 @@ namespace GSF.Security.Cryptography.X509
         private static readonly string PKCS7Data = "1.2.840.113549.1.7.1";
         private static readonly string PKCS12KeyBag = "1.2.840.113549.1.12.10.1.1";
         private static readonly string PKCS12LocalKeyID = "1.2.840.113549.1.9.21";
-        private static readonly string PKCS12FriendlyName = "1.2.840.113549.1.9.20";
         private static readonly string PKCS12CertBag = "1.2.840.113549.1.12.10.1.3";
         private static readonly string PKCS12X509Certificate = "1.2.840.113549.1.9.22.1";
 
@@ -548,15 +547,7 @@ namespace GSF.Security.Cryptography.X509
                         wr.WriteOctetString(new byte[] { 1 });
                     }
                 }
-
-                using (wr.BeginSequence())
-                {
-                    wr.WriteOID(PKCS12FriendlyName);
-                    using (wr.BeginSet())
-                    {
-                        wr.Write("Certificate1");
-                    }
-                }
+         
             }
         }
 
@@ -588,15 +579,6 @@ namespace GSF.Security.Cryptography.X509
                     using (wr.BeginSet())
                     {
                         wr.WriteOctetString(new byte[] { 1 });
-                    }
-                }
-
-                using (wr.BeginSequence())
-                {
-                    wr.WriteOID(PKCS12FriendlyName);
-                    using (wr.BeginSet())
-                    {
-                        wr.Write("Certificate1");
                     }
                 }
             }
