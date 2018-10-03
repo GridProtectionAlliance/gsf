@@ -647,6 +647,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Initialize", "Initializes specified adapter or collection", InitializeRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadConfig", "Manually reloads the system configuration", ReloadConfigRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("UpdateConfigFile", "Updates an option in the configuration file", UpdateConfigFileRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ManageCertificate", "Manages the certificate used by the service", ManageCertificateHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Authenticate", "Authenticates network shares for health and status exports", AuthenticateRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
@@ -3117,6 +3118,68 @@ namespace GSF.TimeSeries
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Manages the certificate used by the service.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        protected virtual void ManageCertificateHandler(ClientRequestInfo requestInfo)
+        {
+            bool import = requestInfo.Request.Arguments.Exists("import");
+            bool export = requestInfo.Request.Arguments.Exists("export");
+            string certificateFile = requestInfo.Request.Arguments["OrderedArg1"];
+            SecureString password = requestInfo.Request.Arguments["OrderedArg2"].ToSecureString();
+
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || !(import ^ export) || string.IsNullOrEmpty(certificateFile) || (password?.Length ?? 0) == 0)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Updates an option in the configuration file.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ManageCertificate { -import | -export } \"Certificate File\" \"Password\"");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -import".PadRight(20));
+                helpMessage.Append("Imports the given certificate into the current user store");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -export".PadRight(20));
+                helpMessage.Append("Exports the current certificate from the user store");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, "{0}", helpMessage);
+            }
+            else
+            {
+                ConfigurationFile configurationFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection remotingServer = configurationFile.Settings["remotingServer"];
+                remotingServer.Add("CertificateFile", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
+
+                string certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
+
+                CertificateGenerator certificateGenerator = new CertificateGenerator()
+                {
+                    Issuer = ServiceName,
+                    CertificatePath = certificatePath
+                };
+
+                if (import)
+                    certificateGenerator.ImportCertificateWithPrivateKey(certificateFile, password);
+
+                if (export)
+                    certificateGenerator.ExportCertificateWithPrivateKey(certificateFile, password);
+
+                SendResponse(requestInfo, true);
             }
         }
 
