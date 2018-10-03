@@ -28,6 +28,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -292,7 +293,61 @@ namespace GSF.Net.Security
             // All attempts to generate the certificate failed, so we must throw an exception
             throw new InvalidOperationException("Unable to generate the self-signed certificate.");
         }
-        
+
+        /// <summary>
+        /// Exports the private key of the certificate that is currently in use to the given path,
+        /// encrypting the file with the given password.
+        /// </summary>
+        /// <param name="exportPath">The path to which the certificate will be exported.</param>
+        /// <param name="password">The password used to encrypt the certificate file.</param>
+        public void ExportCertificateWithPrivateKey(string exportPath, SecureString password)
+        {
+            // Attempt to get an existing certificate from the given certificate path
+            string certificatePath = FilePath.GetAbsolutePath(CertificatePath);
+            X509Certificate2 certificate = new X509Certificate2(certificatePath);
+
+            using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadOnly);
+
+                List<X509Certificate2> certificates = store.Certificates.Cast<X509Certificate2>().ToList();
+                FindMatchingCertificates(certificates, certificate);
+
+                X509Certificate2 pvkCertificate = certificates.FirstOrDefault(CanAccessPrivateKey);
+
+                if ((object)pvkCertificate == null)
+                    throw new InvalidOperationException("Could not locate private key in the current user store.");
+
+                byte[] certificateData = pvkCertificate.Export(X509ContentType.Pfx, password);
+                File.Delete(exportPath);
+                File.WriteAllBytes(exportPath, certificateData);
+
+                store.Close();
+            }
+        }
+
+        /// <summary>
+        /// Imports the given certificate into the current user store and then exports the public key.
+        /// </summary>
+        /// <param name="importPath">The file with the certificate and private key to be imported.</param>
+        /// <param name="password">The password used to encrypt the certificate file with the private key.</param>
+        public void ImportCertificateWithPrivateKey(string importPath, SecureString password)
+        {
+            X509KeyStorageFlags keyStorageFlags = X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet;
+            X509Certificate2 certificate = new X509Certificate2(importPath, password, keyStorageFlags);
+
+            using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadWrite);
+                store.Add(certificate);
+                store.Close();
+            }
+
+            string certificatePath = FilePath.GetAbsolutePath(CertificatePath);
+            byte[] certificateData = certificate.Export(X509ContentType.Cert);
+            File.WriteAllBytes(certificatePath, certificateData);
+        }
+
         // Gets the list of common names to be passed to
         // makecert when generating self-signed certificates.
         private string GetCommonNameList()
