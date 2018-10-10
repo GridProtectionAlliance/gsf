@@ -1582,9 +1582,9 @@ namespace GSF.Web.Model
             if (addEmptyRow)
                 options.Add("", emptyRowValue);
 
-            foreach (int toption in Enum.GetValues(typeof(TOption)))
+            foreach (Enum toption in Enum.GetValues(typeof(TOption)))
             {
-                options.Add(toption.ToString(), Enum.GetName(typeof(TOption), toption));
+                options.Add(toption.GetEnumValueOrDefault(Enum.GetUnderlyingType(typeof(TOption))).ToString(), toption.GetFormattedName());
             }
 
             if (options.Count == 0 && showNoRecordOption)
