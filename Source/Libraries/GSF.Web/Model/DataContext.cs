@@ -1596,6 +1596,78 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
+        /// Generates template based select field based on a dictionary of field attributes.
+        /// </summary>
+        /// <typeparam name="TModel">Modeled table for select field.</typeparam>
+        /// <param name="options">Dictionary generated to be used for the options.</param>
+        /// <param name="fieldName">Field name for value of select field.</param>
+        /// <param name="required">Determines if field name is required.</param>
+        /// <param name="fieldLabel">Label name for select field, defaults to <paramref name="fieldName"/>.</param>
+        /// <param name="fieldID">ID to use for select field; defaults to select + <paramref name="fieldName"/>.</param>
+        /// <param name="groupDataBinding">Data-bind operations to apply to outer form-group div, if any.</param>
+        /// <param name="labelDataBinding">Data-bind operations to apply to label, if any.</param>
+        /// <param name="requiredDataBinding">Boolean data-bind operation to apply to required state, if any.</param>
+        /// <param name="customDataBinding">Extra custom data-binding operations to apply to field, if any.</param>
+        /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
+        /// <param name="optionDataBinding">Data-bind operations to apply to each option value, if any.</param>
+        /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
+        /// <param name="initialFocus">Use field for initial focus.</param>
+        /// <param name="allowUnset">Flag that determines if select can have no selected value.</param>
+        /// <param name="unsetCaption">Label to show when no value is selected; defaults to "Select value...".</param>
+        /// <param name="addEmptyRow">Flag that determines if an empty row should be added to options list.</param>
+        /// <param name="emptyRowValue">Value to use for empty row; defaults to empty string.</param>
+        /// <param name="showNoRecordOption">Flag that determines if an option representing no records should be shown if select query returns no values.</param>
+        /// <param name="noRecordValue">Value for no records option when select query returns no values; defaults to "-1".</param>
+        /// <param name="noRecordText">Text for no records option when select query returns no values; defaults to "No records".</param>
+        /// <returns>Generated HTML for new text field based on specified parameters.</returns>
+        public string AddSelectField<TModel>(Dictionary<string, string> options, string fieldName, bool required, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, bool allowUnset = false, string unsetCaption = "Select value...", bool addEmptyRow = false, string emptyRowValue = "", bool showNoRecordOption = false, string noRecordValue = "-1", string noRecordText = "No records") where TModel : class, new()
+        {
+            RazorView addSelectFieldTemplate = new RazorView(m_razorEngine, AddSelectFieldTemplate, m_exceptionHandler);
+            DynamicViewBag viewBag = addSelectFieldTemplate.ViewBag;
+
+            if (string.IsNullOrEmpty(fieldLabel))
+            {
+                LabelAttribute labelAttribute;
+
+                if (Table<TModel>().TryGetFieldAttribute(fieldName, out labelAttribute))
+                    fieldLabel = labelAttribute.Label;
+            }
+
+            AddFieldValueInitializer<TModel>(fieldName);
+
+            if (string.IsNullOrEmpty(fieldID))
+                fieldID = $"select{fieldName}";
+
+            if (initialFocus)
+                m_initialFocusField = fieldID;
+
+            viewBag.AddValue("FieldName", fieldName);
+            viewBag.AddValue("Required", required);
+            viewBag.AddValue("FieldLabel", fieldLabel);
+            viewBag.AddValue("FieldID", fieldID);
+            viewBag.AddValue("GroupDataBinding", groupDataBinding);
+            viewBag.AddValue("LabelDataBinding", labelDataBinding);
+            viewBag.AddValue("RequiredDataBinding", requiredDataBinding);
+            viewBag.AddValue("CustomDataBinding", customDataBinding);
+            viewBag.AddValue("DependencyFieldName", dependencyFieldName);
+            viewBag.AddValue("ToolTip", toolTip);
+            viewBag.AddValue("OptionDataBinding", optionDataBinding);
+            viewBag.AddValue("AllowUnset", allowUnset);
+            viewBag.AddValue("UnsetCaption", unsetCaption);
+
+            if (addEmptyRow)
+                options.Add("", emptyRowValue);
+
+            if (options.Count == 0 && showNoRecordOption)
+                options.Add(noRecordValue, noRecordText);
+
+            viewBag.AddValue("Options", options);
+
+            return addSelectFieldTemplate.Execute();
+        }
+
+
+        /// <summary>
         /// Generates template based check box field based on reflected modeled table field attributes.
         /// </summary>
         /// <typeparam name="TModel">Modeled table.</typeparam>
