@@ -1328,6 +1328,9 @@ namespace GSF.IO
         /// <param name="record">Record to be written to disk.</param>
         private void WriteToDisk(int recordIndex, T record)
         {
+            if (recordIndex <= 0)
+                throw new ArgumentException("A record index in an ISAM data file must be a positive integer.", nameof(recordIndex));
+
             lock (m_fileDataLock)
             {
                 m_fileData.Seek((recordIndex - 1) * (long)record.BinaryLength, SeekOrigin.Begin);
