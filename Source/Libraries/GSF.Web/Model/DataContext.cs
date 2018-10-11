@@ -1584,7 +1584,11 @@ namespace GSF.Web.Model
 
             foreach (Enum toption in Enum.GetValues(typeof(TOption)))
             {
-                options.Add(toption.GetEnumValueOrDefault(Enum.GetUnderlyingType(typeof(TOption))).ToString(), toption.GetFormattedName());
+                string description = toption.GetDescription();
+                if (description == toption.ToString())
+                    description = toption.GetFormattedName();
+
+                options.Add(toption.GetEnumValueOrDefault(Enum.GetUnderlyingType(typeof(TOption))).ToString(), description);
             }
 
             if (options.Count == 0 && showNoRecordOption)
