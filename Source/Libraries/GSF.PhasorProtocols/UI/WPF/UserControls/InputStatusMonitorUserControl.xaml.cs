@@ -90,7 +90,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private bool m_useLocalClockAsRealtime = true;
         private bool m_ignoreBadTimestamps;
         private int m_chartRefreshInterval = 66;
-        private int m_statisticsDataRefershInterval = 10;
+        private int m_statisticsDataRefreshInterval = 10;
         private int m_measurementsDataRefreshInterval = 10;
         private double m_frequencyRangeMin = 59.95;
         private double m_frequencyRangeMax = 60.05;
@@ -264,7 +264,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_xAxisDataCollection = new int[m_numberOfDataPointsToPlot];
             m_refreshRate = Ticks.FromMilliseconds(m_chartRefreshInterval);
             TextBlockMeasurementRefreshInterval.Text = m_measurementsDataRefreshInterval.ToString();
-            TextBlockStatisticsRefreshInterval.Text = m_statisticsDataRefershInterval.ToString();
+            TextBlockStatisticsRefreshInterval.Text = m_statisticsDataRefreshInterval.ToString();
             TextBoxProcessInterval.Text = "33";
         }
 
@@ -376,7 +376,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfDataPointsToPlot").ToString(), out m_numberOfDataPointsToPlot);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("DataResolution").ToString(), out m_framesPerSecond);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("ChartRefreshInterval").ToString(), out m_chartRefreshInterval);
-            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString(), out m_statisticsDataRefershInterval);
+            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString(), out m_statisticsDataRefreshInterval);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("MeasurementsDataRefreshInterval").ToString(), out m_measurementsDataRefreshInterval);
             double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LagTime").ToString(), out m_lagTime);
             double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LeadTime").ToString(), out m_leadTime);
@@ -484,8 +484,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             if (m_refreshTimer == null)
             {
+                double chartRefreshInterval = (m_chartRefreshInterval >= 0)
+                    ? m_chartRefreshInterval
+                    : 66;
+
                 m_refreshTimer = new DispatcherTimer();
-                m_refreshTimer.Interval = TimeSpan.FromMilliseconds(m_chartRefreshInterval);
+                m_refreshTimer.Interval = TimeSpan.FromMilliseconds(chartRefreshInterval);
                 m_refreshTimer.Tick += m_refreshTimer_Tick;
                 m_refreshTimer.Start();
             }
@@ -923,7 +927,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             TextBoxNumberOFDataPointsToPlot.Text = m_numberOfDataPointsToPlot.ToString();
             TextBoxDataResolution.Text = m_framesPerSecond.ToString();
             TextBoxChartRefreshInterval.Text = m_chartRefreshInterval.ToString();
-            TextBoxStatisticDataRefreshInterval.Text = m_statisticsDataRefershInterval.ToString();
+            TextBoxStatisticDataRefreshInterval.Text = m_statisticsDataRefreshInterval.ToString();
             TextBoxMeasurementDataRefreshInterval.Text = m_measurementsDataRefreshInterval.ToString();
             TextBoxLagTime.Text = m_lagTime.ToString();
             TextBoxLeadTime.Text = m_leadTime.ToString();
