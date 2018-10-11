@@ -1026,6 +1026,8 @@ namespace GSF.Collections
 
             // Clearing the lookup table defragments the file
             m_fragmentationCount = 0;
+
+            ClearJournalNode();
         }
 
         /// <summary>
@@ -1408,8 +1410,8 @@ namespace GSF.Collections
                 m_headerNode.EndOfFilePointer = nextItemPointer;
 
             m_headerNode.Count = count;
-
             Write(m_headerNode);
+            ClearJournalNode();
         }
 
         private void Delete(long lookupPointer, long count)
@@ -1424,6 +1426,7 @@ namespace GSF.Collections
             WriteItemPointer(lookupPointer, 1L);
             m_headerNode.Count = count;
             Write(m_headerNode);
+            ClearJournalNode();
         }
 
         private void GrowLookupSection(long itemSectionPointer, long endOfFilePointer, long newEndOfFilePointer)
@@ -1453,13 +1456,7 @@ namespace GSF.Collections
             m_headerNode.ItemSectionPointer = itemSectionPointer;
             m_headerNode.EndOfFilePointer = newEndOfFilePointer;
             Write(m_headerNode);
-
-            // Clear the journal node
-            m_journalNode.Operation = JournalNode.None;
-            m_journalNode.LookupPointer = 0L;
-            m_journalNode.ItemPointer = 0L;
-            m_journalNode.Sync = 0;
-            Write(m_journalNode);
+            ClearJournalNode();
         }
 
         private void RebuildLookupTable(long capacity)
@@ -1506,13 +1503,7 @@ namespace GSF.Collections
 
             m_headerNode.Capacity = capacity;
             Write(m_headerNode);
-
-            // Clear the journal node
-            m_journalNode.Operation = JournalNode.None;
-            m_journalNode.LookupPointer = 0L;
-            m_journalNode.ItemPointer = 0L;
-            m_journalNode.Sync = 0;
-            Write(m_journalNode);
+            ClearJournalNode();
         }
 
         private void WriteItemNodePointers(long lookupPointer, long itemPointer, long nextItemPointer)
@@ -1528,6 +1519,8 @@ namespace GSF.Collections
             m_fileStream.Seek(itemPointer, SeekOrigin.Begin);
             m_fileWriter.Write(lookupPointer);
             m_fileWriter.Write(nextItemPointer);
+
+            ClearJournalNode();
         }
 
         private void Truncate(long itemPointer)
@@ -1541,6 +1534,17 @@ namespace GSF.Collections
             m_headerNode.EndOfFilePointer = itemPointer;
             Write(m_headerNode);
             m_fileStream.SetLength(itemPointer);
+
+            ClearJournalNode();
+        }
+
+        private void ClearJournalNode()
+        {
+            m_journalNode.Operation = JournalNode.None;
+            m_journalNode.LookupPointer = 0L;
+            m_journalNode.ItemPointer = 0L;
+            m_journalNode.Sync = 0;
+            Write(m_journalNode);
         }
 
         private long GetPosition(long hashCode)
