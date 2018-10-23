@@ -1588,7 +1588,7 @@ namespace GSF.Web.Model
                 if (description == toption.ToString())
                     description = toption.GetFormattedName();
 
-                options.Add(toption.GetEnumValueOrDefault(Enum.GetUnderlyingType(typeof(TOption))).ToString(), description);
+                options.Add(Convert.ChangeType(toption, Enum.GetUnderlyingType(typeof(TOption))).ToString(), description);
             }
 
             if (options.Count == 0 && showNoRecordOption)
