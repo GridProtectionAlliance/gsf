@@ -108,6 +108,11 @@ namespace TimeSeries
         return boost::make_shared<T>(p1, p2);
     }
 
+    template<class T, typename P1, typename P2, typename P3> SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3)
+    {
+        return boost::make_shared<T>(p1, p2, p3);
+    }
+
     template<typename T>
     using Action = std::function<void(T)>;
 
@@ -156,6 +161,7 @@ namespace TimeSeries
         static const string String;
         static const GSF::TimeSeries::Guid Guid;
         static const GSF::TimeSeries::IPAddress IPAddress;
+        static const uint8_t* ZeroLengthBytes;
     };
 }}
 

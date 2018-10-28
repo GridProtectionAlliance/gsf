@@ -32,12 +32,329 @@
     <ClInclude Include="Common\ThreadSafeQueue.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Transport\antlr4-runtime\antlr4-common.h" />
+    <ClInclude Include="Transport\antlr4-runtime\antlr4-runtime.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ANTLRErrorListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ANTLRErrorStrategy.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ANTLRFileStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ANTLRInputStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\AbstractPredicateTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ActionTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\AmbiguityInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ArrayPredictionContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATN.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNConfig.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNConfigSet.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNDeserializationOptions.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNDeserializer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNSerializer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNSimulator.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ATNType.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\AtomTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\BasicBlockStartState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\BasicState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\BlockEndState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\BlockStartState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ContextSensitivityInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\DecisionEventInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\DecisionInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\DecisionState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\EmptyPredictionContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\EpsilonTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ErrorInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerActionExecutor.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerActionType.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerATNConfig.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerATNSimulator.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerChannelAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerCustomAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerIndexedCustomAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerModeAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerMoreAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerPopModeAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerPushModeAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerSkipAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LexerTypeAction.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LL1Analyzer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LookaheadEventInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\LoopEndState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\NotSetTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\OrderedATNConfigSet.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ParseInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ParserATNSimulator.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PlusBlockStartState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PlusLoopbackState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PrecedencePredicateTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PredicateEvalInfo.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PredicateTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PredictionContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\PredictionMode.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\ProfilingATNSimulator.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\RangeTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\RuleStartState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\RuleStopState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\RuleTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\SemanticContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\SetTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\SingletonPredictionContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\StarBlockStartState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\StarLoopbackState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\StarLoopEntryState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\TokensStartState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\Transition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\atn\WildcardTransition.h" />
+    <ClInclude Include="Transport\antlr4-runtime\BailErrorStrategy.h" />
+    <ClInclude Include="Transport\antlr4-runtime\BaseErrorListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\BufferedTokenStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\CharStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\CommonToken.h" />
+    <ClInclude Include="Transport\antlr4-runtime\CommonTokenFactory.h" />
+    <ClInclude Include="Transport\antlr4-runtime\CommonTokenStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ConsoleErrorListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\DefaultErrorStrategy.h" />
+    <ClInclude Include="Transport\antlr4-runtime\dfa\DFA.h" />
+    <ClInclude Include="Transport\antlr4-runtime\dfa\DFASerializer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\dfa\DFAState.h" />
+    <ClInclude Include="Transport\antlr4-runtime\dfa\LexerDFASerializer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\DiagnosticErrorListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\Exceptions.h" />
+    <ClInclude Include="Transport\antlr4-runtime\FailedPredicateException.h" />
+    <ClInclude Include="Transport\antlr4-runtime\InputMismatchException.h" />
+    <ClInclude Include="Transport\antlr4-runtime\InterpreterRuleContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\IntStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\Lexer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\LexerInterpreter.h" />
+    <ClInclude Include="Transport\antlr4-runtime\LexerNoViableAltException.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ListTokenSource.h" />
+    <ClInclude Include="Transport\antlr4-runtime\misc\InterpreterDataReader.h" />
+    <ClInclude Include="Transport\antlr4-runtime\misc\Interval.h" />
+    <ClInclude Include="Transport\antlr4-runtime\misc\IntervalSet.h" />
+    <ClInclude Include="Transport\antlr4-runtime\misc\MurmurHash.h" />
+    <ClInclude Include="Transport\antlr4-runtime\misc\Predicate.h" />
+    <ClInclude Include="Transport\antlr4-runtime\NoViableAltException.h" />
+    <ClInclude Include="Transport\antlr4-runtime\Parser.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ParserInterpreter.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ParserRuleContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\ProxyErrorListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\RecognitionException.h" />
+    <ClInclude Include="Transport\antlr4-runtime\Recognizer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\RuleContext.h" />
+    <ClInclude Include="Transport\antlr4-runtime\RuleContextWithAltNum.h" />
+    <ClInclude Include="Transport\antlr4-runtime\RuntimeMetaData.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\Any.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\Arrays.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\BitSet.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\CPPUtils.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\Declarations.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\guid.h" />
+    <ClInclude Include="Transport\antlr4-runtime\support\StringUtils.h" />
+    <ClInclude Include="Transport\antlr4-runtime\Token.h" />
+    <ClInclude Include="Transport\antlr4-runtime\TokenFactory.h" />
+    <ClInclude Include="Transport\antlr4-runtime\TokenSource.h" />
+    <ClInclude Include="Transport\antlr4-runtime\TokenStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\TokenStreamRewriter.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\AbstractParseTreeVisitor.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ErrorNode.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ErrorNodeImpl.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\IterativeParseTreeWalker.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ParseTree.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ParseTreeListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ParseTreeProperty.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ParseTreeVisitor.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\ParseTreeWalker.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\Chunk.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\ParseTreeMatch.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\ParseTreePattern.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\ParseTreePatternMatcher.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\RuleTagToken.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\TagChunk.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\TextChunk.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\pattern\TokenTagToken.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\TerminalNode.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\TerminalNodeImpl.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\Trees.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPath.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathLexer.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathLexerErrorListener.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathRuleAnywhereElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathRuleElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathTokenAnywhereElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathTokenElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathWildcardAnywhereElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\tree\xpath\XPathWildcardElement.h" />
+    <ClInclude Include="Transport\antlr4-runtime\UnbufferedCharStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\UnbufferedTokenStream.h" />
+    <ClInclude Include="Transport\antlr4-runtime\Vocabulary.h" />
+    <ClInclude Include="Transport\antlr4-runtime\WritableToken.h" />
+    <ClCompile Include="Transport\antlr4-runtime\ANTLRErrorListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ANTLRErrorStrategy.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ANTLRFileStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ANTLRInputStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\AbstractPredicateTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ActionTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\AmbiguityInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ArrayPredictionContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATN.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNConfig.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNConfigSet.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNDeserializationOptions.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNDeserializer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNSerializer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNSimulator.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ATNState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\AtomTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\BasicBlockStartState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\BasicState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\BlockEndState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\BlockStartState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ContextSensitivityInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\DecisionEventInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\DecisionInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\DecisionState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\EmptyPredictionContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\EpsilonTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ErrorInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerActionExecutor.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerATNConfig.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerATNSimulator.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerChannelAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerCustomAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerIndexedCustomAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerModeAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerMoreAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerPopModeAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerPushModeAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerSkipAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LexerTypeAction.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LL1Analyzer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LookaheadEventInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\LoopEndState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\NotSetTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\OrderedATNConfigSet.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ParseInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ParserATNSimulator.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PlusBlockStartState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PlusLoopbackState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PrecedencePredicateTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PredicateEvalInfo.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PredicateTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PredictionContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\PredictionMode.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\ProfilingATNSimulator.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\RangeTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\RuleStartState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\RuleStopState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\RuleTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\SemanticContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\SetTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\SingletonPredictionContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\StarBlockStartState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\StarLoopbackState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\StarLoopEntryState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\TokensStartState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\Transition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\atn\WildcardTransition.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\BailErrorStrategy.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\BaseErrorListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\BufferedTokenStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\CharStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\CommonToken.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\CommonTokenFactory.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\CommonTokenStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ConsoleErrorListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\DefaultErrorStrategy.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\dfa\DFA.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\dfa\DFASerializer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\dfa\DFAState.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\dfa\LexerDFASerializer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\DiagnosticErrorListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\Exceptions.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\FailedPredicateException.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\InputMismatchException.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\InterpreterRuleContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\IntStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\Lexer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\LexerInterpreter.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\LexerNoViableAltException.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ListTokenSource.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\misc\InterpreterDataReader.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\misc\Interval.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\misc\IntervalSet.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\misc\MurmurHash.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\misc\Predicate.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\NoViableAltException.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\Parser.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ParserInterpreter.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ParserRuleContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\ProxyErrorListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\RecognitionException.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\Recognizer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\RuleContext.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\RuleContextWithAltNum.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\RuntimeMetaData.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\support\Any.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\support\Arrays.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\support\CPPUtils.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\support\guid.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\support\StringUtils.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\Token.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\TokenSource.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\TokenStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\TokenStreamRewriter.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\ErrorNode.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\ErrorNodeImpl.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\IterativeParseTreeWalker.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\ParseTree.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\ParseTreeListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\ParseTreeVisitor.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\ParseTreeWalker.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\Chunk.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\ParseTreeMatch.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\ParseTreePattern.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\ParseTreePatternMatcher.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\RuleTagToken.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\TagChunk.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\TextChunk.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\pattern\TokenTagToken.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\TerminalNode.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\TerminalNodeImpl.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\Trees.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPath.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathLexer.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathLexerErrorListener.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathRuleAnywhereElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathRuleElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathTokenAnywhereElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathTokenElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathWildcardAnywhereElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\tree\xpath\XPathWildcardElement.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\UnbufferedCharStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\UnbufferedTokenStream.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\Vocabulary.cpp" />
+    <ClCompile Include="Transport\antlr4-runtime\WritableToken.cpp" />
+    <ClInclude Include="Transport\FilterExpressions\antlr4-common.h" />
+    <ClInclude Include="Transport\FilterExpressions\antlr4-runtime.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClInclude Include="Transport\Constants.h" />
+    <ClInclude Include="Transport\DataPublisher.h" />
     <ClInclude Include="Transport\DataSubscriber.h" />
+    <ClCompile Include="Transport\DataPublisher.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
+    <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxBaseListener.h" />
+    <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxLexer.h" />
+    <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxListener.h" />
+    <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.h" />
     <ClInclude Include="Transport\SignalIndexCache.h" />
+    <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxBaseListener.cpp" />
+    <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxLexer.cpp" />
+    <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxListener.cpp" />
+    <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
     <ClInclude Include="Transport\SubscriberInstance.h" />
     <ClCompile Include="Transport\SubscriberInstance.cpp" />
@@ -50,6 +367,11 @@
   <ItemGroup>
     <None Include="CMakeLists.txt" />
     <None Include="README.txt" />
+    <None Include="Transport\antlr4-runtime\atn\Makefile" />
+    <None Include="Transport\antlr4-runtime\tree\xpath\XPathLexer.g4" />
+    <None Include="Transport\antlr4-runtime\tree\xpath\XPathLexer.tokens" />
+    <None Include="Transport\FilterExpressions\CompileGrammar.bat" />
+    <None Include="Transport\FilterExpressions\FilterExpressionSyntax.g4" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A542BE8-8D17-44C3-BCD2-768DF480FF82}</ProjectGuid>
@@ -125,12 +447,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;Transport\antlr4-runtime</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -140,12 +463,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;Transport\antlr4-runtime</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -157,12 +481,13 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;Transport\antlr4-runtime</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -176,12 +501,13 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;Transport\antlr4-runtime</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

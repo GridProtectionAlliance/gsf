@@ -20,58 +20,76 @@ that was licensed using the Apache License, Version 2.0: http://www.apache.org/l
 This includes, but may not be limited to, the following:
 
 * GSF.ASN1 project derived from BinaryNotes (http://bnotes.sourceforge.net):
-        Copyright 2006-2011 Abdulla Abdurakhmanov (abdulla@latestbit.com)
-        Original sources are available at www.latestbit.com
+    Copyright 2006-2011 Abdulla Abdurakhmanov (abdulla@latestbit.com)
+    Original sources are available at www.latestbit.com
 
 * Dnp3Adapters project uses code from the Automatak DNP3 library (http://dnp3.github.io/):
-        Copyright (c) 2010, 2011 Green Energy Corp.
-        Copyright (c) 2013 Automatak LLC
+    Copyright (c) 2010, 2011 Green Energy Corp.
+    Copyright (c) 2013 Automatak LLC
 
 * CertificateGenerator project that internally includes code from the Bouncy Castle libraries which
-	    includes bzip2 code based on work done by Keiron Liddle, Aftex Software
+    includes bzip2 code based on work done by Keiron Liddle, Aftex Software
 
 * GSF.Web includes anti-CSRF code derived from AspNetWebStack (https://github.com/aspnet/AspNetWebStack):
-		Copyright (c) .NET Foundation. All rights reserved.
+    Copyright (c) .NET Foundation. All rights reserved.
 
 =========================================================================================================
 
 Portions of this software, where noted in the source file header, were implemented using source code
-that was licensed using the Microsoft Public License (Ms-PL): http://www.opensource.org/licenses/ms-pl.
+that was licensed using the Microsoft Public License (Ms-PL): http://www.opensource.org/licenses/ms-pl
 This includes, but may not be limited to, the following:
 
 * WaveSubscriptionDemo project derived from NAudioWpfDemo app in NAudio (http://naudio.codeplex.com/):
-        Copyright (c) Mark Heath 2008
+    Copyright (c) Mark Heath 2008
 
 * GSF.Diagnostics logging internally use portions of DotNetZip library (https://dotnetzip.codeplex.com/)
-        Copyright (c) 2009-2011 Dino Chiesa and Microsoft Corporation
-        Copyright (c) 2009-2011 Dino Chiesa
+    Copyright (c) 2009-2011 Dino Chiesa and Microsoft Corporation
+    Copyright (c) 2009-2011 Dino Chiesa
 
 =========================================================================================================
 
-Portions of this software were implemented using source code that was licensed using an adaptation of the
-MIT X11 License: https://opensource.org/licenses/mit-license.php.
-This includes, but may not be limited to, the following:
+Portions of this software implemented using source code that was licensed using the BSD 3-clause license:
+https://opensource.org/licenses/BSD-3-Clause. This includes, but may not be limited to, the following:
+
+* TimeSeriesPlatformLibrary project FilterExpression code uses ANTLR4 Project C++ run-time library code
+    (https://github.com/antlr/antlr4/tree/master/runtime/Cpp):
+    Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
+
+=========================================================================================================
+
+Portions of this software were implemented using source code that was licensed using the MIT License:
+https://opensource.org/licenses/MIT. This includes, but may not be limited to, the following:
+
+* TimeSeriesPlatformLibrary project FilterExpression code is derived from the SQLite ANTLR4 grammar file
+    (https://github.com/antlr/grammars-v4/tree/master/sqlite / https://github.com/bkiers/sqlite-parser):
+    Copyright (c) 2014 by Bart Kiers
+
+=========================================================================================================
+
+Portions of this software were implemented using source code that was licensed using an adaptation of
+the MIT X11 License: https://opensource.org/licenses/MIT. This includes, but may not be limited to,
+the following:
 
 * CertificateGenerator project that internally includes code from the Bouncy Castle libraries:
 
-	Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)
+    Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-	associated documentation files (the "Software"), to deal in the Software without restriction,
-	including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-	and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-	subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+    associated documentation files (the "Software"), to deal in the Software without restriction,
+    including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or substantial
-	portions of the Software.
+    The above copyright notice and this permission notice shall be included in all copies or substantial
+    portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-	LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-	IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	Contributors: https://www.bouncycastle.org/csharp/contributors.html
+    Contributors: https://www.bouncycastle.org/csharp/contributors.html
 
 =========================================================================================================
 
@@ -82,18 +100,19 @@ This includes, specifically, the following:
 * GSF.Communications project references the clrzmq4 library for ZeroMQ implementation support:
     Source code for the clrzmq4 project can be found here: https://github.com/zeromq/clrzmq4.
     
-    Note that ZeroMQ (http://zeromq.org) implementations include a static linking exception:
+    !! NOTE: ZeroMQ (http://zeromq.org) implementations include a static linking exception:
 
         The copyright holders give you permission to link this library with independent modules to
-        produce	an executable, regardless of the license terms of these independent modules, and
-        to copy and	distribute the resulting executable under terms of your choice, provided that
+        produce an executable, regardless of the license terms of these independent modules, and
+        to copy and distribute the resulting executable under terms of your choice, provided that
         you also meet, for each linked independent module, the terms and conditions of the license
         of that module. An independent module is a module which is not derived from or based on
-        this library. If you modify	this library, you must extend this exception to your version
+        this library. If you modify this library, you must extend this exception to your version
         of the library.
 
     With this linking exception, the Grid Solutions Framework uses the ZeroMQ binary as a dependency yet
-    remains an MIT licensed repository. Full GNU Lesser General Public License text included below.
+    remains an MIT licensed repository. The full GNU Lesser General Public License text is included below
+    for reference only.
 
 =========================================================================================================
 

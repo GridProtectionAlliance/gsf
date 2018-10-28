@@ -558,7 +558,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     }
 
     // Find root node
-    xml_node rootNode = document.child("NewDataSet");
+    xml_node rootNode = document.document_element();
 
     // Query DeviceDetail records from metadata
     map<string, DeviceMetadataPtr> devices;

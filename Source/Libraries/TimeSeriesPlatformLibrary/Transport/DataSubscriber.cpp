@@ -146,7 +146,7 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
                 Thread(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
             }
 
-            io_service io;
+            io_context io;
             deadline_timer timer(io, posix_time::milliseconds(m_retryInterval));
             timer.wait();
         }
@@ -241,8 +241,8 @@ DataSubscriber::DataSubscriber() :  // NOLINT
     m_tsscResetRequested(false),
     m_tsscSequenceNumber(0),
     m_commandChannelSocket(m_commandChannelService),
-    m_readBuffer(MaxPacketSize),
-    m_writeBuffer(MaxPacketSize),
+    m_readBuffer(Common::MaxPacketSize),
+    m_writeBuffer(Common::MaxPacketSize),
     m_dataChannelSocket(m_dataChannelService),
     m_statusMessageCallback(nullptr),
     m_errorMessageCallback(nullptr),
@@ -290,14 +290,13 @@ void DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void DataSubscriber::RunCommandChannelResponseThread()
 {
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
     m_commandChannelService.run();
 }
 
 // Callback for async read of the payload header.
 void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred)
 {
-    const uint32_t PayloadHeaderSize = 8;
     const uint32_t PacketSizeOffset = 4;
 
     if (m_disconnecting)
@@ -322,7 +321,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTra
     }
 
     // Gather statistics
-    m_totalCommandChannelBytesReceived += PayloadHeaderSize;
+    m_totalCommandChannelBytesReceived += Common::PayloadHeaderSize;
 
     const uint32_t packetSize = m_endianConverter.ConvertLittleEndian(*reinterpret_cast<uint32_t*>(&m_readBuffer[PacketSizeOffset]));
 
@@ -366,14 +365,14 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, uint32_t bytesTransferre
     ProcessServerResponse(&m_readBuffer[0], 0, bytesTransferred);
 
     // Read next payload header
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
 }
 
 // If the user defines a separate UDP channel for their
 // subscription, data packets get handled from this thread.
 void DataSubscriber::RunDataChannelResponseThread()
 {
-    vector<uint8_t> buffer(MaxPacketSize);
+    vector<uint8_t> buffer(Common::MaxPacketSize);
     uint32_t length;
 
     udp::endpoint endpoint(m_hostAddress, 0);
@@ -669,8 +668,8 @@ void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vecto
     {
         stringstream messageStream;
 
-        for (uint32_t i = 0; i < buffer.size(); ++i)
-            messageStream << buffer[i];
+        for (unsigned char i : buffer)
+            messageStream << i;
 
         statusMessageCallback(source, messageStream.str());
     }
@@ -688,8 +687,8 @@ void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector
     {
         stringstream messageStream;
 
-        for (uint32_t i = 0; i < buffer.size(); ++i)
-            messageStream << buffer[i];
+        for (unsigned char i : buffer)
+            messageStream << i;
 
         errorMessageCallback(source, messageStream.str());
     }
@@ -1219,7 +1218,7 @@ void DataSubscriber::Disconnect()
     Disconnect(false);
 }
 
-void DataSubscriber::Subscribe(SubscriptionInfo info)
+void DataSubscriber::Subscribe(const SubscriptionInfo info)
 {
     SetSubscriptionInfo(info);
     Subscribe();

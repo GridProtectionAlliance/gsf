@@ -141,9 +141,6 @@ namespace Transport
     class DataSubscriber  // NOLINT
     {
     private:
-        static const size_t MaxPacketSize = 32768;
-        static const uint32_t PayloadHeaderSize = 8;
-
         // Function pointer types
         typedef void(*DispatcherFunction)(DataSubscriber*, const vector<uint8_t>&);
         typedef void(*MessageCallback)(DataSubscriber*, const string&);
@@ -195,14 +192,14 @@ namespace Transport
 
         // Command channel
         Thread m_commandChannelResponseThread;
-        io_service m_commandChannelService;
+        io_context m_commandChannelService;
         TcpSocket m_commandChannelSocket;
         vector<uint8_t> m_readBuffer;
         vector<uint8_t> m_writeBuffer;
 
         // Data channel
         Thread m_dataChannelResponseThread;
-        io_service m_dataChannelService;
+        io_context m_dataChannelService;
         UdpSocket m_dataChannelSocket;
 
         // Callbacks
