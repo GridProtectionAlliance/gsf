@@ -337,8 +337,6 @@
     <ClCompile Include="Transport\antlr4-runtime\UnbufferedTokenStream.cpp" />
     <ClCompile Include="Transport\antlr4-runtime\Vocabulary.cpp" />
     <ClCompile Include="Transport\antlr4-runtime\WritableToken.cpp" />
-    <ClInclude Include="Transport\FilterExpressions\antlr4-common.h" />
-    <ClInclude Include="Transport\FilterExpressions\antlr4-runtime.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClInclude Include="Transport\Constants.h" />

@@ -722,12 +722,6 @@
     <ClInclude Include="Common\CommonTypes.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Transport\FilterExpressions\antlr4-common.h">
-      <Filter>Transport\FilterExpressions</Filter>
-    </ClInclude>
-    <ClInclude Include="Transport\FilterExpressions\antlr4-runtime.h">
-      <Filter>Transport\FilterExpressions</Filter>
-    </ClInclude>
     <ClInclude Include="Transport\antlr4-runtime\antlr4-common.h">
       <Filter>Transport\antlr4-runtime</Filter>
     </ClInclude>
