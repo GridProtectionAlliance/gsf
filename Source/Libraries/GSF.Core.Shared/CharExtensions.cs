@@ -156,7 +156,7 @@ namespace GSF
         /// </returns>
         public static char ToUpper(this char value)
         {
-            if (value > 96 && value < 122)
+            if (value > 96 && value < 123)
                 return (char)(value - 32);
 
             return value;
