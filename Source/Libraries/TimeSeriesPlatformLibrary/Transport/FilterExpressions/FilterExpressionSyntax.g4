@@ -61,7 +61,6 @@ orderingTerm
     Filter expressions understand the following binary operators,
     in order from highest to lowest precedence:
 
-    ||
     *    /    %
     +    -
     <<   >>   &    |
@@ -74,7 +73,6 @@ expression
  : literalValue
  | columnName
  | unaryOperator expression
- | expression '||' expression
  | expression ( '*' | '/' | '%' ) expression
  | expression ( '+' | '-' ) expression
  | expression ( '<<' | '>>' | '&' | '|' ) expression
