@@ -556,7 +556,7 @@ namespace DataMigrationUtility
                         if (string.Compare(sourceTable.Name, foreignKey.ForeignKey.Table.Name, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             // If Oracle, force it to sort NULLs at a higher level - note coalesce may fail for non-integer based primary keys for self-referencing tables
-                            if (m_fromSchema.DataSourceType == DatabaseType.Oracle)
+                            if (m_fromSchema.DataSourceType == DatabaseType.Oracle || m_fromSchema.DataSourceType == DatabaseType.PostgreSQL)
                                 selectString += (index > 0 ? ", " : "") + "COALESCE(" + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name) + ", 0)";
                             else
                                 selectString += (index > 0 ? ", " : "") + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name);
