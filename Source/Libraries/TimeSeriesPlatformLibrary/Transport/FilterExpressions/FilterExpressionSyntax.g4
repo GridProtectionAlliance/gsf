@@ -66,7 +66,7 @@ orderingTerm
     +    -
     <<   >>   &    |
     <    <=   >    >=
-    =    ==   !=   <>   IS   IS NOT   IN   LIKE   REGEXP
+    =    ==   !=   <>   IS NULL   IN   LIKE
     AND
     OR
 */
@@ -79,15 +79,14 @@ expression
  | expression ( '+' | '-' ) expression
  | expression ( '<<' | '>>' | '&' | '|' ) expression
  | expression ( '<' | '<=' | '>' | '>=' ) expression
- | expression ( '=' | '==' | '!=' | '<>' | K_IS | K_IS K_NOT | K_IN | K_LIKE ) expression
+ | expression ( '=' | '==' | '!=' | '<>' ) expression
+ | expression K_IS K_NOT? K_NULL
+ | expression K_NOT? K_IN ( '(' ( expression ( ',' expression )* )? ')' )
+ | expression K_NOT? K_LIKE expression
  | expression K_AND expression
  | expression K_OR expression
  | functionName '(' ( expression ( ',' expression )* | '*' )? ')'
  | '(' expression ')'
- | expression K_NOT? K_LIKE expression
- | expression ( K_ISNULL | K_NOTNULL | K_NOT K_NULL )
- | expression K_IS K_NOT? expression
- | expression K_NOT? K_IN ( '(' ( expression ( ',' expression )* )? ')' )
  ;
 
 literalValue
@@ -114,11 +113,10 @@ keyword
  | K_IIF        // Function
  | K_IN         // IN expression keyword
  | K_IS         // IS expression keyword
- | K_ISNULL     // ISNULL expression keyword
+ | K_ISNULL     // Function
  | K_LEN        // Function
  | K_LIKE       // LIKE expression keyword
  | K_NOT        // Boolean operator
- | K_NOTNULL    // Boolean operator for NULL operand
  | K_NULL       // NULL operand
  | K_OR         // Boolean operator
  | K_ORDER      // FILTER expression keyword (part of optional ORDER BY expression)
@@ -133,6 +131,7 @@ functionName
  : K_CONVERT
  | K_IIF
  | K_LEN
+ | K_ISNULL
  | K_REGEXP
  | K_SUBSTRING
  | K_TRIM
@@ -164,7 +163,6 @@ K_ISNULL : I S N U L L;
 K_LEN: L E N;
 K_LIKE : L I K E;
 K_NOT : N O T;
-K_NOTNULL : N O T N U L L;
 K_NULL : N U L L;
 K_OR : O R;
 K_ORDER : O R D E R;
