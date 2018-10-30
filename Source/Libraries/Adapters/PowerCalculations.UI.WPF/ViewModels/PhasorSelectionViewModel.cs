@@ -11,6 +11,12 @@ namespace PowerCalculations.UI.WPF.ViewModels
 	{
 		private bool m_filterChanged = false;
 
+        public PhasorSelectionViewModel()
+            : this(0)
+        {
+            // For designer
+        }
+
 		public PhasorSelectionViewModel(int itemsPerPage, bool autoSave = true)
 			: base(itemsPerPage, autoSave)
 		{

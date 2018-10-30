@@ -7,7 +7,7 @@
              xmlns:viewModels="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
              xmlns:binding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels:PhasorSelectionViewModel}"
+             d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels:PhasorSelectionViewModel, IsDesignTimeCreatable=True}"
              Loaded="PhasorSelectionUserControl_Loaded">
 
 	<UserControl.Resources>
