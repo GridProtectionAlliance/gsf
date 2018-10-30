@@ -129,8 +129,8 @@ namespace GSF.TimeSeries.UI
             m_timer.Interval = TimeSpan.FromSeconds(5);
             m_timer.Tick += m_timer_Tick;
 
-            m_statusTextBlock = Application.Current.MainWindow.FindName("TextBlockResult") as TextBlock;
-            m_statusPopup = Application.Current.MainWindow.FindName("PopupStatus") as TsfPopup;
+            m_statusTextBlock = Application.Current.MainWindow?.FindName("TextBlockResult") as TextBlock;
+            m_statusPopup = Application.Current.MainWindow?.FindName("PopupStatus") as TsfPopup;
         }
 
         #endregion
