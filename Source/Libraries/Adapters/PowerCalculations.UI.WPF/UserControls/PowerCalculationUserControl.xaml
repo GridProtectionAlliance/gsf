@@ -9,7 +9,7 @@
              xmlns:viewModels1="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
              xmlns:userControls="clr-namespace:PowerCalculations.UI.WPF.UserControls"
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="1300" d:DataContext="{d:DesignInstance viewModels1:PowerCalculationViewModel}"
+             d:DesignHeight="500" d:DesignWidth="1300" d:DataContext="{d:DesignInstance viewModels1:PowerCalculationViewModel, IsDesignTimeCreatable=True}"
              PreviewKeyDown="PowerCalculationUserControl_PreviewKeyDown">
 
 	<UserControl.Resources>

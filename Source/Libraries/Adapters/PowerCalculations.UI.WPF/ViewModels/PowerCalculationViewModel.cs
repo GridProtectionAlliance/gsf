@@ -10,6 +10,12 @@ namespace PowerCalculations.UI.WPF.ViewModels
 {
 	public class PowerCalculationViewModel : PagedViewModelBase<PowerCalculation, int>
 	{
+        public PowerCalculationViewModel()
+            : this(0)
+        {
+            // For designer
+        }
+
 		public PowerCalculationViewModel(int itemsPerPage, bool autoSave = true)
 			: base(itemsPerPage, autoSave)
 		{
