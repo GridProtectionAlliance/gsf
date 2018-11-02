@@ -212,10 +212,10 @@
                      IsEnabled="{Binding ElementName=ComboBoxConcentrator, Path=SelectedIndex, Converter={StaticResource IndexToBooleanConverter}}" />
 
             <TextBlock Text="Longitude" Grid.Row="10" Grid.Column="0"/>
-            <TextBox Grid.Row="10" Grid.Column="1" Text="{tsfBinding:Column Path=Longitude}" />            
+            <TextBox Grid.Row="10" Grid.Column="1" Text="{tsfBinding:Column Path=Longitude, UpdateSourceTrigger=LostFocus}" />
 
             <TextBlock Text="Latitude" Grid.Row="10" Grid.Column="2"/>
-            <TextBox Grid.Row="10" Grid.Column="3" Text="{tsfBinding:Column Path=Latitude}" />
+            <TextBox Grid.Row="10" Grid.Column="3" Text="{tsfBinding:Column Path=Latitude, UpdateSourceTrigger=LostFocus}" />
             
             <TextBlock Text="Interconnection" Grid.Row="11" Grid.Column="0" />
             <ComboBox Grid.Row="11" Grid.Column="1" ItemsSource="{Binding Source={StaticResource InterconnectionLookupList}}" DisplayMemberPath="Value"

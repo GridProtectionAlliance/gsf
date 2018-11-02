@@ -384,7 +384,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             set
             {
-                m_longitude = value;
+                m_longitude = value?.Normalize();
                 OnPropertyChanged("Longitude");
             }
         }
@@ -402,7 +402,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             set
             {
-                m_latitude = value;
+                m_latitude = value?.Normalize();
                 OnPropertyChanged("Latitude");
             }
         }
