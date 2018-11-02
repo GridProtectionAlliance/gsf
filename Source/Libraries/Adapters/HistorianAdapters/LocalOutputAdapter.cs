@@ -976,7 +976,6 @@ namespace HistorianAdapters
                 // Also check for local historian adapters loaded into CustomOutputAdapters
                 historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'").AsEnumerable());
 
-                List<string> validHistorians = new List<string>();
                 string name, acronym, currentPath, archivePath, fileName, defaultFileName, instanceName;
 
                 // Get current execution path
@@ -993,7 +992,6 @@ namespace HistorianAdapters
                 {
                     acronym = row.Field<string>("AdapterName").ToLower();
                     name = $"local \'{acronym}\' historian";
-                    validHistorians.Add(acronym);
 
                     // We handle the statistics historian as a special case
                     if (acronym == "stat")
@@ -1161,8 +1159,14 @@ namespace HistorianAdapters
                     }
                 }
 
-                // Sort valid historians for binary search
-                validHistorians.Sort();
+                // Generate lookup table for output adapter names in the system
+                List<string> outputAdapterNames = database.RetrieveData($"SELECT Acronym FROM Historian").Select()
+                    .Concat(database.RetrieveData("SELECT AdapterName FROM CustomOutputAdapter").Select())
+                    .Select(row => row.Field<string>(0))
+                    .OrderBy(adapterName => adapterName)
+                    .ToList();
+
+                HashSet<string> outputAdapterNameLookup = new HashSet<string>(outputAdapterNames);
 
                 // Create a list to track categories to remove
                 HashSet<string> categoriesToRemove = new HashSet<string>();
@@ -1172,34 +1176,34 @@ namespace HistorianAdapters
                 {
                     name = info.Name;
 
-                    if (name.EndsWith("MetadataFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("MetadataFile", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("MetadataFile") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("MetadataFile", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("StateFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("StateFile", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("StateFile") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("StateFile", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("IntercomFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("IntercomFile", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("IntercomFile") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("IntercomFile", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("ArchiveFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("ArchiveFile", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("ArchiveFile") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("ArchiveFile", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("AdoMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("AdoMetadataProvider", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("AdoMetadataProvider") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("AdoMetadataProvider", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("OleDbMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("OleDbMetadataProvider", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("OleDbMetadataProvider") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("OleDbMetadataProvider", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("RestWebServiceMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("RestWebServiceMetadataProvider", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("RestWebServiceMetadataProvider") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("RestWebServiceMetadataProvider", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("MetadataService") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("MetadataService", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("MetadataService") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("MetadataService", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("TimeSeriesDataService") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("TimeSeriesDataService", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("TimeSeriesDataService") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("TimeSeriesDataService", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("HadoopReplicationProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("HadoopReplicationProvider", StringComparison.OrdinalIgnoreCase))) < 0)
+                    if (name.EndsWith("HadoopReplicationProvider") && outputAdapterNameLookup.Contains(name.Substring(0, name.IndexOf("HadoopReplicationProvider", StringComparison.OrdinalIgnoreCase))))
                         categoriesToRemove.Add(name);
                 }
 
