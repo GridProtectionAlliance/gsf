@@ -69,6 +69,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             m_phaseLookupList.Add("A", "Phase A");
             m_phaseLookupList.Add("B", "Phase B");
             m_phaseLookupList.Add("C", "Phase C");
+            m_phaseLookupList.Add("L", "Line-to-line");
 
             m_typeLookupList = new Dictionary<string, string>();
             m_typeLookupList.Add("V", "Voltage");
