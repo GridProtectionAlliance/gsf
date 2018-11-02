@@ -50,6 +50,7 @@ namespace PowerCalculations.PowerMultiCalculator
         #region [ Members ]
 
         // Constants
+        private const string DefaultTableName = "PowerCalculation";
         private const double SqrtOf3 = 1.7320508075688772935274463415059D;
         private const int ValuesToTrack = 5;
 
@@ -87,6 +88,14 @@ namespace PowerCalculations.PowerMultiCalculator
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the name of the table this adapter will use to obtain its metadata.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the name of the table this adapter will use to obtain its metadata.")]
+        [DefaultValue(DefaultTableName)]
+        public string TableName { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
@@ -198,11 +207,14 @@ namespace PowerCalculations.PowerMultiCalculator
             m_lastReactivePowerCalculations = new ConcurrentQueue<IMeasurement>();
             m_lastApparentPowerCalculations = new ConcurrentQueue<IMeasurement>();
 
+            if (!Settings.TryGetValue(nameof(TableName), out string tableName))
+                tableName = DefaultTableName;
+
             string query = "SELECT " +
                            //            1                   2                     3                   4                     5
                            "ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
                            //         6                        7                            8
-                           "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID FROM PowerCalculation " +
+                           "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID FROM " + tableName + " " +
                            "WHERE NodeId = {0} AND Enabled <> 0 ";
 
             using (AdoDataConnection database = new AdoDataConnection("systemSettings"))

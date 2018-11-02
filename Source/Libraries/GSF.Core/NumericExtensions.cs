@@ -157,5 +157,15 @@ namespace GSF
         {
             return (((IComparable<T>)source).CompareTo(notGreaterThanOrEqualToValue) >= 0 ? alternateValue : source);
         }
+
+        /// <summary>
+        /// Removes trailing zeros from the given decimal <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be normalized.</param>
+        /// <returns>The normalized decimal value.</returns>
+        public static decimal Normalize(this decimal value)
+        {
+            return value / 1.000000000000000000000000000000000M;
+        }
     }
 }
