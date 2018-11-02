@@ -616,6 +616,9 @@
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.cpp">
       <Filter>Transport\FilterExpressions</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\FilterExpressions\FilterExpressionParser.cpp">
+      <Filter>Transport\FilterExpressions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">
@@ -1077,6 +1080,9 @@
       <Filter>Transport\FilterExpressions</Filter>
     </ClInclude>
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.h">
+      <Filter>Transport\FilterExpressions</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\FilterExpressions\FilterExpressionParser.h">
       <Filter>Transport\FilterExpressions</Filter>
     </ClInclude>
   </ItemGroup>

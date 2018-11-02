@@ -344,11 +344,13 @@
     <ClInclude Include="Transport\DataSubscriber.h" />
     <ClCompile Include="Transport\DataPublisher.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
+    <ClInclude Include="Transport\FilterExpressions\FilterExpressionParser.h" />
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxBaseListener.h" />
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxLexer.h" />
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxListener.h" />
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.h" />
     <ClInclude Include="Transport\SignalIndexCache.h" />
+    <ClCompile Include="Transport\FilterExpressions\FilterExpressionParser.cpp" />
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxBaseListener.cpp" />
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxLexer.cpp" />
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxListener.cpp" />
