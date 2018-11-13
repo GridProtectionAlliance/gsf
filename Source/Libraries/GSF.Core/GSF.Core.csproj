@@ -128,6 +128,10 @@
     <Compile Include="Console\CommandResponse.cs" />
     <Compile Include="Collections\IPagedList.cs" />
     <Compile Include="ComponentModel\DefaultValueExpressionAttribute.cs" />
+    <Compile Include="Data\BulkDataOperationBase.cs" />
+    <Compile Include="Data\DataDeleter.cs" />
+    <Compile Include="Data\DataInserter.cs" />
+    <Compile Include="Data\DataUpdater.cs" />
     <Compile Include="Data\Model\EncryptDataAttribute.cs" />
     <Compile Include="Data\Model\NonRecordFieldAttribute.cs" />
     <Compile Include="Data\Model\ITableOperations.cs" />
@@ -144,6 +148,7 @@
     <Compile Include="Data\Model\RecordRestriction.cs" />
     <Compile Include="Data\Model\TableOperations.cs" />
     <Compile Include="Collections\PagedList.cs" />
+    <Compile Include="Data\Schema.cs" />
     <Compile Include="Diagnostics\ChildProcessManager.cs" />
     <Compile Include="Diagnostics\ProcessUtilizationCalculator.cs" />
     <Compile Include="Diagnostics\ThreadPoolMonitor.cs" />
