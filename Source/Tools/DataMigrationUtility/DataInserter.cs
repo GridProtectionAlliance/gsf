@@ -436,6 +436,13 @@ namespace DataMigrationUtility
                         resetAutoIncValueSQL = "DELETE FROM sqlite_sequence WHERE name = '" + table.Name + "'";
                         table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
                         break;
+                    case DatabaseType.PostgreSQL:
+                        // The escaping of names here is very deliberate; for certain table names,
+                        // it is necessary to escape the table name in the pg_get_serial_sequence() call,
+                        // but the call will fail if you attempt to escape the autoIncField name
+                        resetAutoIncValueSQL = $"SELECT setval(pg_get_serial_sequence('{table.SQLEscapedName}', '{table.AutoIncField.Name.ToLower()}'), (SELECT MAX({table.AutoIncField.SQLEscapedName}) FROM {table.SQLEscapedName}))";
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        break;
                 }
             }
             catch (Exception ex)
