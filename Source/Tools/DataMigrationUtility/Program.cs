@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using GSF;
+using GSF.Data;
 using GSF.IO;
 
 namespace DataMigrationUtility
