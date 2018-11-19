@@ -138,7 +138,19 @@ namespace CSVDataManager
                 // Add all the check boxes at once for a more responsive layout
                 ExportFieldsPanel.Controls.Clear();
                 ExportFieldsPanel.Controls.AddRange(checkBoxes.ToArray());
+
+                // Update count labels to reflect number of records in selected table
+                OpenDBConnectionAndExecute(UpdateCountLabels);
             }
+        }
+
+        private void UpdateCountLabels()
+        {
+            Table table = (Table)ExportTableComboBox.SelectedItem;
+            object count = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
+            string text = $"Count: {count}";
+            ExportCountLabel.Text = text;
+            ImportCountLabel.Text = text;
         }
 
         private void ExportButton_Click(object sender, EventArgs e)
