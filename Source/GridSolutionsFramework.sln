@@ -492,6 +492,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UTK", "UTK", "{A7E4DCAA-FB9
 		Dependencies\UTK\UTKLogo.png = Dependencies\UTK\UTKLogo.png
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVDataManager", "Tools\CSVDataManager\CSVDataManager.csproj", "{880EB5C4-FB2C-4611-896B-23F9A50A3C74}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{5ce3d6f4-d38d-4f71-acb6-79681cfe47df}*SharedItemsImports = 13
@@ -1676,6 +1678,18 @@ Global
 		{9F2E9010-4135-48B7-9D19-D3EB1B182BF6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9F2E9010-4135-48B7-9D19-D3EB1B182BF6}.Release|x86.ActiveCfg = Release|Any CPU
 		{9F2E9010-4135-48B7-9D19-D3EB1B182BF6}.Release|x86.Build.0 = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Debug|x86.Build.0 = Debug|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Mono|x86.ActiveCfg = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Mono|x86.Build.0 = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Release|x86.ActiveCfg = Release|Any CPU
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1826,6 +1840,7 @@ Global
 		{3FC7828F-0C9A-4216-AFDC-CE0844D56F1D} = {13006BBE-434A-4027-940B-EAD752844137}
 		{ABA14388-844D-4CE8-8EF4-2D77F702935F} = {13006BBE-434A-4027-940B-EAD752844137}
 		{A7E4DCAA-FB9F-4050-B661-308495C391E6} = {13006BBE-434A-4027-940B-EAD752844137}
+		{880EB5C4-FB2C-4611-896B-23F9A50A3C74} = {1B63485E-46C7-4185-B968-216A02396B88}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}
