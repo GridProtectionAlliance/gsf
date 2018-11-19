@@ -31,6 +31,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GSF;
@@ -224,6 +225,13 @@ namespace CSVDataManager
             MessageBox.Show($"Completed import from {fileName} to the {table.Name} table.");
         }
 
+        private void Importer_OverallProgress(object sender, EventArgs<int, int> args)
+        {
+            int progress = args.Argument1;
+            int total = args.Argument2;
+            ImportProgressBar.Value = 100 * progress / total;
+        }
+
         private void ExportSelectionToFile()
         {
             Table table = (Table)ExportTableComboBox.SelectedItem;
@@ -249,8 +257,14 @@ namespace CSVDataManager
             {
                 writer.WriteLine(csvHeader);
 
+                object result = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
+                int count = Convert.ToInt32(result);
+                ExportProgressBar.Value = 0;
+
                 using (IDataReader reader = DBSchema.Connection.ExecuteReader($"SELECT {fieldList} FROM {table.SQLEscapedName}"))
                 {
+                    int records = 0;
+
                     while (reader.Read())
                     {
                         string[] values = fields
@@ -258,9 +272,13 @@ namespace CSVDataManager
                             .ToArray();
 
                         string csvRecord = CSVEncode(values);
-
                         writer.WriteLine(csvRecord);
+                        records++;
+
+                        ExportProgressBar.Value = 100 * records / count;
                     }
+
+                    ExportProgressBar.Value = 100;
                 }
             }
         }
@@ -275,8 +293,11 @@ namespace CSVDataManager
                 table.Process = true;
             }
 
+            ImportProgressBar.Value = 0;
+            importer.OverallProgress += Importer_OverallProgress;
             importer.UseFromSchemaReferentialIntegrity = false;
             importer.Execute();
+            ImportProgressBar.Value = 100;
         }
 
         private void CopyCSVToMemSchema()

@@ -45,6 +45,8 @@
             this.ExportCountLabel = new System.Windows.Forms.Label();
             this.ImportTopBarPanel = new System.Windows.Forms.TableLayoutPanel();
             this.ImportCountLabel = new System.Windows.Forms.Label();
+            this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
+            this.ImportProgressBar = new System.Windows.Forms.ProgressBar();
             this.MainTabControl.SuspendLayout();
             this.ExportTabPage.SuspendLayout();
             this.ImportTabPage.SuspendLayout();
@@ -68,6 +70,7 @@
             // 
             this.ExportTabPage.Controls.Add(this.ExportFieldsPanel);
             this.ExportTabPage.Controls.Add(this.ExportTopBarPanel);
+            this.ExportTabPage.Controls.Add(this.ExportProgressBar);
             this.ExportTabPage.Location = new System.Drawing.Point(4, 22);
             this.ExportTabPage.Name = "ExportTabPage";
             this.ExportTabPage.Padding = new System.Windows.Forms.Padding(10);
@@ -85,7 +88,7 @@
             this.ExportFieldsPanel.Location = new System.Drawing.Point(10, 39);
             this.ExportFieldsPanel.Name = "ExportFieldsPanel";
             this.ExportFieldsPanel.Padding = new System.Windows.Forms.Padding(5, 5, 5, 20);
-            this.ExportFieldsPanel.Size = new System.Drawing.Size(456, 286);
+            this.ExportFieldsPanel.Size = new System.Drawing.Size(456, 263);
             this.ExportFieldsPanel.TabIndex = 2;
             this.ExportFieldsPanel.WrapContents = false;
             // 
@@ -114,6 +117,7 @@
             // 
             this.ImportTabPage.Controls.Add(this.ImportActionsPanel);
             this.ImportTabPage.Controls.Add(this.ImportTopBarPanel);
+            this.ImportTabPage.Controls.Add(this.ImportProgressBar);
             this.ImportTabPage.Location = new System.Drawing.Point(4, 22);
             this.ImportTabPage.Name = "ImportTabPage";
             this.ImportTabPage.Padding = new System.Windows.Forms.Padding(10);
@@ -137,7 +141,7 @@
             this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.ImportActionsPanel.Size = new System.Drawing.Size(456, 288);
+            this.ImportActionsPanel.Size = new System.Drawing.Size(456, 265);
             this.ImportActionsPanel.TabIndex = 3;
             // 
             // InsertButton
@@ -250,6 +254,22 @@
             this.ImportCountLabel.Size = new System.Drawing.Size(0, 13);
             this.ImportCountLabel.TabIndex = 3;
             // 
+            // ExportProgressBar
+            // 
+            this.ExportProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.ExportProgressBar.Location = new System.Drawing.Point(10, 302);
+            this.ExportProgressBar.Name = "ExportProgressBar";
+            this.ExportProgressBar.Size = new System.Drawing.Size(456, 23);
+            this.ExportProgressBar.TabIndex = 4;
+            // 
+            // ImportProgressBar
+            // 
+            this.ImportProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.ImportProgressBar.Location = new System.Drawing.Point(10, 302);
+            this.ImportProgressBar.Name = "ImportProgressBar";
+            this.ImportProgressBar.Size = new System.Drawing.Size(456, 23);
+            this.ImportProgressBar.TabIndex = 5;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -293,6 +313,8 @@
         private System.Windows.Forms.Label ExportCountLabel;
         private System.Windows.Forms.TableLayoutPanel ImportTopBarPanel;
         private System.Windows.Forms.Label ImportCountLabel;
+        private System.Windows.Forms.ProgressBar ExportProgressBar;
+        private System.Windows.Forms.ProgressBar ImportProgressBar;
     }
 }
 
