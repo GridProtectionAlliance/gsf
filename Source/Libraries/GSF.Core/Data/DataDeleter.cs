@@ -177,7 +177,8 @@ namespace GSF.Data
             bool isPrimary;
 
             // Create a field list of all of the common fields in both tables
-            Fields fieldCollection = new Fields(sourceTable);
+            // Use toTable as the parent to retrieve the appropriate SQLEncodedValues
+            Fields fieldCollection = new Fields(toTable);
 
             foreach (Field field in fromTable.Fields)
             {
@@ -218,10 +219,10 @@ namespace GSF.Data
             OnOverallProgress((int)m_overallProgress, (int)m_overallTotal);
 
             // Execute source query
-            using (IDataReader fromReader = fromTable.Connection.ExecuteReader("SELECT " + fieldCollection.GetList() + " FROM " + fromTable.FullName, CommandBehavior.SequentialAccess, Timeout))
+            using (IDataReader fromReader = fromTable.Connection.ExecuteReader("SELECT " + fieldCollection.GetList(sqlEscapeFunction: fromTable.Parent.Parent.SQLEscapeName) + " FROM " + fromTable.SQLEscapedName, CommandBehavior.SequentialAccess, Timeout))
             {
                 // Create Sql delete stub
-                deleteSQLStub = "DELETE FROM " + toTable.FullName;
+                deleteSQLStub = "DELETE FROM " + toTable.SQLEscapedName;
 
                 // Delete data for each row...
                 while (fromReader.Read())
@@ -262,9 +263,8 @@ namespace GSF.Data
                                 else
                                     whereSQL.Append(" AND ");
 
-                                whereSQL.Append("[");
-                                whereSQL.Append(field.Name);
-                                whereSQL.Append("] = ");
+                                whereSQL.Append(field.SQLEscapedName);
+                                whereSQL.Append(" = ");
                                 whereSQL.Append(value);
                             }
                         }

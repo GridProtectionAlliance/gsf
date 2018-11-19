@@ -170,7 +170,8 @@ namespace GSF.Data
             bool addedFirstUpdate;
 
             // Create a field list of all of the common fields in both tables
-            Fields fieldsCollection = new Fields(sourceTable);
+            // Use toTable as the parent to retrieve the appropriate SQLEncodedValues
+            Fields fieldsCollection = new Fields(toTable);
 
             foreach (Field fld in fromTable.Fields)
             {
@@ -211,10 +212,10 @@ namespace GSF.Data
             OnOverallProgress((int)m_overallProgress, (int)m_overallTotal);
 
             // Execute source query
-            using (IDataReader fromReader = fromTable.Connection.ExecuteReader("SELECT " + fieldsCollection.GetList() + " FROM " + fromTable.FullName, CommandBehavior.SequentialAccess, Timeout))
+            using (IDataReader fromReader = fromTable.Connection.ExecuteReader("SELECT " + fieldsCollection.GetList(sqlEscapeFunction: fromTable.Parent.Parent.SQLEscapeName) + " FROM " + fromTable.SQLEscapedName, CommandBehavior.SequentialAccess, Timeout))
             {
                 // Create Sql update stub
-                updateSQLStub = "UPDATE " + toTable.FullName + " SET ";
+                updateSQLStub = "UPDATE " + toTable.SQLEscapedName + " SET ";
 
                 // Insert data for each row...
                 while (fromReader.Read())
@@ -255,9 +256,8 @@ namespace GSF.Data
                                 else
                                     whereSQL.Append(" AND ");
 
-                                whereSQL.Append("[");
-                                whereSQL.Append(fld.Name);
-                                whereSQL.Append("] = ");
+                                whereSQL.Append(fld.SQLEscapedName);
+                                whereSQL.Append(" = ");
                                 whereSQL.Append(value);
                             }
                             else
@@ -267,9 +267,8 @@ namespace GSF.Data
                                 else
                                     addedFirstUpdate = true;
 
-                                updateSQL.Append("[");
-                                updateSQL.Append(fld.Name);
-                                updateSQL.Append("] = ");
+                                updateSQL.Append(fld.SQLEscapedName);
+                                updateSQL.Append(" = ");
                                 updateSQL.Append(value);
                             }
                         }
