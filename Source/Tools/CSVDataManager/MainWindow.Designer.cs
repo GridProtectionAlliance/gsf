@@ -31,34 +31,48 @@
             this.MainTabControl = new System.Windows.Forms.TabControl();
             this.ExportTabPage = new System.Windows.Forms.TabPage();
             this.ExportFieldsPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.ExportTopBarPanel = new System.Windows.Forms.TableLayoutPanel();
             this.ExportTableComboBox = new System.Windows.Forms.ComboBox();
             this.ExportButton = new System.Windows.Forms.Button();
+            this.ExportCountLabel = new System.Windows.Forms.Label();
+            this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
             this.ImportTabPage = new System.Windows.Forms.TabPage();
             this.ImportActionsPanel = new System.Windows.Forms.TableLayoutPanel();
             this.InsertButton = new System.Windows.Forms.Button();
             this.UpdateButton = new System.Windows.Forms.Button();
             this.DeleteButton = new System.Windows.Forms.Button();
+            this.ImportTopBarPanel = new System.Windows.Forms.TableLayoutPanel();
             this.ImportTableComboBox = new System.Windows.Forms.ComboBox();
+            this.ImportCountLabel = new System.Windows.Forms.Label();
+            this.ImportProgressBar = new System.Windows.Forms.ProgressBar();
+            this.ConfigurationTabPage = new System.Windows.Forms.TabPage();
+            this.ConfigurationPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.ConnectionStringLabel = new System.Windows.Forms.Label();
+            this.ConnectionStringTextBox = new System.Windows.Forms.TextBox();
+            this.DataProviderLabel = new System.Windows.Forms.Label();
+            this.DataProviderComboBox = new System.Windows.Forms.ComboBox();
+            this.DataProviderTextBox = new System.Windows.Forms.TextBox();
+            this.ConfigurationButtonPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.RevertConfigurationButton = new System.Windows.Forms.Button();
+            this.SaveConfigurationButton = new System.Windows.Forms.Button();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ImportFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.ExportTopBarPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.ExportCountLabel = new System.Windows.Forms.Label();
-            this.ImportTopBarPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.ImportCountLabel = new System.Windows.Forms.Label();
-            this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
-            this.ImportProgressBar = new System.Windows.Forms.ProgressBar();
             this.MainTabControl.SuspendLayout();
             this.ExportTabPage.SuspendLayout();
+            this.ExportTopBarPanel.SuspendLayout();
             this.ImportTabPage.SuspendLayout();
             this.ImportActionsPanel.SuspendLayout();
-            this.ExportTopBarPanel.SuspendLayout();
             this.ImportTopBarPanel.SuspendLayout();
+            this.ConfigurationTabPage.SuspendLayout();
+            this.ConfigurationPanel.SuspendLayout();
+            this.ConfigurationButtonPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainTabControl
             // 
             this.MainTabControl.Controls.Add(this.ExportTabPage);
             this.MainTabControl.Controls.Add(this.ImportTabPage);
+            this.MainTabControl.Controls.Add(this.ConfigurationTabPage);
             this.MainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainTabControl.Location = new System.Drawing.Point(0, 0);
             this.MainTabControl.Name = "MainTabControl";
@@ -92,6 +106,24 @@
             this.ExportFieldsPanel.TabIndex = 2;
             this.ExportFieldsPanel.WrapContents = false;
             // 
+            // ExportTopBarPanel
+            // 
+            this.ExportTopBarPanel.AutoSize = true;
+            this.ExportTopBarPanel.ColumnCount = 3;
+            this.ExportTopBarPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.ExportTopBarPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.ExportTopBarPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.ExportTopBarPanel.Controls.Add(this.ExportTableComboBox, 0, 0);
+            this.ExportTopBarPanel.Controls.Add(this.ExportButton, 1, 0);
+            this.ExportTopBarPanel.Controls.Add(this.ExportCountLabel, 2, 0);
+            this.ExportTopBarPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.ExportTopBarPanel.Location = new System.Drawing.Point(10, 10);
+            this.ExportTopBarPanel.Name = "ExportTopBarPanel";
+            this.ExportTopBarPanel.RowCount = 1;
+            this.ExportTopBarPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.ExportTopBarPanel.Size = new System.Drawing.Size(456, 29);
+            this.ExportTopBarPanel.TabIndex = 3;
+            // 
             // ExportTableComboBox
             // 
             this.ExportTableComboBox.DisplayMember = "Name";
@@ -112,6 +144,24 @@
             this.ExportButton.Text = "Export...";
             this.ExportButton.UseVisualStyleBackColor = true;
             this.ExportButton.Click += new System.EventHandler(this.ExportButton_Click);
+            // 
+            // ExportCountLabel
+            // 
+            this.ExportCountLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ExportCountLabel.AutoSize = true;
+            this.ExportCountLabel.Location = new System.Drawing.Point(451, 5);
+            this.ExportCountLabel.Margin = new System.Windows.Forms.Padding(5);
+            this.ExportCountLabel.Name = "ExportCountLabel";
+            this.ExportCountLabel.Size = new System.Drawing.Size(0, 13);
+            this.ExportCountLabel.TabIndex = 2;
+            // 
+            // ExportProgressBar
+            // 
+            this.ExportProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.ExportProgressBar.Location = new System.Drawing.Point(10, 302);
+            this.ExportProgressBar.Name = "ExportProgressBar";
+            this.ExportProgressBar.Size = new System.Drawing.Size(456, 23);
+            this.ExportProgressBar.TabIndex = 4;
             // 
             // ImportTabPage
             // 
@@ -180,54 +230,6 @@
             this.DeleteButton.UseVisualStyleBackColor = true;
             this.DeleteButton.Click += new System.EventHandler(this.ImportButton_Click);
             // 
-            // ImportTableComboBox
-            // 
-            this.ImportTableComboBox.DisplayMember = "Name";
-            this.ImportTableComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ImportTableComboBox.FormattingEnabled = true;
-            this.ImportTableComboBox.Location = new System.Drawing.Point(3, 3);
-            this.ImportTableComboBox.Name = "ImportTableComboBox";
-            this.ImportTableComboBox.Size = new System.Drawing.Size(200, 21);
-            this.ImportTableComboBox.TabIndex = 1;
-            this.ImportTableComboBox.SelectedIndexChanged += new System.EventHandler(this.TableComboBox_SelectedIndexChanged);
-            // 
-            // ExportFileDialog
-            // 
-            this.ExportFileDialog.DefaultExt = "csv";
-            this.ExportFileDialog.Filter = "CSV Files|*.csv|All files|*.*";
-            // 
-            // ImportFileDialog
-            // 
-            this.ImportFileDialog.DefaultExt = "csv";
-            // 
-            // ExportTopBarPanel
-            // 
-            this.ExportTopBarPanel.AutoSize = true;
-            this.ExportTopBarPanel.ColumnCount = 3;
-            this.ExportTopBarPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.ExportTopBarPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.ExportTopBarPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.ExportTopBarPanel.Controls.Add(this.ExportTableComboBox, 0, 0);
-            this.ExportTopBarPanel.Controls.Add(this.ExportButton, 1, 0);
-            this.ExportTopBarPanel.Controls.Add(this.ExportCountLabel, 2, 0);
-            this.ExportTopBarPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.ExportTopBarPanel.Location = new System.Drawing.Point(10, 10);
-            this.ExportTopBarPanel.Name = "ExportTopBarPanel";
-            this.ExportTopBarPanel.RowCount = 1;
-            this.ExportTopBarPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.ExportTopBarPanel.Size = new System.Drawing.Size(456, 29);
-            this.ExportTopBarPanel.TabIndex = 3;
-            // 
-            // ExportCountLabel
-            // 
-            this.ExportCountLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ExportCountLabel.AutoSize = true;
-            this.ExportCountLabel.Location = new System.Drawing.Point(451, 5);
-            this.ExportCountLabel.Margin = new System.Windows.Forms.Padding(5);
-            this.ExportCountLabel.Name = "ExportCountLabel";
-            this.ExportCountLabel.Size = new System.Drawing.Size(0, 13);
-            this.ExportCountLabel.TabIndex = 2;
-            // 
             // ImportTopBarPanel
             // 
             this.ImportTopBarPanel.AutoSize = true;
@@ -244,6 +246,17 @@
             this.ImportTopBarPanel.Size = new System.Drawing.Size(456, 27);
             this.ImportTopBarPanel.TabIndex = 4;
             // 
+            // ImportTableComboBox
+            // 
+            this.ImportTableComboBox.DisplayMember = "Name";
+            this.ImportTableComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ImportTableComboBox.FormattingEnabled = true;
+            this.ImportTableComboBox.Location = new System.Drawing.Point(3, 3);
+            this.ImportTableComboBox.Name = "ImportTableComboBox";
+            this.ImportTableComboBox.Size = new System.Drawing.Size(200, 21);
+            this.ImportTableComboBox.TabIndex = 1;
+            this.ImportTableComboBox.SelectedIndexChanged += new System.EventHandler(this.TableComboBox_SelectedIndexChanged);
+            // 
             // ImportCountLabel
             // 
             this.ImportCountLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -254,14 +267,6 @@
             this.ImportCountLabel.Size = new System.Drawing.Size(0, 13);
             this.ImportCountLabel.TabIndex = 3;
             // 
-            // ExportProgressBar
-            // 
-            this.ExportProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.ExportProgressBar.Location = new System.Drawing.Point(10, 302);
-            this.ExportProgressBar.Name = "ExportProgressBar";
-            this.ExportProgressBar.Size = new System.Drawing.Size(456, 23);
-            this.ExportProgressBar.TabIndex = 4;
-            // 
             // ImportProgressBar
             // 
             this.ImportProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -270,26 +275,166 @@
             this.ImportProgressBar.Size = new System.Drawing.Size(456, 23);
             this.ImportProgressBar.TabIndex = 5;
             // 
+            // ConfigurationTabPage
+            // 
+            this.ConfigurationTabPage.Controls.Add(this.ConfigurationPanel);
+            this.ConfigurationTabPage.Location = new System.Drawing.Point(4, 22);
+            this.ConfigurationTabPage.Name = "ConfigurationTabPage";
+            this.ConfigurationTabPage.Size = new System.Drawing.Size(476, 335);
+            this.ConfigurationTabPage.TabIndex = 2;
+            this.ConfigurationTabPage.Text = "Configuration";
+            this.ConfigurationTabPage.UseVisualStyleBackColor = true;
+            // 
+            // ConfigurationPanel
+            // 
+            this.ConfigurationPanel.ColumnCount = 1;
+            this.ConfigurationPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.ConfigurationPanel.Controls.Add(this.ConnectionStringLabel, 0, 0);
+            this.ConfigurationPanel.Controls.Add(this.ConnectionStringTextBox, 0, 1);
+            this.ConfigurationPanel.Controls.Add(this.DataProviderLabel, 0, 3);
+            this.ConfigurationPanel.Controls.Add(this.DataProviderComboBox, 0, 4);
+            this.ConfigurationPanel.Controls.Add(this.DataProviderTextBox, 0, 5);
+            this.ConfigurationPanel.Controls.Add(this.ConfigurationButtonPanel, 0, 7);
+            this.ConfigurationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ConfigurationPanel.Location = new System.Drawing.Point(0, 0);
+            this.ConfigurationPanel.Name = "ConfigurationPanel";
+            this.ConfigurationPanel.Padding = new System.Windows.Forms.Padding(10);
+            this.ConfigurationPanel.RowCount = 8;
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.ConfigurationPanel.Size = new System.Drawing.Size(476, 335);
+            this.ConfigurationPanel.TabIndex = 1;
+            // 
+            // ConnectionStringLabel
+            // 
+            this.ConnectionStringLabel.AutoSize = true;
+            this.ConnectionStringLabel.Location = new System.Drawing.Point(13, 10);
+            this.ConnectionStringLabel.Name = "ConnectionStringLabel";
+            this.ConnectionStringLabel.Size = new System.Drawing.Size(91, 13);
+            this.ConnectionStringLabel.TabIndex = 1;
+            this.ConnectionStringLabel.Text = "Connection String";
+            // 
+            // ConnectionStringTextBox
+            // 
+            this.ConnectionStringTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ConnectionStringTextBox.Location = new System.Drawing.Point(13, 26);
+            this.ConnectionStringTextBox.MinimumSize = new System.Drawing.Size(4, 60);
+            this.ConnectionStringTextBox.Multiline = true;
+            this.ConnectionStringTextBox.Name = "ConnectionStringTextBox";
+            this.ConnectionStringTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.ConnectionStringTextBox.Size = new System.Drawing.Size(450, 60);
+            this.ConnectionStringTextBox.TabIndex = 0;
+            this.ConnectionStringTextBox.TextChanged += new System.EventHandler(this.ConnectionStringTextBox_TextChanged);
+            // 
+            // DataProviderLabel
+            // 
+            this.DataProviderLabel.AutoSize = true;
+            this.DataProviderLabel.Location = new System.Drawing.Point(13, 109);
+            this.DataProviderLabel.Name = "DataProviderLabel";
+            this.DataProviderLabel.Size = new System.Drawing.Size(72, 13);
+            this.DataProviderLabel.TabIndex = 2;
+            this.DataProviderLabel.Text = "Data Provider";
+            // 
+            // DataProviderComboBox
+            // 
+            this.DataProviderComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DataProviderComboBox.FormattingEnabled = true;
+            this.DataProviderComboBox.Items.AddRange(new object[] {
+            "SQL Server",
+            "SQLite",
+            "PostgreSQL",
+            "MySQL",
+            "Oracle"});
+            this.DataProviderComboBox.Location = new System.Drawing.Point(13, 125);
+            this.DataProviderComboBox.Name = "DataProviderComboBox";
+            this.DataProviderComboBox.Size = new System.Drawing.Size(160, 21);
+            this.DataProviderComboBox.TabIndex = 3;
+            this.DataProviderComboBox.SelectedIndexChanged += new System.EventHandler(this.DataProviderComboBox_SelectedIndexChanged);
+            // 
+            // DataProviderTextBox
+            // 
+            this.DataProviderTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.DataProviderTextBox.Location = new System.Drawing.Point(13, 152);
+            this.DataProviderTextBox.Multiline = true;
+            this.DataProviderTextBox.Name = "DataProviderTextBox";
+            this.DataProviderTextBox.Size = new System.Drawing.Size(450, 60);
+            this.DataProviderTextBox.TabIndex = 4;
+            this.DataProviderTextBox.TextChanged += new System.EventHandler(this.DataProviderTextBox_TextChanged);
+            // 
+            // ConfigurationButtonPanel
+            // 
+            this.ConfigurationButtonPanel.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.ConfigurationButtonPanel.AutoSize = true;
+            this.ConfigurationButtonPanel.Controls.Add(this.RevertConfigurationButton);
+            this.ConfigurationButtonPanel.Controls.Add(this.SaveConfigurationButton);
+            this.ConfigurationButtonPanel.Location = new System.Drawing.Point(157, 238);
+            this.ConfigurationButtonPanel.Name = "ConfigurationButtonPanel";
+            this.ConfigurationButtonPanel.Size = new System.Drawing.Size(162, 29);
+            this.ConfigurationButtonPanel.TabIndex = 7;
+            // 
+            // RevertConfigurationButton
+            // 
+            this.RevertConfigurationButton.Location = new System.Drawing.Point(3, 3);
+            this.RevertConfigurationButton.Name = "RevertConfigurationButton";
+            this.RevertConfigurationButton.Size = new System.Drawing.Size(75, 23);
+            this.RevertConfigurationButton.TabIndex = 6;
+            this.RevertConfigurationButton.Text = "Revert";
+            this.RevertConfigurationButton.UseVisualStyleBackColor = true;
+            this.RevertConfigurationButton.Click += new System.EventHandler(this.ConfigurationButton_Click);
+            // 
+            // SaveConfigurationButton
+            // 
+            this.SaveConfigurationButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.SaveConfigurationButton.Location = new System.Drawing.Point(84, 3);
+            this.SaveConfigurationButton.Name = "SaveConfigurationButton";
+            this.SaveConfigurationButton.Size = new System.Drawing.Size(75, 23);
+            this.SaveConfigurationButton.TabIndex = 5;
+            this.SaveConfigurationButton.Text = "Save";
+            this.SaveConfigurationButton.UseVisualStyleBackColor = true;
+            this.SaveConfigurationButton.Click += new System.EventHandler(this.ConfigurationButton_Click);
+            // 
+            // ExportFileDialog
+            // 
+            this.ExportFileDialog.DefaultExt = "csv";
+            this.ExportFileDialog.Filter = "CSV Files|*.csv|All files|*.*";
+            // 
+            // ImportFileDialog
+            // 
+            this.ImportFileDialog.DefaultExt = "csv";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(484, 361);
             this.Controls.Add(this.MainTabControl);
-            this.MinimumSize = new System.Drawing.Size(500, 0);
+            this.MinimumSize = new System.Drawing.Size(500, 39);
             this.Name = "MainWindow";
             this.Text = "CSV Data Manager";
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.MainTabControl.ResumeLayout(false);
             this.ExportTabPage.ResumeLayout(false);
             this.ExportTabPage.PerformLayout();
+            this.ExportTopBarPanel.ResumeLayout(false);
+            this.ExportTopBarPanel.PerformLayout();
             this.ImportTabPage.ResumeLayout(false);
             this.ImportTabPage.PerformLayout();
             this.ImportActionsPanel.ResumeLayout(false);
-            this.ExportTopBarPanel.ResumeLayout(false);
-            this.ExportTopBarPanel.PerformLayout();
             this.ImportTopBarPanel.ResumeLayout(false);
             this.ImportTopBarPanel.PerformLayout();
+            this.ConfigurationTabPage.ResumeLayout(false);
+            this.ConfigurationPanel.ResumeLayout(false);
+            this.ConfigurationPanel.PerformLayout();
+            this.ConfigurationButtonPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -315,6 +460,16 @@
         private System.Windows.Forms.Label ImportCountLabel;
         private System.Windows.Forms.ProgressBar ExportProgressBar;
         private System.Windows.Forms.ProgressBar ImportProgressBar;
+        private System.Windows.Forms.TabPage ConfigurationTabPage;
+        private System.Windows.Forms.TableLayoutPanel ConfigurationPanel;
+        private System.Windows.Forms.Label ConnectionStringLabel;
+        private System.Windows.Forms.TextBox ConnectionStringTextBox;
+        private System.Windows.Forms.Label DataProviderLabel;
+        private System.Windows.Forms.ComboBox DataProviderComboBox;
+        private System.Windows.Forms.TextBox DataProviderTextBox;
+        private System.Windows.Forms.Button SaveConfigurationButton;
+        private System.Windows.Forms.FlowLayoutPanel ConfigurationButtonPanel;
+        private System.Windows.Forms.Button RevertConfigurationButton;
     }
 }
 

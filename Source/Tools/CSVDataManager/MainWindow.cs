@@ -42,20 +42,6 @@ namespace CSVDataManager
 {
     public partial class MainWindow : Form
     {
-        #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
         public MainWindow()
@@ -67,8 +53,19 @@ namespace CSVDataManager
 
         #region [ Properties ]
 
+        private Dictionary<string, string> DataProviderLookup { get; } = new Dictionary<string, string>()
+        {
+            { "SQL Server", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter" },
+            { "SQLite", "" },
+            { "PostgreSQL", "AssemblyName={Npgsql, Version=0.0.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7}; ConnectionType=Npgsql.NpgsqlConnection; AdapterType=Npgsql.NpgsqlDataAdapter" },
+            { "MySQL", "AssemblyName={MySql.Data, Version=?.?.?.?, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter" },
+            { "Oracle", "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter" }
+        };
+
         private Schema MemSchema { get; set; }
         private Schema DBSchema { get; set; }
+        private string DBConnectionString { get; set; }
+        private string DBDataProviderString { get; set; }
 
         #endregion
 
@@ -79,25 +76,20 @@ namespace CSVDataManager
             Type sqliteConnectionType = typeof(System.Data.SQLite.SQLiteConnection);
             Type sqliteAdapterType = typeof(System.Data.SQLite.SQLiteDataAdapter);
             string assemblyName = sqliteConnectionType.Assembly.FullName;
+            string memConnectionString = $"Data Source=:memory:; Version=3; Foreign Keys=True; FailIfMissing=True";
             string memDataProviderString = $"AssemblyName={{{assemblyName}}}; ConnectionType={sqliteConnectionType.FullName}; AdapterType={sqliteAdapterType.FullName}";
-            string memConnectionString = $"Data Source=:memory:; Version=3; Foreign Keys=True; FailIfMissing=True; DataProviderString={{{memDataProviderString}}}";
+            DataProviderLookup["SQLite"] = memDataProviderString;
 
             ConfigurationFile configurationFile = ConfigurationFile.Current;
             CategorizedSettingsElementCollection applicationSettings = configurationFile.Settings["applicationSettings"];
-            string dbDataProviderString = applicationSettings["DataProviderString"]?.Value;
-            string dbConnectionString = $"{applicationSettings["ConnectionString"]?.Value}; DataProviderString={{{dbDataProviderString}}}; SerializedSchema=SerializedSchema.bin";
+            DBConnectionString = applicationSettings["ConnectionString"]?.Value;
+            DBDataProviderString = applicationSettings["DataProviderString"]?.Value;
+            ConnectionStringTextBox.Text = DBConnectionString;
+            DataProviderTextBox.Text = DBDataProviderString;
 
-            MemSchema = new Schema(memConnectionString, analyzeNow: false);
-            DBSchema = new Schema(dbConnectionString);
-
-            foreach (Table table in DBSchema.Tables)
-            {
-                ImportTableComboBox.Items.Add(table);
-                ExportTableComboBox.Items.Add(table);
-            }
-
-            if (ImportTableComboBox.Items.Count > 0)
-                ImportTableComboBox.SelectedIndex = 0;
+            MemSchema = new Schema($"{memConnectionString}; DataProviderString={{{memDataProviderString}}}", analyzeNow: false);
+            DBSchema = new Schema();
+            UpdateDBSchema();
         }
 
         private void TableComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -143,15 +135,6 @@ namespace CSVDataManager
                 // Update count labels to reflect number of records in selected table
                 OpenDBConnectionAndExecute(UpdateCountLabels);
             }
-        }
-
-        private void UpdateCountLabels()
-        {
-            Table table = (Table)ExportTableComboBox.SelectedItem;
-            object count = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
-            string text = $"Count: {count}";
-            ExportCountLabel.Text = text;
-            ImportCountLabel.Text = text;
         }
 
         private void ExportButton_Click(object sender, EventArgs e)
@@ -230,6 +213,103 @@ namespace CSVDataManager
             int progress = args.Argument1;
             int total = args.Argument2;
             ImportProgressBar.Value = 100 * progress / total;
+        }
+
+        private void DataProviderComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            object selectedItem = DataProviderComboBox.SelectedItem;
+
+            if (selectedItem == null)
+                return;
+
+            string dbType = selectedItem.ToString();
+            string dataProviderString = DataProviderLookup[dbType];
+            DataProviderTextBox.Text = dataProviderString;
+        }
+
+        private void ConnectionStringTextBox_TextChanged(object sender, EventArgs e)
+        {
+            UpdateConfigurationActionButtons();
+        }
+
+        private void DataProviderTextBox_TextChanged(object sender, EventArgs e)
+        {
+            foreach (KeyValuePair<string, string> dataProvider in DataProviderLookup)
+            {
+                string dbType = dataProvider.Key;
+                string dataProviderString = dataProvider.Value;
+
+                if (dataProviderString == DataProviderTextBox.Text)
+                {
+                    DataProviderComboBox.SelectedItem = dbType;
+                    break;
+                }
+            }
+
+            UpdateConfigurationActionButtons();
+        }
+
+        private void ConfigurationButton_Click(object sender, EventArgs e)
+        {
+            Cursor cursor = Cursor;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+
+                if (sender == RevertConfigurationButton)
+                {
+                    ConnectionStringTextBox.Text = DBConnectionString;
+                    DataProviderTextBox.Text = DBDataProviderString;
+                }
+                else if (sender == SaveConfigurationButton)
+                {
+                    DBConnectionString = ConnectionStringTextBox.Text;
+                    DBDataProviderString = DataProviderTextBox.Text;
+                    UpdateDBSchema();
+
+                    ConfigurationFile configurationFile = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection applicationSettings = configurationFile.Settings["applicationSettings"];
+                    applicationSettings.Add("ConnectionString", DBConnectionString, "Database connection string.", false, SettingScope.User);
+                    applicationSettings.Add("DataProviderString", DBDataProviderString, "Configuration database ADO.NET data provider assembly type creation string.", false, SettingScope.User);
+                    applicationSettings["ConnectionString"].Value = DBConnectionString;
+                    applicationSettings["DataProviderString"].Value = DBDataProviderString;
+                    configurationFile.Save();
+                }
+
+                UpdateConfigurationActionButtons();
+            }
+            finally
+            {
+                Cursor = cursor;
+            }
+        }
+
+        private void UpdateDBSchema()
+        {
+            ImportTableComboBox.Items.Clear();
+            ExportTableComboBox.Items.Clear();
+
+            DBSchema.ConnectionString = $"{DBConnectionString}; DataProviderString={{{DBDataProviderString}}}; SerializedSchema=SerializedSchema.bin";
+            DBSchema.Analyze();
+
+            foreach (Table table in DBSchema.Tables)
+            {
+                ImportTableComboBox.Items.Add(table);
+                ExportTableComboBox.Items.Add(table);
+            }
+
+            if (ImportTableComboBox.Items.Count > 0)
+                ImportTableComboBox.SelectedIndex = 0;
+        }
+
+        private void UpdateCountLabels()
+        {
+            Table table = (Table)ExportTableComboBox.SelectedItem;
+            object count = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
+            string text = $"Count: {count}";
+            ExportCountLabel.Text = text;
+            ImportCountLabel.Text = text;
         }
 
         private void ExportSelectionToFile()
@@ -380,6 +460,13 @@ namespace CSVDataManager
                 return new DataDeleter(MemSchema, DBSchema);
 
             return null;
+        }
+
+        private void UpdateConfigurationActionButtons()
+        {
+            ConfigurationButtonPanel.Enabled =
+                DBConnectionString != ConnectionStringTextBox.Text ||
+                DBDataProviderString != DataProviderTextBox.Text;
         }
 
         private void OpenBothConnectionsAndExecute(Action action) =>
