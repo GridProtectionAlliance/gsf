@@ -197,6 +197,7 @@ namespace GSF.Data
             m_rowReportInterval = 5;
             m_timeout = 120;
             m_useFromSchemaRI = true;
+            m_tableCollection = new Tables(m_fromSchema);
         }
 
         /// <summary>
@@ -239,6 +240,7 @@ namespace GSF.Data
             set
             {
                 m_fromSchema = value;
+                m_tableCollection.Parent = value;
             }
         }
 
