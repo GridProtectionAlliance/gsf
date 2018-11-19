@@ -185,12 +185,12 @@ namespace GSF.Data
                         // Copy field information from destination field
                         if (m_useFromSchemaRI)
                         {
-                            commonField = new Field(fieldsCollection, fld.Name, fld.Type);
+                            commonField = new Field(fld.Name, fld.Type);
                             commonField.AutoIncrement = fld.AutoIncrement;
                         }
                         else
                         {
-                            commonField = new Field(fieldsCollection, lookupField.Name, lookupField.Type);
+                            commonField = new Field(lookupField.Name, lookupField.Type);
                             commonField.AutoIncrement = lookupField.AutoIncrement;
                         }
 

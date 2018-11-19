@@ -489,12 +489,12 @@ namespace GSF.Data
                         // Copy field information from destination field
                         if (m_useFromSchemaRI)
                         {
-                            commonField = new Field(fieldCollection, field.Name, field.Type);
+                            commonField = new Field(field.Name, field.Type);
                             commonField.AutoIncrement = field.AutoIncrement;
                         }
                         else
                         {
-                            commonField = new Field(fieldCollection, lookupField.Name, lookupField.Type);
+                            commonField = new Field(lookupField.Name, lookupField.Type);
                             commonField.AutoIncrement = lookupField.AutoIncrement;
                         }
 
@@ -530,7 +530,7 @@ namespace GSF.Data
                             lookupField.AutoIncrementTranslations = new Hashtable();
 
                             // Create a new auto-inc field to hold source value
-                            autoIncField = new Field(toTable.Fields, field.Name, lookupField.Type);
+                            autoIncField = new Field(field.Name, lookupField.Type);
                             autoIncField.AutoIncrementTranslations = lookupField.AutoIncrementTranslations;
                             break;
                         }
@@ -913,7 +913,7 @@ namespace GSF.Data
 
         private void WriteBulkInsertRecord(Table toTable, Fields fieldCollection, Table sourceTable, string fieldTerminator, string rowTerminator, FileStream bulkInsertFileStream, IDataReader fromReader)
         {
-            Field commonField = new Field(toTable.Fields, "Unused", OleDbType.Integer);
+            Field commonField = new Field("Unused", OleDbType.Integer);
             byte[] dataRow;
             StringBuilder bulkInsertRow = new StringBuilder();
             string value;

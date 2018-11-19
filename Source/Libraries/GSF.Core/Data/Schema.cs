@@ -129,9 +129,9 @@ namespace GSF.Data
         #region [ Members ]
 
         //Fields
-        private readonly Fields m_parent;
-        private readonly string m_name;
-        private readonly OleDbType m_dataType;
+        private Fields m_parent;
+        private string m_name;
+        private OleDbType m_dataType;
 
         private int m_ordinal;
         private bool m_allowsNulls;
@@ -161,10 +161,9 @@ namespace GSF.Data
 
         #region [ Constructors ]
 
-        internal Field(Fields Parent, string Name, OleDbType Type)
+        public Field(string Name, OleDbType Type)
         {
             // We only allow internal creation of this object
-            m_parent = Parent;
             m_name = Name;
             m_dataType = Type;
             ForeignKeys = new ForeignKeyFields(this);
@@ -182,6 +181,12 @@ namespace GSF.Data
             get
             {
                 return m_name;
+            }
+            set
+            {
+                m_parent?.FieldDictionary.Remove(m_name);
+                m_parent?.FieldDictionary.Add(value, this);
+                m_name = value;
             }
         }
 
@@ -205,6 +210,10 @@ namespace GSF.Data
             {
                 return m_dataType;
             }
+            set
+            {
+                m_dataType = value;
+            }
         }
 
         /// <summary>
@@ -216,7 +225,7 @@ namespace GSF.Data
             {
                 return m_ordinal;
             }
-            internal set
+            set
             {
                 m_ordinal = value;
             }
@@ -547,6 +556,10 @@ namespace GSF.Data
             {
                 return m_parent;
             }
+            internal set
+            {
+                m_parent = value;
+            }
         }
 
         /// <summary>
@@ -556,7 +569,7 @@ namespace GSF.Data
         {
             get
             {
-                return m_parent.Parent;
+                return m_parent?.Parent;
             }
         }
 
@@ -1302,7 +1315,7 @@ namespace GSF.Data
     /// Represents a collection of <see cref="Field"/> values.
     /// </summary>
     [Serializable]
-    public class Fields : IEnumerable
+    public class Fields : IEnumerable<Field>, IEnumerable
     {
         #region [ Members ]
 
@@ -1414,8 +1427,11 @@ namespace GSF.Data
         /// Add new <see cref="Field"/> to this collection.
         /// </summary>
         /// <param name="newField">Field to add.</param>
-        internal void Add(Field newField)
+        public void Add(Field newField)
         {
+            if ((object)newField.Parent == null)
+                newField.Parent = this;
+
             m_fields.Add(newField.Name, newField);
             m_fieldList.Add(newField);
         }
@@ -1424,17 +1440,32 @@ namespace GSF.Data
         /// Removes <see cref="Field"/> from the collection.
         /// </summary>
         /// <param name="field">Field to remove.</param>
-        internal void Remove(Field field)
+        public void Remove(Field field)
         {
+            if (field.Parent == this)
+                field.Parent = null;
+
             m_fields.Remove(field.Name);
             m_fieldList.Remove(field);
         }
 
+        public void Clear()
+        {
+            foreach (Field field in m_fieldList)
+            {
+                if (field.Parent == this)
+                    field.Parent = null;
+            }
+
+            m_fields.Clear();
+            m_fieldList.Clear();
+        }
+
         /// <summary>
-        /// Get <see cref="IEnumerator"/> type of <see cref="Field"/> list.
+        /// Get <see cref="IEnumerator{Field}"/> type of <see cref="Field"/> list.
         /// </summary>
         /// <returns></returns>
-        public IEnumerator GetEnumerator()
+        public IEnumerator<Field> GetEnumerator()
         {
             return m_fieldList.GetEnumerator();
         }
@@ -1467,6 +1498,15 @@ namespace GSF.Data
 
         }
 
+        /// <summary>
+        /// Get <see cref="IEnumerator"/> type of <see cref="Field"/> list.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         #endregion
     }
 
@@ -1478,12 +1518,12 @@ namespace GSF.Data
     {
         #region [ Members ]
 
-        private readonly Tables m_parent;
-        private readonly string m_catalog;
-        private readonly string m_schema;
-        private readonly string m_name;
-        private readonly TableType m_tableType;
-        private readonly string m_description;
+        private Tables m_parent;
+        private string m_catalog;
+        private string m_schema;
+        private string m_name;
+        private TableType m_tableType;
+        private string m_description;
         private int m_rows;
 
         private Fields m_fields;
@@ -1502,12 +1542,21 @@ namespace GSF.Data
 
         #endregion
 
-        #region [ Consturctors ]
+        #region [ Constructors ]
 
-        internal Table(Tables parent, string catalog, string schema, string name, string type, string description, int rows)
+        public Table()
+            : this(null)
+        {
+        }
+
+        public Table(string name)
+            : this(null, null, name, TableType.Table.ToString(), null, 0)
+        {
+        }
+
+        public Table(string catalog, string schema, string name, string type, string description, int rows)
         {
             // We only allow internal creation of this object
-            m_parent = parent;
             m_fields = new Fields(this);
 
             m_catalog = catalog;
@@ -1646,6 +1695,12 @@ namespace GSF.Data
             {
                 return m_name;
             }
+            set
+            {
+                m_parent?.TableDictionary.Remove(m_name);
+                m_parent?.TableDictionary.Add(value, this);
+                m_name = value;
+            }
         }
 
         /// <summary>
@@ -1691,6 +1746,10 @@ namespace GSF.Data
             {
                 return m_catalog;
             }
+            set
+            {
+                m_catalog = value;
+            }
         }
 
         /// <summary>
@@ -1701,6 +1760,10 @@ namespace GSF.Data
             get
             {
                 return m_schema;
+            }
+            set
+            {
+                m_schema = value;
             }
         }
 
@@ -1713,6 +1776,10 @@ namespace GSF.Data
             {
                 return m_tableType;
             }
+            set
+            {
+                m_tableType = value;
+            }
         }
 
         /// <summary>
@@ -1723,6 +1790,10 @@ namespace GSF.Data
             get
             {
                 return m_description;
+            }
+            set
+            {
+                m_description = value;
             }
         }
 
@@ -1745,6 +1816,11 @@ namespace GSF.Data
             get
             {
                 return m_parent;
+            }
+            internal set
+            {
+                m_parent = value;
+                ReevalulateIdentitySQL();
             }
         }
 
@@ -2075,7 +2151,7 @@ namespace GSF.Data
 
         public void ReevalulateIdentitySQL()
         {
-            switch (m_parent.Parent.DataSourceType)
+            switch (m_parent?.Parent.DataSourceType)
             {
                 case DatabaseType.SQLServer:
                     m_identitySQL = "SELECT IDENT_CURRENT('" + Name + "')";
@@ -2130,7 +2206,7 @@ namespace GSF.Data
     /// List of <see cref="Table"/> collection
     /// </summary>
     [Serializable]
-    public class Tables : IEnumerable
+    public class Tables : IEnumerable<Table>, IEnumerable
     {
         #region [ Memebers ]
 
@@ -2204,16 +2280,34 @@ namespace GSF.Data
 
         #region [ Methods ]
 
-        internal void Add(Table table)
+        public void Add(Table table)
         {
+            if ((object)table.Parent == null)
+                table.Parent = this;
+
             m_tables.Add(table.Name, table);
             m_tableList.Add(table);
         }
 
-        internal void Remove(Table table)
+        public void Remove(Table table)
         {
+            if (table.Parent == this)
+                table.Parent = null;
+
             m_tables.Remove(table.Name);
             m_tableList.Remove(table);
+        }
+
+        public void Clear()
+        {
+            foreach (Table table in m_tableList)
+            {
+                if (table.Parent == this)
+                    table.Parent = null;
+            }
+
+            m_tables.Clear();
+            m_tableList.Clear();
         }
 
         public Table this[int index]
@@ -2250,11 +2344,9 @@ namespace GSF.Data
 
         }
 
-        public IEnumerator GetEnumerator()
+        public IEnumerator<Table> GetEnumerator()
         {
-
             return m_tableList.GetEnumerator();
-
         }
 
         public string GetList()
@@ -2271,6 +2363,11 @@ namespace GSF.Data
 
             return fieldList.ToString();
 
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         #endregion
@@ -2395,9 +2492,10 @@ namespace GSF.Data
             m_immediateClose = true;
             m_allowTextNulls = false;
             m_allowNumericNulls = false;
+            m_tables = new Tables(this);
         }
 
-        public Schema(string connectionString, TableType tableTypeRestriction = NoRestriction, bool immediateClose = true, bool anaylzeNow = true)
+        public Schema(string connectionString, TableType tableTypeRestriction = NoRestriction, bool immediateClose = true, bool analyzeNow = true)
         {
             m_connectionString = connectionString;
             m_restriction = tableTypeRestriction;
@@ -2405,8 +2503,10 @@ namespace GSF.Data
             m_allowTextNulls = false;
             m_allowNumericNulls = false;
 
-            if (anaylzeNow)
+            if (analyzeNow)
                 Analyze();
+            else
+                m_tables = new Tables(this);
         }
 
         #endregion
@@ -2526,6 +2626,10 @@ namespace GSF.Data
             get
             {
                 return m_schemaConnection;
+            }
+            set
+            {
+                m_schemaConnection = value;
             }
         }
 
@@ -2676,7 +2780,7 @@ namespace GSF.Data
             {
                 row = schemaTable.Rows[x];
 
-                table = new Table(m_tables, Common.ToNonNullString(row["TABLE_CATALOG"]),
+                table = new Table(Common.ToNonNullString(row["TABLE_CATALOG"]),
                                 Common.ToNonNullString(row["TABLE_SCHEMA"]),
                                 row["TABLE_NAME"].ToString(),
                                 row["TABLE_TYPE"].ToString(),
@@ -2726,7 +2830,7 @@ namespace GSF.Data
                             row = currentTable.Rows[y];
 
                             // New field encountered, create new field
-                            field = new Field(table.Fields, row["COLUMN_NAME"].ToString(), (OleDbType)row["DATA_TYPE"]);
+                            field = new Field(row["COLUMN_NAME"].ToString(), (OleDbType)row["DATA_TYPE"]);
                             field.HasDefault = Convert.ToBoolean(Common.NotNull(row["COLUMN_HASDEFAULT"], false));
                             field.NumericPrecision = Convert.ToInt32(Common.NotNull(row["NUMERIC_PRECISION"], false));
                             field.NumericScale = Convert.ToInt32(Common.NotNull(row["NUMERIC_SCALE"], false));
