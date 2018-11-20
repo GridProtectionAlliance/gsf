@@ -530,6 +530,8 @@ namespace CSVDataManager
             {
                 StringBuilder token = new StringBuilder();
 
+                i++;
+
                 while (true)
                 {
                     while (i < line.Length && line[i] != '"')
