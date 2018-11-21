@@ -328,7 +328,6 @@ namespace GSF.Data
 
         #endregion
 
-
         #region [ Methods ]
 
         /// <summary>
@@ -381,7 +380,7 @@ namespace GSF.Data
 
             m_excludedTables.Sort();
 
-            m_tableCollection = new Tables(m_fromSchema);
+            m_tableCollection.Clear();
 
             // We preprocess which tables we are going to access for data operation...
             foreach (Table table in m_fromSchema.Tables)

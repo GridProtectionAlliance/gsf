@@ -86,11 +86,11 @@ namespace GSF.Data
             Table table;
             int x;
 
-            if ((object)m_tableCollection == null)
+            if (m_tableCollection.Count == 0)
                 Analyze();
 
-            if ((object)m_tableCollection == null)
-                throw new NullReferenceException("No table collection found even after analyze.");
+            if (m_tableCollection.Count == 0)
+                throw new NullReferenceException("No tables to process even after analyze.");
 
             // We copy the tables into an array list so we can sort and process them in priority order
             foreach (Table sourceTable in m_tableCollection)

@@ -85,6 +85,12 @@ namespace GSF.Data
             Table tableLookup;
             int x;
 
+            if (m_tableCollection.Count == 0)
+                Analyze();
+
+            if (m_tableCollection.Count == 0)
+                throw new NullReferenceException("No tables to process even after analyze.");
+
             // We copy the tables into an array list so we can sort and process them in priority order
             foreach (Table sourceTable in m_tableCollection)
             {

@@ -287,11 +287,11 @@ namespace GSF.Data
             m_overallProgress = 0;
             m_overallTotal = 0;
 
-            if ((object)m_tableCollection == null)
+            if (m_tableCollection.Count == 0)
                 Analyze();
 
-            if ((object)m_tableCollection == null)
-                throw new NullReferenceException("No table collection found even after analyze.");
+            if (m_tableCollection.Count == 0)
+                throw new NullReferenceException("No tables to process even after analyze.");
 
             // Clear data from destination tables, if requested
             if (m_clearDestinationTables)
