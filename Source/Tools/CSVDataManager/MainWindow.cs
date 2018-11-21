@@ -153,9 +153,20 @@ namespace CSVDataManager
             if (result != DialogResult.OK)
                 return;
 
-            // The DBSchema database connection was closed after loading the schema so
-            // it needs to be reopened before we can query the data to be exported
-            OpenDBConnectionAndExecute(ExportSelectionToFile);
+            Cursor cursor = Cursor;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+
+                // The DBSchema database connection was closed after loading the schema so
+                // it needs to be reopened before we can query the data to be exported
+                OpenDBConnectionAndExecute(ExportSelectionToFile);
+            }
+            finally
+            {
+                Cursor = cursor;
+            }
 
             // Automatically open the exported file to indicate completion
             using (Process.Start(ExportFileDialog.FileName)) { }
@@ -200,9 +211,20 @@ namespace CSVDataManager
                 return;
             }
 
-            using (BulkDataOperationBase importer = GetImporter(sender))
+            Cursor cursor = Cursor;
+
+            try
             {
-                OpenBothConnectionsAndExecute(() => ImportSelectionFromFile(importer));
+                Cursor = Cursors.WaitCursor;
+
+                using (BulkDataOperationBase importer = GetImporter(sender))
+                {
+                    OpenBothConnectionsAndExecute(() => ImportSelectionFromFile(importer));
+                }
+            }
+            finally
+            {
+                Cursor = cursor;
             }
 
             MessageBox.Show($"Completed import from {fileName} to the {table.Name} table.");
