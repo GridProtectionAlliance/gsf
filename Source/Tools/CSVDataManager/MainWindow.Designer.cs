@@ -52,11 +52,16 @@
             this.DataProviderLabel = new System.Windows.Forms.Label();
             this.DataProviderComboBox = new System.Windows.Forms.ComboBox();
             this.DataProviderTextBox = new System.Windows.Forms.TextBox();
+            this.SerializedSchemaLabel = new System.Windows.Forms.Label();
+            this.SerializedSchemaConfigurationPanel = new System.Windows.Forms.Panel();
+            this.SerializedSchemaTextBox = new System.Windows.Forms.TextBox();
+            this.SerializedSchemaBrowseButton = new System.Windows.Forms.Button();
             this.ConfigurationButtonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.RevertConfigurationButton = new System.Windows.Forms.Button();
             this.SaveConfigurationButton = new System.Windows.Forms.Button();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ImportFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.SerializedSchemaBrowseDialog = new System.Windows.Forms.OpenFileDialog();
             this.MainTabControl.SuspendLayout();
             this.ExportTabPage.SuspendLayout();
             this.ExportTopBarPanel.SuspendLayout();
@@ -65,6 +70,7 @@
             this.ImportTopBarPanel.SuspendLayout();
             this.ConfigurationTabPage.SuspendLayout();
             this.ConfigurationPanel.SuspendLayout();
+            this.SerializedSchemaConfigurationPanel.SuspendLayout();
             this.ConfigurationButtonPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -294,12 +300,14 @@
             this.ConfigurationPanel.Controls.Add(this.DataProviderLabel, 0, 3);
             this.ConfigurationPanel.Controls.Add(this.DataProviderComboBox, 0, 4);
             this.ConfigurationPanel.Controls.Add(this.DataProviderTextBox, 0, 5);
-            this.ConfigurationPanel.Controls.Add(this.ConfigurationButtonPanel, 0, 7);
+            this.ConfigurationPanel.Controls.Add(this.SerializedSchemaLabel, 0, 7);
+            this.ConfigurationPanel.Controls.Add(this.SerializedSchemaConfigurationPanel, 0, 8);
+            this.ConfigurationPanel.Controls.Add(this.ConfigurationButtonPanel, 0, 10);
             this.ConfigurationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ConfigurationPanel.Location = new System.Drawing.Point(0, 0);
             this.ConfigurationPanel.Name = "ConfigurationPanel";
             this.ConfigurationPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.ConfigurationPanel.RowCount = 8;
+            this.ConfigurationPanel.RowCount = 11;
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
@@ -308,7 +316,9 @@
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ConfigurationPanel.Size = new System.Drawing.Size(476, 335);
             this.ConfigurationPanel.TabIndex = 1;
             // 
@@ -332,7 +342,7 @@
             this.ConnectionStringTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.ConnectionStringTextBox.Size = new System.Drawing.Size(450, 60);
             this.ConnectionStringTextBox.TabIndex = 0;
-            this.ConnectionStringTextBox.TextChanged += new System.EventHandler(this.ConnectionStringTextBox_TextChanged);
+            this.ConnectionStringTextBox.TextChanged += new System.EventHandler(this.ConfigurationTextBox_TextChanged);
             // 
             // DataProviderLabel
             // 
@@ -368,7 +378,46 @@
             this.DataProviderTextBox.Name = "DataProviderTextBox";
             this.DataProviderTextBox.Size = new System.Drawing.Size(450, 60);
             this.DataProviderTextBox.TabIndex = 4;
-            this.DataProviderTextBox.TextChanged += new System.EventHandler(this.DataProviderTextBox_TextChanged);
+            this.DataProviderTextBox.TextChanged += new System.EventHandler(this.ConfigurationTextBox_TextChanged);
+            // 
+            // SerializedSchemaLabel
+            // 
+            this.SerializedSchemaLabel.AutoSize = true;
+            this.SerializedSchemaLabel.Location = new System.Drawing.Point(13, 235);
+            this.SerializedSchemaLabel.Name = "SerializedSchemaLabel";
+            this.SerializedSchemaLabel.Size = new System.Drawing.Size(94, 13);
+            this.SerializedSchemaLabel.TabIndex = 8;
+            this.SerializedSchemaLabel.Text = "Serialized Schema";
+            // 
+            // SerializedSchemaConfigurationPanel
+            // 
+            this.SerializedSchemaConfigurationPanel.Controls.Add(this.SerializedSchemaTextBox);
+            this.SerializedSchemaConfigurationPanel.Controls.Add(this.SerializedSchemaBrowseButton);
+            this.SerializedSchemaConfigurationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.SerializedSchemaConfigurationPanel.Location = new System.Drawing.Point(13, 251);
+            this.SerializedSchemaConfigurationPanel.Name = "SerializedSchemaConfigurationPanel";
+            this.SerializedSchemaConfigurationPanel.Size = new System.Drawing.Size(450, 24);
+            this.SerializedSchemaConfigurationPanel.TabIndex = 10;
+            // 
+            // SerializedSchemaTextBox
+            // 
+            this.SerializedSchemaTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.SerializedSchemaTextBox.Location = new System.Drawing.Point(0, 0);
+            this.SerializedSchemaTextBox.Name = "SerializedSchemaTextBox";
+            this.SerializedSchemaTextBox.Size = new System.Drawing.Size(375, 20);
+            this.SerializedSchemaTextBox.TabIndex = 9;
+            this.SerializedSchemaTextBox.TextChanged += new System.EventHandler(this.ConfigurationTextBox_TextChanged);
+            // 
+            // SerializedSchemaBrowseButton
+            // 
+            this.SerializedSchemaBrowseButton.Dock = System.Windows.Forms.DockStyle.Right;
+            this.SerializedSchemaBrowseButton.Location = new System.Drawing.Point(375, 0);
+            this.SerializedSchemaBrowseButton.Name = "SerializedSchemaBrowseButton";
+            this.SerializedSchemaBrowseButton.Size = new System.Drawing.Size(75, 24);
+            this.SerializedSchemaBrowseButton.TabIndex = 10;
+            this.SerializedSchemaBrowseButton.Text = "Browse...";
+            this.SerializedSchemaBrowseButton.UseVisualStyleBackColor = true;
+            this.SerializedSchemaBrowseButton.Click += new System.EventHandler(this.SerializedSchemaBrowseButton_Click);
             // 
             // ConfigurationButtonPanel
             // 
@@ -376,7 +425,7 @@
             this.ConfigurationButtonPanel.AutoSize = true;
             this.ConfigurationButtonPanel.Controls.Add(this.RevertConfigurationButton);
             this.ConfigurationButtonPanel.Controls.Add(this.SaveConfigurationButton);
-            this.ConfigurationButtonPanel.Location = new System.Drawing.Point(157, 238);
+            this.ConfigurationButtonPanel.Location = new System.Drawing.Point(157, 301);
             this.ConfigurationButtonPanel.Name = "ConfigurationButtonPanel";
             this.ConfigurationButtonPanel.Size = new System.Drawing.Size(162, 29);
             this.ConfigurationButtonPanel.TabIndex = 7;
@@ -411,6 +460,12 @@
             // 
             this.ImportFileDialog.DefaultExt = "csv";
             // 
+            // SerializedSchemaBrowseDialog
+            // 
+            this.SerializedSchemaBrowseDialog.DefaultExt = "bin";
+            this.SerializedSchemaBrowseDialog.FileName = "SerializedSchema.bin";
+            this.SerializedSchemaBrowseDialog.Filter = "Bin files|*.bin|All files|*.*";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -434,6 +489,8 @@
             this.ConfigurationTabPage.ResumeLayout(false);
             this.ConfigurationPanel.ResumeLayout(false);
             this.ConfigurationPanel.PerformLayout();
+            this.SerializedSchemaConfigurationPanel.ResumeLayout(false);
+            this.SerializedSchemaConfigurationPanel.PerformLayout();
             this.ConfigurationButtonPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -470,6 +527,11 @@
         private System.Windows.Forms.Button SaveConfigurationButton;
         private System.Windows.Forms.FlowLayoutPanel ConfigurationButtonPanel;
         private System.Windows.Forms.Button RevertConfigurationButton;
+        private System.Windows.Forms.Label SerializedSchemaLabel;
+        private System.Windows.Forms.Panel SerializedSchemaConfigurationPanel;
+        private System.Windows.Forms.Button SerializedSchemaBrowseButton;
+        private System.Windows.Forms.TextBox SerializedSchemaTextBox;
+        private System.Windows.Forms.OpenFileDialog SerializedSchemaBrowseDialog;
     }
 }
 

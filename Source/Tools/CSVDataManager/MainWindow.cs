@@ -66,6 +66,7 @@ namespace CSVDataManager
         private Schema DBSchema { get; set; }
         private string DBConnectionString { get; set; }
         private string DBDataProviderString { get; set; }
+        private string SerializedSchema { get; set; }
 
         #endregion
 
@@ -84,8 +85,10 @@ namespace CSVDataManager
             CategorizedSettingsElementCollection applicationSettings = configurationFile.Settings["applicationSettings"];
             DBConnectionString = applicationSettings["ConnectionString"]?.Value;
             DBDataProviderString = applicationSettings["DataProviderString"]?.Value;
+            SerializedSchema = applicationSettings["SerializedSchema"]?.Value;
             ConnectionStringTextBox.Text = DBConnectionString;
             DataProviderTextBox.Text = DBDataProviderString;
+            SerializedSchemaTextBox.Text = SerializedSchema;
 
             MemSchema = new Schema($"{memConnectionString}; DataProviderString={{{memDataProviderString}}}", analyzeNow: false);
             DBSchema = new Schema();
@@ -314,26 +317,32 @@ namespace CSVDataManager
             DataProviderTextBox.Text = dataProviderString;
         }
 
-        private void ConnectionStringTextBox_TextChanged(object sender, EventArgs e)
+        private void ConfigurationTextBox_TextChanged(object sender, EventArgs e)
         {
-            UpdateConfigurationActionButtons();
-        }
-
-        private void DataProviderTextBox_TextChanged(object sender, EventArgs e)
-        {
-            foreach (KeyValuePair<string, string> dataProvider in DataProviderLookup)
+            if (sender == DataProviderTextBox)
             {
-                string dbType = dataProvider.Key;
-                string dataProviderString = dataProvider.Value;
-
-                if (dataProviderString == DataProviderTextBox.Text)
+                foreach (KeyValuePair<string, string> dataProvider in DataProviderLookup)
                 {
-                    DataProviderComboBox.SelectedItem = dbType;
-                    break;
+                    string dbType = dataProvider.Key;
+                    string dataProviderString = dataProvider.Value;
+
+                    if (dataProviderString == DataProviderTextBox.Text)
+                    {
+                        DataProviderComboBox.SelectedItem = dbType;
+                        break;
+                    }
                 }
             }
 
             UpdateConfigurationActionButtons();
+        }
+
+        private void SerializedSchemaBrowseButton_Click(object sender, EventArgs e)
+        {
+            DialogResult result = SerializedSchemaBrowseDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+                SerializedSchemaTextBox.Text = SerializedSchemaBrowseDialog.FileName;
         }
 
         private void ConfigurationButton_Click(object sender, EventArgs e)
@@ -348,19 +357,23 @@ namespace CSVDataManager
                 {
                     ConnectionStringTextBox.Text = DBConnectionString;
                     DataProviderTextBox.Text = DBDataProviderString;
+                    SerializedSchemaTextBox.Text = SerializedSchema;
                 }
                 else if (sender == SaveConfigurationButton)
                 {
                     DBConnectionString = ConnectionStringTextBox.Text;
                     DBDataProviderString = DataProviderTextBox.Text;
+                    SerializedSchema = SerializedSchemaTextBox.Text;
                     UpdateDBSchema();
 
                     ConfigurationFile configurationFile = ConfigurationFile.Current;
                     CategorizedSettingsElementCollection applicationSettings = configurationFile.Settings["applicationSettings"];
                     applicationSettings.Add("ConnectionString", DBConnectionString, "Database connection string.", false, SettingScope.User);
                     applicationSettings.Add("DataProviderString", DBDataProviderString, "Configuration database ADO.NET data provider assembly type creation string.", false, SettingScope.User);
+                    applicationSettings.Add("SerializedSchema", DBDataProviderString, "File containing binary-serialized schema information about the database.", false, SettingScope.User);
                     applicationSettings["ConnectionString"].Value = DBConnectionString;
                     applicationSettings["DataProviderString"].Value = DBDataProviderString;
+                    applicationSettings["SerializedSchema"].Value = SerializedSchema;
                     configurationFile.Save();
                 }
 
@@ -377,7 +390,7 @@ namespace CSVDataManager
             ImportTableComboBox.Items.Clear();
             ExportTableComboBox.Items.Clear();
 
-            DBSchema.ConnectionString = $"{DBConnectionString}; DataProviderString={{{DBDataProviderString}}}; SerializedSchema=SerializedSchema.bin";
+            DBSchema.ConnectionString = $"{DBConnectionString}; DataProviderString={{{DBDataProviderString}}}; SerializedSchema={SerializedSchema}";
             DBSchema.Analyze();
 
             foreach (Table table in DBSchema.Tables)
@@ -543,7 +556,8 @@ namespace CSVDataManager
         {
             ConfigurationButtonPanel.Enabled =
                 DBConnectionString != ConnectionStringTextBox.Text ||
-                DBDataProviderString != DataProviderTextBox.Text;
+                DBDataProviderString != DataProviderTextBox.Text ||
+                SerializedSchema != SerializedSchemaTextBox.Text;
         }
 
         private void OpenBothConnectionsAndExecute(Action action) =>
