@@ -153,23 +153,59 @@ namespace CSVDataManager
             if (result != DialogResult.OK)
                 return;
 
+            Field[] fields = ExportFieldsPanel.Controls
+                .OfType<CheckBox>()
+                .Where(checkBox => checkBox.Checked)
+                .Select(checkBox => (Field)checkBox.Tag)
+                .ToArray();
+
             Cursor cursor = Cursor;
+            BeginExport();
 
-            try
+            Thread t = new Thread(() =>
             {
-                Cursor = Cursors.WaitCursor;
+                try { DoExport(); }
+                finally { EndExport(); }
+            });
 
+            t.IsBackground = true;
+            t.Start();
+
+            void BeginExport()
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(BeginExport));
+                    return;
+                }
+
+                MainTabControl.Enabled = false;
+                Cursor = Cursors.WaitCursor;
+                ExportProgressBar.Value = 0;
+            }
+
+            void DoExport()
+            {
                 // The DBSchema database connection was closed after loading the schema so
                 // it needs to be reopened before we can query the data to be exported
-                OpenDBConnectionAndExecute(ExportSelectionToFile);
-            }
-            finally
-            {
-                Cursor = cursor;
+                OpenDBConnectionAndExecute(() => ExportSelectionToFile(table, fields));
+
+                // Automatically open the exported file to upon completion
+                using (Process.Start(ExportFileDialog.FileName)) { }
             }
 
-            // Automatically open the exported file to indicate completion
-            using (Process.Start(ExportFileDialog.FileName)) { }
+            void EndExport()
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(EndExport));
+                    return;
+                }
+
+                MainTabControl.Enabled = true;
+                Cursor = cursor;
+                ExportProgressBar.Value = 100;
+            }
         }
 
         private void ImportButton_Click(object sender, EventArgs e)
@@ -212,29 +248,58 @@ namespace CSVDataManager
             }
 
             Cursor cursor = Cursor;
+            BeginImport();
 
-            try
+            Thread t = new Thread(() =>
             {
-                Cursor = Cursors.WaitCursor;
+                try { DoImport(); }
+                finally { EndImport(); }
+            });
 
+            t.IsBackground = true;
+            t.Start();
+
+            void BeginImport()
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(BeginImport));
+                    return;
+                }
+
+                MainTabControl.Enabled = false;
+                Cursor = Cursors.WaitCursor;
+                ImportProgressBar.Value = 0;
+            }
+
+            void DoImport()
+            {
                 using (BulkDataOperationBase importer = GetImporter(sender))
                 {
-                    OpenBothConnectionsAndExecute(() => ImportSelectionFromFile(importer));
+                    OpenBothConnectionsAndExecute(() => ImportSelectionFromFile(importer, table));
                 }
             }
-            finally
-            {
-                Cursor = cursor;
-            }
 
-            MessageBox.Show($"Completed import from {fileName} to the {table.Name} table.");
+            void EndImport()
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(EndImport));
+                    return;
+                }
+
+                MainTabControl.Enabled = true;
+                Cursor = cursor;
+                ImportProgressBar.Value = 100;
+                MessageBox.Show($"Completed import from {fileName} to the {table.Name} table.");
+            }
         }
 
         private void Importer_OverallProgress(object sender, EventArgs<int, int> args)
         {
             int progress = args.Argument1;
             int total = args.Argument2;
-            ImportProgressBar.Value = 100 * progress / total;
+            UpdateProgressBar(ImportProgressBar, 100 * progress / total);
         }
 
         private void DataProviderComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -334,16 +399,8 @@ namespace CSVDataManager
             ImportCountLabel.Text = text;
         }
 
-        private void ExportSelectionToFile()
+        private void ExportSelectionToFile(Table table, Field[] fields)
         {
-            Table table = (Table)ExportTableComboBox.SelectedItem;
-
-            Field[] fields = ExportFieldsPanel.Controls
-                .OfType<CheckBox>()
-                .Where(checkBox => checkBox.Checked)
-                .Select(checkBox => (Field)checkBox.Tag)
-                .ToArray();
-
             string[] fieldNames = fields
                 .Select(field => field.Name)
                 .ToArray();
@@ -361,7 +418,7 @@ namespace CSVDataManager
 
                 object result = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
                 int count = Convert.ToInt32(result);
-                ExportProgressBar.Value = 0;
+                UpdateProgressBar(ExportProgressBar, 0);
 
                 using (IDataReader reader = DBSchema.Connection.ExecuteReader($"SELECT {fieldList} FROM {table.SQLEscapedName}"))
                 {
@@ -377,35 +434,33 @@ namespace CSVDataManager
                         writer.WriteLine(csvRecord);
                         records++;
 
-                        ExportProgressBar.Value = 100 * records / count;
+                        UpdateProgressBar(ExportProgressBar, 100 * records / count);
                     }
 
-                    ExportProgressBar.Value = 100;
+                    UpdateProgressBar(ExportProgressBar, 100);
                 }
             }
         }
 
-        private void ImportSelectionFromFile(BulkDataOperationBase importer)
+        private void ImportSelectionFromFile(BulkDataOperationBase importer, Table dbTable)
         {
-            CopyCSVToMemSchema();
+            CopyCSVToMemSchema(dbTable);
 
-            foreach (Table table in MemSchema.Tables)
+            foreach (Table memTable in MemSchema.Tables)
             {
-                importer.WorkTables.Add(table);
-                table.Process = true;
+                importer.WorkTables.Add(memTable);
+                memTable.Process = true;
             }
 
-            ImportProgressBar.Value = 0;
+            UpdateProgressBar(ImportProgressBar, 0);
             importer.OverallProgress += Importer_OverallProgress;
             importer.UseFromSchemaReferentialIntegrity = false;
             importer.Execute();
-            ImportProgressBar.Value = 100;
+            UpdateProgressBar(ImportProgressBar, 100);
         }
 
-        private void CopyCSVToMemSchema()
+        private void CopyCSVToMemSchema(Table dbTable)
         {
-            Table dbTable = (Table)ImportTableComboBox.SelectedItem;
-
             Table memTable = new Table(dbTable.Name);
             MemSchema.Tables.Clear();
             MemSchema.Tables.Add(memTable);
@@ -582,6 +637,16 @@ namespace CSVDataManager
             }
 
             return fields.ToArray();
+        }
+
+        private void UpdateProgressBar(ProgressBar progressBar, int progress)
+        {
+            Action<ProgressBar, int> updateAction = (bar, val) => bar.Value = val;
+
+            if (InvokeRequired)
+                Invoke(updateAction, progressBar, progress);
+            else
+                updateAction(progressBar, progress);
         }
 
         #endregion
