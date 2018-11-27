@@ -115,7 +115,17 @@ namespace CSVDataManager
 
             MemSchema = new Schema($"{memConnectionString}; DataProviderString={{{memDataProviderString}}}", analyzeNow: false);
             DBSchema = new Schema();
-            UpdateDBSchema();
+
+            try
+            {
+                UpdateDBSchema();
+            }
+            catch (Exception ex)
+            {
+                string message = $"Error opening connection to database: {ex.Message}";
+                MessageBox.Show(message, "Database error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MainTabControl.SelectedTab = ConfigurationTabPage;
+            }
         }
 
         private void MainTabControl_Selecting(object sender, TabControlCancelEventArgs e)
@@ -166,6 +176,12 @@ namespace CSVDataManager
                     applicationSettings["DataProviderString"].Value = dataProviderString;
                     applicationSettings["SerializedSchema"].Value = SerializedSchema;
                     configurationFile.Save();
+                }
+                catch(Exception ex)
+                {
+                    string message = $"Error updating configuration: {ex.Message}";
+                    MessageBox.Show(message, "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    e.Cancel = true;
                 }
                 finally
                 {
