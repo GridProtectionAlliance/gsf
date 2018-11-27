@@ -64,9 +64,16 @@ namespace CSVDataManager
 
         private Schema MemSchema { get; set; }
         private Schema DBSchema { get; set; }
+
         private string DBConnectionString { get; set; }
         private string DBDataProviderString { get; set; }
         private string SerializedSchema { get; set; }
+
+        private string HostConfigurationFile { get; set; }
+        private string HostConnectionString { get; set; }
+        private string HostDataProviderString { get; set; }
+
+        private TabPage PreviouslySelectedTab { get; set; }
 
         #endregion
 
@@ -86,6 +93,22 @@ namespace CSVDataManager
             DBConnectionString = applicationSettings["ConnectionString"]?.Value;
             DBDataProviderString = applicationSettings["DataProviderString"]?.Value;
             SerializedSchema = applicationSettings["SerializedSchema"]?.Value;
+            HostConfigurationFile = applicationSettings["HostConfigurationFile"]?.Value;
+
+            if (!string.IsNullOrEmpty(HostConfigurationFile))
+            {
+                ConfigurationFile hostConfigurationFile = ConfigurationFile.Open(HostConfigurationFile);
+                CategorizedSettingsElementCollection systemSettings = hostConfigurationFile.Settings["systemSettings"];
+                HostConnectionString = systemSettings["ConnectionString"]?.Value;
+                HostDataProviderString = systemSettings["DataProviderString"]?.Value;
+
+                if (string.IsNullOrEmpty(DBConnectionString))
+                    DBConnectionString = HostConnectionString;
+
+                if (string.IsNullOrEmpty(DBDataProviderString))
+                    DBDataProviderString = HostDataProviderString;
+            }
+
             ConnectionStringTextBox.Text = DBConnectionString;
             DataProviderTextBox.Text = DBDataProviderString;
             SerializedSchemaTextBox.Text = SerializedSchema;
@@ -93,6 +116,62 @@ namespace CSVDataManager
             MemSchema = new Schema($"{memConnectionString}; DataProviderString={{{memDataProviderString}}}", analyzeNow: false);
             DBSchema = new Schema();
             UpdateDBSchema();
+        }
+
+        private void MainTabControl_Selecting(object sender, TabControlCancelEventArgs e)
+        {
+            bool configurationChanged =
+                DBConnectionString != ConnectionStringTextBox.Text ||
+                DBDataProviderString != DataProviderTextBox.Text ||
+                SerializedSchema != SerializedSchemaTextBox.Text;
+
+            if (configurationChanged)
+            {
+                Cursor cursor = Cursor;
+
+                try
+                {
+                    Cursor = Cursors.WaitCursor;
+
+                    if (string.IsNullOrEmpty(ConnectionStringTextBox.Text))
+                        ConnectionStringTextBox.Text = HostConnectionString;
+
+                    if (string.IsNullOrEmpty(DataProviderTextBox.Text))
+                        DataProviderTextBox.Text = HostDataProviderString;
+
+                    if (string.IsNullOrEmpty(SerializedSchemaTextBox.Text))
+                        SerializedSchemaTextBox.Text = "SerializedSchema.bin";
+
+                    DBConnectionString = ConnectionStringTextBox.Text;
+                    DBDataProviderString = DataProviderTextBox.Text;
+                    SerializedSchema = SerializedSchemaTextBox.Text;
+
+                    UpdateDBSchema();
+
+                    string connectionString = string.Empty;
+                    string dataProviderString = string.Empty;
+
+                    if (DBConnectionString != HostConnectionString)
+                        connectionString = DBConnectionString;
+
+                    if (DBDataProviderString != HostDataProviderString)
+                        dataProviderString = DBDataProviderString;
+
+                    ConfigurationFile configurationFile = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection applicationSettings = configurationFile.Settings["applicationSettings"];
+                    applicationSettings.Add("ConnectionString", connectionString, "Database connection string.", false, SettingScope.User);
+                    applicationSettings.Add("DataProviderString", dataProviderString, "Configuration database ADO.NET data provider assembly type creation string.", false, SettingScope.User);
+                    applicationSettings.Add("SerializedSchema", SerializedSchema, "File containing binary-serialized schema information about the database.", false, SettingScope.User);
+                    applicationSettings["ConnectionString"].Value = connectionString;
+                    applicationSettings["DataProviderString"].Value = dataProviderString;
+                    applicationSettings["SerializedSchema"].Value = SerializedSchema;
+                    configurationFile.Save();
+                }
+                finally
+                {
+                    Cursor = cursor;
+                }
+            }
         }
 
         private void TableComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -333,8 +412,6 @@ namespace CSVDataManager
                     }
                 }
             }
-
-            UpdateConfigurationActionButtons();
         }
 
         private void SerializedSchemaBrowseButton_Click(object sender, EventArgs e)
@@ -343,46 +420,6 @@ namespace CSVDataManager
 
             if (result == DialogResult.OK)
                 SerializedSchemaTextBox.Text = SerializedSchemaBrowseDialog.FileName;
-        }
-
-        private void ConfigurationButton_Click(object sender, EventArgs e)
-        {
-            Cursor cursor = Cursor;
-
-            try
-            {
-                Cursor = Cursors.WaitCursor;
-
-                if (sender == RevertConfigurationButton)
-                {
-                    ConnectionStringTextBox.Text = DBConnectionString;
-                    DataProviderTextBox.Text = DBDataProviderString;
-                    SerializedSchemaTextBox.Text = SerializedSchema;
-                }
-                else if (sender == SaveConfigurationButton)
-                {
-                    DBConnectionString = ConnectionStringTextBox.Text;
-                    DBDataProviderString = DataProviderTextBox.Text;
-                    SerializedSchema = SerializedSchemaTextBox.Text;
-                    UpdateDBSchema();
-
-                    ConfigurationFile configurationFile = ConfigurationFile.Current;
-                    CategorizedSettingsElementCollection applicationSettings = configurationFile.Settings["applicationSettings"];
-                    applicationSettings.Add("ConnectionString", DBConnectionString, "Database connection string.", false, SettingScope.User);
-                    applicationSettings.Add("DataProviderString", DBDataProviderString, "Configuration database ADO.NET data provider assembly type creation string.", false, SettingScope.User);
-                    applicationSettings.Add("SerializedSchema", DBDataProviderString, "File containing binary-serialized schema information about the database.", false, SettingScope.User);
-                    applicationSettings["ConnectionString"].Value = DBConnectionString;
-                    applicationSettings["DataProviderString"].Value = DBDataProviderString;
-                    applicationSettings["SerializedSchema"].Value = SerializedSchema;
-                    configurationFile.Save();
-                }
-
-                UpdateConfigurationActionButtons();
-            }
-            finally
-            {
-                Cursor = cursor;
-            }
         }
 
         private void UpdateDBSchema()
@@ -550,14 +587,6 @@ namespace CSVDataManager
                 return new DataDeleter(MemSchema, DBSchema);
 
             return null;
-        }
-
-        private void UpdateConfigurationActionButtons()
-        {
-            ConfigurationButtonPanel.Enabled =
-                DBConnectionString != ConnectionStringTextBox.Text ||
-                DBDataProviderString != DataProviderTextBox.Text ||
-                SerializedSchema != SerializedSchemaTextBox.Text;
         }
 
         private void OpenBothConnectionsAndExecute(Action action) =>

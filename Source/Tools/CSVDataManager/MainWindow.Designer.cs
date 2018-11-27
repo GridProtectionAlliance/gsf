@@ -56,12 +56,10 @@
             this.SerializedSchemaConfigurationPanel = new System.Windows.Forms.Panel();
             this.SerializedSchemaTextBox = new System.Windows.Forms.TextBox();
             this.SerializedSchemaBrowseButton = new System.Windows.Forms.Button();
-            this.ConfigurationButtonPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.RevertConfigurationButton = new System.Windows.Forms.Button();
-            this.SaveConfigurationButton = new System.Windows.Forms.Button();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ImportFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.SerializedSchemaBrowseDialog = new System.Windows.Forms.OpenFileDialog();
+            this.ConfigurationTipLabel = new System.Windows.Forms.Label();
             this.MainTabControl.SuspendLayout();
             this.ExportTabPage.SuspendLayout();
             this.ExportTopBarPanel.SuspendLayout();
@@ -71,7 +69,6 @@
             this.ConfigurationTabPage.SuspendLayout();
             this.ConfigurationPanel.SuspendLayout();
             this.SerializedSchemaConfigurationPanel.SuspendLayout();
-            this.ConfigurationButtonPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainTabControl
@@ -85,6 +82,7 @@
             this.MainTabControl.SelectedIndex = 0;
             this.MainTabControl.Size = new System.Drawing.Size(484, 361);
             this.MainTabControl.TabIndex = 0;
+            this.MainTabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.MainTabControl_Selecting);
             // 
             // ExportTabPage
             // 
@@ -302,7 +300,7 @@
             this.ConfigurationPanel.Controls.Add(this.DataProviderTextBox, 0, 5);
             this.ConfigurationPanel.Controls.Add(this.SerializedSchemaLabel, 0, 7);
             this.ConfigurationPanel.Controls.Add(this.SerializedSchemaConfigurationPanel, 0, 8);
-            this.ConfigurationPanel.Controls.Add(this.ConfigurationButtonPanel, 0, 10);
+            this.ConfigurationPanel.Controls.Add(this.ConfigurationTipLabel, 0, 10);
             this.ConfigurationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ConfigurationPanel.Location = new System.Drawing.Point(0, 0);
             this.ConfigurationPanel.Name = "ConfigurationPanel";
@@ -319,6 +317,7 @@
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ConfigurationPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.ConfigurationPanel.Size = new System.Drawing.Size(476, 335);
             this.ConfigurationPanel.TabIndex = 1;
             // 
@@ -419,38 +418,6 @@
             this.SerializedSchemaBrowseButton.UseVisualStyleBackColor = true;
             this.SerializedSchemaBrowseButton.Click += new System.EventHandler(this.SerializedSchemaBrowseButton_Click);
             // 
-            // ConfigurationButtonPanel
-            // 
-            this.ConfigurationButtonPanel.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.ConfigurationButtonPanel.AutoSize = true;
-            this.ConfigurationButtonPanel.Controls.Add(this.RevertConfigurationButton);
-            this.ConfigurationButtonPanel.Controls.Add(this.SaveConfigurationButton);
-            this.ConfigurationButtonPanel.Location = new System.Drawing.Point(157, 301);
-            this.ConfigurationButtonPanel.Name = "ConfigurationButtonPanel";
-            this.ConfigurationButtonPanel.Size = new System.Drawing.Size(162, 29);
-            this.ConfigurationButtonPanel.TabIndex = 7;
-            // 
-            // RevertConfigurationButton
-            // 
-            this.RevertConfigurationButton.Location = new System.Drawing.Point(3, 3);
-            this.RevertConfigurationButton.Name = "RevertConfigurationButton";
-            this.RevertConfigurationButton.Size = new System.Drawing.Size(75, 23);
-            this.RevertConfigurationButton.TabIndex = 6;
-            this.RevertConfigurationButton.Text = "Revert";
-            this.RevertConfigurationButton.UseVisualStyleBackColor = true;
-            this.RevertConfigurationButton.Click += new System.EventHandler(this.ConfigurationButton_Click);
-            // 
-            // SaveConfigurationButton
-            // 
-            this.SaveConfigurationButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.SaveConfigurationButton.Location = new System.Drawing.Point(84, 3);
-            this.SaveConfigurationButton.Name = "SaveConfigurationButton";
-            this.SaveConfigurationButton.Size = new System.Drawing.Size(75, 23);
-            this.SaveConfigurationButton.TabIndex = 5;
-            this.SaveConfigurationButton.Text = "Save";
-            this.SaveConfigurationButton.UseVisualStyleBackColor = true;
-            this.SaveConfigurationButton.Click += new System.EventHandler(this.ConfigurationButton_Click);
-            // 
             // ExportFileDialog
             // 
             this.ExportFileDialog.DefaultExt = "csv";
@@ -465,6 +432,16 @@
             this.SerializedSchemaBrowseDialog.DefaultExt = "bin";
             this.SerializedSchemaBrowseDialog.FileName = "SerializedSchema.bin";
             this.SerializedSchemaBrowseDialog.Filter = "Bin files|*.bin|All files|*.*";
+            // 
+            // ConfigurationTipLabel
+            // 
+            this.ConfigurationTipLabel.AutoSize = true;
+            this.ConfigurationTipLabel.Location = new System.Drawing.Point(13, 298);
+            this.ConfigurationTipLabel.Name = "ConfigurationTipLabel";
+            this.ConfigurationTipLabel.Size = new System.Drawing.Size(449, 26);
+            this.ConfigurationTipLabel.TabIndex = 11;
+            this.ConfigurationTipLabel.Text = "Tip: Erasing a setting will revert that setting to its default value. All changes" +
+    " will be saved upon switching to another tab.";
             // 
             // MainWindow
             // 
@@ -491,7 +468,6 @@
             this.ConfigurationPanel.PerformLayout();
             this.SerializedSchemaConfigurationPanel.ResumeLayout(false);
             this.SerializedSchemaConfigurationPanel.PerformLayout();
-            this.ConfigurationButtonPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -524,14 +500,12 @@
         private System.Windows.Forms.Label DataProviderLabel;
         private System.Windows.Forms.ComboBox DataProviderComboBox;
         private System.Windows.Forms.TextBox DataProviderTextBox;
-        private System.Windows.Forms.Button SaveConfigurationButton;
-        private System.Windows.Forms.FlowLayoutPanel ConfigurationButtonPanel;
-        private System.Windows.Forms.Button RevertConfigurationButton;
         private System.Windows.Forms.Label SerializedSchemaLabel;
         private System.Windows.Forms.Panel SerializedSchemaConfigurationPanel;
         private System.Windows.Forms.Button SerializedSchemaBrowseButton;
         private System.Windows.Forms.TextBox SerializedSchemaTextBox;
         private System.Windows.Forms.OpenFileDialog SerializedSchemaBrowseDialog;
+        private System.Windows.Forms.Label ConfigurationTipLabel;
     }
 }
 
