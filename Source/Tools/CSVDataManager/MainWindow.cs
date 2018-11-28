@@ -257,6 +257,9 @@ namespace CSVDataManager
                 .Select(checkBox => (Field)checkBox.Tag)
                 .ToArray();
 
+            // Disabling the tab control makes it so the user cannot interact with any
+            // controls while the export is executing, but running in a separate thread
+            // does allow the user to move the window around while the export executes
             Cursor cursor = Cursor;
             BeginExport();
 
@@ -322,9 +325,21 @@ namespace CSVDataManager
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
             Table matchingTable = DBSchema.Tables[fileNameWithoutExtension];
 
+            // Each of the import operations require slightly different wording
+            Dictionary<object, string> importPhraseLookup = new Dictionary<object, string>()
+            {
+                { InsertButton, "insert data into" },
+                { UpdateButton, "update" },
+                { DeleteButton, "delete data from" }
+            };
+
+            if (!importPhraseLookup.TryGetValue(sender, out string importPhrase))
+                importPhrase = "import data into";
+
+            // Run sanity checks to make sure the user didn't make a mistake
             if ((object)table != null && (object)matchingTable != null && !ReferenceEquals(table, matchingTable))
             {
-                DialogResult matchResult = MessageBox.Show($"File name matches another table in the database. Would you like to import into the {matchingTable.Name} table instead?", "Matching table detected", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                DialogResult matchResult = MessageBox.Show($"File name matches another table in the database. Would you like to {importPhrase} the {matchingTable.Name} table instead?", "Matching table detected", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
                 if (matchResult == DialogResult.Cancel)
                     return;
@@ -334,7 +349,8 @@ namespace CSVDataManager
             }
             else if ((object)table != null)
             {
-                DialogResult confirmResult = MessageBox.Show($"You are about to import data into the {table.Name} table. Are you sure you would like to proceed?", "Confirm import", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                DialogResult confirmResult = MessageBox.Show($"You are about to {importPhrase} the {table.Name} table. Are you sure you would like to proceed?", "Confirm import", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (confirmResult == DialogResult.No)
                     return;
@@ -345,6 +361,9 @@ namespace CSVDataManager
                 return;
             }
 
+            // Disabling the tab control makes it so the user cannot interact with any
+            // controls while the import is executing, but running in a separate thread
+            // does allow the user to move the window around while the import executes
             Cursor cursor = Cursor;
             BeginImport();
 
