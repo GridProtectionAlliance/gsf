@@ -22,19 +22,117 @@
 //******************************************************************************************************
 
 #include "FilterExpressionParser.h"
+#include "tree/ParseTreeWalker.h"
+#include "../../Common/Convert.h"
 
 using namespace std;
+using namespace GSF::DataSet;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 using namespace antlr4;
+using namespace antlr4::tree;
 
-FilterExpressionParser::FilterExpressionParser()
+// Mapped type for boost UUID (ANTLR4 also defines a Guid type)
+typedef GSF::TimeSeries::Guid guid;
+
+FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
+    m_inputStream(filterExpression),
+    m_lexer(nullptr),
+    m_tokens(nullptr),
+    m_parser(nullptr),
+    m_dataset(nullptr),
+    m_primaryMeasurementTableName("ActiveMeasurements"),
+    m_signalIDColumnName("SignalID"),
+    m_measurementKeyColumnName("ID"),
+    m_pointTagColumnName("PointTag")
 {
+    m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
+    m_tokens = new CommonTokenStream(m_lexer);
+    m_parser = new FilterExpressionSyntaxParser(m_tokens);
 }
-
 
 FilterExpressionParser::~FilterExpressionParser()
 {
+    delete m_lexer;
+    delete m_tokens;
+    delete m_parser;
+}
+
+bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, ExpressionPtr& expression) const
+{
+    return TryGetValue<const ParserRuleContext*, ExpressionPtr>(m_expressions, context, expression, nullptr);
+}
+
+void FilterExpressionParser::AddExpr(const ParserRuleContext* context, const ExpressionPtr& expression)
+{
+    m_expressions.insert(pair<const ParserRuleContext*, ExpressionPtr>(context, expression));
+}
+
+const DataSetPtr& FilterExpressionParser::CurrentDataSet() const
+{
+    return m_dataset;
+}
+
+void FilterExpressionParser::AssignDataSet(const DataSetPtr& dataset)
+{
+    m_dataset = dataset;
+}
+
+const string& FilterExpressionParser::GetPrimaryMeasurementTableName() const
+{
+    return m_primaryMeasurementTableName;
+}
+
+void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableName)
+{
+    m_primaryMeasurementTableName = tableName;
+}
+
+const string& FilterExpressionParser::GetSignalIDColumnName() const
+{
+    return m_signalIDColumnName;
+}
+
+void FilterExpressionParser::SetSignalIDColumnName(const string& columnName)
+{
+    m_signalIDColumnName = columnName;
+}
+
+const string& FilterExpressionParser::GetMeasurementKeyColumnName() const
+{
+    return m_measurementKeyColumnName;
+}
+
+void FilterExpressionParser::SetMeasurementKeyColumnName(const string& columnName)
+{
+    m_measurementKeyColumnName = columnName;
+}
+
+const string& FilterExpressionParser::GetPointTagColumnName() const
+{
+    return m_pointTagColumnName;
+}
+
+void FilterExpressionParser::SetPointTagColumnName(const string& columnName)
+{
+    m_pointTagColumnName = columnName;
+}
+
+void FilterExpressionParser::Evaluate()
+{
+    if (m_dataset == nullptr)
+        throw RuntimeException("Dataset is undefined");
+
+    m_signalIDs.clear();
+    m_expressions.clear();
+
+    ParseTreeWalker walker;
+    walker.walk(this, m_parser->parse());
+}
+
+const vector<guid>& FilterExpressionParser::FilteredSignalIDs() const
+{
+    return m_signalIDs;
 }
 
 /*
@@ -44,6 +142,31 @@ FilterExpressionParser::~FilterExpressionParser()
  */
 void FilterExpressionParser::exitParse(FilterExpressionSyntaxParser::ParseContext* context)
 {
+}
+
+/*
+    identifierStatement
+     : GUID_LITERAL
+     | MEASUREMENT_KEY_LITERAL
+     | POINT_TAG_LITERAL
+     ;
+ */
+void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext* context)
+{
+    const auto guidLiteral = context->GUID_LITERAL();
+
+    if (guidLiteral)
+    {
+        m_signalIDs.push_back(ToGuid(guidLiteral->getText().c_str()));
+        return;
+    }
+
+    const auto measurementKeyLiteral = context->MEASUREMENT_KEY_LITERAL();
+
+    if (measurementKeyLiteral)
+    {
+        
+    }
 }
 
 /*
@@ -67,49 +190,45 @@ void FilterExpressionParser::exitParse(FilterExpressionSyntaxParser::ParseContex
  */
 void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::ExpressionContext* context)
 {
-    const ExpressionPtr expression = NewSharedPtr<Expression>();
+    const ExpressionPtr result = NewSharedPtr<Expression>();
+    ExpressionPtr value;
 
-    expression->Context = context;
+    result->Context = context;
 
-    auto iterator = m_expressions.find(context->literalValue());
-
-    if (iterator != m_expressions.end())
+    // : literalValue
+    if (TryGetExpr(context->literalValue(), value))
     {
-        const ExpressionPtr literalValue = iterator->second;
-
-        expression->Type = literalValue->Type;
-        expression->Value = literalValue->Value;
-
-        m_expressions.insert(pair<ParserRuleContext*, ExpressionPtr>(context, expression));
+        result->Type = value->Type;
+        result->Value = value->Value;
+        AddExpr(context, result);
         return;
     }
 
-    iterator = m_expressions.find(context->columnName());
-
-    if (iterator != m_expressions.end())
+    // | columnName
+    if (TryGetExpr(context->columnName(), value))
     {
-        const ExpressionPtr columnName = iterator->second;
-
-        expression->Type = columnName->Type;
-        expression->Value = columnName->Value;
-
-        m_expressions.insert(pair<ParserRuleContext*, ExpressionPtr>(context, expression));
+        result->Type = value->Type;
+        result->Value = value->Value;
+        AddExpr(context, result);
         return;
     }
 
-    iterator = m_expressions.find(context->unaryOperator());
+    // | unaryOperator expression
+    const auto unaryOperator = context->unaryOperator();
 
-    if (iterator != m_expressions.end())
+    if (unaryOperator != nullptr && TryGetExpr(context->expression(0), value))
     {
-        const ExpressionPtr unaryOperator = iterator->second;
+
         return;
     }
 
-    iterator = m_expressions.find(context->functionName());
-
-    if (iterator != m_expressions.end())
+    if (context->expression().size() == 2)
     {
-        const ExpressionPtr functionName = iterator->second;
+        
+    }
+
+    if (TryGetExpr(context->functionName(), value))
+    {
         return;
     }
 }

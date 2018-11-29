@@ -30,7 +30,7 @@ parse
 error
  : UNEXPECTED_CHAR 
    { 
-     throw new RuntimeException("Unexpected character: " + $UNEXPECTED_CHAR.text); 
+     throw RuntimeException("Unexpected character: " + $UNEXPECTED_CHAR.text); 
    }
  ;
 

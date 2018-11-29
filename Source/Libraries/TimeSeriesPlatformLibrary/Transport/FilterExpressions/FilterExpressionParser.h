@@ -24,6 +24,7 @@
 #ifndef __FILTER_EXPRESSION_PARSER_H
 #define __FILTER_EXPRESSION_PARSER_H
 
+#include "FilterExpressionSyntaxLexer.h"
 #include "FilterExpressionSyntaxBaseListener.h"
 
 #ifndef EOF
@@ -59,14 +60,47 @@ typedef SharedPtr<Expression> ExpressionPtr;
 class FilterExpressionParser : public FilterExpressionSyntaxBaseListener
 {
 private:
+    antlr4::ANTLRInputStream m_inputStream;
+    FilterExpressionSyntaxLexer* m_lexer;
+    antlr4::CommonTokenStream* m_tokens;
+    FilterExpressionSyntaxParser* m_parser;
     GSF::DataSet::DataSetPtr m_dataset;
-    std::map<antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
 
+    std::string m_primaryMeasurementTableName;
+    std::string m_signalIDColumnName;
+    std::string m_measurementKeyColumnName;
+    std::string m_pointTagColumnName;
+
+    std::vector<GSF::TimeSeries::Guid> m_signalIDs;
+    std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
+
+    bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
+    void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
 public:
-    FilterExpressionParser();
+    FilterExpressionParser(const std::string& filterExpression);
     ~FilterExpressionParser();
 
+    const GSF::DataSet::DataSetPtr& CurrentDataSet() const;
+    void AssignDataSet(const GSF::DataSet::DataSetPtr& dataset);
+
+    const std::string& GetPrimaryMeasurementTableName() const;
+    void SetPrimaryMeasurementTableName(const std::string& tableName);
+
+    const std::string& GetSignalIDColumnName() const;
+    void SetSignalIDColumnName(const std::string& columnName);
+
+    const std::string& GetMeasurementKeyColumnName() const;
+    void SetMeasurementKeyColumnName(const std::string& columnName);
+
+    const std::string& GetPointTagColumnName() const;
+    void SetPointTagColumnName(const std::string& columnName);
+
+    void Evaluate();
+
+    const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
+
     void exitParse(FilterExpressionSyntaxParser::ParseContext*) override;
+    void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
     void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;

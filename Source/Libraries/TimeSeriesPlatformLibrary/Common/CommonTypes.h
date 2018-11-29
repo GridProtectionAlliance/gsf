@@ -117,6 +117,21 @@ namespace TimeSeries
     template<typename T>
     using Func = std::function<T(void)>;
 
+    template<typename TKey, typename TValue>
+    bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
+    {
+        auto iterator = dictionary.find(key);
+
+        if (iterator != dictionary.end())
+        {
+            value = iterator->second;
+            return true;
+        }
+
+        value = defaultValue;
+        return false;
+    }
+
     typedef boost::uuids::uuid Guid;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;
