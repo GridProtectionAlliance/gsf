@@ -1048,12 +1048,13 @@ namespace GSF.Communication
                 if ((object)acceptArgs != m_acceptArgs)
                     return;
 
-                if (acceptArgs.SocketError != SocketError.Success)
+                SocketError error = acceptArgs.SocketError;
+
+                if (error != SocketError.Success && error != SocketError.ConnectionReset)
                 {
                     // Error is unrecoverable.
                     // We need to make sure to restart the
                     // server before we throw the error.
-                    SocketError error = acceptArgs.SocketError;
                     ThreadPool.QueueUserWorkItem(state => ReStart());
                     throw new SocketException((int)error);
                 }
@@ -1064,6 +1065,9 @@ namespace GSF.Communication
 
                 try
                 {
+                    if (acceptArgs.SocketError != SocketError.Success)
+                        throw new SocketException((int)error);
+
                     if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                     {
                         // Reject client connection since limit has been reached.

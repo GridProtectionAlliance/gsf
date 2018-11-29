@@ -847,30 +847,35 @@ namespace GSF.Communication
                 if ((object)acceptArgs != m_acceptArgs)
                     return;
 
-                if (acceptArgs.SocketError != SocketError.Success)
+                SocketError error = acceptArgs.SocketError;
+                client.Provider = acceptArgs.AcceptSocket;
+
+                if (error == SocketError.Success || error == SocketError.ConnectionReset)
                 {
-                    // Error is unrecoverable.
-                    // We need to make sure to restart the
-                    // server before we throw the error.
-                    SocketError error = acceptArgs.SocketError;
-                    ThreadPool.QueueUserWorkItem(state => ReStart());
-                    throw new SocketException((int)error);
+                    // Return to accepting new connections.
+                    acceptArgs.AcceptSocket = null;
+
+                    if (!m_tcpServer.AcceptAsync(acceptArgs))
+                        ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
+                }
+                else
+                {
+                    // For unrecoverable errors, we need to ensure the server
+                    // will be restarted before we can throw the error.
+                    if (error != SocketError.ConnectionReset)
+                        ThreadPool.QueueUserWorkItem(state => ReStart());
                 }
 
+                if (error != SocketError.Success)
+                    throw new SocketException((int)error);
+
                 // Process the newly connected client.
-                client.Provider = acceptArgs.AcceptSocket;
                 client.Provider.ReceiveBufferSize = ReceiveBufferSize;
                 remoteEndPoint = client.Provider.RemoteEndPoint as IPEndPoint;
 
                 // Set up SocketAsyncEventArgs for receive operations.
                 receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                 receiveArgs.Completed += ReceiveHandler;
-
-                // Return to accepting new connections.
-                acceptArgs.AcceptSocket = null;
-
-                if (!m_tcpServer.AcceptAsync(acceptArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
 
 #if !MONO
                 // Authenticate the connected client Windows credentials.
