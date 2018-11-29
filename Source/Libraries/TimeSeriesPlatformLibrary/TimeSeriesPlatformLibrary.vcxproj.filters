@@ -619,6 +619,18 @@
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionParser.cpp">
       <Filter>Transport\FilterExpressions</Filter>
     </ClCompile>
+    <ClCompile Include="DataSet\DataSet.cpp">
+      <Filter>DataSet</Filter>
+    </ClCompile>
+    <ClCompile Include="DataSet\DataTable.cpp">
+      <Filter>DataSet</Filter>
+    </ClCompile>
+    <ClCompile Include="DataSet\DataColumn.cpp">
+      <Filter>DataSet</Filter>
+    </ClCompile>
+    <ClCompile Include="DataSet\DataRow.cpp">
+      <Filter>DataSet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">
@@ -697,6 +709,9 @@
     </Filter>
     <Filter Include="Transport\antlr4-runtime\tree\xpath">
       <UniqueIdentifier>{55dc8940-3bb0-4039-9de7-d165efcfc768}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataSet">
+      <UniqueIdentifier>{85f66a16-6e8c-4e92-bcd6-b3ad8e32bf06}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1084,6 +1099,18 @@
     </ClInclude>
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionParser.h">
       <Filter>Transport\FilterExpressions</Filter>
+    </ClInclude>
+    <ClInclude Include="DataSet\DataSet.h">
+      <Filter>DataSet</Filter>
+    </ClInclude>
+    <ClInclude Include="DataSet\DataTable.h">
+      <Filter>DataSet</Filter>
+    </ClInclude>
+    <ClInclude Include="DataSet\DataColumn.h">
+      <Filter>DataSet</Filter>
+    </ClInclude>
+    <ClInclude Include="DataSet\DataRow.h">
+      <Filter>DataSet</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

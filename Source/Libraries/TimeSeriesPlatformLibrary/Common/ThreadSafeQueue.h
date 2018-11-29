@@ -28,8 +28,6 @@
 
 #include "CommonTypes.h"
 
-using namespace boost;
-
 namespace GSF {
 namespace TimeSeries
 {
@@ -46,7 +44,7 @@ namespace TimeSeries
     private:
         Mutex m_mutex;
         WaitHandle m_dataWaitHandle;
-        queue<T> m_queue;
+        std::queue<T> m_queue;
         bool m_release;
 
     public:

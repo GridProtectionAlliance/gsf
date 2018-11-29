@@ -24,41 +24,49 @@
 #ifndef __FILTER_EXPRESSION_PARSER_H
 #define __FILTER_EXPRESSION_PARSER_H
 
-//#include "../../Common/CommonTypes.h"
 #include "FilterExpressionSyntaxBaseListener.h"
+
+#ifndef EOF
+#define EOF (-1)
+#endif
+
+#include "../../Common/CommonTypes.h"
+#include "../../DataSet/DataSet.h"
 
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
 
-struct ExpressionType
+enum class ExpressionType
 {
-    static const uint8_t Boolean = 0;
-    static const uint8_t Numeric = 1;
-    static const uint8_t String = 2;
-    static const uint8_t DateTime = 3;
-    static const uint8_t Null = 255;
+    Boolean,
+    Numeric,
+    String,
+    DateTime,
+    Null
 };
 
 struct Expression
 {
-    ExpressionType Type;
-    antlr4::ParserRuleContext Context;
-    antlrcpp::Any Value;
+    ExpressionType Type = ExpressionType::Null;
+    antlr4::ParserRuleContext* Context = nullptr;
+    antlrcpp::Any Value = nullptr;
 };
+
+typedef SharedPtr<Expression> ExpressionPtr;
 
 class FilterExpressionParser : public FilterExpressionSyntaxBaseListener
 {
 private:
-    //std::map<antlr4::tree::ParseTree, Expression> m_expressions;
+    GSF::DataSet::DataSetPtr m_dataset;
+    std::map<antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
 
 public:
     FilterExpressionParser();
     ~FilterExpressionParser();
 
     void exitParse(FilterExpressionSyntaxParser::ParseContext*) override;
-    void exitError(FilterExpressionSyntaxParser::ErrorContext*) override;
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
     void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;

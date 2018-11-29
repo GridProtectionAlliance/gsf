@@ -28,9 +28,10 @@
 #include "../Common/Convert.h"
 #include "../Common/pugixml.hpp"
 
+using namespace std;
+using namespace pugi;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
-using namespace pugi;
 
 SubscriberInstance::SubscriberInstance() :  // NOLINT
     m_hostname("localhost"),

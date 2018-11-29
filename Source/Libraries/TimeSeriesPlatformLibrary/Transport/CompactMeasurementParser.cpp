@@ -23,6 +23,7 @@
 
 #include "CompactMeasurementParser.h"
 
+using namespace std;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 

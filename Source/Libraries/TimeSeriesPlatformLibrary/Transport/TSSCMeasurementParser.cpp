@@ -24,6 +24,7 @@
 #include "TSSCMeasurementParser.h"
 #include "Constants.h"
 
+using namespace std;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 

@@ -37,8 +37,6 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/array.hpp>
 
-using namespace std;
-
 namespace GSF {
 namespace TimeSeries
 {
@@ -137,7 +135,7 @@ namespace TimeSeries
 
     struct MemoryStream : boost::iostreams::array_source
     {
-        MemoryStream(const vector<uint8_t>& buffer) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer.data()), buffer.size())
+        MemoryStream(const std::vector<uint8_t>& buffer) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer.data()), buffer.size())
         {
         }
 
@@ -146,9 +144,9 @@ namespace TimeSeries
         }
     };
 
-    inline void CopyStream(Decompressor& source, vector<uint8_t>& sink)
+    inline void CopyStream(Decompressor& source, std::vector<uint8_t>& sink)
     {
-        sink.assign(istreambuf_iterator<char>{ &source }, {});
+        sink.assign(std::istreambuf_iterator<char>{ &source }, {});
     }
 
     // Floating-point types
@@ -158,7 +156,7 @@ namespace TimeSeries
     // Empty types
     struct Empty
     {
-        static const string String;
+        static const std::string String;
         static const GSF::TimeSeries::Guid Guid;
         static const GSF::TimeSeries::IPAddress IPAddress;
         static const uint8_t* ZeroLengthBytes;
@@ -168,14 +166,12 @@ namespace TimeSeries
 // Setup standard hash code for Guid
 namespace std  // NOLINT
 {
-    using namespace GSF::TimeSeries;
-
     template<>
-    struct hash<Guid>
+    struct hash<GSF::TimeSeries::Guid>
     {
-        size_t operator () (const Guid& uid) const
+        size_t operator () (const GSF::TimeSeries::Guid& uid) const
         {
-            return boost::hash<Guid>()(uid);
+            return boost::hash<GSF::TimeSeries::Guid>()(uid);
         }
     };
 }

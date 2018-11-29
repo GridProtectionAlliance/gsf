@@ -30,8 +30,6 @@
 
 #include "DataSubscriber.h"
 
-using namespace std;
-
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
@@ -40,52 +38,52 @@ namespace Transport
     {
     private:
         // Subscription members
-        string m_hostname;
+        std::string m_hostname;
         uint16_t m_port;
         uint16_t m_udpPort;
         bool m_autoReconnect;
         bool m_autoParseMetadata;
         int16_t m_maxRetries;
         int16_t m_retryInterval;
-        string m_filterExpression;
+        std::string m_filterExpression;
         DataSubscriber m_subscriber;
         SubscriptionInfo m_subscriptionInfo;
-        string m_startTime;
-        string m_stopTime;
+        std::string m_startTime;
+        std::string m_stopTime;
         EndianConverter m_endianConverter;
         void* m_userData;
 
-        map<string, DeviceMetadataPtr> m_devices;
-        map<Guid, MeasurementMetadataPtr> m_measurements;
-        map<string, ConfigurationFramePtr> m_configurationFrames;
+        std::map<std::string, DeviceMetadataPtr> m_devices;
+        std::map<Guid, MeasurementMetadataPtr> m_measurements;
+        std::map<std::string, ConfigurationFramePtr> m_configurationFrames;
 
         Mutex m_configurationUpdateLock;
 
-        static void ConstructConfigurationFrames(const map<string, DeviceMetadataPtr>& devices, const map<Guid, MeasurementMetadataPtr>& measurements, map<string, ConfigurationFramePtr>& configurationFrames);
-        static bool TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
-        static bool TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata);
-        static uint16_t GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
+        static void ConstructConfigurationFrames(const std::map<std::string, DeviceMetadataPtr>& devices, const std::map<Guid, MeasurementMetadataPtr>& measurements, std::map<std::string, ConfigurationFramePtr>& configurationFrames);
+        static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
+        static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata);
+        static uint16_t GetSignalKindCount(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
 
         // Internal subscription event handlers
         static void HandleResubscribe(DataSubscriber* source);
-        static void HandleStatusMessage(DataSubscriber* source, const string& message);
-        static void HandleErrorMessage(DataSubscriber* source, const string& message);
+        static void HandleStatusMessage(DataSubscriber* source, const std::string& message);
+        static void HandleErrorMessage(DataSubscriber* source, const std::string& message);
         static void HandleDataStartTime(DataSubscriber* source, int64_t startTime);
-        static void HandleMetadata(DataSubscriber* source, const vector<uint8_t>& payload);
-        static void HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
-        static void HandleProcessingComplete(DataSubscriber* source, const string& message);
+        static void HandleMetadata(DataSubscriber* source, const std::vector<uint8_t>& payload);
+        static void HandleNewMeasurements(DataSubscriber* source, const std::vector<MeasurementPtr>& measurements);
+        static void HandleProcessingComplete(DataSubscriber* source, const std::string& message);
         static void HandleConfigurationChanged(DataSubscriber* source);
         static void HandleConnectionTerminated(DataSubscriber* source);
 
     protected:
         virtual void SetupSubscriberConnector(SubscriberConnector& connector);
         virtual SubscriptionInfo CreateSubscriptionInfo();
-        virtual void StatusMessage(const string& message);	// Defaults output to cout
-        virtual void ErrorMessage(const string& message);	// Defaults output to cerr
+        virtual void StatusMessage(const std::string& message);	// Defaults output to cout
+        virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
         virtual void DataStartTime(time_t unixSOC, uint16_t milliseconds);
-        virtual void ReceivedMetadata(const vector<uint8_t>& payload);
+        virtual void ReceivedMetadata(const std::vector<uint8_t>& payload);
         virtual void ParsedMetadata();
-        virtual void ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements);
+        virtual void ReceivedNewMeasurements(const std::vector<MeasurementPtr>& measurements);
         virtual void ConfigurationChanged();
         virtual void HistoricalReadComplete();
         virtual void ConnectionEstablished();
@@ -110,7 +108,7 @@ namespace Transport
         // Initialize a connection with host name, port. To enable UDP for data channel,
         // optionally specify a UDP receive port. This function must be called before
         // calling the Connect method.
-        void Initialize(const string& hostname, uint16_t port, uint16_t udpPort = 0);
+        void Initialize(const std::string& hostname, uint16_t port, uint16_t udpPort = 0);
 
         // Gets or sets flag that determines if auto-reconnect is enabled
         bool GetAutoReconnect() const;
@@ -152,7 +150,7 @@ namespace Transport
         // defaults to all non-static points available. When specified before the Connect function,
         // this filter expression will be used for the initial connection. Updating the filter
         // expression while a subscription is active will cause a resubscribe with new expression.
-        void SetFilterExpression(const string& filterExpression);
+        void SetFilterExpression(const std::string& filterExpression);
 
         // Starts the connection cycle to a GEP publisher. Upon connection, meta-data will be requested,
         // when received, a subscription will be established
@@ -166,7 +164,7 @@ namespace Transport
 
         // Defines the desired time-range of data from the GEP publisher, if the publisher supports
         // historical queries. If specified, this function must be called before Connect.
-        void EstablishHistoricalRead(const string& startTime, const string& stopTime);
+        void EstablishHistoricalRead(const std::string& startTime, const std::string& stopTime);
 
         // Dynamically controls replay speed - can be updated while historical data is being received
         void SetHistoricalReplayInterval(int32_t replayInterval);
@@ -205,12 +203,12 @@ namespace Transport
 
         // Safely get list of device acronyms (accessed from metadata after successful auto-parse),
         // vector will be cleared then appended to, returns true if any devices were added
-        bool TryGetDeviceAcronyms(vector<string>& deviceAcronyms);
+        bool TryGetDeviceAcronyms(std::vector<std::string>& deviceAcronyms);
 
         // Metadata record lookup functions (post-parse)
-        bool TryGetDeviceMetadata(const string& deviceAcronym, DeviceMetadataPtr& deviceMetadata);
+        bool TryGetDeviceMetadata(const std::string& deviceAcronym, DeviceMetadataPtr& deviceMetadata);
         bool TryGetMeasurementMetdata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata);
-        bool TryGetConfigurationFrame(const string& deviceAcronym, ConfigurationFramePtr& configurationFrame);
+        bool TryGetConfigurationFrame(const std::string& deviceAcronym, ConfigurationFramePtr& configurationFrame);
         bool TryFindTargetConfigurationFrame(const Guid& signalID, ConfigurationFramePtr& targetFrame);
 
         // Configuration frame limits the required search range for measurement metadata,

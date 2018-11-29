@@ -79,8 +79,8 @@ namespace Transport
     class TSSCMeasurementParser
     {
     private:
-        vector<uint8_t> m_empty;
-        vector<uint8_t>& m_data;
+        std::vector<uint8_t> m_empty;
+        std::vector<uint8_t>& m_data;
         int32_t m_position;
         int32_t m_lastPosition;
 
@@ -93,7 +93,7 @@ namespace Transport
         int64_t m_prevTimeDelta4;
 
         TSSCPointMetadataPtr m_lastPoint;
-        vector<TSSCPointMetadataPtr> m_points;
+        std::vector<TSSCPointMetadataPtr> m_points;
 
         // The number of bits in m_bitStreamCache that are valid. 0 Means the bitstream is empty.
         int32_t m_bitStreamCount;
@@ -116,7 +116,7 @@ namespace Transport
         void Reset();
 
         // Sets the internal buffer to read data from.
-        void SetBuffer(const vector<uint8_t>& data, int32_t offset);
+        void SetBuffer(const std::vector<uint8_t>& data, int32_t offset);
 
         // Reads the next measurement from the stream. If the end of the stream has been encountered, return false.
         bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value);

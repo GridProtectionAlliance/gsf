@@ -30,8 +30,6 @@
 
 #include "../Common/CommonTypes.h"
 
-using namespace std;
-
 namespace GSF {
 namespace TimeSeries
 {
@@ -39,10 +37,10 @@ namespace TimeSeries
     class SubscriberException : public Exception
     {
     private:
-        string m_message;
+        std::string m_message;
 
     public:
-        SubscriberException(string message) noexcept;
+        SubscriberException(std::string message) noexcept;
         const char* what() const noexcept;
     };
     
@@ -55,7 +53,7 @@ namespace TimeSeries
 
         // Source used in human-
         // readable measurement key.
-        string Source;
+        std::string Source;
 
         // Measurement's globally
         // unique identifier.
@@ -63,7 +61,7 @@ namespace TimeSeries
 
         // Human-readable tag name to
         // help describe the measurement.
-        string Tag;
+        std::string Tag;
 
         // Instantaneous value
         // of the measurement.
@@ -117,31 +115,31 @@ namespace TimeSeries
     extern const char* SignalKindAcronym[];
 
     // Helper function to parse signal kind
-    SignalKind ParseSignalKind(const string& acronym);
+    SignalKind ParseSignalKind(const std::string& acronym);
 
     struct SignalReference
     {
-        Guid SignalID;		// Unique UUID of this individual measurement (key to MeasurementMetadata.SignalID)
-        string Acronym;		// Associated (parent) device for measurement (key to DeviceMetadata.Acronym / MeasurementMetadata.DeviceAcronym)
-        uint16_t Index;		// For phasors, digitals and analogs - this is the ordered index, uses 1-based indexing
-        SignalKind Kind;	// Signal classification (e.g., phase angle, but not specific type of voltage or current)
+        Guid SignalID;		    // Unique UUID of this individual measurement (key to MeasurementMetadata.SignalID)
+        std::string Acronym;    // Associated (parent) device for measurement (key to DeviceMetadata.Acronym / MeasurementMetadata.DeviceAcronym)
+        uint16_t Index;		    // For phasors, digitals and analogs - this is the ordered index, uses 1-based indexing
+        SignalKind Kind;	    // Signal classification (e.g., phase angle, but not specific type of voltage or current)
 
         SignalReference();
-        SignalReference(const string& signal);
+        SignalReference(const std::string& signal);
 
     };
 
-    ostream& operator << (ostream& stream, const SignalReference& reference);
+    std::ostream& operator << (std::ostream& stream, const SignalReference& reference);
 
     struct MeasurementMetadata
     {
-        string DeviceAcronym;		// Associated (parent) device for measurement (key to DeviceMetadata.Acronym)
-        string ID;					// Measurement key string, format: "source:index" (if useful)
+        std::string DeviceAcronym;	// Associated (parent) device for measurement (key to DeviceMetadata.Acronym)
+        std::string ID;				// Measurement key string, format: "source:index" (if useful)
         Guid SignalID;				// Unique UUID of this individual measurement (lookup key!)
-        string PointTag;			// Well formatted tag name for historians, e.g., OSI-PI, etc.
+        std::string PointTag;		// Well formatted tag name for historians, e.g., OSI-PI, etc.
         SignalReference Reference;	// Parsed signal reference structure
         uint16_t PhasorSourceIndex; // Measurement phasor index, if measurement represents a "Phasor"
-        string Description;			// Detailed measurement description (free-form)
+        std::string Description;    // Detailed measurement description (free-form)
         time_t UpdatedOn;			// Time of last meta-data update
     };
 
@@ -149,12 +147,12 @@ namespace TimeSeries
 
     struct PhasorMetadata
     {
-        string DeviceAcronym;	// Associated (parent) device for phasor (key to DeviceMetadata.Acronym)
-        string Label;			// Channel name for "phasor" (covers two measurements)
-        string Type;			// Phasor type, i.e., "V" for voltage or "I" for current
-        string Phase;			// Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
-        uint16_t SourceIndex;	// Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
-        time_t UpdatedOn;		// Time of last meta-data update
+        std::string DeviceAcronym;  // Associated (parent) device for phasor (key to DeviceMetadata.Acronym)
+        std::string Label;			// Channel name for "phasor" (covers two measurements)
+        std::string Type;			// Phasor type, i.e., "V" for voltage or "I" for current
+        std::string Phase;			// Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
+        uint16_t SourceIndex;	    // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
+        time_t UpdatedOn;		    // Time of last meta-data update
     };
 
     typedef SharedPtr<PhasorMetadata> PhasorMetadataPtr;
@@ -170,23 +168,23 @@ namespace TimeSeries
 
     struct DeviceMetadata
     {
-        string Acronym;				// Alpha-numeric device, e.g., pmu/station name (all-caps)
-        string Name;				// User-defined device name / description (free-form)
-        Guid UniqueID;			    // Device unique UUID (used for C37.118 v3 config frame)
-        uint16_t AccessID;			// ID code used for device connection / reference
-        string ParentAcronym;		// Original PDC name (if useful / not assigned for directly connected devices)
-        string ProtocolName;		// Original protocol name (if useful)
-        uint16_t FramesPerSecond;	// Device reporting rate, e.g., 30 fps
-        string CompanyAcronym;		// Original device company name (if useful)
-        string VendorAcronym;		// Original device vendor name (if useful / provided)
-        string VendorDeviceName;	// Original vendor device name, e.g., PMU brand (if useful / provided)
-        float64_t Longitude;	    // Device longitude (if reported)
-        float64_t Latitude;		    // Device latitude (if reported)
-        time_t UpdatedOn;			// Time of last meta-data update
+        std::string Acronym;			// Alpha-numeric device, e.g., pmu/station name (all-caps)
+        std::string Name;				// User-defined device name / description (free-form)
+        Guid UniqueID;			        // Device unique UUID (used for C37.118 v3 config frame)
+        uint16_t AccessID;			    // ID code used for device connection / reference
+        std::string ParentAcronym;		// Original PDC name (if useful / not assigned for directly connected devices)
+        std::string ProtocolName;		// Original protocol name (if useful)
+        uint16_t FramesPerSecond;	    // Device reporting rate, e.g., 30 fps
+        std::string CompanyAcronym;		// Original device company name (if useful)
+        std::string VendorAcronym;		// Original device vendor name (if useful / provided)
+        std::string VendorDeviceName;   // Original vendor device name, e.g., PMU brand (if useful / provided)
+        float64_t Longitude;	        // Device longitude (if reported)
+        float64_t Latitude;		        // Device latitude (if reported)
+        time_t UpdatedOn;			    // Time of last meta-data update
 
         // Associated measurement and phasor meta-data
-        vector<MeasurementMetadataPtr> Measurements;
-        vector<PhasorReferencePtr> Phasors;
+        std::vector<MeasurementMetadataPtr> Measurements;
+        std::vector<PhasorReferencePtr> Phasors;
     };
 
     typedef SharedPtr<DeviceMetadata> DeviceMetadataPtr;
@@ -194,16 +192,16 @@ namespace TimeSeries
     // Defines the configuration frame "structure" for a device data frame
     struct ConfigurationFrame
     {
-        string DeviceAcronym;
+        std::string DeviceAcronym;
         MeasurementMetadataPtr QualityFlags; // This measurement may be null, see below **
         MeasurementMetadataPtr StatusFlags;
         MeasurementMetadataPtr Frequency;
-        vector<PhasorReferencePtr> Phasors;
-        vector<MeasurementMetadataPtr> Analogs;
-        vector<MeasurementMetadataPtr> Digitals;
+        std::vector<PhasorReferencePtr> Phasors;
+        std::vector<MeasurementMetadataPtr> Analogs;
+        std::vector<MeasurementMetadataPtr> Digitals;
 
         // Associated measurements
-        unordered_set<Guid> Measurements;
+        std::unordered_set<Guid> Measurements;
     };
 
     typedef SharedPtr<ConfigurationFrame> ConfigurationFramePtr;

@@ -32,6 +32,10 @@
     <ClInclude Include="Common\ThreadSafeQueue.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataSet\DataColumn.h" />
+    <ClInclude Include="DataSet\DataRow.h" />
+    <ClInclude Include="DataSet\DataSet.h" />
+    <ClInclude Include="DataSet\DataTable.h" />
     <ClInclude Include="Transport\antlr4-runtime\antlr4-common.h" />
     <ClInclude Include="Transport\antlr4-runtime\antlr4-runtime.h" />
     <ClInclude Include="Transport\antlr4-runtime\ANTLRErrorListener.h" />
@@ -189,6 +193,10 @@
     <ClInclude Include="Transport\antlr4-runtime\UnbufferedTokenStream.h" />
     <ClInclude Include="Transport\antlr4-runtime\Vocabulary.h" />
     <ClInclude Include="Transport\antlr4-runtime\WritableToken.h" />
+    <ClCompile Include="DataSet\DataColumn.cpp" />
+    <ClCompile Include="DataSet\DataRow.cpp" />
+    <ClCompile Include="DataSet\DataSet.cpp" />
+    <ClCompile Include="DataSet\DataTable.cpp" />
     <ClCompile Include="Transport\antlr4-runtime\ANTLRErrorListener.cpp" />
     <ClCompile Include="Transport\antlr4-runtime\ANTLRErrorStrategy.cpp" />
     <ClCompile Include="Transport\antlr4-runtime\ANTLRFileStream.cpp" />

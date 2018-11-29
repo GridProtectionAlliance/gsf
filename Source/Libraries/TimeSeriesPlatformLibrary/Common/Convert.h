@@ -27,8 +27,6 @@
 #include <string>
 #include "CommonTypes.h"
 
-using namespace std;
-
 namespace GSF {
 namespace TimeSeries
 {
@@ -36,11 +34,11 @@ namespace TimeSeries
     void GetUnixTime(int64_t gepTime, time_t& unixSOC, uint16_t& milliseconds);
 
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
-    uint32_t TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks);
+    uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);
 
     // Converts an object to a string
     template <class T>
-    string ToString(const T& obj);
+    std::string ToString(const T& obj);
 
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ToGuid(const uint8_t* data, bool swapBytes);

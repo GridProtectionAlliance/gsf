@@ -1015,7 +1015,8 @@ namespace date
 			>::type
 			trunc(T t) NOEXCEPT
 		{
-			using namespace std;
+			
+		    using namespace std;
 			using I = typename choose_trunc_type<T>::type;
 			CONSTDATA auto digits = numeric_limits<T>::digits;
 			static_assert(digits < numeric_limits<I>::digits, "");

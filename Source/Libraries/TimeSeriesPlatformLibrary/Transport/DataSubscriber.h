@@ -35,8 +35,6 @@
 #include "../Common/EndianConverter.h"
 #include "../Common/ThreadSafeQueue.h"
 
-using namespace boost::asio;
-
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
@@ -46,7 +44,7 @@ namespace Transport
     // Info structure used to configure subscriptions.
     struct SubscriptionInfo
     {
-        string FilterExpression;
+        std::string FilterExpression;
 
         bool RemotelySynchronized;
         bool Throttled;
@@ -60,12 +58,12 @@ namespace Transport
         bool UseLocalClockAsRealTime;
         bool UseMillisecondResolution;
 
-        string StartTime;
-        string StopTime;
-        string ConstraintParameters;
+        std::string StartTime;
+        std::string StopTime;
+        std::string ConstraintParameters;
         int32_t ProcessingInterval;
 
-        string ExtraConnectionStringParameters;
+        std::string ExtraConnectionStringParameters;
 
         SubscriptionInfo();
     };
@@ -74,13 +72,13 @@ namespace Transport
     class SubscriberConnector
     {
     private:
-        typedef void(*ErrorMessageCallback)(DataSubscriber*, const string&);
+        typedef void(*ErrorMessageCallback)(DataSubscriber*, const std::string&);
         typedef void(*ReconnectCallback)(DataSubscriber*);
 
         ErrorMessageCallback m_errorMessageCallback;
         ReconnectCallback m_reconnectCallback;
 
-        string m_hostname;
+        std::string m_hostname;
         uint16_t m_port;
 
         int32_t m_maxRetries;
@@ -115,7 +113,7 @@ namespace Transport
         void Cancel();
 
         // Set the hostname of the publisher to connect to.
-        void SetHostname(const string& hostname);
+        void SetHostname(const std::string& hostname);
 
         // Set the port that the publisher is listening on.
         void SetPort(uint16_t port);
@@ -131,7 +129,7 @@ namespace Transport
         void SetAutoReconnect(bool autoReconnect);
 
         // Getters for configurable settings.
-        string GetHostname() const;
+        std::string GetHostname() const;
         uint16_t GetPort() const;
         int32_t GetMaxRetries() const;
         int32_t GetRetryInterval() const;
@@ -142,11 +140,11 @@ namespace Transport
     {
     private:
         // Function pointer types
-        typedef void(*DispatcherFunction)(DataSubscriber*, const vector<uint8_t>&);
-        typedef void(*MessageCallback)(DataSubscriber*, const string&);
+        typedef void(*DispatcherFunction)(DataSubscriber*, const std::vector<uint8_t>&);
+        typedef void(*MessageCallback)(DataSubscriber*, const std::string&);
         typedef void(*DataStartTimeCallback)(DataSubscriber*, int64_t);
-        typedef void(*MetadataCallback)(DataSubscriber*, const vector<uint8_t>&);
-        typedef void(*NewMeasurementsCallback)(DataSubscriber*, const vector<MeasurementPtr>&);
+        typedef void(*MetadataCallback)(DataSubscriber*, const std::vector<uint8_t>&);
+        typedef void(*NewMeasurementsCallback)(DataSubscriber*, const std::vector<MeasurementPtr>&);
         typedef void(*ConfigurationChangedCallback)(DataSubscriber*);
         typedef void(*ConnectionTerminatedCallback)(DataSubscriber*);
 
@@ -155,7 +153,7 @@ namespace Transport
         struct CallbackDispatcher
         {
             DataSubscriber* Source;
-            SharedPtr<vector<uint8_t>> Data;
+            SharedPtr<std::vector<uint8_t>> Data;
             DispatcherFunction Function;
 
             CallbackDispatcher();
@@ -192,14 +190,14 @@ namespace Transport
 
         // Command channel
         Thread m_commandChannelResponseThread;
-        io_context m_commandChannelService;
+        boost::asio::io_context m_commandChannelService;
         TcpSocket m_commandChannelSocket;
-        vector<uint8_t> m_readBuffer;
-        vector<uint8_t> m_writeBuffer;
+        std::vector<uint8_t> m_readBuffer;
+        std::vector<uint8_t> m_writeBuffer;
 
         // Data channel
         Thread m_dataChannelResponseThread;
-        io_context m_dataChannelService;
+        boost::asio::io_context m_dataChannelService;
         UdpSocket m_dataChannelSocket;
 
         // Callbacks
@@ -237,19 +235,19 @@ namespace Transport
         // Dispatchers
         void Dispatch(DispatcherFunction function);
         void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
-        void DispatchStatusMessage(const string& message);
-        void DispatchErrorMessage(const string& message);
+        void DispatchStatusMessage(const std::string& message);
+        void DispatchErrorMessage(const std::string& message);
 
-        static void StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
-        static void ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
-        static void DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
-        static void MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
-        static void NewMeasurementsDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
-        static void ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
-        static void ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer);
+        static void StatusMessageDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void ErrorMessageDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void DataStartTimeDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void MetadataDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void NewMeasurementsDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void ProcessingCompleteDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void ConfigurationChangedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         
-        static void ParseTSSCMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, uint32_t offset, vector<MeasurementPtr>& measurements);
-        static void ParseCompactMeasurements(DataSubscriber* source, const vector<uint8_t>& buffer, uint32_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements);
+        static void ParseTSSCMeasurements(DataSubscriber* source, const std::vector<uint8_t>& buffer, uint32_t offset, std::vector<MeasurementPtr>& measurements);
+        static void ParseCompactMeasurements(DataSubscriber* source, const std::vector<uint8_t>& buffer, uint32_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
 
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
@@ -316,7 +314,7 @@ namespace Transport
         const SubscriptionInfo& GetSubscriptionInfo() const;
 
         // Synchronously connects to publisher.
-        void Connect(string hostname, uint16_t port);
+        void Connect(std::string hostname, uint16_t port);
 
         // Disconnects from the publisher.
         //
@@ -348,7 +346,7 @@ namespace Transport
         //   ServerCommand::ConfirmBufferBlock
         //   ServerCommand::PublishCommandMeasurements
         void SendServerCommand(uint8_t commandCode);
-        void SendServerCommand(uint8_t commandCode, string message);
+        void SendServerCommand(uint8_t commandCode, std::string message);
         void SendServerCommand(uint8_t commandCode, const uint8_t* data, uint32_t offset, uint32_t length);
 
         // Convenience method to send the currently defined and/or supported

@@ -34,10 +34,6 @@
 #include "../Common/ThreadSafeQueue.h"
 #include "../Common/pugixml.hpp"
 
-using namespace boost::asio;
-using boost::asio::ip::tcp;
-using namespace pugi;
-
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
@@ -70,7 +66,7 @@ namespace Transport
         //void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
         //void ReadResponse(const ErrorCode& error, uint32_t bytesTransferred);
     public:
-        ClientConnection(DataPublisherPtr parent, io_context& commandChannelService, io_context& dataChannelService);
+        ClientConnection(DataPublisherPtr parent, boost::asio::io_context& commandChannelService, boost::asio::io_context& dataChannelService);
         ~ClientConnection();
 
         TcpSocket& CommandChannelSocket();
@@ -86,9 +82,9 @@ namespace Transport
     {
     private:
         // Function pointer types
-        typedef void(*DispatcherFunction)(DataPublisher*, const vector<uint8_t>&);
-        typedef void(*MessageCallback)(DataPublisher*, const string&);
-        typedef void(*ClientConnectedCallback)(DataPublisher*, const Guid&, const string&, const string&);
+        typedef void(*DispatcherFunction)(DataPublisher*, const std::vector<uint8_t>&);
+        typedef void(*MessageCallback)(DataPublisher*, const std::string&);
+        typedef void(*ClientConnectedCallback)(DataPublisher*, const Guid&, const std::string&, const std::string&);
         //typedef void
 
         // Structure used to dispatch
@@ -96,13 +92,13 @@ namespace Transport
         struct CallbackDispatcher
         {
             DataPublisher* Source;
-            SharedPtr<vector<uint8_t>> Data;
+            SharedPtr<std::vector<uint8_t>> Data;
             DispatcherFunction Function;
 
             CallbackDispatcher();
         };
 
-        map<Guid, ClientConnectionPtr> m_clientConnections;
+        std::map<Guid, ClientConnectionPtr> m_clientConnections;
         uint32_t m_securityMode;
         bool m_encryptPayload;
         bool m_allowMetadataRefresh;
@@ -123,11 +119,11 @@ namespace Transport
 
         // Command channel
         Thread m_commandChannelAcceptThread;
-        io_context m_commandChannelService;
-        tcp::acceptor m_clientAcceptor;
+        boost::asio::io_context m_commandChannelService;
+        boost::asio::ip::tcp::acceptor m_clientAcceptor;
 
         // Data channel
-        io_context m_dataChannelService;
+        boost::asio::io_context m_dataChannelService;
 
         // Threads
         void RunCallbackThread();
@@ -156,21 +152,21 @@ namespace Transport
         // Dispatchers
         void Dispatch(DispatcherFunction function);
         void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
-        void DispatchStatusMessage(const string& message);
-        void DispatchErrorMessage(const string& message);
-        void DispatchClientConnected(const Guid& clientID, const string& connectionInfo, const string& subscriberInfo);
+        void DispatchStatusMessage(const std::string& message);
+        void DispatchErrorMessage(const std::string& message);
+        void DispatchClientConnected(const Guid& clientID, const std::string& connectionInfo, const std::string& subscriberInfo);
 
-        static void StatusMessageDispatcher(DataPublisher* source, const vector<uint8_t>& buffer);
-        static void ErrorMessageDispatcher(DataPublisher* source, const vector<uint8_t>& buffer);
-        static void ClientConnectedDispatcher(DataPublisher* source, const vector<uint8_t>& buffer);
+        static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         
-        static void SerializeSignalIndexCache(const Guid& clientID, const SignalIndexCache& signalIndexCache, vector<uint8_t>& buffer);
+        static void SerializeSignalIndexCache(const Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
         //static void SerializeMetadata(const Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer);
         //static void SerializeMetadata(const Guid& clientID, const xml_document& metadata, vector<uint8_t>& buffer);
 
     public:
         // Creates a new instance of the data publisher.
-        DataPublisher(const tcp::endpoint& endpoint);
+        DataPublisher(const boost::asio::ip::tcp::endpoint& endpoint);
         DataPublisher(uint16_t port, bool ipV6 = false);
 
         // Releases all threads and sockets
@@ -178,12 +174,12 @@ namespace Transport
         ~DataPublisher();
 
         // Define metadata from existing configuration frames
-        void DefineMetadata(const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
+        void DefineMetadata(const std::vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
         
         // Define metadata from existing XML document
-        void DefineMetadata(const xml_document& metadata);
+        void DefineMetadata(const pugi::xml_document& metadata);
 
-        void PublishMeasurements(const vector<MeasurementPtr>& measurements);
+        void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
 
         // Callback registration
         //

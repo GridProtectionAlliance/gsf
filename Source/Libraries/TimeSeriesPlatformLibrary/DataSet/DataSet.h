@@ -1,12 +1,12 @@
 //******************************************************************************************************
-//  CommonTypes.cpp - Gbtc
+//  DataSet.h - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,21 +16,40 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/23/2018 - J. Ritchie Carroll
+//  11/03/2018 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-#include "CommonTypes.h"
-#include "Convert.h"
+#ifndef __DATA_SET_H
+#define __DATA_SET_H
 
-using namespace std;
-using namespace GSF::TimeSeries;
+#include <map>
+#include "../Common/CommonTypes.h"
+#include "DataTable.h"
 
-const string Empty::String;
+namespace GSF {
+namespace DataSet
+{
 
-const Guid Empty::Guid = ToGuid("00000000-0000-0000-0000-000000000000");
+class DataSet : public boost::enable_shared_from_this<DataSet> // NOLINT
+{
+private:
+    std::map<std::string, DataTablePtr> m_tables;
 
-const IPAddress Empty::IPAddress;
+public:
+     DataSet();
+    ~DataSet();
 
-const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
+    typedef void(*TableIteratorHandlerFunction)(const DataTablePtr&, void* userData);
+
+    DataTablePtr Table(std::string& tableName);
+
+    void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
+};
+
+typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+
+}}
+
+#endif

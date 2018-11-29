@@ -1,14 +1,14 @@
 //******************************************************************************************************
-//  Version.h - Gbtc
+//  DataSet.cpp - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/eclipse-1.0.php
+//      http://opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -16,15 +16,36 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/12/2012 - Stephen C. Wills
+//  11/03/2018 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#include "DataSet.h"
 
-#define GSFTS_VERSION "0.9.6"
-#define GSFTS_BUILD_DATE "November 2018"
+using namespace std;
+using namespace GSF::DataSet;
 
-#endif
+DataSet::DataSet()
+{
+}
+
+DataSet::~DataSet()
+{
+}
+
+DataTablePtr DataSet::Table(string& tableName)
+{
+    const auto iterator = m_tables.find(tableName);
+
+    if (iterator != m_tables.end())
+        return iterator->second;
+
+    return nullptr;
+}
+
+void DataSet::IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData)
+{
+    for (auto const& item : m_tables)
+        iteratorHandler(item.second, userData);
+}

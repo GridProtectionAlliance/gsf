@@ -40,18 +40,18 @@ namespace Transport
     class SignalIndexCache
     {
     private:
-        map<uint16_t, uint32_t> m_reference;
-        vector<Guid> m_signalIDList;
-        vector<string> m_sourceList;
-        vector<uint32_t> m_idList;
-        map<Guid, uint16_t> m_signalIDCache;
+        std::map<uint16_t, uint32_t> m_reference;
+        std::vector<Guid> m_signalIDList;
+        std::vector<std::string> m_sourceList;
+        std::vector<uint32_t> m_idList;
+        std::map<Guid, uint16_t> m_signalIDCache;
 
     public:
         // Adds a measurement key to the cache.
         void AddMeasurementKey(
             uint16_t signalIndex,
             Guid signalID,
-            string source,
+            std::string source,
             uint32_t id);
 
         // Empties the cache.
@@ -65,7 +65,7 @@ namespace Transport
 
         // Gets the first half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
-        const string& GetSource(uint16_t signalIndex) const;
+        const std::string& GetSource(uint16_t signalIndex) const;
 
         // Gets the second half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
@@ -76,7 +76,7 @@ namespace Transport
         bool GetMeasurementKey(
             uint16_t signalIndex,
             Guid& signalID,
-            string& source,
+            std::string& source,
             uint32_t& id) const;
 
         // Gets the 16-bit runtime ID associated with the given globally unique signal ID.

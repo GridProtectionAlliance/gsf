@@ -28,6 +28,8 @@
 #include "Constants.h"
 #include "../Common/Convert.h"
 
+using namespace std;
+using namespace pugi;
 using namespace boost;
 using namespace boost::asio;
 using namespace boost::asio::ip;

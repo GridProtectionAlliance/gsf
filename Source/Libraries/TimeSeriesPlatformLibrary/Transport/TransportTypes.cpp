@@ -29,6 +29,7 @@
 #include "TransportTypes.h"
 #include "../Common/Convert.h"
 
+using namespace std;
 using namespace GSF::TimeSeries;
 using namespace boost::algorithm;
 
