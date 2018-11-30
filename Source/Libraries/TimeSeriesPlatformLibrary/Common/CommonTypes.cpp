@@ -27,6 +27,14 @@
 using namespace std;
 using namespace GSF::TimeSeries;
 
+const decimal_t Decimal::MaxValue = numeric_limits<decimal_t>::max();
+
+const decimal_t Decimal::MinValue = numeric_limits<decimal_t>::min();
+
+const decimal_t Decimal::DotNetMaxValue = decimal_t("79228162514264337593543950335");
+
+const decimal_t Decimal::DotNetMinValue = decimal_t("-79228162514264337593543950335");
+
 const string Empty::String;
 
 const Guid Empty::Guid = ToGuid("00000000-0000-0000-0000-000000000000");

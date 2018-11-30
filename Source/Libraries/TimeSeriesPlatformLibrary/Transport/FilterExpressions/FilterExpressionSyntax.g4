@@ -88,9 +88,12 @@ expression
  ;
 
 literalValue
- : NUMERIC_LITERAL
+ : INTEGER_LITERAL
+ | NUMERIC_LITERAL
  | STRING_LITERAL
  | DATETIME_LITERAL
+ | GUID_LITERAL
+ | BOOLEAN_LITERAL
  | K_NULL
  ;
 
@@ -105,13 +108,15 @@ keyword
  : K_AND        // Boolean operator
  | K_ASC        // FILTER expression keyword (part of optional ORDER BY expression)
  | K_BY         // FILTER expression keyword (part of optional ORDER BY expression)
+ | K_COALESCE   // Function (synonym to ISNULL function)
  | K_CONVERT    // Function
  | K_DESC       // FILTER expression keyword (part of optional ORDER BY expression)
+ | K_FALSE      // Boolean literal
  | K_FILTER     // FILTER expression keyword
  | K_IIF        // Function
  | K_IN         // IN expression keyword
  | K_IS         // IS expression keyword
- | K_ISNULL     // Function
+ | K_ISNULL     // Function (synonym to COALESCE function)
  | K_LEN        // Function
  | K_LIKE       // LIKE expression keyword
  | K_NOT        // Boolean operator
@@ -119,24 +124,24 @@ keyword
  | K_OR         // Boolean operator
  | K_ORDER      // FILTER expression keyword (part of optional ORDER BY expression)
  | K_REGEXP     // Function
- | K_SUBSTRING  // Function
+ | K_SUBSTR     // Function (synonym to SUBSTRING function)
+ | K_SUBSTRING  // Function (synonym to SUBSTR function)
  | K_TOP        // FILTER expression keyword
  | K_TRIM       // Function
+ | K_TRUE       // Boolean literal
  | K_WHERE      // FILTER expression keyword
  ;
 
 functionName
- : K_CONVERT
+ : K_COALESCE
+ | K_CONVERT
  | K_IIF
  | K_LEN
  | K_ISNULL
  | K_REGEXP
+ | K_SUBSTR
  | K_SUBSTRING
  | K_TRIM
- ;
-
-databaseName
- : IDENTIFIER
  ;
 
 tableName 
@@ -152,7 +157,9 @@ K_AND : A N D;
 K_ASC : A S C;
 K_BY : B Y;
 K_CONVERT : C O N V E R T;
+K_COALESCE : C O A L E S C E;
 K_DESC : D E S C;
+K_FALSE: F A L S E;
 K_FILTER : F I L T E R;
 K_IIF : I I F;
 K_IN : I N;
@@ -165,14 +172,17 @@ K_NULL : N U L L;
 K_OR : O R;
 K_ORDER : O R D E R;
 K_REGEXP : R E G E X P;
+K_SUBSTR: S U B S T R;
 K_SUBSTRING: S U B S T R I N G;
 K_TOP : T O P;
 K_TRIM: T R I M;
+K_TRUE: T R U E;
 K_WHERE : W H E R E;
 
 IDENTIFIER
- : '"' (  ~'"' | '""' )* '"'
- | '[' ~']'* ']'
+ : '"' ( ~'"' | '""' )+ '"'
+ | '`' ( ~'`' )+ '`'
+ | '[' ( ~']' )+ ']'
  | [a-zA-Z_] [a-zA-Z_0-9]* // TODO check: needs more chars in set
  ;
 
@@ -198,9 +208,15 @@ GUID_VALUE
  ;
 
 GUID_LITERAL
- : '{' GUID_VALUE '}'
+ : GUID_VALUE
+ | '{' GUID_VALUE '}'
  | '\'' GUID_VALUE '\''
  ;
+
+BOOLEAN_LITERAL
+  : K_TRUE
+  | K_FALSE
+  ;
 
 MEASUREMENT_KEY_LITERAL
  : ACRONYM_DIGIT+ ':' DIGIT+

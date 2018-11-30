@@ -52,9 +52,6 @@ public:
   virtual void enterFunctionName(FilterExpressionSyntaxParser::FunctionNameContext * /*ctx*/) override { }
   virtual void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext * /*ctx*/) override { }
 
-  virtual void enterDatabaseName(FilterExpressionSyntaxParser::DatabaseNameContext * /*ctx*/) override { }
-  virtual void exitDatabaseName(FilterExpressionSyntaxParser::DatabaseNameContext * /*ctx*/) override { }
-
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext * /*ctx*/) override { }
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext * /*ctx*/) override { }
 

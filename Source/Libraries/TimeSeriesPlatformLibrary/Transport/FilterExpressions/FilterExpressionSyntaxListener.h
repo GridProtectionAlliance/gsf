@@ -50,9 +50,6 @@ public:
   virtual void enterFunctionName(FilterExpressionSyntaxParser::FunctionNameContext *ctx) = 0;
   virtual void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext *ctx) = 0;
 
-  virtual void enterDatabaseName(FilterExpressionSyntaxParser::DatabaseNameContext *ctx) = 0;
-  virtual void exitDatabaseName(FilterExpressionSyntaxParser::DatabaseNameContext *ctx) = 0;
-
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
 

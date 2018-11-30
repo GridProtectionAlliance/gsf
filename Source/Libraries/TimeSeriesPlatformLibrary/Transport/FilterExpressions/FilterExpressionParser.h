@@ -39,20 +39,24 @@ namespace TimeSeries {
 namespace Transport
 {
 
-enum class ExpressionType
+enum class DataType
 {
-    Boolean,
-    Numeric,
-    String,
-    DateTime,
-    Null
+    Boolean,    // bool
+    Int32,      // int32_t
+    Int64,      // int64_t
+    Decimal,    // decimal_t
+    Double,     // double_t
+    String,     // string
+    Guid,       // Guid
+    DateTime,   // time_t
+    Null        // nullptr
 };
 
 struct Expression
 {
-    ExpressionType Type = ExpressionType::Null;
     antlr4::ParserRuleContext* Context = nullptr;
     antlrcpp::Any Value = nullptr;
+    DataType Type = DataType::Null;
 };
 
 typedef SharedPtr<Expression> ExpressionPtr;
@@ -76,7 +80,7 @@ private:
 
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
-    void MapMeasurement(const GSF::DataSet::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& columnValue);
+    void MapMeasurement(const GSF::DataSet::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
 public:
     FilterExpressionParser(const std::string& filterExpression);
     ~FilterExpressionParser();

@@ -534,7 +534,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
         // Perform zlib decompression on buffer
         Decompressor decompressor;
 
-        decompressor.push(GZipStream());
+        decompressor.push(GZipDecompressor());
         decompressor.push(payloadStream);
 
         CopyStream(decompressor, uncompressed);

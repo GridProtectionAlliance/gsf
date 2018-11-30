@@ -27,6 +27,8 @@
 #include <cstddef>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
+#include <boost/locale/collator.hpp>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
@@ -88,25 +90,38 @@ namespace TimeSeries
         static const uint64_t MinValue = static_cast<uint64_t>(0UL);
     };
 
+    struct Decimal
+    {
+        static const boost::multiprecision::cpp_dec_float_100 MaxValue;
+        static const boost::multiprecision::cpp_dec_float_100 MinValue;
+
+        static const boost::multiprecision::cpp_dec_float_100 DotNetMaxValue;
+        static const boost::multiprecision::cpp_dec_float_100 DotNetMinValue;
+    };
+
     template<class T>
     using SharedPtr = boost::shared_ptr<T>;
 
-    template<class T> SharedPtr<T> NewSharedPtr()
+    template<class T>
+    SharedPtr<T> NewSharedPtr()
     {
         return boost::make_shared<T>();
     }
 
-    template<class T, typename P1> SharedPtr<T> NewSharedPtr(P1 p1)
+    template<class T, typename P1>
+    SharedPtr<T> NewSharedPtr(P1 p1)
     {
         return boost::make_shared<T>(p1);
     }
 
-    template<class T, typename P1, typename P2> SharedPtr<T> NewSharedPtr(P1 p1, P2 p2)
+    template<class T, typename P1, typename P2>
+    SharedPtr<T> NewSharedPtr(P1 p1, P2 p2)
     {
         return boost::make_shared<T>(p1, p2);
     }
 
-    template<class T, typename P1, typename P2, typename P3> SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3)
+    template<class T, typename P1, typename P2, typename P3>
+    SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3)
     {
         return boost::make_shared<T>(p1, p2, p3);
     }
@@ -132,6 +147,10 @@ namespace TimeSeries
         return false;
     }
 
+    // std::map string comparer options
+    static boost::locale::comparator<char, boost::locale::collator_base::primary> StringComparerIgnoreCaseAndAccents;
+    static boost::locale::comparator<char, boost::locale::collator_base::secondary> StringComparerIgnoreCase;
+
     typedef boost::uuids::uuid Guid;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;
@@ -146,7 +165,12 @@ namespace TimeSeries
     typedef boost::asio::ip::udp::socket UdpSocket;
     typedef boost::asio::ip::tcp::resolver DnsResolver;
     typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> Decompressor;
-    typedef boost::iostreams::gzip_decompressor GZipStream;
+    typedef boost::iostreams::gzip_decompressor GZipDecompressor;
+
+    // Floating-point types
+    typedef float float32_t;
+    typedef double float64_t;
+    typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
 
     struct MemoryStream : boost::iostreams::array_source
     {
@@ -163,10 +187,6 @@ namespace TimeSeries
     {
         sink.assign(std::istreambuf_iterator<char>{ &source }, {});
     }
-
-    // Floating-point types
-    typedef float float32_t;
-    typedef double float64_t;
 
     // Empty types
     struct Empty

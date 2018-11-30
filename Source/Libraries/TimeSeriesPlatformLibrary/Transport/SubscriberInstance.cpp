@@ -531,7 +531,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         const MemoryStream payloadStream(payload);
         Decompressor decompressor;
 
-        decompressor.push(GZipStream());
+        decompressor.push(GZipDecompressor());
         decompressor.push(payloadStream);
 
         uncompressed = new vector<uint8_t>();
