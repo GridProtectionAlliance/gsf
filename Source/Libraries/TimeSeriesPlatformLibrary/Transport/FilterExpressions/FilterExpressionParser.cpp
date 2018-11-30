@@ -25,12 +25,15 @@
 #include "tree/ParseTreeWalker.h"
 #include "../../Common/Convert.h"
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace GSF::DataSet;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 using namespace antlr4;
 using namespace antlr4::tree;
+using namespace boost;
 
 // Mapped type for boost UUID (ANTLR4 also defines a Guid type)
 typedef GSF::TimeSeries::Guid guid;
@@ -66,6 +69,30 @@ bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, Expres
 void FilterExpressionParser::AddExpr(const ParserRuleContext* context, const ExpressionPtr& expression)
 {
     m_expressions.insert(pair<const ParserRuleContext*, ExpressionPtr>(context, expression));
+}
+
+void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, const int32_t signalIDColumnIndex, const string& columnName, const string& columnValue)
+{
+    const auto column = measurements->Column(columnName);
+
+    if (column == nullptr)
+        return;
+
+    const int32_t columnIndex = column->Index();
+
+    for (int32_t i = 0; i < measurements->RowCount(); i++)
+    {
+        const auto row = measurements->Row(i);
+
+        if (row != nullptr)
+        {
+            if (iequals(columnValue, row->ValueAsString(columnIndex)))
+            {
+                m_signalIDs.push_back(row->ValueAsGuid(signalIDColumnIndex));
+                return;
+            }
+        }
+    }
 }
 
 const DataSetPtr& FilterExpressionParser::CurrentDataSet() const
@@ -161,12 +188,30 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
         return;
     }
 
+    const auto measurements = m_dataset->Table(m_primaryMeasurementTableName);
+
+    if (measurements == nullptr)
+        return;
+
+    const auto signalIDColumn = measurements->Column(m_signalIDColumnName);
+
+    if (signalIDColumn == nullptr)
+        return;
+
+    const int32_t signalIDColumnIndex = signalIDColumn->Index();
+
     const auto measurementKeyLiteral = context->MEASUREMENT_KEY_LITERAL();
 
     if (measurementKeyLiteral)
     {
-        
+        MapMeasurement(measurements, signalIDColumnIndex, m_measurementKeyColumnName, measurementKeyLiteral->getText());
+        return;
     }
+
+    const auto pointTagLiteral = context->POINT_TAG_LITERAL();
+    
+    if (pointTagLiteral)
+        MapMeasurement(measurements, signalIDColumnIndex, m_pointTagColumnName, pointTagLiteral->getText());
 }
 
 /*

@@ -77,7 +77,7 @@ DataType DataColumn::Type() const
     return m_type;
 }
 
-uint32_t DataColumn::Index() const
+int32_t DataColumn::Index() const
 {
     return m_index;
 }

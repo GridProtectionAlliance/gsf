@@ -76,6 +76,7 @@ private:
 
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
+    void MapMeasurement(const GSF::DataSet::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& columnValue);
 public:
     FilterExpressionParser(const std::string& filterExpression);
     ~FilterExpressionParser();
@@ -107,6 +108,8 @@ public:
     void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext*) override;
     void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext*) override;
 };
+
+typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
 }}}
 

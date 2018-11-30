@@ -63,7 +63,7 @@ private:
     DataTablePtr m_parent;
     std::string m_name;
     DataType m_type;
-    uint32_t m_index;
+    int32_t m_index;
 
 public:
     DataColumn(const DataTablePtr& parent, std::string name, DataType type);
@@ -75,7 +75,7 @@ public:
 
     DataType Type() const;
 
-    uint32_t Index() const;
+    int32_t Index() const;
 
     static const DataColumnPtr NullPtr;
 
