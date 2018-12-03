@@ -66,6 +66,9 @@ const DataColumnPtr& DataTable::Column(const string& columnName) const
 
 const DataColumnPtr& DataTable::Column(int32_t index) const
 {
+    if (index < 0 || index >= static_cast<int32_t>(m_columns.size()))
+        return DataColumn::NullPtr;
+
     return m_columns[index];
 }
 
@@ -91,6 +94,9 @@ int32_t DataTable::ColumnCount() const
 
 const DataRowPtr& DataTable::Row(int32_t index)
 {
+    if (index < 0 || index >= static_cast<int32_t>(m_rows.size()))
+        return DataRow::NullPtr;
+    
     return m_rows[index];
 }
 

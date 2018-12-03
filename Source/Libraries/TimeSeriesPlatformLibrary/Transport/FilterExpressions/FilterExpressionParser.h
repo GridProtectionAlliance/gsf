@@ -31,37 +31,32 @@
 #define EOF (-1)
 #endif
 
-#include "../../Common/CommonTypes.h"
-#include "../../DataSet/DataSet.h"
+#include "ExpressionTree.h"
 
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
 
-enum class DataType
+//struct Expression
+//{
+//    antlr4::ParserRuleContext* Context = nullptr;
+//    GSF::TimeSeries::Object Value = nullptr;
+//    ExpressionDataType Type = ExpressionDataType::Null;
+//};
+//
+//typedef SharedPtr<Expression> ExpressionPtr;
+
+struct MeasurementTableIDFields
 {
-    Boolean,    // bool
-    Int32,      // int32_t
-    Int64,      // int64_t
-    Decimal,    // decimal_t
-    Double,     // double_t
-    String,     // string
-    Guid,       // Guid
-    DateTime,   // time_t
-    Null        // nullptr
+    std::string SignalIDFieldName;
+    std::string MeasurementKeyFieldName;
+    std::string PointTagFieldName;
 };
 
-struct Expression
-{
-    antlr4::ParserRuleContext* Context = nullptr;
-    antlrcpp::Any Value = nullptr;
-    DataType Type = DataType::Null;
-};
+typedef SharedPtr<MeasurementTableIDFields> MeasurementTableIDFieldsPtr;
 
-typedef SharedPtr<Expression> ExpressionPtr;
-
-class FilterExpressionParser : public FilterExpressionSyntaxBaseListener
+class FilterExpressionParser : public FilterExpressionSyntaxBaseListener // NOLINT
 {
 private:
     antlr4::ANTLRInputStream m_inputStream;
@@ -71,12 +66,9 @@ private:
     GSF::DataSet::DataSetPtr m_dataset;
 
     std::string m_primaryMeasurementTableName;
-    std::string m_signalIDColumnName;
-    std::string m_measurementKeyColumnName;
-    std::string m_pointTagColumnName;
-
     std::vector<GSF::TimeSeries::Guid> m_signalIDs;
     std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
+    std::map<const std::string, MeasurementTableIDFieldsPtr> m_measurementTableIDFields;
 
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
@@ -88,17 +80,11 @@ public:
     const GSF::DataSet::DataSetPtr& CurrentDataSet() const;
     void AssignDataSet(const GSF::DataSet::DataSetPtr& dataset);
 
+    MeasurementTableIDFieldsPtr GetMeasurementTableIDFields(const std::string& measurementTableName) const;
+    void SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields);
+
     const std::string& GetPrimaryMeasurementTableName() const;
     void SetPrimaryMeasurementTableName(const std::string& tableName);
-
-    const std::string& GetSignalIDColumnName() const;
-    void SetSignalIDColumnName(const std::string& columnName);
-
-    const std::string& GetMeasurementKeyColumnName() const;
-    void SetMeasurementKeyColumnName(const std::string& columnName);
-
-    const std::string& GetPointTagColumnName() const;
-    void SetPointTagColumnName(const std::string& columnName);
 
     void Evaluate();
 

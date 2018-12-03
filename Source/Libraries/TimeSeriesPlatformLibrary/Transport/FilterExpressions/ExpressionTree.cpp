@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  DataColumn.h - Gbtc
+//  ExpressionTree.cpp - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,73 +16,18 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/03/2018 - J. Ritchie Carroll
+//  12/02/2018 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-#ifndef __DATA_COLUMN_H
-#define __DATA_COLUMN_H
+#include "ExpressionTree.h"
 
-#include <string>
-#include "../Common/CommonTypes.h"
+using namespace GSF::DataSet;
+using namespace GSF::TimeSeries;
+using namespace Transport;
 
-namespace GSF {
-namespace DataSet
+Guid ExpressionTree::Evaluate(const DataRowPtr& row, const int32_t signalIDColumnIndex)
 {
-
-enum class DataType
-{
-    String,
-    Boolean,
-    DateTime,
-    Single,
-    Double,
-    Decimal,
-    Guid,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64
-};
-
-const char* EnumName(DataType type);
-
-class DataTable;
-typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
-
-class DataColumn;
-typedef TimeSeries::SharedPtr<DataColumn> DataColumnPtr;
-
-class DataColumn // NOLINT
-{
-private:
-    DataTablePtr m_parent;
-    std::string m_name;
-    DataType m_type;
-    int32_t m_index;
-
-public:
-    DataColumn(const DataTablePtr& parent, std::string name, DataType type);
-    ~DataColumn();
-
-    const DataTablePtr& Parent() const;
-
-    const std::string& Name() const;
-
-    DataType Type() const;
-
-    int32_t Index() const;
-
-    static const DataColumnPtr NullPtr;
-
-    friend class DataTable;
-};
-
-}}
-
-#endif
+    return Empty::Guid;
+}

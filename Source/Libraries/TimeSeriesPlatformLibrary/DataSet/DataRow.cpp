@@ -38,6 +38,8 @@ const char* DataRowException::what() const noexcept
     return m_message.c_str();
 }
 
+const DataRowPtr DataRow::NullPtr = nullptr;
+
 DataRow::DataRow(const DataTablePtr& parent) :
     m_parent(parent),
     m_values(parent->ColumnCount())
@@ -132,24 +134,34 @@ void DataRow::SetDateTimeValue(int32_t index, time_t value)
     SetValue<time_t>(index, value, DataType::DateTime);
 }
 
-float DataRow::ValueAsSingle(int32_t index) const
+float32_t DataRow::ValueAsSingle(int32_t index) const
 {
-    return GetValue<float>(index);
+    return GetValue<float32_t>(index);
 }
 
-void DataRow::SetSingleValue(int32_t index, float value)
+void DataRow::SetSingleValue(int32_t index, float32_t value)
 {
-    SetValue<float>(index, value, DataType::Single);
+    SetValue<float32_t>(index, value, DataType::Single);
 }
 
-double DataRow::ValueAsDouble(int32_t index) const
+float64_t DataRow::ValueAsDouble(int32_t index) const
 {
-    return GetValue<double>(index);
+    return GetValue<float64_t>(index);
 }
 
-void DataRow::SetDoubleValue(int32_t index, double value)
+void DataRow::SetDoubleValue(int32_t index, float64_t value)
 {
-    SetValue<double>(index, value, DataType::Double);
+    SetValue<float64_t>(index, value, DataType::Double);
+}
+
+decimal_t DataRow::ValueAsDecimal(int32_t index) const
+{
+    return GetValue<decimal_t>(index);
+}
+
+void DataRow::SetDecimalValue(int32_t index, decimal_t value)
+{
+    SetValue<decimal_t>(index, value, DataType::Decimal);
 }
 
 Guid DataRow::ValueAsGuid(int32_t index) const

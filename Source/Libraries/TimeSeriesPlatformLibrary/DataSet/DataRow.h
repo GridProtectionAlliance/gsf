@@ -79,11 +79,14 @@ public:
     time_t ValueAsDateTime(int32_t index) const;
     void SetDateTimeValue(int32_t index, time_t value);
 
-    float ValueAsSingle(int32_t index) const;
-    void SetSingleValue(int32_t index, float value);
+    TimeSeries::float32_t ValueAsSingle(int32_t index) const;
+    void SetSingleValue(int32_t index, TimeSeries::float32_t value);
 
-    double ValueAsDouble(int32_t index) const;
-    void SetDoubleValue(int32_t index, double value);
+    TimeSeries::float64_t ValueAsDouble(int32_t index) const;
+    void SetDoubleValue(int32_t index, TimeSeries::float64_t value);
+
+    TimeSeries::decimal_t ValueAsDecimal(int32_t index) const;
+    void SetDecimalValue(int32_t index, TimeSeries::decimal_t value);
 
     TimeSeries::Guid ValueAsGuid(int32_t index) const;
     void SetGuidValue(int32_t index, TimeSeries::Guid value);
@@ -111,6 +114,8 @@ public:
 
     uint64_t ValueAsUInt64(int32_t index) const;
     void SetUInt64Value(int32_t index, uint64_t value);
+
+    static const DataRowPtr NullPtr;
 
     friend class DataTable;
 };

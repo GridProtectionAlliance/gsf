@@ -631,6 +631,9 @@
     <ClCompile Include="DataSet\DataRow.cpp">
       <Filter>DataSet</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\FilterExpressions\ExpressionTree.cpp">
+      <Filter>Transport\FilterExpressions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">
@@ -1111,6 +1114,9 @@
     </ClInclude>
     <ClInclude Include="DataSet\DataRow.h">
       <Filter>DataSet</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\FilterExpressions\ExpressionTree.h">
+      <Filter>Transport\FilterExpressions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

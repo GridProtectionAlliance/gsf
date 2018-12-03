@@ -45,6 +45,8 @@ const char* DataTypeAcronym[] =
     "UInt64"
 };
 
+const DataColumnPtr DataColumn::NullPtr = nullptr;
+
 const char* GSF::DataSet::EnumName(DataType type)
 {
     return DataTypeAcronym[static_cast<int32_t>(type)];

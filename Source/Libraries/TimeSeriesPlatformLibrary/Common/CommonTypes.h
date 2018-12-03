@@ -25,6 +25,7 @@
 #define __COMMON_TYPES_H
 
 #include <cstddef>
+#include <boost/any.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/locale/collator.hpp>
@@ -151,6 +152,7 @@ namespace TimeSeries
     static boost::locale::comparator<char, boost::locale::collator_base::primary> StringComparerIgnoreCaseAndAccents;
     static boost::locale::comparator<char, boost::locale::collator_base::secondary> StringComparerIgnoreCase;
 
+    typedef boost::any Object;
     typedef boost::uuids::uuid Guid;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;

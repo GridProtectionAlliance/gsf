@@ -35,7 +35,7 @@ using namespace antlr4;
 using namespace antlr4::tree;
 using namespace boost;
 
-// Mapped type for boost UUID (ANTLR4 also defines a Guid type)
+// Mapped type for TimeSeries Guid (ANTLR4 also defines a Guid type)
 typedef GSF::TimeSeries::Guid guid;
 
 static guid ParseGuidLiteral(string guidLiteral)
@@ -109,14 +109,19 @@ FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_tokens(nullptr),
     m_parser(nullptr),
     m_dataset(nullptr),
-    m_primaryMeasurementTableName("ActiveMeasurements"),
-    m_signalIDColumnName("SignalID"),
-    m_measurementKeyColumnName("ID"),
-    m_pointTagColumnName("PointTag")
+    m_primaryMeasurementTableName("ActiveMeasurements")
 {
     m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
     m_tokens = new CommonTokenStream(m_lexer);
     m_parser = new FilterExpressionSyntaxParser(m_tokens);
+
+    MeasurementTableIDFieldsPtr measurementTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
+
+    measurementTableIDFields->SignalIDFieldName = "SignalID";
+    measurementTableIDFields->MeasurementKeyFieldName = "ID";
+    measurementTableIDFields->PointTagFieldName = "PointTag";
+
+    SetMeasurementTableIDFields(m_primaryMeasurementTableName, measurementTableIDFields);
 }
 
 FilterExpressionParser::~FilterExpressionParser()
@@ -149,7 +154,7 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
     {
         const auto row = measurements->Row(i);
 
-        if (row != nullptr)
+        if (row)
         {
             if (iequals(mappingValue, row->ValueAsString(columnIndex)))
             {
@@ -170,6 +175,20 @@ void FilterExpressionParser::AssignDataSet(const DataSetPtr& dataset)
     m_dataset = dataset;
 }
 
+MeasurementTableIDFieldsPtr FilterExpressionParser::GetMeasurementTableIDFields(const std::string& measurementTableName) const
+{
+    MeasurementTableIDFieldsPtr measurementTableFields;
+    
+    TryGetValue<const std::string, MeasurementTableIDFieldsPtr>(m_measurementTableIDFields, measurementTableName, measurementTableFields, nullptr);
+
+    return measurementTableFields;
+}
+
+void FilterExpressionParser::SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields)
+{
+    m_measurementTableIDFields.insert_or_assign(measurementTableName, measurementTableIDFields);
+}
+
 const string& FilterExpressionParser::GetPrimaryMeasurementTableName() const
 {
     return m_primaryMeasurementTableName;
@@ -178,36 +197,6 @@ const string& FilterExpressionParser::GetPrimaryMeasurementTableName() const
 void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableName)
 {
     m_primaryMeasurementTableName = tableName;
-}
-
-const string& FilterExpressionParser::GetSignalIDColumnName() const
-{
-    return m_signalIDColumnName;
-}
-
-void FilterExpressionParser::SetSignalIDColumnName(const string& columnName)
-{
-    m_signalIDColumnName = columnName;
-}
-
-const string& FilterExpressionParser::GetMeasurementKeyColumnName() const
-{
-    return m_measurementKeyColumnName;
-}
-
-void FilterExpressionParser::SetMeasurementKeyColumnName(const string& columnName)
-{
-    m_measurementKeyColumnName = columnName;
-}
-
-const string& FilterExpressionParser::GetPointTagColumnName() const
-{
-    return m_pointTagColumnName;
-}
-
-void FilterExpressionParser::SetPointTagColumnName(const string& columnName)
-{
-    m_pointTagColumnName = columnName;
 }
 
 void FilterExpressionParser::Evaluate()
@@ -256,7 +245,12 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
     if (measurements == nullptr)
         return;
 
-    const auto signalIDColumn = measurements->Column(m_signalIDColumnName);
+    const auto measurementTableIDFields = GetMeasurementTableIDFields(m_primaryMeasurementTableName);
+
+    if (measurementTableIDFields == nullptr)
+        return;
+
+    const auto signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
 
     if (signalIDColumn == nullptr)
         return;
@@ -265,12 +259,12 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
     if (context->MEASUREMENT_KEY_LITERAL())
     {
-        MapMeasurement(measurements, signalIDColumnIndex, m_measurementKeyColumnName, context->MEASUREMENT_KEY_LITERAL()->getText());
+        MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->MeasurementKeyFieldName, context->MEASUREMENT_KEY_LITERAL()->getText());
         return;
     }
 
     if (context->POINT_TAG_LITERAL())
-        MapMeasurement(measurements, signalIDColumnIndex, m_pointTagColumnName, context->POINT_TAG_LITERAL()->getText());
+        MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->PointTagFieldName, context->POINT_TAG_LITERAL()->getText());
 }
 
 /*
@@ -294,26 +288,26 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
  */
 void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::ExpressionContext* context)
 {
-    const ExpressionPtr result = NewSharedPtr<Expression>();
+    //const ExpressionPtr result = NewSharedPtr<Expression>();
     ExpressionPtr value;
 
-    result->Context = context;
+    //result->Context = context;
 
-    if (TryGetExpr(context->literalValue(), value))
-    {
-        result->Value = value->Value;
-        result->Type = value->Type;
-        AddExpr(context, result);
-        return;
-    }
+    //if (TryGetExpr(context->literalValue(), value))
+    //{
+    //    result->Value = value->Value;
+    //    result->DataType = value->DataType;
+    //    AddExpr(context, result);
+    //    return;
+    //}
 
-    if (TryGetExpr(context->columnName(), value))
-    {
-        result->Value = value->Value;
-        result->Type = value->Type;
-        AddExpr(context, result);
-        return;
-    }
+    //if (TryGetExpr(context->columnName(), value))
+    //{
+    //    result->Value = value->Value;
+    //    result->DataType = value->DataType;
+    //    AddExpr(context, result);
+    //    return;
+    //}
 
     const auto unaryOperator = context->unaryOperator();
 
@@ -347,9 +341,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
  */
 void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext* context)
 {
-    const ExpressionPtr result = NewSharedPtr<Expression>();
-
-    result->Context = context;
+    const LiteralExpressionPtr result = NewSharedPtr<LiteralExpression>();
 
     if (context->INTEGER_LITERAL())
     {
@@ -358,17 +350,17 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
         if (value > Int64::MaxValue)
         {
             result->Value = value;
-            result->Type = DataType::Double;
+            result->DataType = ExpressionDataType::Double;
         }
         else if (value > Int32::MaxValue)
         {
             result->Value = static_cast<int64_t>(value);
-            result->Type = DataType::Int64;
+            result->DataType = ExpressionDataType::Int64;
         }
         else
         {
             result->Value = static_cast<int32_t>(value);
-            result->Type = DataType::Int32;
+            result->DataType = ExpressionDataType::Int32;
         }
         
         AddExpr(context, result);
@@ -383,7 +375,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
         {
             // Real literals using scientific notation are parsed as double
             result->Value = stod(literal);
-            result->Type = DataType::Double;
+            result->DataType = ExpressionDataType::Double;
         }
         else
         {
@@ -392,12 +384,12 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
             try
             {
                 result->Value = decimal_t(literal);
-                result->Type = DataType::Decimal;
+                result->DataType = ExpressionDataType::Decimal;
             }
             catch (const std::runtime_error&)
             {
                 result->Value = stod(literal);
-                result->Type = DataType::Double;
+                result->DataType = ExpressionDataType::Double;
             }
         }
 
@@ -408,7 +400,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     if (context->STRING_LITERAL())
     {
         result->Value = context->STRING_LITERAL()->getText();
-        result->Type = DataType::String;
+        result->DataType = ExpressionDataType::String;
         AddExpr(context, result);
         return;
     }
@@ -416,7 +408,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     if (context->DATETIME_LITERAL())
     {
         result->Value = ParseDateTimeLiteral(context->DATETIME_LITERAL()->getText());
-        result->Type = DataType::DateTime;
+        result->DataType = ExpressionDataType::DateTime;
         AddExpr(context, result);
         return;
     }
@@ -424,7 +416,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     if (context->GUID_LITERAL())
     {
         result->Value = ParseGuidLiteral(context->GUID_LITERAL()->getText());
-        result->Type = DataType::Guid;
+        result->DataType = ExpressionDataType::Guid;
         AddExpr(context, result);
         return;
     }
@@ -432,7 +424,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     if (context->BOOLEAN_LITERAL())
     {        
         result->Value = iequals(context->BOOLEAN_LITERAL()->getText(), "true");
-        result->Type = DataType::Boolean;
+        result->DataType = ExpressionDataType::Boolean;
         AddExpr(context, result);
         return;
     }
@@ -440,7 +432,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     if (context->K_NULL())
     {
         result->Value = nullptr;
-        result->Type = DataType::Null;
+        result->DataType = ExpressionDataType::Null;
         AddExpr(context, result);
     }
 }
