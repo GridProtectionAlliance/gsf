@@ -25,6 +25,7 @@
 #define __DATA_COLUMN_H
 
 #include <string>
+
 #include "../Common/CommonTypes.h"
 
 namespace GSF {

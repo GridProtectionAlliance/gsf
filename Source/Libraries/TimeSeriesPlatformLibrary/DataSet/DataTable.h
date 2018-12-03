@@ -26,6 +26,7 @@
 
 #include <unordered_map>
 #include <vector>
+
 #include "../Common/CommonTypes.h"
 #include "DataColumn.h"
 #include "DataRow.h"
@@ -36,6 +37,9 @@ namespace DataSet
 
 class DataSet;
 typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+
+class DataTable;
+typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
 
 enum class DataType;
 
@@ -77,6 +81,8 @@ public:
     DataRowPtr CreateRow();
 
     int32_t RowCount() const;
+
+    static const DataTablePtr NullPtr;
 };
 
 typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;

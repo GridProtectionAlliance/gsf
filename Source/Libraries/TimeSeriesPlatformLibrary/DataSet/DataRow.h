@@ -25,6 +25,7 @@
 #define __DATA_ROW_H
 
 #include <vector>
+
 #include "../Common/CommonTypes.h"
 
 namespace GSF {
@@ -34,10 +35,10 @@ namespace DataSet
 enum class DataType;
 
 class DataTable;
-typedef GSF::TimeSeries::SharedPtr<DataTable> DataTablePtr;
+typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
 
 class DataRow;
-typedef GSF::TimeSeries::SharedPtr<DataRow> DataRowPtr;
+typedef TimeSeries::SharedPtr<DataRow> DataRowPtr;
 
 // Simple exception type thrown by DataRow
 class DataRowException : public TimeSeries::Exception

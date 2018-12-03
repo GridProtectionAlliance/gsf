@@ -43,6 +43,16 @@ const char* SubscriberException::what() const noexcept
     return &m_message[0];
 }
 
+PublisherException::PublisherException(string message) noexcept :
+    m_message(move(message))
+{
+}
+
+const char* PublisherException::what() const noexcept
+{
+    return &m_message[0];
+}
+
 Measurement::Measurement() :
     ID(0),
     SignalID(Empty::Guid),

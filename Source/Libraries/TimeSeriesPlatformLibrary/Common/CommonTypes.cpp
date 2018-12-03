@@ -39,6 +39,8 @@ const string Empty::String;
 
 const Guid Empty::Guid = ToGuid("00000000-0000-0000-0000-000000000000");
 
+const Object Empty::Object(nullptr);
+
 const IPAddress Empty::IPAddress;
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };

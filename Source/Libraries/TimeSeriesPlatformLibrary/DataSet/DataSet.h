@@ -25,6 +25,7 @@
 #define __DATA_SET_H
 
 #include <map>
+
 #include "../Common/CommonTypes.h"
 #include "DataTable.h"
 
@@ -43,7 +44,7 @@ public:
 
     typedef void(*TableIteratorHandlerFunction)(const DataTablePtr&, void* userData);
 
-    DataTablePtr Table(std::string& tableName);
+    const DataTablePtr& Table(const std::string& tableName);
 
     void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
 };

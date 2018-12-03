@@ -103,6 +103,16 @@ time_t ParseDateTimeLiteral(string time)
     return ParseXMLTimestamp(time.c_str());
 }
 
+FilterExpressionException::FilterExpressionException(string message) noexcept :
+    m_message(std::move(message))
+{
+}
+
+const char* FilterExpressionException::what() const noexcept
+{
+    return &m_message[0];
+}
+
 FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_inputStream(filterExpression),
     m_lexer(nullptr),
@@ -158,7 +168,7 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
         {
             if (iequals(mappingValue, row->ValueAsString(columnIndex)))
             {
-                m_signalIDs.push_back(row->ValueAsGuid(signalIDColumnIndex));
+                m_signalIDs.insert(row->ValueAsGuid(signalIDColumnIndex));
                 return;
             }
         }
@@ -199,19 +209,68 @@ void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableN
     m_primaryMeasurementTableName = tableName;
 }
 
-void FilterExpressionParser::Evaluate()
+void HandleEvaluateError(vector<string>* warnings, const string& warning)
 {
-    if (m_dataset == nullptr)
-        throw RuntimeException("Dataset is undefined");
+    if (warnings)
+    {
+        warnings->push_back(warning);
+        return;
+    }
 
-    m_signalIDs.clear();
-    m_expressions.clear();
-
-    ParseTreeWalker walker;
-    walker.walk(this, m_parser->parse());
+    throw FilterExpressionException(warning);
 }
 
-const vector<guid>& FilterExpressionParser::FilteredSignalIDs() const
+void FilterExpressionParser::Evaluate(vector<string>* warnings)
+{
+    m_signalIDs.clear();
+    m_expressionTrees.clear();
+    m_expressions.clear();
+
+    if (m_dataset == nullptr)
+    {
+        HandleEvaluateError(warnings, "Cannot evaluate filter expression, no dataset has been defined");
+        return;
+    }
+
+    // Create parse tree and visit listener methods
+    ParseTreeWalker walker;
+    const auto parseTree = m_parser->parse();
+    walker.walk(this, parseTree);
+
+    // Each filter expression statement will have its own expression tree, evaluate each
+    for (size_t x = 0; x < m_expressionTrees.size(); x++)
+    {
+        const ExpressionTreePtr& expressionTree = m_expressionTrees[x];
+        const DataTablePtr& measurements = expressionTree->Measurements;
+        const auto measurementTableIDFields = GetMeasurementTableIDFields(expressionTree->MeasurementTableName);
+
+        if (measurementTableIDFields == nullptr)
+        {
+            HandleEvaluateError(warnings, "Failed to find ID fields record for measurement table \"" + expressionTree->MeasurementTableName + "\"");
+            continue;
+        }
+
+        const auto signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
+
+        if (signalIDColumn == nullptr)
+        {
+            HandleEvaluateError(warnings, "Failed to find signal ID field for measurement table \"" + expressionTree->MeasurementTableName + "\"");
+            continue;
+        }
+
+        const int32_t signalIDColumnIndex = signalIDColumn->Index();
+
+        for (int32_t y = 0; y < measurements->RowCount(); y++)
+        {
+            const auto row = measurements->Row(y);
+
+            if (row && expressionTree->Evaluate(row))
+                m_signalIDs.insert(row->ValueAsGuid(signalIDColumnIndex));
+        }
+    }
+}
+
+const unordered_set<guid>& FilterExpressionParser::FilteredSignalIDs() const
 {
     return m_signalIDs;
 }
@@ -226,6 +285,28 @@ void FilterExpressionParser::exitParse(FilterExpressionSyntaxParser::ParseContex
 }
 
 /*
+    filterExpressionStatement
+     : filterStatement
+     | identifierStatement
+     ;
+ */
+void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext* context)
+{
+    // One filter expression can contain multiple filter statements separated by semi-colon,
+    // so we track each as an independent expression tree
+    m_expressions.clear();
+
+    const string& measurementTableName = context->tableName()->getText();
+    const auto measurements = m_dataset->Table(measurementTableName);
+
+    if (measurements == nullptr)
+        throw FilterExpressionException("Failed to find measurement table \"" + measurementTableName + "\"");
+
+    m_activeExpressionTree = NewSharedPtr<ExpressionTree>(measurementTableName, measurements);
+    m_expressionTrees.push_back(m_activeExpressionTree);
+}
+
+/*
     identifierStatement
      : GUID_LITERAL
      | MEASUREMENT_KEY_LITERAL
@@ -236,7 +317,7 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 {
     if (context->GUID_LITERAL())
     {
-        m_signalIDs.push_back(ParseGuidLiteral(context->GUID_LITERAL()->getText()));
+        m_signalIDs.insert(ParseGuidLiteral(context->GUID_LITERAL()->getText()));
         return;
     }
 
@@ -341,41 +422,27 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
  */
 void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext* context)
 {
-    const LiteralExpressionPtr result = NewSharedPtr<LiteralExpression>();
+    LiteralExpressionPtr result = nullptr;
 
     if (context->INTEGER_LITERAL())
     {
         const double_t value = stod(context->INTEGER_LITERAL()->getText());
 
         if (value > Int64::MaxValue)
-        {
-            result->Value = value;
-            result->DataType = ExpressionDataType::Double;
-        }
+            result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Double, value);
         else if (value > Int32::MaxValue)
-        {
-            result->Value = static_cast<int64_t>(value);
-            result->DataType = ExpressionDataType::Int64;
-        }
+            result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Int64, static_cast<int64_t>(value));
         else
-        {
-            result->Value = static_cast<int32_t>(value);
-            result->DataType = ExpressionDataType::Int32;
-        }
-        
-        AddExpr(context, result);
-        return;
+            result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Int32, static_cast<int32_t>(value));
     }
-
-    if (context->NUMERIC_LITERAL())
+    else if (context->NUMERIC_LITERAL())
     {
         const string literal = context->NUMERIC_LITERAL()->getText();
         
         if (literal.find('e') || literal.find('E'))
         {
             // Real literals using scientific notation are parsed as double
-            result->Value = stod(literal);
-            result->DataType = ExpressionDataType::Double;
+            result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Double, stod(literal));
         }
         else
         {
@@ -383,58 +450,37 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
             // the number fails to parse as decimal, then it is parsed as a double
             try
             {
-                result->Value = decimal_t(literal);
-                result->DataType = ExpressionDataType::Decimal;
+                result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Decimal, decimal_t(literal));
             }
             catch (const std::runtime_error&)
             {
-                result->Value = stod(literal);
-                result->DataType = ExpressionDataType::Double;
+                result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Double, stod(literal));
             }
         }
-
-        AddExpr(context, result);
-        return;
     }
-
-    if (context->STRING_LITERAL())
+    else if (context->STRING_LITERAL())
     {
-        result->Value = context->STRING_LITERAL()->getText();
-        result->DataType = ExpressionDataType::String;
-        AddExpr(context, result);
-        return;
+        result = NewSharedPtr<LiteralExpression>(ExpressionDataType::String, context->STRING_LITERAL()->getText());
     }
-
-    if (context->DATETIME_LITERAL())
+    else if (context->DATETIME_LITERAL())
     {
-        result->Value = ParseDateTimeLiteral(context->DATETIME_LITERAL()->getText());
-        result->DataType = ExpressionDataType::DateTime;
-        AddExpr(context, result);
-        return;
+        result = NewSharedPtr<LiteralExpression>(ExpressionDataType::DateTime, ParseDateTimeLiteral(context->DATETIME_LITERAL()->getText()));
     }
-
-    if (context->GUID_LITERAL())
+    else if (context->GUID_LITERAL())
     {
-        result->Value = ParseGuidLiteral(context->GUID_LITERAL()->getText());
-        result->DataType = ExpressionDataType::Guid;
-        AddExpr(context, result);
-        return;
+        result = NewSharedPtr<LiteralExpression>(ExpressionDataType::Guid, ParseGuidLiteral(context->GUID_LITERAL()->getText()));
     }
-
-    if (context->BOOLEAN_LITERAL())
+    else if (context->BOOLEAN_LITERAL())
     {        
-        result->Value = iequals(context->BOOLEAN_LITERAL()->getText(), "true");
-        result->DataType = ExpressionDataType::Boolean;
-        AddExpr(context, result);
-        return;
+        result = iequals(context->BOOLEAN_LITERAL()->getText(), "true") ? ExpressionTree::True : ExpressionTree::False;
+    }
+    else if (context->K_NULL())
+    {
+        result = ExpressionTree::Null;
     }
 
-    if (context->K_NULL())
-    {
-        result->Value = nullptr;
-        result->DataType = ExpressionDataType::Null;
-        AddExpr(context, result);
-    }
+    if (result)
+        AddExpr(context, CastSharedPtr<Expression>(result));
 }
 
 /*
@@ -444,6 +490,15 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
  */
 void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext* context)
 {
+    //const ColumnExpressionPtr result = NewSharedPtr<ColumnExpression>();
+
+    //result->ColumnName = context->IDENTIFIER()->getText();
+    //const auto column = measurements->Column(columnName);
+
+    //if (column == nullptr)
+    //    return;
+
+    //const int32_t columnIndex = column->Index();
 }
 
 /*

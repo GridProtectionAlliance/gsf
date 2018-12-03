@@ -127,6 +127,12 @@ namespace TimeSeries
         return boost::make_shared<T>(p1, p2, p3);
     }
 
+    template<class T, class S>
+    SharedPtr<T> CastSharedPtr(SharedPtr<S> const& source)
+    {
+        return boost::static_pointer_cast<T>(source);
+    }
+
     template<typename T>
     using Action = std::function<void(T)>;
 
@@ -174,6 +180,12 @@ namespace TimeSeries
     typedef double float64_t;
     typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
 
+    template<class T>
+    T Cast(const Object& source)
+    {
+        return boost::any_cast<T>(source);
+    }
+
     struct MemoryStream : boost::iostreams::array_source
     {
         MemoryStream(const std::vector<uint8_t>& buffer) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer.data()), buffer.size())
@@ -195,6 +207,7 @@ namespace TimeSeries
     {
         static const std::string String;
         static const GSF::TimeSeries::Guid Guid;
+        static const GSF::TimeSeries::Object Object;
         static const GSF::TimeSeries::IPAddress IPAddress;
         static const uint8_t* ZeroLengthBytes;
     };

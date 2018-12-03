@@ -34,14 +34,14 @@ DataSet::~DataSet()
 {
 }
 
-DataTablePtr DataSet::Table(string& tableName)
+const DataTablePtr& DataSet::Table(const string& tableName)
 {
     const auto iterator = m_tables.find(tableName);
 
     if (iterator != m_tables.end())
         return iterator->second;
 
-    return nullptr;
+    return DataTable::NullPtr;
 }
 
 void DataSet::IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData)

@@ -43,7 +43,18 @@ namespace TimeSeries
         SubscriberException(std::string message) noexcept;
         const char* what() const noexcept;
     };
-    
+
+    // Simple exception type thrown by the data publisher
+    class PublisherException : public Exception
+    {
+    private:
+        std::string m_message;
+
+    public:
+        PublisherException(std::string message) noexcept;
+        const char* what() const noexcept;
+    };
+
     // Fundamental data type used by the Time Series Framework
     struct Measurement
     {

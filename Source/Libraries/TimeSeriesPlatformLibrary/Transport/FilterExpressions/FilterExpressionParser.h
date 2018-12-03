@@ -38,14 +38,16 @@ namespace TimeSeries {
 namespace Transport
 {
 
-//struct Expression
-//{
-//    antlr4::ParserRuleContext* Context = nullptr;
-//    GSF::TimeSeries::Object Value = nullptr;
-//    ExpressionDataType Type = ExpressionDataType::Null;
-//};
-//
-//typedef SharedPtr<Expression> ExpressionPtr;
+// Simple exception type thrown by the filter expression parser
+class FilterExpressionException : public Exception
+{
+private:
+    std::string m_message;
+
+public:
+    FilterExpressionException(std::string message) noexcept;
+    const char* what() const noexcept;
+};
 
 struct MeasurementTableIDFields
 {
@@ -64,9 +66,11 @@ private:
     antlr4::CommonTokenStream* m_tokens;
     FilterExpressionSyntaxParser* m_parser;
     GSF::DataSet::DataSetPtr m_dataset;
+    ExpressionTreePtr m_activeExpressionTree;
 
     std::string m_primaryMeasurementTableName;
-    std::vector<GSF::TimeSeries::Guid> m_signalIDs;
+    std::unordered_set<GSF::TimeSeries::Guid> m_signalIDs;
+    std::vector<ExpressionTreePtr> m_expressionTrees;
     std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
     std::map<const std::string, MeasurementTableIDFieldsPtr> m_measurementTableIDFields;
 
@@ -86,11 +90,12 @@ public:
     const std::string& GetPrimaryMeasurementTableName() const;
     void SetPrimaryMeasurementTableName(const std::string& tableName);
 
-    void Evaluate();
+    void Evaluate(std::vector<std::string>* warnings = nullptr);
 
-    const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
+    const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
 
     void exitParse(FilterExpressionSyntaxParser::ParseContext*) override;
+    void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
     void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
     void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;

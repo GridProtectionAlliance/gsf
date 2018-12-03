@@ -32,6 +32,17 @@ namespace TimeSeries {
 namespace Transport
 {
 
+// Simple exception type thrown by the expression tree
+class ExpressionTreeException : public Exception
+{
+private:
+    std::string m_message;
+
+public:
+    ExpressionTreeException(std::string message) noexcept;
+    const char* what() const noexcept;
+};
+
 enum class ExpressionType
 {
     Literal,
@@ -54,29 +65,26 @@ enum class ExpressionDataType
     Null        // nullptr
 };
 
+class Expression;
+typedef SharedPtr<Expression> ExpressionPtr;
+
 class Expression
 {
 public:
-    Expression(ExpressionType type) :
-        Type(type)
-    {
-    }
-    
-    ExpressionType Type;
-    ExpressionDataType DataType = ExpressionDataType::Null;
-};
+    Expression(ExpressionType type, ExpressionDataType dataType);
 
-typedef SharedPtr<Expression> ExpressionPtr;
+    const ExpressionType Type;
+    const ExpressionDataType DataType;
+    ExpressionPtr Left = nullptr;
+    ExpressionPtr Right = nullptr;
+};
 
 class LiteralExpression : public Expression
 {
 public:
-    LiteralExpression() :
-        Expression(ExpressionType::Literal)
-    {
-    }
+    LiteralExpression(ExpressionDataType dataType, const GSF::TimeSeries::Object& value);
 
-    GSF::TimeSeries::Object Value = nullptr;
+    const GSF::TimeSeries::Object& Value;
 };
 
 typedef SharedPtr<LiteralExpression> LiteralExpressionPtr;
@@ -91,14 +99,10 @@ enum class ExpressionUnaryType
 class UnaryExpression : public Expression
 {
 public:
-    UnaryExpression(ExpressionUnaryType unaryType) :
-        Expression(ExpressionType::Unary),
-        UnaryType(unaryType)
-    {
-    }
+    UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value);
 
-    ExpressionUnaryType UnaryType;
-    ExpressionPtr Value = nullptr;
+    const ExpressionUnaryType UnaryType;
+    const ExpressionPtr& Value;
 };
 
 typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
@@ -106,16 +110,12 @@ typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
 class ColumnExpression : public Expression
 {
 public:
-    ColumnExpression() :
-        Expression(ExpressionType::Column)
-    {
-    }
+    ColumnExpression(ExpressionDataType dataType, int32_t columnIndex);
 
-    std::string ColumnName = nullptr;
-    int32_t ColumnIndex = -1;
+    const int32_t ColumnIndex;
 };
 
-typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
+typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
 
 enum class ExpressionOperatorType
 {
@@ -143,16 +143,12 @@ enum class ExpressionOperatorType
 class OperatorExpression : public Expression
 {
 public:
-    OperatorExpression(ExpressionOperatorType operatorType) :
-        Expression(ExpressionType::Operator),
-        OperatorType(operatorType)
-    {
-    }
+    OperatorExpression(ExpressionDataType dataType, ExpressionOperatorType operatorType);
 
-    ExpressionOperatorType OperatorType;
-    ExpressionPtr Left = nullptr;
-    ExpressionPtr Right = nullptr;
+    const ExpressionOperatorType OperatorType;
 };
+
+typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;
 
 enum class ExpressionFunctionType
 {
@@ -168,22 +164,32 @@ enum class ExpressionFunctionType
 class FunctionExpression : public Expression
 {
 public:
-    FunctionExpression(ExpressionFunctionType functionType) :
-        Expression(ExpressionType::Function),
-        FunctionType(functionType)
-    {
-    }
+    FunctionExpression(ExpressionDataType dataType, ExpressionFunctionType functionType, const std::vector<ExpressionPtr>& arguments);
 
-    ExpressionFunctionType FunctionType;
-    std::vector<ExpressionPtr> Arguments;
+    const ExpressionFunctionType FunctionType;
+    const std::vector<ExpressionPtr>& Arguments;
 };
+
+typedef SharedPtr<FunctionExpression> FunctionExpressionPtr;
 
 class ExpressionTree
 {
+private:
+    DataSet::DataRowPtr m_currentRow;
+
+    ExpressionPtr Evaluate(ExpressionPtr node);
 public:
+    ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
+
+    const std::string MeasurementTableName;
+    const DataSet::DataTablePtr& Measurements;
     ExpressionPtr Root = nullptr;
 
-    GSF::TimeSeries::Guid Evaluate(const DataSet::DataRowPtr& row, const int32_t signalIDColumnIndex);
+    bool Evaluate(const DataSet::DataRowPtr& row);
+
+    static const LiteralExpressionPtr True;
+    static const LiteralExpressionPtr False;
+    static const LiteralExpressionPtr Null;
 };
 
 typedef SharedPtr<ExpressionTree> ExpressionTreePtr;

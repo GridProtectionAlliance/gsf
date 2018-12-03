@@ -27,6 +27,8 @@ using namespace std;
 using namespace GSF::TimeSeries;
 using namespace GSF::DataSet;
 
+const DataTablePtr DataTable::NullPtr = nullptr;
+
 DataTable::DataTable(const DataSetPtr& parent, string name) :
     m_parent(parent),
     m_name(std::move(name))
