@@ -472,7 +472,7 @@ namespace DynamicCalculator
             else
                 m_timestampSource = TimestampSource.Frame;
 
-            if (settings.TryGetValue("publicationInterval", out setting))
+            if (settings.TryGetValue("calculationInterval", out setting))
                 CalculationInterval = double.Parse(setting);
             else
                 CalculationInterval = 0;
