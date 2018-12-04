@@ -1118,5 +1118,8 @@
     <ClInclude Include="Transport\FilterExpressions\ExpressionTree.h">
       <Filter>Transport\FilterExpressions</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Nullable.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -45,47 +45,58 @@ DataRow::DataRow(const DataTablePtr& parent) :
     m_values(parent->ColumnCount())
 {
     for (uint32_t i = 0; i < m_values.size(); i++)
-    {
         m_values[i] = nullptr;
-    }
 }
 
 DataRow::~DataRow()
 {
     for (uint32_t i = 0; i < m_values.size(); i++)
     {
-        if (m_values[i] != nullptr)
+        if (m_values[i])
             free(m_values[i]);
     }
 }
 
-void DataRow::ValidateColumnType(int32_t index, DataType targetType) const
+void DataRow::ValidateColumnType(int32_t index, DataType targetType, bool read) const
 {
     const DataType columnType = m_parent->Column(index)->Type();
 
     if (columnType != targetType)
     {
         stringstream errorMessageStream;
-        errorMessageStream << "Cannot assign " << EnumName(targetType)  << " value to DataColumn " << index << ", data type is " << EnumName(columnType);
+        errorMessageStream << "Cannot" << (read ? " read " : " assign ") << EnumName(targetType)  << " value" << (read ? " from " : " to ") << "DataColumn " << index << ", column data type is " << EnumName(columnType);
         throw DataRowException(errorMessageStream.str());
     }
 }
 
 template<typename T>
-T DataRow::GetValue(int32_t index) const
+Nullable<T> DataRow::GetValue(int32_t index, DataType targetType) const
 {
-    return *static_cast<T*>(m_values[index]);
+    ValidateColumnType(index, targetType, true);
+
+    T* value = static_cast<T*>(m_values[index]);
+
+    if (value)
+        return *value;
+
+    return nullptr;
 }
 
 template<typename T>
-void DataRow::SetValue(int32_t index, T value, DataType targetType)
+void DataRow::SetValue(int32_t index, const Nullable<T>& value, DataType targetType)
 {
     ValidateColumnType(index, targetType);
 
-    uint8_t* copy = static_cast<uint8_t*>(malloc(sizeof(T)));
-    memcpy(copy, &value, sizeof(T));
-
-    m_values[index] = copy;
+    if (value.HasValue())
+    {
+        uint8_t* copy = static_cast<uint8_t*>(malloc(sizeof(T)));
+        memcpy(copy, &value.Value, sizeof(T));
+        m_values[index] = copy;
+    }
+    else
+    {
+        m_values[index] = nullptr;
+    }
 }
 
 const DataTablePtr& DataRow::Parent() const
@@ -95,6 +106,8 @@ const DataTablePtr& DataRow::Parent() const
 
 const char* DataRow::ValueAsString(int32_t index) const
 {
+    ValidateColumnType(index, DataType::String, true);
+
     return static_cast<const char*>(m_values[index]);
 }
 
@@ -102,154 +115,215 @@ void DataRow::SetStringValue(int32_t index, const char* value)
 {
     ValidateColumnType(index, DataType::String);
 
-    const int32_t length = strlen(value);
-    char* copy = static_cast<char*>(malloc(length + 1));
-    strcpy_s(copy, length, value);
-
-    m_values[index] = copy;
+    if (value)
+    {
+        const int32_t length = strlen(value);
+        char* copy = static_cast<char*>(malloc(length + 1));
+        strcpy_s(copy, length, value);
+        m_values[index] = copy;
+    }
+    else
+    {
+        m_values[index] = nullptr;
+    }
 }
 
-bool DataRow::ValueAsBoolean(int32_t index) const
+Nullable<bool> DataRow::ValueAsBoolean(int32_t index) const
 {
-    return *static_cast<uint8_t*>(m_values[index]) != 0;
+    ValidateColumnType(index, DataType::Boolean, true);
+
+    uint8_t* value = static_cast<uint8_t*>(m_values[index]);
+    
+    if (value)
+        return *value != 0;
+    
+    return nullptr;
 }
 
-void DataRow::SetBooleanValue(int32_t index, bool value)
+void DataRow::SetBooleanValue(int32_t index, const Nullable<bool>& value)
 {
     ValidateColumnType(index, DataType::Boolean);
 
-    uint8_t* copy = static_cast<uint8_t*>(malloc(1));
-    *copy = value ? 1 : 0;
-
-    m_values[index] = copy;
+    if (value.HasValue())
+    {
+        uint8_t* copy = static_cast<uint8_t*>(malloc(1));
+        *copy = static_cast<bool>(value.Value) ? 1 : 0;
+        m_values[index] = copy;
+    }
+    else
+    {
+        m_values[index] = nullptr;
+    }
 }
 
-time_t DataRow::ValueAsDateTime(int32_t index) const
+Nullable<time_t> DataRow::ValueAsDateTime(int32_t index) const
 {
-    return GetValue<time_t>(index);
+    return GetValue<time_t>(index, DataType::DateTime);
 }
 
-void DataRow::SetDateTimeValue(int32_t index, time_t value)
+void DataRow::SetDateTimeValue(int32_t index, const Nullable<time_t>& value)
 {
     SetValue<time_t>(index, value, DataType::DateTime);
 }
 
-float32_t DataRow::ValueAsSingle(int32_t index) const
+Nullable<float32_t> DataRow::ValueAsSingle(int32_t index) const
 {
-    return GetValue<float32_t>(index);
+    return GetValue<float32_t>(index, DataType::Single);
 }
 
-void DataRow::SetSingleValue(int32_t index, float32_t value)
+void DataRow::SetSingleValue(int32_t index, const Nullable<float32_t>& value)
 {
     SetValue<float32_t>(index, value, DataType::Single);
 }
 
-float64_t DataRow::ValueAsDouble(int32_t index) const
+Nullable<float64_t> DataRow::ValueAsDouble(int32_t index) const
 {
-    return GetValue<float64_t>(index);
+    return GetValue<float64_t>(index, DataType::Double);
 }
 
-void DataRow::SetDoubleValue(int32_t index, float64_t value)
+void DataRow::SetDoubleValue(int32_t index, const Nullable<float64_t>& value)
 {
     SetValue<float64_t>(index, value, DataType::Double);
 }
 
-decimal_t DataRow::ValueAsDecimal(int32_t index) const
+Nullable<decimal_t> DataRow::ValueAsDecimal(int32_t index) const
 {
-    return GetValue<decimal_t>(index);
+    ValidateColumnType(index, DataType::Decimal, true);
+ 
+    const char* value = static_cast<const char*>(m_values[index]);
+
+    if (value)
+        return decimal_t(value);
+
+    return nullptr;
 }
 
-void DataRow::SetDecimalValue(int32_t index, decimal_t value)
+void DataRow::SetDecimalValue(int32_t index, const Nullable<decimal_t>& value)
 {
-    SetValue<decimal_t>(index, value, DataType::Decimal);
+    ValidateColumnType(index, DataType::Decimal);
+
+    if (value.HasValue())
+    {
+        const string& strval = static_cast<decimal_t>(value.Value).str();
+        const int32_t length = strval.size();
+        char* copy = static_cast<char*>(malloc(length + 1));
+        strcpy_s(copy, length, strval.c_str());
+        m_values[index] = copy;
+    }
+    else
+    {
+        m_values[index] = nullptr;
+    }
 }
 
-Guid DataRow::ValueAsGuid(int32_t index) const
+Nullable<Guid> DataRow::ValueAsGuid(int32_t index) const
 {
-    return GetValue<Guid>(index);
+    ValidateColumnType(index, DataType::Guid, true);
+
+    int8_t* data = static_cast<int8_t*>(m_values[index]);
+
+    if (data)
+    {
+        Guid value;
+        memcpy(value.data, data, 16);
+        return value;
+    }
+
+    return nullptr;
 }
 
-void DataRow::SetGuidValue(int32_t index, Guid value)
+void DataRow::SetGuidValue(int32_t index, const Nullable<Guid>& value)
 {
-    SetValue<Guid>(index, value, DataType::Guid);
+    ValidateColumnType(index, DataType::Guid);
+
+    if (value.HasValue())
+    {
+        int8_t* copy = static_cast<int8_t*>(malloc(16));
+        memcpy(copy, static_cast<Guid>(value.Value).data, 16);
+        m_values[index] = copy;
+    }
+    else
+    {
+        m_values[index] = nullptr;
+    }
 }
 
-int8_t DataRow::ValueAsInt8(int32_t index) const
+Nullable<int8_t> DataRow::ValueAsInt8(int32_t index) const
 {
-    return GetValue<int8_t>(index);
+    return GetValue<int8_t>(index, DataType::Int8);
 }
 
-void DataRow::SetInt8Value(int32_t index, int8_t value)
+void DataRow::SetInt8Value(int32_t index, const Nullable<int8_t>& value)
 {
     SetValue<int8_t>(index, value, DataType::Int8);
 }
 
-int16_t DataRow::ValueAsInt16(int32_t index) const
+Nullable<int16_t> DataRow::ValueAsInt16(int32_t index) const
 {
-    return GetValue<int16_t>(index);
+    return GetValue<int16_t>(index, DataType::Int16);
 }
 
-void DataRow::SetInt16Value(int32_t index, int16_t value)
+void DataRow::SetInt16Value(int32_t index, const Nullable<int16_t>& value)
 {
     SetValue<int16_t>(index, value, DataType::Int16);
 }
 
-int32_t DataRow::ValueAsInt32(int32_t index) const
+Nullable<int32_t> DataRow::ValueAsInt32(int32_t index) const
 {
-    return GetValue<int32_t>(index);
+    return GetValue<int32_t>(index, DataType::Int32);
 }
 
-void DataRow::SetInt32Value(int32_t index, int32_t value)
+void DataRow::SetInt32Value(int32_t index, const Nullable<int32_t>& value)
 {
     SetValue<int32_t>(index, value, DataType::Int32);
 }
 
-int64_t DataRow::ValueAsInt64(int32_t index) const
+Nullable<int64_t> DataRow::ValueAsInt64(int32_t index) const
 {
-    return GetValue<int64_t>(index);
+    return GetValue<int64_t>(index, DataType::Int64);
 }
 
-void DataRow::SetInt64Value(int32_t index, int64_t value)
+void DataRow::SetInt64Value(int32_t index, const Nullable<int64_t>& value)
 {
     SetValue<int64_t>(index, value, DataType::Int64);
 }
 
-uint8_t DataRow::ValueAsUInt8(int32_t index) const
+Nullable<uint8_t> DataRow::ValueAsUInt8(int32_t index) const
 {
-    return GetValue<uint8_t>(index);
+    return GetValue<uint8_t>(index, DataType::UInt8);
 }
 
-void DataRow::SetUInt8Value(int32_t index, uint8_t value)
+void DataRow::SetUInt8Value(int32_t index, const Nullable<uint8_t>& value)
 {
     SetValue<uint8_t>(index, value, DataType::UInt8);
 }
 
-uint16_t DataRow::ValueAsUInt16(int32_t index) const
+Nullable<uint16_t> DataRow::ValueAsUInt16(int32_t index) const
 {
-    return GetValue<uint16_t>(index);
+    return GetValue<uint16_t>(index, DataType::UInt16);
 }
 
-void DataRow::SetUInt16Value(int32_t index, uint16_t value)
+void DataRow::SetUInt16Value(int32_t index, const Nullable<uint16_t>& value)
 {
     SetValue<uint16_t>(index, value, DataType::UInt16);
 }
 
-uint32_t DataRow::ValueAsUInt32(int32_t index) const
+Nullable<uint32_t> DataRow::ValueAsUInt32(int32_t index) const
 {
-    return GetValue<uint32_t>(index);
+    return GetValue<uint32_t>(index, DataType::UInt32);
 }
 
-void DataRow::SetUInt32Value(int32_t index, uint32_t value)
+void DataRow::SetUInt32Value(int32_t index, const Nullable<uint32_t>& value)
 {
     SetValue<uint32_t>(index, value, DataType::UInt32);
 }
 
-uint64_t DataRow::ValueAsUInt64(int32_t index) const
+Nullable<uint64_t> DataRow::ValueAsUInt64(int32_t index) const
 {
-    return GetValue<uint64_t>(index);
+    return GetValue<uint64_t>(index, DataType::UInt64);
 }
 
-void DataRow::SetUInt64Value(int32_t index, uint64_t value)
+void DataRow::SetUInt64Value(int32_t index, const Nullable<uint64_t>& value)
 {
     SetValue<uint64_t>(index, value, DataType::UInt64);
 }

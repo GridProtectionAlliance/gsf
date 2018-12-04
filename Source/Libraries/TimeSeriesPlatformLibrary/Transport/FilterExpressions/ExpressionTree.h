@@ -75,8 +75,6 @@ public:
 
     const ExpressionType Type;
     const ExpressionDataType DataType;
-    ExpressionPtr Left = nullptr;
-    ExpressionPtr Right = nullptr;
 };
 
 class LiteralExpression : public Expression
@@ -146,6 +144,8 @@ public:
     OperatorExpression(ExpressionDataType dataType, ExpressionOperatorType operatorType);
 
     const ExpressionOperatorType OperatorType;
+    ExpressionPtr Left;
+    ExpressionPtr Right;
 };
 
 typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;
@@ -177,7 +177,11 @@ class ExpressionTree
 private:
     DataSet::DataRowPtr m_currentRow;
 
-    ExpressionPtr Evaluate(ExpressionPtr node);
+    ExpressionPtr Evaluate(const ExpressionPtr&  node);
+    ExpressionPtr EvaluateUnary(const ExpressionPtr& node);
+    ExpressionPtr EvaluateColumn(const ExpressionPtr& node) const;
+    ExpressionPtr EvaluateFunction(const ExpressionPtr& node);
+    ExpressionPtr EvaluateOperator(const ExpressionPtr& node);
 public:
     ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
 

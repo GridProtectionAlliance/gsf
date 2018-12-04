@@ -168,7 +168,11 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
         {
             if (iequals(mappingValue, row->ValueAsString(columnIndex)))
             {
-                m_signalIDs.insert(row->ValueAsGuid(signalIDColumnIndex));
+                auto signalID = row->ValueAsGuid(signalIDColumnIndex);
+
+                if (signalID.HasValue())
+                    m_signalIDs.insert(signalID.Value);
+
                 return;
             }
         }
@@ -264,8 +268,21 @@ void FilterExpressionParser::Evaluate(vector<string>* warnings)
         {
             const auto row = measurements->Row(y);
 
-            if (row && expressionTree->Evaluate(row))
-                m_signalIDs.insert(row->ValueAsGuid(signalIDColumnIndex));
+            try
+            {
+                if (row && expressionTree->Evaluate(row))
+                {
+                    auto signalID = row->ValueAsGuid(signalIDColumnIndex);
+
+                    if (signalID.HasValue())
+                        m_signalIDs.insert(signalID.Value);
+                }
+            }
+            catch (const ExpressionTreeException& ex)
+            {
+                HandleEvaluateError(warnings, ex.what());
+                break;
+            }
         }
     }
 }
