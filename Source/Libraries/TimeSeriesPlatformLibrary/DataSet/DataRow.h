@@ -72,8 +72,8 @@ public:
 
     const DataTablePtr& Parent() const;
 
-    const char* ValueAsString(int32_t index) const;
-    void SetStringValue(int32_t index, const char* value);
+    Nullable<std::string> ValueAsString(int32_t index) const;
+    void SetStringValue(int32_t index, const Nullable<std::string>& value);
 
     Nullable<bool> ValueAsBoolean(int32_t index) const;
     void SetBooleanValue(int32_t index, const Nullable<bool>& value);

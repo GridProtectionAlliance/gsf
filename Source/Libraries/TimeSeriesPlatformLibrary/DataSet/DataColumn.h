@@ -51,6 +51,7 @@ enum class DataType
     UInt64
 };
 
+const char* DataTypeAcronym[];
 const char* EnumName(DataType type);
 
 class DataTable;

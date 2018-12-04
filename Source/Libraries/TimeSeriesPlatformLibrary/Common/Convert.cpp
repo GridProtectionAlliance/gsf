@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <sstream>
 #include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include "Convert.h"
 #include "Date.h"
@@ -111,6 +112,18 @@ string GSF::TimeSeries::ToString(const T& obj)
 {
     stringstream stream;
     stream << obj;
+    return stream.str();
+}
+
+std::string GSF::TimeSeries::ToString(Guid value)
+{
+    return boost::uuids::to_string(value);
+}
+
+std::string GSF::TimeSeries::ToString(time_t value, const char* fmt)
+{
+    stringstream stream;
+    stream << format(fmt, system_clock::from_time_t(value));
     return stream.str();
 }
 

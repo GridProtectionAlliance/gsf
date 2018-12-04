@@ -202,6 +202,8 @@ namespace TimeSeries
         sink.assign(std::istreambuf_iterator<char>{ &source }, {});
     }
 
+    bool StringEquals(const std::string& left, const std::string& right, bool ignoreCase = true);
+
     // Empty types
     struct Empty
     {

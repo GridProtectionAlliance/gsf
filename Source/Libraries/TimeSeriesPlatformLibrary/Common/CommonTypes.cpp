@@ -23,6 +23,7 @@
 
 #include "CommonTypes.h"
 #include "Convert.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace GSF::TimeSeries;
@@ -44,3 +45,11 @@ const Object Empty::Object(nullptr);
 const IPAddress Empty::IPAddress;
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
+
+bool GSF::TimeSeries::StringEquals(const std::string& left, const std::string& right, bool ignoreCase)
+{
+    if (ignoreCase)
+        return boost::iequals(left, right);
+
+    return boost::equals(left, right);
+}

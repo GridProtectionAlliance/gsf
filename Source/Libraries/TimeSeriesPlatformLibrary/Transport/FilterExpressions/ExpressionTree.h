@@ -45,13 +45,19 @@ public:
 
 enum class ExpressionType
 {
-    Literal,
+    Value,
     Unary,
     Column,
     Operator,
     Function
 };
 
+// These data types are reduced to a more reasonable set of possible
+// literal types that can be represented in a filter expression, as a
+// result all data table column values will be mapped to these types.
+// The behavior has been targeted to match that of parsed literal
+// expressions in .NET DataSet operations. See:
+// https://docs.microsoft.com/en-us/dotnet/api/system.data.datacolumn.expression?redirectedfrom=MSDN&view=netframework-4.7.2#parsing-literal-expressions
 enum class ExpressionDataType
 {
     Boolean,    // bool
@@ -65,27 +71,51 @@ enum class ExpressionDataType
     Null        // nullptr
 };
 
+const char* ExpressionDataTypeAcronym[];
+const char* EnumName(ExpressionDataType type);
+
+bool IsIntegerType(ExpressionDataType type);
+bool IsNumericType(ExpressionDataType type);
+
+// Base class for all expression types
 class Expression;
 typedef SharedPtr<Expression> ExpressionPtr;
 
 class Expression
 {
 public:
-    Expression(ExpressionType type, ExpressionDataType dataType);
+    Expression(ExpressionType type, ExpressionDataType dataType, bool isNullable = false);
 
     const ExpressionType Type;
     const ExpressionDataType DataType;
+    const bool IsNullable;
 };
 
-class LiteralExpression : public Expression
+class ValueExpression : public Expression
 {
+private:
+    void ValidateDataType(ExpressionDataType targetType) const;
+
 public:
-    LiteralExpression(ExpressionDataType dataType, const GSF::TimeSeries::Object& value);
+    ValueExpression(ExpressionDataType dataType, const GSF::TimeSeries::Object& value, bool isNullable = false);
 
     const GSF::TimeSeries::Object& Value;
+
+    bool IsNull() const;
+    std::string ToString() const;
+
+    // The following functions are data type validated
+    Nullable<bool> ValueAsBoolean() const;
+    Nullable<int32_t> ValueAsInt32() const;
+    Nullable<int64_t> ValueAsInt64() const;
+    Nullable<decimal_t> ValueAsDecimal() const;
+    Nullable<float64_t> ValueAsDouble() const;
+    Nullable<std::string> ValueAsString() const;
+    Nullable<Guid> ValueAsGuid() const;
+    Nullable<time_t> ValueAsDateTime() const;
 };
 
-typedef SharedPtr<LiteralExpression> LiteralExpressionPtr;
+typedef SharedPtr<ValueExpression> ValueExpressionPtr;
 
 enum class ExpressionUnaryType
 {
@@ -108,9 +138,9 @@ typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
 class ColumnExpression : public Expression
 {
 public:
-    ColumnExpression(ExpressionDataType dataType, int32_t columnIndex);
+    ColumnExpression(const GSF::DataSet::DataColumnPtr& column);
 
-    const int32_t ColumnIndex;
+    const GSF::DataSet::DataColumnPtr& Column;
 };
 
 typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
@@ -191,9 +221,9 @@ public:
 
     bool Evaluate(const DataSet::DataRowPtr& row);
 
-    static const LiteralExpressionPtr True;
-    static const LiteralExpressionPtr False;
-    static const LiteralExpressionPtr Null;
+    static const ValueExpressionPtr True;
+    static const ValueExpressionPtr False;
+    static const ValueExpressionPtr Null;
 };
 
 typedef SharedPtr<ExpressionTree> ExpressionTreePtr;

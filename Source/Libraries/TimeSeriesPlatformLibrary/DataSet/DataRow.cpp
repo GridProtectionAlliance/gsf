@@ -104,22 +104,28 @@ const DataTablePtr& DataRow::Parent() const
     return m_parent;
 }
 
-const char* DataRow::ValueAsString(int32_t index) const
+Nullable<string> DataRow::ValueAsString(int32_t index) const
 {
     ValidateColumnType(index, DataType::String, true);
 
-    return static_cast<const char*>(m_values[index]);
+    const char* value  = static_cast<const char*>(m_values[index]);
+
+    if (value)
+        return string(value);
+
+    return nullptr;
 }
 
-void DataRow::SetStringValue(int32_t index, const char* value)
+void DataRow::SetStringValue(int32_t index, const Nullable<string>& value)
 {
     ValidateColumnType(index, DataType::String);
 
-    if (value)
+    if (value.HasValue())
     {
-        const int32_t length = strlen(value);
+        const string& strval = value.Value;
+        const int32_t length = strval.size();
         char* copy = static_cast<char*>(malloc(length + 1));
-        strcpy_s(copy, length, value);
+        strcpy_s(copy, length, strval.c_str());
         m_values[index] = copy;
     }
     else
@@ -204,6 +210,8 @@ void DataRow::SetDecimalValue(int32_t index, const Nullable<decimal_t>& value)
 
     if (value.HasValue())
     {
+        // The boost decimal type has a very complex internal representation,
+        // although slower, it's safer just to store this as a string for now
         const string& strval = static_cast<decimal_t>(value.Value).str();
         const int32_t length = strval.size();
         char* copy = static_cast<char*>(malloc(length + 1));

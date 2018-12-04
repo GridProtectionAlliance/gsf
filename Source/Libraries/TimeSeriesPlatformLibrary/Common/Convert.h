@@ -24,7 +24,6 @@
 #ifndef __COMMON_CONVERT_H
 #define __COMMON_CONVERT_H
 
-#include <string>
 #include "CommonTypes.h"
 
 namespace GSF {
@@ -39,6 +38,10 @@ namespace TimeSeries
     // Converts an object to a string
     template <class T>
     std::string ToString(const T& obj);
+
+    std::string ToString(Guid value);
+
+    std::string ToString(time_t value, const char* format = "%F %T");
 
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ToGuid(const uint8_t* data, bool swapBytes);

@@ -27,13 +27,14 @@
 using namespace std;
 using namespace GSF::DataSet;
 
-const char* DataTypeAcronym[] =
+const char* GSF::DataSet::DataTypeAcronym[] =
 {
     "String",
     "Boolean",
     "DateTime",
     "Single",
     "Double",
+    "Decimal",
     "Guid",
     "Int8",
     "Int16",
@@ -45,12 +46,12 @@ const char* DataTypeAcronym[] =
     "UInt64"
 };
 
-const DataColumnPtr DataColumn::NullPtr = nullptr;
-
 const char* GSF::DataSet::EnumName(DataType type)
 {
     return DataTypeAcronym[static_cast<int32_t>(type)];
 }
+
+const DataColumnPtr DataColumn::NullPtr = nullptr;
 
 DataColumn::DataColumn(const DataTablePtr& parent, string name, DataType type) :
     m_parent(parent),
