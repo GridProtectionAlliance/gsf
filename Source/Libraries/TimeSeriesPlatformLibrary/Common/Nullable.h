@@ -357,10 +357,10 @@ inline std::string ToString(Nullable<GSF::TimeSeries::Guid> value)
     return {};
 }
 
-inline std::string ToString(Nullable<time_t> value)
+inline std::string ToString(Nullable<time_t> value, const char* fmt = "%F %T")
 {
     if (value.HasValue())
-        return GSF::TimeSeries::ToString(static_cast<time_t>(value.Value));
+        return GSF::TimeSeries::ToString(static_cast<time_t>(value.Value), fmt);
 
     return {};
 }
