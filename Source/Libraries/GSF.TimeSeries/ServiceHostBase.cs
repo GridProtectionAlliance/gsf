@@ -3377,7 +3377,7 @@ namespace GSF.TimeSeries
                             WindowStyle = ProcessWindowStyle.Hidden,
                             UseShellExecute = false,
                             FileName = "ping",
-                            Arguments = adapter.Settings["server"],
+                            Arguments = adapter.Settings["server"].Split(':')[0],
                             RedirectStandardOutput = true,
                             RedirectStandardError = true
                         };
