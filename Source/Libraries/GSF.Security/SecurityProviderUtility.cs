@@ -113,7 +113,16 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Username of the user for whom the <see cref="ISecurityProvider"/> is to be created.</param>
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
-        public static ISecurityProvider CreateProvider(string username)
+        public static ISecurityProvider CreateProvider(string username) =>
+            CreateProvider(username, null);
+
+        /// <summary>
+        /// Creates a new <see cref="ISecurityProvider"/> based on the settings in the config file.
+        /// </summary>
+        /// <param name="username">Username of the user for whom the <see cref="ISecurityProvider"/> is to be created.</param>
+        /// <param name="passthroughPrincipal"><see cref="IPrincipal"/> obtained through alternative authentication mechanisms to provide authentication for the <see cref="ISecurityProvider"/>.</param>
+        /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
+        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal)
         {
             // Initialize the username
             if (string.IsNullOrEmpty(username))
@@ -130,6 +139,7 @@ namespace GSF.Security
 
             // Initialize the provider
             provider.LoadSettings();
+            provider.PassthroughPrincipal = passthroughPrincipal;
 
             if (provider.CanRefreshData)
                 provider.RefreshData();

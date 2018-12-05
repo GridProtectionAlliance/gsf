@@ -32,6 +32,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Timers;
 using GSF.Collections;
 using GSF.Configuration;
@@ -197,19 +198,23 @@ namespace GSF.Security
         /// Creates a new provider from data cached by the <see cref="SecurityProviderCache"/>.
         /// </summary>
         /// <param name="username">The username of the user for which to create a new provider.</param>
+        /// <param name="passthroughPrincipal"><see cref="IPrincipal"/> obtained through alternative authentication mechanisms to provide authentication for the <see cref="ISecurityProvider"/>.</param>
+        /// <param name="autoRefresh">Indicates whether the provider should be automatically refreshed on a timer.</param>
         /// <returns>A new provider initialized from cached data.</returns>
-        public static ISecurityProvider CreateProvider(string username)
+        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal = null, bool autoRefresh = true)
         {
             CacheContext cacheContext;
 
             lock (s_cache)
             {
-                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username)));
+                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal)));
             }
 
             ISecurityProvider provider = SecurityProviderUtility.CreateProvider(cacheContext.Provider.UserData);
+            provider.PassthroughPrincipal = passthroughPrincipal;
 
-            AutoRefresh(provider);
+            if (autoRefresh)
+                AutoRefresh(provider);
 
             return provider;
         }
