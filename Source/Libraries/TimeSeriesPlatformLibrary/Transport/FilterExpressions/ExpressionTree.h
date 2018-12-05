@@ -184,7 +184,7 @@ enum class ExpressionFunctionType
 {
     Coalesce,
     Convert,
-    ImmediateIf,
+    IIf,
     Len,
     RegExp,
     SubString,
@@ -207,11 +207,24 @@ class ExpressionTree
 private:
     DataSet::DataRowPtr m_currentRow;
 
-    ExpressionPtr Evaluate(const ExpressionPtr&  node);
-    ExpressionPtr EvaluateUnary(const ExpressionPtr& node);
-    ExpressionPtr EvaluateColumn(const ExpressionPtr& node) const;
-    ExpressionPtr EvaluateFunction(const ExpressionPtr& node);
-    ExpressionPtr EvaluateOperator(const ExpressionPtr& node);
+    ValueExpressionPtr Evaluate(const ExpressionPtr& node) const;
+    ValueExpressionPtr EvaluateUnary(const ExpressionPtr& node) const;
+    ValueExpressionPtr EvaluateColumn(const ExpressionPtr& node) const;
+    ValueExpressionPtr EvaluateFunction(const ExpressionPtr& node) const;
+    ValueExpressionPtr EvaluateOperator(const ExpressionPtr& node) const;
+    
+    template<typename T>
+    T ApplyIntegerUnaryOperation(const UnaryExpressionPtr& unaryNode) const;
+    
+    template<typename T>
+    T ApplyNumericUnaryOperation(const UnaryExpressionPtr& unaryNode) const;
+
+    template<typename T>
+    const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
+
+    const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
+
+    const ValueExpressionPtr& IIf(const ValueExpressionPtr& testValue, const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
 public:
     ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
 

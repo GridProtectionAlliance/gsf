@@ -277,7 +277,7 @@ ExpressionTree::ExpressionTree(string measurementTableName, const DataTablePtr& 
 {
 }
 
-ExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& node)
+ValueExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& node) const
 {
     if (node == nullptr)
         return ExpressionTree::False;
@@ -287,7 +287,7 @@ ExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& node)
     switch (node->Type)
     {
         case ExpressionType::Value:
-            return node;
+            return CastSharedPtr<ValueExpression>(node);
         case ExpressionType::Unary:
             return EvaluateUnary(node);
         case ExpressionType::Column:
@@ -301,13 +301,78 @@ ExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& node)
     }
 }
 
-ExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& node)
+template<typename T>
+T ExpressionTree::ApplyIntegerUnaryOperation(const UnaryExpressionPtr& unaryNode) const
 {
-    const UnaryExpressionPtr unaryNode = CastSharedPtr<UnaryExpression>(node);
-    return node;
+    T value = Cast<T>(unaryNode->Value);
+
+    switch (unaryNode->UnaryType)
+    {
+        case ExpressionUnaryType::Plus:
+            return +value;
+        case ExpressionUnaryType::Minus:
+            return -value;
+        case ExpressionUnaryType::Not:
+            return ~value;
+        default:
+            throw ExpressionTreeException("Unexpected unary type encountered");
+    }
 }
 
-ExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& node) const
+template<typename T>
+T ExpressionTree::ApplyNumericUnaryOperation(const UnaryExpressionPtr& unaryNode) const
+{
+    T value = Cast<T>(unaryNode->Value);
+
+    switch (unaryNode->UnaryType)
+    {
+        case ExpressionUnaryType::Plus:
+            return +value;
+        case ExpressionUnaryType::Minus:
+            return -value;
+        case ExpressionUnaryType::Not:
+            throw ExpressionTreeException("Cannot apply unary \"~\" operator to specified type \"" + string(EnumName(unaryNode->DataType)) + "\"");
+        default:
+            throw ExpressionTreeException("Unexpected unary type encountered");
+    }
+}
+
+ValueExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& node) const
+{
+    const UnaryExpressionPtr unaryNode = CastSharedPtr<UnaryExpression>(node);
+
+    switch (unaryNode->DataType)
+    {
+        case ExpressionDataType::Int32:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, ApplyIntegerUnaryOperation<int32_t>(unaryNode));
+        case ExpressionDataType::Int64:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, ApplyIntegerUnaryOperation<int64_t>(unaryNode));
+        case ExpressionDataType::Decimal:;
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, ApplyNumericUnaryOperation<decimal_t>(unaryNode));
+        case ExpressionDataType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, ApplyNumericUnaryOperation<float64_t>(unaryNode));
+        case ExpressionDataType::Boolean:
+        case ExpressionDataType::String:
+        case ExpressionDataType::Guid:
+        case ExpressionDataType::DateTime:
+        case ExpressionDataType::Null:
+            switch (unaryNode->UnaryType)
+            {
+                case ExpressionUnaryType::Plus:
+                    throw ExpressionTreeException("Cannot apply unary \"+\" operator to specified type \"" + string(EnumName(unaryNode->DataType)) + "\"");
+                case ExpressionUnaryType::Minus:
+                    throw ExpressionTreeException("Cannot apply unary \"-\" operator to specified type \"" + string(EnumName(unaryNode->DataType)) + "\"");
+                case ExpressionUnaryType::Not:
+                    throw ExpressionTreeException("Cannot apply unary \"~\" operator to specified type \"" + string(EnumName(unaryNode->DataType)) + "\"");
+                default:
+                    throw ExpressionTreeException("Unexpected unary type encountered");
+            }
+        default:
+            throw ExpressionTreeException("Unexpected expression data type encountered");
+    }
+}
+
+ValueExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& node) const
 {
     const ColumnExpressionPtr columnNode = CastSharedPtr<ColumnExpression>(node);
     const DataColumnPtr& column = columnNode->Column;
@@ -410,47 +475,120 @@ ExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& node) const
     return NewSharedPtr<ValueExpression>(dataType, value, true);
 }
 
-ExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& node)
+template<typename T>
+const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
+{
+    if (testValue->IsNullable)
+    {
+        Nullable<T> value = Cast<Nullable<T>>(testValue->Value);
+
+        if (value.HasValue())
+            return testValue;
+
+        return defaultValue;
+    }
+
+    return testValue;
+}
+
+const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
+{
+    if (testValue->DataType != defaultValue->DataType)
+        throw ExpressionTreeException("Coalesce/IsNull arguments must be the same type");
+
+    switch (testValue->DataType)
+    {
+        case ExpressionDataType::Boolean:
+            return Coalesce<bool>(testValue, defaultValue);
+        case ExpressionDataType::Int32:
+            return Coalesce<int32_t>(testValue, defaultValue);
+        case ExpressionDataType::Int64:;
+            return Coalesce<int64_t>(testValue, defaultValue);
+        case ExpressionDataType::Decimal:
+            return Coalesce<decimal_t>(testValue, defaultValue);
+        case ExpressionDataType::Double:
+            return Coalesce<float64_t>(testValue, defaultValue);
+        case ExpressionDataType::String:
+            return Coalesce<string>(testValue, defaultValue);
+        case ExpressionDataType::Guid:
+            return Coalesce<Guid>(testValue, defaultValue);
+        case ExpressionDataType::DateTime:
+            return Coalesce<time_t>(testValue, defaultValue);
+        case ExpressionDataType::Null:
+            return defaultValue;
+        default:
+            throw ExpressionTreeException("Unexpected expression data type encountered");
+    }
+}
+
+const ValueExpressionPtr& ExpressionTree::IIf(const ValueExpressionPtr& testValue, const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const
+{
+    if (testValue->DataType != ExpressionDataType::Boolean)
+        throw ExpressionTreeException("First IIf argument must be boolean type");
+
+    if (leftValue->DataType != rightValue->DataType)
+        throw ExpressionTreeException("Second and third IIf arguments must be the same type");
+
+    if (testValue->IsNullable)
+    {
+        Nullable<bool> value = Cast<Nullable<bool>>(testValue->Value);
+
+        if (value.HasValue())
+            return static_cast<bool>(value.Value) ? leftValue : rightValue;
+
+        return ExpressionTree::Null;
+    }
+
+    return Cast<bool>(testValue->Value) ? leftValue : rightValue;
+}
+
+ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& node) const
 {
     const FunctionExpressionPtr functionNode = CastSharedPtr<FunctionExpression>(node);
+
+    vector<ValueExpressionPtr> evaluatedArguments;
+
+    for (size_t i = 0; i < functionNode->Arguments.size(); i++)
+        evaluatedArguments.push_back(Evaluate(functionNode->Arguments[i]));
 
     switch (functionNode->FunctionType)
     {
         case ExpressionFunctionType::Coalesce:
-            if (functionNode->Arguments.size() != 2)
-                throw ExpressionTreeException("Coalesce/IsNull function expects 2 arguments, received " + to_string(functionNode->Arguments.size()));
+            if (evaluatedArguments.size() != 2)
+                throw ExpressionTreeException("Coalesce/IsNull function expects 2 arguments, received " + to_string(evaluatedArguments.size()));
 
-            break;
+            return Coalesce(evaluatedArguments[0], evaluatedArguments[1]);
         case ExpressionFunctionType::Convert:
-            if (functionNode->Arguments.size() != 2)
-                throw ExpressionTreeException("Convert function expects 2 arguments, received " + to_string(functionNode->Arguments.size()));
+            if (evaluatedArguments.size() != 2)
+                throw ExpressionTreeException("Convert function expects 2 arguments, received " + to_string(evaluatedArguments.size()));
             break;
-        case ExpressionFunctionType::ImmediateIf:
-            if (functionNode->Arguments.size() != 3)
-                throw ExpressionTreeException("IIf function expects 3 arguments, received " + to_string(functionNode->Arguments.size()));
-            break;
+        case ExpressionFunctionType::IIf:
+            if (evaluatedArguments.size() != 3)
+                throw ExpressionTreeException("IIf function expects 3 arguments, received " + to_string(evaluatedArguments.size()));
+
+            return IIf(evaluatedArguments[0], evaluatedArguments[1], evaluatedArguments[2]);
         case ExpressionFunctionType::Len:
-            if (functionNode->Arguments.size() != 1)
-                throw ExpressionTreeException("Len expects 3 arguments, received " + to_string(functionNode->Arguments.size()));
+            if (evaluatedArguments.size() != 1)
+                throw ExpressionTreeException("Len expects 1 argument, received " + to_string(evaluatedArguments.size()));
             break;
         case ExpressionFunctionType::RegExp:
-            if (functionNode->Arguments.size() != 2)
-                throw ExpressionTreeException("RegExp function expects 2 arguments, received " + to_string(functionNode->Arguments.size()));
+            if (evaluatedArguments.size() != 2)
+                throw ExpressionTreeException("RegExp function expects 2 arguments, received " + to_string(evaluatedArguments.size()));
             break;
         case ExpressionFunctionType::SubString:
-            if (functionNode->Arguments.size() < 2 || functionNode->Arguments.size() > 3)
-                throw ExpressionTreeException("SubString function expects 2 or 3 arguments, received " + to_string(functionNode->Arguments.size()));
+            if (evaluatedArguments.size() < 2 || evaluatedArguments.size() > 3)
+                throw ExpressionTreeException("SubString function expects 2 or 3 arguments, received " + to_string(evaluatedArguments.size()));
             break;
         case ExpressionFunctionType::Trim:
-            if (functionNode->Arguments.size() != 1)
-                throw ExpressionTreeException("Trim function expects 3 arguments, received " + to_string(functionNode->Arguments.size()));
+            if (evaluatedArguments.size() != 1)
+                throw ExpressionTreeException("Trim function expects 3 arguments, received " + to_string(evaluatedArguments.size()));
             break;
         default:
             throw ExpressionTreeException("Unexpected function type encountered");
     }
 }
 
-ExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& node)
+ValueExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& node) const
 {
     const OperatorExpressionPtr operatorNode = CastSharedPtr<OperatorExpression>(node);
 
