@@ -35,6 +35,7 @@ using System.Linq;
 using System.Timers;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Threading;
 using Timer = System.Timers.Timer;
 
 namespace GSF.Security
@@ -157,6 +158,11 @@ namespace GSF.Security
         /// </summary>
         private const int DefaultUserCacheTimeout = 5;
 
+        /// <summary>
+        /// Number of milliseconds between calls to monitor the cache.
+        /// </summary>
+        private const int CacheMonitorTimerInterval = 60000;
+
         #endregion
 
         #region [ Static ]
@@ -165,6 +171,7 @@ namespace GSF.Security
         private static readonly Dictionary<string, CacheContext> s_cache;
         private static readonly List<CacheContext> s_autoRefreshProviders;
         private static readonly int s_userCacheTimeout;
+        private static readonly Action s_cacheMonitorAction;
 
         // Static Constructor
         static SecurityProviderCache()
@@ -180,9 +187,8 @@ namespace GSF.Security
             s_cache = new Dictionary<string, CacheContext>();
             s_autoRefreshProviders = new List<CacheContext>();
 
-            Timer cacheMonitorTimer = new Timer(60000);
-            cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
-            cacheMonitorTimer.Start();
+            s_cacheMonitorAction = new Action(ManageCachedCredentials);
+            s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
         }
 
         // Static Methods
@@ -256,23 +262,36 @@ namespace GSF.Security
                 s_cache.Clear();
             }
 
+            List<CacheContext> refreshedContexts = new List<CacheContext>();
+
             lock (s_autoRefreshProviders)
             {
                 for (int i = s_autoRefreshProviders.Count - 1; i >= 0; i--)
                 {
                     CacheContext cacheContext = s_autoRefreshProviders[i];
 
-                    if (!cacheContext.Refresh())
+                    if ((object)cacheContext.Provider == null)
                     {
                         s_autoRefreshProviders[i] = s_autoRefreshProviders[s_autoRefreshProviders.Count - 1];
                         s_autoRefreshProviders.RemoveAt(s_autoRefreshProviders.Count - 1);
                     }
+                    else
+                    {
+                        refreshedContexts.Add(cacheContext);
+                    }
                 }
             }
+
+            // It's important to avoid calling refresh
+            // inside the lock for performance reasons
+            foreach (CacheContext cacheContext in refreshedContexts)
+                cacheContext.Refresh();
         }
 
-        private static void CacheMonitorTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private static void ManageCachedCredentials()
         {
+            HashSet<CacheContext> refreshedContexts = new HashSet<CacheContext>();
+
             lock (s_cache)
             {
                 foreach (string username in s_cache.Keys.ToList())
@@ -282,7 +301,7 @@ namespace GSF.Security
                     if (DateTime.UtcNow.Subtract(cacheContext.LastAccessTime).TotalMinutes > s_userCacheTimeout)
                         s_cache.Remove(username);
                     else
-                        cacheContext.Refresh();
+                        refreshedContexts.Add(s_cache[username]);
                 }
             }
 
@@ -294,14 +313,27 @@ namespace GSF.Security
 
                     if (DateTime.UtcNow.Subtract(cacheContext.LastRefreshTime).TotalMinutes > s_userCacheTimeout)
                     {
-                        if (!cacheContext.Refresh())
+                        if ((object)cacheContext.Provider == null)
                         {
                             s_autoRefreshProviders[i] = s_autoRefreshProviders[s_autoRefreshProviders.Count - 1];
                             s_autoRefreshProviders.RemoveAt(s_autoRefreshProviders.Count - 1);
                         }
+                        else
+                        {
+                            refreshedContexts.Add(cacheContext);
+                        }
                     }
                 }
             }
+
+            // It's important to avoid calling refresh
+            // inside the lock for performance reasons
+            foreach (CacheContext cacheContext in refreshedContexts)
+                cacheContext.Refresh();
+
+            // The refresh could take several minutes so we should
+            // wait to kick off the timer until after we are finished
+            s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
         }
 
         #endregion
