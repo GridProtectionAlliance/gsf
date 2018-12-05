@@ -102,7 +102,7 @@ namespace GSF.Web.Security
                 AuthenticationHeaderValue authorization = AuthorizationHeader;
 
                 // Attempt to retrieve the user's credentials that were cached to the user's session
-                if (s_authorizationCache.TryGetValue(sessionID, out securityPrincipal))
+                if (TryGetPrincipal(sessionID, out securityPrincipal))
                 {
                     bool useCachedCredentials =
                         (object)Request.User == null ||
@@ -113,7 +113,7 @@ namespace GSF.Web.Security
                     {
                         // Explicit login attempts as a different user
                         // cause credentials to be flushed from the session
-                        s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
+                        ClearAuthorizationCache(sessionID);
                         securityPrincipal = null;
                     }
                 }
@@ -132,7 +132,7 @@ namespace GSF.Web.Security
 
                     // Attempt to cache the security principal to the session
                     if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                        s_authorizationCache[sessionID] = securityPrincipal;
+                        CachePrincipal(sessionID, securityPrincipal);
                 }
 
                 if ((object)securityPrincipal == null)
@@ -146,7 +146,7 @@ namespace GSF.Web.Security
 
                     // Attempt to cache the security principal to the session
                     if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                        s_authorizationCache[sessionID] = securityPrincipal;
+                        CachePrincipal(sessionID, securityPrincipal);
                 }
 
                 // Set the principal of the IOwinRequest so that it
@@ -255,7 +255,7 @@ namespace GSF.Web.Security
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false);
             securityProvider.Password = password;
             securityProvider.Authenticate();
 
@@ -274,7 +274,7 @@ namespace GSF.Web.Security
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false);
             securityProvider.Password = password;
             securityProvider.Authenticate();
 
@@ -295,7 +295,7 @@ namespace GSF.Web.Security
             IPrincipal passthroughPrincipal = Request.User;
 
             // Create the security provider that will verify the user's pass-through authentication
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal);
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal, false);
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
@@ -346,6 +346,12 @@ namespace GSF.Web.Security
                 SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider);
 
             return removed;
+        }
+
+        private static void CachePrincipal(Guid sessionID, SecurityPrincipal principal)
+        {
+            if (s_authorizationCache.TryAdd(sessionID, principal))
+                SecurityProviderCache.AutoRefresh(principal.Identity.Provider);
         }
 
         private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)
