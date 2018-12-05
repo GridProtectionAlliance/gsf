@@ -210,14 +210,14 @@ namespace Transport
     };
 
     // Security modes used by the DataPublisher to secure data sent over the command channel.
-    struct SecurityMode
+    enum class SecurityMode
     {
         // No security.
-        static const uint32_t None = 0;
+        None,
         // Transport Layer Security.
-        static const uint32_t TLS = 1;
+        TLS,
         // Pre-shared key. Deprecated - use TLS instead.
-        static const uint32_t Gateway = 2;
+        Gateway
     };
 
     // The encoding commands supported by TSSC

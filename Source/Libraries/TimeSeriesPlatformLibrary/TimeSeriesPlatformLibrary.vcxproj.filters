@@ -634,6 +634,9 @@
     <ClCompile Include="Transport\FilterExpressions\ExpressionTree.cpp">
       <Filter>Transport\FilterExpressions</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\PublisherInstance.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">
@@ -1120,6 +1123,9 @@
     </ClInclude>
     <ClInclude Include="Common\Nullable.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\PublisherInstance.h">
+      <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -30,9 +30,9 @@
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "TSSCMeasurementParser.h"
-#include "../Common/EndianConverter.h"
 #include "../Common/ThreadSafeQueue.h"
 #include "../Common/pugixml.hpp"
+#include "Constants.h"
 
 namespace GSF {
 namespace TimeSeries {
@@ -99,13 +99,13 @@ namespace Transport
         };
 
         std::map<Guid, ClientConnectionPtr> m_clientConnections;
-        uint32_t m_securityMode;
-        bool m_encryptPayload;
+        SecurityMode m_securityMode;
         bool m_allowMetadataRefresh;
         bool m_allowNaNValueFilter;
         bool m_forceNaNValueFilter;
         uint32_t m_cipherKeyRotationPeriod;
         bool m_disconnecting;
+        void* m_userData;
 
         // Statistics counters
         uint64_t m_totalCommandChannelBytesSent;
@@ -162,7 +162,7 @@ namespace Transport
         
         static void SerializeSignalIndexCache(const Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
         //static void SerializeMetadata(const Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer);
-        //static void SerializeMetadata(const Guid& clientID, const xml_document& metadata, vector<uint8_t>& buffer);
+        //static void SerializeMetadata(const Guid& clientID, const pugi::xml_document& metadata, std::vector<uint8_t>& buffer);
 
     public:
         // Creates a new instance of the data publisher.
@@ -173,6 +173,9 @@ namespace Transport
         // tied up by the publisher.
         ~DataPublisher();
 
+        // Define metadata from existing metadata tables
+        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata);
+
         // Define metadata from existing configuration frames
         void DefineMetadata(const std::vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
         
@@ -180,6 +183,31 @@ namespace Transport
         void DefineMetadata(const pugi::xml_document& metadata);
 
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
+
+        SecurityMode GetSecurityMode() const;
+        void SetSecurityMode(SecurityMode securityMode);
+
+        bool IsMetadataRefreshAllowed() const;
+        void SetMetadataRefreshAllowed(bool allowed);
+
+        bool IsNaNValueFilterAllowed() const;
+        void SetNaNValueFilterAllowed(bool allowed);
+
+        bool IsNaNValueFilterForced() const;
+        void SetNaNValueFilterForced(bool forced);
+
+        uint32_t GetCipherKeyRotationPeriod() const;
+        void SetCipherKeyRotationPeriod(uint32_t period);
+
+        // Gets or sets user defined data reference
+        void* GetUserData() const;
+        void SetUserData(void* userData);
+
+        // Statistical functions
+        uint64_t GetTotalCommandChannelBytesSent() const;
+        uint64_t GetTotalDataChannelBytesSent() const;
+        uint64_t GetTotalMeasurementsSent() const;
+        bool IsConnected() const;
 
         // Callback registration
         //

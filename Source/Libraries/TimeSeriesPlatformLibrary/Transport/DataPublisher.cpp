@@ -90,7 +90,6 @@ void ClientConnection::Start()
 
 DataPublisher::DataPublisher(const tcp::endpoint& endpoint) :    
     m_securityMode(SecurityMode::None),
-    m_encryptPayload(false),
     m_allowMetadataRefresh(true),
     m_allowNaNValueFilter(true),
     m_forceNaNValueFilter(false),
@@ -100,7 +99,10 @@ DataPublisher::DataPublisher(const tcp::endpoint& endpoint) :
     m_totalDataChannelBytesSent(0L),
     m_totalMeasurementsSent(0L),
     m_connected(false),
-    m_clientAcceptor(m_commandChannelService, endpoint)
+    m_clientAcceptor(m_commandChannelService, endpoint),
+    m_statusMessageCallback(nullptr),
+    m_errorMessageCallback(nullptr),
+    m_clientConnectedCallback(nullptr)
 {
     m_commandChannelService.restart();
     m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
@@ -302,6 +304,10 @@ void DataPublisher::SerializeSignalIndexCache(const Guid& clientID, const Signal
 //{
 //}
 
+void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata)
+{
+}
+
 void DataPublisher::DefineMetadata(const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags)
 {
 }
@@ -312,6 +318,89 @@ void DataPublisher::DefineMetadata(const xml_document& metadata)
 
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
+}
+
+SecurityMode DataPublisher::GetSecurityMode() const
+{
+    return m_securityMode;
+}
+
+void DataPublisher::SetSecurityMode(SecurityMode securityMode)
+{
+    if (IsConnected())
+        throw PublisherException("Cannot change security mode once publisher has been connected");
+
+    m_securityMode = securityMode;
+}
+
+bool DataPublisher::IsMetadataRefreshAllowed() const
+{
+    return m_allowMetadataRefresh;
+}
+
+void DataPublisher::SetMetadataRefreshAllowed(bool allowed)
+{
+    m_allowMetadataRefresh = allowed;
+}
+
+bool DataPublisher::IsNaNValueFilterAllowed() const
+{
+    return m_allowNaNValueFilter;
+}
+
+void DataPublisher::SetNaNValueFilterAllowed(bool allowed)
+{
+    m_allowNaNValueFilter = allowed;
+}
+
+bool DataPublisher::IsNaNValueFilterForced() const
+{
+    return m_forceNaNValueFilter;
+}
+
+void DataPublisher::SetNaNValueFilterForced(bool forced)
+{
+    m_forceNaNValueFilter = forced;
+}
+
+uint32_t DataPublisher::GetCipherKeyRotationPeriod() const
+{
+    return m_cipherKeyRotationPeriod;
+}
+
+void DataPublisher::SetCipherKeyRotationPeriod(uint32_t period)
+{
+    m_cipherKeyRotationPeriod = period;
+}
+
+void* DataPublisher::GetUserData() const
+{
+    return m_userData;
+}
+
+void DataPublisher::SetUserData(void* userData)
+{
+    m_userData = userData;
+}
+
+uint64_t DataPublisher::GetTotalCommandChannelBytesSent() const
+{
+    return m_totalCommandChannelBytesSent;
+}
+
+uint64_t DataPublisher::GetTotalDataChannelBytesSent() const
+{
+    return m_totalDataChannelBytesSent;
+}
+
+uint64_t DataPublisher::GetTotalMeasurementsSent() const
+{
+    return m_totalMeasurementsSent;
+}
+
+bool DataPublisher::IsConnected() const
+{
+    return m_connected;
 }
 
 void DataPublisher::RegisterStatusMessageCallback(MessageCallback statusMessageCallback)

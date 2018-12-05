@@ -137,7 +137,6 @@ namespace TimeSeries
 
         SignalReference();
         SignalReference(const std::string& signal);
-
     };
 
     std::ostream& operator << (std::ostream& stream, const SignalReference& reference);
@@ -194,8 +193,8 @@ namespace TimeSeries
         time_t UpdatedOn;			    // Time of last meta-data update
 
         // Associated measurement and phasor meta-data
-        std::vector<MeasurementMetadataPtr> Measurements;
-        std::vector<PhasorReferencePtr> Phasors;
+        std::vector<MeasurementMetadataPtr> Measurements;   // DataPublisher does not need to assign
+        std::vector<PhasorReferencePtr> Phasors;            // DataPublisher does not need to assign
     };
 
     typedef SharedPtr<DeviceMetadata> DeviceMetadataPtr;
