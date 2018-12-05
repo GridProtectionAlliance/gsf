@@ -359,6 +359,7 @@
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxLexer.h" />
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxListener.h" />
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.h" />
+    <ClInclude Include="Transport\PublisherInstance.h" />
     <ClInclude Include="Transport\SignalIndexCache.h" />
     <ClCompile Include="Transport\FilterExpressions\ExpressionTree.cpp" />
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionParser.cpp" />
@@ -366,6 +367,7 @@
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxLexer.cpp" />
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxListener.cpp" />
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionSyntaxParser.cpp" />
+    <ClCompile Include="Transport\PublisherInstance.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
     <ClInclude Include="Transport\SubscriberInstance.h" />
     <ClCompile Include="Transport\SubscriberInstance.cpp" />

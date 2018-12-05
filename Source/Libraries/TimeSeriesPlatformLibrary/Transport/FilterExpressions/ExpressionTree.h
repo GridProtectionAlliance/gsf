@@ -219,9 +219,6 @@ private:
     template<typename T>
     T ApplyNumericUnaryOperation(const UnaryExpressionPtr& unaryNode) const;
 
-    template<typename T>
-    const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
-
     const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
 
     const ValueExpressionPtr& IIf(const ValueExpressionPtr& testValue, const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;

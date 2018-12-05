@@ -28,8 +28,19 @@
 #include <cstddef>
 #include "Convert.h"
 
+class NullableType
+{
+public:
+    virtual ~NullableType() = default;
+    
+    virtual bool HasValue() const
+    {
+        return false;
+    };
+};
+
 template <typename T>
-class Nullable final
+class Nullable final : public NullableType
 {
 public:
     Nullable();
@@ -38,7 +49,7 @@ public:
     const Nullable<T> & operator=(const Nullable<T> &value);
     const Nullable<T> & operator=(const T &value);
     const Nullable<T> & operator=(nullptr_t nullpointer);
-    bool HasValue() const;
+    bool HasValue() const override;
     const T & GetValueOrDefault() const;
     const T & GetValueOrDefault(const T &def) const;
     bool TryGetValue(T &value) const;
@@ -346,10 +357,10 @@ inline std::string ToString(Nullable<GSF::TimeSeries::Guid> value)
     return {};
 }
 
-inline std::string ToString(Nullable<time_t> value)
+inline std::string ToString(Nullable<time_t> value, const char* fmt = "%F %T")
 {
     if (value.HasValue())
-        return GSF::TimeSeries::ToString(static_cast<time_t>(value.Value));
+        return GSF::TimeSeries::ToString(static_cast<time_t>(value.Value), fmt);
 
     return {};
 }

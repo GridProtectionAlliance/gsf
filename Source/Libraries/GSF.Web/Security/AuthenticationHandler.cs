@@ -295,8 +295,7 @@ namespace GSF.Web.Security
             IPrincipal passthroughPrincipal = Request.User;
 
             // Create the security provider that will verify the user's pass-through authentication
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
-            securityProvider.PassthroughPrincipal = passthroughPrincipal;
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal);
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
@@ -341,7 +340,12 @@ namespace GSF.Web.Security
         public static bool ClearAuthorizationCache(Guid sessionID)
         {
             SecurityPrincipal securityPrincipal;
-            return s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
+            bool removed = s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
+
+            if (removed)
+                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider);
+
+            return removed;
         }
 
         private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)
