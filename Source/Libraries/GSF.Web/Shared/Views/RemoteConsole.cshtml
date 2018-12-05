@@ -100,10 +100,15 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
     string filter;
-
+    string command;
     if (!parameters.TryGetValue("filter", out filter)) {
         filter = "Filter -Remove 0";
     }
+
+    if (!parameters.TryGetValue("command", out command)) {
+        command = "";
+    }
+
 }
 @section Scripts {
     <script src="@Resources.Root/Shared/Scripts/js.cookie.js")"></script>
@@ -186,7 +191,11 @@
             // Set the client filter to the value of the
             // filter parameter that came from the URL
             $(window).on("hubConnected", function (event) {
-                serviceHub.sendCommand("@Raw(filter.JavaScriptEncode())");
+                serviceHub.sendCommand("@Raw(filter.JavaScriptEncode())").done(function () {
+                    var command = "@Raw(command.JavaScriptEncode())"
+                    if (command !== "")
+                        serviceHub.sendCommand(command);
+                });
             });
 
             $("#remoteConsoleWindow").mouseenter(function () {
