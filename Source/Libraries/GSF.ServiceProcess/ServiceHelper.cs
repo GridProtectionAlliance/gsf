@@ -2533,11 +2533,8 @@ namespace GSF.ServiceProcess
                         if ((object)username == null)
                             throw new SecurityException($"Authentication failed for client: unable to determine user name.");
 
-                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
-                        securityProvider.PassthroughPrincipal = windowsPrincipal;
+                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, windowsPrincipal, false);
                         securityProvider.SecurePassword = client.SecureClientPassword;
-
-                        securityProvider.RefreshData();
 
                         if (!securityProvider.Authenticate())
                             throw new SecurityException($"Authentication failed for user '{client.ClientUsername}'. Reason: {securityProvider.AuthenticationFailureReason}");
