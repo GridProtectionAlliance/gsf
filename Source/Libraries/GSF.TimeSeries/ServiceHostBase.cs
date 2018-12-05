@@ -658,7 +658,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GenerateReport", "Generates a report for the specified date", GenerateReportRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReportingConfig", "Displays or modifies the configuration of the reporting process", ReportingConfigRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
-
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Ping", "Shells out a process to perform a ping on the device.", PingRequestHandler));
             // Start system initialization on an independent thread so that service responds in a timely fashion...
             InitializeSystem();
         }
@@ -3331,6 +3331,101 @@ namespace GSF.TimeSeries
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Used to ping a device.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <returns>True if the requested adapter exists; false otherwise.</returns>
+        protected virtual void PingRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Attempts to ping a device.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Ping [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("        [ID] ".PadRight(20));
+                helpMessage.Append("Attempts to ping the specified device");
+
+                SendResponse(requestInfo, true, helpMessage.ToString());
+            }
+            else
+            {
+                IAdapter adapter = GetRequestedAdapter(requestInfo);
+                if (adapter.Settings.ContainsKey("server"))
+                {
+                    SendResponse(requestInfo, true, $"Attempting to ping {adapter.Name} ...");
+
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo(ConsoleApplicationName)
+                        {
+                            CreateNoWindow = true,
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                            UseShellExecute = false,
+                            FileName = "ping",
+                            Arguments = adapter.Settings["server"],
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true
+                        };
+
+                        Task.Run(() =>
+                        {
+                            using (Process shell = new Process())
+                            {
+                                shell.StartInfo = psi;
+                                shell.OutputDataReceived += (sender, processArgs) =>
+                                {
+                                    if (string.IsNullOrWhiteSpace(processArgs.Data))
+                                        return;
+
+                                    SendResponse(requestInfo, true, processArgs.Data);
+                                };
+
+                                shell.ErrorDataReceived += (sender, processArgs) =>
+                                {
+                                    if (string.IsNullOrWhiteSpace(processArgs.Data))
+                                        return;
+
+                                    SendResponse(requestInfo, false, processArgs.Data);
+                                };
+
+
+                                shell.Start();
+                                shell.BeginOutputReadLine();
+                                shell.BeginErrorReadLine();
+
+                                if (!shell.WaitForExit(30000))
+                                    shell.Kill();
+                            }
+
+                            SendResponse(requestInfo, true);
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        SendResponse(requestInfo, false, "Failed to restart host service: {0}", ex.Message);
+                        LogException(ex);
+                    }
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "Unable to ping this adapter because it does not have an IP address.");
+                }
+            }
         }
 
         #endregion
