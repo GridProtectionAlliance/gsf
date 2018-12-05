@@ -475,12 +475,14 @@ ValueExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& node) con
     return NewSharedPtr<ValueExpression>(dataType, value, true);
 }
 
-template<typename T>
 const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
 {
+    if (testValue->DataType != defaultValue->DataType)
+        throw ExpressionTreeException("Coalesce/IsNull arguments must be the same type");
+
     if (testValue->IsNullable)
     {
-        Nullable<T> value = Cast<Nullable<T>>(testValue->Value);
+        NullableType value = Cast<NullableType>(testValue->Value);
 
         if (value.HasValue())
             return testValue;
@@ -489,36 +491,6 @@ const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& tes
     }
 
     return testValue;
-}
-
-const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
-{
-    if (testValue->DataType != defaultValue->DataType)
-        throw ExpressionTreeException("Coalesce/IsNull arguments must be the same type");
-
-    switch (testValue->DataType)
-    {
-        case ExpressionDataType::Boolean:
-            return Coalesce<bool>(testValue, defaultValue);
-        case ExpressionDataType::Int32:
-            return Coalesce<int32_t>(testValue, defaultValue);
-        case ExpressionDataType::Int64:;
-            return Coalesce<int64_t>(testValue, defaultValue);
-        case ExpressionDataType::Decimal:
-            return Coalesce<decimal_t>(testValue, defaultValue);
-        case ExpressionDataType::Double:
-            return Coalesce<float64_t>(testValue, defaultValue);
-        case ExpressionDataType::String:
-            return Coalesce<string>(testValue, defaultValue);
-        case ExpressionDataType::Guid:
-            return Coalesce<Guid>(testValue, defaultValue);
-        case ExpressionDataType::DateTime:
-            return Coalesce<time_t>(testValue, defaultValue);
-        case ExpressionDataType::Null:
-            return defaultValue;
-        default:
-            throw ExpressionTreeException("Unexpected expression data type encountered");
-    }
 }
 
 const ValueExpressionPtr& ExpressionTree::IIf(const ValueExpressionPtr& testValue, const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const
