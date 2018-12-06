@@ -22,8 +22,6 @@
 //******************************************************************************************************
 
 #include <string>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <utility>
 
 #include "TransportTypes.h"
@@ -31,7 +29,6 @@
 
 using namespace std;
 using namespace GSF::TimeSeries;
-using namespace boost::algorithm;
 
 SubscriberException::SubscriberException(string message) noexcept :
     m_message(move(message))
@@ -92,13 +89,13 @@ SignalReference::SignalReference(const string& signal) : SignalID(Guid())
     if (splitIndex == string::npos)
     {
         // This represents an error - best we can do is assume entire string is the acronym
-        Acronym = to_upper_copy(trim_copy(signal));
+        Acronym = ToUpper(Trim(signal));
         Kind = SignalKind::Unknown;
     }
     else
     {
-        string signalType = to_upper_copy(trim_copy(signal.substr(splitIndex + 1)));
-        Acronym = to_upper_copy(trim_copy(signal.substr(0, splitIndex)));
+        string signalType = ToUpper(Trim(signal.substr(splitIndex + 1)));
+        Acronym = ToUpper(Trim(signal.substr(0, splitIndex)));
 
         // If the length of the signal type acronym is greater than 2, then this
         // is an indexed signal type (e.g., CORDOVA-PA2)

@@ -202,7 +202,16 @@ namespace TimeSeries
         sink.assign(std::istreambuf_iterator<char>{ &source }, {});
     }
 
-    bool StringEquals(const std::string& left, const std::string& right, bool ignoreCase = true);
+    // Handy string functions (boost wrappers)
+    bool IsEqual(const std::string& left, const std::string& right, bool ignoreCase = true);
+    bool StartsWith(const std::string& value, const std::string& testValue, bool ignoreCase = true);
+    bool EndsWith(const std::string& value, const std::string& testValue, bool ignoreCase = true);
+    bool Contains(const std::string& value, const std::string& testValue, bool ignoreCase = true);
+    std::string ToUpper(const std::string& value);
+    std::string ToLower(const std::string& value);
+    std::string Trim(const std::string& value);
+    std::string TrimRight(const std::string& value);
+    std::string TrimLeft(const std::string& value);
 
     // Empty types
     struct Empty

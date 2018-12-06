@@ -68,9 +68,10 @@ enum class ExpressionDataType
     String,     // string
     Guid,       // Guid
     DateTime,   // time_t
-    Null        // nullptr
+    Null        // nullptr (make sure value is always last in enum)
 };
 
+const extern int32_t ExpressionDataTypeLength;
 const char* ExpressionDataTypeAcronym[];
 const char* EnumName(ExpressionDataType type);
 
@@ -220,8 +221,8 @@ private:
     T ApplyNumericUnaryOperation(const UnaryExpressionPtr& unaryNode) const;
 
     const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
-
-    const ValueExpressionPtr& IIf(const ValueExpressionPtr& testValue, const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
+    ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& targetType) const;
+    ValueExpressionPtr IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const;
 public:
     ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
 

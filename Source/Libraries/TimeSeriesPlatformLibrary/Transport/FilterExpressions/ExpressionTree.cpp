@@ -28,6 +28,8 @@ using namespace GSF::DataSet;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
+const int32_t GSF::TimeSeries::Transport::ExpressionDataTypeLength = static_cast<int32_t>(ExpressionDataType::Null) + 1;
+
 const char* GSF::TimeSeries::Transport::ExpressionDataTypeAcronym[] =
 {
     "Boolean",
@@ -478,7 +480,7 @@ ValueExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& node) con
 const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
 {
     if (testValue->DataType != defaultValue->DataType)
-        throw ExpressionTreeException("Coalesce/IsNull arguments must be the same type");
+        throw ExpressionTreeException("Coalesce/IsNull function arguments must be the same type");
 
     if (testValue->IsNullable)
     {
@@ -493,67 +495,309 @@ const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& tes
     return testValue;
 }
 
-const ValueExpressionPtr& ExpressionTree::IIf(const ValueExpressionPtr& testValue, const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const
+ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& targetType) const
+{
+    if (targetType->DataType != ExpressionDataType::String)
+        throw ExpressionTreeException("Convert function target type, second argument, must be string type");
+
+    Nullable<string> targetTypeValue = targetType->ValueAsString();
+
+    if (!targetTypeValue.HasValue())
+        throw ExpressionTreeException("Convert function target type, second argument, is null");
+
+    string targetTypeName = targetTypeValue.Value;
+
+    // Remove any "System." prefix: 01234567
+    if (StartsWith(targetTypeName, "System.") && targetTypeName.size() > 7)
+        targetTypeName = targetTypeName.substr(7);
+
+    ExpressionDataType targetDataType = ExpressionDataType::Null;
+    bool foundDataType = false;
+
+    for (int32_t i = 0; i < ExpressionDataTypeLength; i++)
+    {
+        if (IsEqual(targetTypeName, ExpressionDataTypeAcronym[i]))
+        {
+            targetDataType = static_cast<ExpressionDataType>(i);
+            foundDataType = true;
+            break;
+        }
+    }
+
+    if (!foundDataType)
+        throw ExpressionTreeException("Specified Convert function target type \"" + static_cast<string>(targetTypeValue.Value) + "\", second argument, is not supported");
+
+    // If source value is Null, result is Null, regardless of target type
+    if (sourceValue->IsNullable)
+    {
+        NullableType value = Cast<NullableType>(sourceValue->Value);
+
+        if (!value.HasValue())
+            return ExpressionTree::Null;
+    }
+
+    Object targetValue;
+
+    switch (sourceValue->DataType)
+    {
+        case ExpressionDataType::Boolean:
+        {
+            int32_t value = Cast<bool>(sourceValue->Value) ? 1 : 0;
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                    targetValue = sourceValue->Value;
+                    break;
+                case ExpressionDataType::Int32:
+                    targetValue = value;
+                    break;
+                case ExpressionDataType::Int64:
+                    targetValue = static_cast<int64_t>(value);
+                    break;
+                case ExpressionDataType::Decimal:
+                    targetValue = static_cast<decimal_t>(value);
+                    break;
+                case ExpressionDataType::Double:
+                    targetValue = static_cast<float64_t>(value);
+                    break;
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                    throw ExpressionTreeException("Cannot convert \"Boolean\" data type to \"" + string(EnumName(targetDataType)) + "\"");
+                case ExpressionDataType::Null:
+                    targetValue = ExpressionTree::Null;
+                    break;
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            
+            break;
+        }
+        case ExpressionDataType::Int32:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::Int64:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::Decimal:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::Double:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::String:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::Guid:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::DateTime:
+        {
+            bool value = Cast<bool>(sourceValue->Value);
+
+            switch (targetDataType)
+            {
+                case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                case ExpressionDataType::Int64:
+                case ExpressionDataType::Decimal:
+                case ExpressionDataType::Double:
+                case ExpressionDataType::String:
+                    targetValue = sourceValue->ToString();
+                    break;
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                case ExpressionDataType::Null:
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+            break;
+        }
+        case ExpressionDataType::Null:
+            // Converting any value to Null results in Null
+            return ExpressionTree::Null;
+        default:
+            throw ExpressionTreeException("Unexpected expression data type encountered");
+    }
+
+    return NewSharedPtr<ValueExpression>(targetDataType, targetValue);
+}
+
+ValueExpressionPtr ExpressionTree::IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const
 {
     if (testValue->DataType != ExpressionDataType::Boolean)
-        throw ExpressionTreeException("First IIf argument must be boolean type");
+        throw ExpressionTreeException("IIf function test value, first argument, must be boolean type");
 
-    if (leftValue->DataType != rightValue->DataType)
-        throw ExpressionTreeException("Second and third IIf arguments must be the same type");
+    if (leftResultValue->DataType != rightResultValue->DataType)
+        throw ExpressionTreeException("IIf function result values, second and third arguments, must be the same type");
 
     if (testValue->IsNullable)
     {
         Nullable<bool> value = Cast<Nullable<bool>>(testValue->Value);
 
         if (value.HasValue())
-            return static_cast<bool>(value.Value) ? leftValue : rightValue;
+            return static_cast<bool>(value.Value) ? Evaluate(leftResultValue) : Evaluate(rightResultValue);
 
         return ExpressionTree::Null;
     }
 
-    return Cast<bool>(testValue->Value) ? leftValue : rightValue;
+    return Cast<bool>(testValue->Value) ? Evaluate(leftResultValue) : Evaluate(rightResultValue);
 }
 
 ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& node) const
 {
     const FunctionExpressionPtr functionNode = CastSharedPtr<FunctionExpression>(node);
 
-    vector<ValueExpressionPtr> evaluatedArguments;
-
-    for (size_t i = 0; i < functionNode->Arguments.size(); i++)
-        evaluatedArguments.push_back(Evaluate(functionNode->Arguments[i]));
-
     switch (functionNode->FunctionType)
     {
         case ExpressionFunctionType::Coalesce:
-            if (evaluatedArguments.size() != 2)
-                throw ExpressionTreeException("Coalesce/IsNull function expects 2 arguments, received " + to_string(evaluatedArguments.size()));
+            if (functionNode->Arguments.size() != 2)
+                throw ExpressionTreeException("Coalesce/IsNull function expects 2 arguments, received " + ToString(functionNode->Arguments.size()));
 
-            return Coalesce(evaluatedArguments[0], evaluatedArguments[1]);
+            return Coalesce(Evaluate(functionNode->Arguments[0]), Evaluate(functionNode->Arguments[1]));
         case ExpressionFunctionType::Convert:
-            if (evaluatedArguments.size() != 2)
-                throw ExpressionTreeException("Convert function expects 2 arguments, received " + to_string(evaluatedArguments.size()));
-            break;
-        case ExpressionFunctionType::IIf:
-            if (evaluatedArguments.size() != 3)
-                throw ExpressionTreeException("IIf function expects 3 arguments, received " + to_string(evaluatedArguments.size()));
+            if (functionNode->Arguments.size() != 2)
+                throw ExpressionTreeException("Convert function expects 2 arguments, received " + ToString(functionNode->Arguments.size()));
 
-            return IIf(evaluatedArguments[0], evaluatedArguments[1], evaluatedArguments[2]);
+            return Convert(Evaluate(functionNode->Arguments[0]), Evaluate(functionNode->Arguments[1]));
+        case ExpressionFunctionType::IIf:
+            if (functionNode->Arguments.size() != 3)
+                throw ExpressionTreeException("IIf function expects 3 arguments, received " + ToString(functionNode->Arguments.size()));
+
+            // Not pre-evaluating IIf result value arguments - only evaluating desired path
+            return IIf(Evaluate(functionNode->Arguments[0]), functionNode->Arguments[1], functionNode->Arguments[2]);
         case ExpressionFunctionType::Len:
-            if (evaluatedArguments.size() != 1)
-                throw ExpressionTreeException("Len expects 1 argument, received " + to_string(evaluatedArguments.size()));
+            if (functionNode->Arguments.size() != 1)
+                throw ExpressionTreeException("Len function expects 1 argument, received " + ToString(functionNode->Arguments.size()));
             break;
         case ExpressionFunctionType::RegExp:
-            if (evaluatedArguments.size() != 2)
-                throw ExpressionTreeException("RegExp function expects 2 arguments, received " + to_string(evaluatedArguments.size()));
+            if (functionNode->Arguments.size() != 2)
+                throw ExpressionTreeException("RegExp function expects 2 arguments, received " + ToString(functionNode->Arguments.size()));
             break;
         case ExpressionFunctionType::SubString:
-            if (evaluatedArguments.size() < 2 || evaluatedArguments.size() > 3)
-                throw ExpressionTreeException("SubString function expects 2 or 3 arguments, received " + to_string(evaluatedArguments.size()));
+            if (functionNode->Arguments.size() < 2 || functionNode->Arguments.size() > 3)
+                throw ExpressionTreeException("SubString function expects 2 or 3 arguments, received " + ToString(functionNode->Arguments.size()));
             break;
         case ExpressionFunctionType::Trim:
-            if (evaluatedArguments.size() != 1)
-                throw ExpressionTreeException("Trim function expects 3 arguments, received " + to_string(evaluatedArguments.size()));
+            if (functionNode->Arguments.size() != 1)
+                throw ExpressionTreeException("Trim function expects 3 arguments, received " + ToString(functionNode->Arguments.size()));
             break;
         default:
             throw ExpressionTreeException("Unexpected function type encountered");

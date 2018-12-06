@@ -24,9 +24,12 @@
 #include "CommonTypes.h"
 #include "Convert.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 using namespace std;
 using namespace GSF::TimeSeries;
+using namespace boost::algorithm;
 
 const decimal_t Decimal::MaxValue = numeric_limits<decimal_t>::max();
 
@@ -46,10 +49,59 @@ const IPAddress Empty::IPAddress;
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
 
-bool GSF::TimeSeries::StringEquals(const std::string& left, const std::string& right, bool ignoreCase)
+bool GSF::TimeSeries::IsEqual(const std::string& left, const std::string& right, bool ignoreCase)
 {
     if (ignoreCase)
         return boost::iequals(left, right);
 
     return boost::equals(left, right);
+}
+
+bool GSF::TimeSeries::StartsWith(const std::string& value, const std::string& testValue, bool ignoreCase)
+{
+    if (ignoreCase)
+        return istarts_with(value, testValue);
+
+    return starts_with(value, testValue);
+}
+
+bool GSF::TimeSeries::EndsWith(const std::string& value, const std::string& testValue, bool ignoreCase)
+{
+    if (ignoreCase)
+        return iends_with(value, testValue);
+
+    return ends_with(value, testValue);
+}
+
+bool GSF::TimeSeries::Contains(const std::string& value, const std::string& testValue, bool ignoreCase)
+{
+    if (ignoreCase)
+        return icontains(value, testValue);
+
+    return contains(value, testValue);
+}
+
+std::string GSF::TimeSeries::ToUpper(const std::string& value)
+{
+    return to_upper_copy(value);
+}
+
+std::string GSF::TimeSeries::ToLower(const std::string& value)
+{
+    return to_lower_copy(value);
+}
+
+std::string GSF::TimeSeries::Trim(const std::string& value)
+{
+    return trim_copy(value);
+}
+
+std::string GSF::TimeSeries::TrimRight(const std::string& value)
+{
+    return trim_right_copy(value);
+}
+
+std::string GSF::TimeSeries::TrimLeft(const std::string& value)
+{
+    return trim_left_copy(value);
 }

@@ -165,7 +165,7 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
         {
             const Nullable<string> field = row->ValueAsString(columnIndex);
 
-            if (field.HasValue() && StringEquals(mappingValue, field.Value))
+            if (field.HasValue() && IsEqual(mappingValue, field.Value))
             {
                 const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
@@ -488,7 +488,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     }
     else if (context->BOOLEAN_LITERAL())
     {        
-        result = StringEquals(context->BOOLEAN_LITERAL()->getText(), "true") ? ExpressionTree::True : ExpressionTree::False;
+        result = IsEqual(context->BOOLEAN_LITERAL()->getText(), "true") ? ExpressionTree::True : ExpressionTree::False;
     }
     else if (context->K_NULL())
     {

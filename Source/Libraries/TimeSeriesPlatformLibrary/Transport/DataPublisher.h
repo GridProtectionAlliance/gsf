@@ -39,7 +39,6 @@ namespace TimeSeries {
 namespace Transport
 {
     class DataPublisher;
-
     typedef SharedPtr<DataPublisher> DataPublisherPtr;
 
     class ClientConnection
@@ -85,7 +84,6 @@ namespace Transport
         typedef void(*DispatcherFunction)(DataPublisher*, const std::vector<uint8_t>&);
         typedef void(*MessageCallback)(DataPublisher*, const std::string&);
         typedef void(*ClientConnectedCallback)(DataPublisher*, const Guid&, const std::string&, const std::string&);
-        //typedef void
 
         // Structure used to dispatch
         // callbacks on the callback thread.
