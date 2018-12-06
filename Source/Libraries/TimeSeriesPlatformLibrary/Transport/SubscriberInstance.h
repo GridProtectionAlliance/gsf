@@ -205,6 +205,14 @@ namespace Transport
         // vector will be cleared then appended to, returns true if any devices were added
         bool TryGetDeviceAcronyms(std::vector<std::string>& deviceAcronyms);
 
+        // Safely get parsed device metadata (accessed after successful auto-parse),
+        // vector will be cleared then appended to with copy of all parsed data
+        void GetParsedDeviceMetadata(std::map<std::string, DeviceMetadataPtr>& devices);
+
+        // Safely get parsed measurements (accessed after successful auto-parse),
+        // vector will be cleared then appended to with copy of all parsed data
+        void GetParsedMeasurementMetadata(std::map<Guid, MeasurementMetadataPtr>& measurements);
+
         // Metadata record lookup functions (post-parse)
         bool TryGetDeviceMetadata(const std::string& deviceAcronym, DeviceMetadataPtr& deviceMetadata);
         bool TryGetMeasurementMetdata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata);

@@ -281,7 +281,7 @@ void SubscriberInstance::IterateConfigurationFrames(ConfigurationFrameIteratorHa
     m_configurationUpdateLock.unlock();
 }
 
-void IterateDevices(const DeviceMetadataPtr& device, void* userData)
+void IterateDeviceMetadataForAcronyms(const DeviceMetadataPtr& device, void* userData)
 {
     vector<string>* deviceAcronyms = static_cast<vector<string>*>(userData);
     deviceAcronyms->push_back(device->Acronym);
@@ -291,9 +291,33 @@ bool SubscriberInstance::TryGetDeviceAcronyms(vector<string>& deviceAcronyms)
 {
     deviceAcronyms.clear();
 
-    IterateDeviceMetadata(&IterateDevices, &deviceAcronyms);
+    IterateDeviceMetadata(&IterateDeviceMetadataForAcronyms, &deviceAcronyms);
 
     return !deviceAcronyms.empty();
+}
+
+void IterateDeviceMetadataForCopy(const DeviceMetadataPtr& device, void* userData)
+{
+    map<string, DeviceMetadataPtr>* devices = static_cast<map<string, DeviceMetadataPtr>*>(userData);
+    devices->insert(pair<string, DeviceMetadataPtr>(device->Acronym, device));
+}
+
+void SubscriberInstance::GetParsedDeviceMetadata(map<string, DeviceMetadataPtr>& devices)
+{
+    devices.clear();
+    IterateDeviceMetadata(&IterateDeviceMetadataForCopy, &devices);
+}
+
+void IterateMeasurementMetadataForCopy(const MeasurementMetadataPtr& measurement, void* userData)
+{
+    map<Guid, MeasurementMetadataPtr>* measurements = static_cast<map<Guid, MeasurementMetadataPtr>*>(userData);
+    measurements->insert(pair<Guid, MeasurementMetadataPtr>(measurement->SignalID, measurement));
+}
+
+void SubscriberInstance::GetParsedMeasurementMetadata(map<Guid, MeasurementMetadataPtr>& measurements)
+{
+    measurements.clear();
+    IterateMeasurementMetadata(&IterateMeasurementMetadataForCopy, &measurements);
 }
 
 bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, DeviceMetadataPtr& deviceMetadata)
@@ -392,6 +416,11 @@ bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Gu
     else if (sourceFrame->Frequency && sourceFrame->Frequency->SignalID == signalID)
     {
         measurementMetadata = sourceFrame->Frequency;
+        found = true;
+    }
+    else if (sourceFrame->DfDt && sourceFrame->DfDt->SignalID == signalID)
+    {
+        measurementMetadata = sourceFrame->DfDt;
         found = true;
     }
     else
@@ -740,6 +769,17 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
         {
             configurationFrame->Frequency = nullptr;
         }
+
+        if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::DfDt, measurement))
+        {
+            configurationFrame->DfDt = measurement;
+            configurationFrame->Measurements.insert(measurement->SignalID);
+        }
+        else
+        {
+            configurationFrame->DfDt = nullptr;
+        }
+
 
         if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Quality, measurement))
         {

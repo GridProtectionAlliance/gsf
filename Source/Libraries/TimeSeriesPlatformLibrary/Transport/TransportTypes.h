@@ -206,6 +206,7 @@ namespace TimeSeries
         MeasurementMetadataPtr QualityFlags; // This measurement may be null, see below **
         MeasurementMetadataPtr StatusFlags;
         MeasurementMetadataPtr Frequency;
+        MeasurementMetadataPtr DfDt;
         std::vector<PhasorReferencePtr> Phasors;
         std::vector<MeasurementMetadataPtr> Analogs;
         std::vector<MeasurementMetadataPtr> Digitals;
