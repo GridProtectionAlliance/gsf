@@ -98,6 +98,14 @@ void PublisherInstance::DefineMetadata(const xml_document& metadata)
     m_publisher.DefineMetadata(metadata);
 }
 
+void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements)
+{
+    if (!m_initialized)
+        throw PublisherException("Operation failed, publisher is not initialized.");
+
+    m_publisher.PublishMeasurements(measurements);
+}
+
 void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
     if (!m_initialized)

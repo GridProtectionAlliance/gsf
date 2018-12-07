@@ -67,6 +67,7 @@ namespace Transport
         // Define metadata from existing XML document
         void DefineMetadata(const pugi::xml_document& metadata);
 
+        void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
 
         bool IsMetadataRefreshAllowed() const;
