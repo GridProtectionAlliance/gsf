@@ -27,6 +27,7 @@
 #include "../Common/Convert.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <iostream>
 
 using namespace std;
 using namespace GSF::TimeSeries;
@@ -107,77 +108,77 @@ void SubscriberHandler::ParsedMetadata()
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {
     // Start processing measurements
-    for (auto &measurement : measurements)
-    {
-        time_t soc;
-        uint16_t milliseconds;
+    //for (auto &measurement : measurements)
+    //{
+    //    time_t soc;
+    //    uint16_t milliseconds;
 
-        // Get adjusted value
-        const float64_t value = measurement->AdjustedValue();
+    //    // Get adjusted value
+    //    const float64_t value = measurement->AdjustedValue();
 
-        // Get time converted to UNIX second of century plus milliseconds
-        measurement->GetUnixTime(soc, milliseconds);
+    //    // Get time converted to UNIX second of century plus milliseconds
+    //    measurement->GetUnixTime(soc, milliseconds);
 
-        // Handle per measurement quality flags
-        int32_t qualityFlags = measurement->Flags;
+    //    // Handle per measurement quality flags
+    //    int32_t qualityFlags = measurement->Flags;
 
-        ConfigurationFramePtr configurationFrame;
-        MeasurementMetadataPtr measurementMetadata;
+    //    ConfigurationFramePtr configurationFrame;
+    //    MeasurementMetadataPtr measurementMetadata;
 
-        // Find associated configuration for measurement
-        if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
-        {
-            // Lookup measurement metadata - it's faster to find metadata from within configuration frame
-            if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
-            {
-                const SignalReference& reference = measurementMetadata->Reference;
+    //    // Find associated configuration for measurement
+    //    if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
+    //    {
+    //        // Lookup measurement metadata - it's faster to find metadata from within configuration frame
+    //        if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
+    //        {
+    //            const SignalReference& reference = measurementMetadata->Reference;
 
-                // reference.Acronym	<< target device acronym 
-                // reference.Kind		<< kind of signal (see SignalKind in "Types.h"), like Frequency, Angle, etc
-                // reference.Index      << for Phasors, Analogs and Digitals - this is the ordered "index"
+    //            // reference.Acronym	<< target device acronym 
+    //            // reference.Kind		<< kind of signal (see SignalKind in "Types.h"), like Frequency, Angle, etc
+    //            // reference.Index      << for Phasors, Analogs and Digitals - this is the ordered "index"
 
-                // TODO: Handle measurement processing here...
-            }
-        }
-        else if (TryGetMeasurementMetdata(measurement->SignalID, measurementMetadata))
-        {
-            // Received measurement is not part of a defined configuration frame, e.g., a statistic
-            const SignalReference& reference = measurementMetadata->Reference;
-        }
-    }
+    //            // TODO: Handle measurement processing here...
+    //        }
+    //    }
+    //    else if (TryGetMeasurementMetdata(measurement->SignalID, measurementMetadata))
+    //    {
+    //        // Received measurement is not part of a defined configuration frame, e.g., a statistic
+    //        const SignalReference& reference = measurementMetadata->Reference;
+    //    }
+    //}
 
     // TODO: *** Temporary Testing Code Below *** -- REMOVE BEFORE USE
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
     const uint32_t MaxTimestampSize = 80;
 
-    static long processCount = 0;
+    //static long processCount = 0;
     static char timestamp[MaxTimestampSize];
-    static const long interval = 5 * 60;
-    const long measurementCount = measurements.size();
-    const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
+    //static const long interval = 5 * 60;
+    //const long measurementCount = measurements.size();
+    const bool showMessage = true; // (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
-    processCount += measurementCount;
+    //processCount += measurementCount;
 
     // Only display messages every few seconds
     if (showMessage)
     {
         stringstream message;
 
-        message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
+        //message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
         if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-            message << "Timestamp: " << string(timestamp) << endl;
+            message << string(timestamp);
         
-        message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
+        //message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
 
-        message << "Point\tValue" << endl;
+        //message << "Point\tValue" << endl;
 
         for (const auto& measurement : measurements)
-            message << measurement->ID << '\t' << measurement->Value << endl;
+            message << '\t' << measurement->ID << '\t' << measurement->Value;
 
-        message << endl;
+        message << '\t' << GetTotalMeasurementsReceived() << endl;
 
-        StatusMessage(message.str());
+        cout << message.str();
     }
 }
 
@@ -194,6 +195,7 @@ void SubscriberHandler::HistoricalReadComplete()
 void SubscriberHandler::ConnectionEstablished()
 {
     StatusMessage("Connection established.");
+    
 }
 
 void SubscriberHandler::ConnectionTerminated()

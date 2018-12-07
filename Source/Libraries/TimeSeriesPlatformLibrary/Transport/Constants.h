@@ -1,14 +1,14 @@
 //******************************************************************************************************
 //  Constants.h - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/eclipse-1.0.php
+//      http://opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -104,12 +104,12 @@ namespace Transport
         static const uint8_t UserCommand15 = 0xDF;
     };
 
+    // Although the server commands and responses will be on two different paths, the response enumeration values
+    // are defined as distinct from the command values to make it easier to identify codes from a wire analysis.
+
     // Server responses sent by DataPublisher and received by DataSubscriber.
     struct ServerResponse
     {
-        // Although the server commands and responses will be on two different paths, the response enumeration values
-        // are defined as distinct from the command values to make it easier to identify codes from a wire analysis.
-
         // Command succeeded response. Informs client that its solicited server command succeeded, original command and success message follow.
         static const uint8_t Succeeded = 0x80;
         // Command failed response. Informs client that its solicited server command failed, original command and failure message follow.
@@ -153,14 +153,14 @@ namespace Transport
         static const uint8_t NoOP = 0xFF;
     };
 
+    // Operational modes are sent from a subscriber to a publisher to request operational behaviors for the
+    // connection, as a result the operation modes must be sent before any other command. The publisher may
+    // silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
+    // apply to fundamental protocol control.
+
     // Operational modes that affect how DataPublisher and DataSubscriber communicate.
     struct OperationalModes
     {
-        // Operational modes are sent from a subscriber to a publisher to request operational behaviors for the
-        // connection, as a result the operation modes must be sent before any other command. The publisher may
-        // silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
-        // apply to fundamental protocol control.
-
         // Mask to get version number of protocol. Version number is currently set to 0.
         static const uint32_t VersionMask = 0x0000001F;
         // Mask to get mode of compression. GZip and TSSC compression are the only modes currently supported. Remaining bits are reserved for future compression modes.
@@ -183,14 +183,14 @@ namespace Transport
         static const uint32_t NoFlags = 0x00000000;
     };
 
+    // Operational modes are sent from a subscriber to a publisher to request operational behaviors for the
+    // connection, as a result the operation modes must be sent before any other command. The publisher may
+    // silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
+    // apply to fundamental protocol control.
+
     // Enumeration for character encodings supported by the Gateway Exchange Protocol.
     struct OperationalEncoding
     {
-        // Operational modes are sent from a subscriber to a publisher to request operational behaviors for the
-        // connection, as a result the operation modes must be sent before any other command. The publisher may
-        // silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
-        // apply to fundamental protocol control.
-
         // UTF-16, little endian
         static const uint32_t Unicode = 0x00000000;
         // UTF-16, big endian

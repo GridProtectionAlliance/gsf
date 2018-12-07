@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  Types.h - Gbtc
+//  TransportTypes.h - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //

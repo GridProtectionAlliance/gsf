@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  Types.cpp - Gbtc
+//  TransportTypes.cpp - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
