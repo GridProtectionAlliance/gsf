@@ -104,6 +104,9 @@ namespace TimeSeries
     using SharedPtr = boost::shared_ptr<T>;
 
     template<class T>
+    using EnableSharedThisPtr = boost::enable_shared_from_this<T>;
+
+    template<class T>
     SharedPtr<T> NewSharedPtr()
     {
         return boost::make_shared<T>();

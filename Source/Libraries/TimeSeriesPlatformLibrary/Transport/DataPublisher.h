@@ -77,7 +77,7 @@ namespace Transport
 
     typedef SharedPtr<ClientConnection> ClientConnectionPtr;
 
-    class DataPublisher : public boost::enable_shared_from_this<DataPublisher>
+    class DataPublisher : public EnableSharedThisPtr<DataPublisher>
     {
     private:
         // Function pointer types

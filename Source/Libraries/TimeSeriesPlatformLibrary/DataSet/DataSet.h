@@ -33,7 +33,7 @@ namespace GSF {
 namespace DataSet
 {
 
-class DataSet : public boost::enable_shared_from_this<DataSet> // NOLINT
+class DataSet : public TimeSeries::EnableSharedThisPtr<DataSet> // NOLINT
 {
 private:
     std::map<std::string, DataTablePtr> m_tables;

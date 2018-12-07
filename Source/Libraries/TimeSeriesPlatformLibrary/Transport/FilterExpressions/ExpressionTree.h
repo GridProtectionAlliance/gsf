@@ -68,7 +68,7 @@ enum class ExpressionDataType
     String,     // string
     Guid,       // Guid
     DateTime,   // time_t
-    Null        // nullptr (make sure value is always last in enum)
+    Undefined   // nullptr (make sure value is always last in enum)
 };
 
 const extern int32_t ExpressionDataTypeLength;
@@ -186,8 +186,9 @@ enum class ExpressionFunctionType
     Coalesce,
     Convert,
     IIf,
+    IsRegExMatch,
     Len,
-    RegExp,
+    RegExVal,
     SubString,
     Trim
 };
@@ -208,7 +209,7 @@ class ExpressionTree
 private:
     DataSet::DataRowPtr m_currentRow;
 
-    ValueExpressionPtr Evaluate(const ExpressionPtr& node) const;
+    ValueExpressionPtr Evaluate(const ExpressionPtr& node, ExpressionDataType targetType = ExpressionDataType::Undefined) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& node) const;
     ValueExpressionPtr EvaluateColumn(const ExpressionPtr& node) const;
     ValueExpressionPtr EvaluateFunction(const ExpressionPtr& node) const;
@@ -223,6 +224,13 @@ private:
     const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& targetType) const;
     ValueExpressionPtr IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const;
+    ValueExpressionPtr IsRegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr Len(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr RegExVal(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr SubString(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const;
+    ValueExpressionPtr Trim(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnValue) const;
+    ValueExpressionPtr NullableValue(ExpressionDataType targetDataType) const;
 public:
     ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
 
@@ -230,11 +238,12 @@ public:
     const DataSet::DataTablePtr& Measurements;
     ExpressionPtr Root = nullptr;
 
-    bool Evaluate(const DataSet::DataRowPtr& row);
+    ValueExpressionPtr Evaluate(const DataSet::DataRowPtr& row);
 
     static const ValueExpressionPtr True;
     static const ValueExpressionPtr False;
     static const ValueExpressionPtr Null;
+    static const ValueExpressionPtr Empty;
 };
 
 typedef SharedPtr<ExpressionTree> ExpressionTreePtr;

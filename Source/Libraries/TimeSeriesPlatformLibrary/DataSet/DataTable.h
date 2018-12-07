@@ -43,7 +43,7 @@ typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
 
 enum class DataType;
 
-class DataTable : public boost::enable_shared_from_this<DataTable> // NOLINT
+class DataTable : public TimeSeries::EnableSharedThisPtr<DataTable> // NOLINT
 {
 private:
     DataSetPtr m_parent;

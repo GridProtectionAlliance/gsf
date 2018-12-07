@@ -212,28 +212,14 @@ void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableN
     m_primaryMeasurementTableName = tableName;
 }
 
-void HandleEvaluateError(vector<string>* warnings, const string& warning)
-{
-    if (warnings)
-    {
-        warnings->push_back(warning);
-        return;
-    }
-
-    throw FilterExpressionException(warning);
-}
-
-void FilterExpressionParser::Evaluate(vector<string>* warnings)
+void FilterExpressionParser::Evaluate()
 {
     m_signalIDs.clear();
     m_expressionTrees.clear();
     m_expressions.clear();
 
     if (m_dataset == nullptr)
-    {
-        HandleEvaluateError(warnings, "Cannot evaluate filter expression, no dataset has been defined");
-        return;
-    }
+        throw FilterExpressionException("Cannot evaluate filter expression, no dataset has been defined");
 
     // Create parse tree and visit listener methods
     ParseTreeWalker walker;
@@ -248,18 +234,12 @@ void FilterExpressionParser::Evaluate(vector<string>* warnings)
         const MeasurementTableIDFieldsPtr measurementTableIDFields = GetMeasurementTableIDFields(expressionTree->MeasurementTableName);
 
         if (measurementTableIDFields == nullptr)
-        {
-            HandleEvaluateError(warnings, "Failed to find ID fields record for measurement table \"" + expressionTree->MeasurementTableName + "\"");
-            continue;
-        }
+            throw FilterExpressionException("Failed to find ID fields record for measurement table \"" + expressionTree->MeasurementTableName + "\"");
 
         const DataColumnPtr signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
 
         if (signalIDColumn == nullptr)
-        {
-            HandleEvaluateError(warnings, "Failed to find signal ID field for measurement table \"" + expressionTree->MeasurementTableName + "\"");
-            continue;
-        }
+            throw FilterExpressionException("Failed to find signal ID field for measurement table \"" + expressionTree->MeasurementTableName + "\"");
 
         const int32_t signalIDColumnIndex = signalIDColumn->Index();
 
@@ -267,20 +247,25 @@ void FilterExpressionParser::Evaluate(vector<string>* warnings)
         {
             const DataRowPtr row = measurements->Row(y);
 
-            try
-            {
-                if (row && expressionTree->Evaluate(row))
-                {
-                    Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+            if (row == nullptr)
+                continue;
 
-                    if (signalIDField.HasValue())
-                        m_signalIDs.insert(signalIDField.Value);
-                }
-            }
-            catch (const ExpressionTreeException& ex)
+            ValueExpressionPtr result = expressionTree->Evaluate(row);
+
+            // If final result is Null (due to Null propagation), treat result as False
+            if (result->DataType == ExpressionDataType::Null)
+                result = ExpressionTree::False;
+
+            // Final expression should have a boolean data type (it's part of a WHERE clause)
+            if (result->DataType != ExpressionDataType::Boolean)
+                throw FilterExpressionException("Final expression tree evaluation did not result in a boolean value, result data type is " + string(EnumName(result->DataType)));
+
+            if (Cast<bool>(CastSharedPtr<ValueExpression>(result)->Value))
             {
-                HandleEvaluateError(warnings, ex.what());
-                break;
+                Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+
+                if (signalIDField.HasValue())
+                    m_signalIDs.insert(signalIDField.Value);
             }
         }
     }
@@ -532,9 +517,10 @@ void FilterExpressionParser::exitUnaryOperator(FilterExpressionSyntaxParser::Una
      : K_COALESCE
      | K_CONVERT
      | K_IIF
-     | K_LEN
      | K_ISNULL
-     | K_REGEXP
+     | K_ISREGEXMATCH
+     | K_LEN
+     | K_REGEXVAL
      | K_SUBSTR
      | K_SUBSTRING
      | K_TRIM

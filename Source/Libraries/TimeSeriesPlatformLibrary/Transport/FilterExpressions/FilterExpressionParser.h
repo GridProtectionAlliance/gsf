@@ -90,7 +90,7 @@ public:
     const std::string& GetPrimaryMeasurementTableName() const;
     void SetPrimaryMeasurementTableName(const std::string& tableName);
 
-    void Evaluate(std::vector<std::string>* warnings = nullptr);
+    void Evaluate();
 
     const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
 
