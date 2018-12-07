@@ -28,6 +28,9 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
+    // TODO: Define function to map IEEE C37.118 status flags to GEP flags
+
+
     // Common constants.
     struct Common
     {

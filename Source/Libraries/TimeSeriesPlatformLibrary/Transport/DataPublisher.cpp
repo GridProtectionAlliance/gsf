@@ -316,6 +316,10 @@ void DataPublisher::DefineMetadata(const xml_document& metadata)
 {
 }
 
+void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
+{
+}
+
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
 }
