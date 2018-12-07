@@ -25,6 +25,8 @@
 
 #include "SubscriberHandler.h"
 
+using namespace std;
+
 #define TotalInstances 3
 
 SubscriberHandler* Subscriber[TotalInstances];
