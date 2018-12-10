@@ -50,6 +50,9 @@ namespace TimeSeries
     // Returns a non-empty nor null value
     const char* Coalesce(const char* data, const char* nonEmptyValue);
 
+    // Converts a time string to a common epoch time
+    time_t ParseTimestamp(const char* time);
+
     // Converts an XML formatted time string to a common epoch time
     time_t ParseXMLTimestamp(const char* time);
 }}

@@ -58,46 +58,7 @@ time_t ParseDateTimeLiteral(string time)
         time.erase(time.size() - 1);
     }
 
-    // Need a "generic" ParseTimestamp function...
-    //    istringstream in { time };
-    //    sys_seconds timestamp;
-    //
-    //    // Try parsing several date-time formats formatted timestamp string
-    //    // using the Hinnant date library: https://github.com/HowardHinnant/date
-    //
-    //    // Need to try several date/time format variations per:
-    //    // https://howardhinnant.github.io/date/date.html#from_stream_formatting
-    //    /*
-    //        istringstream in { "2018-01-12 12:05:14" };
-    //        sys_seconds timestamp;
-    //    
-    //        in >> parse("%Y-%m-%dT%T%z", timestamp);
-    //
-    //        if (bool(in))    
-    //        {
-    //            std::cout << "Parsed XML time: " << system_clock::to_time_t(timestamp) << "\n";
-    //        }
-    //        else
-    //        {
-    //            in.clear();
-    //            in.str("2018-01-12 12:05:14");
-    //            in >> parse("%F%n %T", timestamp);
-    //    
-    //            if (bool(in))    
-    //            {
-    //                std::cout << "Parsed std time: " << system_clock::to_time_t(timestamp) << "\n";
-    //            }
-    //            else
-    //            {
-    //                std::cout << "Failed to parse time...\n";
-    //            }
-    //        }
-    //     */
-    //
-    //    // Try XML format, e.g.: 2018-03-14T19:23:11.665-04:00:
-    //    in >> parse("%Y-%m-%dT%T%z", timestamp);
-    
-    return ParseXMLTimestamp(time.c_str());
+    return ParseTimestamp(time.c_str());
 }
 
 FilterExpressionException::FilterExpressionException(string message) noexcept :
@@ -253,14 +214,26 @@ void FilterExpressionParser::Evaluate()
             ValueExpressionPtr result = expressionTree->Evaluate(row);
 
             // If final result is Null (due to Null propagation), treat result as False
-            if (result->DataType == ExpressionDataType::Null)
-                result = ExpressionTree::False;
+            if (result->IsNullable)
+            {
+                NullableType value = Cast<NullableType>(result->Value);
+
+                if (!value.HasValue())
+                    result = ExpressionTree::False;
+            }
 
             // Final expression should have a boolean data type (it's part of a WHERE clause)
             if (result->DataType != ExpressionDataType::Boolean)
                 throw FilterExpressionException("Final expression tree evaluation did not result in a boolean value, result data type is " + string(EnumName(result->DataType)));
 
-            if (Cast<bool>(CastSharedPtr<ValueExpression>(result)->Value))
+            bool expressionValue;
+
+            if (result->IsNullable)
+                expressionValue = static_cast<bool>(Cast<Nullable<bool>>(result->Value).Value);
+            else
+                expressionValue = Cast<bool>(result->Value);
+
+            if (expressionValue)
             {
                 Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 

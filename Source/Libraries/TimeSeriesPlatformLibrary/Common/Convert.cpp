@@ -188,6 +188,49 @@ const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValu
     return data;
 }
 
+time_t GSF::TimeSeries::ParseTimestamp(const char* time)
+{
+    // Need a "generic" ParseTimestamp function...
+//    istringstream in { time };
+//    sys_seconds timestamp;
+//
+//    // Try parsing several date-time formats formatted timestamp string
+//    // using the Hinnant date library: https://github.com/HowardHinnant/date
+//
+//    // Need to try several date/time format variations per:
+//    // https://howardhinnant.github.io/date/date.html#from_stream_formatting
+//    /*
+//        istringstream in { "2018-01-12 12:05:14" };
+//        sys_seconds timestamp;
+//    
+//        in >> parse("%Y-%m-%dT%T%z", timestamp);
+//
+//        if (bool(in))    
+//        {
+//            std::cout << "Parsed XML time: " << system_clock::to_time_t(timestamp) << "\n";
+//        }
+//        else
+//        {
+//            in.clear();
+//            in.str("2018-01-12 12:05:14");
+//            in >> parse("%F%n %T", timestamp);
+//    
+//            if (bool(in))    
+//            {
+//                std::cout << "Parsed std time: " << system_clock::to_time_t(timestamp) << "\n";
+//            }
+//            else
+//            {
+//                std::cout << "Failed to parse time...\n";
+//            }
+//        }
+//     */
+//
+//    // Try XML format, e.g.: 2018-03-14T19:23:11.665-04:00:
+//    in >> parse("%Y-%m-%dT%T%z", timestamp);
+    return ParseXMLTimestamp(time);
+}
+
 time_t GSF::TimeSeries::ParseXMLTimestamp(const char* time)
 {
     istringstream in { time };
