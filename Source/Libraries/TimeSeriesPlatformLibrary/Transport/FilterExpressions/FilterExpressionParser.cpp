@@ -211,16 +211,7 @@ void FilterExpressionParser::Evaluate()
             if (row == nullptr)
                 continue;
 
-            ValueExpressionPtr result = expressionTree->Evaluate(row);
-
-            // If final result is Null (due to Null propagation), treat result as False
-            if (result->IsNullable)
-            {
-                NullableType value = Cast<NullableType>(result->Value);
-
-                if (!value.HasValue())
-                    result = ExpressionTree::False;
-            }
+            const ValueExpressionPtr result = expressionTree->Evaluate(row);
 
             // Final expression should have a boolean data type (it's part of a WHERE clause)
             if (result->DataType != ExpressionDataType::Boolean)
@@ -228,10 +219,20 @@ void FilterExpressionParser::Evaluate()
 
             bool expressionValue;
 
+            // If final result is Null (due to Null propagation), treat result as False
             if (result->IsNullable)
-                expressionValue = static_cast<bool>(Cast<Nullable<bool>>(result->Value).Value);
+            {
+                Nullable<bool> value = Cast<Nullable<bool>>(result->Value);
+
+                if (value.HasValue())
+                    expressionValue = value.Value;
+                else
+                    expressionValue = false;
+            }
             else
+            {
                 expressionValue = Cast<bool>(result->Value);
+            }
 
             if (expressionValue)
             {
