@@ -751,6 +751,13 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets flag that indicates whether the connection will be persisted
+        /// even while the adapter is offline in order to synchronize metadata.
+        /// </summary>
+        public bool PersistConnectionForMetadata =>
+            !AutoStart && AutoSynchronizeMetadata;
+
+        /// <summary>
         /// Gets or sets flag that determines if child devices associated with a subscription
         /// should be prefixed with the subscription name and an exclamation point to ensure
         /// device name uniqueness - recommended value is <c>true</c>.
@@ -805,6 +812,13 @@ namespace GSF.TimeSeries.Transport
                 m_useMillisecondResolution = value;
             }
         }
+
+        /// <summary>
+        /// Gets flag that determines whether the command channel is connected.
+        /// </summary>
+        public bool CommandChannelConnected =>
+            (object)m_commandChannel != null &&
+            m_commandChannel.Enabled;
 
         /// <summary>
         /// Gets flag that determines if this <see cref="DataSubscriber"/> has successfully authenticated with the <see cref="DataPublisher"/>.
@@ -1167,18 +1181,46 @@ namespace GSF.TimeSeries.Transport
                 base.DataSource = value;
                 m_registerStatisticsOperation.RunOnce();
 
+                bool outputMeasurementsUpdated = AutoConnect && UpdateOutputMeasurements();
+
                 // For automatic connections, when meta-data refresh is complete, update output measurements to see if any
                 // points for subscription have changed after re-application of filter expressions and if so, resubscribe
-                if ((object)m_commandChannel != null && m_commandChannel.Enabled && m_autoConnect && UpdateOutputMeasurements())
+                if (outputMeasurementsUpdated && Enabled && CommandChannelConnected)
                 {
                     OnStatusMessage(MessageLevel.Info, "Meta-data received from publisher modified measurement availability, adjusting active subscription...");
 
                     // Updating subscription will restart data stream monitor upon successful resubscribe
-                    SubscribeToOutputMeasurements(true);
+                    if (AutoStart)
+                        SubscribeToOutputMeasurements(true);
                 }
 
                 if ((object)m_dataGapRecoverer != null)
                     m_dataGapRecoverer.DataSource = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public override MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get
+            {
+                return base.RequestedOutputMeasurementKeys;
+            }
+            set
+            {
+                MeasurementKey[] oldKeys = base.RequestedOutputMeasurementKeys ?? new MeasurementKey[0];
+                MeasurementKey[] newKeys = value ?? new MeasurementKey[0];
+                HashSet<MeasurementKey> oldKeySet = new HashSet<MeasurementKey>(oldKeys);
+
+                base.RequestedOutputMeasurementKeys = value;
+
+                if (!AutoStart && Enabled && CommandChannelConnected && !oldKeySet.SetEquals(newKeys))
+                {
+                    OnStatusMessage(MessageLevel.Info, "Requested measurements have changed, adjusting active subscription...");
+                    SubscribeToOutputMeasurements(true);
+                }
             }
         }
 
@@ -1821,6 +1863,9 @@ namespace GSF.TimeSeries.Transport
             {
                 m_bypassingStatistics = true;
             }
+
+            if (PersistConnectionForMetadata)
+                m_commandChannel.ConnectAsync();
 
             Initialized = true;
         }
@@ -2868,7 +2913,19 @@ namespace GSF.TimeSeries.Transport
             m_monitoredBytesReceived = 0L;
             m_lastBytesReceived = 0;
 
-            m_commandChannel.ConnectAsync();
+            if (!PersistConnectionForMetadata)
+                m_commandChannel.ConnectAsync();
+            else
+                OnConnected();
+
+            if (PersistConnectionForMetadata && CommandChannelConnected)
+            {
+                // Attempt authentication if required, remaining steps will happen on successful authentication
+                if (m_securityMode == SecurityMode.Gateway)
+                    Authenticate(m_sharedSecret, m_authenticationID);
+                else
+                    SubscribeToOutputMeasurements(true);
+            }
 
             if (m_useLocalClockAsRealTime && (object)m_subscribedDevicesTimer == null)
             {
@@ -2902,7 +2959,7 @@ namespace GSF.TimeSeries.Transport
                 m_dataStreamMonitor.Enabled = false;
 
             // Disconnect command channel
-            if ((object)m_commandChannel != null)
+            if (!PersistConnectionForMetadata && (object)m_commandChannel != null)
                 m_commandChannel.Disconnect();
 
             if ((object)m_subscribedDevicesTimer != null)
@@ -3576,24 +3633,31 @@ namespace GSF.TimeSeries.Transport
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if ((object)OutputMeasurements != null && OutputMeasurements.Length > 0)
+            MeasurementKey[] outputMeasurementKeys = AutoStart
+                ? this.OutputMeasurementKeys()
+                : RequestedOutputMeasurementKeys;
+
+            if ((object)outputMeasurementKeys != null && outputMeasurementKeys.Length > 0)
             {
-                foreach (IMeasurement measurement in OutputMeasurements)
+                foreach (MeasurementKey measurementKey in outputMeasurementKeys)
                 {
                     if (filterExpression.Length > 0)
                         filterExpression.Append(';');
 
                     // Subscribe by associated Guid...
-                    filterExpression.Append(measurement.ID);
+                    filterExpression.Append(measurementKey.SignalID);
                 }
 
                 // Start unsynchronized subscription
                 #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
-            else if (metaDataRefreshCompleted)
+            else
             {
-                OnStatusMessage(MessageLevel.Error, "No measurements are currently defined for subscription.");
+                Unsubscribe();
+
+                if (AutoStart && metaDataRefreshCompleted)
+                    OnStatusMessage(MessageLevel.Error, "No measurements are currently defined for subscription.");
             }
         }
 
@@ -4663,7 +4727,7 @@ namespace GSF.TimeSeries.Transport
         // This method is called when connection has been authenticated
         private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
         {
-            if (m_autoConnect)
+            if (m_autoConnect && Enabled)
                 StartSubscription();
         }
 
@@ -5060,14 +5124,17 @@ namespace GSF.TimeSeries.Transport
             SendServerCommand(ServerCommand.DefineOperationalModes, BigEndian.GetBytes((uint)m_operationalModes));
 
             // Notify input adapter base that asynchronous connection succeeded
-            OnConnected();
+            if (!PersistConnectionForMetadata)
+                OnConnected();
+            else
+                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
 
             // Notify consumer that connection was successfully established
             OnConnectionEstablished();
 
             OnStatusMessage(MessageLevel.Info, "Data subscriber command channel connection to publisher was established.");
 
-            if (m_autoConnect)
+            if (m_autoConnect && Enabled)
             {
                 // Attempt authentication if required, remaining steps will happen on successful authentication
                 if (m_securityMode == SecurityMode.Gateway)
