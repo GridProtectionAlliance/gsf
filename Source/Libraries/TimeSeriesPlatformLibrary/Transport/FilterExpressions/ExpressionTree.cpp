@@ -81,9 +81,7 @@ const ValueExpressionPtr ExpressionTree::True = NewSharedPtr<ValueExpression>(Ex
 
 const ValueExpressionPtr ExpressionTree::False = NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, false);
 
-const ValueExpressionPtr ExpressionTree::Null = NewSharedPtr<ValueExpression>(ExpressionDataType::Undefined, nullptr);
-
-const ValueExpressionPtr ExpressionTree::Empty = NewSharedPtr<ValueExpression>(ExpressionDataType::String, string());
+const ValueExpressionPtr ExpressionTree::EmptyString = NewSharedPtr<ValueExpression>(ExpressionDataType::String, string());
 
 ExpressionTreeException::ExpressionTreeException(string message) noexcept :
     m_message(move(message))
@@ -284,21 +282,16 @@ ExpressionTree::ExpressionTree(string measurementTableName, const DataTablePtr& 
 
 ValueExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& node, ExpressionDataType targetDataType) const
 {
-    if (node == nullptr || targetDataType == ExpressionDataType::Undefined)
-        return ExpressionTree::Null;
-
     // All expression nodes should evaluate to a value expression
     // Only operator expressions have left and right nodes
     switch (node->Type)
     {
         case ExpressionType::Value:
-        {
             // Change Undefined values to Nullable of target type
             if (node->DataType == ExpressionDataType::Undefined)
-                return NullableValue(targetDataType);
+                return NullValue(targetDataType);
 
             return CastSharedPtr<ValueExpression>(node);
-        }
         case ExpressionType::Unary:
             return EvaluateUnary(node);
         case ExpressionType::Column:
@@ -542,7 +535,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         NullableType value = Cast<NullableType>(sourceValue->Value);
 
         if (!value.HasValue())
-            return ExpressionTree::Null;
+            return NullValue(targetDataType);
     }
 
     Object targetValue;
@@ -751,8 +744,6 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Guid:
         {
-            const Guid value = Cast<Guid>(sourceValue->Value);
-
             switch (targetDataType)
             {
                 case ExpressionDataType::String:
@@ -809,7 +800,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Undefined:
             // Change Undefined values to Nullable of target type
-            return NullableValue(targetDataType);
+            return NullValue(targetDataType);
         default:
             throw ExpressionTreeException("Unexpected expression data type encountered");
     }
@@ -854,7 +845,7 @@ ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) co
         Nullable<string> value = Cast<Nullable<string>>(sourceValue->Value);
 
         if (!value.HasValue())
-            return ExpressionTree::Null;
+            return NullValue(ExpressionDataType::String);
     }
 
     return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Cast<string>(sourceValue->Value).size());
@@ -884,7 +875,7 @@ ValueExpressionPtr ExpressionTree::SubString(const ValueExpressionPtr& sourceVal
         Nullable<string> value = Cast<Nullable<string>>(sourceValue->Value);
 
         if (!value.HasValue())
-            return ExpressionTree::Null;
+            return NullValue(ExpressionDataType::String);
 
         sourceText = value.Value;
     }
@@ -965,7 +956,7 @@ ValueExpressionPtr ExpressionTree::Trim(const ValueExpressionPtr& sourceValue) c
         Nullable<string> value = Cast<Nullable<string>>(sourceValue->Value);
 
         if (!value.HasValue())
-            return ExpressionTree::Null;
+            return NullValue(ExpressionDataType::String);
 
         sourceText = value.Value;
     }
@@ -992,7 +983,7 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
         Nullable<string> value = Cast<Nullable<string>>(regexValue->Value);
 
         if (!value.HasValue())
-            return ExpressionTree::Null;
+            return NullValue(ExpressionDataType::String);
 
         expressionText = value.Value;
     }
@@ -1006,7 +997,7 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
         Nullable<string> value = Cast<Nullable<string>>(testValue->Value);
 
         if (!value.HasValue())
-            return ExpressionTree::Null;
+            return NullValue(ExpressionDataType::String);
 
         testText = value.Value;
     }
@@ -1025,34 +1016,34 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
         if (result)
             return NewSharedPtr<ValueExpression>(ExpressionDataType::String, string(match[0]));
 
-        return ExpressionTree::Empty;
+        return ExpressionTree::EmptyString;
     }
 
     // IsRegExMatch returns boolean result for if there was a matched value
     return result ? ExpressionTree::True : ExpressionTree::False;
 }
 
-ValueExpressionPtr ExpressionTree::NullableValue(ExpressionDataType targetDataType) const
+ValueExpressionPtr ExpressionTree::NullValue(ExpressionDataType targetDataType)
 {
     // Change Undefined values to Nullable of target type
     switch (targetDataType)
     {
         case ExpressionDataType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Nullable<bool>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Nullable<bool>(nullptr), true);
         case ExpressionDataType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Nullable<int32_t>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Nullable<int32_t>(nullptr), true);
         case ExpressionDataType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, Nullable<int64_t>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, Nullable<int64_t>(nullptr), true);
         case ExpressionDataType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Nullable<decimal_t>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Nullable<decimal_t>(nullptr), true);
         case ExpressionDataType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Nullable<float64_t>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Nullable<float64_t>(nullptr), true);
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::String, Nullable<string>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::String, Nullable<string>(nullptr), true);
         case ExpressionDataType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Guid, Nullable<Guid>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Guid, Nullable<Guid>(nullptr), true);
         case ExpressionDataType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::DateTime, Nullable<time_t>(nullptr));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::DateTime, Nullable<time_t>(nullptr), true);
         default:
             throw ExpressionTreeException("Unexpected expression data type encountered");
     }
@@ -1100,7 +1091,7 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& node) c
                 throw ExpressionTreeException("SubString function expects 2 or 3 arguments, received " + ToString(functionNode->Arguments.size()));
 
             if (functionNode->Arguments.size() == 2)
-                return SubString(Evaluate(functionNode->Arguments[0], ExpressionDataType::String), Evaluate(functionNode->Arguments[1], ExpressionDataType::Int32), Evaluate(ExpressionTree::Null, ExpressionDataType::Int32));
+                return SubString(Evaluate(functionNode->Arguments[0], ExpressionDataType::String), Evaluate(functionNode->Arguments[1], ExpressionDataType::Int32), NullValue(ExpressionDataType::Int32));
             
             return SubString(Evaluate(functionNode->Arguments[0], ExpressionDataType::String), Evaluate(functionNode->Arguments[1], ExpressionDataType::Int32), Evaluate(functionNode->Arguments[2], ExpressionDataType::Int32));
         case ExpressionFunctionType::Trim:

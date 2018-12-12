@@ -451,7 +451,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     }
     else if (context->K_NULL())
     {
-        result = ExpressionTree::Null;
+        result = ExpressionTree::NullValue(ExpressionDataType::Undefined);
     }
 
     if (result)

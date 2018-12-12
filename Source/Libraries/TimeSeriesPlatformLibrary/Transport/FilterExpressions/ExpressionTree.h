@@ -209,7 +209,7 @@ class ExpressionTree
 private:
     DataSet::DataRowPtr m_currentRow;
 
-    ValueExpressionPtr Evaluate(const ExpressionPtr& node, ExpressionDataType targetType = ExpressionDataType::Undefined) const;
+    ValueExpressionPtr Evaluate(const ExpressionPtr& node, ExpressionDataType targetDataType = ExpressionDataType::Boolean) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& node) const;
     ValueExpressionPtr EvaluateColumn(const ExpressionPtr& node) const;
     ValueExpressionPtr EvaluateFunction(const ExpressionPtr& node) const;
@@ -230,7 +230,6 @@ private:
     ValueExpressionPtr SubString(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const;
     ValueExpressionPtr Trim(const ValueExpressionPtr& sourceValue) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnValue) const;
-    ValueExpressionPtr NullableValue(ExpressionDataType targetDataType) const;
 public:
     ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
 
@@ -242,8 +241,8 @@ public:
 
     static const ValueExpressionPtr True;
     static const ValueExpressionPtr False;
-    static const ValueExpressionPtr Null;
-    static const ValueExpressionPtr Empty;
+    static const ValueExpressionPtr EmptyString;
+    static ValueExpressionPtr NullValue(ExpressionDataType targetDataType);
 };
 
 typedef SharedPtr<ExpressionTree> ExpressionTreePtr;
