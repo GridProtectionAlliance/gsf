@@ -538,6 +538,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_checkCertificateRevocation;
         private bool m_internal;
         private bool m_includeTime;
+        private bool m_filterOutputMeasurements;
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
         private bool m_useSourcePrefixNames;
@@ -559,7 +560,10 @@ namespace GSF.TimeSeries.Transport
         private long m_lastParsingExceptionTime;
         private int m_allowedParsingExceptions;
         private Ticks m_parsingExceptionWindow;
+        private bool m_supportsRealTimeProcessing;
         private bool m_supportsTemporalProcessing;
+        private DateTime m_startTimeConstraint;
+        private DateTime m_stopTimeConstraint;
         //private Ticks m_lastMeasurementCheck;
         //private Ticks m_minimumMissingMeasurementThreshold = 5;
         //private double m_transmissionDelayTimeAdjustment = 5.0;
@@ -755,7 +759,7 @@ namespace GSF.TimeSeries.Transport
         /// even while the adapter is offline in order to synchronize metadata.
         /// </summary>
         public bool PersistConnectionForMetadata =>
-            !AutoStart && AutoSynchronizeMetadata;
+            !AutoStart && AutoSynchronizeMetadata && !this.TemporalConstraintIsDefined();
 
         /// <summary>
         /// Gets or sets flag that determines if child devices associated with a subscription
@@ -1046,6 +1050,17 @@ namespace GSF.TimeSeries.Transport
         /// <see cref="OperationalEncoding"/> of the communications stream.
         /// </summary>
         public Encoding Encoding => m_encoding;
+
+        /// <summary>
+        /// Gets flag indicating if this adapter supports real-time processing.
+        /// </summary>
+        /// <remarks>
+        /// Setting this value to false indicates that the adapter should not be enabled unless it exists within a temporal session.
+        /// As an example, this flag can be used in a gateway system to set up two separate subscribers: one to the PDC for real-time
+        /// data streams and one to the historian for historical data streams. In this scenario, the assumption is that the PDC is
+        /// the data source for the historian, implying that only local data is destined for archival.
+        /// </remarks>
+        public bool SupportsRealTimeProcessing => m_supportsRealTimeProcessing;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -1577,6 +1592,11 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("compressionModes", out setting) && Enum.TryParse(setting, true, out compressionModes))
                 CompressionModes = compressionModes;
 
+            // Check if output measurements should be filtered to only those belonging to the subscriber
+            m_filterOutputMeasurements = !settings.TryGetValue("filterOutputMeasurements", out setting) || setting.ParseBoolean();
+
+            // Check if the subscriber supports real-time and historical processing
+            m_supportsRealTimeProcessing = !settings.TryGetValue("supportsRealTimeProcessing", out setting) || setting.ParseBoolean();
             m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
 
             if (settings.TryGetValue("useZeroMQChannel", out setting))
@@ -1925,7 +1945,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // If active measurements are defined, attempt to defined desired subscription points from there
-            if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+            if (m_filterOutputMeasurements && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
             {
                 try
                 {
@@ -1977,6 +1997,9 @@ namespace GSF.TimeSeries.Transport
         // the published meta-data rather than blindly attempting to subscribe to all signals.
         private void TryFilterOutputMeasurements()
         {
+            if (!m_filterOutputMeasurements)
+                return;
+
             IEnumerable<Guid> measurementIDs;
             ISet<Guid> measurementIDSet;
             Guid signalID = Guid.Empty;
@@ -2898,6 +2921,9 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
+            if (!this.TemporalConstraintIsDefined() && !m_supportsRealTimeProcessing)
+                return;
+
             long now = m_useLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
 
@@ -3620,7 +3646,7 @@ namespace GSF.TimeSeries.Transport
             SubscribeToOutputMeasurements(!m_autoSynchronizeMetadata);
 
             // Initiate meta-data refresh
-            if (m_autoSynchronizeMetadata)
+            if (m_autoSynchronizeMetadata && !this.TemporalConstraintIsDefined())
                 SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
         }
 
@@ -3628,10 +3654,20 @@ namespace GSF.TimeSeries.Transport
         {
             StringBuilder filterExpression = new StringBuilder();
             string dataChannel = null;
+            string startTimeConstraint = null;
+            string stopTimeConstraint = null;
+            int processingInterval = -1;
 
             // If TCP command channel is defined separately, then base connection string defines data channel
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
+
+            if (this.TemporalConstraintIsDefined())
+            {
+                startTimeConstraint = StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fffffff");
+                stopTimeConstraint = StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fffffff");
+                processingInterval = ProcessingInterval;
+            }
 
             MeasurementKey[] outputMeasurementKeys = AutoStart
                 ? this.OutputMeasurementKeys()
@@ -3650,7 +3686,7 @@ namespace GSF.TimeSeries.Transport
 
                 // Start unsynchronized subscription
                 #pragma warning disable 0618
-                UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
+                UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel, startTime: startTimeConstraint, stopTime: stopTimeConstraint, processingInterval: processingInterval);
             }
             else
             {
