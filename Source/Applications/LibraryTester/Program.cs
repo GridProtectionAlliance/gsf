@@ -21,15 +21,16 @@
 //
 //******************************************************************************************************
 
+using GSF;
+using GSF.Communication;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using GSF;
-using GSF.Communication;
-using System.Diagnostics;
 
 //using GSF.EMAX;
 
@@ -50,6 +51,17 @@ namespace LibraryTester
         {
             // Add references for projects as needed, then add a simple call so that immediate window
             // will have access to assembly. Only a single call per assembly is needed.
+
+            DataSet dataSet = new DataSet();
+            dataSet.ReadXml(@"C:\Users\rcarroll\Desktop\Metadata.xml");
+
+            DataTable deviceDetail = dataSet.Tables["DeviceDetail"];
+
+            DataColumn testColumn = new DataColumn("Test", typeof(bool), "'12' LIKE '12*12'");
+
+            deviceDetail.Columns.Add(testColumn);
+
+            Debug.WriteLine(deviceDetail.Rows[0]["Test"]);
 
             Common.IsDefaultValue(true);            // Call to load GSF.Core
             Transport.GetDefaultIPStack();          // Call to load GSF.Communications

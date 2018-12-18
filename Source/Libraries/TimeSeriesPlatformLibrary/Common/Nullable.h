@@ -311,56 +311,56 @@ template<typename T, typename U>
 Nullable<T> CastAsNullable(const Nullable<U>& source)
 {
     if (source.HasValue())
-        return static_cast<T>(source.Value);
+        return static_cast<T>(source.GetValueOrDefault());
 
     return nullptr;
 }
 
 template<typename T>
-std::string ToString(Nullable<T> value)
+std::string ToString(const Nullable<T>& value)
 {
     if (value.HasValue())
-        return GSF::TimeSeries::ToString(value.Value);
+        return GSF::TimeSeries::ToString(value.GetValueOrDefault());
 
     return {};
 }
 
-inline std::string ToString(Nullable<std::string> value)
+inline std::string ToString(const Nullable<std::string>& value)
 {
     if (value.HasValue())
-        return value.Value;
+        return value.GetValueOrDefault();
 
     return {};
 }
 
-inline std::string ToString(Nullable<bool> value)
+inline std::string ToString(const Nullable<bool>& value)
 {
     if (value.HasValue())
-        return static_cast<bool>(value.Value) ? "true" : "false";
+        return value.GetValueOrDefault() ? "true" : "false";
 
     return {};
 }
 
-inline std::string ToString(Nullable<GSF::TimeSeries::decimal_t> value)
+inline std::string ToString(const Nullable<GSF::TimeSeries::decimal_t>& value)
 {
     if (value.HasValue())
-        return static_cast<GSF::TimeSeries::decimal_t>(value.Value).str();
+        return value.GetValueOrDefault().str();
 
     return {};
 }
 
-inline std::string ToString(Nullable<GSF::TimeSeries::Guid> value)
+inline std::string ToString(const Nullable<GSF::TimeSeries::Guid>& value)
 {
     if (value.HasValue())
-        return GSF::TimeSeries::ToString(static_cast<GSF::TimeSeries::Guid>(value.Value));
+        return GSF::TimeSeries::ToString(value.GetValueOrDefault());
 
     return {};
 }
 
-inline std::string ToString(Nullable<time_t> value, const char* fmt = "%F %T")
+inline std::string ToString(const Nullable<time_t>& value, const char* fmt = "%F %T")
 {
     if (value.HasValue())
-        return GSF::TimeSeries::ToString(static_cast<time_t>(value.Value), fmt);
+        return GSF::TimeSeries::ToString(value.GetValueOrDefault(), fmt);
 
     return {};
 }

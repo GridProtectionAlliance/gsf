@@ -100,8 +100,6 @@ public:
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
     void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
-    void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext*) override;
-    void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext*) override;
 };
 
 typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;

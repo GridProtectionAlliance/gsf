@@ -57,28 +57,58 @@ bool GSF::TimeSeries::IsEqual(const std::string& left, const std::string& right,
     return boost::equals(left, right);
 }
 
-bool GSF::TimeSeries::StartsWith(const std::string& value, const std::string& testValue, bool ignoreCase)
+bool GSF::TimeSeries::StartsWith(const std::string& value, const std::string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
-        return istarts_with(value, testValue);
+        return istarts_with(value, findValue);
 
-    return starts_with(value, testValue);
+    return starts_with(value, findValue);
 }
 
-bool GSF::TimeSeries::EndsWith(const std::string& value, const std::string& testValue, bool ignoreCase)
+bool GSF::TimeSeries::EndsWith(const std::string& value, const std::string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
-        return iends_with(value, testValue);
+        return iends_with(value, findValue);
 
-    return ends_with(value, testValue);
+    return ends_with(value, findValue);
 }
 
-bool GSF::TimeSeries::Contains(const std::string& value, const std::string& testValue, bool ignoreCase)
+bool GSF::TimeSeries::Contains(const std::string& value, const std::string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
-        return icontains(value, testValue);
+        return icontains(value, findValue);
 
-    return contains(value, testValue);
+    return contains(value, findValue);
+}
+
+int32_t GSF::TimeSeries::Compare(const std::string& left, const std::string& right, bool ignoreCase)
+{
+    if (ignoreCase)
+    {
+        if (ilexicographical_compare(left, right))
+            return -1;
+
+        if (ilexicographical_compare(right, left))
+            return 1;
+
+        return 0;
+    }
+
+    if (lexicographical_compare(left, right))
+        return -1;
+
+    if (lexicographical_compare(right, left))
+        return 1;
+
+    return 0;
+}
+
+std::string GSF::TimeSeries::Replace(const std::string& value, const std::string& findValue, const std::string& replaceValue, bool ignoreCase)
+{
+    if (ignoreCase)
+        return ireplace_all_copy(value, findValue, replaceValue);
+
+    return replace_all_copy(value, findValue, replaceValue);
 }
 
 std::string GSF::TimeSeries::ToUpper(const std::string& value)

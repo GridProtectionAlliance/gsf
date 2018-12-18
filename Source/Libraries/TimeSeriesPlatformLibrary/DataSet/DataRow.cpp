@@ -122,7 +122,7 @@ void DataRow::SetStringValue(int32_t index, const Nullable<string>& value)
 
     if (value.HasValue())
     {
-        const string& strval = value.Value;
+        const string& strval = value.GetValueOrDefault();
         const int32_t length = strval.size();
         char* copy = static_cast<char*>(malloc(length + 1));
         strcpy_s(copy, length, strval.c_str());
@@ -153,7 +153,7 @@ void DataRow::SetBooleanValue(int32_t index, const Nullable<bool>& value)
     if (value.HasValue())
     {
         uint8_t* copy = static_cast<uint8_t*>(malloc(1));
-        *copy = static_cast<bool>(value.Value) ? 1 : 0;
+        *copy = value.GetValueOrDefault() ? 1 : 0;
         m_values[index] = copy;
     }
     else
@@ -212,7 +212,7 @@ void DataRow::SetDecimalValue(int32_t index, const Nullable<decimal_t>& value)
     {
         // The boost decimal type has a very complex internal representation,
         // although slower, it's safer just to store this as a string for now
-        const string& strval = static_cast<decimal_t>(value.Value).str();
+        const string& strval = value.GetValueOrDefault().str();
         const int32_t length = strval.size();
         char* copy = static_cast<char*>(malloc(length + 1));
         strcpy_s(copy, length, strval.c_str());
@@ -247,7 +247,7 @@ void DataRow::SetGuidValue(int32_t index, const Nullable<Guid>& value)
     if (value.HasValue())
     {
         int8_t* copy = static_cast<int8_t*>(malloc(16));
-        memcpy(copy, static_cast<Guid>(value.Value).data, 16);
+        memcpy(copy, value.GetValueOrDefault().data, 16);
         m_values[index] = copy;
     }
     else

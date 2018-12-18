@@ -207,9 +207,11 @@ namespace TimeSeries
 
     // Handy string functions (boost wrappers)
     bool IsEqual(const std::string& left, const std::string& right, bool ignoreCase = true);
-    bool StartsWith(const std::string& value, const std::string& testValue, bool ignoreCase = true);
-    bool EndsWith(const std::string& value, const std::string& testValue, bool ignoreCase = true);
-    bool Contains(const std::string& value, const std::string& testValue, bool ignoreCase = true);
+    bool StartsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
+    bool EndsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
+    bool Contains(const std::string& value, const std::string& findValue, bool ignoreCase = true);
+    int32_t Compare(const std::string& left, const std::string& right, bool ignoreCase = true);
+    std::string Replace(const std::string& value, const std::string& findValue, const std::string& replaceValue, bool ignoreCase = true);
     std::string ToUpper(const std::string& value);
     std::string ToLower(const std::string& value);
     std::string Trim(const std::string& value);
