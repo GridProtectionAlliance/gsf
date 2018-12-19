@@ -81,23 +81,23 @@ bool GSF::TimeSeries::Contains(const std::string& value, const std::string& find
     return contains(value, findValue);
 }
 
-int32_t GSF::TimeSeries::Compare(const std::string& left, const std::string& right, bool ignoreCase)
+int32_t GSF::TimeSeries::Compare(const std::string& leftValue, const std::string& rightValue, bool ignoreCase)
 {
     if (ignoreCase)
     {
-        if (ilexicographical_compare(left, right))
+        if (ilexicographical_compare(leftValue, rightValue))
             return -1;
 
-        if (ilexicographical_compare(right, left))
+        if (ilexicographical_compare(rightValue, leftValue))
             return 1;
 
         return 0;
     }
 
-    if (lexicographical_compare(left, right))
+    if (lexicographical_compare(leftValue, rightValue))
         return -1;
 
-    if (lexicographical_compare(right, left))
+    if (lexicographical_compare(rightValue, leftValue))
         return 1;
 
     return 0;
