@@ -57,7 +57,7 @@ namespace LibraryTester
 
             DataTable deviceDetail = dataSet.Tables["DeviceDetail"];
 
-            DataColumn testColumn = new DataColumn("Test", typeof(bool), "'12' LIKE '12*12'");
+            DataColumn testColumn = new DataColumn("Test", typeof(int), "1 % false");
 
             deviceDetail.Columns.Add(testColumn);
 

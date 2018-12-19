@@ -109,15 +109,30 @@ public:
     bool IsNull() const;
     std::string ToString() const;
 
-    // The following functions are data type validated
-    Nullable<bool> ValueAsBoolean() const;
-    Nullable<int32_t> ValueAsInt32() const;
-    Nullable<int64_t> ValueAsInt64() const;
-    Nullable<decimal_t> ValueAsDecimal() const;
-    Nullable<float64_t> ValueAsDouble() const;
-    Nullable<std::string> ValueAsString() const;
-    Nullable<Guid> ValueAsGuid() const;
-    Nullable<time_t> ValueAsDateTime() const;
+    // The following public functions are data type validated
+    bool ValueAsBoolean() const;
+    Nullable<bool> ValueAsNullableBoolean() const;
+
+    int32_t ValueAsInt32() const;
+    Nullable<int32_t> ValueAsNullableInt32() const;
+
+    int64_t ValueAsInt64() const;
+    Nullable<int64_t> ValueAsNullableInt64() const;
+
+    decimal_t ValueAsDecimal() const;
+    Nullable<decimal_t> ValueAsNullableDecimal() const;
+
+    float64_t ValueAsDouble() const;
+    Nullable<float64_t> ValueAsNullableDouble() const;
+
+    std::string ValueAsString() const;
+    Nullable<std::string> ValueAsNullableString() const;
+
+    Guid ValueAsGuid() const;
+    Nullable<Guid> ValueAsNullableGuid() const;
+
+    time_t ValueAsDateTime() const;
+    Nullable<time_t> ValueAsNullableDateTime() const;
 };
 
 typedef SharedPtr<ValueExpression> ValueExpressionPtr;
@@ -208,7 +223,7 @@ enum class ExpressionFunctionType
 class InListExpression : public Expression
 {
 public:
-    InListExpression(const ExpressionPtr& value, const ExpressionCollectionPtr& arguments, bool notInList);
+    InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool notInList);
 
     const ExpressionPtr& Value;
     const ExpressionCollectionPtr Arguments;
@@ -220,7 +235,7 @@ typedef SharedPtr<InListExpression> InListExpressionPtr;
 class FunctionExpression : public Expression
 {
 public:
-    FunctionExpression(ExpressionFunctionType functionType, const ExpressionCollectionPtr& arguments);
+    FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments);
 
     const ExpressionFunctionType FunctionType;
     const ExpressionCollectionPtr Arguments;
@@ -241,21 +256,20 @@ private:
     ValueExpressionPtr EvaluateOperator(const ExpressionPtr& node) const;
     
     template<typename T>
-    T ApplyIntegerUnaryOperation(const Nullable<T>& unaryValue, ExpressionUnaryType unaryOperation) const;
+    static T ApplyIntegerUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation);
     
     template<typename T>
-    T ApplyNumericUnaryOperation(const Nullable<T>& unaryValue, ExpressionUnaryType unaryOperation, ExpressionDataType dataType) const;
+    static T ApplyFloatingPointUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionDataType dataType);
 
     // Operation Data Type Selectors
     ExpressionDataType DeriveOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
     ExpressionDataType DeriveArithmeticOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
-    ExpressionDataType DeriveBitwiseOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
+    ExpressionDataType DeriveIntegerOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
     ExpressionDataType DeriveComparisonOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
-    ExpressionDataType DeriveEqualityOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
     ExpressionDataType DeriveBooleanOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
 
     // Filter Expression Function Implementations
-    const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
+    static const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue);
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& targetType) const;
     ValueExpressionPtr IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const;
     ValueExpressionPtr IsRegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
@@ -288,49 +302,49 @@ private:
     ValueExpressionPtr Or(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
 
     template<typename T>
-    static T Multiply(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T Multiply(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static T Divide(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T Divide(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static T Modulus(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T Modulus(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static T Add(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T Add(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static T Subtract(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T Subtract(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static T BitShiftLeft(const Nullable<T>& operandValue, int32_t shiftValue);
+    static T BitShiftLeft(const T& operandValue, int32_t shiftValue);
 
     template<typename T>
-    static T BitShiftRight(const Nullable<T>& operandValue, int32_t shiftValue);
+    static T BitShiftRight(const T& operandValue, int32_t shiftValue);
 
     template<typename T>
-    static T BitwiseAnd(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T BitwiseAnd(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static T BitwiseOr(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static T BitwiseOr(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static bool LessThan(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static bool LessThan(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static bool LessThanOrEqual(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static bool LessThanOrEqual(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static bool GreaterThan(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static bool GreaterThan(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static bool GreaterThanOrEqual(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static bool GreaterThanOrEqual(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static bool Equal(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static bool Equal(const T& leftValue, const T& rightValue);
 
     template<typename T>
-    static bool NotEqual(const Nullable<T>& leftValue, const Nullable<T>& rightValue);
+    static bool NotEqual(const T& leftValue, const T& rightValue);
 
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionDataType targetDataType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;

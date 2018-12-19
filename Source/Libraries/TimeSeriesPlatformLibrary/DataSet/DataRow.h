@@ -61,10 +61,10 @@ private:
     void ValidateColumnType(int32_t index, DataType targetType, bool read = false) const;
 
     template<typename T>
-    Nullable<T> GetValue(int32_t index, DataType targetType) const;
+    GSF::TimeSeries::Nullable<T> GetValue(int32_t index, DataType targetType) const;
 
     template<typename T>
-    void SetValue(int32_t index, const Nullable<T>& value, DataType targetType);
+    void SetValue(int32_t index, const GSF::TimeSeries::Nullable<T>& value, DataType targetType);
 
 public:
     DataRow(const DataTablePtr& parent);
@@ -72,50 +72,50 @@ public:
 
     const DataTablePtr& Parent() const;
 
-    Nullable<std::string> ValueAsString(int32_t index) const;
-    void SetStringValue(int32_t index, const Nullable<std::string>& value);
+    GSF::TimeSeries::Nullable<std::string> ValueAsString(int32_t index) const;
+    void SetStringValue(int32_t index, const GSF::TimeSeries::Nullable<std::string>& value);
 
-    Nullable<bool> ValueAsBoolean(int32_t index) const;
-    void SetBooleanValue(int32_t index, const Nullable<bool>& value);
+    GSF::TimeSeries::Nullable<bool> ValueAsBoolean(int32_t index) const;
+    void SetBooleanValue(int32_t index, const GSF::TimeSeries::Nullable<bool>& value);
 
-    Nullable<time_t> ValueAsDateTime(int32_t index) const;
-    void SetDateTimeValue(int32_t index, const Nullable<time_t>& value);
+    GSF::TimeSeries::Nullable<time_t> ValueAsDateTime(int32_t index) const;
+    void SetDateTimeValue(int32_t index, const GSF::TimeSeries::Nullable<time_t>& value);
 
-    Nullable<TimeSeries::float32_t> ValueAsSingle(int32_t index) const;
-    void SetSingleValue(int32_t index, const Nullable<TimeSeries::float32_t>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::float32_t> ValueAsSingle(int32_t index) const;
+    void SetSingleValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::float32_t>& value);
 
-    Nullable<TimeSeries::float64_t> ValueAsDouble(int32_t index) const;
-    void SetDoubleValue(int32_t index, const Nullable<TimeSeries::float64_t>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::float64_t> ValueAsDouble(int32_t index) const;
+    void SetDoubleValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::float64_t>& value);
 
-    Nullable<TimeSeries::decimal_t> ValueAsDecimal(int32_t index) const;
-    void SetDecimalValue(int32_t index, const Nullable<TimeSeries::decimal_t>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::decimal_t> ValueAsDecimal(int32_t index) const;
+    void SetDecimalValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::decimal_t>& value);
 
-    Nullable<TimeSeries::Guid> ValueAsGuid(int32_t index) const;
-    void SetGuidValue(int32_t index, const Nullable<TimeSeries::Guid>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::Guid> ValueAsGuid(int32_t index) const;
+    void SetGuidValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::Guid>& value);
 
-    Nullable<int8_t> ValueAsInt8(int32_t index) const;
-    void SetInt8Value(int32_t index, const Nullable<int8_t>& value);
+    GSF::TimeSeries::Nullable<int8_t> ValueAsInt8(int32_t index) const;
+    void SetInt8Value(int32_t index, const GSF::TimeSeries::Nullable<int8_t>& value);
 
-    Nullable<int16_t> ValueAsInt16(int32_t index) const;
-    void SetInt16Value(int32_t index, const Nullable<int16_t>& value);
+    GSF::TimeSeries::Nullable<int16_t> ValueAsInt16(int32_t index) const;
+    void SetInt16Value(int32_t index, const GSF::TimeSeries::Nullable<int16_t>& value);
 
-    Nullable<int32_t> ValueAsInt32(int32_t index) const;
-    void SetInt32Value(int32_t index, const Nullable<int32_t>& value);
+    GSF::TimeSeries::Nullable<int32_t> ValueAsInt32(int32_t index) const;
+    void SetInt32Value(int32_t index, const GSF::TimeSeries::Nullable<int32_t>& value);
 
-    Nullable<int64_t> ValueAsInt64(int32_t index) const;
-    void SetInt64Value(int32_t index, const Nullable<int64_t>& value);
+    GSF::TimeSeries::Nullable<int64_t> ValueAsInt64(int32_t index) const;
+    void SetInt64Value(int32_t index, const GSF::TimeSeries::Nullable<int64_t>& value);
 
-    Nullable<uint8_t> ValueAsUInt8(int32_t index) const;
-    void SetUInt8Value(int32_t index, const Nullable<uint8_t>& value);
+    GSF::TimeSeries::Nullable<uint8_t> ValueAsUInt8(int32_t index) const;
+    void SetUInt8Value(int32_t index, const GSF::TimeSeries::Nullable<uint8_t>& value);
 
-    Nullable<uint16_t> ValueAsUInt16(int32_t index) const;
-    void SetUInt16Value(int32_t index, const Nullable<uint16_t>& value);
+    GSF::TimeSeries::Nullable<uint16_t> ValueAsUInt16(int32_t index) const;
+    void SetUInt16Value(int32_t index, const GSF::TimeSeries::Nullable<uint16_t>& value);
 
-    Nullable<uint32_t> ValueAsUInt32(int32_t index) const;
-    void SetUInt32Value(int32_t index, const Nullable<uint32_t>& value);
+    GSF::TimeSeries::Nullable<uint32_t> ValueAsUInt32(int32_t index) const;
+    void SetUInt32Value(int32_t index, const GSF::TimeSeries::Nullable<uint32_t>& value);
 
-    Nullable<uint64_t> ValueAsUInt64(int32_t index) const;
-    void SetUInt64Value(int32_t index, const Nullable<uint64_t>& value);
+    GSF::TimeSeries::Nullable<uint64_t> ValueAsUInt64(int32_t index) const;
+    void SetUInt64Value(int32_t index, const GSF::TimeSeries::Nullable<uint64_t>& value);
 
     static const DataRowPtr NullPtr;
 

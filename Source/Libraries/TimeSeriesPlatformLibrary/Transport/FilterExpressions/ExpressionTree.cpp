@@ -23,6 +23,7 @@
 
 #include "ExpressionTree.h"
 #include <regex>
+#include <utility>
 
 using namespace std;
 using namespace GSF::DataSet;
@@ -145,34 +146,18 @@ ValueExpression::ValueExpression(ExpressionDataType dataType, const Object& valu
 void ValueExpression::ValidateDataType(ExpressionDataType targetType) const
 {
     if (DataType != targetType)
-        throw ExpressionTreeException("Cannot read literal expression value as " + string(EnumName(targetType)) + ", data type is " + string(EnumName(DataType)));
+        throw ExpressionTreeException("Cannot read expression value as " + string(EnumName(targetType)) + ", data type is " + string(EnumName(DataType)));
 }
 
 bool ValueExpression::IsNull() const
 {
-    switch (DataType)
+    if (IsNullable)
     {
-        case ExpressionDataType::Boolean:
-            return !ValueAsBoolean().HasValue();
-        case ExpressionDataType::Int32:
-            return !ValueAsInt32().HasValue();
-        case ExpressionDataType::Int64:
-            return !ValueAsInt64().HasValue();
-        case ExpressionDataType::Decimal:
-            return !ValueAsDecimal().HasValue();
-        case ExpressionDataType::Double:
-            return !ValueAsDouble().HasValue();
-        case ExpressionDataType::String:
-            return !ValueAsString().HasValue();
-        case ExpressionDataType::Guid:
-            return !ValueAsGuid().HasValue();
-        case ExpressionDataType::DateTime:
-            return !ValueAsDateTime().HasValue();
-        case ExpressionDataType::Undefined:
-            return true;
-        default:
-            throw ExpressionTreeException("Unexpected expression data type encountered");
+        NullableType value = Cast<NullableType>(Value);
+        return !value.HasValue();
     }
+
+    return false;
 }
 
 string ValueExpression::ToString() const
@@ -180,21 +165,21 @@ string ValueExpression::ToString() const
     switch (DataType)
     {
         case ExpressionDataType::Boolean:
-            return GSF::TimeSeries::ToString(ValueAsBoolean());
+            return GSF::TimeSeries::ToString(ValueAsNullableBoolean());
         case ExpressionDataType::Int32:
-            return GSF::TimeSeries::ToString(ValueAsInt32());
+            return GSF::TimeSeries::ToString(ValueAsNullableInt32());
         case ExpressionDataType::Int64:
-            return GSF::TimeSeries::ToString(ValueAsInt64());
+            return GSF::TimeSeries::ToString(ValueAsNullableInt64());
         case ExpressionDataType::Decimal:
-            return GSF::TimeSeries::ToString(ValueAsDecimal());
+            return GSF::TimeSeries::ToString(ValueAsNullableDecimal());
         case ExpressionDataType::Double:
-            return GSF::TimeSeries::ToString(ValueAsDouble());
+            return GSF::TimeSeries::ToString(ValueAsNullableDouble());
         case ExpressionDataType::String:
-            return GSF::TimeSeries::ToString(ValueAsString());
+            return GSF::TimeSeries::ToString(ValueAsNullableString());
         case ExpressionDataType::Guid:
-            return GSF::TimeSeries::ToString(ValueAsGuid());
+            return GSF::TimeSeries::ToString(ValueAsNullableGuid());
         case ExpressionDataType::DateTime:
-            return GSF::TimeSeries::ToString(ValueAsDateTime());
+            return GSF::TimeSeries::ToString(ValueAsNullableDateTime());
         case ExpressionDataType::Undefined:
             return nullptr;
         default:
@@ -202,7 +187,17 @@ string ValueExpression::ToString() const
     }
 }
 
-Nullable<bool> ValueExpression::ValueAsBoolean() const
+bool ValueExpression::ValueAsBoolean() const
+{
+    ValidateDataType(ExpressionDataType::Boolean);
+
+    if (IsNullable)
+        return Cast<Nullable<bool>>(Value).GetValueOrDefault();
+
+    return Cast<bool>(Value);
+}
+
+Nullable<bool> ValueExpression::ValueAsNullableBoolean() const
 {
     ValidateDataType(ExpressionDataType::Boolean);
 
@@ -212,7 +207,17 @@ Nullable<bool> ValueExpression::ValueAsBoolean() const
     return Cast<bool>(Value);
 }
 
-Nullable<int32_t> ValueExpression::ValueAsInt32() const
+int32_t ValueExpression::ValueAsInt32() const
+{
+    ValidateDataType(ExpressionDataType::Int32);
+
+    if (IsNullable)
+        return Cast<Nullable<int32_t>>(Value).GetValueOrDefault();
+
+    return Cast<int32_t>(Value);
+}
+
+Nullable<int32_t> ValueExpression::ValueAsNullableInt32() const
 {
     ValidateDataType(ExpressionDataType::Int32);
 
@@ -222,7 +227,17 @@ Nullable<int32_t> ValueExpression::ValueAsInt32() const
     return Cast<int32_t>(Value);
 }
 
-Nullable<int64_t> ValueExpression::ValueAsInt64() const
+int64_t ValueExpression::ValueAsInt64() const
+{
+    ValidateDataType(ExpressionDataType::Int64);
+
+    if (IsNullable)
+        return Cast<Nullable<int64_t>>(Value).GetValueOrDefault();
+
+    return Cast<int64_t>(Value);
+}
+
+Nullable<int64_t> ValueExpression::ValueAsNullableInt64() const
 {
     ValidateDataType(ExpressionDataType::Int64);
 
@@ -232,7 +247,17 @@ Nullable<int64_t> ValueExpression::ValueAsInt64() const
     return Cast<int64_t>(Value);
 }
 
-Nullable<decimal_t> ValueExpression::ValueAsDecimal() const
+decimal_t ValueExpression::ValueAsDecimal() const
+{
+    ValidateDataType(ExpressionDataType::Decimal);
+
+    if (IsNullable)
+        return Cast<Nullable<decimal_t>>(Value).GetValueOrDefault();
+
+    return Cast<decimal_t>(Value);
+}
+
+Nullable<decimal_t> ValueExpression::ValueAsNullableDecimal() const
 {
     ValidateDataType(ExpressionDataType::Decimal);
 
@@ -242,7 +267,17 @@ Nullable<decimal_t> ValueExpression::ValueAsDecimal() const
     return Cast<decimal_t>(Value);
 }
 
-Nullable<float64_t> ValueExpression::ValueAsDouble() const
+float64_t ValueExpression::ValueAsDouble() const
+{
+    ValidateDataType(ExpressionDataType::Double);
+
+    if (IsNullable)
+        return Cast<Nullable<float64_t>>(Value).GetValueOrDefault();
+
+    return Cast<float64_t>(Value);
+}
+
+Nullable<float64_t> ValueExpression::ValueAsNullableDouble() const
 {
     ValidateDataType(ExpressionDataType::Double);
 
@@ -252,7 +287,17 @@ Nullable<float64_t> ValueExpression::ValueAsDouble() const
     return Cast<float64_t>(Value);
 }
 
-Nullable<string> ValueExpression::ValueAsString() const
+string ValueExpression::ValueAsString() const
+{
+    ValidateDataType(ExpressionDataType::String);
+
+    if (IsNullable)
+        return Cast<Nullable<string>>(Value).GetValueOrDefault();
+
+    return Cast<string>(Value);
+}
+
+Nullable<string> ValueExpression::ValueAsNullableString() const
 {
     ValidateDataType(ExpressionDataType::String);
 
@@ -262,7 +307,17 @@ Nullable<string> ValueExpression::ValueAsString() const
     return Cast<string>(Value);
 }
 
-Nullable<Guid> ValueExpression::ValueAsGuid() const
+Guid ValueExpression::ValueAsGuid() const
+{
+    ValidateDataType(ExpressionDataType::Guid);
+
+    if (IsNullable)
+        return Cast<Nullable<Guid>>(Value).GetValueOrDefault();
+
+    return Cast<Guid>(Value);
+}
+
+Nullable<Guid> ValueExpression::ValueAsNullableGuid() const
 {
     ValidateDataType(ExpressionDataType::Guid);
 
@@ -272,7 +327,17 @@ Nullable<Guid> ValueExpression::ValueAsGuid() const
     return Cast<Guid>(Value);
 }
 
-Nullable<time_t> ValueExpression::ValueAsDateTime() const
+time_t ValueExpression::ValueAsDateTime() const
+{
+    ValidateDataType(ExpressionDataType::DateTime);
+
+    if (IsNullable)
+        return Cast<Nullable<time_t>>(Value).GetValueOrDefault();
+
+    return Cast<time_t>(Value);
+}
+
+Nullable<time_t> ValueExpression::ValueAsNullableDateTime() const
 {
     ValidateDataType(ExpressionDataType::DateTime);
 
@@ -303,18 +368,18 @@ OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, cons
 {
 }
 
-InListExpression::InListExpression(const ExpressionPtr& value, const ExpressionCollectionPtr& arguments, bool notInList) :
+InListExpression::InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool notInList) :
     Expression(ExpressionType::InList, ExpressionDataType::Boolean),
     Value(value),
-    Arguments(arguments),
+    Arguments(std::move(arguments)),
     NotInList(notInList)
 {
 }
 
-FunctionExpression::FunctionExpression(ExpressionFunctionType functionType, const ExpressionCollectionPtr& arguments) :
+FunctionExpression::FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments) :
     Expression(ExpressionType::Function, ExpressionDataType::Undefined),
     FunctionType(functionType),
-    Arguments(arguments)
+    Arguments(std::move(arguments))
 {
 }
 
@@ -363,9 +428,9 @@ ValueExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& node) cons
         case ExpressionDataType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, ApplyIntegerUnaryOperation<int64_t>(unaryValue->ValueAsInt64(), unaryNode->UnaryType));
         case ExpressionDataType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, ApplyNumericUnaryOperation<decimal_t>(unaryValue->ValueAsDecimal(), unaryNode->UnaryType, unaryValue->DataType));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, ApplyFloatingPointUnaryOperation<decimal_t>(unaryValue->ValueAsDecimal(), unaryNode->UnaryType, unaryValue->DataType));
         case ExpressionDataType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, ApplyNumericUnaryOperation<float64_t>(unaryValue->ValueAsDouble(), unaryNode->UnaryType, unaryValue->DataType));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, ApplyFloatingPointUnaryOperation<float64_t>(unaryValue->ValueAsDouble(), unaryNode->UnaryType, unaryValue->DataType));
         case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
@@ -495,7 +560,7 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& node) con
     for (int32_t i = 0; i < argumentCount; i++)
     {
         const ValueExpressionPtr argumentValue = Evaluate(inListNode->Arguments->at(i));
-        const ExpressionDataType dataType = DeriveEqualityOperationDataType(ExpressionOperatorType::Equal, inListValue->DataType, argumentValue->DataType);
+        const ExpressionDataType dataType = DeriveComparisonOperationDataType(ExpressionOperatorType::Equal, inListValue->DataType, argumentValue->DataType);
         const ValueExpressionPtr result = Equal(inListValue, argumentValue, dataType);
 
         if (result->IsNullable)
@@ -627,34 +692,30 @@ ValueExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& node) c
 }
 
 template<typename T>
-T ExpressionTree::ApplyIntegerUnaryOperation(const Nullable<T>& unaryValue, ExpressionUnaryType unaryOperation) const
+T ExpressionTree::ApplyIntegerUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation)
 {
-    T value = unaryValue.GetValueOrDefault();
-
     switch (unaryOperation)
     {
         case ExpressionUnaryType::Plus:
-            return +value;
+            return +unaryValue;
         case ExpressionUnaryType::Minus:
-            return -value;
+            return -unaryValue;
         case ExpressionUnaryType::Not:
-            return ~value;
+            return ~unaryValue;
         default:
             throw ExpressionTreeException("Unexpected unary type encountered");
     }
 }
 
 template<typename T>
-T ExpressionTree::ApplyNumericUnaryOperation(const Nullable<T>& unaryValue, ExpressionUnaryType unaryOperation, ExpressionDataType dataType) const
+T ExpressionTree::ApplyFloatingPointUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionDataType dataType)
 {
-    T value = unaryValue.GetValueOrDefault();
-
     switch (unaryOperation)
     {
         case ExpressionUnaryType::Plus:
-            return +value;
+            return +unaryValue;
         case ExpressionUnaryType::Minus:
-            return -value;
+            return -unaryValue;
         case ExpressionUnaryType::Not:
             throw ExpressionTreeException("Cannot apply unary \"~\" operator to \"" + string(EnumName(dataType)) + "\" type");
         default:
@@ -668,21 +729,20 @@ ExpressionDataType ExpressionTree::DeriveOperationDataType(ExpressionOperatorTyp
     {
         case ExpressionOperatorType::Multiply:
         case ExpressionOperatorType::Divide:
-        case ExpressionOperatorType::Modulus:
         case ExpressionOperatorType::Add:
         case ExpressionOperatorType::Subtract:
             return DeriveArithmeticOperationDataType(operationType, leftDataType, rightDataType);        
+        case ExpressionOperatorType::Modulus:
         case ExpressionOperatorType::BitwiseAnd:
         case ExpressionOperatorType::BitwiseOr:
-            return DeriveBitwiseOperationDataType(operationType, leftDataType, rightDataType);
+            return DeriveIntegerOperationDataType(operationType, leftDataType, rightDataType);        
         case ExpressionOperatorType::LessThan:
         case ExpressionOperatorType::LessThanOrEqual:
         case ExpressionOperatorType::GreaterThan:
         case ExpressionOperatorType::GreaterThanOrEqual:
-            return DeriveComparisonOperationDataType(operationType, leftDataType, rightDataType);
         case ExpressionOperatorType::Equal:
         case ExpressionOperatorType::NotEqual:
-            return DeriveEqualityOperationDataType(operationType, leftDataType, rightDataType);
+            return DeriveComparisonOperationDataType(operationType, leftDataType, rightDataType);
         case ExpressionOperatorType::And:
         case ExpressionOperatorType::Or:
             return DeriveBooleanOperationDataType(operationType, leftDataType, rightDataType);
@@ -702,9 +762,11 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
 {
     switch (leftDataType)
     {
-        case ExpressionDataType::Int32:
+        case ExpressionDataType::Boolean:
             switch (rightDataType)
             {
+                case ExpressionDataType::Boolean:
+                    return ExpressionDataType::Boolean;
                 case ExpressionDataType::Int32:
                     return ExpressionDataType::Int32;
                 case ExpressionDataType::Int64:
@@ -713,7 +775,25 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
                     return ExpressionDataType::Decimal;
                 case ExpressionDataType::Double:
                     return ExpressionDataType::Double;
+                case ExpressionDataType::String:
+                case ExpressionDataType::Guid:
+                case ExpressionDataType::DateTime:
+                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Boolean\" and \"" + string(EnumName(rightDataType)) + "\"");
+                default:
+                    throw ExpressionTreeException("Unexpected expression data type encountered");
+            }
+        case ExpressionDataType::Int32:
+            switch (rightDataType)
+            {
                 case ExpressionDataType::Boolean:
+                case ExpressionDataType::Int32:
+                    return ExpressionDataType::Int32;
+                case ExpressionDataType::Int64:
+                    return ExpressionDataType::Int64;
+                case ExpressionDataType::Decimal:
+                    return ExpressionDataType::Decimal;
+                case ExpressionDataType::Double:
+                    return ExpressionDataType::Double;
                 case ExpressionDataType::String:
                 case ExpressionDataType::Guid:
                 case ExpressionDataType::DateTime:
@@ -724,6 +804,7 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
         case ExpressionDataType::Int64:
             switch (rightDataType)
             {
+                case ExpressionDataType::Boolean:
                 case ExpressionDataType::Int32:
                 case ExpressionDataType::Int64:
                     return ExpressionDataType::Int64;
@@ -731,7 +812,6 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
                     return ExpressionDataType::Decimal;
                 case ExpressionDataType::Double:
                     return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
                 case ExpressionDataType::String:
                 case ExpressionDataType::Guid:
                 case ExpressionDataType::DateTime:
@@ -742,13 +822,13 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
         case ExpressionDataType::Decimal:
             switch (rightDataType)
             {
+                case ExpressionDataType::Boolean:
                 case ExpressionDataType::Int32:
                 case ExpressionDataType::Int64:
                 case ExpressionDataType::Decimal:
                     return ExpressionDataType::Decimal;
                 case ExpressionDataType::Double:
                     return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
                 case ExpressionDataType::String:
                 case ExpressionDataType::Guid:
                 case ExpressionDataType::DateTime:
@@ -759,12 +839,12 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
         case ExpressionDataType::Double:
             switch (rightDataType)
             {
+                case ExpressionDataType::Boolean:
                 case ExpressionDataType::Int32:
                 case ExpressionDataType::Int64:
                 case ExpressionDataType::Decimal:
                 case ExpressionDataType::Double:
                     return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
                 case ExpressionDataType::String:
                 case ExpressionDataType::Guid:
                 case ExpressionDataType::DateTime:
@@ -772,7 +852,6 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
                 default:
                     throw ExpressionTreeException("Unexpected expression data type encountered");
             }
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -782,7 +861,7 @@ ExpressionDataType ExpressionTree::DeriveArithmeticOperationDataType(ExpressionO
     }
 }
 
-ExpressionDataType ExpressionTree::DeriveBitwiseOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const
+ExpressionDataType ExpressionTree::DeriveIntegerOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const
 {
     switch (leftDataType)
     {
@@ -849,121 +928,6 @@ ExpressionDataType ExpressionTree::DeriveBitwiseOperationDataType(ExpressionOper
 }
 
 ExpressionDataType ExpressionTree::DeriveComparisonOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const
-{
-    switch (leftDataType)
-    {
-        case ExpressionDataType::Boolean:
-            throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Boolean\" and \"" + string(EnumName(rightDataType)) + "\"");
-        case ExpressionDataType::Int32:
-            switch (rightDataType)
-            {
-                case ExpressionDataType::Int32:
-                case ExpressionDataType::String:
-                    return ExpressionDataType::Int32;
-                case ExpressionDataType::Int64:
-                    return ExpressionDataType::Int64;
-                case ExpressionDataType::Decimal:
-                    return ExpressionDataType::Decimal;
-                case ExpressionDataType::Double:
-                    return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
-                case ExpressionDataType::Guid:
-                case ExpressionDataType::DateTime:
-                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Int32\" and \"" + string(EnumName(rightDataType)) + "\"");
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        case ExpressionDataType::Int64:
-            switch (rightDataType)
-            {
-                case ExpressionDataType::Int32:
-                case ExpressionDataType::Int64:
-                case ExpressionDataType::String:
-                    return ExpressionDataType::Int64;
-                case ExpressionDataType::Decimal:
-                    return ExpressionDataType::Decimal;
-                case ExpressionDataType::Double:
-                    return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
-                case ExpressionDataType::Guid:
-                case ExpressionDataType::DateTime:
-                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Int64\" and \"" + string(EnumName(rightDataType)) + "\"");
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        case ExpressionDataType::Decimal:
-            switch (rightDataType)
-            {
-                case ExpressionDataType::Int32:
-                case ExpressionDataType::Int64:
-                case ExpressionDataType::Decimal:
-                case ExpressionDataType::String:
-                    return ExpressionDataType::Decimal;
-                case ExpressionDataType::Double:
-                    return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
-                case ExpressionDataType::Guid:
-                case ExpressionDataType::DateTime:
-                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Decimal\" and \"" + string(EnumName(rightDataType)) + "\"");
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        case ExpressionDataType::Double:
-            switch (rightDataType)
-            {
-                case ExpressionDataType::Int32:
-                case ExpressionDataType::Int64:
-                case ExpressionDataType::Decimal:
-                case ExpressionDataType::Double:
-                case ExpressionDataType::String:
-                    return ExpressionDataType::Double;
-                case ExpressionDataType::Boolean:
-                case ExpressionDataType::Guid:
-                case ExpressionDataType::DateTime:
-                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Double\" and \"" + string(EnumName(rightDataType)) + "\"");
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        case ExpressionDataType::String:
-            return leftDataType;
-        case ExpressionDataType::Guid:
-            switch (rightDataType)
-            {
-                case ExpressionDataType::Guid:
-                case ExpressionDataType::String:
-                    return ExpressionDataType::Guid;
-                case ExpressionDataType::Boolean:
-                case ExpressionDataType::Int32:
-                case ExpressionDataType::Int64:
-                case ExpressionDataType::Decimal:
-                case ExpressionDataType::Double:
-                case ExpressionDataType::DateTime:
-                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Guid\" and \"" + string(EnumName(rightDataType)) + "\"");
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        case ExpressionDataType::DateTime:
-            switch (rightDataType)
-            {
-                case ExpressionDataType::DateTime:
-                case ExpressionDataType::String:
-                    return ExpressionDataType::DateTime;
-                case ExpressionDataType::Boolean:
-                case ExpressionDataType::Int32:
-                case ExpressionDataType::Int64:
-                case ExpressionDataType::Decimal:
-                case ExpressionDataType::Double:
-                case ExpressionDataType::Guid:
-                    throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"DateTime\" and \"" + string(EnumName(rightDataType)) + "\"");
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        default:
-            throw ExpressionTreeException("Unexpected expression data type encountered");
-    }
-}
-
-ExpressionDataType ExpressionTree::DeriveEqualityOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const
 {
     switch (leftDataType)
     {
@@ -1104,20 +1068,16 @@ ExpressionDataType ExpressionTree::DeriveBooleanOperationDataType(ExpressionOper
     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"" + string(EnumName(leftDataType)) + "\" and \"" + string(EnumName(rightDataType)) + "\"");
 }
 
-const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
+const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue)
 {
     if (testValue->DataType != defaultValue->DataType)
         throw ExpressionTreeException("\"Coalesce\"/\"IsNull\" function arguments must be the same type");
 
-    if (testValue->IsNullable)
-    {
-        NullableType value = Cast<NullableType>(testValue->Value);
+    if (defaultValue->IsNull())
+        throw ExpressionTreeException("\"Coalesce\"/\"IsNull\" default value, second argument, is null");
 
-        if (value.HasValue())
-            return testValue;
-
+    if (testValue->IsNull())
         return defaultValue;
-    }
 
     return testValue;
 }
@@ -1127,12 +1087,10 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     if (targetType->DataType != ExpressionDataType::String)
         throw ExpressionTreeException("\"Convert\" function target type, second argument, must be string type");
 
-    Nullable<string> targetTypeValue = targetType->ValueAsString();
-
-    if (!targetTypeValue.HasValue())
+    if (targetType->IsNull())
         throw ExpressionTreeException("\"Convert\" function target type, second argument, is null");
 
-    string targetTypeName = targetTypeValue.GetValueOrDefault();
+    string targetTypeName = targetType->ValueAsString();
 
     // Remove any "System." prefix: 01234567
     if (StartsWith(targetTypeName, "System.") && targetTypeName.size() > 7)
@@ -1152,7 +1110,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     }
 
     if (!foundDataType || targetDataType == ExpressionDataType::Undefined)
-        throw ExpressionTreeException("Specified \"Convert\" function target type \"" + targetTypeValue.GetValueOrDefault() + "\", second argument, is not supported");
+        throw ExpressionTreeException("Specified \"Convert\" function target type \"" + targetType->ValueAsString() + "\", second argument, is not supported");
 
     return Convert(sourceValue, targetDataType);
 }
@@ -1340,6 +1298,8 @@ ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue,
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Multiply<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Multiply<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1348,7 +1308,6 @@ ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue,
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Multiply<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Multiply<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1370,6 +1329,19 @@ ValueExpressionPtr ExpressionTree::Divide(const ValueExpressionPtr& leftValue, c
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+        {
+            const int32_t leftInt = left->ValueAsBoolean() ? 1 : 0;
+            const int32_t rightInt = right->ValueAsBoolean() ? 1 : 0;
+            bool result;
+
+            if (rightInt == 0)
+                result = false;
+            else
+                result = leftInt / rightInt != 0;
+
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, result);
+        }
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Divide<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1378,7 +1350,6 @@ ValueExpressionPtr ExpressionTree::Divide(const ValueExpressionPtr& leftValue, c
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Divide<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Divide<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1400,15 +1371,25 @@ ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, 
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+        {
+            const int32_t leftInt = left->ValueAsBoolean() ? 1 : 0;
+            const int32_t rightInt = right->ValueAsBoolean() ? 1 : 0;
+            bool result;
+
+            if (rightInt == 0)
+                result = false;
+            else
+                result = leftInt % rightInt != 0;
+
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, result);
+        }
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Modulus<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, Modulus<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
         case ExpressionDataType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Modulus<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
         case ExpressionDataType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Modulus<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1430,6 +1411,8 @@ ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, cons
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Add<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Add<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1438,7 +1421,6 @@ ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, cons
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Add<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Add<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1460,6 +1442,8 @@ ValueExpressionPtr ExpressionTree::Subtract(const ValueExpressionPtr& leftValue,
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Subtract<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, Subtract<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1468,7 +1452,6 @@ ValueExpressionPtr ExpressionTree::Subtract(const ValueExpressionPtr& leftValue,
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Decimal, Subtract<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Double, Subtract<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1532,13 +1515,14 @@ ValueExpressionPtr ExpressionTree::BitShiftLeft(const ValueExpressionPtr& leftVa
 
     switch (leftValue->DataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, BitShiftLeft<bool>(leftValue->ValueAsBoolean(), shiftValue));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, BitShiftLeft<int32_t>(leftValue->ValueAsInt32(), shiftValue));
         case ExpressionDataType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, BitShiftLeft<int64_t>(leftValue->ValueAsInt64(), shiftValue));
         case ExpressionDataType::Decimal:
         case ExpressionDataType::Double:
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1602,13 +1586,14 @@ ValueExpressionPtr ExpressionTree::BitShiftRight(const ValueExpressionPtr& leftV
 
     switch (leftValue->DataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, BitShiftRight<bool>(leftValue->ValueAsBoolean(), shiftValue));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, BitShiftRight<int32_t>(leftValue->ValueAsInt32(), shiftValue));
         case ExpressionDataType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, BitShiftRight<int64_t>(leftValue->ValueAsInt64(), shiftValue));
         case ExpressionDataType::Decimal:
         case ExpressionDataType::Double:
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1630,13 +1615,14 @@ ValueExpressionPtr ExpressionTree::BitwiseAnd(const ValueExpressionPtr& leftValu
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, BitwiseAnd<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, BitwiseAnd<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, BitwiseAnd<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
         case ExpressionDataType::Decimal:
         case ExpressionDataType::Double:
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1658,13 +1644,14 @@ ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, BitwiseOr<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, BitwiseOr<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Int64, BitwiseOr<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
         case ExpressionDataType::Decimal:
         case ExpressionDataType::Double:
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::String:
         case ExpressionDataType::Guid:
         case ExpressionDataType::DateTime:
@@ -1686,6 +1673,8 @@ ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue,
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThan<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThan<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1695,12 +1684,11 @@ ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue,
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThan<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString().GetValueOrDefault(), right->ValueAsString().GetValueOrDefault()) < 0);
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) < 0);
         case ExpressionDataType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThan<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
         case ExpressionDataType::DateTime:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThan<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::Undefined:
             throw ExpressionTreeException("Cannot apply less than \"<\" operator to \"" + string(EnumName(dataType)) + "\" type");
         default:
@@ -1719,6 +1707,8 @@ ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& lef
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThanOrEqual<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThanOrEqual<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1728,12 +1718,11 @@ ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& lef
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThanOrEqual<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString().GetValueOrDefault(), right->ValueAsString().GetValueOrDefault()) <= 0);
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) <= 0);
         case ExpressionDataType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThanOrEqual<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
         case ExpressionDataType::DateTime:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, LessThanOrEqual<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::Undefined:
             throw ExpressionTreeException("Cannot apply less than or equal \"<=\" operator to \"" + string(EnumName(dataType)) + "\" type");
         default:
@@ -1752,6 +1741,8 @@ ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftVal
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThan<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThan<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1761,12 +1752,11 @@ ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftVal
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThan<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString().GetValueOrDefault(), right->ValueAsString().GetValueOrDefault()) > 0);
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) > 0);
         case ExpressionDataType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThan<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
         case ExpressionDataType::DateTime:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThan<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::Undefined:
             throw ExpressionTreeException("Cannot apply greater than \">\" operator to \"" + string(EnumName(dataType)) + "\" type");
         default:
@@ -1785,6 +1775,8 @@ ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& 
 
     switch (dataType)
     {
+        case ExpressionDataType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThanOrEqual<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
         case ExpressionDataType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThanOrEqual<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
         case ExpressionDataType::Int64:
@@ -1794,12 +1786,11 @@ ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& 
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThanOrEqual<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString().GetValueOrDefault(), right->ValueAsString().GetValueOrDefault()) >= 0);
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) >= 0);
         case ExpressionDataType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThanOrEqual<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
         case ExpressionDataType::DateTime:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, GreaterThanOrEqual<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
-        case ExpressionDataType::Boolean:
         case ExpressionDataType::Undefined:
             throw ExpressionTreeException("Cannot apply greater than or equal \">=\" operator to \"" + string(EnumName(dataType)) + "\" type");
         default:
@@ -1829,7 +1820,7 @@ ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, co
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Equal<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, IsEqual(left->ValueAsString().GetValueOrDefault(), right->ValueAsString().GetValueOrDefault()));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, IsEqual(left->ValueAsString(), right->ValueAsString()));
         case ExpressionDataType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, Equal<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
         case ExpressionDataType::DateTime:
@@ -1863,7 +1854,7 @@ ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue,
         case ExpressionDataType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, NotEqual<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
         case ExpressionDataType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, !IsEqual(left->ValueAsString().GetValueOrDefault(), right->ValueAsString().GetValueOrDefault()));
+            return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, !IsEqual(left->ValueAsString(), right->ValueAsString()));
         case ExpressionDataType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, NotEqual<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
         case ExpressionDataType::DateTime:
@@ -1959,8 +1950,8 @@ ValueExpressionPtr ExpressionTree::And(const ValueExpressionPtr& leftValue, cons
     if (leftValue->DataType != ExpressionDataType::Boolean || rightValue->DataType != ExpressionDataType::Boolean)
         throw ExpressionTreeException("Cannot perform \"AND\" operation on \"" + string(EnumName(leftValue->DataType)) + "\" and \"" + string(EnumName(rightValue->DataType)) + "\"");
 
-    const bool left = leftValue->ValueAsBoolean().GetValueOrDefault();
-    const bool right = rightValue->ValueAsBoolean().GetValueOrDefault();
+    const bool left = leftValue->ValueAsBoolean();
+    const bool right = rightValue->ValueAsBoolean();
 
     return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, left && right);
 }
@@ -1974,100 +1965,100 @@ ValueExpressionPtr ExpressionTree::Or(const ValueExpressionPtr& leftValue, const
     if (leftValue->DataType != ExpressionDataType::Boolean || rightValue->DataType != ExpressionDataType::Boolean)
         throw ExpressionTreeException("Cannot perform \"OR\" operation on \"" + string(EnumName(leftValue->DataType)) + "\" and \"" + string(EnumName(rightValue->DataType)) + "\"");
 
-    const bool left = leftValue->ValueAsBoolean().GetValueOrDefault();
-    const bool right = rightValue->ValueAsBoolean().GetValueOrDefault();
+    const bool left = leftValue->ValueAsBoolean();
+    const bool right = rightValue->ValueAsBoolean();
 
     return NewSharedPtr<ValueExpression>(ExpressionDataType::Boolean, left || right);
 }
 
 template <typename T>
-T ExpressionTree::Multiply(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::Multiply(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() * rightValue.GetValueOrDefault();
+    return leftValue * rightValue;
 }
 
 template <typename T>
-T ExpressionTree::Divide(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::Divide(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() / rightValue.GetValueOrDefault();
+    return leftValue / rightValue;
 }
 
 template <typename T>
-T ExpressionTree::Modulus(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::Modulus(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() % rightValue.GetValueOrDefault();
+    return leftValue % rightValue;
 }
 
 template <typename T>
-T ExpressionTree::Add(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::Add(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() + rightValue.GetValueOrDefault();
+    return leftValue + rightValue;
 }
 
 template <typename T>
-T ExpressionTree::Subtract(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::Subtract(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() - rightValue.GetValueOrDefault();
+    return leftValue - rightValue;
 }
 
 template <typename T>
-T ExpressionTree::BitShiftLeft(const Nullable<T>& operandValue, int32_t shiftValue)
+T ExpressionTree::BitShiftLeft(const T& operandValue, int32_t shiftValue)
 {
-    return operandValue.GetValueOrDefault() << shiftValue;
+    return operandValue << shiftValue;
 }
 
 template <typename T>
-T ExpressionTree::BitShiftRight(const Nullable<T>& operandValue, int32_t shiftValue)
+T ExpressionTree::BitShiftRight(const T& operandValue, int32_t shiftValue)
 {
-    return operandValue.GetValueOrDefault() >> shiftValue;
+    return operandValue >> shiftValue;
 }
 
 template <typename T>
-T ExpressionTree::BitwiseAnd(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::BitwiseAnd(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() & rightValue.GetValueOrDefault();
+    return leftValue & rightValue;
 }
 
 template <typename T>
-T ExpressionTree::BitwiseOr(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+T ExpressionTree::BitwiseOr(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() | rightValue.GetValueOrDefault();
+    return leftValue | rightValue;
 }
 
 template <typename T>
-bool ExpressionTree::LessThan(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+bool ExpressionTree::LessThan(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() < rightValue.GetValueOrDefault();
+    return leftValue < rightValue;
 }
 
 template <typename T>
-bool ExpressionTree::LessThanOrEqual(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+bool ExpressionTree::LessThanOrEqual(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() <= rightValue.GetValueOrDefault();
+    return leftValue <= rightValue;
 }
 
 template <typename T>
-bool ExpressionTree::GreaterThan(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+bool ExpressionTree::GreaterThan(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() > rightValue.GetValueOrDefault();
+    return leftValue > rightValue;
 }
 
 template <typename T>
-bool ExpressionTree::GreaterThanOrEqual(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+bool ExpressionTree::GreaterThanOrEqual(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() >= rightValue.GetValueOrDefault();
+    return leftValue >= rightValue;
 }
 
 template <typename T>
-bool ExpressionTree::Equal(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+bool ExpressionTree::Equal(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() == rightValue.GetValueOrDefault();
+    return leftValue == rightValue;
 }
 
 template <typename T>
-bool ExpressionTree::NotEqual(const Nullable<T>& leftValue, const Nullable<T>& rightValue)
+bool ExpressionTree::NotEqual(const T& leftValue, const T& rightValue)
 {
-    return leftValue.GetValueOrDefault() != rightValue.GetValueOrDefault();
+    return leftValue != rightValue;
 }
 
 ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue, ExpressionDataType targetDataType) const
@@ -2091,7 +2082,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetDataType)
             {
                 case ExpressionDataType::Boolean:
-                    targetValue = value;
+                    targetValue = result;
                     break;
                 case ExpressionDataType::Int32:
                     targetValue = value;
