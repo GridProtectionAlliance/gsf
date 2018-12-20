@@ -61,6 +61,7 @@
     <Compile Include="RandomValueInputAdapter.cs" />
     <Compile Include="SampleActionAdapter.cs" />
     <Compile Include="SetFlagsFilterAdapter.cs" />
+    <Compile Include="SynchronizeLocalClock.cs" />
     <Compile Include="VirtualActionAdapter.cs" />
     <Compile Include="VirtualInputAdapter.cs" />
     <Compile Include="VirtualOutputAdapter.cs" />
