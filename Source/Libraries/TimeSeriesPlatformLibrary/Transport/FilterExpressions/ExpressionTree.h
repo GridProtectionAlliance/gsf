@@ -53,13 +53,27 @@ enum class ExpressionType
     Operator
 };
 
-// These data types are reduced to a more reasonable set of possible
-// literal types that can be represented in a filter expression, as a
-// result all data table column values will be mapped to these types.
-// The behavior of these types has been modeled to operate similar to
-// parsing of literal expressions in .NET DataSet operations, see:
+// Base class for all expression types
+class Expression;
+typedef SharedPtr<Expression> ExpressionPtr;
+
+class Expression
+{
+public:
+    Expression(ExpressionType type);
+
+    const ExpressionType Type;
+};
+
+typedef std::vector<ExpressionPtr> ExpressionCollection;
+typedef SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
+
+// These expression value data types are reduced to a reasonable set of possible types
+// that can be represented in a filter expression. All data table column values will be
+// mapped to these types. The behavior of these types has been modeled to operate similar
+// to parsing of literal expressions in .NET DataSet operations, see:
 // https://docs.microsoft.com/en-us/dotnet/api/system.data.datacolumn.expression#parsing-literal-expressions
-enum class ExpressionDataType
+enum class ExpressionValueType
 {
     Boolean,    // bool
     Int32,      // int32_t
@@ -72,39 +86,24 @@ enum class ExpressionDataType
     Undefined   // nullptr (make sure value is always last in enum)
 };
 
-const extern int32_t ExpressionDataTypeLength;
-const char* ExpressionDataTypeAcronym[];
-const char* EnumName(ExpressionDataType type);
+const extern int32_t ExpressionValueTypeLength;
+const char* ExpressionValueTypeAcronym[];
+const char* EnumName(ExpressionValueType valueType);
 
-bool IsIntegerType(ExpressionDataType type);
-bool IsNumericType(ExpressionDataType type);
-
-// Base class for all expression types
-class Expression;
-typedef SharedPtr<Expression> ExpressionPtr;
-
-class Expression
-{
-public:
-    Expression(ExpressionType type, ExpressionDataType dataType, bool dataTypeIsNullable = false);
-
-    const ExpressionType Type;
-    const ExpressionDataType DataType;
-    const bool DataTypeIsNullable;
-};
-
-typedef std::vector<ExpressionPtr> ExpressionCollection;
-typedef SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
+bool IsIntegerType(ExpressionValueType valueType);
+bool IsNumericType(ExpressionValueType valueType);
 
 class ValueExpression : public Expression
 {
 private:
-    void ValidateDataType(ExpressionDataType targetType) const;
+    void ValidateValueType(ExpressionValueType valueType) const;
 
 public:
-    ValueExpression(ExpressionDataType dataType, const GSF::TimeSeries::Object& value, bool dataTypeIsNullable = false);
+    ValueExpression(ExpressionValueType valueType, const GSF::TimeSeries::Object& value, bool valueIsNullable = false);
 
     const GSF::TimeSeries::Object& Value;
+    const ExpressionValueType ValueType;
+    const bool ValueIsNullable;
 
     bool IsNull() const;
     std::string ToString() const;
@@ -145,15 +144,15 @@ enum class ExpressionUnaryType
 };
 
 const char* ExpressionUnaryTypeAcronym[];
-const char* EnumName(ExpressionUnaryType type);
+const char* EnumName(ExpressionUnaryType unaryType);
 
 class UnaryExpression : public Expression
 {
 public:
-    UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value);
+    UnaryExpression(ExpressionUnaryType unaryType, const ValueExpressionPtr& value);
 
     const ExpressionUnaryType UnaryType;
-    const ExpressionPtr& Value;
+    const ValueExpressionPtr& Value;
 };
 
 typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
@@ -161,9 +160,9 @@ typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
 class ColumnExpression : public Expression
 {
 public:
-    ColumnExpression(const GSF::DataSet::DataColumnPtr& column);
+    ColumnExpression(const GSF::DataSet::DataColumnPtr& dataColumn);
 
-    const GSF::DataSet::DataColumnPtr& Column;
+    const GSF::DataSet::DataColumnPtr& DataColumn;
 };
 
 typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
@@ -194,7 +193,7 @@ enum class ExpressionOperatorType
 };
 
 const char* ExpressionOperatorTypeAcronym[];
-const char* EnumName(ExpressionOperatorType type);
+const char* EnumName(ExpressionOperatorType operatorType);
 
 class OperatorExpression : public Expression
 {
@@ -248,25 +247,24 @@ class ExpressionTree
 private:
     DataSet::DataRowPtr m_currentRow;
 
-    ValueExpressionPtr Evaluate(const ExpressionPtr& node, ExpressionDataType targetDataType = ExpressionDataType::Boolean) const;
-    ValueExpressionPtr EvaluateUnary(const ExpressionPtr& node) const;
-    ValueExpressionPtr EvaluateColumn(const ExpressionPtr& node) const;
-    ValueExpressionPtr EvaluateInList(const ExpressionPtr& node) const;
-    ValueExpressionPtr EvaluateFunction(const ExpressionPtr& node) const;
-    ValueExpressionPtr EvaluateOperator(const ExpressionPtr& node) const;
+    ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
+    ValueExpressionPtr EvaluateColumn(const ExpressionPtr& expression) const;
+    ValueExpressionPtr EvaluateInList(const ExpressionPtr& expression) const;
+    ValueExpressionPtr EvaluateFunction(const ExpressionPtr& expression) const;
+    ValueExpressionPtr EvaluateOperator(const ExpressionPtr& expression) const;
     
     template<typename T>
     static T ApplyIntegerUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation);
     
     template<typename T>
-    static T ApplyFloatingPointUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionDataType dataType);
+    static T ApplyFloatingPointUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType);
 
-    // Operation Data Type Selectors
-    ExpressionDataType DeriveOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
-    ExpressionDataType DeriveArithmeticOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
-    ExpressionDataType DeriveIntegerOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
-    ExpressionDataType DeriveComparisonOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
-    ExpressionDataType DeriveBooleanOperationDataType(ExpressionOperatorType operationType, ExpressionDataType leftDataType, ExpressionDataType rightDataType) const;
+    // Operation Value Type Selectors
+    ExpressionValueType DeriveOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
+    ExpressionValueType DeriveArithmeticOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
+    ExpressionValueType DeriveIntegerOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
+    ExpressionValueType DeriveComparisonOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
+    ExpressionValueType DeriveBooleanOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
 
     // Filter Expression Function Implementations
     static const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue);
@@ -279,21 +277,21 @@ private:
     ValueExpressionPtr Trim(const ValueExpressionPtr& sourceValue) const;
 
     // Filter Expression Operator Implementations
-    ValueExpressionPtr Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr Divide(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr Modulus(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr Add(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr Subtract(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
+    ValueExpressionPtr Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr Divide(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr Modulus(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr Add(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr Subtract(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
     ValueExpressionPtr BitShiftLeft(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
     ValueExpressionPtr BitShiftRight(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
-    ValueExpressionPtr BitwiseAnd(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr BitwiseOr(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr LessThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr LessThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr GreaterThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr GreaterThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
-    ValueExpressionPtr NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionDataType dataType) const;
+    ValueExpressionPtr BitwiseAnd(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr BitwiseOr(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr LessThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr LessThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr GreaterThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr GreaterThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
     ValueExpressionPtr IsNull(const ValueExpressionPtr& leftValue) const;
     ValueExpressionPtr IsNotNull(const ValueExpressionPtr& leftValue) const;
     ValueExpressionPtr Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
@@ -346,21 +344,21 @@ private:
     template<typename T>
     static bool NotEqual(const T& leftValue, const T& rightValue);
 
-    ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionDataType targetDataType) const;
+    ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
 public:
-    ExpressionTree(std::string measurementTableName, const DataSet::DataTablePtr& measurements);
+    ExpressionTree(const DataSet::DataTablePtr& measurements);
 
-    const std::string MeasurementTableName;
     const DataSet::DataTablePtr& Measurements;
     ExpressionPtr Root = nullptr;
 
     ValueExpressionPtr Evaluate(const DataSet::DataRowPtr& row);
+    ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
 
     static const ValueExpressionPtr True;
     static const ValueExpressionPtr False;
     static const ValueExpressionPtr EmptyString;
-    static ValueExpressionPtr NullValue(ExpressionDataType targetDataType);
+    static ValueExpressionPtr NullValue(ExpressionValueType targetValueType);
 };
 
 typedef SharedPtr<ExpressionTree> ExpressionTreePtr;
