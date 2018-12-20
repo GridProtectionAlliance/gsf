@@ -221,24 +221,8 @@ void FilterExpressionParser::Evaluate()
             if (resultExpression->DataType != ExpressionDataType::Boolean)
                 throw FilterExpressionException("Final expression tree evaluation did not result in a boolean value, result data type is " + string(EnumName(resultExpression->DataType)));
 
-            bool result;
-
-            if (resultExpression->IsNullable)
-            {
-                Nullable<bool> value = Cast<Nullable<bool>>(resultExpression->Value);
-
-                // If final result is Null, i.e., has no value due to Null propagation, treat result as False
-                if (value.HasValue())
-                    result = value.GetValueOrDefault();
-                else
-                    result = false;
-            }
-            else
-            {
-                result = Cast<bool>(resultExpression->Value);
-            }
-
-            if (result)
+            // If final result is Null, i.e., has no value due to Null propagation, treat result as False
+            if (resultExpression->ValueAsBoolean())
             {
                 Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 

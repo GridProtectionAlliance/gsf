@@ -86,11 +86,11 @@ typedef SharedPtr<Expression> ExpressionPtr;
 class Expression
 {
 public:
-    Expression(ExpressionType type, ExpressionDataType dataType, bool isNullable = false);
+    Expression(ExpressionType type, ExpressionDataType dataType, bool dataTypeIsNullable = false);
 
     const ExpressionType Type;
     const ExpressionDataType DataType;
-    const bool IsNullable;
+    const bool DataTypeIsNullable;
 };
 
 typedef std::vector<ExpressionPtr> ExpressionCollection;
@@ -102,14 +102,14 @@ private:
     void ValidateDataType(ExpressionDataType targetType) const;
 
 public:
-    ValueExpression(ExpressionDataType dataType, const GSF::TimeSeries::Object& value, bool isNullable = false);
+    ValueExpression(ExpressionDataType dataType, const GSF::TimeSeries::Object& value, bool dataTypeIsNullable = false);
 
     const GSF::TimeSeries::Object& Value;
 
     bool IsNull() const;
     std::string ToString() const;
 
-    // The following public functions are data type validated
+    // The following functions are data type validated
     bool ValueAsBoolean() const;
     Nullable<bool> ValueAsNullableBoolean() const;
 

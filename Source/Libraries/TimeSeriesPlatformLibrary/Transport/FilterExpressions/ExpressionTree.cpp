@@ -130,15 +130,15 @@ const char* ExpressionTreeException::what() const noexcept
     return &m_message[0];
 }
 
-Expression::Expression(ExpressionType type, ExpressionDataType dataType, bool isNullable) :
+Expression::Expression(ExpressionType type, ExpressionDataType dataType, bool dataTypeIsNullable) :
     Type(type),
     DataType(dataType),
-    IsNullable(isNullable)
+    DataTypeIsNullable(dataTypeIsNullable)
 {
 }
 
-ValueExpression::ValueExpression(ExpressionDataType dataType, const Object& value, bool isNullable) :
-    Expression(ExpressionType::Value, dataType, isNullable),
+ValueExpression::ValueExpression(ExpressionDataType dataType, const Object& value, bool dataTypeIsNullable) :
+    Expression(ExpressionType::Value, dataType, dataTypeIsNullable),
     Value(value)
 {
 }
@@ -151,7 +151,7 @@ void ValueExpression::ValidateDataType(ExpressionDataType targetType) const
 
 bool ValueExpression::IsNull() const
 {
-    if (IsNullable)
+    if (DataTypeIsNullable)
     {
         NullableType value = Cast<NullableType>(Value);
         return !value.HasValue();
@@ -191,7 +191,7 @@ bool ValueExpression::ValueAsBoolean() const
 {
     ValidateDataType(ExpressionDataType::Boolean);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<bool>>(Value).GetValueOrDefault();
 
     return Cast<bool>(Value);
@@ -201,7 +201,7 @@ Nullable<bool> ValueExpression::ValueAsNullableBoolean() const
 {
     ValidateDataType(ExpressionDataType::Boolean);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<bool>>(Value);
 
     return Cast<bool>(Value);
@@ -211,7 +211,7 @@ int32_t ValueExpression::ValueAsInt32() const
 {
     ValidateDataType(ExpressionDataType::Int32);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<int32_t>>(Value).GetValueOrDefault();
 
     return Cast<int32_t>(Value);
@@ -221,7 +221,7 @@ Nullable<int32_t> ValueExpression::ValueAsNullableInt32() const
 {
     ValidateDataType(ExpressionDataType::Int32);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<int32_t>>(Value);
 
     return Cast<int32_t>(Value);
@@ -231,7 +231,7 @@ int64_t ValueExpression::ValueAsInt64() const
 {
     ValidateDataType(ExpressionDataType::Int64);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<int64_t>>(Value).GetValueOrDefault();
 
     return Cast<int64_t>(Value);
@@ -241,7 +241,7 @@ Nullable<int64_t> ValueExpression::ValueAsNullableInt64() const
 {
     ValidateDataType(ExpressionDataType::Int64);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<int64_t>>(Value);
 
     return Cast<int64_t>(Value);
@@ -251,7 +251,7 @@ decimal_t ValueExpression::ValueAsDecimal() const
 {
     ValidateDataType(ExpressionDataType::Decimal);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<decimal_t>>(Value).GetValueOrDefault();
 
     return Cast<decimal_t>(Value);
@@ -261,7 +261,7 @@ Nullable<decimal_t> ValueExpression::ValueAsNullableDecimal() const
 {
     ValidateDataType(ExpressionDataType::Decimal);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<decimal_t>>(Value);
 
     return Cast<decimal_t>(Value);
@@ -271,7 +271,7 @@ float64_t ValueExpression::ValueAsDouble() const
 {
     ValidateDataType(ExpressionDataType::Double);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<float64_t>>(Value).GetValueOrDefault();
 
     return Cast<float64_t>(Value);
@@ -281,7 +281,7 @@ Nullable<float64_t> ValueExpression::ValueAsNullableDouble() const
 {
     ValidateDataType(ExpressionDataType::Double);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<float64_t>>(Value);
 
     return Cast<float64_t>(Value);
@@ -291,7 +291,7 @@ string ValueExpression::ValueAsString() const
 {
     ValidateDataType(ExpressionDataType::String);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<string>>(Value).GetValueOrDefault();
 
     return Cast<string>(Value);
@@ -301,7 +301,7 @@ Nullable<string> ValueExpression::ValueAsNullableString() const
 {
     ValidateDataType(ExpressionDataType::String);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<string>>(Value);
 
     return Cast<string>(Value);
@@ -311,7 +311,7 @@ Guid ValueExpression::ValueAsGuid() const
 {
     ValidateDataType(ExpressionDataType::Guid);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<Guid>>(Value).GetValueOrDefault();
 
     return Cast<Guid>(Value);
@@ -321,7 +321,7 @@ Nullable<Guid> ValueExpression::ValueAsNullableGuid() const
 {
     ValidateDataType(ExpressionDataType::Guid);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<Guid>>(Value);
 
     return Cast<Guid>(Value);
@@ -331,7 +331,7 @@ time_t ValueExpression::ValueAsDateTime() const
 {
     ValidateDataType(ExpressionDataType::DateTime);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<time_t>>(Value).GetValueOrDefault();
 
     return Cast<time_t>(Value);
@@ -341,14 +341,14 @@ Nullable<time_t> ValueExpression::ValueAsNullableDateTime() const
 {
     ValidateDataType(ExpressionDataType::DateTime);
 
-    if (IsNullable)
+    if (DataTypeIsNullable)
         return Cast<Nullable<time_t>>(Value);
 
     return Cast<time_t>(Value);
 }
 
 UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value) :
-    Expression(ExpressionType::Unary, value->DataType, value->IsNullable),
+    Expression(ExpressionType::Unary, value->DataType, value->DataTypeIsNullable),
     UnaryType(unaryType),
     Value(value)
 {
@@ -563,18 +563,8 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& node) con
         const ExpressionDataType dataType = DeriveComparisonOperationDataType(ExpressionOperatorType::Equal, inListValue->DataType, argumentValue->DataType);
         const ValueExpressionPtr result = Equal(inListValue, argumentValue, dataType);
 
-        if (result->IsNullable)
-        {
-            Nullable<bool> value = Cast<Nullable<bool>>(result->Value);
-
-            if (value.HasValue() && value.GetValueOrDefault())
-                return notInList ? ExpressionTree::False : ExpressionTree::True;
-        }
-        else
-        {
-            if (Cast<bool>(result->Value))
-                return notInList ? ExpressionTree::False : ExpressionTree::True;
-        }
+        if (result->ValueAsBoolean())
+            return notInList ? ExpressionTree::False : ExpressionTree::True;
     }
 
     return notInList ? ExpressionTree::True : ExpressionTree::False;
@@ -1123,18 +1113,8 @@ ValueExpressionPtr ExpressionTree::IIf(const ValueExpressionPtr& testValue, cons
     if (leftResultValue->DataType != rightResultValue->DataType)
         throw ExpressionTreeException("\"IIf\" function result values, second and third arguments, must be the same type");
 
-    if (testValue->IsNullable)
-    {
-        Nullable<bool> value = Cast<Nullable<bool>>(testValue->Value);
-
-        if (value.HasValue())
-            return value.GetValueOrDefault() ? Evaluate(leftResultValue) : Evaluate(rightResultValue);
-
-        // Null test expression evaluates to false, that is, right expression
-        return Evaluate(rightResultValue);
-    }
-
-    return Cast<bool>(testValue->Value) ? Evaluate(leftResultValue) : Evaluate(rightResultValue);
+    // Null test expression evaluates to false, that is, right expression
+    return testValue->ValueAsBoolean() ? Evaluate(leftResultValue) : Evaluate(rightResultValue);
 }
 
 ValueExpressionPtr ExpressionTree::IsRegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const
@@ -1151,9 +1131,7 @@ ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) co
     if (sourceValue->IsNull())
         return NullValue(ExpressionDataType::Int32);
 
-    const string sourceText = sourceValue->IsNullable ?
-        Cast<Nullable<string>>(sourceValue->Value).GetValueOrDefault() :
-        Cast<string>(sourceValue->Value);
+    const string sourceText = sourceValue->ValueAsString();
 
     return NewSharedPtr<ValueExpression>(ExpressionDataType::Int32, sourceText.size());
 }
@@ -1178,91 +1156,44 @@ ValueExpressionPtr ExpressionTree::SubString(const ValueExpressionPtr& sourceVal
     if (!IsIntegerType(lengthValue->DataType))
         throw ExpressionTreeException("\"SubString\" function length value, third argument, must be an integer type");
 
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"SubString\" function index value, second argument, is null");
+
     int32_t index, length = -1;
 
-    const string sourceText = sourceValue->IsNullable ?
-        Cast<Nullable<string>>(sourceValue->Value).GetValueOrDefault() :
-        Cast<string>(sourceValue->Value);
+    const string sourceText = sourceValue->ValueAsString();
 
-    if (indexValue->IsNullable)
+    switch (indexValue->DataType)
     {
-        NullableType value = Cast<NullableType>(indexValue->Value);
-
-        if (!value.HasValue())
-            throw ExpressionTreeException("\"SubString\" function index value, second argument, is null");
-
-        switch (indexValue->DataType)
-        {
-            case ExpressionDataType::Boolean:
-                index = Cast<Nullable<bool>>(indexValue->Value).GetValueOrDefault() ? 1 : 0;
-                break;
-            case ExpressionDataType::Int32:
-                index = Cast<Nullable<int32_t>>(indexValue->Value).GetValueOrDefault();
-                break;
-            case ExpressionDataType::Int64:
-                index = static_cast<int32_t>(Cast<Nullable<int64_t>>(indexValue->Value).GetValueOrDefault());
-                break;
-            default:
-                throw ExpressionTreeException("Unexpected expression data type encountered");
-        }
-    }
-    else
-    {
-        switch (indexValue->DataType)
-        {
-            case ExpressionDataType::Boolean:
-                index = Cast<bool>(indexValue->Value) ? 1 : 0;
-                break;
-            case ExpressionDataType::Int32:
-                index = Cast<int32_t>(indexValue->Value);
-                break;
-            case ExpressionDataType::Int64:
-                index = static_cast<int32_t>(Cast<int64_t>(indexValue->Value));
-                break;
-            default:
-                throw ExpressionTreeException("Unexpected expression data type encountered");
-        }
+        case ExpressionDataType::Boolean:
+            index = indexValue->ValueAsBoolean() ? 1 : 0;
+            break;
+        case ExpressionDataType::Int32:
+            index = indexValue->ValueAsInt32();
+            break;
+        case ExpressionDataType::Int64:
+            index = static_cast<int32_t>(indexValue->ValueAsInt64());
+            break;
+        default:
+            throw ExpressionTreeException("Unexpected expression data type encountered");
     }
 
-    if (lengthValue->IsNullable)
-    {
-        NullableType value = Cast<NullableType>(lengthValue->Value);
-
-        if (value.HasValue())
-        {
-            switch (lengthValue->DataType)
-            {
-                case ExpressionDataType::Boolean:
-                    length = Cast<Nullable<bool>>(lengthValue->Value).GetValueOrDefault() ? 1 : 0;
-                    break;
-                case ExpressionDataType::Int32:
-                    length = Cast<Nullable<int32_t>>(lengthValue->Value).GetValueOrDefault();
-                    break;
-                case ExpressionDataType::Int64:
-                    length = static_cast<int32_t>(Cast<Nullable<int64_t>>(lengthValue->Value).GetValueOrDefault());
-                    break;
-                default:
-                    throw ExpressionTreeException("Unexpected expression data type encountered");
-            }
-        }
-    }
-    else
+    if (!lengthValue->IsNull())
     {
         switch (lengthValue->DataType)
         {
             case ExpressionDataType::Boolean:
-                length = Cast<bool>(lengthValue->Value) ? 1 : 0;
+                length = lengthValue->ValueAsBoolean() ? 1 : 0;
                 break;
             case ExpressionDataType::Int32:
-                length = Cast<int32_t>(lengthValue->Value);
+                length = lengthValue->ValueAsInt32();
                 break;
             case ExpressionDataType::Int64:
-                length = static_cast<int32_t>(Cast<int64_t>(lengthValue->Value));
+                length = static_cast<int32_t>(lengthValue->ValueAsInt64());
                 break;
             default:
                 throw ExpressionTreeException("Unexpected expression data type encountered");
         }
-
     }
 
     if (length > -1)
@@ -1280,9 +1211,7 @@ ValueExpressionPtr ExpressionTree::Trim(const ValueExpressionPtr& sourceValue) c
     if (sourceValue->IsNull())
         return NullValue(ExpressionDataType::String);
 
-    const string sourceText = sourceValue->IsNullable ?
-        Cast<Nullable<string>>(sourceValue->Value).GetValueOrDefault() :
-        Cast<string>(sourceValue->Value);
+    const string sourceText = sourceValue->ValueAsString();
 
     return NewSharedPtr<ValueExpression>(ExpressionDataType::String, GSF::TimeSeries::Trim(sourceText));
 }
@@ -1471,46 +1400,24 @@ ValueExpressionPtr ExpressionTree::BitShiftLeft(const ValueExpressionPtr& leftVa
     if (!IsIntegerType(rightValue->DataType))
         throw ExpressionTreeException("BitShift operation shift value must be an integer type");
 
+    if (rightValue->IsNull())
+        throw ExpressionTreeException("BitShift operation shift value is null");
+
     int32_t shiftValue;
 
-    if (rightValue->IsNullable)
+    switch (rightValue->DataType)
     {
-        NullableType value = Cast<NullableType>(rightValue->Value);
-
-        if (!value.HasValue())
-            throw ExpressionTreeException("BitShift operation shift value is null");
-
-        switch (rightValue->DataType)
-        {
-            case ExpressionDataType::Boolean:
-                shiftValue = Cast<Nullable<bool>>(rightValue->Value).GetValueOrDefault() ? 1 : 0;
-                break;
-            case ExpressionDataType::Int32:
-                shiftValue = Cast<Nullable<int32_t>>(rightValue->Value).GetValueOrDefault();
-                break;
-            case ExpressionDataType::Int64:
-                shiftValue = static_cast<int32_t>(Cast<Nullable<int64_t>>(rightValue->Value).GetValueOrDefault());
-                break;
-            default:
-                throw ExpressionTreeException("Unexpected expression data type encountered");
-        }
-    }
-    else
-    {
-        switch (rightValue->DataType)
-        {
-            case ExpressionDataType::Boolean:
-                shiftValue = Cast<bool>(rightValue->Value) ? 1 : 0;
-                break;
-            case ExpressionDataType::Int32:
-                shiftValue = Cast<int32_t>(rightValue->Value);
-                break;
-            case ExpressionDataType::Int64:
-                shiftValue = static_cast<int32_t>(Cast<int64_t>(rightValue->Value));
-                break;
-            default:
-                throw ExpressionTreeException("Unexpected expression data type encountered");
-        }
+        case ExpressionDataType::Boolean:
+            shiftValue = rightValue->ValueAsBoolean() ? 1 : 0;
+            break;
+        case ExpressionDataType::Int32:
+            shiftValue = rightValue->ValueAsInt32();
+            break;
+        case ExpressionDataType::Int64:
+            shiftValue = static_cast<int32_t>(rightValue->ValueAsInt64());
+            break;
+        default:
+            throw ExpressionTreeException("Unexpected expression data type encountered");
     }
 
     switch (leftValue->DataType)
@@ -1542,46 +1449,24 @@ ValueExpressionPtr ExpressionTree::BitShiftRight(const ValueExpressionPtr& leftV
     if (!IsIntegerType(rightValue->DataType))
         throw ExpressionTreeException("BitShift operation shift value must be an integer type");
 
+    if (rightValue->IsNull())
+        throw ExpressionTreeException("BitShift operation shift value is null");
+
     int32_t shiftValue;
 
-    if (rightValue->IsNullable)
+    switch (rightValue->DataType)
     {
-        NullableType value = Cast<NullableType>(rightValue->Value);
-
-        if (!value.HasValue())
-            throw ExpressionTreeException("BitShift operation shift value is null");
-
-        switch (rightValue->DataType)
-        {
-            case ExpressionDataType::Boolean:
-                shiftValue = Cast<Nullable<bool>>(rightValue->Value).GetValueOrDefault() ? 1 : 0;
-                break;
-            case ExpressionDataType::Int32:
-                shiftValue = Cast<Nullable<int32_t>>(rightValue->Value).GetValueOrDefault();
-                break;
-            case ExpressionDataType::Int64:
-                shiftValue = static_cast<int32_t>(Cast<Nullable<int64_t>>(rightValue->Value).GetValueOrDefault());
-                break;
-            default:
-                throw ExpressionTreeException("Unexpected expression data type encountered");
-        }
-    }
-    else
-    {
-        switch (rightValue->DataType)
-        {
-            case ExpressionDataType::Boolean:
-                shiftValue = Cast<bool>(rightValue->Value) ? 1 : 0;
-                break;
-            case ExpressionDataType::Int32:
-                shiftValue = Cast<int32_t>(rightValue->Value);
-                break;
-            case ExpressionDataType::Int64:
-                shiftValue = static_cast<int32_t>(Cast<int64_t>(rightValue->Value));
-                break;
-            default:
-                throw ExpressionTreeException("Unexpected expression data type encountered");
-        }
+        case ExpressionDataType::Boolean:
+            shiftValue = rightValue->ValueAsBoolean() ? 1 : 0;
+            break;
+        case ExpressionDataType::Int32:
+            shiftValue = rightValue->ValueAsInt32();
+            break;
+        case ExpressionDataType::Int64:
+            shiftValue = static_cast<int32_t>(rightValue->ValueAsInt64());
+            break;
+        default:
+            throw ExpressionTreeException("Unexpected expression data type encountered");
     }
 
     switch (leftValue->DataType)
@@ -1888,13 +1773,8 @@ ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, con
     if (rightValue->IsNull())
         throw ExpressionTreeException("Right operand of \"LIKE\" expression is null");
 
-    const string leftOperand = leftValue->IsNullable ?
-        Cast<Nullable<string>>(leftValue->Value).GetValueOrDefault() :
-        Cast<string>(leftValue->Value);
-
-    const string rightOperand = rightValue->IsNullable ?
-        Cast<Nullable<string>>(rightValue->Value).GetValueOrDefault() :
-        Cast<string>(rightValue->Value);
+    const string leftOperand = leftValue->ValueAsString();
+    const string rightOperand = rightValue->ValueAsString();
 
     string testExpression = Replace(rightOperand, "%", "*", false);
     const bool startsWithWildcard = StartsWith(testExpression, "*", false);
@@ -1934,11 +1814,7 @@ ValueExpressionPtr ExpressionTree::NotLike(const ValueExpressionPtr& leftValue, 
 
     const ValueExpressionPtr likeResult = Like(leftValue, rightValue);
 
-    const bool result = likeResult->IsNullable ?
-        Cast<Nullable<bool>>(likeResult->Value).GetValueOrDefault() :
-        Cast<bool>(likeResult->Value);
-
-    return result ? ExpressionTree::False : ExpressionTree::True;
+    return likeResult->ValueAsBoolean() ? ExpressionTree::False : ExpressionTree::True;
 }
 
 ValueExpressionPtr ExpressionTree::And(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const
@@ -2073,10 +1949,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     {
         case ExpressionDataType::Boolean:
         {
-            const bool result = sourceValue->IsNullable ?
-                Cast<Nullable<bool>>(sourceValue->Value).GetValueOrDefault() : 
-                Cast<bool>(sourceValue->Value);
-
+            const bool result = sourceValue->ValueAsBoolean();
             const int32_t value = result ? 1 : 0;
 
             switch (targetDataType)
@@ -2109,9 +1982,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Int32:
         {
-            const int32_t value = sourceValue->IsNullable ?
-                Cast<Nullable<int32_t>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<int32_t>(sourceValue->Value);
+            const int32_t value = sourceValue->ValueAsInt32();
 
             switch (targetDataType)
             {
@@ -2143,9 +2014,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Int64:
         {
-            const int64_t value = sourceValue->IsNullable ?
-                Cast<Nullable<int64_t>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<int64_t>(sourceValue->Value);
+            const int64_t value = sourceValue->ValueAsInt64();
 
             switch (targetDataType)
             {
@@ -2177,9 +2046,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Decimal:
         {
-            const decimal_t value = sourceValue->IsNullable ?
-                Cast<Nullable<decimal_t>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<decimal_t>(sourceValue->Value);
+            const decimal_t value = sourceValue->ValueAsDecimal();
 
             switch (targetDataType)
             {
@@ -2211,9 +2078,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Double:
         {
-            const float64_t value = sourceValue->IsNullable ?
-                Cast<Nullable<float64_t>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<float64_t>(sourceValue->Value);
+            const float64_t value = sourceValue->ValueAsDouble();
 
             switch (targetDataType)
             {
@@ -2245,9 +2110,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::String:
         {
-            const string value = sourceValue->IsNullable ?
-                Cast<Nullable<string>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<string>(sourceValue->Value);
+            const string value = sourceValue->ValueAsString();
 
             switch (targetDataType)
             {
@@ -2287,9 +2150,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::Guid:
         {
-            const Guid value = sourceValue->IsNullable ?
-                Cast<Nullable<Guid>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<Guid>(sourceValue->Value);
+            const Guid value = sourceValue->ValueAsGuid();
 
             switch (targetDataType)
             {
@@ -2313,9 +2174,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionDataType::DateTime:
         {
-            const time_t value = sourceValue->IsNullable ?
-                Cast<Nullable<time_t>>(sourceValue->Value).GetValueOrDefault() :
-                Cast<time_t>(sourceValue->Value);
+            const time_t value = sourceValue->ValueAsDateTime();
 
             switch (targetDataType)
             {
@@ -2365,38 +2224,14 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
     if (testValue->DataType != ExpressionDataType::String)
         throw ExpressionTreeException("\"" + functionName + "\" function test value, second argument, must be string type");
 
-    string expressionText, testText;
+    if (regexValue->IsNull() || testValue->IsNull())
+        return NullValue(returnMatchedValue ? ExpressionDataType::String : ExpressionDataType::Boolean);
 
-    if (regexValue->IsNullable)
-    {
-        Nullable<string> value = Cast<Nullable<string>>(regexValue->Value);
-
-        if (!value.HasValue())
-            return NullValue(ExpressionDataType::String);
-
-        expressionText = value.GetValueOrDefault();
-    }
-    else
-    {
-        expressionText = Cast<string>(regexValue->Value);
-    }
-
-    if (testValue->IsNullable)
-    {
-        Nullable<string> value = Cast<Nullable<string>>(testValue->Value);
-
-        if (!value.HasValue())
-            return NullValue(ExpressionDataType::String);
-
-        testText = value.GetValueOrDefault();
-    }
-    else
-    {
-        testText = Cast<string>(testValue->Value);
-    }
+    const string expressionText = regexValue->ValueAsString();
+    const string testText = testValue->ValueAsString();
+    const regex expression(expressionText);
 
     cmatch match;
-    const regex expression(expressionText);
     const bool result = regex_match(testText.c_str(), match, expression);
 
     if (returnMatchedValue)
