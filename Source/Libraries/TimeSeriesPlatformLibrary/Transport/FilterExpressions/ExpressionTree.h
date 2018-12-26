@@ -108,7 +108,7 @@ public:
     bool IsNull() const;
     std::string ToString() const;
 
-    // The following functions are data type validated
+    // The following functions are value type validated
     bool ValueAsBoolean() const;
     Nullable<bool> ValueAsNullableBoolean() const;
 
@@ -350,6 +350,9 @@ public:
     ExpressionTree(const DataSet::DataTablePtr& measurements);
 
     const DataSet::DataTablePtr& Measurements;
+    int32_t TopLimit;
+    std::vector<std::pair<DataSet::DataColumnPtr, bool>> OrderByTerms;
+
     ExpressionPtr Root = nullptr;
 
     ValueExpressionPtr Evaluate(const DataSet::DataRowPtr& row);

@@ -135,7 +135,7 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
                 const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                 if (signalIDField.HasValue())
-                    m_signalIDs.insert(signalIDField.GetValueOrDefault());
+                    m_signalIDSet.insert(signalIDField.GetValueOrDefault());
 
                 return;
             }
@@ -177,9 +177,18 @@ void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableN
     m_primaryMeasurementTableName = tableName;
 }
 
+template<typename T>
+static bool CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
+{
+    if (leftNullable.HasValue() && rightNullable.HasValue())
+        return leftNullable.GetValueOrDefault() < rightNullable.GetValueOrDefault();
+
+    return !leftNullable.HasValue();
+}
+
 void FilterExpressionParser::Evaluate()
 {
-    m_signalIDs.clear();
+    m_signalIDSet.clear();
     m_expressionTrees.clear();
     m_expressions.clear();
 
@@ -204,12 +213,16 @@ void FilterExpressionParser::Evaluate()
         const DataColumnPtr signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
 
         if (signalIDColumn == nullptr)
-            throw FilterExpressionException("Failed to find signal ID field for measurement table \"" + measurements->Name() + "\"");
+            throw FilterExpressionException("Failed to find signal ID field \"" + measurementTableIDFields->SignalIDFieldName + "\" for measurement table \"" + measurements->Name() + "\"");
 
         const int32_t signalIDColumnIndex = signalIDColumn->Index();
+        vector<DataRowPtr> matchedRows;
 
         for (int32_t y = 0; y < measurements->RowCount(); y++)
         {
+            if (expressionTree->TopLimit > -1 && static_cast<int32_t>(matchedRows.size()) >= expressionTree->TopLimit)
+                break;
+
             const DataRowPtr row = measurements->Row(y);
 
             if (row == nullptr)
@@ -219,7 +232,7 @@ void FilterExpressionParser::Evaluate()
 
             // Final expression should have a boolean data type (it's part of a WHERE clause)
             if (resultExpression->ValueType != ExpressionValueType::Boolean)
-                throw FilterExpressionException("Final expression tree evaluation did not result in a boolean value, result data type is " + string(EnumName(resultExpression->ValueType)));
+                throw FilterExpressionException("Final expression tree evaluation did not result in a boolean value, result data type is \"" + string(EnumName(resultExpression->ValueType)) + "\"");
 
             // If final result is Null, i.e., has no value due to Null propagation, treat result as False
             if (resultExpression->ValueAsBoolean())
@@ -227,15 +240,134 @@ void FilterExpressionParser::Evaluate()
                 Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                 if (signalIDField.HasValue())
-                    m_signalIDs.insert(signalIDField.GetValueOrDefault());
+                {
+                    const guid signalID = signalIDField.GetValueOrDefault();
+
+                    if (signalID != Empty::Guid)
+                    {
+                        const auto iterator = m_signalIDSet.find(signalID);
+
+                        if (iterator != m_signalIDSet.end())
+                        {
+                            m_signalIDSet.insert(signalID);
+                            matchedRows.push_back(row);
+                        }
+                    }
+                }
             }
         }
+
+        if (matchedRows.empty())
+            continue;
+
+        if (!expressionTree->OrderByTerms.empty())
+        {
+            std::sort(matchedRows.begin(), matchedRows.end(), [expressionTree](const DataRowPtr& leftMatchedRow, const DataRowPtr& rightMatchedRow)
+            {
+                for (size_t i = 0; i < expressionTree->OrderByTerms.size(); i++)
+                {
+                    const auto orderByTerm = expressionTree->OrderByTerms[i];
+                    const DataColumnPtr orderByColumn = orderByTerm.first;
+                    const int32_t columnIndex = orderByColumn->Index();
+                    const bool ascending = orderByTerm.second;
+                    const DataRowPtr& leftRow = ascending ? leftMatchedRow : rightMatchedRow;
+                    const DataRowPtr& rightRow = ascending ? rightMatchedRow : leftMatchedRow;
+
+                    switch (orderByColumn->Type())
+                    {
+                        case DataType::String:
+                        {
+                            auto leftNullable = leftRow->ValueAsString(columnIndex);
+                            auto rightNullable = rightRow->ValueAsString(columnIndex);
+
+                            if (leftNullable.HasValue() && rightNullable.HasValue())
+                            {
+                                if (Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault()) < 0)
+                                    return true;
+                            }
+                            else if (!leftNullable.HasValue())
+                            {
+                                return true;
+                            }
+                        }
+                        case DataType::Boolean:
+                            if (CompareValues(leftRow->ValueAsBoolean(columnIndex), rightRow->ValueAsBoolean(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::DateTime:
+                            if (CompareValues(leftRow->ValueAsDateTime(columnIndex), rightRow->ValueAsDateTime(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Single:
+                            if (CompareValues(leftRow->ValueAsSingle(columnIndex), rightRow->ValueAsSingle(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Double:
+                            if (CompareValues(leftRow->ValueAsDouble(columnIndex), rightRow->ValueAsDouble(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Decimal:
+                            if (CompareValues(leftRow->ValueAsDecimal(columnIndex), rightRow->ValueAsDecimal(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Guid:
+                            if (CompareValues(leftRow->ValueAsGuid(columnIndex), rightRow->ValueAsGuid(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Int8:
+                            if (CompareValues(leftRow->ValueAsInt8(columnIndex), rightRow->ValueAsInt8(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Int16:
+                            if (CompareValues(leftRow->ValueAsInt16(columnIndex), rightRow->ValueAsInt16(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Int32:
+                            if (CompareValues(leftRow->ValueAsInt32(columnIndex), rightRow->ValueAsInt32(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::Int64:
+                            if (CompareValues(leftRow->ValueAsInt64(columnIndex), rightRow->ValueAsInt64(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::UInt8:
+                            if (CompareValues(leftRow->ValueAsUInt8(columnIndex), rightRow->ValueAsUInt8(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::UInt16:
+                            if (CompareValues(leftRow->ValueAsUInt16(columnIndex), rightRow->ValueAsUInt16(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::UInt32:
+                            if (CompareValues(leftRow->ValueAsUInt32(columnIndex), rightRow->ValueAsUInt32(columnIndex)))
+                                return true;
+                            break;
+                        case DataType::UInt64:
+                            if (CompareValues(leftRow->ValueAsUInt64(columnIndex), rightRow->ValueAsUInt64(columnIndex)))
+                                return true;
+                            break;
+                        default:
+                            throw FilterExpressionException("Unexpected column data type encountered");
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        for (size_t i = 0; i < matchedRows.size(); i++)
+            m_signalIDs.push_back(matchedRows[i]->ValueAsGuid(signalIDColumnIndex).GetValueOrDefault());
     }
 }
 
-const unordered_set<guid>& FilterExpressionParser::FilteredSignalIDs() const
+const vector<guid>& FilterExpressionParser::FilteredSignalIDs() const
 {
     return m_signalIDs;
+}
+
+const unordered_set<guid>& FilterExpressionParser::FilteredSignalIDSet() const
+{
+    return m_signalIDSet;
 }
 
 /*
@@ -267,6 +399,27 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
 
     m_activeExpressionTree = NewSharedPtr<ExpressionTree>(measurements);
     m_expressionTrees.push_back(m_activeExpressionTree);
+
+    if (context->K_TOP() != nullptr)
+        m_activeExpressionTree->TopLimit = stoi(context->INTEGER_LITERAL()->getText());
+
+    if (context->K_ORDER() != nullptr && context->K_BY() != nullptr)
+    {
+        for (size_t i = 0; i < context->orderingTerm().size(); i++)
+        {
+            auto orderingTermContext = context->orderingTerm(i);
+            const string orderByColumnName = orderingTermContext->columnName()->getText();
+            const DataColumnPtr orderByColumn = measurements->Column(orderByColumnName);
+
+            if (orderByColumn == nullptr)
+                throw FilterExpressionException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + measurements->Name() + "\"");
+
+            m_activeExpressionTree->OrderByTerms.push_back(make_pair(
+                orderByColumn,
+                orderingTermContext->K_DESC() == nullptr
+            ));
+        }
+    }
 }
 
 /*
@@ -280,7 +433,7 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 {
     if (context->GUID_LITERAL())
     {
-        m_signalIDs.insert(ParseGuidLiteral(context->GUID_LITERAL()->getText()));
+        m_signalIDSet.insert(ParseGuidLiteral(context->GUID_LITERAL()->getText()));
         return;
     }
 
@@ -404,6 +557,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             else
                 throw FilterExpressionException("Unexpected unary operator type \"" + unaryOperator + "\"");
 
+            // TODO: This should not be evaluating while building the expression tree (current row will not be set)
             AddExpr(context, NewSharedPtr<UnaryExpression>(unaryType, m_activeExpressionTree->Evaluate(value)));
             return;
         }

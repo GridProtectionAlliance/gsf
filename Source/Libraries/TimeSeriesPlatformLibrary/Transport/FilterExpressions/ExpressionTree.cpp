@@ -2216,7 +2216,8 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
 }
 
 ExpressionTree::ExpressionTree(const DataTablePtr& measurements) :
-    Measurements(measurements)
+    Measurements(measurements),
+    TopLimit(-1)
 {
 }
 

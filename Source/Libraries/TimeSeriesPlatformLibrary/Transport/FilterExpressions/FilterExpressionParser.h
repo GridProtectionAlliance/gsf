@@ -69,7 +69,8 @@ private:
     ExpressionTreePtr m_activeExpressionTree;
 
     std::string m_primaryMeasurementTableName;
-    std::unordered_set<GSF::TimeSeries::Guid> m_signalIDs;
+    std::unordered_set<GSF::TimeSeries::Guid> m_signalIDSet;
+    std::vector<GSF::TimeSeries::Guid> m_signalIDs;
     std::vector<ExpressionTreePtr> m_expressionTrees;
     std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
     std::map<const std::string, MeasurementTableIDFieldsPtr> m_measurementTableIDFields;
@@ -92,7 +93,8 @@ public:
 
     void Evaluate();
 
-    const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
+    const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
+    const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDSet() const;
 
     void exitParse(FilterExpressionSyntaxParser::ParseContext*) override;
     void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
