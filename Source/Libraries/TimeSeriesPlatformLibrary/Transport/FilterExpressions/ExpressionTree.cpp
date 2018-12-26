@@ -380,6 +380,39 @@ FunctionExpression::FunctionExpression(ExpressionFunctionType functionType, Expr
 {
 }
 
+ValueExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType) const
+{
+    if (expression == nullptr)
+        return NullValue(targetValueType);
+
+    // All expression nodes should evaluate to a value expression
+    switch (expression->Type)
+    {
+        case ExpressionType::Value:
+        {
+            const ValueExpressionPtr valueExpression = CastSharedPtr<ValueExpression>(expression);
+
+            // Change Undefined NULL values to Nullable of target type
+            if (valueExpression->ValueType == ExpressionValueType::Undefined)
+                return NullValue(targetValueType);
+
+            return valueExpression;
+        }
+        case ExpressionType::Unary:
+            return EvaluateUnary(expression);
+        case ExpressionType::Column:
+            return EvaluateColumn(expression);
+        case ExpressionType::InList:
+            return EvaluateInList(expression);
+        case ExpressionType::Function:
+            return EvaluateFunction(expression);
+        case ExpressionType::Operator:
+            return EvaluateOperator(expression);
+        default:
+            throw ExpressionTreeException("Unexpected expression type encountered");
+    }
+}
+
 ValueExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& expression) const
 {
     const UnaryExpressionPtr unaryExpression = CastSharedPtr<UnaryExpression>(expression);
@@ -2225,39 +2258,6 @@ ValueExpressionPtr ExpressionTree::Evaluate(const DataRowPtr& row)
 {
     m_currentRow = row;
     return Evaluate(Root);
-}
-
-ValueExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType) const
-{
-    if (expression == nullptr)
-        return NullValue(targetValueType);
-
-    // All expression nodes should evaluate to a value expression
-    switch (expression->Type)
-    {
-        case ExpressionType::Value:
-        {
-            const ValueExpressionPtr valueExpression = CastSharedPtr<ValueExpression>(expression);
-
-            // Change Undefined NULL values to Nullable of target type
-            if (valueExpression->ValueType == ExpressionValueType::Undefined)
-                return NullValue(targetValueType);
-
-            return valueExpression;
-        }
-        case ExpressionType::Unary:
-            return EvaluateUnary(expression);
-        case ExpressionType::Column:
-            return EvaluateColumn(expression);
-        case ExpressionType::InList:
-            return EvaluateInList(expression);
-        case ExpressionType::Function:
-            return EvaluateFunction(expression);
-        case ExpressionType::Operator:
-            return EvaluateOperator(expression);
-        default:
-            throw ExpressionTreeException("Unexpected expression type encountered");
-    }
 }
 
 const ValueExpressionPtr ExpressionTree::True = NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, true);

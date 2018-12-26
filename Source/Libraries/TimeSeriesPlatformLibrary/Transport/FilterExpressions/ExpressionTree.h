@@ -247,6 +247,7 @@ class ExpressionTree
 private:
     DataSet::DataRowPtr m_currentRow;
 
+    ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
     ValueExpressionPtr EvaluateColumn(const ExpressionPtr& expression) const;
     ValueExpressionPtr EvaluateInList(const ExpressionPtr& expression) const;
@@ -356,7 +357,6 @@ public:
     ExpressionPtr Root = nullptr;
 
     ValueExpressionPtr Evaluate(const DataSet::DataRowPtr& row);
-    ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
 
     static const ValueExpressionPtr True;
     static const ValueExpressionPtr False;
