@@ -344,7 +344,7 @@ Nullable<time_t> ValueExpression::ValueAsNullableDateTime() const
     return Cast<time_t>(Value);
 }
 
-UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, const ValueExpressionPtr& value) :
+UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value) :
     Expression(ExpressionType::Unary),
     UnaryType(unaryType),
     Value(value)

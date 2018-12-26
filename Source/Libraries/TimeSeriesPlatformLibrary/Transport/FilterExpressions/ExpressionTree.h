@@ -149,10 +149,10 @@ const char* EnumName(ExpressionUnaryType unaryType);
 class UnaryExpression : public Expression
 {
 public:
-    UnaryExpression(ExpressionUnaryType unaryType, const ValueExpressionPtr& value);
+    UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value);
 
     const ExpressionUnaryType UnaryType;
-    const ValueExpressionPtr& Value;
+    const ExpressionPtr& Value;
 };
 
 typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;

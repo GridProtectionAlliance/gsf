@@ -557,8 +557,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             else
                 throw FilterExpressionException("Unexpected unary operator type \"" + unaryOperator + "\"");
 
-            // TODO: This should not be evaluating while building the expression tree (current row will not be set)
-            AddExpr(context, NewSharedPtr<UnaryExpression>(unaryType, m_activeExpressionTree->Evaluate(value)));
+            AddExpr(context, NewSharedPtr<UnaryExpression>(unaryType, value));
             return;
         }
 
