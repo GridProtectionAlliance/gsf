@@ -178,12 +178,19 @@ void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableN
 }
 
 template<typename T>
-static bool CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
+static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
 {
     if (leftNullable.HasValue() && rightNullable.HasValue())
-        return leftNullable.GetValueOrDefault() < rightNullable.GetValueOrDefault();
+    {
+        const T& leftValue = leftNullable.GetValueOrDefault();
+        const T& rightValue = rightNullable.GetValueOrDefault();
+        return leftValue < rightValue ? -1 : (leftValue > rightValue ? 1 : 0);
+    }
 
-    return !leftNullable.HasValue();
+    if (!leftNullable.HasValue() && !rightNullable.HasValue())
+        return 0;
+
+    return leftNullable.HasValue() ? 1 : -1;
 }
 
 void FilterExpressionParser::Evaluate()
@@ -243,16 +250,8 @@ void FilterExpressionParser::Evaluate()
                 {
                     const guid signalID = signalIDField.GetValueOrDefault();
 
-                    if (signalID != Empty::Guid)
-                    {
-                        const auto iterator = m_signalIDSet.find(signalID);
-
-                        if (iterator != m_signalIDSet.end())
-                        {
-                            m_signalIDSet.insert(signalID);
-                            matchedRows.push_back(row);
-                        }
-                    }
+                    if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
+                        matchedRows.push_back(row);
                 }
             }
         }
@@ -272,6 +271,7 @@ void FilterExpressionParser::Evaluate()
                     const bool ascending = orderByTerm.second;
                     const DataRowPtr& leftRow = ascending ? leftMatchedRow : rightMatchedRow;
                     const DataRowPtr& rightRow = ascending ? rightMatchedRow : leftMatchedRow;
+                    int32_t result;
 
                     switch (orderByColumn->Type())
                     {
@@ -281,74 +281,67 @@ void FilterExpressionParser::Evaluate()
                             auto rightNullable = rightRow->ValueAsString(columnIndex);
 
                             if (leftNullable.HasValue() && rightNullable.HasValue())
-                            {
-                                if (Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault()) < 0)
-                                    return true;
-                            }
-                            else if (!leftNullable.HasValue())
-                            {
-                                return true;
-                            }
+                                result = Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault());
+                            else if (!leftNullable.HasValue() && !rightNullable.HasValue())
+                                result = 0;
+                            else
+                                result = leftNullable.HasValue() ? 1 : -1;
+
+                            break;
                         }
                         case DataType::Boolean:
-                            if (CompareValues(leftRow->ValueAsBoolean(columnIndex), rightRow->ValueAsBoolean(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsBoolean(columnIndex), rightRow->ValueAsBoolean(columnIndex));
                             break;
                         case DataType::DateTime:
-                            if (CompareValues(leftRow->ValueAsDateTime(columnIndex), rightRow->ValueAsDateTime(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsDateTime(columnIndex), rightRow->ValueAsDateTime(columnIndex));
                             break;
                         case DataType::Single:
-                            if (CompareValues(leftRow->ValueAsSingle(columnIndex), rightRow->ValueAsSingle(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsSingle(columnIndex), rightRow->ValueAsSingle(columnIndex));
                             break;
                         case DataType::Double:
-                            if (CompareValues(leftRow->ValueAsDouble(columnIndex), rightRow->ValueAsDouble(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsDouble(columnIndex), rightRow->ValueAsDouble(columnIndex));
                             break;
                         case DataType::Decimal:
-                            if (CompareValues(leftRow->ValueAsDecimal(columnIndex), rightRow->ValueAsDecimal(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsDecimal(columnIndex), rightRow->ValueAsDecimal(columnIndex));
                             break;
                         case DataType::Guid:
-                            if (CompareValues(leftRow->ValueAsGuid(columnIndex), rightRow->ValueAsGuid(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsGuid(columnIndex), rightRow->ValueAsGuid(columnIndex));
                             break;
                         case DataType::Int8:
-                            if (CompareValues(leftRow->ValueAsInt8(columnIndex), rightRow->ValueAsInt8(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsInt8(columnIndex), rightRow->ValueAsInt8(columnIndex));
                             break;
                         case DataType::Int16:
-                            if (CompareValues(leftRow->ValueAsInt16(columnIndex), rightRow->ValueAsInt16(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsInt16(columnIndex), rightRow->ValueAsInt16(columnIndex));
                             break;
                         case DataType::Int32:
-                            if (CompareValues(leftRow->ValueAsInt32(columnIndex), rightRow->ValueAsInt32(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsInt32(columnIndex), rightRow->ValueAsInt32(columnIndex));
                             break;
                         case DataType::Int64:
-                            if (CompareValues(leftRow->ValueAsInt64(columnIndex), rightRow->ValueAsInt64(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsInt64(columnIndex), rightRow->ValueAsInt64(columnIndex));
                             break;
                         case DataType::UInt8:
-                            if (CompareValues(leftRow->ValueAsUInt8(columnIndex), rightRow->ValueAsUInt8(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsUInt8(columnIndex), rightRow->ValueAsUInt8(columnIndex));
                             break;
                         case DataType::UInt16:
-                            if (CompareValues(leftRow->ValueAsUInt16(columnIndex), rightRow->ValueAsUInt16(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsUInt16(columnIndex), rightRow->ValueAsUInt16(columnIndex));
                             break;
                         case DataType::UInt32:
-                            if (CompareValues(leftRow->ValueAsUInt32(columnIndex), rightRow->ValueAsUInt32(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsUInt32(columnIndex), rightRow->ValueAsUInt32(columnIndex));
                             break;
                         case DataType::UInt64:
-                            if (CompareValues(leftRow->ValueAsUInt64(columnIndex), rightRow->ValueAsUInt64(columnIndex)))
-                                return true;
+                            result = CompareValues(leftRow->ValueAsUInt64(columnIndex), rightRow->ValueAsUInt64(columnIndex));
                             break;
                         default:
                             throw FilterExpressionException("Unexpected column data type encountered");
                     }
+
+                    if (result < 0)
+                        return true;
+
+                    if (result > 0)
+                        return false;
+
+                    // Last compare result was equal, continue sort based on next order-by term
                 }
 
                 return false;
