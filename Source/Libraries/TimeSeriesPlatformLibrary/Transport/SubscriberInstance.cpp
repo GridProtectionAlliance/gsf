@@ -599,7 +599,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 
         deviceMetadata->Acronym = device.child_value("Acronym");
         deviceMetadata->Name = device.child_value("Name");
-        deviceMetadata->UniqueID = ToGuid(device.child_value("UniqueID"));
+        deviceMetadata->UniqueID = ParseGuid(device.child_value("UniqueID"));
         deviceMetadata->AccessID = stoi(Coalesce(device.child_value("AccessID"), "0"));
         deviceMetadata->ParentAcronym = device.child_value("ParentAcronym");
         deviceMetadata->ProtocolName = device.child_value("ProtocolName");
@@ -623,7 +623,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 
         measurementMetadata->DeviceAcronym = device.child_value("DeviceAcronym");
         measurementMetadata->ID = device.child_value("ID");
-        measurementMetadata->SignalID = ToGuid(device.child_value("SignalID"));
+        measurementMetadata->SignalID = ParseGuid(device.child_value("SignalID"));
         measurementMetadata->PointTag = device.child_value("PointTag");
         measurementMetadata->Reference = SignalReference(string(device.child_value("SignalReference")));
         measurementMetadata->PhasorSourceIndex = stoi(Coalesce(device.child_value("PhasorSourceIndex"), "0"));

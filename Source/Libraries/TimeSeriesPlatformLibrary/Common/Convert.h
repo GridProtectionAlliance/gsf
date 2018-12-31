@@ -44,8 +44,8 @@ namespace TimeSeries
     std::string ToString(time_t value, const char* format = "%F %T");
 
     // Converts 16 contiguous bytes of character data into a globally unique identifier
-    Guid ToGuid(const uint8_t* data, bool swapBytes);
-    Guid ToGuid(const char* data);
+    Guid ParseGuid(const uint8_t* data, bool swapBytes);
+    Guid ParseGuid(const char* data);
 
     // Returns a non-empty nor null value
     const char* Coalesce(const char* data, const char* nonEmptyValue);

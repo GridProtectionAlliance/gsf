@@ -41,7 +41,7 @@ const decimal_t Decimal::DotNetMinValue = decimal_t("-79228162514264337593543950
 
 const string Empty::String;
 
-const Guid Empty::Guid = ToGuid("00000000-0000-0000-0000-000000000000");
+const Guid Empty::Guid = ParseGuid("00000000-0000-0000-0000-000000000000");
 
 const Object Empty::Object(nullptr);
 

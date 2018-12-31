@@ -127,7 +127,7 @@ std::string GSF::TimeSeries::ToString(time_t value, const char* fmt)
     return stream.str();
 }
 
-Guid GSF::TimeSeries::ToGuid(const uint8_t* data, bool swapBytes)
+Guid GSF::TimeSeries::ParseGuid(const uint8_t* data, bool swapBytes)
 {
     Guid id;
     uint8_t swappedBytes[16];
@@ -171,7 +171,7 @@ Guid GSF::TimeSeries::ToGuid(const uint8_t* data, bool swapBytes)
     return id;
 }
 
-Guid GSF::TimeSeries::ToGuid(const char* data)
+Guid GSF::TimeSeries::ParseGuid(const char* data)
 {
     const string_generator generator;
     return generator(data);

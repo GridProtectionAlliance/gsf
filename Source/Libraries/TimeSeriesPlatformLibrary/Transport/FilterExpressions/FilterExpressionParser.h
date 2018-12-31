@@ -96,7 +96,6 @@ public:
     const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
     const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDSet() const;
 
-    void exitParse(FilterExpressionSyntaxParser::ParseContext*) override;
     void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
     void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;

@@ -45,7 +45,7 @@ static guid ParseGuidLiteral(string guidLiteral)
         guidLiteral.erase(guidLiteral.size() - 1);
     }
 
-    return ToGuid(guidLiteral.c_str());
+    return ParseGuid(guidLiteral.c_str());
 }
 
 time_t ParseDateTimeLiteral(string time)
@@ -73,9 +73,6 @@ const char* FilterExpressionException::what() const noexcept
 
 FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_inputStream(filterExpression),
-    m_lexer(nullptr),
-    m_tokens(nullptr),
-    m_parser(nullptr),
     m_dataset(nullptr),
     m_primaryMeasurementTableName("ActiveMeasurements")
 {
@@ -106,11 +103,11 @@ bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, Expres
 
 void FilterExpressionParser::AddExpr(const ParserRuleContext* context, const ExpressionPtr& expression)
 {
+    // Track expression in parser rule context map
     m_expressions.insert(pair<const ParserRuleContext*, ExpressionPtr>(context, expression));
 
-    // Update active expression tree root for operator and function expressions
-    if (expression->Type == ExpressionType::Operator || expression->Type ==  ExpressionType::Function)
-        m_activeExpressionTree->Root = expression;
+    // Update active expression tree root
+    m_activeExpressionTree->Root = expression;
 }
 
 void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, const int32_t signalIDColumnIndex, const string& columnName, const string& mappingValue)
@@ -135,7 +132,12 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
                 const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                 if (signalIDField.HasValue())
-                    m_signalIDSet.insert(signalIDField.GetValueOrDefault());
+                {
+                    const guid& signalID = signalIDField.GetValueOrDefault();
+
+                    if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
+                        m_signalIDs.push_back(signalID);
+                }
 
                 return;
             }
@@ -196,6 +198,7 @@ static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable
 void FilterExpressionParser::Evaluate()
 {
     m_signalIDSet.clear();
+    m_signalIDs.clear();
     m_expressionTrees.clear();
     m_expressions.clear();
 
@@ -248,7 +251,7 @@ void FilterExpressionParser::Evaluate()
 
                 if (signalIDField.HasValue())
                 {
-                    const guid signalID = signalIDField.GetValueOrDefault();
+                    const guid& signalID = signalIDField.GetValueOrDefault();
 
                     if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
                         matchedRows.push_back(row);
@@ -364,15 +367,6 @@ const unordered_set<guid>& FilterExpressionParser::FilteredSignalIDSet() const
 }
 
 /*
-    parse
-     : ( filterExpressionStatementList | error ) EOF
-     ;
- */
-void FilterExpressionParser::exitParse(FilterExpressionSyntaxParser::ParseContext* context)
-{
-}
-
-/*
     filterStatement
      : K_FILTER ( K_TOP INTEGER_LITERAL )? tableName K_WHERE expression ( K_ORDER K_BY orderingTerm ( ',' orderingTerm )* )?
      ;
@@ -410,10 +404,10 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
             if (orderByColumn == nullptr)
                 throw FilterExpressionException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + measurements->Name() + "\"");
 
-            m_activeExpressionTree->OrderByTerms.push_back(make_pair(
+            m_activeExpressionTree->OrderByTerms.emplace_back(
                 orderByColumn,
                 orderingTermContext->K_DESC() == nullptr
-            ));
+            );
         }
     }
 }
@@ -429,7 +423,11 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 {
     if (context->GUID_LITERAL())
     {
-        m_signalIDSet.insert(ParseGuidLiteral(context->GUID_LITERAL()->getText()));
+        const guid& signalID = ParseGuidLiteral(context->GUID_LITERAL()->getText());
+        
+        if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
+            m_signalIDs.push_back(signalID);
+
         return;
     }
 
@@ -703,7 +701,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             operatorType = ExpressionOperatorType::LessThanOrEqual;
         else if (IsEqual(operatorSymbol, ">", false))
             operatorType = ExpressionOperatorType::GreaterThan;
-        else if (IsEqual(operatorSymbol, "/", false))
+        else if (IsEqual(operatorSymbol, ">=", false))
             operatorType = ExpressionOperatorType::GreaterThanOrEqual;
 
         // Check for equality operations
@@ -803,7 +801,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
         result = NewSharedPtr<ValueExpression>(ExpressionValueType::Guid, ParseGuidLiteral(context->GUID_LITERAL()->getText()));
     }
     else if (context->BOOLEAN_LITERAL())
-    {        
+    {
         result = IsEqual(context->BOOLEAN_LITERAL()->getText(), "true") ? ExpressionTree::True : ExpressionTree::False;
     }
     else if (context->K_NULL())

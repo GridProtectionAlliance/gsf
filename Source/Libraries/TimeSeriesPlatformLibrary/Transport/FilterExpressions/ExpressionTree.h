@@ -54,9 +54,6 @@ enum class ExpressionType
 };
 
 // Base class for all expression types
-class Expression;
-typedef SharedPtr<Expression> ExpressionPtr;
-
 class Expression
 {
 public:
@@ -65,6 +62,7 @@ public:
     const ExpressionType Type;
 };
 
+typedef SharedPtr<Expression> ExpressionPtr;
 typedef std::vector<ExpressionPtr> ExpressionCollection;
 typedef SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
 
@@ -167,6 +165,41 @@ public:
 
 typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
 
+class InListExpression : public Expression
+{
+public:
+    InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool hasNotKeyword);
+
+    const ExpressionPtr& Value;
+    const ExpressionCollectionPtr Arguments;
+    const bool HasNotKeyword;
+};
+
+typedef SharedPtr<InListExpression> InListExpressionPtr;
+
+enum class ExpressionFunctionType
+{
+    Coalesce,
+    Convert,
+    IIf,
+    IsRegExMatch,
+    Len,
+    RegExVal,
+    SubString,
+    Trim
+};
+
+class FunctionExpression : public Expression
+{
+public:
+    FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments);
+
+    const ExpressionFunctionType FunctionType;
+    const ExpressionCollectionPtr Arguments;
+};
+
+typedef SharedPtr<FunctionExpression> FunctionExpressionPtr;
+
 enum class ExpressionOperatorType
 {
     Multiply,
@@ -206,41 +239,6 @@ public:
 };
 
 typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;
-
-enum class ExpressionFunctionType
-{
-    Coalesce,
-    Convert,
-    IIf,
-    IsRegExMatch,
-    Len,
-    RegExVal,
-    SubString,
-    Trim
-};
-
-class InListExpression : public Expression
-{
-public:
-    InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool notInList);
-
-    const ExpressionPtr& Value;
-    const ExpressionCollectionPtr Arguments;
-    const bool NotInList;
-};
-
-typedef SharedPtr<InListExpression> InListExpressionPtr;
-
-class FunctionExpression : public Expression
-{
-public:
-    FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments);
-
-    const ExpressionFunctionType FunctionType;
-    const ExpressionCollectionPtr Arguments;
-};
-
-typedef SharedPtr<FunctionExpression> FunctionExpressionPtr;
 
 class ExpressionTree
 {

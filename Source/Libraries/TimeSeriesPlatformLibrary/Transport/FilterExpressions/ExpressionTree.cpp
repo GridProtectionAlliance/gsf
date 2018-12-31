@@ -365,11 +365,11 @@ OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, cons
 {
 }
 
-InListExpression::InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool notInList) :
+InListExpression::InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool hasNotKeyword) :
     Expression(ExpressionType::InList),
     Value(value),
     Arguments(std::move(arguments)),
-    NotInList(notInList)
+    HasNotKeyword(hasNotKeyword)
 {
 }
 
@@ -535,7 +535,7 @@ ValueExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& expressio
             else
             {
                 valueType = ExpressionValueType::Int64;
-                value = Nullable<int64_t>(nullptr);
+                value = NullValue(ExpressionValueType::Int64);
             }
 
             break;
@@ -552,7 +552,7 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& expressio
 {
     const InListExpressionPtr inListExpression = CastSharedPtr<InListExpression>(expression);
     const ValueExpressionPtr inListValue = Evaluate(inListExpression->Value);
-    const bool notInList = inListExpression->NotInList;
+    const bool hasNotKeyword = inListExpression->HasNotKeyword;
 
     // If in list test value is Null, result is Null
     if (inListValue->IsNull())
@@ -567,10 +567,10 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& expressio
         const ValueExpressionPtr result = Equal(inListValue, argumentValue, valueType);
 
         if (result->ValueAsBoolean())
-            return notInList ? ExpressionTree::False : ExpressionTree::True;
+            return hasNotKeyword ? ExpressionTree::False : ExpressionTree::True;
     }
 
-    return notInList ? ExpressionTree::True : ExpressionTree::False;
+    return hasNotKeyword ? ExpressionTree::True : ExpressionTree::False;
 }
 
 ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& expression) const
@@ -2139,7 +2139,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     targetValue = value;
                     break;
                 case ExpressionValueType::Guid:
-                    targetValue = ToGuid(value.c_str());
+                    targetValue = ParseGuid(value.c_str());
                     break;
                 case ExpressionValueType::DateTime:
                     targetValue = ParseTimestamp(value.c_str());

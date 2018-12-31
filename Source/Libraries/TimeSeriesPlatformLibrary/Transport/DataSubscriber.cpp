@@ -575,7 +575,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
 
         // Set values for measurement key
         signalIndex = m_endianConverter.ConvertBigEndian(*signalIndexPtr);
-        signalID = ToGuid(signalIDPtr, swapBytes);
+        signalID = ParseGuid(signalIDPtr, swapBytes);
         source = sourceStream.str();
         id = m_endianConverter.ConvertBigEndian(*idPtr);
 
