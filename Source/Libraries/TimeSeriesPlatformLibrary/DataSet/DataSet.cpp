@@ -34,7 +34,7 @@ DataSet::~DataSet()
 {
 }
 
-const DataTablePtr& DataSet::Table(const string& tableName)
+const DataTablePtr& DataSet::Table(const string& tableName) const
 {
     const auto iterator = m_tables.find(tableName);
 
@@ -44,8 +44,24 @@ const DataTablePtr& DataSet::Table(const string& tableName)
     return DataTable::NullPtr;
 }
 
+const DataTablePtr& DataSet::operator[](const std::string& tableName) const
+{
+    return Table(tableName);
+}
+
 void DataSet::IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData)
 {
     for (auto const& item : m_tables)
         iteratorHandler(item.second, userData);
+}
+
+bool DataSet::AddTable(const DataTablePtr& table)
+{
+    // Returns true on insert, false on update
+    return m_tables.insert_or_assign(table->Name(), table).second;
+}
+
+bool DataSet::RemoveTable(const std::string& tableName)
+{
+    return m_tables.erase(tableName) > 0;
 }

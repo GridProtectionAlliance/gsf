@@ -44,9 +44,15 @@ public:
 
     typedef void(*TableIteratorHandlerFunction)(const DataTablePtr&, void* userData);
 
-    const DataTablePtr& Table(const std::string& tableName);
+    const DataTablePtr& Table(const std::string& tableName) const;
+
+    const DataTablePtr& operator[](const std::string& tableName) const;
 
     void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
+
+    bool AddTable(const DataTablePtr& table);
+
+    bool RemoveTable(const std::string& tableName);
 };
 
 typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
