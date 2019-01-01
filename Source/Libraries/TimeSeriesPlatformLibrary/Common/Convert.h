@@ -37,7 +37,12 @@ namespace TimeSeries
 
     // Converts an object to a string
     template <class T>
-    std::string ToString(const T& obj);
+    std::string ToString(const T& obj)
+    {
+        std::stringstream stream;
+        stream << obj;
+        return stream.str();
+    }
 
     std::string ToString(Guid value);
 

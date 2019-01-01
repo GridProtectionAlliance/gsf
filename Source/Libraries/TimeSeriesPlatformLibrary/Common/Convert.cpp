@@ -107,14 +107,6 @@ uint32_t GSF::TimeSeries::TicksToString(char* ptr, uint32_t maxsize, string form
     return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }
 
-template <class T>
-string GSF::TimeSeries::ToString(const T& obj)
-{
-    stringstream stream;
-    stream << obj;
-    return stream.str();
-}
-
 std::string GSF::TimeSeries::ToString(Guid value)
 {
     return boost::uuids::to_string(value);
