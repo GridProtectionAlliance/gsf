@@ -50,7 +50,7 @@ public:
 
     void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
 
-    bool AddTable(const DataTablePtr& table);
+    bool AddOrUpdateTable(const DataTablePtr& table);
 
     bool RemoveTable(const std::string& tableName);
 };

@@ -55,7 +55,7 @@ void DataSet::IterateTables(TableIteratorHandlerFunction iteratorHandler, void* 
         iteratorHandler(item.second, userData);
 }
 
-bool DataSet::AddTable(const DataTablePtr& table)
+bool DataSet::AddOrUpdateTable(const DataTablePtr& table)
 {
     // Returns true on insert, false on update
     return m_tables.insert_or_assign(table->Name(), table).second;
