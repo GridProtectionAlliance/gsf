@@ -619,23 +619,23 @@
     <ClCompile Include="Transport\FilterExpressions\FilterExpressionParser.cpp">
       <Filter>Transport\FilterExpressions</Filter>
     </ClCompile>
-    <ClCompile Include="DataSet\DataSet.cpp">
-      <Filter>DataSet</Filter>
-    </ClCompile>
-    <ClCompile Include="DataSet\DataTable.cpp">
-      <Filter>DataSet</Filter>
-    </ClCompile>
-    <ClCompile Include="DataSet\DataColumn.cpp">
-      <Filter>DataSet</Filter>
-    </ClCompile>
-    <ClCompile Include="DataSet\DataRow.cpp">
-      <Filter>DataSet</Filter>
-    </ClCompile>
     <ClCompile Include="Transport\FilterExpressions\ExpressionTree.cpp">
       <Filter>Transport\FilterExpressions</Filter>
     </ClCompile>
     <ClCompile Include="Transport\PublisherInstance.cpp">
       <Filter>Transport</Filter>
+    </ClCompile>
+    <ClCompile Include="Data\DataColumn.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Data\DataRow.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Data\DataSet.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Data\DataTable.cpp">
+      <Filter>Data</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -716,7 +716,7 @@
     <Filter Include="Transport\antlr4-runtime\tree\xpath">
       <UniqueIdentifier>{55dc8940-3bb0-4039-9de7-d165efcfc768}</UniqueIdentifier>
     </Filter>
-    <Filter Include="DataSet">
+    <Filter Include="Data">
       <UniqueIdentifier>{85f66a16-6e8c-4e92-bcd6-b3ad8e32bf06}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -1106,18 +1106,6 @@
     <ClInclude Include="Transport\FilterExpressions\FilterExpressionParser.h">
       <Filter>Transport\FilterExpressions</Filter>
     </ClInclude>
-    <ClInclude Include="DataSet\DataSet.h">
-      <Filter>DataSet</Filter>
-    </ClInclude>
-    <ClInclude Include="DataSet\DataTable.h">
-      <Filter>DataSet</Filter>
-    </ClInclude>
-    <ClInclude Include="DataSet\DataColumn.h">
-      <Filter>DataSet</Filter>
-    </ClInclude>
-    <ClInclude Include="DataSet\DataRow.h">
-      <Filter>DataSet</Filter>
-    </ClInclude>
     <ClInclude Include="Transport\FilterExpressions\ExpressionTree.h">
       <Filter>Transport\FilterExpressions</Filter>
     </ClInclude>
@@ -1126,6 +1114,18 @@
     </ClInclude>
     <ClInclude Include="Transport\PublisherInstance.h">
       <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\DataColumn.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\DataRow.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\DataSet.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\DataTable.h">
+      <Filter>Data</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -65,7 +65,7 @@ private:
     FilterExpressionSyntaxLexer* m_lexer;
     antlr4::CommonTokenStream* m_tokens;
     FilterExpressionSyntaxParser* m_parser;
-    GSF::DataSet::DataSetPtr m_dataset;
+    GSF::Data::DataSetPtr m_dataset;
     ExpressionTreePtr m_activeExpressionTree;
 
     std::string m_primaryMeasurementTableName;
@@ -77,13 +77,13 @@ private:
 
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
-    void MapMeasurement(const GSF::DataSet::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
+    void MapMeasurement(const GSF::Data::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
 public:
     FilterExpressionParser(const std::string& filterExpression);
     ~FilterExpressionParser();
 
-    const GSF::DataSet::DataSetPtr& CurrentDataSet() const;
-    void AssignDataSet(const GSF::DataSet::DataSetPtr& dataset);
+    const GSF::Data::DataSetPtr& CurrentDataSet() const;
+    void AssignDataSet(const GSF::Data::DataSetPtr& dataset);
 
     MeasurementTableIDFieldsPtr GetMeasurementTableIDFields(const std::string& measurementTableName) const;
     void SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields);

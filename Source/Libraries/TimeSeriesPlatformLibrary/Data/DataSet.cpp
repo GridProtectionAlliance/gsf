@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  DataColumn.h - Gbtc
+//  DataSet.cpp - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,70 +21,47 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_COLUMN_H
-#define __DATA_COLUMN_H
+#include "DataSet.h"
 
-#include <string>
+using namespace std;
+using namespace GSF::Data;
 
-#include "../Common/CommonTypes.h"
-
-namespace GSF {
-namespace DataSet
+DataSet::DataSet()
 {
+}
 
-enum class DataType
+DataSet::~DataSet()
 {
-    String,
-    Boolean,
-    DateTime,
-    Single,
-    Double,
-    Decimal,
-    Guid,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64
-};
+}
 
-const char* DataTypeAcronym[];
-const char* EnumName(DataType type);
-
-class DataTable;
-typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
-
-class DataColumn;
-typedef TimeSeries::SharedPtr<DataColumn> DataColumnPtr;
-
-class DataColumn // NOLINT
+const DataTablePtr& DataSet::Table(const string& tableName) const
 {
-private:
-    DataTablePtr m_parent;
-    std::string m_name;
-    DataType m_type;
-    int32_t m_index;
+    const auto iterator = m_tables.find(tableName);
 
-public:
-    DataColumn(const DataTablePtr& parent, std::string name, DataType type);
-    ~DataColumn();
+    if (iterator != m_tables.end())
+        return iterator->second;
 
-    const DataTablePtr& Parent() const;
+    return DataTable::NullPtr;
+}
 
-    const std::string& Name() const;
+const DataTablePtr& DataSet::operator[](const std::string& tableName) const
+{
+    return Table(tableName);
+}
 
-    DataType Type() const;
+void DataSet::IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData)
+{
+    for (auto const& item : m_tables)
+        iteratorHandler(item.second, userData);
+}
 
-    int32_t Index() const;
+bool DataSet::AddOrUpdateTable(const DataTablePtr& table)
+{
+    // Returns true on insert, false on update
+    return m_tables.insert_or_assign(table->Name(), table).second;
+}
 
-    static const DataColumnPtr NullPtr;
-
-    friend class DataTable;
-};
-
-}}
-
-#endif
+bool DataSet::RemoveTable(const std::string& tableName)
+{
+    return m_tables.erase(tableName) > 0;
+}

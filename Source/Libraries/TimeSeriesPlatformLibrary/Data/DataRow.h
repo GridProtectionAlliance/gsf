@@ -30,7 +30,7 @@
 #include "../Common/Nullable.h"
 
 namespace GSF {
-namespace DataSet
+namespace Data
 {
 
 enum class DataType;

@@ -25,7 +25,7 @@
 #define __EXPRESSION_TREE_H
 
 #include "../../Common/CommonTypes.h"
-#include "../../DataSet/DataSet.h"
+#include "../../Data/DataSet.h"
 
 namespace GSF {
 namespace TimeSeries {
@@ -158,9 +158,9 @@ typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
 class ColumnExpression : public Expression
 {
 public:
-    ColumnExpression(const GSF::DataSet::DataColumnPtr& dataColumn);
+    ColumnExpression(const GSF::Data::DataColumnPtr& dataColumn);
 
-    const GSF::DataSet::DataColumnPtr& DataColumn;
+    const GSF::Data::DataColumnPtr& DataColumn;
 };
 
 typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
@@ -243,7 +243,7 @@ typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;
 class ExpressionTree
 {
 private:
-    DataSet::DataRowPtr m_currentRow;
+    Data::DataRowPtr m_currentRow;
 
     ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
@@ -346,15 +346,15 @@ private:
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
 public:
-    ExpressionTree(const DataSet::DataTablePtr& measurements);
+    ExpressionTree(const Data::DataTablePtr& measurements);
 
-    const DataSet::DataTablePtr& Measurements;
+    const Data::DataTablePtr& Measurements;
     int32_t TopLimit;
-    std::vector<std::pair<DataSet::DataColumnPtr, bool>> OrderByTerms;
+    std::vector<std::pair<Data::DataColumnPtr, bool>> OrderByTerms;
 
     ExpressionPtr Root = nullptr;
 
-    ValueExpressionPtr Evaluate(const DataSet::DataRowPtr& row);
+    ValueExpressionPtr Evaluate(const Data::DataRowPtr& row);
 
     static const ValueExpressionPtr True;
     static const ValueExpressionPtr False;

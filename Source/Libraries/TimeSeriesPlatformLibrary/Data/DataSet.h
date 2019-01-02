@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  DataColumn.cpp - Gbtc
+//  DataSet.h - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,66 +21,42 @@
 //
 //******************************************************************************************************
 
-#include "DataColumn.h"
+#ifndef __DATA_SET_H
+#define __DATA_SET_H
+
+#include <map>
+
+#include "../Common/CommonTypes.h"
 #include "DataTable.h"
 
-using namespace std;
-using namespace GSF::DataSet;
-
-const char* GSF::DataSet::DataTypeAcronym[] =
+namespace GSF {
+namespace Data
 {
-    "String",
-    "Boolean",
-    "DateTime",
-    "Single",
-    "Double",
-    "Decimal",
-    "Guid",
-    "Int8",
-    "Int16",
-    "Int32",
-    "Int64",
-    "UInt8",
-    "UInt16",
-    "UInt32",
-    "UInt64"
+
+class DataSet : public TimeSeries::EnableSharedThisPtr<DataSet> // NOLINT
+{
+private:
+    std::map<std::string, DataTablePtr> m_tables;
+
+public:
+     DataSet();
+    ~DataSet();
+
+    typedef void(*TableIteratorHandlerFunction)(const DataTablePtr&, void* userData);
+
+    const DataTablePtr& Table(const std::string& tableName) const;
+
+    const DataTablePtr& operator[](const std::string& tableName) const;
+
+    void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
+
+    bool AddOrUpdateTable(const DataTablePtr& table);
+
+    bool RemoveTable(const std::string& tableName);
 };
 
-const char* GSF::DataSet::EnumName(DataType type)
-{
-    return DataTypeAcronym[static_cast<int32_t>(type)];
-}
+typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
 
-const DataColumnPtr DataColumn::NullPtr = nullptr;
+}}
 
-DataColumn::DataColumn(const DataTablePtr& parent, string name, DataType type) :
-    m_parent(parent),
-    m_name(std::move(name)),
-    m_type(type),
-    m_index(-1)
-{
-}
-
-DataColumn::~DataColumn()
-{
-}
-
-const DataTablePtr& DataColumn::Parent() const
-{
-    return m_parent;
-}
-
-const string& DataColumn::Name() const
-{
-    return m_name;
-}
-
-DataType DataColumn::Type() const
-{
-    return m_type;
-}
-
-int32_t DataColumn::Index() const
-{
-    return m_index;
-}
+#endif

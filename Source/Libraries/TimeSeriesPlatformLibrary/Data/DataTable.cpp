@@ -25,7 +25,7 @@
 
 using namespace std;
 using namespace GSF::TimeSeries;
-using namespace GSF::DataSet;
+using namespace GSF::Data;
 
 const DataTablePtr DataTable::NullPtr = nullptr;
 

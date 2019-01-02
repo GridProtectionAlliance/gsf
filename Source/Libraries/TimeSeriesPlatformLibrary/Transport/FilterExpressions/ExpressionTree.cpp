@@ -26,7 +26,7 @@
 #include <utility>
 
 using namespace std;
-using namespace GSF::DataSet;
+using namespace GSF::Data;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 

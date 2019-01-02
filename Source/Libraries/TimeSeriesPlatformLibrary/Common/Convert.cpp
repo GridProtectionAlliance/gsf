@@ -96,7 +96,7 @@ uint32_t GSF::TimeSeries::TicksToString(char* ptr, uint32_t maxsize, string form
         }
     }
 
-    struct tm timeinfo;
+    struct tm timeinfo{};
 
 #ifdef _WIN32
     gmtime_s(&timeinfo, &fromSeconds);

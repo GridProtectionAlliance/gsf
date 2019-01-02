@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  DataTable.h - Gbtc
+//  DataColumn.h - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,71 +21,69 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_TABLE_H
-#define __DATA_TABLE_H
+#ifndef __DATA_COLUMN_H
+#define __DATA_COLUMN_H
 
-#include <unordered_map>
-#include <vector>
+#include <string>
 
 #include "../Common/CommonTypes.h"
-#include "DataColumn.h"
-#include "DataRow.h"
 
 namespace GSF {
-namespace DataSet
+namespace Data
 {
 
-class DataSet;
-typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+enum class DataType
+{
+    String,
+    Boolean,
+    DateTime,
+    Single,
+    Double,
+    Decimal,
+    Guid,
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64
+};
+
+const char* DataTypeAcronym[];
+const char* EnumName(DataType type);
 
 class DataTable;
 typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
 
-enum class DataType;
+class DataColumn;
+typedef TimeSeries::SharedPtr<DataColumn> DataColumnPtr;
 
-class DataTable : public TimeSeries::EnableSharedThisPtr<DataTable> // NOLINT
+class DataColumn // NOLINT
 {
 private:
-    DataSetPtr m_parent;
+    DataTablePtr m_parent;
     std::string m_name;
-    std::unordered_map<std::string, int32_t> m_columnIndexes;
-    std::vector<DataColumnPtr> m_columns;
-    std::vector<DataRowPtr> m_rows;
+    DataType m_type;
+    int32_t m_index;
 
 public:
-    DataTable(const DataSetPtr& parent, std::string name);
-    ~DataTable();
+    DataColumn(const DataTablePtr& parent, std::string name, DataType type);
+    ~DataColumn();
 
-    const DataSetPtr& Parent() const;
+    const DataTablePtr& Parent() const;
 
     const std::string& Name() const;
 
-    void AddColumn(DataColumnPtr column);
+    DataType Type() const;
 
-    const DataColumnPtr& Column(const std::string& columnName) const;
+    int32_t Index() const;
 
-    const DataColumnPtr& Column(int32_t index) const;
+    static const DataColumnPtr NullPtr;
 
-    const DataColumnPtr& operator[](const std::string& columnName) const;
-
-    const DataColumnPtr& operator[](int32_t index) const;
-
-    DataColumnPtr CreateColumn(const std::string& name, DataType type);
-
-    int32_t ColumnCount() const;
-
-    const DataRowPtr& Row(int32_t index);
-
-    void AddRow(DataRowPtr row);
-
-    DataRowPtr CreateRow();
-
-    int32_t RowCount() const;
-
-    static const DataTablePtr NullPtr;
+    friend class DataTable;
 };
-
-typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
 
 }}
 

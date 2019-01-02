@@ -26,7 +26,7 @@
 
 using namespace std;
 using namespace GSF::TimeSeries;
-using namespace GSF::DataSet;
+using namespace GSF::Data;
 
 DataRowException::DataRowException(string message) noexcept :
     m_message(move(message))
