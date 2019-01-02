@@ -133,7 +133,7 @@ namespace TimeSeries
     template<class T, class S>
     SharedPtr<T> CastSharedPtr(SharedPtr<S> const& source)
     {
-        return boost::static_pointer_cast<T>(source);
+        return boost::dynamic_pointer_cast<T>(source);
     }
 
     template<typename T>

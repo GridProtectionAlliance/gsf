@@ -135,6 +135,10 @@ Expression::Expression(ExpressionType type) :
 {
 }
 
+Expression::~Expression()
+{
+}
+
 ValueExpression::ValueExpression(ExpressionValueType valueType, const Object& value, bool valueIsNullable) :
     Expression(ExpressionType::Value),
     Value(value),

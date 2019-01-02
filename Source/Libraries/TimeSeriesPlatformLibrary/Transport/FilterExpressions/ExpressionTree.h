@@ -54,10 +54,11 @@ enum class ExpressionType
 };
 
 // Base class for all expression types
-class Expression
+class Expression // NOLINT
 {
 public:
-    Expression(ExpressionType type);
+    explicit Expression(ExpressionType type);
+    virtual ~Expression();
 
     const ExpressionType Type;
 };

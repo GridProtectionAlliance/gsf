@@ -61,12 +61,12 @@ time_t ParseDateTimeLiteral(string time)
     return ParseTimestamp(time.c_str());
 }
 
-FilterExpressionException::FilterExpressionException(string message) noexcept :
+FilterExpressionParserException::FilterExpressionParserException(string message) noexcept :
     m_message(std::move(message))
 {
 }
 
-const char* FilterExpressionException::what() const noexcept
+const char* FilterExpressionParserException::what() const noexcept
 {
     return &m_message[0];
 }
@@ -203,7 +203,7 @@ void FilterExpressionParser::Evaluate()
     m_expressions.clear();
 
     if (m_dataset == nullptr)
-        throw FilterExpressionException("Cannot evaluate filter expression, no dataset has been defined");
+        throw FilterExpressionParserException("Cannot evaluate filter expression, no dataset has been defined");
 
     // Create parse tree and visit listener methods
     ParseTreeWalker walker;
@@ -218,12 +218,12 @@ void FilterExpressionParser::Evaluate()
         const MeasurementTableIDFieldsPtr& measurementTableIDFields = GetMeasurementTableIDFields(measurements->Name());
 
         if (measurementTableIDFields == nullptr)
-            throw FilterExpressionException("Failed to find ID fields record for measurement table \"" + measurements->Name() + "\"");
+            throw FilterExpressionParserException("Failed to find ID fields record for measurement table \"" + measurements->Name() + "\"");
 
         const DataColumnPtr& signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
 
         if (signalIDColumn == nullptr)
-            throw FilterExpressionException("Failed to find signal ID field \"" + measurementTableIDFields->SignalIDFieldName + "\" for measurement table \"" + measurements->Name() + "\"");
+            throw FilterExpressionParserException("Failed to find signal ID field \"" + measurementTableIDFields->SignalIDFieldName + "\" for measurement table \"" + measurements->Name() + "\"");
 
         const int32_t signalIDColumnIndex = signalIDColumn->Index();
         vector<DataRowPtr> matchedRows;
@@ -242,7 +242,7 @@ void FilterExpressionParser::Evaluate()
 
             // Final expression should have a boolean data type (it's part of a WHERE clause)
             if (resultExpression->ValueType != ExpressionValueType::Boolean)
-                throw FilterExpressionException("Final expression tree evaluation did not result in a boolean value, result data type is \"" + string(EnumName(resultExpression->ValueType)) + "\"");
+                throw FilterExpressionParserException("Final expression tree evaluation did not result in a boolean value, result data type is \"" + string(EnumName(resultExpression->ValueType)) + "\"");
 
             // If final result is Null, i.e., has no value due to Null propagation, treat result as False
             if (resultExpression->ValueAsBoolean())
@@ -335,7 +335,7 @@ void FilterExpressionParser::Evaluate()
                             result = CompareValues(leftRow->ValueAsUInt64(columnIndex), rightRow->ValueAsUInt64(columnIndex));
                             break;
                         default:
-                            throw FilterExpressionException("Unexpected column data type encountered");
+                            throw FilterExpressionParserException("Unexpected column data type encountered");
                     }
 
                     if (result < 0)
@@ -385,7 +385,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
     const DataTablePtr& measurements = m_dataset->Table(measurementTableName);
 
     if (measurements == nullptr)
-        throw FilterExpressionException("Failed to find measurement table \"" + measurementTableName + "\"");
+        throw FilterExpressionParserException("Failed to find measurement table \"" + measurementTableName + "\"");
 
     m_activeExpressionTree = NewSharedPtr<ExpressionTree>(measurements);
     m_expressionTrees.push_back(m_activeExpressionTree);
@@ -402,7 +402,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
             const DataColumnPtr& orderByColumn = measurements->Column(orderByColumnName);
 
             if (orderByColumn == nullptr)
-                throw FilterExpressionException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + measurements->Name() + "\"");
+                throw FilterExpressionParserException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + measurements->Name() + "\"");
 
             m_activeExpressionTree->OrderByTerms.emplace_back(
                 orderByColumn,
@@ -512,7 +512,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             return;
         }
         
-        throw FilterExpressionException("Failed to find literal value expression \"" + literalValueContext->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find literal value expression \"" + literalValueContext->getText() + "\"");
     }
 
     // Check for column name expressions
@@ -526,7 +526,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             return;
         }
 
-        throw FilterExpressionException("Failed to find column name expression \"" + columnNameContext->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find column name expression \"" + columnNameContext->getText() + "\"");
     }
 
     // Check for unary operator expressions
@@ -535,7 +535,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
     if (unaryOperatorContext != nullptr)
     {
         if (context->expression().size() != 1)
-            throw FilterExpressionException("Unary operator expression is undefined");
+            throw FilterExpressionParserException("Unary operator expression is undefined");
 
         if (TryGetExpr(context->expression(0), value))
         {
@@ -549,13 +549,13 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             else if (IsEqual(unaryOperator, "~", false) || IsEqual(unaryOperator, "NOT"))
                 unaryType = ExpressionUnaryType::Not;
             else
-                throw FilterExpressionException("Unexpected unary operator type \"" + unaryOperator + "\"");
+                throw FilterExpressionParserException("Unexpected unary operator type \"" + unaryOperator + "\"");
 
             AddExpr(context, NewSharedPtr<UnaryExpression>(unaryType, value));
             return;
         }
 
-        throw FilterExpressionException("Failed to find unary operator expression \"" + context->expression(0)->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find unary operator expression \"" + context->expression(0)->getText() + "\"");
     }
 
     // Check for function expressions
@@ -583,7 +583,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
         else if (IsEqual(functionName, "TRIM"))
             functionType = ExpressionFunctionType::Trim;
         else
-            throw FilterExpressionException("Unexpected function type \"" + functionName + "\"");
+            throw FilterExpressionParserException("Unexpected function type \"" + functionName + "\"");
 
         ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
         const int32_t argumentCount = context->expression().size();
@@ -595,7 +595,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             if (TryGetExpr(context->expression(i), argument))
                 arguments->push_back(argument);
             else
-                throw FilterExpressionException("Failed to find argument expression " + ToString(i) + " for function \"" + functionName + "\"");
+                throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " for function \"" + functionName + "\"");
         }
 
         AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
@@ -612,7 +612,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
         const ExpressionOperatorType operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::IsNull : ExpressionOperatorType::IsNotNull;
 
         if (context->expression().size() != 1)
-            throw FilterExpressionException("\"IS NULL\" expression is undefined");
+            throw FilterExpressionParserException("\"IS NULL\" expression is undefined");
 
         if (TryGetExpr(context->expression(0), value))
         {
@@ -620,7 +620,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             return;
         }
 
-        throw FilterExpressionException("Failed to find \"IS NULL\" expression \"" + context->expression(0)->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find \"IS NULL\" expression \"" + context->expression(0)->getText() + "\"");
     }
 
     // Check for IN expressions
@@ -632,7 +632,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
         const int32_t argumentCount = context->expression().size();
 
         if (context->expression().size() < 2)
-            throw FilterExpressionException("Not enough expressions found for \"IN\" operation");
+            throw FilterExpressionParserException("Not enough expressions found for \"IN\" operation");
 
         for (int32_t i = 0; i < argumentCount; i++)
         {
@@ -647,7 +647,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             }
             else
             {
-                throw FilterExpressionException("Failed to find argument expression " + ToString(i) + " for \"IN\" operation");
+                throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " for \"IN\" operation");
             }
         }
 
@@ -662,13 +662,13 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
         ExpressionOperatorType operatorType;
 
         if (!TryGetExpr(context->expression(0), leftValue))
-            throw FilterExpressionException("Failed to find left operator expression \"" + context->expression(0)->getText() + "\"");
+            throw FilterExpressionParserException("Failed to find left operator expression \"" + context->expression(0)->getText() + "\"");
 
         if (!TryGetExpr(context->expression(1), rightValue))
-            throw FilterExpressionException("Failed to find right operator expression \"" + context->expression(1)->getText() + "\"");
+            throw FilterExpressionParserException("Failed to find right operator expression \"" + context->expression(1)->getText() + "\"");
 
         if (context->children.size() < 3)
-            throw FilterExpressionException("Operator expression is malformed");
+            throw FilterExpressionParserException("Operator expression is malformed");
 
         const string& operatorSymbol = context->children[1]->getText();
 
@@ -718,7 +718,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
         else if (context->K_OR() != nullptr)
             operatorType = ExpressionOperatorType::Or;
         else
-            throw FilterExpressionException("Unexpected operator \"" + operatorSymbol + "\"");
+            throw FilterExpressionParserException("Unexpected operator \"" + operatorSymbol + "\"");
 
         AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
         return;
@@ -733,10 +733,10 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             return;
         }
 
-        throw FilterExpressionException("Failed to find sub expression \"" + context->expression(0)->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find sub expression \"" + context->expression(0)->getText() + "\"");
     }
 
-    throw FilterExpressionException("Unexpected expression \"" + context->getText() + "\"");
+    throw FilterExpressionParserException("Unexpected expression \"" + context->getText() + "\"");
 }
 
 /*
@@ -824,7 +824,7 @@ void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::Column
     const DataColumnPtr& dataColumn = m_activeExpressionTree->Measurements()->Column(columnName);
 
     if (dataColumn == nullptr)
-        throw FilterExpressionException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Measurements()->Name() + "\"");
+        throw FilterExpressionParserException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Measurements()->Name() + "\"");
 
     AddExpr(context, NewSharedPtr<ColumnExpression>(dataColumn));
 }

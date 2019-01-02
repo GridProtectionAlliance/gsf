@@ -39,13 +39,13 @@ namespace Transport
 {
 
 // Simple exception type thrown by the filter expression parser
-class FilterExpressionException : public Exception
+class FilterExpressionParserException : public Exception
 {
 private:
     std::string m_message;
 
 public:
-    FilterExpressionException(std::string message) noexcept;
+    FilterExpressionParserException(std::string message) noexcept;
     const char* what() const noexcept;
 };
 
