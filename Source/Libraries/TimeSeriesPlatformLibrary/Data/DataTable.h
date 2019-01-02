@@ -53,7 +53,7 @@ private:
     std::vector<DataRowPtr> m_rows;
 
 public:
-    DataTable(const DataSetPtr& parent, std::string name);
+    DataTable(DataSetPtr parent, std::string name);
     ~DataTable();
 
     const DataSetPtr& Parent() const;

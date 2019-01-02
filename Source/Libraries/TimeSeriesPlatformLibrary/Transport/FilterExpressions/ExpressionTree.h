@@ -98,9 +98,9 @@ private:
     void ValidateValueType(ExpressionValueType valueType) const;
 
 public:
-    ValueExpression(ExpressionValueType valueType, const GSF::TimeSeries::Object& value, bool valueIsNullable = false);
+    ValueExpression(ExpressionValueType valueType, GSF::TimeSeries::Object value, bool valueIsNullable = false);
 
-    const GSF::TimeSeries::Object& Value;
+    const GSF::TimeSeries::Object Value;
     const ExpressionValueType ValueType;
     const bool ValueIsNullable;
 
@@ -148,10 +148,10 @@ const char* EnumName(ExpressionUnaryType unaryType);
 class UnaryExpression : public Expression
 {
 public:
-    UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value);
+    UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr value);
 
     const ExpressionUnaryType UnaryType;
-    const ExpressionPtr& Value;
+    const ExpressionPtr Value;
 };
 
 typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
@@ -159,9 +159,9 @@ typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
 class ColumnExpression : public Expression
 {
 public:
-    ColumnExpression(const GSF::Data::DataColumnPtr& dataColumn);
+    ColumnExpression(GSF::Data::DataColumnPtr dataColumn);
 
-    const GSF::Data::DataColumnPtr& DataColumn;
+    const GSF::Data::DataColumnPtr DataColumn;
 };
 
 typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
@@ -169,9 +169,9 @@ typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
 class InListExpression : public Expression
 {
 public:
-    InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool hasNotKeyword);
+    InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword);
 
-    const ExpressionPtr& Value;
+    const ExpressionPtr Value;
     const ExpressionCollectionPtr Arguments;
     const bool HasNotKeyword;
 };
@@ -232,11 +232,11 @@ const char* EnumName(ExpressionOperatorType operatorType);
 class OperatorExpression : public Expression
 {
 public:
-    OperatorExpression(ExpressionOperatorType operatorType, const ExpressionPtr& leftValue, const ExpressionPtr& rightValue);
+    OperatorExpression(ExpressionOperatorType operatorType, ExpressionPtr leftValue, ExpressionPtr rightValue);
 
     const ExpressionOperatorType OperatorType;
-    const ExpressionPtr& LeftValue;
-    const ExpressionPtr& RightValue;
+    const ExpressionPtr LeftValue;
+    const ExpressionPtr RightValue;
 };
 
 typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;

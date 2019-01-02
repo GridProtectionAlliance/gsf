@@ -40,9 +40,9 @@ const char* DataRowException::what() const noexcept
 
 const DataRowPtr DataRow::NullPtr = nullptr;
 
-DataRow::DataRow(const DataTablePtr& parent) :
-    m_parent(parent),
-    m_values(parent->ColumnCount())
+DataRow::DataRow(DataTablePtr parent) :
+    m_parent(std::move(parent)),
+    m_values(m_parent->ColumnCount())
 {
     for (uint32_t i = 0; i < m_values.size(); i++)
         m_values[i] = nullptr;

@@ -67,7 +67,7 @@ private:
     void SetValue(int32_t index, const GSF::TimeSeries::Nullable<T>& value, DataType targetType);
 
 public:
-    DataRow(const DataTablePtr& parent);
+    DataRow(DataTablePtr parent);
     ~DataRow();
 
     const DataTablePtr& Parent() const;

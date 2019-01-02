@@ -135,11 +135,9 @@ Expression::Expression(ExpressionType type) :
 {
 }
 
-Expression::~Expression()
-{
-}
+Expression::~Expression() = default;
 
-ValueExpression::ValueExpression(ExpressionValueType valueType, const Object& value, bool valueIsNullable) :
+ValueExpression::ValueExpression(ExpressionValueType valueType, Object value, bool valueIsNullable) :  // NOLINT(modernize-pass-by-value)
     Expression(ExpressionType::Value),
     Value(value),
     ValueType(valueType),
@@ -155,10 +153,32 @@ void ValueExpression::ValidateValueType(ExpressionValueType valueType) const
 
 bool ValueExpression::IsNull() const
 {
-    if (ValueIsNullable)
-        return !Cast<NullableType>(Value).HasValue();
+    if (!ValueIsNullable)
+        return false;
 
-    return false;
+    switch (ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            return !ValueAsNullableBoolean().HasValue();
+        case ExpressionValueType::Int32:
+            return !ValueAsNullableInt32().HasValue();
+        case ExpressionValueType::Int64:
+            return !ValueAsNullableInt64().HasValue();
+        case ExpressionValueType::Decimal:
+            return !ValueAsNullableDecimal().HasValue();
+        case ExpressionValueType::Double:
+            return !ValueAsNullableDouble().HasValue();
+        case ExpressionValueType::String:
+            return !ValueAsNullableString().HasValue();
+        case ExpressionValueType::Guid:
+            return !ValueAsNullableGuid().HasValue();
+        case ExpressionValueType::DateTime:
+            return !ValueAsNullableDateTime().HasValue();
+        case ExpressionValueType::Undefined:
+            return true;
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
 }
 
 string ValueExpression::ToString() const
@@ -348,30 +368,30 @@ Nullable<time_t> ValueExpression::ValueAsNullableDateTime() const
     return Cast<time_t>(Value);
 }
 
-UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, const ExpressionPtr& value) :
+UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr value) :
     Expression(ExpressionType::Unary),
     UnaryType(unaryType),
-    Value(value)
+    Value(std::move(value))
 {
 }
 
-ColumnExpression::ColumnExpression(const DataColumnPtr& dataColumn) :
+ColumnExpression::ColumnExpression(DataColumnPtr dataColumn) :
     Expression(ExpressionType::Column),
-    DataColumn(dataColumn)
+    DataColumn(std::move(dataColumn))
 {
 }
 
-OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, const ExpressionPtr& leftValue, const ExpressionPtr& rightValue) :
+OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, ExpressionPtr leftValue, ExpressionPtr rightValue) :
     Expression(ExpressionType::Operator),
     OperatorType(operatorType),
-    LeftValue(leftValue),
-    RightValue(rightValue)
+    LeftValue(std::move(leftValue)),
+    RightValue(std::move(rightValue))
 {
 }
 
-InListExpression::InListExpression(const ExpressionPtr& value, ExpressionCollectionPtr arguments, bool hasNotKeyword) :
+InListExpression::InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword) :
     Expression(ExpressionType::InList),
-    Value(value),
+    Value(std::move(value)),
     Arguments(std::move(arguments)),
     HasNotKeyword(hasNotKeyword)
 {

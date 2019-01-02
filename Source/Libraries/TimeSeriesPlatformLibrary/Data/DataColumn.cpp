@@ -53,17 +53,15 @@ const char* GSF::Data::EnumName(DataType type)
 
 const DataColumnPtr DataColumn::NullPtr = nullptr;
 
-DataColumn::DataColumn(const DataTablePtr& parent, string name, DataType type) :
-    m_parent(parent),
+DataColumn::DataColumn(DataTablePtr parent, string name, DataType type) :
+    m_parent(std::move(parent)),
     m_name(std::move(name)),
     m_type(type),
     m_index(-1)
 {
 }
 
-DataColumn::~DataColumn()
-{
-}
+DataColumn::~DataColumn() = default;
 
 const DataTablePtr& DataColumn::Parent() const
 {

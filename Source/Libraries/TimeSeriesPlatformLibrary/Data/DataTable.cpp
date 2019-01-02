@@ -29,15 +29,13 @@ using namespace GSF::Data;
 
 const DataTablePtr DataTable::NullPtr = nullptr;
 
-DataTable::DataTable(const DataSetPtr& parent, string name) :
-    m_parent(parent),
+DataTable::DataTable(DataSetPtr parent, string name) :
+    m_parent(std::move(parent)),
     m_name(std::move(name))
 {
 }
 
-DataTable::~DataTable()
-{
-}
+DataTable::~DataTable() = default;
 
 const DataSetPtr& DataTable::Parent() const
 {

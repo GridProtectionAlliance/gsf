@@ -35,6 +35,19 @@ using namespace boost;
 // Mapped type for TimeSeries Guid (ANTLR4 also defines a Guid type)
 typedef GSF::TimeSeries::Guid guid;
 
+static string ParseStringLiteral(string stringLiteral)  // NOLINT
+{
+    // Remove any surrounding quotes from string, ANTLR grammar already
+    // ensures strings starting with quote also ends with one
+    if (stringLiteral.front() == '\'')
+    {
+        stringLiteral.erase(0, 1);
+        stringLiteral.erase(stringLiteral.size() - 1);
+    }
+
+    return stringLiteral;
+}
+
 static guid ParseGuidLiteral(string guidLiteral)
 {
     // Remove any quotes from GUID (boost currently only handles optional braces),
@@ -790,7 +803,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     }
     else if (context->STRING_LITERAL())
     {
-        result = NewSharedPtr<ValueExpression>(ExpressionValueType::String, context->STRING_LITERAL()->getText());
+        result = NewSharedPtr<ValueExpression>(ExpressionValueType::String, ParseStringLiteral(context->STRING_LITERAL()->getText()));
     }
     else if (context->DATETIME_LITERAL())
     {

@@ -26,13 +26,9 @@
 using namespace std;
 using namespace GSF::Data;
 
-DataSet::DataSet()
-{
-}
+DataSet::DataSet() = default;
 
-DataSet::~DataSet()
-{
-}
+DataSet::~DataSet() = default;
 
 const DataTablePtr& DataSet::Table(const string& tableName) const
 {
