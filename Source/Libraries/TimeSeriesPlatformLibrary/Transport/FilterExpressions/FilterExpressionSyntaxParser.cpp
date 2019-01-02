@@ -704,9 +704,9 @@ FilterExpressionSyntaxParser::ExpressionContext* FilterExpressionSyntaxParser::e
       case FilterExpressionSyntaxParser::K_NULL:
       case FilterExpressionSyntaxParser::INTEGER_LITERAL:
       case FilterExpressionSyntaxParser::NUMERIC_LITERAL:
+      case FilterExpressionSyntaxParser::GUID_LITERAL:
       case FilterExpressionSyntaxParser::STRING_LITERAL:
       case FilterExpressionSyntaxParser::DATETIME_LITERAL:
-      case FilterExpressionSyntaxParser::GUID_LITERAL:
       case FilterExpressionSyntaxParser::BOOLEAN_LITERAL: {
         setState(92);
         literalValue();
@@ -766,9 +766,9 @@ FilterExpressionSyntaxParser::ExpressionContext* FilterExpressionSyntaxParser::e
           case FilterExpressionSyntaxParser::IDENTIFIER:
           case FilterExpressionSyntaxParser::INTEGER_LITERAL:
           case FilterExpressionSyntaxParser::NUMERIC_LITERAL:
+          case FilterExpressionSyntaxParser::GUID_LITERAL:
           case FilterExpressionSyntaxParser::STRING_LITERAL:
           case FilterExpressionSyntaxParser::DATETIME_LITERAL:
-          case FilterExpressionSyntaxParser::GUID_LITERAL:
           case FilterExpressionSyntaxParser::BOOLEAN_LITERAL: {
             setState(99);
             expression(0);
@@ -1058,9 +1058,9 @@ FilterExpressionSyntaxParser::ExpressionContext* FilterExpressionSyntaxParser::e
             | (1ULL << FilterExpressionSyntaxParser::IDENTIFIER)
             | (1ULL << FilterExpressionSyntaxParser::INTEGER_LITERAL)
             | (1ULL << FilterExpressionSyntaxParser::NUMERIC_LITERAL)
+            | (1ULL << FilterExpressionSyntaxParser::GUID_LITERAL)
             | (1ULL << FilterExpressionSyntaxParser::STRING_LITERAL)
             | (1ULL << FilterExpressionSyntaxParser::DATETIME_LITERAL)
-            | (1ULL << FilterExpressionSyntaxParser::GUID_LITERAL)
             | (1ULL << FilterExpressionSyntaxParser::BOOLEAN_LITERAL))) != 0)) {
             setState(157);
             expression(0);
@@ -1164,9 +1164,9 @@ FilterExpressionSyntaxParser::LiteralValueContext* FilterExpressionSyntaxParser:
       ((1ULL << _la) & ((1ULL << FilterExpressionSyntaxParser::K_NULL)
       | (1ULL << FilterExpressionSyntaxParser::INTEGER_LITERAL)
       | (1ULL << FilterExpressionSyntaxParser::NUMERIC_LITERAL)
+      | (1ULL << FilterExpressionSyntaxParser::GUID_LITERAL)
       | (1ULL << FilterExpressionSyntaxParser::STRING_LITERAL)
       | (1ULL << FilterExpressionSyntaxParser::DATETIME_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::GUID_LITERAL)
       | (1ULL << FilterExpressionSyntaxParser::BOOLEAN_LITERAL))) != 0))) {
     _errHandler->recoverInline(this);
     }
@@ -1686,8 +1686,8 @@ std::vector<std::string> FilterExpressionSyntaxParser::_symbolicNames = {
   "K_DESC", "K_FALSE", "K_FILTER", "K_IIF", "K_IN", "K_IS", "K_ISNULL", 
   "K_ISREGEXMATCH", "K_LEN", "K_LIKE", "K_NOT", "K_NULL", "K_OR", "K_ORDER", 
   "K_REGEXVAL", "K_SUBSTR", "K_SUBSTRING", "K_TOP", "K_TRIM", "K_TRUE", 
-  "K_WHERE", "IDENTIFIER", "INTEGER_LITERAL", "NUMERIC_LITERAL", "STRING_LITERAL", 
-  "DATETIME_LITERAL", "GUID_LITERAL", "BOOLEAN_LITERAL", "MEASUREMENT_KEY_LITERAL", 
+  "K_WHERE", "IDENTIFIER", "INTEGER_LITERAL", "NUMERIC_LITERAL", "GUID_LITERAL", 
+  "STRING_LITERAL", "DATETIME_LITERAL", "BOOLEAN_LITERAL", "MEASUREMENT_KEY_LITERAL", 
   "POINT_TAG_LITERAL", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", "SPACES", 
   "UNEXPECTED_CHAR"
 };
@@ -1742,7 +1742,7 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0xa, 0x3, 0xa, 0x3, 0xb, 0x3, 0xb, 0x3, 0xc, 0x3, 0xc, 0x3, 0xd, 0x3, 
     0xd, 0x3, 0xe, 0x3, 0xe, 0x3, 0xf, 0x3, 0xf, 0x3, 0xf, 0x2, 0x3, 0x10, 
     0x10, 0x2, 0x4, 0x6, 0x8, 0xa, 0xc, 0xe, 0x10, 0x12, 0x14, 0x16, 0x18, 
-    0x1a, 0x1c, 0x2, 0xd, 0x4, 0x2, 0x38, 0x38, 0x3a, 0x3b, 0x4, 0x2, 0x1a, 
+    0x1a, 0x1c, 0x2, 0xd, 0x4, 0x2, 0x36, 0x36, 0x3a, 0x3b, 0x4, 0x2, 0x1a, 
     0x1a, 0x1e, 0x1e, 0x3, 0x2, 0x5, 0x7, 0x3, 0x2, 0x8, 0x9, 0x3, 0x2, 
     0xa, 0xd, 0x3, 0x2, 0xe, 0x11, 0x3, 0x2, 0x12, 0x15, 0x4, 0x2, 0x29, 
     0x29, 0x34, 0x39, 0x5, 0x2, 0x8, 0x9, 0x18, 0x18, 0x28, 0x28, 0x3, 0x2, 

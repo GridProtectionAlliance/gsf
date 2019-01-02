@@ -198,18 +198,18 @@ NUMERIC_LITERAL
  | '.' DIGIT+ ( E [-+]? DIGIT+ )?
  ;
 
+GUID_LITERAL
+ : '\'' GUID_VALUE '\''
+ | '{' GUID_VALUE '}'
+ | GUID_VALUE
+ ;
+
 STRING_LITERAL
  : '\'' ( ~'\'' | '\'\'' )* '\''
  ;
 
 DATETIME_LITERAL
  : '#' ( ~'#' )+ '#'
- ;
-
-GUID_LITERAL
- : '\'' GUID_VALUE '\''
- | '{' GUID_VALUE '}'
- | GUID_VALUE
  ;
 
 BOOLEAN_LITERAL
