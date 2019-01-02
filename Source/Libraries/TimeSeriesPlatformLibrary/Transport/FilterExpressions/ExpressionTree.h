@@ -244,6 +244,7 @@ class ExpressionTree
 {
 private:
     Data::DataRowPtr m_currentRow;
+    Data::DataTablePtr m_measurements;
 
     ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
@@ -346,9 +347,9 @@ private:
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
 public:
-    ExpressionTree(const Data::DataTablePtr& measurements);
+    ExpressionTree(Data::DataTablePtr measurements);
 
-    const Data::DataTablePtr& Measurements;
+    const Data::DataTablePtr& Measurements() const;
     int32_t TopLimit;
     std::vector<std::pair<Data::DataColumnPtr, bool>> OrderByTerms;
 

@@ -2248,10 +2248,15 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
     return result ? ExpressionTree::True : ExpressionTree::False;
 }
 
-ExpressionTree::ExpressionTree(const DataTablePtr& measurements) :
-    Measurements(measurements),
+ExpressionTree::ExpressionTree(DataTablePtr measurements) :
+    m_measurements(std::move(measurements)),
     TopLimit(-1)
 {
+}
+
+const DataTablePtr& ExpressionTree::Measurements() const
+{
+    return m_measurements;
 }
 
 ValueExpressionPtr ExpressionTree::Evaluate(const DataRowPtr& row)

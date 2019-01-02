@@ -214,7 +214,7 @@ void FilterExpressionParser::Evaluate()
     for (size_t x = 0; x < m_expressionTrees.size(); x++)
     {
         const ExpressionTreePtr& expressionTree = m_expressionTrees[x];
-        const DataTablePtr& measurements = expressionTree->Measurements;
+        const DataTablePtr& measurements = expressionTree->Measurements();
         const MeasurementTableIDFieldsPtr& measurementTableIDFields = GetMeasurementTableIDFields(measurements->Name());
 
         if (measurementTableIDFields == nullptr)
@@ -821,10 +821,10 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
 void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext* context)
 {
     const string& columnName = context->IDENTIFIER()->getText();
-    const DataColumnPtr& dataColumn = m_activeExpressionTree->Measurements->Column(columnName);
+    const DataColumnPtr& dataColumn = m_activeExpressionTree->Measurements()->Column(columnName);
 
     if (dataColumn == nullptr)
-        throw FilterExpressionException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Measurements->Name() + "\"");
+        throw FilterExpressionException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Measurements()->Name() + "\"");
 
     AddExpr(context, NewSharedPtr<ColumnExpression>(dataColumn));
 }
