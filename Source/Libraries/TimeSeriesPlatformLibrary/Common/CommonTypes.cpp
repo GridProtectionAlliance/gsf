@@ -22,14 +22,18 @@
 //******************************************************************************************************
 
 #include "CommonTypes.h"
-#include "Convert.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+//#include <boost/uuid/nil_generator.hpp>
 
 using namespace std;
 using namespace GSF::TimeSeries;
 using namespace boost::algorithm;
+
+boost::uuids::random_generator RandomGuidGen;
+boost::uuids::nil_generator NilGuidGen;
 
 const decimal_t Decimal::MaxValue = numeric_limits<decimal_t>::max();
 
@@ -41,13 +45,18 @@ const decimal_t Decimal::DotNetMinValue = decimal_t("-79228162514264337593543950
 
 const string Empty::String;
 
-const Guid Empty::Guid = ParseGuid("00000000-0000-0000-0000-000000000000");
+const Guid Empty::Guid = NilGuidGen();
 
 const Object Empty::Object(nullptr);
 
 const IPAddress Empty::IPAddress;
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
+
+Guid GSF::TimeSeries::NewGuid()
+{
+    return RandomGuidGen();
+}
 
 bool GSF::TimeSeries::IsEqual(const std::string& left, const std::string& right, bool ignoreCase)
 {

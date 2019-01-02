@@ -205,6 +205,8 @@ namespace TimeSeries
         sink.assign(std::istreambuf_iterator<char>{ &source }, {});
     }
 
+    Guid NewGuid();
+
     // Handy string functions (boost wrappers)
     bool IsEqual(const std::string& left, const std::string& right, bool ignoreCase = true);
     bool StartsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
