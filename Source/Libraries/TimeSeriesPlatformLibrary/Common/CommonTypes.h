@@ -43,6 +43,11 @@
 namespace GSF {
 namespace TimeSeries
 {
+    // Floating-point types
+    typedef float float32_t;
+    typedef double float64_t;
+    typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
+
     struct Int8
     {
         static const int8_t MaxValue = static_cast<int8_t>(127);
@@ -93,11 +98,11 @@ namespace TimeSeries
 
     struct Decimal
     {
-        static const boost::multiprecision::cpp_dec_float_100 MaxValue;
-        static const boost::multiprecision::cpp_dec_float_100 MinValue;
+        static const decimal_t MaxValue;
+        static const decimal_t MinValue;
 
-        static const boost::multiprecision::cpp_dec_float_100 DotNetMaxValue;
-        static const boost::multiprecision::cpp_dec_float_100 DotNetMinValue;
+        static const decimal_t DotNetMaxValue;
+        static const decimal_t DotNetMinValue;
     };
 
     template<class T>
@@ -177,11 +182,6 @@ namespace TimeSeries
     typedef boost::asio::ip::tcp::resolver DnsResolver;
     typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> Decompressor;
     typedef boost::iostreams::gzip_decompressor GZipDecompressor;
-
-    // Floating-point types
-    typedef float float32_t;
-    typedef double float64_t;
-    typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
 
     template<class T>
     T Cast(const Object& source)

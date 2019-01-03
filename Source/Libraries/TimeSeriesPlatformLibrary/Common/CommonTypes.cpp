@@ -26,7 +26,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-//#include <boost/uuid/nil_generator.hpp>
 
 using namespace std;
 using namespace GSF::TimeSeries;
