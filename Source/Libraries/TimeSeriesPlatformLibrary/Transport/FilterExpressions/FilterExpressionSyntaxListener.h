@@ -44,9 +44,6 @@ public:
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
 
-  virtual void enterKeyword(FilterExpressionSyntaxParser::KeywordContext *ctx) = 0;
-  virtual void exitKeyword(FilterExpressionSyntaxParser::KeywordContext *ctx) = 0;
-
   virtual void enterFunctionName(FilterExpressionSyntaxParser::FunctionNameContext *ctx) = 0;
   virtual void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext *ctx) = 0;
 
@@ -55,6 +52,9 @@ public:
 
   virtual void enterColumnName(FilterExpressionSyntaxParser::ColumnNameContext *ctx) = 0;
   virtual void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext *ctx) = 0;
+
+  virtual void enterOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext *ctx) = 0;
+  virtual void exitOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext *ctx) = 0;
 
 
 };

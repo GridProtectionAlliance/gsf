@@ -411,7 +411,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
         for (size_t i = 0; i < context->orderingTerm().size(); i++)
         {
             auto orderingTermContext = context->orderingTerm(i);
-            const string& orderByColumnName = orderingTermContext->columnName()->getText();
+            const string& orderByColumnName = orderingTermContext->orderByColumnName()->getText();
             const DataColumnPtr& orderByColumn = measurements->Column(orderByColumnName);
 
             if (orderByColumn == nullptr)

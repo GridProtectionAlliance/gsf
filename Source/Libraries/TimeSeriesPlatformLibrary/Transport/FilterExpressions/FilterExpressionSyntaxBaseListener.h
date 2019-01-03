@@ -46,9 +46,6 @@ public:
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext * /*ctx*/) override { }
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext * /*ctx*/) override { }
 
-  virtual void enterKeyword(FilterExpressionSyntaxParser::KeywordContext * /*ctx*/) override { }
-  virtual void exitKeyword(FilterExpressionSyntaxParser::KeywordContext * /*ctx*/) override { }
-
   virtual void enterFunctionName(FilterExpressionSyntaxParser::FunctionNameContext * /*ctx*/) override { }
   virtual void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext * /*ctx*/) override { }
 
@@ -57,6 +54,9 @@ public:
 
   virtual void enterColumnName(FilterExpressionSyntaxParser::ColumnNameContext * /*ctx*/) override { }
   virtual void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext * /*ctx*/) override { }
+
+  virtual void enterOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext * /*ctx*/) override { }
+  virtual void exitOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext * /*ctx*/) override { }
 
 
   virtual void enterEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }
