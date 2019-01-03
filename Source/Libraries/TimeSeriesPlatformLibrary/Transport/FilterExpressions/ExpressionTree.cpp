@@ -1158,7 +1158,7 @@ ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) co
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sourceText.size());
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, static_cast<int32_t>(sourceText.size()));
 }
 
 ValueExpressionPtr ExpressionTree::RegExVal(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const
@@ -1222,9 +1222,9 @@ ValueExpressionPtr ExpressionTree::SubString(const ValueExpressionPtr& sourceVal
     }
 
     if (length > -1)
-        return NewSharedPtr<ValueExpression>(ExpressionValueType::String, sourceText.substr(index, length));
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::String, string(sourceText.substr(index, length)));
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, sourceText.substr(index));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, string(sourceText.substr(index)));
 }
 
 ValueExpressionPtr ExpressionTree::Trim(const ValueExpressionPtr& sourceValue) const
@@ -2317,6 +2317,6 @@ ValueExpressionPtr ExpressionTree::NullValue(ExpressionValueType targetValueType
         case ExpressionValueType::DateTime:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, Nullable<time_t>(nullptr), true);
         default:
-            throw ExpressionTreeException("Unexpected expression value type encountered");
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Undefined, nullptr);
     }
 }
