@@ -61,7 +61,7 @@ static guid ParseGuidLiteral(string guidLiteral)
     return ParseGuid(guidLiteral.c_str());
 }
 
-time_t ParseDateTimeLiteral(string time)
+static time_t ParseDateTimeLiteral(string time)
 {
     // Remove any surrounding '#' symbols from date/time, ANTLR grammar already
     // ensures date/time starting with '#' symbol will also end with one
@@ -72,6 +72,19 @@ time_t ParseDateTimeLiteral(string time)
     }
 
     return ParseTimestamp(time.c_str());
+}
+
+static string ParsePointTagLiteral(string pointTagLiteral)
+{
+    // Remove any double-quotes from point tag literal, ANTLR grammar already
+    // ensures tag starting with quote also ends with one
+    if (pointTagLiteral.front() == '"')
+    {
+        pointTagLiteral.erase(0, 1);
+        pointTagLiteral.erase(pointTagLiteral.size() - 1);
+    }
+
+    return pointTagLiteral;
 }
 
 FilterExpressionParserException::FilterExpressionParserException(string message) noexcept :
@@ -87,6 +100,7 @@ const char* FilterExpressionParserException::what() const noexcept
 FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_inputStream(filterExpression),
     m_dataset(nullptr),
+    m_trackFilteredRows(false),
     m_primaryMeasurementTableName("ActiveMeasurements")
 {
     m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
@@ -148,22 +162,27 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
                 {
                     const guid& signalID = signalIDField.GetValueOrDefault();
 
-                    if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
-                        m_signalIDs.push_back(signalID);
-                }
+                    if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+                    {
+                        m_filteredSignalIDs.push_back(signalID);
 
-                return;
+                        if (m_trackFilteredRows)
+                            m_filteredRows.push_back(row);
+
+                        return;
+                    }
+                }
             }
         }
     }
 }
 
-const DataSetPtr& FilterExpressionParser::CurrentDataSet() const
+const DataSetPtr& FilterExpressionParser::GetDataSet() const
 {
     return m_dataset;
 }
 
-void FilterExpressionParser::AssignDataSet(const DataSetPtr& dataset)
+void FilterExpressionParser::SetDataSet(const DataSetPtr& dataset)
 {
     m_dataset = dataset;
 }
@@ -210,8 +229,9 @@ static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable
 
 void FilterExpressionParser::Evaluate()
 {
-    m_signalIDSet.clear();
-    m_signalIDs.clear();
+    m_filteredSignalIDSet.clear();
+    m_filteredSignalIDs.clear();
+    m_filteredRows.clear();
     m_expressionTrees.clear();
     m_expressions.clear();
 
@@ -266,7 +286,7 @@ void FilterExpressionParser::Evaluate()
                 {
                     const guid& signalID = signalIDField.GetValueOrDefault();
 
-                    if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
+                    if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
                         matchedRows.push_back(row);
                 }
             }
@@ -365,18 +385,38 @@ void FilterExpressionParser::Evaluate()
         }
 
         for (size_t i = 0; i < matchedRows.size(); i++)
-            m_signalIDs.push_back(matchedRows[i]->ValueAsGuid(signalIDColumnIndex).GetValueOrDefault());
+        {
+            m_filteredSignalIDs.push_back(matchedRows[i]->ValueAsGuid(signalIDColumnIndex).GetValueOrDefault());
+
+            if (m_trackFilteredRows)
+                m_filteredRows.push_back(matchedRows[i]);
+        }
     }
 }
 
 const vector<guid>& FilterExpressionParser::FilteredSignalIDs() const
 {
-    return m_signalIDs;
+    return m_filteredSignalIDs;
 }
 
 const unordered_set<guid>& FilterExpressionParser::FilteredSignalIDSet() const
 {
-    return m_signalIDSet;
+    return m_filteredSignalIDSet;
+}
+
+bool FilterExpressionParser::GetTrackFilteredRows() const
+{
+    return m_trackFilteredRows;
+}
+
+void FilterExpressionParser::SetTrackFilteredRows(bool trackFilteredRows)
+{
+    m_trackFilteredRows = trackFilteredRows;
+}
+
+const std::vector<GSF::Data::DataRowPtr>& FilterExpressionParser::FilteredRows() const
+{
+    return m_filteredRows;
 }
 
 /*
@@ -434,14 +474,17 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
  */
 void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext* context)
 {
+    guid signalID = Empty::Guid;
+
     if (context->GUID_LITERAL())
     {
-        const guid& signalID = ParseGuidLiteral(context->GUID_LITERAL()->getText());
+        signalID = ParseGuidLiteral(context->GUID_LITERAL()->getText());
         
-        if (signalID != Empty::Guid && m_signalIDSet.insert(signalID).second)
-            m_signalIDs.push_back(signalID);
+        if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+            m_filteredSignalIDs.push_back(signalID);
 
-        return;
+        if (!m_trackFilteredRows)
+            return;
     }
 
     const DataTablePtr& measurements = m_dataset->Table(m_primaryMeasurementTableName);
@@ -461,6 +504,27 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
     const int32_t signalIDColumnIndex = signalIDColumn->Index();
 
+    if (m_trackFilteredRows && signalID != Empty::Guid)
+    {
+        for (int32_t i = 0; i < measurements->RowCount(); i++)
+        {
+            const DataRowPtr& row = measurements->Row(i);
+
+            if (row)
+            {
+                const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+
+                if (signalIDField.HasValue() && signalIDField.GetValueOrDefault() == signalID)
+                {
+                    m_filteredRows.push_back(row);
+                    return;
+                }
+            }
+        }
+
+        return;
+    }
+
     if (context->MEASUREMENT_KEY_LITERAL())
     {
         MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->MeasurementKeyFieldName, context->MEASUREMENT_KEY_LITERAL()->getText());
@@ -468,7 +532,7 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
     }
 
     if (context->POINT_TAG_LITERAL())
-        MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->PointTagFieldName, context->POINT_TAG_LITERAL()->getText());
+        MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->PointTagFieldName, ParsePointTagLiteral(context->POINT_TAG_LITERAL()->getText()));
 }
 
 /*

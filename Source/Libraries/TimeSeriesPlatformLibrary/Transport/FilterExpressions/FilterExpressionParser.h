@@ -67,10 +67,12 @@ private:
     FilterExpressionSyntaxParser* m_parser;
     GSF::Data::DataSetPtr m_dataset;
     ExpressionTreePtr m_activeExpressionTree;
+    bool m_trackFilteredRows;
 
     std::string m_primaryMeasurementTableName;
-    std::unordered_set<GSF::TimeSeries::Guid> m_signalIDSet;
-    std::vector<GSF::TimeSeries::Guid> m_signalIDs;
+    std::unordered_set<GSF::TimeSeries::Guid> m_filteredSignalIDSet;
+    std::vector<GSF::TimeSeries::Guid> m_filteredSignalIDs;
+    std::vector<GSF::Data::DataRowPtr> m_filteredRows;
     std::vector<ExpressionTreePtr> m_expressionTrees;
     std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
     std::map<const std::string, MeasurementTableIDFieldsPtr> m_measurementTableIDFields;
@@ -82,8 +84,8 @@ public:
     FilterExpressionParser(const std::string& filterExpression);
     ~FilterExpressionParser();
 
-    const GSF::Data::DataSetPtr& CurrentDataSet() const;
-    void AssignDataSet(const GSF::Data::DataSetPtr& dataset);
+    const GSF::Data::DataSetPtr& GetDataSet() const;
+    void SetDataSet(const GSF::Data::DataSetPtr& dataset);
 
     MeasurementTableIDFieldsPtr GetMeasurementTableIDFields(const std::string& measurementTableName) const;
     void SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields);
@@ -95,6 +97,10 @@ public:
 
     const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
     const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDSet() const;
+    
+    bool GetTrackFilteredRows() const;
+    void SetTrackFilteredRows(bool trackFilteredRows);
+    const std::vector<GSF::Data::DataRowPtr>& FilteredRows() const;
 
     void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
     void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;

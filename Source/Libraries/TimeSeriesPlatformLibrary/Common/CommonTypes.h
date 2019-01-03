@@ -162,7 +162,7 @@ namespace TimeSeries
     }
 
     // std::map string comparer options
-    #define StringComparerIgnoreCase boost::locale::comparator<char, boost::locale::collator_base::secondary>;
+    #define StringComparerIgnoreCase boost::locale::comparator<char, boost::locale::collator_base::secondary>
 
     // std::unordered_map string comparer options
     struct StringHasherIgnoreCase : std::unary_function<std::string, std::size_t>
