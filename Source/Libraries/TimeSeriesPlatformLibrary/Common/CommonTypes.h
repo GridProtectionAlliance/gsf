@@ -28,7 +28,6 @@
 #include <boost/any.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
-#include <boost/locale/collator.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -163,8 +162,18 @@ namespace TimeSeries
     }
 
     // std::map string comparer options
-    static boost::locale::comparator<char, boost::locale::collator_base::primary> StringComparerIgnoreCaseAndAccents;
-    static boost::locale::comparator<char, boost::locale::collator_base::secondary> StringComparerIgnoreCase;
+    #define StringComparerIgnoreCase boost::locale::comparator<char, boost::locale::collator_base::secondary>;
+
+    // std::unordered_map string comparer options
+    struct StringHasherIgnoreCase : std::unary_function<std::string, std::size_t>
+    {
+        std::size_t operator()(const std::string& x) const;
+    };
+
+    struct StringEqualityIgnoreCase : std::binary_function<std::string, std::string, bool>
+    {
+        bool operator()(const std::string& x, const std::string& y) const;
+    };
 
     typedef boost::any Object;
     typedef boost::uuids::uuid Guid;

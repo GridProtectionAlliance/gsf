@@ -52,6 +52,24 @@ const IPAddress Empty::IPAddress;
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
 
+size_t StringHasherIgnoreCase::operator()(const string& x) const
+{
+    size_t seed = 0;
+    const locale locale;
+
+    for (string::const_iterator it = x.begin(); it != x.end(); ++it)
+    {
+        boost::hash_combine(seed, toupper(*it, locale));
+    }
+
+    return seed;
+}
+
+bool StringEqualityIgnoreCase::operator()(const string& x, const string& y) const
+{
+    return boost::iequals(x, y);
+}
+
 Guid GSF::TimeSeries::NewGuid()
 {
     return RandomGuidGen();
