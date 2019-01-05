@@ -33,6 +33,20 @@ namespace GSF {
 namespace Data
 {
 
+// Simple exception type thrown by data set operations
+class DataSetException : public GSF::TimeSeries::Exception
+{
+private:
+    std::string m_message;
+
+public:
+    DataSetException(std::string message) noexcept;
+    const char* what() const noexcept;
+};
+
+class DataSet;
+typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+
 class DataSet : public TimeSeries::EnableSharedThisPtr<DataSet> // NOLINT
 {
 private:
@@ -48,14 +62,22 @@ public:
 
     const DataTablePtr& operator[](const std::string& tableName) const;
 
+    DataTablePtr CreateTable(const std::string& name);
+
+    int32_t TableCount() const;
+
     void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
 
     bool AddOrUpdateTable(DataTablePtr table);
 
     bool RemoveTable(const std::string& tableName);
-};
 
-typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+    static DataSetPtr ParseXmlDataSet(const std::vector<uint8_t>& xmlDataSet);
+
+    static const std::string XmlSchemaNamespace;
+
+    static const std::string ExtXmlSchemaDataNamespace;
+};
 
 }}
 
