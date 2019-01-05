@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <string>
+#include <boost/filesystem.hpp>
 
 #include "../Transport/FilterExpressions/FilterExpressionParser.h"
 #include "../Data/DataSet.h"
@@ -39,11 +40,11 @@ void Evaluate(const FilterExpressionParserPtr& parser)
     {
         parser->Evaluate();
     }
-    catch (FilterExpressionParserException& ex)
+    catch (const FilterExpressionParserException& ex)
     {
         cerr << "FilterExpressionParser exception: " << ex.what() << endl;
     }
-    catch (ExpressionTreeException& ex)
+    catch (const ExpressionTreeException& ex)
     {
         cerr << "ExpressionTree exception: " <<  ex.what() << endl;
     }
@@ -56,17 +57,19 @@ void Evaluate(const FilterExpressionParserPtr& parser)
 // Sample application to test the filter expression parser.
 int main(int argc, char* argv[])
 {
+    cout << "Current path: " << boost::filesystem::current_path() << endl << endl;
+
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
-    DataTablePtr dataTable = NewSharedPtr<DataTable>(dataSet, "ActiveMeasurements");
+    DataTablePtr dataTable = dataSet->CreateTable("ActiveMeasurements");
     DataColumnPtr dataColumn;
     DataRowPtr dataRow;
     int32_t test = 0;
 
-    dataColumn = NewSharedPtr<DataColumn>(dataTable, "SignalID", DataType::Guid);
+    dataColumn = dataTable->CreateColumn("SignalID", DataType::Guid);
     dataTable->AddColumn(dataColumn);
     const int32_t signalIDField = dataTable->Column("SignalID")->Index();
 
-    dataColumn = NewSharedPtr<DataColumn>(dataTable, "SignalType", DataType::String);
+    dataColumn = dataTable->CreateColumn("SignalType", DataType::String);
     dataTable->AddColumn(dataColumn);
     const int32_t signalTypeField = dataTable->Column("SignalType")->Index();
 
@@ -435,6 +438,91 @@ int main(int argc, char* argv[])
     assert(parser->FilteredRows()[0]->ValueAsString(signalTypeField).GetValueOrDefault() == "STAT");
     assert(parser->FilteredRows()[1]->ValueAsGuid(signalIDField).GetValueOrDefault() == freqID);
     assert(parser->FilteredRows()[1]->ValueAsString(signalTypeField).GetValueOrDefault() == "FREQ");
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Prep new dataset
+    const string MetadataSample1FileName = "MetadataSample1.xml";
+
+    cout << endl << "Loading XML metadata from \"" << MetadataSample1FileName << "\"..." << endl;
+
+    ifstream metadataStream(MetadataSample1FileName, ios::binary);
+    metadataStream >> noskipws;
+    vector<uint8_t> xmlMetadata(istream_iterator<uint8_t> {metadataStream}, {});
+
+    if (xmlMetadata.empty())
+    {
+        cerr << "Failed to load XML metadata from \"" + MetadataSample1FileName + "\"" << endl;
+        return 1;
+    }
+
+    cout << "Loaded " << xmlMetadata.size() << " bytes of data." << endl;
+    cout << "Parsing XML metadata into data set..." << endl;
+
+    dataSet = nullptr;
+
+    try
+    {
+        dataSet = DataSet::ParseXmlDataSet(xmlMetadata);
+    }
+    catch (const DataSetException& ex)
+    {
+        cerr << "DataSet exception: " <<  ex.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << boost::current_exception_diagnostic_information(true) << endl;
+    }
+
+    if (dataSet == nullptr)
+        return 1;
+
+    cout << "Loaded " << dataSet->TableCount() << " tables from XML metadata." << endl << endl;
+
+    // Test 35 - validate schema load
+    assert(dataSet->TableCount() == 4);
+    assert(dataSet->Table("MeasurementDetail"));
+    assert(dataSet->Table("MeasurementDetail")->ColumnCount() == 11);
+    assert(dataSet->Table("MeasurementDetail")->Column("ID"));
+    assert(dataSet->Table("MeasurementDetail")->Column("id")->Type() == DataType::String);
+    assert(dataSet->Table("MeasurementDetail")->Column("SignalID"));
+    assert(dataSet->Table("MeasurementDetail")->Column("signalID")->Type() == DataType::Guid);
+    assert(dataSet->Table("MeasurementDetail")->RowCount() > 0);
+    assert(dataSet->Table("DeviceDetail"));
+    assert(dataSet->Table("DeviceDetail")->ColumnCount() == 19);
+    assert(dataSet->Table("DeviceDetail")->Column("Acronym"));
+    assert(dataSet->Table("DeviceDetail")->Column("Acronym")->Type() == DataType::String);
+    assert(dataSet->Table("DeviceDetail")->Column("Name"));
+    assert(dataSet->Table("DeviceDetail")->Column("Name")->Type() == DataType::String);
+    assert(dataSet->Table("DeviceDetail")->RowCount() == 1);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 36 - validate data load
+    assert(IsEqual(
+        dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Acronym").GetValueOrDefault(),
+        dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Name").GetValueOrDefault()
+    ));
+
+    // In test data set, DeviceDetail.OriginalSource is null
+    assert(!dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("OriginalSource").HasValue());
+
+    // In test data set, DeviceDetail.ParentAcronym is not null, but is an empty string
+    assert(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").HasValue());
+    assert(static_cast<string>(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").Value).empty());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    MeasurementTableIDFieldsPtr measurementTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
+    measurementTableIDFields->SignalIDFieldName = "SignalID";
+    measurementTableIDFields->MeasurementKeyFieldName = "ID";
+    measurementTableIDFields->PointTagFieldName = "PointTag";
+
+    // Test 37
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER MeasurementDetail WHERE SignalAcronym = 'FREQ'");
+    parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+    parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+    Evaluate(parser);
+
+    assert(parser->FilteredSignalIDs().size() == 1);
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.

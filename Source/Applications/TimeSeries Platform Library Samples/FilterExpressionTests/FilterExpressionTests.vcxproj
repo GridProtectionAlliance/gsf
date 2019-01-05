@@ -97,6 +97,14 @@
   <ItemGroup>
     <Text Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\README.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="MetadataSample1.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </Xml>
+    <Xml Include="MetadataSample2.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </Xml>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
