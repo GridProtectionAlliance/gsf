@@ -41,30 +41,20 @@ typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
 class DataRow;
 typedef TimeSeries::SharedPtr<DataRow> DataRowPtr;
 
-// Simple exception type thrown by DataRow
-class DataRowException : public TimeSeries::Exception
-{
-private:
-    std::string m_message;
-
-public:
-    DataRowException(std::string message) noexcept;
-    const char* what() const noexcept;
-};
-
 class DataRow // NOLINT
 {
 private:
     DataTablePtr m_parent;
     std::vector<void*> m_values;
 
-    void ValidateColumnType(int32_t index, DataType targetType, bool read = false) const;
+    int32_t GetColumnIndex(const std::string& columnName) const;
+    void ValidateColumnType(int32_t columnIndex, DataType targetType, bool read = false) const;
 
     template<typename T>
-    GSF::TimeSeries::Nullable<T> GetValue(int32_t index, DataType targetType) const;
+    GSF::TimeSeries::Nullable<T> GetValue(int32_t columnIndex, DataType targetType) const;
 
     template<typename T>
-    void SetValue(int32_t index, const GSF::TimeSeries::Nullable<T>& value, DataType targetType);
+    void SetValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<T>& value, DataType targetType);
 
 public:
     DataRow(DataTablePtr parent);
@@ -72,50 +62,83 @@ public:
 
     const DataTablePtr& Parent() const;
 
-    GSF::TimeSeries::Nullable<std::string> ValueAsString(int32_t index) const;
-    void SetStringValue(int32_t index, const GSF::TimeSeries::Nullable<std::string>& value);
+    void SetNullValue(int32_t columnIndex);
+    void SetNullValue(const std::string& columnName);
 
-    GSF::TimeSeries::Nullable<bool> ValueAsBoolean(int32_t index) const;
-    void SetBooleanValue(int32_t index, const GSF::TimeSeries::Nullable<bool>& value);
+    GSF::TimeSeries::Nullable<std::string> ValueAsString(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<std::string> ValueAsString(const std::string& columnName) const;
+    void SetStringValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<std::string>& value);
+    void SetStringValue(const std::string& columnName, const GSF::TimeSeries::Nullable<std::string>& value);
 
-    GSF::TimeSeries::Nullable<time_t> ValueAsDateTime(int32_t index) const;
-    void SetDateTimeValue(int32_t index, const GSF::TimeSeries::Nullable<time_t>& value);
+    GSF::TimeSeries::Nullable<bool> ValueAsBoolean(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<bool> ValueAsBoolean(const std::string& columnName) const;
+    void SetBooleanValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<bool>& value);
+    void SetBooleanValue(const std::string& columnName, const GSF::TimeSeries::Nullable<bool>& value);
 
-    GSF::TimeSeries::Nullable<TimeSeries::float32_t> ValueAsSingle(int32_t index) const;
-    void SetSingleValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::float32_t>& value);
+    GSF::TimeSeries::Nullable<time_t> ValueAsDateTime(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<time_t> ValueAsDateTime(const std::string& columnName) const;
+    void SetDateTimeValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<time_t>& value);
+    void SetDateTimeValue(const std::string& columnName, const GSF::TimeSeries::Nullable<time_t>& value);
 
-    GSF::TimeSeries::Nullable<TimeSeries::float64_t> ValueAsDouble(int32_t index) const;
-    void SetDoubleValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::float64_t>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::float32_t> ValueAsSingle(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<TimeSeries::float32_t> ValueAsSingle(const std::string& columnName) const;
+    void SetSingleValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<TimeSeries::float32_t>& value);
+    void SetSingleValue(const std::string& columnName, const GSF::TimeSeries::Nullable<TimeSeries::float32_t>& value);
 
-    GSF::TimeSeries::Nullable<TimeSeries::decimal_t> ValueAsDecimal(int32_t index) const;
-    void SetDecimalValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::decimal_t>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::float64_t> ValueAsDouble(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<TimeSeries::float64_t> ValueAsDouble(const std::string& columnName) const;
+    void SetDoubleValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<TimeSeries::float64_t>& value);
+    void SetDoubleValue(const std::string& columnName, const GSF::TimeSeries::Nullable<TimeSeries::float64_t>& value);
 
-    GSF::TimeSeries::Nullable<TimeSeries::Guid> ValueAsGuid(int32_t index) const;
-    void SetGuidValue(int32_t index, const GSF::TimeSeries::Nullable<TimeSeries::Guid>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::decimal_t> ValueAsDecimal(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<TimeSeries::decimal_t> ValueAsDecimal(const std::string& columnName) const;
+    void SetDecimalValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<TimeSeries::decimal_t>& value);
+    void SetDecimalValue(const std::string& columnName, const GSF::TimeSeries::Nullable<TimeSeries::decimal_t>& value);
 
-    GSF::TimeSeries::Nullable<int8_t> ValueAsInt8(int32_t index) const;
-    void SetInt8Value(int32_t index, const GSF::TimeSeries::Nullable<int8_t>& value);
+    GSF::TimeSeries::Nullable<TimeSeries::Guid> ValueAsGuid(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<TimeSeries::Guid> ValueAsGuid(const std::string& columnName) const;
+    void SetGuidValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<TimeSeries::Guid>& value);
+    void SetGuidValue(const std::string& columnName, const GSF::TimeSeries::Nullable<TimeSeries::Guid>& value);
 
-    GSF::TimeSeries::Nullable<int16_t> ValueAsInt16(int32_t index) const;
-    void SetInt16Value(int32_t index, const GSF::TimeSeries::Nullable<int16_t>& value);
+    GSF::TimeSeries::Nullable<int8_t> ValueAsInt8(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<int8_t> ValueAsInt8(const std::string& columnName) const;
+    void SetInt8Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<int8_t>& value);
+    void SetInt8Value(const std::string& columnName, const GSF::TimeSeries::Nullable<int8_t>& value);
 
-    GSF::TimeSeries::Nullable<int32_t> ValueAsInt32(int32_t index) const;
-    void SetInt32Value(int32_t index, const GSF::TimeSeries::Nullable<int32_t>& value);
+    GSF::TimeSeries::Nullable<int16_t> ValueAsInt16(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<int16_t> ValueAsInt16(const std::string& columnName) const;
+    void SetInt16Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<int16_t>& value);
+    void SetInt16Value(const std::string& columnName, const GSF::TimeSeries::Nullable<int16_t>& value);
 
-    GSF::TimeSeries::Nullable<int64_t> ValueAsInt64(int32_t index) const;
-    void SetInt64Value(int32_t index, const GSF::TimeSeries::Nullable<int64_t>& value);
+    GSF::TimeSeries::Nullable<int32_t> ValueAsInt32(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<int32_t> ValueAsInt32(const std::string& columnName) const;
+    void SetInt32Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<int32_t>& value);
+    void SetInt32Value(const std::string& columnName, const GSF::TimeSeries::Nullable<int32_t>& value);
 
-    GSF::TimeSeries::Nullable<uint8_t> ValueAsUInt8(int32_t index) const;
-    void SetUInt8Value(int32_t index, const GSF::TimeSeries::Nullable<uint8_t>& value);
+    GSF::TimeSeries::Nullable<int64_t> ValueAsInt64(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<int64_t> ValueAsInt64(const std::string& columnName) const;
+    void SetInt64Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<int64_t>& value);
+    void SetInt64Value(const std::string& columnName, const GSF::TimeSeries::Nullable<int64_t>& value);
 
-    GSF::TimeSeries::Nullable<uint16_t> ValueAsUInt16(int32_t index) const;
-    void SetUInt16Value(int32_t index, const GSF::TimeSeries::Nullable<uint16_t>& value);
+    GSF::TimeSeries::Nullable<uint8_t> ValueAsUInt8(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<uint8_t> ValueAsUInt8(const std::string& columnName) const;
+    void SetUInt8Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<uint8_t>& value);
+    void SetUInt8Value(const std::string& columnName, const GSF::TimeSeries::Nullable<uint8_t>& value);
 
-    GSF::TimeSeries::Nullable<uint32_t> ValueAsUInt32(int32_t index) const;
-    void SetUInt32Value(int32_t index, const GSF::TimeSeries::Nullable<uint32_t>& value);
+    GSF::TimeSeries::Nullable<uint16_t> ValueAsUInt16(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<uint16_t> ValueAsUInt16(const std::string& columnName) const;
+    void SetUInt16Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<uint16_t>& value);
+    void SetUInt16Value(const std::string& columnName, const GSF::TimeSeries::Nullable<uint16_t>& value);
 
-    GSF::TimeSeries::Nullable<uint64_t> ValueAsUInt64(int32_t index) const;
-    void SetUInt64Value(int32_t index, const GSF::TimeSeries::Nullable<uint64_t>& value);
+    GSF::TimeSeries::Nullable<uint32_t> ValueAsUInt32(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<uint32_t> ValueAsUInt32(const std::string& columnName) const;
+    void SetUInt32Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<uint32_t>& value);
+    void SetUInt32Value(const std::string& columnName, const GSF::TimeSeries::Nullable<uint32_t>& value);
+
+    GSF::TimeSeries::Nullable<uint64_t> ValueAsUInt64(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<uint64_t> ValueAsUInt64(const std::string& columnName) const;
+    void SetUInt64Value(int32_t columnIndex, const GSF::TimeSeries::Nullable<uint64_t>& value);
+    void SetUInt64Value(const std::string& columnName, const GSF::TimeSeries::Nullable<uint64_t>& value);
 
     static const DataRowPtr NullPtr;
 

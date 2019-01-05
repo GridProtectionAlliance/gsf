@@ -23,6 +23,7 @@
 
 #include "DataColumn.h"
 #include "DataTable.h"
+#include "DataSet.h"
 
 using namespace std;
 using namespace GSF::Data;
@@ -59,6 +60,8 @@ DataColumn::DataColumn(DataTablePtr parent, string name, DataType type) :
     m_type(type),
     m_index(-1)
 {
+    if (m_parent == nullptr)
+        throw DataSetException("DataTable parent is null");
 }
 
 DataColumn::~DataColumn() = default;

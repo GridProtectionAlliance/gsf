@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 #include "DataTable.h"
+#include "DataSet.h"
 
 using namespace std;
 using namespace GSF::TimeSeries;
@@ -33,6 +34,8 @@ DataTable::DataTable(DataSetPtr parent, string name) :
     m_parent(std::move(parent)),
     m_name(std::move(name))
 {
+    if (m_parent == nullptr)
+        throw DataSetException("DataSet parent is null");
 }
 
 DataTable::~DataTable() = default;
