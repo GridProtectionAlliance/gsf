@@ -1127,6 +1127,26 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
     }
 
+    if (!foundValueType)
+    {
+        // Handle a few common exceptions
+        if (IsEqual(targetTypeName, "Single") || StartsWith(targetTypeName, "float"))
+        {
+            targetValueType = ExpressionValueType::Double;
+            foundValueType = true;
+        }
+        else if (IsEqual(targetTypeName, "bool"))
+        {
+            targetValueType = ExpressionValueType::Boolean;
+            foundValueType = true;
+        }
+        else if (StartsWith(targetTypeName, "Int") || StartsWith(targetTypeName, "UInt"))
+        {
+            targetValueType = ExpressionValueType::Int64;
+            foundValueType = true;
+        }
+    }
+
     if (!foundValueType || targetValueType == ExpressionValueType::Undefined)
         throw ExpressionTreeException("Specified \"Convert\" function target type \"" + targetType->ValueAsString() + "\", second argument, is not supported");
 

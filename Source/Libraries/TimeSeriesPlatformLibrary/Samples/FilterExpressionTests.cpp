@@ -559,6 +559,71 @@ int main(int argc, char* argv[])
 
         assert(!parser->FilteredSignalIDs().empty());
         cout << "Test " << ++test << " succeeded..." << endl;
+
+        MeasurementTableIDFieldsPtr deviceTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
+        deviceTableIDFields->SignalIDFieldName = "UniqueID";
+        deviceTableIDFields->MeasurementKeyFieldName = "Name";
+        deviceTableIDFields->PointTagFieldName = "Acronym";
+
+        // Test 41
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Longitude, 'System.Int32') = -89");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 42
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(latitude, 'int16') = 35");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 43
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Latitude, 'Int32') = '35'");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 44
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Convert(Latitude, 'Int32'), 'String') = 35");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 45
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Latitude, 'single') >= 35");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 46
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Longitude < 0.0");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
     }
 
     // Wait until the user presses enter before quitting.
