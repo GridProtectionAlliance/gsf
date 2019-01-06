@@ -564,7 +564,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         decompressor.push(payloadStream);
 
         uncompressed = new vector<uint8_t>();
-        CopyStream(decompressor, *uncompressed);
+        CopyStream(&decompressor, *uncompressed);
     }
     else
     {

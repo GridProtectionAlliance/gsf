@@ -52,22 +52,45 @@ const IPAddress Empty::IPAddress;
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
 
-size_t StringHasherIgnoreCase::operator()(const string& x) const
+StringHasher::StringHasher() :
+    m_ignoreCase(true)
+{
+}
+
+StringHasher::StringHasher(bool ignoreCase) :
+    m_ignoreCase(ignoreCase)
+{
+}
+
+size_t StringHasher::operator()(const string& value) const
 {
     size_t seed = 0;
     const locale locale;
 
-    for (string::const_iterator it = x.begin(); it != x.end(); ++it)
+    for (string::const_iterator it = value.begin(); it != value.end(); ++it)
     {
-        boost::hash_combine(seed, toupper(*it, locale));
+        if (m_ignoreCase)
+            boost::hash_combine(seed, toupper(*it, locale));
+        else
+            boost::hash_combine(seed, *it);
     }
 
     return seed;
 }
 
-bool StringEqualityIgnoreCase::operator()(const string& x, const string& y) const
+StringComparer::StringComparer() :
+    m_ignoreCase(true)
 {
-    return boost::iequals(x, y);
+}
+
+StringComparer::StringComparer(bool ignoreCase) :
+    m_ignoreCase(ignoreCase)
+{
+}
+
+bool StringComparer::operator()(const string& left, const string& right) const
+{
+    return IsEqual(left, right, m_ignoreCase);
 }
 
 Guid GSF::TimeSeries::NewGuid()

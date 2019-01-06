@@ -144,7 +144,7 @@ namespace TimeSeries
     using Action = std::function<void(T)>;
 
     template<typename T>
-    using Func = std::function<T(void)>;
+    using Func = std::function<T()>;
 
     template<typename TKey, typename TValue>
     bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
@@ -162,17 +162,28 @@ namespace TimeSeries
     }
 
     // std::map string comparer options
-    #define StringComparerIgnoreCase boost::locale::comparator<char, boost::locale::collator_base::secondary>
+    #define StringComparator boost::locale::comparator<char, boost::locale::collator_base::identical>
+    #define StringComparatorIgnoreCase boost::locale::comparator<char, boost::locale::collator_base::secondary>
 
     // std::unordered_map string comparer options
-    struct StringHasherIgnoreCase : std::unary_function<std::string, std::size_t>
+    struct StringHasher : std::unary_function<std::string, std::size_t>
     {
-        std::size_t operator()(const std::string& x) const;
+    private:
+        const bool m_ignoreCase; // Defaults to true
+    public:
+        StringHasher();
+        explicit StringHasher(bool ignoreCase);
+        std::size_t operator()(const std::string& value) const;
     };
 
-    struct StringEqualityIgnoreCase : std::binary_function<std::string, std::string, bool>
+    struct StringComparer : std::binary_function<std::string, std::string, bool>
     {
-        bool operator()(const std::string& x, const std::string& y) const;
+    private:
+        const bool m_ignoreCase; // Defaults to true
+    public:
+        StringComparer();
+        explicit StringComparer(bool ignoreCase);
+        bool operator()(const std::string& left, const std::string& right) const;
     };
 
     typedef boost::any Object;
@@ -209,9 +220,24 @@ namespace TimeSeries
         }
     };
 
-    inline void CopyStream(Decompressor& source, std::vector<uint8_t>& sink)
+    template<class T, class TElem = char>
+    void CopyStream(T* source, std::vector<uint8_t>& sink)
     {
-        sink.assign(std::istreambuf_iterator<char>{ &source }, {});
+        std::istreambuf_iterator<TElem> it{ source };
+        std::istreambuf_iterator<TElem> eos{};
+
+        for (; it != eos; ++it)
+            sink.push_back(static_cast<uint8_t>(*it));
+    }
+
+    template<class T, class TElem = char>
+    void CopyStream(T& source, std::vector<uint8_t>& sink)
+    {
+        std::istreambuf_iterator<TElem> it{ source };
+        std::istreambuf_iterator<TElem> eos{};
+
+        for (; it != eos; ++it)
+            sink.push_back(static_cast<uint8_t>(*it));
     }
 
     Guid NewGuid();

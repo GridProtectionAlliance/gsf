@@ -214,17 +214,20 @@ void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableN
 template<typename T>
 static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
 {
-    if (leftNullable.HasValue() && rightNullable.HasValue())
+    const bool leftHasValue = leftNullable.HasValue();
+    const bool rightHasValue = rightNullable.HasValue();
+
+    if (leftHasValue && rightHasValue)
     {
         const T& leftValue = leftNullable.GetValueOrDefault();
         const T& rightValue = rightNullable.GetValueOrDefault();
         return leftValue < rightValue ? -1 : (leftValue > rightValue ? 1 : 0);
     }
 
-    if (!leftNullable.HasValue() && !rightNullable.HasValue())
+    if (!leftHasValue && !rightHasValue)
         return 0;
 
-    return leftNullable.HasValue() ? 1 : -1;
+    return leftHasValue ? 1 : -1;
 }
 
 void FilterExpressionParser::Evaluate()
