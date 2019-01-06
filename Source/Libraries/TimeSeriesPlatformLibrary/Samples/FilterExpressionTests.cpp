@@ -440,90 +440,93 @@ int main(int argc, char* argv[])
     assert(parser->FilteredRows()[1]->ValueAsString(signalTypeField).GetValueOrDefault() == "FREQ");
     cout << "Test " << ++test << " succeeded..." << endl;
 
-    // Prep new dataset
-    const string MetadataSample1FileName = "MetadataSample1.xml";
+    const string MetadataSampleFileName[2] = { "MetadataSample1.xml", "MetadataSample2.xml" };
 
-    cout << endl << "Loading XML metadata from \"" << MetadataSample1FileName << "\"..." << endl;
-
-    ifstream metadataStream(MetadataSample1FileName, ios::binary);
-    metadataStream >> noskipws;
-    vector<uint8_t> xmlMetadata(istream_iterator<uint8_t> {metadataStream}, {});
-
-    if (xmlMetadata.empty())
+    for (int32_t i = 0; i < 2; i++)
     {
-        cerr << "Failed to load XML metadata from \"" + MetadataSample1FileName + "\"" << endl;
-        return 1;
+        // Prep new dataset
+        cout << endl << "Loading XML metadata from \"" << MetadataSampleFileName[i] << "\"..." << endl;
+
+        ifstream metadataStream(MetadataSampleFileName[i], ios::binary);
+        metadataStream >> noskipws;
+        vector<uint8_t> xmlMetadata(istream_iterator<uint8_t> {metadataStream}, {});
+
+        if (xmlMetadata.empty())
+        {
+            cerr << "Failed to load XML metadata from \"" + MetadataSampleFileName[i] + "\"" << endl;
+            return 1;
+        }
+
+        cout << "Loaded " << xmlMetadata.size() << " bytes of data." << endl;
+        cout << "Parsing XML metadata into data set..." << endl;
+
+        dataSet = nullptr;
+
+        try
+        {
+            dataSet = DataSet::ParseXmlDataSet(xmlMetadata);
+        }
+        catch (const DataSetException& ex)
+        {
+            cerr << "DataSet exception: " <<  ex.what() << endl;
+        }
+        catch (...)
+        {
+            cerr << boost::current_exception_diagnostic_information(true) << endl;
+        }
+
+        if (dataSet == nullptr)
+            return 1;
+
+        cout << "Loaded " << dataSet->TableCount() << " tables from XML metadata." << endl << endl;
+
+        // Test 35 - validate schema load
+        assert(dataSet->TableCount() == 4);
+        assert(dataSet->Table("MeasurementDetail"));
+        assert(dataSet->Table("MeasurementDetail")->ColumnCount() == 11);
+        assert(dataSet->Table("MeasurementDetail")->Column("ID"));
+        assert(dataSet->Table("MeasurementDetail")->Column("id")->Type() == DataType::String);
+        assert(dataSet->Table("MeasurementDetail")->Column("SignalID"));
+        assert(dataSet->Table("MeasurementDetail")->Column("signalID")->Type() == DataType::Guid);
+        assert(dataSet->Table("MeasurementDetail")->RowCount() > 0);
+        assert(dataSet->Table("DeviceDetail"));
+        assert(dataSet->Table("DeviceDetail")->ColumnCount() == 19);
+        assert(dataSet->Table("DeviceDetail")->Column("Acronym"));
+        assert(dataSet->Table("DeviceDetail")->Column("Acronym")->Type() == DataType::String);
+        assert(dataSet->Table("DeviceDetail")->Column("Name"));
+        assert(dataSet->Table("DeviceDetail")->Column("Name")->Type() == DataType::String);
+        assert(dataSet->Table("DeviceDetail")->RowCount() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 36 - validate data load
+        assert(IsEqual(
+            dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Acronym").GetValueOrDefault(),
+            dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Name").GetValueOrDefault()
+        ));
+
+        // In test data set, DeviceDetail.OriginalSource is null
+        assert(!dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("OriginalSource").HasValue());
+
+        // In test data set, DeviceDetail.ParentAcronym is not null, but is an empty string
+        assert(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").HasValue());
+        assert(static_cast<string>(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").Value).empty());
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        MeasurementTableIDFieldsPtr measurementTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
+        measurementTableIDFields->SignalIDFieldName = "SignalID";
+        measurementTableIDFields->MeasurementKeyFieldName = "ID";
+        measurementTableIDFields->PointTagFieldName = "PointTag";
+
+        // Test 37
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER MeasurementDetail WHERE SignalAcronym = 'FREQ'");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
     }
-
-    cout << "Loaded " << xmlMetadata.size() << " bytes of data." << endl;
-    cout << "Parsing XML metadata into data set..." << endl;
-
-    dataSet = nullptr;
-
-    try
-    {
-        dataSet = DataSet::ParseXmlDataSet(xmlMetadata);
-    }
-    catch (const DataSetException& ex)
-    {
-        cerr << "DataSet exception: " <<  ex.what() << endl;
-    }
-    catch (...)
-    {
-        cerr << boost::current_exception_diagnostic_information(true) << endl;
-    }
-
-    if (dataSet == nullptr)
-        return 1;
-
-    cout << "Loaded " << dataSet->TableCount() << " tables from XML metadata." << endl << endl;
-
-    // Test 35 - validate schema load
-    assert(dataSet->TableCount() == 4);
-    assert(dataSet->Table("MeasurementDetail"));
-    assert(dataSet->Table("MeasurementDetail")->ColumnCount() == 11);
-    assert(dataSet->Table("MeasurementDetail")->Column("ID"));
-    assert(dataSet->Table("MeasurementDetail")->Column("id")->Type() == DataType::String);
-    assert(dataSet->Table("MeasurementDetail")->Column("SignalID"));
-    assert(dataSet->Table("MeasurementDetail")->Column("signalID")->Type() == DataType::Guid);
-    assert(dataSet->Table("MeasurementDetail")->RowCount() > 0);
-    assert(dataSet->Table("DeviceDetail"));
-    assert(dataSet->Table("DeviceDetail")->ColumnCount() == 19);
-    assert(dataSet->Table("DeviceDetail")->Column("Acronym"));
-    assert(dataSet->Table("DeviceDetail")->Column("Acronym")->Type() == DataType::String);
-    assert(dataSet->Table("DeviceDetail")->Column("Name"));
-    assert(dataSet->Table("DeviceDetail")->Column("Name")->Type() == DataType::String);
-    assert(dataSet->Table("DeviceDetail")->RowCount() == 1);
-    cout << "Test " << ++test << " succeeded..." << endl;
-
-    // Test 36 - validate data load
-    assert(IsEqual(
-        dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Acronym").GetValueOrDefault(),
-        dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Name").GetValueOrDefault()
-    ));
-
-    // In test data set, DeviceDetail.OriginalSource is null
-    assert(!dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("OriginalSource").HasValue());
-
-    // In test data set, DeviceDetail.ParentAcronym is not null, but is an empty string
-    assert(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").HasValue());
-    assert(static_cast<string>(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").Value).empty());
-    cout << "Test " << ++test << " succeeded..." << endl;
-
-    MeasurementTableIDFieldsPtr measurementTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
-    measurementTableIDFields->SignalIDFieldName = "SignalID";
-    measurementTableIDFields->MeasurementKeyFieldName = "ID";
-    measurementTableIDFields->PointTagFieldName = "PointTag";
-
-    // Test 37
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER MeasurementDetail WHERE SignalAcronym = 'FREQ'");
-    parser->SetDataSet(dataSet);
-    parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
-    parser->SetPrimaryMeasurementTableName("MeasurementDetail");
-    Evaluate(parser);
-
-    assert(parser->FilteredSignalIDs().size() == 1);
-    cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
