@@ -449,7 +449,8 @@ int main(int argc, char* argv[])
 
         ifstream metadataStream(MetadataSampleFileName[i], ios::binary);
         metadataStream >> noskipws;
-        vector<uint8_t> xmlMetadata(istream_iterator<uint8_t> {metadataStream}, {});
+        vector<uint8_t> xmlMetadata;
+        CopyStream(metadataStream, xmlMetadata);
 
         if (xmlMetadata.empty())
         {
@@ -482,6 +483,7 @@ int main(int argc, char* argv[])
 
         // Test 35 - validate schema load
         assert(dataSet->TableCount() == 4);
+
         assert(dataSet->Table("MeasurementDetail"));
         assert(dataSet->Table("MeasurementDetail")->ColumnCount() == 11);
         assert(dataSet->Table("MeasurementDetail")->Column("ID"));
@@ -489,6 +491,7 @@ int main(int argc, char* argv[])
         assert(dataSet->Table("MeasurementDetail")->Column("SignalID"));
         assert(dataSet->Table("MeasurementDetail")->Column("signalID")->Type() == DataType::Guid);
         assert(dataSet->Table("MeasurementDetail")->RowCount() > 0);
+
         assert(dataSet->Table("DeviceDetail"));
         assert(dataSet->Table("DeviceDetail")->ColumnCount() == 19);
         assert(dataSet->Table("DeviceDetail")->Column("Acronym"));
@@ -525,6 +528,36 @@ int main(int argc, char* argv[])
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 38
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER TOP 8 MeasurementDetail WHERE SignalAcronym = 'STAT'");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 8);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 39
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER TOP 0 MeasurementDetail WHERE SignalAcronym = 'STAT'");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().empty());
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 40
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER TOP -1 MeasurementDetail WHERE SignalAcronym = 'STAT'");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        Evaluate(parser);
+
+        assert(!parser->FilteredSignalIDs().empty());
         cout << "Test " << ++test << " succeeded..." << endl;
     }
 
