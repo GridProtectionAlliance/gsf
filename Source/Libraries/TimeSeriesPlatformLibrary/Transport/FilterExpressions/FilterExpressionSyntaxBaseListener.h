@@ -34,6 +34,9 @@ public:
   virtual void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext * /*ctx*/) override { }
   virtual void exitFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext * /*ctx*/) override { }
 
+  virtual void enterTopLimit(FilterExpressionSyntaxParser::TopLimitContext * /*ctx*/) override { }
+  virtual void exitTopLimit(FilterExpressionSyntaxParser::TopLimitContext * /*ctx*/) override { }
+
   virtual void enterOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext * /*ctx*/) override { }
   virtual void exitOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext * /*ctx*/) override { }
 

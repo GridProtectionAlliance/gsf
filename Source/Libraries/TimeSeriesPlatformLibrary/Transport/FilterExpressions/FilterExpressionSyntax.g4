@@ -50,9 +50,13 @@ identifierStatement
  ;
 
 filterStatement
- : K_FILTER ( K_TOP INTEGER_LITERAL )? tableName K_WHERE expression ( K_ORDER K_BY orderingTerm ( ',' orderingTerm )* )?
+ : K_FILTER ( K_TOP topLimit )? tableName K_WHERE expression ( K_ORDER K_BY orderingTerm ( ',' orderingTerm )* )?
  ;
- 
+
+topLimit
+ : ('-' | '+')? INTEGER_LITERAL
+ ;
+
 orderingTerm
  : orderByColumnName ( K_ASC | K_DESC )?
  ;

@@ -29,8 +29,9 @@ public:
   enum {
     RuleParse = 0, RuleError = 1, RuleFilterExpressionStatementList = 2, 
     RuleFilterExpressionStatement = 3, RuleIdentifierStatement = 4, RuleFilterStatement = 5, 
-    RuleOrderingTerm = 6, RuleExpression = 7, RuleLiteralValue = 8, RuleUnaryOperator = 9, 
-    RuleFunctionName = 10, RuleTableName = 11, RuleColumnName = 12, RuleOrderByColumnName = 13
+    RuleTopLimit = 6, RuleOrderingTerm = 7, RuleExpression = 8, RuleLiteralValue = 9, 
+    RuleUnaryOperator = 10, RuleFunctionName = 11, RuleTableName = 12, RuleColumnName = 13, 
+    RuleOrderByColumnName = 14
   };
 
   FilterExpressionSyntaxParser(antlr4::TokenStream *input);
@@ -49,6 +50,7 @@ public:
   class FilterExpressionStatementContext;
   class IdentifierStatementContext;
   class FilterStatementContext;
+  class TopLimitContext;
   class OrderingTermContext;
   class ExpressionContext;
   class LiteralValueContext;
@@ -139,7 +141,7 @@ public:
     antlr4::tree::TerminalNode *K_WHERE();
     ExpressionContext *expression();
     antlr4::tree::TerminalNode *K_TOP();
-    antlr4::tree::TerminalNode *INTEGER_LITERAL();
+    TopLimitContext *topLimit();
     antlr4::tree::TerminalNode *K_ORDER();
     antlr4::tree::TerminalNode *K_BY();
     std::vector<OrderingTermContext *> orderingTerm();
@@ -151,6 +153,19 @@ public:
   };
 
   FilterStatementContext* filterStatement();
+
+  class  TopLimitContext : public antlr4::ParserRuleContext {
+  public:
+    TopLimitContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *INTEGER_LITERAL();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  TopLimitContext* topLimit();
 
   class  OrderingTermContext : public antlr4::ParserRuleContext {
   public:

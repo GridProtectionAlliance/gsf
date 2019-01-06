@@ -447,7 +447,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
     m_expressionTrees.push_back(m_activeExpressionTree);
 
     if (context->K_TOP() != nullptr)
-        m_activeExpressionTree->TopLimit = stoi(context->INTEGER_LITERAL()->getText());
+        m_activeExpressionTree->TopLimit = stoi(context->topLimit()->getText());
 
     if (context->K_ORDER() != nullptr && context->K_BY() != nullptr)
     {

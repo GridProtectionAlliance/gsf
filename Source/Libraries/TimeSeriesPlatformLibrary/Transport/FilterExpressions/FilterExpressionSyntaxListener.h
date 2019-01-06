@@ -32,6 +32,9 @@ public:
   virtual void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext *ctx) = 0;
   virtual void exitFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext *ctx) = 0;
 
+  virtual void enterTopLimit(FilterExpressionSyntaxParser::TopLimitContext *ctx) = 0;
+  virtual void exitTopLimit(FilterExpressionSyntaxParser::TopLimitContext *ctx) = 0;
+
   virtual void enterOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext *ctx) = 0;
   virtual void exitOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext *ctx) = 0;
 
