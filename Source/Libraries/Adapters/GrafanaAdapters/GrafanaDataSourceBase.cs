@@ -545,6 +545,7 @@ namespace GrafanaAdapters
     /// <summary>
     /// Represents a base implementation for Grafana data sources.
     /// </summary>
+    [Serializable]
     public abstract class GrafanaDataSourceBase
     {
         #region [ Members ]
