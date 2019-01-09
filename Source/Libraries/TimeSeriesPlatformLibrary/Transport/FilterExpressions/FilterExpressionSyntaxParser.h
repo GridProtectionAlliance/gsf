@@ -149,11 +149,11 @@ public:
     FilterStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *K_FILTER();
-    TableNameContext *tableName();
     antlr4::tree::TerminalNode *K_WHERE();
     ExpressionContext *expression();
     antlr4::tree::TerminalNode *K_TOP();
     TopLimitContext *topLimit();
+    TableNameContext *tableName();
     antlr4::tree::TerminalNode *K_ORDER();
     antlr4::tree::TerminalNode *K_BY();
     std::vector<OrderingTermContext *> orderingTerm();

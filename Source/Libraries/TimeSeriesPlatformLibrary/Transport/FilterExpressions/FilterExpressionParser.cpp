@@ -99,7 +99,8 @@ const char* FilterExpressionParserException::what() const noexcept
 
 FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_inputStream(filterExpression),
-    m_dataset(nullptr),
+    m_dataSet(nullptr),
+    m_trackFilteredSignalIDs(true),
     m_trackFilteredRows(false),
     m_primaryMeasurementTableName("ActiveMeasurements")
 {
@@ -156,21 +157,28 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
 
             if (field.HasValue() && IsEqual(mappingValue, field.GetValueOrDefault()))
             {
-                const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
-
-                if (signalIDField.HasValue())
+                if (m_trackFilteredSignalIDs)
                 {
-                    const guid& signalID = signalIDField.GetValueOrDefault();
+                    const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
-                    if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+                    if (signalIDField.HasValue())
                     {
-                        m_filteredSignalIDs.push_back(signalID);
+                        const guid& signalID = signalIDField.GetValueOrDefault();
 
-                        if (m_trackFilteredRows)
-                            m_filteredRows.push_back(row);
+                        if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+                        {
+                            m_filteredSignalIDs.push_back(signalID);
 
-                        return;
+                            if (m_trackFilteredRows)
+                                m_filteredRows.push_back(row);
+
+                            return;
+                        }
                     }
+                }
+                else if (m_trackFilteredRows)
+                {
+                    m_filteredRows.push_back(row);
                 }
             }
         }
@@ -179,12 +187,12 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
 
 const DataSetPtr& FilterExpressionParser::GetDataSet() const
 {
-    return m_dataset;
+    return m_dataSet;
 }
 
-void FilterExpressionParser::SetDataSet(const DataSetPtr& dataset)
+void FilterExpressionParser::SetDataSet(const DataSetPtr& dataSet)
 {
-    m_dataset = dataset;
+    m_dataSet = dataSet;
 }
 
 MeasurementTableIDFieldsPtr FilterExpressionParser::GetMeasurementTableIDFields(const std::string& measurementTableName) const
@@ -232,14 +240,14 @@ static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable
 
 void FilterExpressionParser::Evaluate()
 {
+    if (m_dataSet == nullptr)
+        throw FilterExpressionParserException("Cannot evaluate filter expression, no dataset has been defined");
+
     m_filteredSignalIDSet.clear();
     m_filteredSignalIDs.clear();
     m_filteredRows.clear();
     m_expressionTrees.clear();
     m_expressions.clear();
-
-    if (m_dataset == nullptr)
-        throw FilterExpressionParserException("Cannot evaluate filter expression, no dataset has been defined");
 
     // Create parse tree and visit listener methods
     ParseTreeWalker walker;
@@ -251,17 +259,23 @@ void FilterExpressionParser::Evaluate()
     {
         const ExpressionTreePtr& expressionTree = m_expressionTrees[x];
         const DataTablePtr& measurements = expressionTree->Measurements();
-        const MeasurementTableIDFieldsPtr& measurementTableIDFields = GetMeasurementTableIDFields(measurements->Name());
+        int32_t signalIDColumnIndex = -1;
 
-        if (measurementTableIDFields == nullptr)
-            throw FilterExpressionParserException("Failed to find ID fields record for measurement table \"" + measurements->Name() + "\"");
+        if (m_trackFilteredSignalIDs)
+        {
+            const MeasurementTableIDFieldsPtr& measurementTableIDFields = GetMeasurementTableIDFields(measurements->Name());
 
-        const DataColumnPtr& signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
+            if (measurementTableIDFields == nullptr)
+                throw FilterExpressionParserException("Failed to find ID fields record for measurement table \"" + measurements->Name() + "\"");
 
-        if (signalIDColumn == nullptr)
-            throw FilterExpressionParserException("Failed to find signal ID field \"" + measurementTableIDFields->SignalIDFieldName + "\" for measurement table \"" + measurements->Name() + "\"");
+            const DataColumnPtr& signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
 
-        const int32_t signalIDColumnIndex = signalIDColumn->Index();
+            if (signalIDColumn == nullptr)
+                throw FilterExpressionParserException("Failed to find signal ID field \"" + measurementTableIDFields->SignalIDFieldName + "\" for measurement table \"" + measurements->Name() + "\"");
+
+            signalIDColumnIndex = signalIDColumn->Index();
+        }
+
         vector<DataRowPtr> matchedRows;
 
         for (int32_t y = 0; y < measurements->RowCount(); y++)
@@ -283,14 +297,21 @@ void FilterExpressionParser::Evaluate()
             // If final result is Null, i.e., has no value due to Null propagation, treat result as False
             if (resultExpression->ValueAsBoolean())
             {
-                Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
-
-                if (signalIDField.HasValue())
+                if (m_trackFilteredSignalIDs)
                 {
-                    const guid& signalID = signalIDField.GetValueOrDefault();
+                    Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
-                    if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
-                        matchedRows.push_back(row);
+                    if (signalIDField.HasValue())
+                    {
+                        const guid& signalID = signalIDField.GetValueOrDefault();
+
+                        if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+                            matchedRows.push_back(row);
+                    }
+                }
+                else
+                {
+                    matchedRows.push_back(row);
                 }
             }
         }
@@ -389,12 +410,23 @@ void FilterExpressionParser::Evaluate()
 
         for (size_t i = 0; i < matchedRows.size(); i++)
         {
-            m_filteredSignalIDs.push_back(matchedRows[i]->ValueAsGuid(signalIDColumnIndex).GetValueOrDefault());
+            if (m_trackFilteredSignalIDs)
+                m_filteredSignalIDs.push_back(matchedRows[i]->ValueAsGuid(signalIDColumnIndex).GetValueOrDefault());
 
             if (m_trackFilteredRows)
                 m_filteredRows.push_back(matchedRows[i]);
         }
     }
+}
+
+bool FilterExpressionParser::GetTrackFilteredSignalIDs() const
+{
+    return m_trackFilteredSignalIDs;
+}
+
+void FilterExpressionParser::SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs)
+{
+    m_trackFilteredSignalIDs = trackFilteredSignalIDs;
 }
 
 const vector<guid>& FilterExpressionParser::FilteredSignalIDs() const
@@ -438,7 +470,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
     m_expressions.clear();
 
     const string& measurementTableName = context->tableName()->getText();
-    const DataTablePtr& measurements = m_dataset->Table(measurementTableName);
+    const DataTablePtr& measurements = m_dataSet->Table(measurementTableName);
 
     if (measurements == nullptr)
         throw FilterExpressionParserException("Failed to find measurement table \"" + measurementTableName + "\"");
@@ -483,14 +515,14 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
     {
         signalID = ParseGuidLiteral(context->GUID_LITERAL()->getText());
         
-        if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+        if (m_trackFilteredSignalIDs && signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
             m_filteredSignalIDs.push_back(signalID);
 
         if (!m_trackFilteredRows)
             return;
     }
 
-    const DataTablePtr& measurements = m_dataset->Table(m_primaryMeasurementTableName);
+    const DataTablePtr& measurements = m_dataSet->Table(m_primaryMeasurementTableName);
 
     if (measurements == nullptr)
         return;
@@ -1057,4 +1089,40 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     }
 
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
+}
+
+ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression)
+{
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(
+        StartsWith(filterExpression, "FILTER ") ? filterExpression : 
+        "FITLER " + dataTable->Name() + " WHERE " + filterExpression);
+    
+    parser->SetDataSet(dataTable->Parent());
+    parser->SetPrimaryMeasurementTableName(dataTable->Name());
+
+    ParseTreeWalker walker;
+    const auto parseTree = parser->m_parser->parse();
+    walker.walk(parser.get(), parseTree);
+
+    return parser->m_activeExpressionTree;
+}
+
+ValueExpressionPtr FilterExpressionParser::Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression)
+{
+    return GenerateExpressionTree(dataRow->Parent(), filterExpression)->Evaluate(dataRow);
+}
+
+std::vector<GSF::Data::DataRowPtr> FilterExpressionParser::Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression)
+{
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(
+        StartsWith(filterExpression, "FILTER ") ? filterExpression : 
+        "FITLER " + dataTable->Name() + " WHERE " + filterExpression);
+
+    parser->SetDataSet(dataTable->Parent());
+    parser->SetPrimaryMeasurementTableName(dataTable->Name());
+    parser->SetTrackFilteredSignalIDs(false);
+    parser->SetTrackFilteredRows(true);
+    parser->Evaluate();
+
+    return parser->FilteredRows();
 }

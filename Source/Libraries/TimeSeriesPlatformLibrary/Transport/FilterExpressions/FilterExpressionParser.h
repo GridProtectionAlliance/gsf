@@ -65,8 +65,9 @@ private:
     FilterExpressionSyntaxLexer* m_lexer;
     antlr4::CommonTokenStream* m_tokens;
     FilterExpressionSyntaxParser* m_parser;
-    GSF::Data::DataSetPtr m_dataset;
+    GSF::Data::DataSetPtr m_dataSet;
     ExpressionTreePtr m_activeExpressionTree;
+    bool m_trackFilteredSignalIDs;
     bool m_trackFilteredRows;
 
     std::string m_primaryMeasurementTableName;
@@ -85,7 +86,7 @@ public:
     ~FilterExpressionParser();
 
     const GSF::Data::DataSetPtr& GetDataSet() const;
-    void SetDataSet(const GSF::Data::DataSetPtr& dataset);
+    void SetDataSet(const GSF::Data::DataSetPtr& dataSet);
 
     MeasurementTableIDFieldsPtr GetMeasurementTableIDFields(const std::string& measurementTableName) const;
     void SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields);
@@ -95,6 +96,8 @@ public:
 
     void Evaluate();
 
+    bool GetTrackFilteredSignalIDs() const;
+    void SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs);
     const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
     const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDSet() const;
     
@@ -110,6 +113,10 @@ public:
     void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
     void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
+
+    static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
+    static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression);
+    static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
 };
 
 typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
