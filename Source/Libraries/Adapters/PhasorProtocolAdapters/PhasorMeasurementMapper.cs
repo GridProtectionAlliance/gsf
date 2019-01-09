@@ -1244,15 +1244,17 @@ namespace PhasorProtocolAdapters
         {
             MeasurementKey definedMeasurement;
             Guid signalID;
-            string signalReference;
+            string signalReference, signalType;
 
             Dictionary<string, MeasurementKey> definedMeasurements = new Dictionary<string, MeasurementKey>();
 
             foreach (DataRow row in DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements.LookupByDeviceID(SharedMappingID))
             {
                 signalReference = row["SignalReference"].ToString();
+                signalType = row["SignalType"].ToString();
 
-                if (!string.IsNullOrWhiteSpace(signalReference))
+                // Although statistics may be associated with device, it will not be this adapter producing them...
+                if (!string.IsNullOrWhiteSpace(signalReference) && !string.Equals(signalType, "STAT", StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
