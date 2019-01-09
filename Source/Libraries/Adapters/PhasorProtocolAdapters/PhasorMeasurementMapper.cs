@@ -720,8 +720,9 @@ namespace PhasorProtocolAdapters
                 status.AppendLine();
                 status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
                 status.AppendLine();
-                status.AppendFormat("           Inject bad data: {0}", m_injectBadData ? "Yes" : "No");
-                status.AppendLine();
+
+                if (m_injectBadData)
+                    status.AppendLine("   Injecting bad data flag: Yes - WARNING: Test mode enabled to override bad data flag");
 
                 if (m_allowUseOfCachedConfiguration)
                 {
@@ -1294,10 +1295,15 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Toggles the flag that determines whether to inject the bad data state flag into the stream.
         /// </summary>
-        [AdapterCommand("Toggles the flag that determines whether to inject the bad data state flag into the stream.")]
+        [AdapterCommand("Toggles the flag that determines whether to inject the bad data state flag into the stream.", "Administrator", "Editor")]
         public void ToggleBadData()
         {
             m_injectBadData = !m_injectBadData;
+
+            if (m_injectBadData)
+                OnStatusMessage(MessageLevel.Warning, "TEST MODE ENABLED: Now overriding bad data flag, all published measurements for this device will now report bad data.");
+            else
+                OnStatusMessage(MessageLevel.Info, "TEST MODE DISABLED: Now publishing bad data flag as reported by device.");
         }
 
         /// <summary>
