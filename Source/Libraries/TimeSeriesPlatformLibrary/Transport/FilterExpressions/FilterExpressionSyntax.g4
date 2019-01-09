@@ -54,15 +54,19 @@ filterStatement
  ;
 
 topLimit
- : ('-' | '+')? INTEGER_LITERAL
+ : ( '-' | '+' )? INTEGER_LITERAL
  ;
 
 orderingTerm
  : orderByColumnName ( K_ASC | K_DESC )?
  ;
 
+expressionList
+ : expression ( ',' expression )*
+ ;
+
 /*
-    Filter expressions understand the following binary operators,
+    Expressions understand the following binary operators,
     in order from highest to lowest precedence:
 
     *    /    %
@@ -70,42 +74,61 @@ orderingTerm
     <<   >>   &    |
     <    <=   >    >=
     =    ==   !=   <>   IS NULL   IN   LIKE
-    AND
-    OR
+    AND  &&
+    OR   ||
 */
 expression
- : literalValue
- | columnName
- | unaryOperator expression
- | expression ( '*' | '/' | '%' ) expression
- | expression ( '+' | '-' ) expression
- | expression ( '<<' | '>>' | '&' | '|' ) expression
- | expression ( '<' | '<=' | '>' | '>=' ) expression
- | expression ( '=' | '==' | '!=' | '<>' ) expression
- | expression K_IS K_NOT? K_NULL
- | expression K_NOT? K_IN ( '(' ( expression ( ',' expression )* )? ')' )
- | expression K_NOT? K_LIKE expression
- | expression K_AND expression
- | expression K_OR expression
- | functionName '(' ( expression ( ',' expression )* | '*' )? ')'
- | '(' expression ')'
+ : notOperator expression
+ | expression logicalOperator expression
+ | predicateExpression
  ;
 
-literalValue
- : INTEGER_LITERAL
- | NUMERIC_LITERAL
- | STRING_LITERAL
- | DATETIME_LITERAL
- | GUID_LITERAL
- | BOOLEAN_LITERAL
- | K_NULL
+predicateExpression
+ : predicateExpression K_NOT? K_IN '(' expressionList ')'
+ | predicateExpression K_IS K_NOT? K_NULL
+ | predicateExpression comparisonOperator predicateExpression
+ | predicateExpression K_NOT? K_LIKE predicateExpression
+ | valueExpression
+ ;
+
+valueExpression
+ : literalValue
+ | columnName
+ | functionExpression
+ | unaryOperator valueExpression
+ | '(' expression ')'
+ | valueExpression mathOperator valueExpression
+ | valueExpression bitwiseOperator valueExpression
+ ;
+
+notOperator
+ : K_NOT
+ | '!'
  ;
 
 unaryOperator
- : '-'
- | '+'
- | '~'
- | K_NOT
+ : '-' | '+'
+ | '~' | '!' | K_NOT
+ ;
+
+comparisonOperator
+ : '<' | '<=' | '>' | '>='
+ | '=' | '==' | '!=' | '<>'
+ ;
+
+logicalOperator
+ : K_AND | '&&'
+ | K_OR | '||'
+ ;
+
+bitwiseOperator
+ : '<<' | '>>'
+ | '&' | '|'
+ ;
+
+mathOperator
+ : '*' | '/' | '%'
+ | '+' | '-'
  ;
 
 functionName
@@ -119,6 +142,20 @@ functionName
  | K_SUBSTR
  | K_SUBSTRING
  | K_TRIM
+ ;
+
+functionExpression
+ : functionName '(' expressionList? ')'
+ ;
+
+literalValue
+ : INTEGER_LITERAL
+ | NUMERIC_LITERAL
+ | STRING_LITERAL
+ | DATETIME_LITERAL
+ | GUID_LITERAL
+ | BOOLEAN_LITERAL
+ | K_NULL
  ;
 
 tableName 

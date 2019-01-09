@@ -449,6 +449,8 @@ ValueExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& expression
 
     switch (unaryValueType)
     {
+        case ExpressionValueType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, ApplyBooleanUnaryOperation(unaryValue->ValueAsBoolean(), unaryExpression->UnaryType));
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, ApplyIntegerUnaryOperation<int32_t>(unaryValue->ValueAsInt32(), unaryExpression->UnaryType));
         case ExpressionValueType::Int64:
@@ -457,7 +459,6 @@ ValueExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& expression
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, ApplyFloatingPointUnaryOperation<decimal_t>(unaryValue->ValueAsDecimal(), unaryExpression->UnaryType, unaryValueType));
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, ApplyFloatingPointUnaryOperation<float64_t>(unaryValue->ValueAsDouble(), unaryExpression->UnaryType, unaryValueType));
-        case ExpressionValueType::Boolean:
         case ExpressionValueType::String:
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
@@ -706,6 +707,20 @@ ValueExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& express
             return Or(leftValue, rightValue);
         default:
             throw ExpressionTreeException("Unexpected operator type encountered");
+    }
+}
+
+bool ExpressionTree::ApplyBooleanUnaryOperation(bool unaryValue, ExpressionUnaryType unaryOperation)
+{
+    switch (unaryOperation)
+    {
+        case ExpressionUnaryType::Not:
+            return !unaryValue;
+        case ExpressionUnaryType::Plus:
+        case ExpressionUnaryType::Minus:
+            throw ExpressionTreeException("Cannot apply unary \"" + string(EnumName(unaryOperation)) + "\" operator to \"" + string(EnumName(ExpressionValueType::Boolean)) + "\"");
+        default:
+            throw ExpressionTreeException("Unexpected unary type encountered");
     }
 }
 

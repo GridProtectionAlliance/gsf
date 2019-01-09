@@ -38,17 +38,44 @@ public:
   virtual void enterOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext *ctx) = 0;
   virtual void exitOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext *ctx) = 0;
 
+  virtual void enterExpressionList(FilterExpressionSyntaxParser::ExpressionListContext *ctx) = 0;
+  virtual void exitExpressionList(FilterExpressionSyntaxParser::ExpressionListContext *ctx) = 0;
+
   virtual void enterExpression(FilterExpressionSyntaxParser::ExpressionContext *ctx) = 0;
   virtual void exitExpression(FilterExpressionSyntaxParser::ExpressionContext *ctx) = 0;
 
-  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
-  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
+  virtual void enterPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext *ctx) = 0;
+  virtual void exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext *ctx) = 0;
+
+  virtual void enterValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext *ctx) = 0;
+  virtual void exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext *ctx) = 0;
+
+  virtual void enterNotOperator(FilterExpressionSyntaxParser::NotOperatorContext *ctx) = 0;
+  virtual void exitNotOperator(FilterExpressionSyntaxParser::NotOperatorContext *ctx) = 0;
 
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
 
+  virtual void enterComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext *ctx) = 0;
+  virtual void exitComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext *ctx) = 0;
+
+  virtual void enterLogicalOperator(FilterExpressionSyntaxParser::LogicalOperatorContext *ctx) = 0;
+  virtual void exitLogicalOperator(FilterExpressionSyntaxParser::LogicalOperatorContext *ctx) = 0;
+
+  virtual void enterBitwiseOperator(FilterExpressionSyntaxParser::BitwiseOperatorContext *ctx) = 0;
+  virtual void exitBitwiseOperator(FilterExpressionSyntaxParser::BitwiseOperatorContext *ctx) = 0;
+
+  virtual void enterMathOperator(FilterExpressionSyntaxParser::MathOperatorContext *ctx) = 0;
+  virtual void exitMathOperator(FilterExpressionSyntaxParser::MathOperatorContext *ctx) = 0;
+
   virtual void enterFunctionName(FilterExpressionSyntaxParser::FunctionNameContext *ctx) = 0;
   virtual void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext *ctx) = 0;
+
+  virtual void enterFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext *ctx) = 0;
+  virtual void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext *ctx) = 0;
+
+  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
+  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
 
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;

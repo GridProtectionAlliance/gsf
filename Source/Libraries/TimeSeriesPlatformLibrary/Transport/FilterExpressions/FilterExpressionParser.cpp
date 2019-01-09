@@ -539,49 +539,229 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 }
 
 /*
-    unaryOperator
-     : '-'
-     | '+'
-     | '~'
-     | K_NOT
-     ;
-
-    functionName
-     : K_COALESCE
-     | K_CONVERT
-     | K_IIF
-     | K_ISNULL
-     | K_ISREGEXMATCH
-     | K_LEN
-     | K_REGEXVAL
-     | K_SUBSTR
-     | K_SUBSTRING
-     | K_TRIM
-     ;
-
     expression
-     : literalValue
-     | columnName
-     | unaryOperator expression
-     | expression ( '*' | '/' | '%' ) expression
-     | expression ( '+' | '-' ) expression
-     | expression ( '<<' | '>>' | '&' | '|' ) expression
-     | expression ( '<' | '<=' | '>' | '>=' ) expression
-     | expression ( '=' | '==' | '!=' | '<>' ) expression
-     | expression K_IS K_NOT? K_NULL
-     | expression K_NOT? K_IN ( '(' ( expression ( ',' expression )* )? ')' )
-     | expression K_NOT? K_LIKE expression
-     | expression K_AND expression
-     | expression K_OR expression
-     | functionName '(' ( expression ( ',' expression )* | '*' )? ')'
-     | '(' expression ')'
+     : notOperator expression
+     | expression logicalOperator expression
+     | predicateExpression
      ;
  */
 void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::ExpressionContext* context)
 {
     ExpressionPtr value;
 
-    // Check for literal value expressions
+    // Check for predicate expressions (see explicit visit function)
+    const auto predicateExpressionContext = context->predicateExpression();
+
+    if (predicateExpressionContext != nullptr)
+    {
+        if (TryGetExpr(predicateExpressionContext, value))
+        {
+            AddExpr(context, value);
+            return;
+        }
+
+        throw FilterExpressionParserException("Failed to find predicate expression \"" + predicateExpressionContext->getText() + "\"");
+    }
+
+    // Check for not operator expressions
+    const auto notOperatorContext = context->notOperator();
+
+    if (notOperatorContext != nullptr)
+    {
+        if (context->expression().size() != 1)
+            throw FilterExpressionParserException("Not operator expression is malformed: \"" + context->getText() + "\"");
+
+        if (!TryGetExpr(context->expression(0), value))
+            throw FilterExpressionParserException("Failed to find not operator expression \"" + context->getText() + "\"");
+        
+        AddExpr(context, NewSharedPtr<UnaryExpression>(ExpressionUnaryType::Not, value));
+        return;
+    }
+
+    // Check for logical operator expressions
+    const auto logicalOperatorContext = context->logicalOperator();
+
+    if (logicalOperatorContext != nullptr)
+    {
+        ExpressionPtr leftValue, rightValue;
+        ExpressionOperatorType operatorType;
+
+        if (context->expression().size() != 2)
+            throw FilterExpressionParserException("Operator expression, in logical operator expression context, is malformed: \"" + context->getText() + "\"");
+
+        if (!TryGetExpr(context->expression(0), leftValue))
+            throw FilterExpressionParserException("Failed to find left operator expression \"" + context->expression(0)->getText() + "\"");
+
+        if (!TryGetExpr(context->expression(1), rightValue))
+            throw FilterExpressionParserException("Failed to find right operator expression \"" + context->expression(1)->getText() + "\"");
+
+        const string& operatorSymbol = logicalOperatorContext->getText();
+
+        // Check for boolean operations
+        if (IsEqual(operatorSymbol, "AND") || IsEqual(operatorSymbol, "&&", false))
+            operatorType = ExpressionOperatorType::And;
+        else if (IsEqual(operatorSymbol, "OR") || IsEqual(operatorSymbol, "||", false))
+            operatorType = ExpressionOperatorType::Or;
+        else
+            throw FilterExpressionParserException("Unexpected logical operator \"" + operatorSymbol + "\"");
+
+        AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
+        return;
+    }
+
+    throw FilterExpressionParserException("Unexpected expression \"" + context->getText() + "\"");
+}
+
+/*
+    predicateExpression
+     : predicateExpression K_NOT? K_IN '(' expressionList ')'
+     | predicateExpression K_IS K_NOT? K_NULL
+     | predicateExpression comparisonOperator predicateExpression
+     | predicateExpression K_NOT? K_LIKE predicateExpression
+     | valueExpression
+     ;
+ */
+void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext* context)
+{
+    ExpressionPtr value;
+
+    // Check for value expressions (see explicit visit function)
+    const auto valueExpressionContext = context->valueExpression();
+
+    if (valueExpressionContext != nullptr)
+    {
+        if (TryGetExpr(valueExpressionContext, value))
+        {
+            AddExpr(context, value);
+            return;
+        }
+
+        throw FilterExpressionParserException("Failed to find value expression \"" + valueExpressionContext->getText() + "\"");
+    }
+
+    // Check for IN expressions
+    const auto inKeywordContext = context->K_IN();
+    const auto notKeywordContext = context->K_NOT();
+
+    if (inKeywordContext != nullptr)
+    {
+        // IN expression expects one predicate
+        if (context->predicateExpression().size() != 1)
+            throw FilterExpressionParserException("\"IN\" expression is malformed: \"" + context->getText() + "\"");
+
+        if (!TryGetExpr(context->predicateExpression(0), value))
+            throw FilterExpressionParserException("Failed to find \"IN\" predicate expression \"" + context->predicateExpression(0)->getText() + "\"");
+
+        ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
+        const auto expressionList = context->expressionList();
+        const int32_t argumentCount = expressionList->expression().size();
+
+        if (argumentCount < 1)
+            throw FilterExpressionParserException("Not enough expressions found for \"IN\" operation");
+
+        for (int32_t i = 0; i < argumentCount; i++)
+        {
+            ExpressionPtr argument;
+
+            if (TryGetExpr(expressionList->expression(i), argument))
+                arguments->push_back(argument);
+            else
+                throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for \"IN\" operation");
+        }
+
+        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr));
+        return;
+    }
+
+    // Check for IS NULL expressions
+    const auto isKeywordContext = context->K_IS();
+    const auto nullKeywordContext = context->K_NULL();
+
+    if (isKeywordContext != nullptr && nullKeywordContext != nullptr)
+    {
+        const ExpressionOperatorType operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::IsNull : ExpressionOperatorType::IsNotNull;
+
+        // IS NULL expression expects one predicate
+        if (context->predicateExpression().size() != 1)
+            throw FilterExpressionParserException("\"IS NULL\" expression is malformed: \"" + context->getText() + "\"");
+
+        if (TryGetExpr(context->predicateExpression(0), value))
+        {
+            AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, value, nullptr));
+            return;
+        }
+
+        throw FilterExpressionParserException("Failed to find \"IS NULL\" predicate expression \"" + context->predicateExpression(0)->getText() + "\"");
+    }
+
+    // Remaining operators require two predicate expressions
+    if (context->predicateExpression().size() != 2)
+        throw FilterExpressionParserException("Operator expression, in predicate expression context, is malformed: \"" + context->getText() + "\"");
+
+    ExpressionPtr leftValue, rightValue;
+    ExpressionOperatorType operatorType;
+
+    if (!TryGetExpr(context->predicateExpression(0), leftValue))
+        throw FilterExpressionParserException("Failed to find left operator predicate expression \"" + context->predicateExpression(0)->getText() + "\"");
+
+    if (!TryGetExpr(context->predicateExpression(1), rightValue))
+        throw FilterExpressionParserException("Failed to find right operator predicate expression \"" + context->predicateExpression(1)->getText() + "\"");
+
+    // Check for comparison operator expressions
+    const auto comparisonOperatorContext = context->comparisonOperator();
+
+    if (comparisonOperatorContext != nullptr)
+    {
+        const string& operatorSymbol = comparisonOperatorContext->getText();
+
+        // Check for comparison operations
+        if (IsEqual(operatorSymbol, "<", false))
+            operatorType = ExpressionOperatorType::LessThan;
+        else if (IsEqual(operatorSymbol, "<=", false))
+            operatorType = ExpressionOperatorType::LessThanOrEqual;
+        else if (IsEqual(operatorSymbol, ">", false))
+            operatorType = ExpressionOperatorType::GreaterThan;
+        else if (IsEqual(operatorSymbol, ">=", false))
+            operatorType = ExpressionOperatorType::GreaterThanOrEqual;
+        else if (IsEqual(operatorSymbol, "=", false) || IsEqual(operatorSymbol, "==", false))
+            operatorType = ExpressionOperatorType::Equal;
+        else if (IsEqual(operatorSymbol, "<>", false) || IsEqual(operatorSymbol, "!=", false))
+            operatorType = ExpressionOperatorType::NotEqual;
+        else
+            throw FilterExpressionParserException("Unexpected comparison operator \"" + operatorSymbol + "\"");
+
+        AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
+        return;
+    }
+
+    // Check for LIKE expressions
+    const auto likeKeywordContext = context->K_LIKE();
+
+    if (likeKeywordContext != nullptr)
+    {
+        operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
+        AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
+        return;
+    }
+
+    throw FilterExpressionParserException("Unexpected predicate expression \"" + context->getText() + "\"");
+}
+
+/*
+    valueExpression
+     : literalValue
+     | columnName
+     | functionExpression
+     | unaryOperator valueExpression
+     | '(' expression ')'
+     | valueExpression mathOperator valueExpression
+     | valueExpression bitwiseOperator valueExpression
+; */
+void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext* context)
+{
+    ExpressionPtr value;
+
+    // Check for literal values (see explicit visit function)
     const auto literalValueContext = context->literalValue();
 
     if (literalValueContext != nullptr)
@@ -591,33 +771,47 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             AddExpr(context, value);
             return;
         }
-        
-        throw FilterExpressionParserException("Failed to find literal value expression \"" + literalValueContext->getText() + "\"");
+
+        throw FilterExpressionParserException("Failed to find literal value \"" + literalValueContext->getText() + "\"");
     }
 
-    // Check for column name expressions
+    // Check for column names (see explicit visit function)
     const auto columnNameContext = context->columnName();
 
     if (columnNameContext != nullptr)
     {
-        if (TryGetExpr(context->columnName(), value))
+        if (TryGetExpr(columnNameContext, value))
         {
             AddExpr(context, value);
             return;
         }
 
-        throw FilterExpressionParserException("Failed to find column name expression \"" + columnNameContext->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find column name \"" + columnNameContext->getText() + "\"");
     }
 
-    // Check for unary operator expressions
+    // Check for function expressions (see explicit visit function)
+    const auto functionExpressionContext = context->functionExpression();
+
+    if (functionExpressionContext != nullptr)
+    {
+        if (TryGetExpr(functionExpressionContext, value))
+        {
+            AddExpr(context, value);
+            return;
+        }
+
+        throw FilterExpressionParserException("Failed to find function expression \"" + functionExpressionContext->getText() + "\"");
+    }
+
+    // Check for unary operators
     const auto unaryOperatorContext = context->unaryOperator();
 
     if (unaryOperatorContext != nullptr)
     {
-        if (context->expression().size() != 1)
-            throw FilterExpressionParserException("Unary operator expression is undefined");
+        if (context->valueExpression().size() != 1)
+            throw FilterExpressionParserException("Unary operator value expression is undefined");
 
-        if (TryGetExpr(context->expression(0), value))
+        if (TryGetExpr(context->valueExpression(0), value))
         {
             ExpressionUnaryType unaryType;
             const string unaryOperator = unaryOperatorContext->getText();
@@ -626,7 +820,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
                 unaryType = ExpressionUnaryType::Plus;
             else if (IsEqual(unaryOperator, "-", false))
                 unaryType = ExpressionUnaryType::Minus;
-            else if (IsEqual(unaryOperator, "~", false) || IsEqual(unaryOperator, "NOT"))
+            else if (IsEqual(unaryOperator, "~", false) || IsEqual(unaryOperator, "!", false) || IsEqual(unaryOperator, "NOT"))
                 unaryType = ExpressionUnaryType::Not;
             else
                 throw FilterExpressionParserException("Unexpected unary operator type \"" + unaryOperator + "\"");
@@ -635,122 +829,42 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             return;
         }
 
-        throw FilterExpressionParserException("Failed to find unary operator expression \"" + context->expression(0)->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find unary operator value expression \"" + context->getText() + "\"");
     }
 
-    // Check for function expressions
-    const auto functionNameContext = context->functionName();
+    // Check for sub-expressions, i.e., "(" expression ")"
+    const auto expressionContext = context->expression();
 
-    if (functionNameContext != nullptr)
+    if (expressionContext != nullptr)
     {
-        ExpressionFunctionType functionType;
-        const string& functionName = functionNameContext->getText();
-
-        if (IsEqual(functionName, "COALESCE") || IsEqual(functionName, "ISNULL"))
-            functionType = ExpressionFunctionType::Coalesce;
-        else if (IsEqual(functionName, "CONVERT"))
-            functionType = ExpressionFunctionType::Convert;
-        else if (IsEqual(functionName, "IIF"))
-            functionType = ExpressionFunctionType::IIf;
-        else if (IsEqual(functionName, "ISREGEXMATCH"))
-            functionType = ExpressionFunctionType::IsRegExMatch;
-        else if (IsEqual(functionName, "LEN"))
-            functionType = ExpressionFunctionType::Len;
-        else if (IsEqual(functionName, "REGEXVAL"))
-            functionType = ExpressionFunctionType::RegExVal;
-        else if (StartsWith(functionName, "SUBSTR"))
-            functionType = ExpressionFunctionType::SubString;
-        else if (IsEqual(functionName, "TRIM"))
-            functionType = ExpressionFunctionType::Trim;
-        else
-            throw FilterExpressionParserException("Unexpected function type \"" + functionName + "\"");
-
-        ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
-        const int32_t argumentCount = context->expression().size();
-
-        for (int32_t i = 0; i < argumentCount; i++)
+        if (TryGetExpr(expressionContext, value))
         {
-            ExpressionPtr argument;
-
-            if (TryGetExpr(context->expression(i), argument))
-                arguments->push_back(argument);
-            else
-                throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " for function \"" + functionName + "\"");
-        }
-
-        AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
-        return;
-    }
-
-    // Check for IS NULL expressions
-    const auto isKeywordContext = context->K_IS();
-    const auto nullKeywordContext = context->K_NULL();
-    const auto notKeywordContext = context->K_NOT();
-
-    if (isKeywordContext != nullptr && nullKeywordContext != nullptr)
-    {
-        const ExpressionOperatorType operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::IsNull : ExpressionOperatorType::IsNotNull;
-
-        if (context->expression().size() != 1)
-            throw FilterExpressionParserException("\"IS NULL\" expression is undefined");
-
-        if (TryGetExpr(context->expression(0), value))
-        {
-            AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, value, nullptr));
+            AddExpr(context, value);
             return;
         }
 
-        throw FilterExpressionParserException("Failed to find \"IS NULL\" expression \"" + context->expression(0)->getText() + "\"");
+        throw FilterExpressionParserException("Failed to find sub-expression \"" + expressionContext->getText() + "\"");
     }
 
-    // Check for IN expressions
-    const auto inKeywordContext = context->K_IN();
+    // Remaining operators require two value expressions
+    if (context->valueExpression().size() != 2)
+        throw FilterExpressionParserException("Operator expression, in value expression context, is malformed: \"" + context->getText() + "\"");
 
-    if (inKeywordContext != nullptr)
+    ExpressionPtr leftValue, rightValue;
+    ExpressionOperatorType operatorType;
+
+    if (!TryGetExpr(context->valueExpression(0), leftValue))
+        throw FilterExpressionParserException("Failed to find left operator value expression \"" + context->valueExpression(0)->getText() + "\"");
+
+    if (!TryGetExpr(context->valueExpression(1), rightValue))
+        throw FilterExpressionParserException("Failed to find right operator value expression \"" + context->valueExpression(1)->getText() + "\"");
+
+    // Check for math operator expressions
+    const auto mathOperatorContext = context->mathOperator();
+
+    if (mathOperatorContext != nullptr)
     {
-        ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
-        const int32_t argumentCount = context->expression().size();
-
-        if (context->expression().size() < 2)
-            throw FilterExpressionParserException("Not enough expressions found for \"IN\" operation");
-
-        for (int32_t i = 0; i < argumentCount; i++)
-        {
-            ExpressionPtr argument;
-
-            if (TryGetExpr(context->expression(i), argument))
-            {
-                if (i == 0)
-                    value = argument;
-                else
-                    arguments->push_back(argument);
-            }
-            else
-            {
-                throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " for \"IN\" operation");
-            }
-        }
-
-        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr));
-        return;
-    }
-
-    // Check for operator expressions
-    if (context->expression().size() == 2)
-    {
-        ExpressionPtr leftValue, rightValue;
-        ExpressionOperatorType operatorType;
-
-        if (!TryGetExpr(context->expression(0), leftValue))
-            throw FilterExpressionParserException("Failed to find left operator expression \"" + context->expression(0)->getText() + "\"");
-
-        if (!TryGetExpr(context->expression(1), rightValue))
-            throw FilterExpressionParserException("Failed to find right operator expression \"" + context->expression(1)->getText() + "\"");
-
-        if (context->children.size() < 3)
-            throw FilterExpressionParserException("Operator expression is malformed");
-
-        const string& operatorSymbol = context->children[1]->getText();
+        const string& operatorSymbol = mathOperatorContext->getText();
 
         // Check for arithmetic operations
         if (IsEqual(operatorSymbol, "*", false))
@@ -763,9 +877,22 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             operatorType = ExpressionOperatorType::Add;
         else if (IsEqual(operatorSymbol, "-", false))
             operatorType = ExpressionOperatorType::Subtract;
+        else
+            throw FilterExpressionParserException("Unexpected math operator \"" + operatorSymbol + "\"");
+
+        AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
+        return;
+    }
+
+    // Check for bitwise operator expressions
+    const auto bitwiseOperatorContext = context->bitwiseOperator();
+
+    if (bitwiseOperatorContext != nullptr)
+    {
+        const string& operatorSymbol = bitwiseOperatorContext->getText();
 
         // Check for bitwise operations
-        else if (IsEqual(operatorSymbol, "<<", false))
+        if (IsEqual(operatorSymbol, "<<", false))
             operatorType = ExpressionOperatorType::BitShiftLeft;
         else if (IsEqual(operatorSymbol, ">>", false))
             operatorType = ExpressionOperatorType::BitShiftRight;
@@ -773,50 +900,14 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
             operatorType = ExpressionOperatorType::BitwiseAnd;
         else if (IsEqual(operatorSymbol, "|", false))
             operatorType = ExpressionOperatorType::BitwiseOr;
-
-        // Check for comparison operations
-        else if (IsEqual(operatorSymbol, "<", false))
-            operatorType = ExpressionOperatorType::LessThan;
-        else if (IsEqual(operatorSymbol, "<=", false))
-            operatorType = ExpressionOperatorType::LessThanOrEqual;
-        else if (IsEqual(operatorSymbol, ">", false))
-            operatorType = ExpressionOperatorType::GreaterThan;
-        else if (IsEqual(operatorSymbol, ">=", false))
-            operatorType = ExpressionOperatorType::GreaterThanOrEqual;
-
-        // Check for equality operations
-        else if (IsEqual(operatorSymbol, "=", false) || IsEqual(operatorSymbol, "==", false))
-            operatorType = ExpressionOperatorType::Equal;
-        else if (IsEqual(operatorSymbol, "<>", false) || IsEqual(operatorSymbol, "!=", false))
-            operatorType = ExpressionOperatorType::NotEqual;
-
-        // Check for boolean operations
-        else if (context->K_LIKE() != nullptr)
-            operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
-        else if (context->K_AND() != nullptr)
-            operatorType = ExpressionOperatorType::And;
-        else if (context->K_OR() != nullptr)
-            operatorType = ExpressionOperatorType::Or;
         else
-            throw FilterExpressionParserException("Unexpected operator \"" + operatorSymbol + "\"");
+            throw FilterExpressionParserException("Unexpected bitwise operator \"" + operatorSymbol + "\"");
 
         AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
         return;
     }
 
-    // Check for sub-expressions, i.e., "(" expression ")"
-    if (!context->children.empty() && IsEqual(context->children[0]->getText(), "(", false) && context->expression().size() == 1)
-    {
-        if (TryGetExpr(context->expression(0), value))
-        {
-            AddExpr(context, value);
-            return;
-        }
-
-        throw FilterExpressionParserException("Failed to find sub expression \"" + context->expression(0)->getText() + "\"");
-    }
-
-    throw FilterExpressionParserException("Unexpected expression \"" + context->getText() + "\"");
+    throw FilterExpressionParserException("Unexpected value expression \"" + context->getText() + "\"");
 }
 
 /*
@@ -849,7 +940,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
     {
         const string& literal = context->NUMERIC_LITERAL()->getText();
         
-        if (literal.find('e') || literal.find('E'))
+        if (Contains(literal, "E"))
         {
             // Real literals using scientific notation are parsed as double
             result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, stod(literal));
@@ -907,4 +998,63 @@ void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::Column
         throw FilterExpressionParserException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Measurements()->Name() + "\"");
 
     AddExpr(context, NewSharedPtr<ColumnExpression>(dataColumn));
+}
+
+/*
+    functionName
+     : K_COALESCE
+     | K_CONVERT
+     | K_IIF
+     | K_ISNULL
+     | K_ISREGEXMATCH
+     | K_LEN
+     | K_REGEXVAL
+     | K_SUBSTR
+     | K_SUBSTRING
+     | K_TRIM
+     ;
+
+    functionExpression
+     : functionName '(' expressionList? ')'
+     ;
+ */
+void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext* context)
+{
+    ExpressionFunctionType functionType;
+    const string& functionName = context->functionName()->getText();
+
+    if (IsEqual(functionName, "COALESCE") || IsEqual(functionName, "ISNULL"))
+        functionType = ExpressionFunctionType::Coalesce;
+    else if (IsEqual(functionName, "CONVERT"))
+        functionType = ExpressionFunctionType::Convert;
+    else if (IsEqual(functionName, "IIF"))
+        functionType = ExpressionFunctionType::IIf;
+    else if (IsEqual(functionName, "ISREGEXMATCH"))
+        functionType = ExpressionFunctionType::IsRegExMatch;
+    else if (IsEqual(functionName, "LEN"))
+        functionType = ExpressionFunctionType::Len;
+    else if (IsEqual(functionName, "REGEXVAL"))
+        functionType = ExpressionFunctionType::RegExVal;
+    else if (StartsWith(functionName, "SUBSTR"))
+        functionType = ExpressionFunctionType::SubString;
+    else if (IsEqual(functionName, "TRIM"))
+        functionType = ExpressionFunctionType::Trim;
+    else
+        throw FilterExpressionParserException("Unexpected function type \"" + functionName + "\"");
+
+    ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
+    const auto expressionList = context->expressionList();
+    const int32_t argumentCount = expressionList->expression().size();
+
+    for (int32_t i = 0; i < argumentCount; i++)
+    {
+        ExpressionPtr argument;
+
+        if (TryGetExpr(expressionList->expression(i), argument))
+            arguments->push_back(argument);
+        else
+            throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for function \"" + functionName + "\"");
+    }
+
+    AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }

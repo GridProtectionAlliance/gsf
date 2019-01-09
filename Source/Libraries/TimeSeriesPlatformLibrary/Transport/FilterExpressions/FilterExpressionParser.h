@@ -105,8 +105,11 @@ public:
     void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
     void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
+    void exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext*) override;
+    void exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext*) override;
     void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
+    void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
 };
 
 typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;

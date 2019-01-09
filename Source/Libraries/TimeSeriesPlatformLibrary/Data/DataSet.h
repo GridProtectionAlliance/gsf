@@ -74,6 +74,8 @@ public:
 
     static DataSetPtr ParseXmlDataSet(const std::vector<uint8_t>& xmlDataSet);
 
+    static std::vector<uint8_t> GenerateXmlDataSet(const DataSetPtr& dataSet, const std::string& dataSetName = "DataSet");
+
     static const std::string XmlSchemaNamespace;
 
     static const std::string ExtXmlSchemaDataNamespace;

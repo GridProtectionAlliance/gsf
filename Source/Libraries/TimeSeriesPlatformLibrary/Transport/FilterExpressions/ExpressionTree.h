@@ -253,7 +253,9 @@ private:
     ValueExpressionPtr EvaluateInList(const ExpressionPtr& expression) const;
     ValueExpressionPtr EvaluateFunction(const ExpressionPtr& expression) const;
     ValueExpressionPtr EvaluateOperator(const ExpressionPtr& expression) const;
-    
+
+    static bool ApplyBooleanUnaryOperation(bool unaryValue, ExpressionUnaryType unaryOperation);
+
     template<typename T>
     static T ApplyIntegerUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation);
     

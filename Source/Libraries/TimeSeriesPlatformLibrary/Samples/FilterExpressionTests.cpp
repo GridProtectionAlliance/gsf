@@ -411,7 +411,7 @@ int main(int argc, char* argv[])
     parser->SetDataSet(dataSet);
     Evaluate(parser);
 
-    assert(parser->FilteredSignalIDs().size() == 0);
+    assert(parser->FilteredSignalIDs().empty());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 33 - number converted to string and compared
@@ -615,8 +615,58 @@ int main(int argc, char* argv[])
         assert(parser->FilteredSignalIDs().size() == 1);
         cout << "Test " << ++test << " succeeded..." << endl;
 
-        // Test 46
+        // Test 46 - test decimal comparison
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Longitude < 0.0");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 47
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Acronym IN ('Test', 'Shelby')");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 48
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Acronym NOT IN ('Test', 'Apple')");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 49 - unary negative
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE NOT (Acronym IN ('Shelby', 'Apple'))");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().empty());
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 50 - unary positive
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE !Acronym IN ('Test', 'Apple')");
+        parser->SetDataSet(dataSet);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredSignalIDs().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 51 - unary positive (negating negative)
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE NOT Acronym NOT IN ('Shelby', 'Apple')");
         parser->SetDataSet(dataSet);
         parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");

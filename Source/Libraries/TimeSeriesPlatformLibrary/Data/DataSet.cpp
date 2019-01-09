@@ -445,3 +445,22 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
 
     return dataSet;
 }
+
+vector<uint8_t> DataSet::GenerateXmlDataSet(const DataSetPtr& dataSet, const string& dataSetName)
+{
+    xml_document document;
+    const char* rootNodeName = dataSetName.c_str();
+
+    xml_node rootNode = document.append_child(rootNodeName);
+
+    // <xs:schema id="DataSet" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ext="urn:schemas-microsoft-com:xml-msdata">
+    xml_node schemaNode = rootNode.append_child("xs:schema");
+
+    schemaNode.append_attribute("id") = rootNodeName;
+    schemaNode.append_attribute("xmlns:xs") = XmlSchemaNamespace.c_str();
+    schemaNode.append_attribute("xmlns:ext") = ExtXmlSchemaDataNamespace.c_str();
+
+    vector<uint8_t> xmlDataSet;
+
+    return xmlDataSet;
+}

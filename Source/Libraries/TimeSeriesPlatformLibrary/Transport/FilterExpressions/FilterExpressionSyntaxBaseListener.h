@@ -40,17 +40,44 @@ public:
   virtual void enterOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext * /*ctx*/) override { }
   virtual void exitOrderingTerm(FilterExpressionSyntaxParser::OrderingTermContext * /*ctx*/) override { }
 
+  virtual void enterExpressionList(FilterExpressionSyntaxParser::ExpressionListContext * /*ctx*/) override { }
+  virtual void exitExpressionList(FilterExpressionSyntaxParser::ExpressionListContext * /*ctx*/) override { }
+
   virtual void enterExpression(FilterExpressionSyntaxParser::ExpressionContext * /*ctx*/) override { }
   virtual void exitExpression(FilterExpressionSyntaxParser::ExpressionContext * /*ctx*/) override { }
 
-  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
-  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
+  virtual void enterPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext * /*ctx*/) override { }
+  virtual void exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext * /*ctx*/) override { }
+
+  virtual void enterValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext * /*ctx*/) override { }
+  virtual void exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext * /*ctx*/) override { }
+
+  virtual void enterNotOperator(FilterExpressionSyntaxParser::NotOperatorContext * /*ctx*/) override { }
+  virtual void exitNotOperator(FilterExpressionSyntaxParser::NotOperatorContext * /*ctx*/) override { }
 
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext * /*ctx*/) override { }
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext * /*ctx*/) override { }
 
+  virtual void enterComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext * /*ctx*/) override { }
+  virtual void exitComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext * /*ctx*/) override { }
+
+  virtual void enterLogicalOperator(FilterExpressionSyntaxParser::LogicalOperatorContext * /*ctx*/) override { }
+  virtual void exitLogicalOperator(FilterExpressionSyntaxParser::LogicalOperatorContext * /*ctx*/) override { }
+
+  virtual void enterBitwiseOperator(FilterExpressionSyntaxParser::BitwiseOperatorContext * /*ctx*/) override { }
+  virtual void exitBitwiseOperator(FilterExpressionSyntaxParser::BitwiseOperatorContext * /*ctx*/) override { }
+
+  virtual void enterMathOperator(FilterExpressionSyntaxParser::MathOperatorContext * /*ctx*/) override { }
+  virtual void exitMathOperator(FilterExpressionSyntaxParser::MathOperatorContext * /*ctx*/) override { }
+
   virtual void enterFunctionName(FilterExpressionSyntaxParser::FunctionNameContext * /*ctx*/) override { }
   virtual void exitFunctionName(FilterExpressionSyntaxParser::FunctionNameContext * /*ctx*/) override { }
+
+  virtual void enterFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext * /*ctx*/) override { }
+  virtual void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext * /*ctx*/) override { }
+
+  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
+  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
 
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext * /*ctx*/) override { }
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext * /*ctx*/) override { }
