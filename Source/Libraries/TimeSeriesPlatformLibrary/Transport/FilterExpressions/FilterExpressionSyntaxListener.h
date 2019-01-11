@@ -56,6 +56,9 @@ public:
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
 
+  virtual void enterExactMatchOperator(FilterExpressionSyntaxParser::ExactMatchOperatorContext *ctx) = 0;
+  virtual void exitExactMatchOperator(FilterExpressionSyntaxParser::ExactMatchOperatorContext *ctx) = 0;
+
   virtual void enterComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext *ctx) = 0;
   virtual void exitComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext *ctx) = 0;
 
@@ -74,9 +77,6 @@ public:
   virtual void enterFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext *ctx) = 0;
   virtual void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext *ctx) = 0;
 
-  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
-  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
-
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
 
@@ -85,6 +85,9 @@ public:
 
   virtual void enterOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext *ctx) = 0;
   virtual void exitOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext *ctx) = 0;
+
+  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
+  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
 
 
 };

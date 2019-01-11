@@ -15,15 +15,22 @@ public:
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
-    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, K_AND = 26, 
-    K_ASC = 27, K_BY = 28, K_CONVERT = 29, K_COALESCE = 30, K_DESC = 31, 
-    K_FILTER = 32, K_IIF = 33, K_IN = 34, K_IS = 35, K_ISNULL = 36, K_ISREGEXMATCH = 37, 
-    K_LEN = 38, K_LIKE = 39, K_NOT = 40, K_NULL = 41, K_OR = 42, K_ORDER = 43, 
-    K_REGEXVAL = 44, K_SUBSTR = 45, K_SUBSTRING = 46, K_TOP = 47, K_TRIM = 48, 
-    K_WHERE = 49, BOOLEAN_LITERAL = 50, IDENTIFIER = 51, INTEGER_LITERAL = 52, 
-    NUMERIC_LITERAL = 53, GUID_LITERAL = 54, MEASUREMENT_KEY_LITERAL = 55, 
-    POINT_TAG_LITERAL = 56, STRING_LITERAL = 57, DATETIME_LITERAL = 58, 
-    SINGLE_LINE_COMMENT = 59, MULTILINE_COMMENT = 60, SPACES = 61, UNEXPECTED_CHAR = 62
+    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, T__25 = 26, 
+    T__26 = 27, BOOLEAN_LITERAL = 28, IDENTIFIER = 29, INTEGER_LITERAL = 30, 
+    NUMERIC_LITERAL = 31, GUID_LITERAL = 32, MEASUREMENT_KEY_LITERAL = 33, 
+    POINT_TAG_LITERAL = 34, STRING_LITERAL = 35, DATETIME_LITERAL = 36, 
+    SINGLE_LINE_COMMENT = 37, MULTILINE_COMMENT = 38, SPACES = 39, UNEXPECTED_CHAR = 40, 
+    K_ABS = 41, K_AND = 42, K_ASC = 43, K_BINARY = 44, K_BY = 45, K_CEILING = 46, 
+    K_COALESCE = 47, K_CONVERT = 48, K_CONTAINS = 49, K_DATEADD = 50, K_DATEDIFF = 51, 
+    K_DATEPART = 52, K_DESC = 53, K_ENDSWITH = 54, K_FILTER = 55, K_FLOOR = 56, 
+    K_IIF = 57, K_IN = 58, K_INDEXOF = 59, K_IS = 60, K_ISDATE = 61, K_ISINTEGER = 62, 
+    K_ISGUID = 63, K_ISNULL = 64, K_ISNUMERIC = 65, K_LASTINDEXOF = 66, 
+    K_LEN = 67, K_LIKE = 68, K_LOWER = 69, K_MAX = 70, K_MIN = 71, K_NOT = 72, 
+    K_NOW = 73, K_NULL = 74, K_OR = 75, K_ORDER = 76, K_POWER = 77, K_REGEXMATCH = 78, 
+    K_REGEXVAL = 79, K_REPLACE = 80, K_REVERSE = 81, K_ROUND = 82, K_SQRT = 83, 
+    K_SPLIT = 84, K_STARTSWITH = 85, K_STRCOUNT = 86, K_STRCMP = 87, K_SUBSTR = 88, 
+    K_TOP = 89, K_TRIM = 90, K_TRIMLEFT = 91, K_TRIMRIGHT = 92, K_UPPER = 93, 
+    K_UTCNOW = 94, K_WHERE = 95
   };
 
   enum {
@@ -31,10 +38,10 @@ public:
     RuleFilterExpressionStatement = 3, RuleIdentifierStatement = 4, RuleFilterStatement = 5, 
     RuleTopLimit = 6, RuleOrderingTerm = 7, RuleExpressionList = 8, RuleExpression = 9, 
     RulePredicateExpression = 10, RuleValueExpression = 11, RuleNotOperator = 12, 
-    RuleUnaryOperator = 13, RuleComparisonOperator = 14, RuleLogicalOperator = 15, 
-    RuleBitwiseOperator = 16, RuleMathOperator = 17, RuleFunctionName = 18, 
-    RuleFunctionExpression = 19, RuleLiteralValue = 20, RuleTableName = 21, 
-    RuleColumnName = 22, RuleOrderByColumnName = 23
+    RuleUnaryOperator = 13, RuleExactMatchOperator = 14, RuleComparisonOperator = 15, 
+    RuleLogicalOperator = 16, RuleBitwiseOperator = 17, RuleMathOperator = 18, 
+    RuleFunctionName = 19, RuleFunctionExpression = 20, RuleTableName = 21, 
+    RuleColumnName = 22, RuleOrderByColumnName = 23, RuleLiteralValue = 24
   };
 
   FilterExpressionSyntaxParser(antlr4::TokenStream *input);
@@ -61,16 +68,17 @@ public:
   class ValueExpressionContext;
   class NotOperatorContext;
   class UnaryOperatorContext;
+  class ExactMatchOperatorContext;
   class ComparisonOperatorContext;
   class LogicalOperatorContext;
   class BitwiseOperatorContext;
   class MathOperatorContext;
   class FunctionNameContext;
   class FunctionExpressionContext;
-  class LiteralValueContext;
   class TableNameContext;
   class ColumnNameContext;
-  class OrderByColumnNameContext; 
+  class OrderByColumnNameContext;
+  class LiteralValueContext; 
 
   class  ParseContext : public antlr4::ParserRuleContext {
   public:
@@ -121,6 +129,7 @@ public:
     virtual size_t getRuleIndex() const override;
     IdentifierStatementContext *identifierStatement();
     FilterStatementContext *filterStatement();
+    ExpressionContext *expression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -149,11 +158,11 @@ public:
     FilterStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *K_FILTER();
+    TableNameContext *tableName();
     antlr4::tree::TerminalNode *K_WHERE();
     ExpressionContext *expression();
     antlr4::tree::TerminalNode *K_TOP();
     TopLimitContext *topLimit();
-    TableNameContext *tableName();
     antlr4::tree::TerminalNode *K_ORDER();
     antlr4::tree::TerminalNode *K_BY();
     std::vector<OrderingTermContext *> orderingTerm();
@@ -235,6 +244,7 @@ public:
     ComparisonOperatorContext *comparisonOperator();
     antlr4::tree::TerminalNode *K_LIKE();
     antlr4::tree::TerminalNode *K_NOT();
+    ExactMatchOperatorContext *exactMatchOperator();
     antlr4::tree::TerminalNode *K_IN();
     ExpressionListContext *expressionList();
     antlr4::tree::TerminalNode *K_IS();
@@ -294,6 +304,19 @@ public:
 
   UnaryOperatorContext* unaryOperator();
 
+  class  ExactMatchOperatorContext : public antlr4::ParserRuleContext {
+  public:
+    ExactMatchOperatorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *K_BINARY();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  ExactMatchOperatorContext* exactMatchOperator();
+
   class  ComparisonOperatorContext : public antlr4::ParserRuleContext {
   public:
     ComparisonOperatorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -348,16 +371,46 @@ public:
   public:
     FunctionNameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *K_ABS();
+    antlr4::tree::TerminalNode *K_CEILING();
     antlr4::tree::TerminalNode *K_COALESCE();
     antlr4::tree::TerminalNode *K_CONVERT();
+    antlr4::tree::TerminalNode *K_CONTAINS();
+    antlr4::tree::TerminalNode *K_DATEADD();
+    antlr4::tree::TerminalNode *K_DATEDIFF();
+    antlr4::tree::TerminalNode *K_DATEPART();
+    antlr4::tree::TerminalNode *K_ENDSWITH();
+    antlr4::tree::TerminalNode *K_FLOOR();
     antlr4::tree::TerminalNode *K_IIF();
+    antlr4::tree::TerminalNode *K_INDEXOF();
+    antlr4::tree::TerminalNode *K_ISDATE();
+    antlr4::tree::TerminalNode *K_ISINTEGER();
+    antlr4::tree::TerminalNode *K_ISGUID();
     antlr4::tree::TerminalNode *K_ISNULL();
-    antlr4::tree::TerminalNode *K_ISREGEXMATCH();
+    antlr4::tree::TerminalNode *K_ISNUMERIC();
+    antlr4::tree::TerminalNode *K_LASTINDEXOF();
     antlr4::tree::TerminalNode *K_LEN();
+    antlr4::tree::TerminalNode *K_LOWER();
+    antlr4::tree::TerminalNode *K_MAX();
+    antlr4::tree::TerminalNode *K_MIN();
+    antlr4::tree::TerminalNode *K_NOW();
+    antlr4::tree::TerminalNode *K_POWER();
+    antlr4::tree::TerminalNode *K_REGEXMATCH();
     antlr4::tree::TerminalNode *K_REGEXVAL();
+    antlr4::tree::TerminalNode *K_REPLACE();
+    antlr4::tree::TerminalNode *K_REVERSE();
+    antlr4::tree::TerminalNode *K_ROUND();
+    antlr4::tree::TerminalNode *K_SPLIT();
+    antlr4::tree::TerminalNode *K_SQRT();
+    antlr4::tree::TerminalNode *K_STARTSWITH();
+    antlr4::tree::TerminalNode *K_STRCOUNT();
+    antlr4::tree::TerminalNode *K_STRCMP();
     antlr4::tree::TerminalNode *K_SUBSTR();
-    antlr4::tree::TerminalNode *K_SUBSTRING();
     antlr4::tree::TerminalNode *K_TRIM();
+    antlr4::tree::TerminalNode *K_TRIMLEFT();
+    antlr4::tree::TerminalNode *K_TRIMRIGHT();
+    antlr4::tree::TerminalNode *K_UPPER();
+    antlr4::tree::TerminalNode *K_UTCNOW();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -379,25 +432,6 @@ public:
   };
 
   FunctionExpressionContext* functionExpression();
-
-  class  LiteralValueContext : public antlr4::ParserRuleContext {
-  public:
-    LiteralValueContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *INTEGER_LITERAL();
-    antlr4::tree::TerminalNode *NUMERIC_LITERAL();
-    antlr4::tree::TerminalNode *STRING_LITERAL();
-    antlr4::tree::TerminalNode *DATETIME_LITERAL();
-    antlr4::tree::TerminalNode *GUID_LITERAL();
-    antlr4::tree::TerminalNode *BOOLEAN_LITERAL();
-    antlr4::tree::TerminalNode *K_NULL();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-   
-  };
-
-  LiteralValueContext* literalValue();
 
   class  TableNameContext : public antlr4::ParserRuleContext {
   public:
@@ -437,6 +471,25 @@ public:
   };
 
   OrderByColumnNameContext* orderByColumnName();
+
+  class  LiteralValueContext : public antlr4::ParserRuleContext {
+  public:
+    LiteralValueContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *INTEGER_LITERAL();
+    antlr4::tree::TerminalNode *NUMERIC_LITERAL();
+    antlr4::tree::TerminalNode *STRING_LITERAL();
+    antlr4::tree::TerminalNode *DATETIME_LITERAL();
+    antlr4::tree::TerminalNode *GUID_LITERAL();
+    antlr4::tree::TerminalNode *BOOLEAN_LITERAL();
+    antlr4::tree::TerminalNode *K_NULL();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  LiteralValueContext* literalValue();
 
 
   virtual bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;

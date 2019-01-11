@@ -152,6 +152,16 @@ int32_t GSF::TimeSeries::Compare(const std::string& leftValue, const std::string
     return 0;
 }
 
+int32_t GSF::TimeSeries::IndexOf(const std::string& value, const std::string& findValue, bool ignoreCase)
+{
+    boost::iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
+
+    if (it.empty())
+        return -1;
+
+    return distance(value.begin(), it.begin());
+}
+
 std::string GSF::TimeSeries::Replace(const std::string& value, const std::string& findValue, const std::string& replaceValue, bool ignoreCase)
 {
     if (ignoreCase)

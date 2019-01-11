@@ -100,21 +100,12 @@ const char* FilterExpressionParserException::what() const noexcept
 FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_inputStream(filterExpression),
     m_dataSet(nullptr),
-    m_trackFilteredSignalIDs(true),
-    m_trackFilteredRows(false),
-    m_primaryMeasurementTableName("ActiveMeasurements")
+    m_trackFilteredSignalIDs(false),
+    m_trackFilteredRows(true)
 {
     m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
     m_tokens = new CommonTokenStream(m_lexer);
     m_parser = new FilterExpressionSyntaxParser(m_tokens);
-
-    MeasurementTableIDFieldsPtr measurementTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
-
-    measurementTableIDFields->SignalIDFieldName = "SignalID";
-    measurementTableIDFields->MeasurementKeyFieldName = "ID";
-    measurementTableIDFields->PointTagFieldName = "PointTag";
-
-    SetMeasurementTableIDFields(m_primaryMeasurementTableName, measurementTableIDFields);
 }
 
 FilterExpressionParser::~FilterExpressionParser()
@@ -169,6 +160,7 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
                         {
                             m_filteredSignalIDs.push_back(signalID);
 
+                            // TODO: Should filtered rows be subject to signal ID limits? ID could be empty, still want row?
                             if (m_trackFilteredRows)
                                 m_filteredRows.push_back(row);
 
@@ -178,6 +170,7 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
                 }
                 else if (m_trackFilteredRows)
                 {
+                    // TODO: Multiple filter expressions could duplicate rows, should an unordered_set be used??
                     m_filteredRows.push_back(row);
                 }
             }
@@ -195,16 +188,16 @@ void FilterExpressionParser::SetDataSet(const DataSetPtr& dataSet)
     m_dataSet = dataSet;
 }
 
-MeasurementTableIDFieldsPtr FilterExpressionParser::GetMeasurementTableIDFields(const std::string& measurementTableName) const
+MeasurementTableIDFieldsPtr FilterExpressionParser::GetMeasurementTableIDFields(const string& measurementTableName) const
 {
     MeasurementTableIDFieldsPtr measurementTableFields;
     
-    TryGetValue<const std::string, MeasurementTableIDFieldsPtr>(m_measurementTableIDFields, measurementTableName, measurementTableFields, nullptr);
+    TryGetValue<const string, MeasurementTableIDFieldsPtr>(m_measurementTableIDFields, measurementTableName, measurementTableFields, nullptr);
 
     return measurementTableFields;
 }
 
-void FilterExpressionParser::SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields)
+void FilterExpressionParser::SetMeasurementTableIDFields(const string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields)
 {
     m_measurementTableIDFields.insert_or_assign(measurementTableName, measurementTableIDFields);
 }
@@ -321,7 +314,7 @@ void FilterExpressionParser::Evaluate()
 
         if (!expressionTree->OrderByTerms.empty())
         {
-            std::sort(matchedRows.begin(), matchedRows.end(), [expressionTree](const DataRowPtr& leftMatchedRow, const DataRowPtr& rightMatchedRow)
+            sort(matchedRows.begin(), matchedRows.end(), [expressionTree](const DataRowPtr& leftMatchedRow, const DataRowPtr& rightMatchedRow)
             {
                 for (size_t i = 0; i < expressionTree->OrderByTerms.size(); i++)
                 {
@@ -449,9 +442,24 @@ void FilterExpressionParser::SetTrackFilteredRows(bool trackFilteredRows)
     m_trackFilteredRows = trackFilteredRows;
 }
 
-const std::vector<GSF::Data::DataRowPtr>& FilterExpressionParser::FilteredRows() const
+const vector<DataRowPtr>& FilterExpressionParser::FilteredRows() const
 {
     return m_filteredRows;
+}
+
+/*
+    filterExpressionStatement
+     : identifierStatement
+     | filterStatement
+     | expression
+     ;
+ */
+void FilterExpressionParser::enterFilterExpressionStatement(FilterExpressionSyntaxParser::FilterExpressionStatementContext*)
+{
+    // One filter expression can contain multiple filter statements separated by semi-colon,
+    // so we track each as an independent expression tree
+    m_expressions.clear();
+    m_activeExpressionTree = nullptr;
 }
 
 /*
@@ -465,10 +473,6 @@ const std::vector<GSF::Data::DataRowPtr>& FilterExpressionParser::FilteredRows()
  */
 void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext* context)
 {
-    // One filter expression can contain multiple filter statements separated by semi-colon,
-    // so we track each as an independent expression tree
-    m_expressions.clear();
-
     const string& measurementTableName = context->tableName()->getText();
     const DataTablePtr& measurements = m_dataSet->Table(measurementTableName);
 
@@ -577,6 +581,28 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
      | predicateExpression
      ;
  */
+void FilterExpressionParser::enterExpression(FilterExpressionSyntaxParser::ExpressionContext*)
+{
+    // Handle case of encountering a standalone expression, i.e., an expression not within a filter statement context
+    if (m_activeExpressionTree == nullptr)
+    {
+        const DataTablePtr& measurements = m_dataSet->Table(m_primaryMeasurementTableName);
+
+        if (measurements == nullptr)
+            throw FilterExpressionParserException("Failed to find measurement table \"" + m_primaryMeasurementTableName + "\"");
+
+        m_activeExpressionTree = NewSharedPtr<ExpressionTree>(measurements);
+        m_expressionTrees.push_back(m_activeExpressionTree);
+    }
+}
+
+/*
+    expression
+     : notOperator expression
+     | expression logicalOperator expression
+     | predicateExpression
+     ;
+ */
 void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::ExpressionContext* context)
 {
     ExpressionPtr value;
@@ -630,9 +656,9 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
         const string& operatorSymbol = logicalOperatorContext->getText();
 
         // Check for boolean operations
-        if (IsEqual(operatorSymbol, "AND") || IsEqual(operatorSymbol, "&&", false))
+        if (logicalOperatorContext->K_AND() != nullptr || IsEqual(operatorSymbol, "&&", false))
             operatorType = ExpressionOperatorType::And;
-        else if (IsEqual(operatorSymbol, "OR") || IsEqual(operatorSymbol, "||", false))
+        else if (logicalOperatorContext->K_OR() != nullptr  || IsEqual(operatorSymbol, "||", false))
             operatorType = ExpressionOperatorType::Or;
         else
             throw FilterExpressionParserException("Unexpected logical operator \"" + operatorSymbol + "\"");
@@ -674,6 +700,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     // Check for IN expressions
     const auto inKeywordContext = context->K_IN();
     const auto notKeywordContext = context->K_NOT();
+    const auto exactMatchOperatorContext = context->exactMatchOperator();
 
     if (inKeywordContext != nullptr)
     {
@@ -701,7 +728,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
                 throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for \"IN\" operation");
         }
 
-        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr));
+        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr, exactMatchOperatorContext != nullptr));
         return;
     }
 
@@ -757,8 +784,12 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
             operatorType = ExpressionOperatorType::GreaterThanOrEqual;
         else if (IsEqual(operatorSymbol, "=", false) || IsEqual(operatorSymbol, "==", false))
             operatorType = ExpressionOperatorType::Equal;
+        else if (IsEqual(operatorSymbol, "===", false))
+            operatorType = ExpressionOperatorType::EqualExactMatch;
         else if (IsEqual(operatorSymbol, "<>", false) || IsEqual(operatorSymbol, "!=", false))
             operatorType = ExpressionOperatorType::NotEqual;
+        else if (IsEqual(operatorSymbol, "!==", false))
+            operatorType = ExpressionOperatorType::NotEqualExactMatch;
         else
             throw FilterExpressionParserException("Unexpected comparison operator \"" + operatorSymbol + "\"");
 
@@ -771,7 +802,11 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
 
     if (likeKeywordContext != nullptr)
     {
-        operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
+        if (exactMatchOperatorContext == nullptr)
+            operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
+        else
+            operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::LikeExactMatch : ExpressionOperatorType::NotLikeExactMatch;
+
         AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
         return;
     }
@@ -852,7 +887,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
                 unaryType = ExpressionUnaryType::Plus;
             else if (IsEqual(unaryOperator, "-", false))
                 unaryType = ExpressionUnaryType::Minus;
-            else if (IsEqual(unaryOperator, "~", false) || IsEqual(unaryOperator, "!", false) || IsEqual(unaryOperator, "NOT"))
+            else if (IsEqual(unaryOperator, "~", false) || IsEqual(unaryOperator, "!", false) || unaryOperatorContext->K_NOT() != nullptr)
                 unaryType = ExpressionUnaryType::Not;
             else
                 throw FilterExpressionParserException("Unexpected unary operator type \"" + unaryOperator + "\"");
@@ -985,7 +1020,7 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
             {
                 result = NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, decimal_t(literal));
             }
-            catch (const std::runtime_error&)
+            catch (const runtime_error&)
             {
                 result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, stod(literal));
             }
@@ -1033,19 +1068,6 @@ void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::Column
 }
 
 /*
-    functionName
-     : K_COALESCE
-     | K_CONVERT
-     | K_IIF
-     | K_ISNULL
-     | K_ISREGEXMATCH
-     | K_LEN
-     | K_REGEXVAL
-     | K_SUBSTR
-     | K_SUBSTRING
-     | K_TRIM
-     ;
-
     functionExpression
      : functionName '(' expressionList? ')'
      ;
@@ -1053,26 +1075,65 @@ void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::Column
 void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext* context)
 {
     ExpressionFunctionType functionType;
-    const string& functionName = context->functionName()->getText();
+    auto functionNameContext = context->functionName();
 
-    if (IsEqual(functionName, "COALESCE") || IsEqual(functionName, "ISNULL"))
+    // TODO: Add remaining function tests...
+    if (functionNameContext->K_ABS() != nullptr)
+        functionType = ExpressionFunctionType::Abs;
+    else if (functionNameContext->K_CEILING() != nullptr)
+        functionType = ExpressionFunctionType::Ceiling;
+    else if (functionNameContext->K_COALESCE() != nullptr)
         functionType = ExpressionFunctionType::Coalesce;
-    else if (IsEqual(functionName, "CONVERT"))
+    else if (functionNameContext->K_CONVERT() != nullptr)
         functionType = ExpressionFunctionType::Convert;
-    else if (IsEqual(functionName, "IIF"))
+    else if (functionNameContext->K_CONTAINS() != nullptr)
+        functionType = ExpressionFunctionType::Contains;
+    else if (functionNameContext->K_DATEADD() != nullptr)
+        functionType = ExpressionFunctionType::DateAdd;
+    else if (functionNameContext->K_DATEDIFF() != nullptr)
+        functionType = ExpressionFunctionType::DateDiff;
+    else if (functionNameContext->K_DATEPART() != nullptr)
+        functionType = ExpressionFunctionType::DatePart;
+    else if (functionNameContext->K_ENDSWITH() != nullptr)
+        functionType = ExpressionFunctionType::EndsWith;
+    else if (functionNameContext->K_FLOOR() != nullptr)
+        functionType = ExpressionFunctionType::Floor;
+    else if (functionNameContext->K_IIF() != nullptr)
         functionType = ExpressionFunctionType::IIf;
-    else if (IsEqual(functionName, "ISREGEXMATCH"))
-        functionType = ExpressionFunctionType::IsRegExMatch;
-    else if (IsEqual(functionName, "LEN"))
+    else if (functionNameContext->K_INDEXOF() != nullptr)
+        functionType = ExpressionFunctionType::IndexOf;
+    else if (functionNameContext->K_ISDATE() != nullptr)
+        functionType = ExpressionFunctionType::IsDate;
+    else if (functionNameContext->K_ISINTEGER() != nullptr)
+        functionType = ExpressionFunctionType::IsInteger;
+    else if (functionNameContext->K_ISGUID() != nullptr)
+        functionType = ExpressionFunctionType::IsGuid;
+    else if (functionNameContext->K_ISNULL() != nullptr)
+        functionType = ExpressionFunctionType::IsNull;
+    else if (functionNameContext->K_ISNUMERIC() != nullptr)
+        functionType = ExpressionFunctionType::IsNumeric;
+    else if (functionNameContext->K_LASTINDEXOF() != nullptr)
+        functionType = ExpressionFunctionType::LastIndexOf;
+    else if (functionNameContext->K_LEN() != nullptr)
         functionType = ExpressionFunctionType::Len;
-    else if (IsEqual(functionName, "REGEXVAL"))
+    else if (functionNameContext->K_LOWER() != nullptr)
+        functionType = ExpressionFunctionType::Lower;
+    else if (functionNameContext->K_MAX() != nullptr)
+        functionType = ExpressionFunctionType::Max;
+    else if (functionNameContext->K_MIN() != nullptr)
+        functionType = ExpressionFunctionType::Min;
+    else if (functionNameContext->K_NOW() != nullptr)
+        functionType = ExpressionFunctionType::Now;
+    else if (functionNameContext->K_REGEXMATCH() != nullptr)
+        functionType = ExpressionFunctionType::RegExMatch;
+    else if (functionNameContext->K_REGEXVAL() != nullptr)
         functionType = ExpressionFunctionType::RegExVal;
-    else if (StartsWith(functionName, "SUBSTR"))
-        functionType = ExpressionFunctionType::SubString;
-    else if (IsEqual(functionName, "TRIM"))
+    else if (functionNameContext->K_SUBSTR() != nullptr)
+        functionType = ExpressionFunctionType::SubStr;
+    else if (functionNameContext->K_TRIM() != nullptr)
         functionType = ExpressionFunctionType::Trim;
     else
-        throw FilterExpressionParserException("Unexpected function type \"" + functionName + "\"");
+        throw FilterExpressionParserException("Unexpected function type \"" + functionNameContext->getText() + "\"");
 
     ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
     const auto expressionList = context->expressionList();
@@ -1085,38 +1146,46 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
         if (TryGetExpr(expressionList->expression(i), argument))
             arguments->push_back(argument);
         else
-            throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for function \"" + functionName + "\"");
+            throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for function \"" + functionNameContext->getText() + "\"");
     }
 
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }
 
-ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression)
+vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(
-        StartsWith(filterExpression, "FILTER ") ? filterExpression : 
-        "FITLER " + dataTable->Name() + " WHERE " + filterExpression);
-    
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
+
     parser->SetDataSet(dataTable->Parent());
     parser->SetPrimaryMeasurementTableName(dataTable->Name());
+    parser->SetTrackFilteredSignalIDs(false);
+    parser->SetTrackFilteredRows(false);
 
     ParseTreeWalker walker;
     const auto parseTree = parser->m_parser->parse();
     walker.walk(parser.get(), parseTree);
 
-    return parser->m_activeExpressionTree;
+    return parser->m_expressionTrees;
 }
 
-ValueExpressionPtr FilterExpressionParser::Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression)
+ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression)
+{
+    vector<ExpressionTreePtr> expressionTrees = GenerateExpressionTrees(dataTable, filterExpression);
+
+    if (!expressionTrees.empty())
+        return expressionTrees[0];
+
+    throw FilterExpressionParserException("No expression trees generated with filter expression \"" + filterExpression + "\" for table \"" + dataTable->Name() + "\"");
+}
+
+ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, const string& filterExpression)
 {
     return GenerateExpressionTree(dataRow->Parent(), filterExpression)->Evaluate(dataRow);
 }
 
-std::vector<GSF::Data::DataRowPtr> FilterExpressionParser::Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression)
+vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(
-        StartsWith(filterExpression, "FILTER ") ? filterExpression : 
-        "FITLER " + dataTable->Name() + " WHERE " + filterExpression);
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
 
     parser->SetDataSet(dataTable->Parent());
     parser->SetPrimaryMeasurementTableName(dataTable->Name());
@@ -1124,5 +1193,5 @@ std::vector<GSF::Data::DataRowPtr> FilterExpressionParser::Select(const GSF::Dat
     parser->SetTrackFilteredRows(true);
     parser->Evaluate();
 
-    return parser->FilteredRows();
+    return parser->m_filteredRows;
 }

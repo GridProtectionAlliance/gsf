@@ -134,6 +134,18 @@ namespace TimeSeries
         return boost::make_shared<T>(p1, p2, p3);
     }
 
+    template<class T, typename P1, typename P2, typename P3, typename P4>
+    SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3, P4 p4)
+    {
+        return boost::make_shared<T>(p1, p2, p3, p4);
+    }
+
+    template<class T, typename P1, typename P2, typename P3, typename P4, typename P5>
+    SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5)
+    {
+        return boost::make_shared<T>(p1, p2, p3, p4, p5);
+    }
+
     template<class T, class S>
     SharedPtr<T> CastSharedPtr(SharedPtr<S> const& source)
     {
@@ -248,6 +260,7 @@ namespace TimeSeries
     bool EndsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     bool Contains(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     int32_t Compare(const std::string& leftValue, const std::string& rightValue, bool ignoreCase = true);
+    int32_t IndexOf(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     std::string Replace(const std::string& value, const std::string& findValue, const std::string& replaceValue, bool ignoreCase = true);
     std::string ToUpper(const std::string& value);
     std::string ToLower(const std::string& value);

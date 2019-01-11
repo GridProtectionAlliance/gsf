@@ -169,25 +169,58 @@ typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
 class InListExpression : public Expression
 {
 public:
-    InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword);
+    InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword, bool exactMatch);
 
     const ExpressionPtr Value;
     const ExpressionCollectionPtr Arguments;
     const bool HasNotKeyword;
+    const bool ExactMatch;
 };
 
 typedef SharedPtr<InListExpression> InListExpressionPtr;
 
 enum class ExpressionFunctionType
 {
+    Abs,
+    Ceiling,
     Coalesce,
     Convert,
+    Contains,
+    DateAdd,
+    DateDiff,
+    DatePart,
+    EndsWith,
+    Floor,
     IIf,
-    IsRegExMatch,
+    IndexOf,
+    IsDate,
+    IsInteger,
+    IsGuid,
+    IsNull,
+    IsNumeric,
+    LastIndexOf,
     Len,
+    Lower,
+    Max,
+    Min,
+    Now,
+    Power,
+    RegExMatch,
     RegExVal,
-    SubString,
-    Trim
+    Replace,
+    Reverse,
+    Round,
+    Split,
+    Sqrt,
+    StartsWith,
+    StrCount,
+    StrCmp,
+    SubStr,
+    Trim,
+    TrimLeft,
+    TrimRight,
+    Upper,
+    UtcNow
 };
 
 class FunctionExpression : public Expression
@@ -217,11 +250,15 @@ enum class ExpressionOperatorType
     GreaterThan,
     GreaterThanOrEqual,
     Equal,
+    EqualExactMatch,
     NotEqual,
+    NotEqualExactMatch,
     IsNull,
     IsNotNull,
     Like,
+    LikeExactMatch,
     NotLike,
+    NotLikeExactMatch,
     And,
     Or
 };
@@ -254,14 +291,6 @@ private:
     ValueExpressionPtr EvaluateFunction(const ExpressionPtr& expression) const;
     ValueExpressionPtr EvaluateOperator(const ExpressionPtr& expression) const;
 
-    static bool ApplyBooleanUnaryOperation(bool unaryValue, ExpressionUnaryType unaryOperation);
-
-    template<typename T>
-    static T ApplyIntegerUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation);
-    
-    template<typename T>
-    static T ApplyFloatingPointUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType);
-
     // Operation Value Type Selectors
     ExpressionValueType DeriveOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
     ExpressionValueType DeriveArithmeticOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
@@ -270,14 +299,45 @@ private:
     ExpressionValueType DeriveBooleanOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const;
 
     // Filter Expression Function Implementations
-    static const ValueExpressionPtr& Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue);
+    ValueExpressionPtr Abs(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Ceiling(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Coalesce(const ExpressionCollectionPtr& arguments) const;
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& targetType) const;
+    ValueExpressionPtr Contains(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr DateAdd(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& addValue, const ValueExpressionPtr& intervalType) const;
+    ValueExpressionPtr DateDiff(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& intervalType) const;
+    ValueExpressionPtr DatePart(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& intervalType) const;
+    ValueExpressionPtr EndsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr Floor(const ExpressionCollectionPtr& arguments) const;
     ValueExpressionPtr IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const;
-    ValueExpressionPtr IsRegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr IndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr IsDate(const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr IsInteger(const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr IsGuid(const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr IsNull(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const;
+    ValueExpressionPtr IsNumeric(const ValueExpressionPtr& testValue) const;
+    ValueExpressionPtr LastIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr Len(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Lower(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Max(const ExpressionCollectionPtr& arguments) const;
+    ValueExpressionPtr Min(const ExpressionCollectionPtr& arguments) const;
+    ValueExpressionPtr Now() const;
+    ValueExpressionPtr Power(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& exponentValue) const;
+    ValueExpressionPtr RegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
     ValueExpressionPtr RegExVal(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
-    ValueExpressionPtr SubString(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const;
+    ValueExpressionPtr Replace(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& replaceValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr Reverse(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Split(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& delimitersValue, const ValueExpressionPtr& valueIndex) const;
+    ValueExpressionPtr Sqrt(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr StartsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr StrCount(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr StrCmp(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& ignoreCase) const;
+    ValueExpressionPtr SubStr(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const;
     ValueExpressionPtr Trim(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr TrimLeft(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr TrimRight(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Upper(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr UtcNow() const;
 
     // Filter Expression Operator Implementations
     ValueExpressionPtr Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
@@ -293,59 +353,22 @@ private:
     ValueExpressionPtr LessThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
     ValueExpressionPtr GreaterThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
     ValueExpressionPtr GreaterThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
-    ValueExpressionPtr Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
-    ValueExpressionPtr NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const;
+    ValueExpressionPtr Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType, bool exactMatch = false) const;
+    ValueExpressionPtr NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType, bool exactMatch = false) const;
     ValueExpressionPtr IsNull(const ValueExpressionPtr& leftValue) const;
     ValueExpressionPtr IsNotNull(const ValueExpressionPtr& leftValue) const;
-    ValueExpressionPtr Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
-    ValueExpressionPtr NotLike(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
+    ValueExpressionPtr Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, bool exactMatch = false) const;
+    ValueExpressionPtr NotLike(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, bool exactMatch = false) const;
     ValueExpressionPtr And(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
     ValueExpressionPtr Or(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
 
     template<typename T>
-    static T Multiply(const T& leftValue, const T& rightValue);
+    static T Unary(const T& unaryValue, ExpressionUnaryType unaryOperation);
 
     template<typename T>
-    static T Divide(const T& leftValue, const T& rightValue);
+    static T UnaryFloat(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType);
 
-    template<typename T>
-    static T Modulus(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static T Add(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static T Subtract(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static T BitShiftLeft(const T& operandValue, int32_t shiftValue);
-
-    template<typename T>
-    static T BitShiftRight(const T& operandValue, int32_t shiftValue);
-
-    template<typename T>
-    static T BitwiseAnd(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static T BitwiseOr(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static bool LessThan(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static bool LessThanOrEqual(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static bool GreaterThan(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static bool GreaterThanOrEqual(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static bool Equal(const T& leftValue, const T& rightValue);
-
-    template<typename T>
-    static bool NotEqual(const T& leftValue, const T& rightValue);
+    static bool UnaryBool(bool unaryValue, ExpressionUnaryType unaryOperation);
 
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;

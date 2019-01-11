@@ -105,8 +105,10 @@ public:
     void SetTrackFilteredRows(bool trackFilteredRows);
     const std::vector<GSF::Data::DataRowPtr>& FilteredRows() const;
 
+    void enterFilterExpressionStatement(FilterExpressionSyntaxParser::FilterExpressionStatementContext*) override;
     void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
     void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
+    void enterExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
     void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
     void exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext*) override;
     void exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext*) override;
@@ -114,6 +116,7 @@ public:
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
     void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
 
+    static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
     static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
     static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression);
     static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);

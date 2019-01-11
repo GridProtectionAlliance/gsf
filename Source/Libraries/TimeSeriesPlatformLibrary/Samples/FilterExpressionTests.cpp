@@ -91,10 +91,18 @@ int main(int argc, char* argv[])
     cout << endl;
 
     FilterExpressionParserPtr parser;
+    MeasurementTableIDFieldsPtr activeMeasurementsIDFields = NewSharedPtr<MeasurementTableIDFields>();
+
+    activeMeasurementsIDFields->SignalIDFieldName = "SignalID";
+    activeMeasurementsIDFields->MeasurementKeyFieldName = "ID";
+    activeMeasurementsIDFields->PointTagFieldName = "PointTag";    
 
     // Test 1
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -104,6 +112,9 @@ int main(int argc, char* argv[])
     // Test 2
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'STAT'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -113,6 +124,10 @@ int main(int argc, char* argv[])
     // Test 3
     parser = NewSharedPtr<FilterExpressionParser>(";;{" + ToString(statID) + "};;;");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -122,6 +137,10 @@ int main(int argc, char* argv[])
     // Test 4
     parser = NewSharedPtr<FilterExpressionParser>(ToString(statID));
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -131,6 +150,10 @@ int main(int argc, char* argv[])
     // Test 5
     parser = NewSharedPtr<FilterExpressionParser>("'" + ToString(freqID) + "' ; ");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -140,6 +163,10 @@ int main(int argc, char* argv[])
     // Test 6
     parser = NewSharedPtr<FilterExpressionParser>("{" + ToString(statID) + "}; {" + ToString(freqID) + "}; {" + ToString(statID) + "};");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -150,6 +177,10 @@ int main(int argc, char* argv[])
     // Test 7
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; '" + ToString(statID) + "'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -162,6 +193,10 @@ int main(int argc, char* argv[])
     // Test 8
     parser = NewSharedPtr<FilterExpressionParser>(ToString(freqID) + "; FILTER ActiveMeasurements WHERE SignalType = 'STAT'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -172,6 +207,10 @@ int main(int argc, char* argv[])
     // Test 9
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; FILTER ActiveMeasurements WHERE SignalType = 'STAT' ORDER BY SignalID");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -182,6 +221,10 @@ int main(int argc, char* argv[])
     // Test 10
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ' OR SignalType = 'STAT'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -194,6 +237,10 @@ int main(int argc, char* argv[])
     // Test 11
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ' OR SignalType = 'STAT' ORDER BY SignalType");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -206,6 +253,10 @@ int main(int argc, char* argv[])
     // Test 12
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'STAT' OR SignalType = 'FREQ' ORDER BY SignalType DESC");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -218,6 +269,10 @@ int main(int argc, char* argv[])
     // Test 13
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalID = '" + ToString(freqID) + "'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -227,6 +282,10 @@ int main(int argc, char* argv[])
     // Test 14
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalID = " + ToString(freqID) + " OR SignalID = {" + ToString(statID) + "}");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -239,6 +298,10 @@ int main(int argc, char* argv[])
     // Test 15
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalID = {" + ToString(statID) + "} OR SignalID = '" + ToString(freqID) + "' ORDER BY SignalType");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -251,6 +314,10 @@ int main(int argc, char* argv[])
     // Test 16
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalID = {" + ToString(statID) + "} OR SignalID = '" + ToString(freqID) + "' ORDER BY SignalType; " + ToString(statID));
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -264,6 +331,10 @@ int main(int argc, char* argv[])
     // Test 17
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE True");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -274,6 +345,10 @@ int main(int argc, char* argv[])
     // Test 18
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE IsNull(NULL, False) OR Coalesce(Null, true)");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -284,6 +359,10 @@ int main(int argc, char* argv[])
     // Test 19
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE IIf(IsNull(NULL, False) OR Coalesce(Null, true), Len(SignalType) == 4, false)");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -294,6 +373,10 @@ int main(int argc, char* argv[])
     // Test 20
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType IS NOT NULL");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -304,6 +387,10 @@ int main(int argc, char* argv[])
     // Test 21
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SubStr(Coalesce(Trim(SignalType), 'OTHER'), 0, 2)) = 2");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -314,6 +401,10 @@ int main(int argc, char* argv[])
     // Test 22
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE LEN(SignalTYPE) > 3.5");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -324,6 +415,10 @@ int main(int argc, char* argv[])
     // Test 23
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SignalType) & 4 == 4");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -334,6 +429,10 @@ int main(int argc, char* argv[])
     // Test 24
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE RegExVal('ST.+', SignalType) == 'STAT'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -341,8 +440,12 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 25
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE IsRegExMatch('FR.+', SignalType)");
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE RegExMatch('FR.+', SignalType)");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -352,6 +455,10 @@ int main(int argc, char* argv[])
     // Test 26
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType IN ('FREQ', 'STAT') ORDER BY SignalType");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -362,6 +469,10 @@ int main(int argc, char* argv[])
     // Test 27
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalID IN ({" + ToString(statID) + "}, {" + ToString(freqID) + "})");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -372,6 +483,10 @@ int main(int argc, char* argv[])
     // Test 28
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType LIKE 'ST%'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -381,6 +496,10 @@ int main(int argc, char* argv[])
     // Test 29
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType LIKE '*EQ'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -390,6 +509,10 @@ int main(int argc, char* argv[])
     // Test 30
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType LIKE '*TA%'");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 1);
@@ -399,6 +522,10 @@ int main(int argc, char* argv[])
     // Test 31
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE -Len(SignalType) <= 0");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -409,6 +536,10 @@ int main(int argc, char* argv[])
     // Test 32 - number converted to string and compared
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType == 0");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().empty());
@@ -417,6 +548,10 @@ int main(int argc, char* argv[])
     // Test 33 - number converted to string and compared
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType > 99");
     parser->SetDataSet(dataSet);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredRows(false);
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -427,7 +562,9 @@ int main(int argc, char* argv[])
     // Test 34
     parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SignalType) / 2 = 2");
     parser->SetDataSet(dataSet);
-    parser->SetTrackFilteredRows(true);
+    parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
+    parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
+    parser->SetTrackFilteredSignalIDs(true);
     Evaluate(parser);
 
     assert(parser->FilteredSignalIDs().size() == 2);
@@ -515,16 +652,18 @@ int main(int argc, char* argv[])
         assert(static_cast<string>(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").Value).empty());
         cout << "Test " << ++test << " succeeded..." << endl;
 
-        MeasurementTableIDFieldsPtr measurementTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
-        measurementTableIDFields->SignalIDFieldName = "SignalID";
-        measurementTableIDFields->MeasurementKeyFieldName = "ID";
-        measurementTableIDFields->PointTagFieldName = "PointTag";
+        MeasurementTableIDFieldsPtr measurementDetailIDFields = NewSharedPtr<MeasurementTableIDFields>();
+        measurementDetailIDFields->SignalIDFieldName = "SignalID";
+        measurementDetailIDFields->MeasurementKeyFieldName = "ID";
+        measurementDetailIDFields->PointTagFieldName = "PointTag";
 
         // Test 37
         parser = NewSharedPtr<FilterExpressionParser>("FILTER MeasurementDetail WHERE SignalAcronym = 'FREQ'");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementDetailIDFields);
         parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -533,8 +672,10 @@ int main(int argc, char* argv[])
         // Test 38
         parser = NewSharedPtr<FilterExpressionParser>("FILTER TOP 8 MeasurementDetail WHERE SignalAcronym = 'STAT'");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementDetailIDFields);
         parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 8);
@@ -543,8 +684,10 @@ int main(int argc, char* argv[])
         // Test 39
         parser = NewSharedPtr<FilterExpressionParser>("FILTER TOP 0 MeasurementDetail WHERE SignalAcronym = 'STAT'");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementDetailIDFields);
         parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().empty());
@@ -553,23 +696,27 @@ int main(int argc, char* argv[])
         // Test 40
         parser = NewSharedPtr<FilterExpressionParser>("FILTER TOP -1 MeasurementDetail WHERE SignalAcronym = 'STAT'");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementTableIDFields);
+        parser->SetMeasurementTableIDFields("MeasurementDetail", measurementDetailIDFields);
         parser->SetPrimaryMeasurementTableName("MeasurementDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(!parser->FilteredSignalIDs().empty());
         cout << "Test " << ++test << " succeeded..." << endl;
 
-        MeasurementTableIDFieldsPtr deviceTableIDFields = NewSharedPtr<MeasurementTableIDFields>();
-        deviceTableIDFields->SignalIDFieldName = "UniqueID";
-        deviceTableIDFields->MeasurementKeyFieldName = "Name";
-        deviceTableIDFields->PointTagFieldName = "Acronym";
+        MeasurementTableIDFieldsPtr deviceDetailIDFields = NewSharedPtr<MeasurementTableIDFields>();
+        deviceDetailIDFields->SignalIDFieldName = "UniqueID";
+        deviceDetailIDFields->MeasurementKeyFieldName = "Name";
+        deviceDetailIDFields->PointTagFieldName = "Acronym";
 
         // Test 41
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Longitude, 'System.Int32') = -89");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -578,8 +725,10 @@ int main(int argc, char* argv[])
         // Test 42
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(latitude, 'int16') = 35");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -588,8 +737,10 @@ int main(int argc, char* argv[])
         // Test 43
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Latitude, 'Int32') = '35'");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -598,8 +749,10 @@ int main(int argc, char* argv[])
         // Test 44
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Convert(Latitude, 'Int32'), 'String') = 35");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -608,8 +761,10 @@ int main(int argc, char* argv[])
         // Test 45
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Convert(Latitude, 'single') >= 35");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -618,8 +773,10 @@ int main(int argc, char* argv[])
         // Test 46 - test decimal comparison
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Longitude < 0.0");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -628,8 +785,10 @@ int main(int argc, char* argv[])
         // Test 47
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Acronym IN ('Test', 'Shelby')");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -638,8 +797,10 @@ int main(int argc, char* argv[])
         // Test 48
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Acronym NOT IN ('Test', 'Apple')");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -648,8 +809,10 @@ int main(int argc, char* argv[])
         // Test 49 - unary negative
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE NOT (Acronym IN ('Shelby', 'Apple'))");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().empty());
@@ -658,8 +821,10 @@ int main(int argc, char* argv[])
         // Test 50 - unary positive
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE !Acronym IN ('Test', 'Apple')");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
@@ -668,13 +833,215 @@ int main(int argc, char* argv[])
         // Test 51 - unary positive (negating negative)
         parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE NOT Acronym NOT IN ('Shelby', 'Apple')");
         parser->SetDataSet(dataSet);
-        parser->SetMeasurementTableIDFields("DeviceDetail", deviceTableIDFields);
+        parser->SetMeasurementTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        parser->SetTrackFilteredRows(false);
+        parser->SetTrackFilteredSignalIDs(true);
         Evaluate(parser);
 
         assert(parser->FilteredSignalIDs().size() == 1);
         cout << "Test " << ++test << " succeeded..." << endl;
+
+        // Test 52
+        parser = NewSharedPtr<FilterExpressionParser>("Acronym LIKE 'Shel%'");
+        parser->SetDataSet(dataSet);
+        parser->SetPrimaryMeasurementTableName("DeviceDetail");
+        Evaluate(parser);
+
+        assert(parser->FilteredRows().size() == 1);
+        cout << "Test " << ++test << " succeeded..." << endl;
     }
+    // loops 2 times with last test @ 70
+
+    cout << endl << "Basic Expression Tests..." << endl << endl;
+
+    // Test 71
+    vector<DataRowPtr> dataRows = FilterExpressionParser::Select(dataSet->Table("MeasurementDetail"), "SignalAcronym = 'STAT'");
+
+    assert(dataRows.size() == 116);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 72
+    dataRows = FilterExpressionParser::Select(dataSet->Table("PhasorDetail"), "Type = 'V'");
+
+    assert(dataRows.size() == 2);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 73
+    ValueExpressionPtr valueExpression = FilterExpressionParser::Evaluate(dataSet->Table("SchemaVersion")->Row(0), "VersionNumber > 0");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 74
+    dataRow = dataSet->Table("DeviceDetail")->Row(0);
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID % 2 = 0 AND FramesPerSecond % 4 <> 2 OR AccessID % 1 = 0");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 75
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID % 2 = 0 AND (FramesPerSecond % 4 <> 2 OR -AccessID % 1 = 0)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 76
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID % 2 = 0 AND (FramesPerSecond % 4 <> 2 AND AccessID % 1 = 0)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 77
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID % 2 >= 0 || (FramesPerSecond % 4 <> 2 AND AccessID % 1 = 0)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 78
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID % 2 = 0 OR FramesPerSecond % 4 != 2 && AccessID % 1 == 0");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 79
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "!AccessID % 2 = 0 || FramesPerSecond % 4 = 2 && AccessID % 1 == 0");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 80
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT AccessID % 2 = 0 OR FramesPerSecond % 4 >> 1 = 1 && AccessID % 1 == 0");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 81
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT AccessID % 2 = 0 OR FramesPerSecond % 4 >> 1 = 1 && AccessID % 3 << 1 & 4 >= 4");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 82
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "OriginalSource IS NULL");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 83
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "ParentAcronym IS NOT NULL");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 84
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT ParentAcronym IS NULL && Len(parentAcronym) == 0");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 85
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "-FramesPerSecond");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == -30);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 86
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "~FramesPerSecond");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == -31);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 87
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "~FramesPerSecond * -1 - 1 << -2");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == -2147483648LL);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 88
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT True");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 89
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "!True");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 90
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "~True");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 91
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "Len(IsNull(OriginalSource, 'A')) = 1");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 92
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExMatch('SH', Acronym)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 93
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExMatch('SH', Name)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 94
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExMatch('S[hH]', Name) && RegExMatch('S[hH]', Acronym)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 95
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExVal('Sh\\w+', Name)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::String);
+    assert(IsEqual(valueExpression->ValueAsString(), "Shelby", false));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 96
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "SubStr(RegExVal('Sh\\w+', Name), 2) == 'ElbY'");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 97
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "SubStr(RegExVal('Sh\\w+', Name), 3, 2) == 'lB'");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;

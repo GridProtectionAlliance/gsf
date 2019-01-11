@@ -53,11 +53,11 @@ namespace LibraryTester
             // will have access to assembly. Only a single call per assembly is needed.
 
             DataSet dataSet = new DataSet();
-            dataSet.ReadXml(@"C:\Users\rcarroll\Desktop\Metadata.xml");
+            dataSet.ReadXml(@"..\..\..\TimeSeries Platform Library Samples\FilterExpressionTests\MetadataSample1.xml");
 
             DataTable deviceDetail = dataSet.Tables["DeviceDetail"];
 
-            DataColumn testColumn = new DataColumn("Test", typeof(int), "1 % false");
+            DataColumn testColumn = new DataColumn("Test", typeof(bool), "AccessID % 2 = 0 OR FramesPerSecond % 4 <> 2 AND AccessID % 1 = 0");
 
             deviceDetail.Columns.Add(testColumn);
 

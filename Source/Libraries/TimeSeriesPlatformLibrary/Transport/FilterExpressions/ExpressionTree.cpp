@@ -26,9 +26,23 @@
 #include <utility>
 
 using namespace std;
+using namespace boost::posix_time;
 using namespace GSF::Data;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
+
+#define isEqual GSF::TimeSeries::IsEqual
+#define startsWith GSF::TimeSeries::StartsWith
+#define endsWith GSF::TimeSeries::EndsWith
+#define contains GSF::TimeSeries::Contains
+#define compare GSF::TimeSeries::Compare
+#define indexOf GSF::TimeSeries::IndexOf
+#define replace GSF::TimeSeries::Replace
+#define toUpper GSF::TimeSeries::ToUpper
+#define toLower GSF::TimeSeries::ToLower
+#define trim GSF::TimeSeries::Trim
+#define trimRight GSF::TimeSeries::TrimRight
+#define trimLeft GSF::TimeSeries::TrimLeft
 
 const int32_t GSF::TimeSeries::Transport::ExpressionValueTypeLength = static_cast<int32_t>(ExpressionValueType::Undefined) + 1;
 
@@ -78,7 +92,9 @@ const char* GSF::TimeSeries::Transport::ExpressionOperatorTypeAcronym[] =
     ">",
     ">=",
     "=",
+    "===",
     "<>",
+    "!==",
     "IS NULL",
     "IS NOT NULL",
     "LIKE",
@@ -121,7 +137,7 @@ bool Transport::IsNumericType(ExpressionValueType valueType)
 }
 
 ExpressionTreeException::ExpressionTreeException(string message) noexcept :
-    m_message(move(message))
+    m_message(std::move(message))
 {
 }
 
@@ -139,7 +155,7 @@ Expression::~Expression() = default;
 
 ValueExpression::ValueExpression(ExpressionValueType valueType, Object value, bool valueIsNullable) :  // NOLINT(modernize-pass-by-value)
     Expression(ExpressionType::Value),
-    Value(value),
+    Value(std::move(value)),
     ValueType(valueType),
     ValueIsNullable(valueIsNullable)
 {
@@ -389,11 +405,12 @@ OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, Expr
 {
 }
 
-InListExpression::InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword) :
+InListExpression::InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword, bool exactMatch) :
     Expression(ExpressionType::InList),
     Value(std::move(value)),
     Arguments(std::move(arguments)),
-    HasNotKeyword(hasNotKeyword)
+    HasNotKeyword(hasNotKeyword),
+    ExactMatch(exactMatch)
 {
 }
 
@@ -450,15 +467,15 @@ ValueExpressionPtr ExpressionTree::EvaluateUnary(const ExpressionPtr& expression
     switch (unaryValueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, ApplyBooleanUnaryOperation(unaryValue->ValueAsBoolean(), unaryExpression->UnaryType));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, UnaryBool(unaryValue->ValueAsBoolean(), unaryExpression->UnaryType));
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, ApplyIntegerUnaryOperation<int32_t>(unaryValue->ValueAsInt32(), unaryExpression->UnaryType));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, Unary<int32_t>(unaryValue->ValueAsInt32(), unaryExpression->UnaryType));
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, ApplyIntegerUnaryOperation<int64_t>(unaryValue->ValueAsInt64(), unaryExpression->UnaryType));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, Unary<int64_t>(unaryValue->ValueAsInt64(), unaryExpression->UnaryType));
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, ApplyFloatingPointUnaryOperation<decimal_t>(unaryValue->ValueAsDecimal(), unaryExpression->UnaryType, unaryValueType));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, UnaryFloat<decimal_t>(unaryValue->ValueAsDecimal(), unaryExpression->UnaryType, unaryValueType));
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, ApplyFloatingPointUnaryOperation<float64_t>(unaryValue->ValueAsDouble(), unaryExpression->UnaryType, unaryValueType));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, UnaryFloat<float64_t>(unaryValue->ValueAsDouble(), unaryExpression->UnaryType, unaryValueType));
         case ExpressionValueType::String:
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
@@ -578,6 +595,7 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& expressio
     const InListExpressionPtr inListExpression = CastSharedPtr<InListExpression>(expression);
     const ValueExpressionPtr inListValue = Evaluate(inListExpression->Value);
     const bool hasNotKeyword = inListExpression->HasNotKeyword;
+    const bool exactMatch = inListExpression->ExactMatch;
 
     // If in list test value is Null, result is Null
     if (inListValue->IsNull())
@@ -589,7 +607,7 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& expressio
     {
         const ValueExpressionPtr argumentValue = Evaluate(inListExpression->Arguments->at(i));
         const ExpressionValueType valueType = DeriveComparisonOperationValueType(ExpressionOperatorType::Equal, inListValue->ValueType, argumentValue->ValueType);
-        const ValueExpressionPtr result = Equal(inListValue, argumentValue, valueType);
+        const ValueExpressionPtr result = Equal(inListValue, argumentValue, valueType, exactMatch);
 
         if (result->ValueAsBoolean())
             return hasNotKeyword ? ExpressionTree::False : ExpressionTree::True;
@@ -605,50 +623,151 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
 
     switch (functionExpression->FunctionType)
     {
+        case ExpressionFunctionType::Abs:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Ceiling:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
         case ExpressionFunctionType::Coalesce:
-            if (arguments->size() != 2)
-                throw ExpressionTreeException("\"Coalesce\"/\"IsNull\" function expects 2 arguments, received " + ToString(arguments->size()));
+            if (arguments->size() < 2)
+                throw ExpressionTreeException("\"Coalesce\" function expects at least 2 arguments, received " + ToString(arguments->size()));
 
-            return Coalesce(Evaluate(arguments->at(0)), Evaluate(arguments->at(1)));
+            // Not pre-evaluating Coalesce arguments - arguments will be evaluated only up to first non-null value
+            return Coalesce(arguments);
         case ExpressionFunctionType::Convert:
             if (arguments->size() != 2)
                 throw ExpressionTreeException("\"Convert\" function expects 2 arguments, received " + ToString(arguments->size()));
 
             return Convert(Evaluate(arguments->at(0)), Evaluate(arguments->at(1), ExpressionValueType::String));
+        case ExpressionFunctionType::Contains:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::DateAdd:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::DateDiff:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::DatePart:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::EndsWith:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Floor:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
         case ExpressionFunctionType::IIf:
             if (arguments->size() != 3)
                 throw ExpressionTreeException("\"IIf\" function expects 3 arguments, received " + ToString(arguments->size()));
 
             // Not pre-evaluating IIf result value arguments - only evaluating desired path
             return IIf(Evaluate(arguments->at(0), ExpressionValueType::Boolean), arguments->at(1), arguments->at(2));
-        case ExpressionFunctionType::IsRegExMatch:
+        case ExpressionFunctionType::IndexOf:
+        case ExpressionFunctionType::IsDate:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::IsInteger:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::IsGuid:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::IsNull:
             if (arguments->size() != 2)
-                throw ExpressionTreeException("\"IsRegExMatch\" function expects 2 arguments, received " + ToString(arguments->size()));
+                throw ExpressionTreeException("\"IsNull\" function expects 2 arguments, received " + ToString(arguments->size()));
 
-            return IsRegExMatch(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String));
+            return IsNull(Evaluate(arguments->at(0)), Evaluate(arguments->at(1)));
+        case ExpressionFunctionType::IsNumeric:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::LastIndexOf:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
         case ExpressionFunctionType::Len:
             if (arguments->size() != 1)
                 throw ExpressionTreeException("\"Len\" function expects 1 argument, received " + ToString(arguments->size()));
 
             return Len(Evaluate(arguments->at(0), ExpressionValueType::String));
+        case ExpressionFunctionType::Lower:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Max:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Min:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Now:
+            if (!arguments->empty())
+                throw ExpressionTreeException("\"Now\" function expects 0 arguments, received " + ToString(arguments->size()));
+
+            return Now();
+        case ExpressionFunctionType::Power:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::RegExMatch:
+            if (arguments->size() != 2)
+                throw ExpressionTreeException("\"RegExMatch\" function expects 2 arguments, received " + ToString(arguments->size()));
+
+            return RegExMatch(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String));
         case ExpressionFunctionType::RegExVal:
             if (arguments->size() != 2)
                 throw ExpressionTreeException("\"RegExVal\" function expects 2 arguments, received " + ToString(arguments->size()));
 
             return RegExVal(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String));
-        case ExpressionFunctionType::SubString:
+        case ExpressionFunctionType::Replace:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Reverse:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Round:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Split:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Sqrt:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::StartsWith:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::StrCount:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::StrCmp:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::SubStr:
             if (arguments->size() < 2 || arguments->size() > 3)
-                throw ExpressionTreeException("\"SubString\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+                throw ExpressionTreeException("\"SubStr\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
 
             if (arguments->size() == 2)
-                return SubString(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::Int32), NullValue(ExpressionValueType::Int32));
+                return SubStr(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::Int32), NullValue(ExpressionValueType::Int32));
 
-            return SubString(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::Int32), Evaluate(arguments->at(2), ExpressionValueType::Int32));
+            return SubStr(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::Int32), Evaluate(arguments->at(2), ExpressionValueType::Int32));
         case ExpressionFunctionType::Trim:
             if (arguments->size() != 1)
                 throw ExpressionTreeException("\"Trim\" function expects 1 argument, received " + ToString(arguments->size()));
 
             return Trim(Evaluate(arguments->at(0), ExpressionValueType::String));
+        case ExpressionFunctionType::TrimLeft:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::TrimRight:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::Upper:
+            // TODO: Develop implementation
+            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+        case ExpressionFunctionType::UtcNow:
+            if (!arguments->empty())
+                throw ExpressionTreeException("\"UtcNow\" function expects 0 arguments, received " + ToString(arguments->size()));
+
+            return UtcNow();
         default:
             throw ExpressionTreeException("Unexpected function type encountered");
     }
@@ -691,68 +810,30 @@ ValueExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& express
             return GreaterThanOrEqual(leftValue, rightValue, valueType);
         case ExpressionOperatorType::Equal:
             return Equal(leftValue, rightValue, valueType);
+        case ExpressionOperatorType::EqualExactMatch:
+            return Equal(leftValue, rightValue, valueType, true);
         case ExpressionOperatorType::NotEqual:
             return NotEqual(leftValue, rightValue, valueType);
+        case ExpressionOperatorType::NotEqualExactMatch:
+            return NotEqual(leftValue, rightValue, valueType, true);
         case ExpressionOperatorType::IsNull:
             return IsNull(leftValue);
         case ExpressionOperatorType::IsNotNull:
             return IsNotNull(leftValue);
         case ExpressionOperatorType::Like:
             return Like(leftValue, rightValue);
+        case ExpressionOperatorType::LikeExactMatch:
+            return Like(leftValue, rightValue, true);
         case ExpressionOperatorType::NotLike:
             return NotLike(leftValue, rightValue);
+        case ExpressionOperatorType::NotLikeExactMatch:
+            return NotLike(leftValue, rightValue, true);
         case ExpressionOperatorType::And:
             return And(leftValue, rightValue);
         case ExpressionOperatorType::Or:
             return Or(leftValue, rightValue);
         default:
             throw ExpressionTreeException("Unexpected operator type encountered");
-    }
-}
-
-bool ExpressionTree::ApplyBooleanUnaryOperation(bool unaryValue, ExpressionUnaryType unaryOperation)
-{
-    switch (unaryOperation)
-    {
-        case ExpressionUnaryType::Not:
-            return !unaryValue;
-        case ExpressionUnaryType::Plus:
-        case ExpressionUnaryType::Minus:
-            throw ExpressionTreeException("Cannot apply unary \"" + string(EnumName(unaryOperation)) + "\" operator to \"" + string(EnumName(ExpressionValueType::Boolean)) + "\"");
-        default:
-            throw ExpressionTreeException("Unexpected unary type encountered");
-    }
-}
-
-template<typename T>
-T ExpressionTree::ApplyIntegerUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation)
-{
-    switch (unaryOperation)
-    {
-        case ExpressionUnaryType::Plus:
-            return +unaryValue;
-        case ExpressionUnaryType::Minus:
-            return -unaryValue;
-        case ExpressionUnaryType::Not:
-            return ~unaryValue;
-        default:
-            throw ExpressionTreeException("Unexpected unary type encountered");
-    }
-}
-
-template<typename T>
-T ExpressionTree::ApplyFloatingPointUnaryOperation(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType)
-{
-    switch (unaryOperation)
-    {
-        case ExpressionUnaryType::Plus:
-            return +unaryValue;
-        case ExpressionUnaryType::Minus:
-            return -unaryValue;
-        case ExpressionUnaryType::Not:
-            throw ExpressionTreeException("Cannot apply unary \"~\" operator to \"" + string(EnumName(unaryValueType)) + "\"");
-        default:
-            throw ExpressionTreeException("Unexpected unary type encountered");
     }
 }
 
@@ -774,7 +855,9 @@ ExpressionValueType ExpressionTree::DeriveOperationValueType(ExpressionOperatorT
         case ExpressionOperatorType::GreaterThan:
         case ExpressionOperatorType::GreaterThanOrEqual:
         case ExpressionOperatorType::Equal:
+        case ExpressionOperatorType::EqualExactMatch:
         case ExpressionOperatorType::NotEqual:
+        case ExpressionOperatorType::NotEqualExactMatch:
             return DeriveComparisonOperationValueType(operationType, leftValueType, rightValueType);
         case ExpressionOperatorType::And:
         case ExpressionOperatorType::Or:
@@ -809,6 +892,8 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
                 case ExpressionValueType::Double:
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
+                    if (operationType == ExpressionOperatorType::Add)
+                        return ExpressionValueType::String;
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Boolean\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -828,6 +913,8 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
                 case ExpressionValueType::Double:
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
+                    if (operationType == ExpressionOperatorType::Add)
+                        return ExpressionValueType::String;
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Int32\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -846,6 +933,8 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
                 case ExpressionValueType::Double:
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
+                    if (operationType == ExpressionOperatorType::Add)
+                        return ExpressionValueType::String;
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Int64\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -863,6 +952,8 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
                 case ExpressionValueType::Double:
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
+                    if (operationType == ExpressionOperatorType::Add)
+                        return ExpressionValueType::String;
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Decimal\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -879,6 +970,8 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
                 case ExpressionValueType::Double:
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
+                    if (operationType == ExpressionOperatorType::Add)
+                        return ExpressionValueType::String;
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Double\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -886,6 +979,8 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
                     throw ExpressionTreeException("Unexpected expression value type encountered");
             }
         case ExpressionValueType::String:
+            if (operationType == ExpressionOperatorType::Add)
+                return ExpressionValueType::String;
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
             throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"" + string(EnumName(leftValueType)) + "\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -1101,16 +1196,32 @@ ExpressionValueType ExpressionTree::DeriveBooleanOperationValueType(ExpressionOp
     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"" + string(EnumName(leftValueType)) + "\" and \"" + string(EnumName(rightValueType)) + "\"");
 }
 
-const ValueExpressionPtr& ExpressionTree::Coalesce(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue)
+ValueExpressionPtr ExpressionTree::Abs(const ValueExpressionPtr& sourceValue) const
 {
-    if (testValue->ValueType != defaultValue->ValueType)
-        throw ExpressionTreeException("\"Coalesce\"/\"IsNull\" function arguments must be the same type");
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
 
-    if (defaultValue->IsNull())
-        throw ExpressionTreeException("\"Coalesce\"/\"IsNull\" default value, second argument, is null");
+ValueExpressionPtr ExpressionTree::Ceiling(const ValueExpressionPtr& sourceValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
 
-    if (testValue->IsNull())
-        return defaultValue;
+ValueExpressionPtr ExpressionTree::Coalesce(const ExpressionCollectionPtr& arguments) const
+{
+    ValueExpressionPtr testValue = Evaluate(arguments->at(0));
+
+    if (!testValue->IsNull())
+        return testValue;
+
+    for (size_t i = 1; i < arguments->size(); i++)
+    {
+        ValueExpressionPtr listValue = Evaluate(arguments->at(i));
+
+        if (!listValue->IsNull())
+            return listValue;
+    }
 
     return testValue;
 }
@@ -1126,7 +1237,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     string targetTypeName = targetType->ValueAsString();
 
     // Remove any "System." prefix: 01234567
-    if (StartsWith(targetTypeName, "System.") && targetTypeName.size() > 7)
+    if (startsWith(targetTypeName, "System.") && targetTypeName.size() > 7)
         targetTypeName = targetTypeName.substr(7);
 
     ExpressionValueType targetValueType = ExpressionValueType::Undefined;
@@ -1134,7 +1245,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
 
     for (int32_t i = 0; i < ExpressionValueTypeLength; i++)
     {
-        if (IsEqual(targetTypeName, ExpressionValueTypeAcronym[i]))
+        if (isEqual(targetTypeName, ExpressionValueTypeAcronym[i]))
         {
             targetValueType = static_cast<ExpressionValueType>(i);
             foundValueType = true;
@@ -1145,17 +1256,17 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     if (!foundValueType)
     {
         // Handle a few common exceptions
-        if (IsEqual(targetTypeName, "Single") || StartsWith(targetTypeName, "float"))
+        if (isEqual(targetTypeName, "Single") || startsWith(targetTypeName, "float"))
         {
             targetValueType = ExpressionValueType::Double;
             foundValueType = true;
         }
-        else if (IsEqual(targetTypeName, "bool"))
+        else if (isEqual(targetTypeName, "bool"))
         {
             targetValueType = ExpressionValueType::Boolean;
             foundValueType = true;
         }
-        else if (StartsWith(targetTypeName, "Int") || StartsWith(targetTypeName, "UInt"))
+        else if (startsWith(targetTypeName, "Int") || startsWith(targetTypeName, "UInt"))
         {
             targetValueType = ExpressionValueType::Int64;
             foundValueType = true;
@@ -1168,6 +1279,42 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     return Convert(sourceValue, targetValueType);
 }
 
+ValueExpressionPtr ExpressionTree::Contains(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& addValue, const ValueExpressionPtr& intervalType) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::DateDiff(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& intervalType) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& intervalType) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::EndsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::Floor(const ExpressionCollectionPtr& arguments) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
 ValueExpressionPtr ExpressionTree::IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const
 {
     if (testValue->ValueType != ExpressionValueType::Boolean)
@@ -1177,9 +1324,65 @@ ValueExpressionPtr ExpressionTree::IIf(const ValueExpressionPtr& testValue, cons
     return testValue->ValueAsBoolean() ? Evaluate(leftResultValue) : Evaluate(rightResultValue);
 }
 
-ValueExpressionPtr ExpressionTree::IsRegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const
+ValueExpressionPtr ExpressionTree::IndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    return EvaluateRegEx("IsRegExMatch", regexValue, testValue, false);
+    //if (sourceValue->ValueType != ExpressionValueType::String)
+    //    throw ExpressionTreeException("\"IndexOf\" function source value, first argument, must be a string");
+
+    //// If source value is Null, result is Null
+    //if (sourceValue->IsNull())
+    //    return NullValue(ExpressionValueType::String);
+
+    //const string sourceText = sourceValue->ValueAsString();
+
+    //return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, indexOf(sourceText));
+
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::IsDate(const ValueExpressionPtr& testValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::IsInteger(const ValueExpressionPtr& testValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::IsGuid(const ValueExpressionPtr& testValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::IsNull(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
+{
+    if (testValue->ValueType != defaultValue->ValueType)
+        throw ExpressionTreeException("\"IsNull\" function arguments must be the same type");
+
+    if (defaultValue->IsNull())
+        throw ExpressionTreeException("\"IsNull\" default value, second argument, is null");
+
+    if (testValue->IsNull())
+        return defaultValue;
+
+    return testValue;
+}
+
+ValueExpressionPtr ExpressionTree::IsNumeric(const ValueExpressionPtr& testValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::LastIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
 }
 
 ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) const
@@ -1196,28 +1399,112 @@ ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) co
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, static_cast<int32_t>(sourceText.size()));
 }
 
+ValueExpressionPtr ExpressionTree::Lower(const ValueExpressionPtr& sourceValue) const
+{
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Lower\" function source value, first argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::String);
+
+    const string sourceText = sourceValue->ValueAsString();
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, toLower(sourceText));
+}
+
+ValueExpressionPtr ExpressionTree::Max(const ExpressionCollectionPtr& arguments) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::Min(const ExpressionCollectionPtr& arguments) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::Now() const
+{
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, to_time_t(second_clock::local_time()));
+}
+
+ValueExpressionPtr ExpressionTree::Power(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& exponentValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::RegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const
+{
+    return EvaluateRegEx("RegExMatch", regexValue, testValue, false);
+}
+
 ValueExpressionPtr ExpressionTree::RegExVal(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const
 {
     return EvaluateRegEx("RegExVal", regexValue, testValue, true);
 }
 
-ValueExpressionPtr ExpressionTree::SubString(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const
+ValueExpressionPtr ExpressionTree::Replace(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& replaceValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::Reverse(const ValueExpressionPtr& sourceValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::Split(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& delimitersValue, const ValueExpressionPtr& valueIndex) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::Sqrt(const ValueExpressionPtr& sourceValue) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::StartsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::StrCount(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::StrCmp(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& ignoreCase) const
+{
+    // TODO: Develop implementation
+    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+}
+
+ValueExpressionPtr ExpressionTree::SubStr(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const
 {
     if (sourceValue->ValueType != ExpressionValueType::String)
-        throw ExpressionTreeException("\"SubString\" function source value, first argument, must be a string");
+        throw ExpressionTreeException("\"SubStr\" function source value, first argument, must be a string");
 
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::String);
 
     if (!IsIntegerType(indexValue->ValueType))
-        throw ExpressionTreeException("\"SubString\" function index value, second argument, must be an integer");
+        throw ExpressionTreeException("\"SubStr\" function index value, second argument, must be an integer");
 
     if (!IsIntegerType(lengthValue->ValueType))
-        throw ExpressionTreeException("\"SubString\" function length value, third argument, must be an integer");
+        throw ExpressionTreeException("\"SubStr\" function length value, third argument, must be an integer");
 
     if (indexValue->IsNull())
-        throw ExpressionTreeException("\"SubString\" function index value, second argument, is null");
+        throw ExpressionTreeException("\"SubStr\" function index value, second argument, is null");
 
     int32_t index, length = -1;
 
@@ -1273,7 +1560,54 @@ ValueExpressionPtr ExpressionTree::Trim(const ValueExpressionPtr& sourceValue) c
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::TimeSeries::Trim(sourceText));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, trim(sourceText));
+}
+
+ValueExpressionPtr ExpressionTree::TrimLeft(const ValueExpressionPtr& sourceValue) const
+{
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"TrimLeft\" function source value, first argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::String);
+
+    const string sourceText = sourceValue->ValueAsString();
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, trimLeft(sourceText));
+}
+
+ValueExpressionPtr ExpressionTree::TrimRight(const ValueExpressionPtr& sourceValue) const
+{
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"TrimRight\" function source value, first argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::String);
+
+    const string sourceText = sourceValue->ValueAsString();
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, trimRight(sourceText));
+}
+
+ValueExpressionPtr ExpressionTree::Upper(const ValueExpressionPtr& sourceValue) const
+{
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Upper\" function source value, first argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::String);
+
+    const string sourceText = sourceValue->ValueAsString();
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, toUpper(sourceText));
+}
+
+ValueExpressionPtr ExpressionTree::UtcNow() const
+{
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, to_time_t(second_clock::universal_time()));
 }
 
 ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
@@ -1288,15 +1622,15 @@ ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue,
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Multiply<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() * right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, Multiply<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() * right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, Multiply<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() * right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, Multiply<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, left->ValueAsDecimal() * right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, Multiply<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, left->ValueAsDouble() * right->ValueAsDouble());
         case ExpressionValueType::String:
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
@@ -1332,13 +1666,13 @@ ValueExpressionPtr ExpressionTree::Divide(const ValueExpressionPtr& leftValue, c
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, result);
         }
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, Divide<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() / right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, Divide<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() / right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, Divide<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, left->ValueAsDecimal() / right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, Divide<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, left->ValueAsDouble() / right->ValueAsDouble());
         case ExpressionValueType::String:
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
@@ -1374,9 +1708,9 @@ ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, 
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, result);
         }
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, Modulus<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() % right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, Modulus<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() % right->ValueAsInt64());
         case ExpressionValueType::Decimal:
         case ExpressionValueType::Double:
         case ExpressionValueType::String:
@@ -1401,16 +1735,17 @@ ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, cons
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Add<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() + right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, Add<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() + right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, Add<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() + right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, Add<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, left->ValueAsDecimal() + right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, Add<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, left->ValueAsDouble() + right->ValueAsDouble());
         case ExpressionValueType::String:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::String, left->ValueAsString() + right->ValueAsString());
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
         case ExpressionValueType::Undefined:
@@ -1432,15 +1767,15 @@ ValueExpressionPtr ExpressionTree::Subtract(const ValueExpressionPtr& leftValue,
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Subtract<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() - right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, Subtract<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() - right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, Subtract<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() - right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, Subtract<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, left->ValueAsDecimal() - right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, Subtract<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, left->ValueAsDouble() - right->ValueAsDouble());
         case ExpressionValueType::String:
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
@@ -1483,11 +1818,11 @@ ValueExpressionPtr ExpressionTree::BitShiftLeft(const ValueExpressionPtr& leftVa
     switch (leftValue->ValueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, BitShiftLeft<bool>(leftValue->ValueAsBoolean(), shiftValue));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, leftValue->ValueAsBoolean() << shiftValue);
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, BitShiftLeft<int32_t>(leftValue->ValueAsInt32(), shiftValue));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, leftValue->ValueAsInt32() << shiftValue);
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, BitShiftLeft<int64_t>(leftValue->ValueAsInt64(), shiftValue));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, leftValue->ValueAsInt64() << shiftValue);
         case ExpressionValueType::Decimal:
         case ExpressionValueType::Double:
         case ExpressionValueType::String:
@@ -1532,11 +1867,11 @@ ValueExpressionPtr ExpressionTree::BitShiftRight(const ValueExpressionPtr& leftV
     switch (leftValue->ValueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, BitShiftRight<bool>(leftValue->ValueAsBoolean(), shiftValue));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, leftValue->ValueAsBoolean() >> shiftValue);
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, BitShiftRight<int32_t>(leftValue->ValueAsInt32(), shiftValue));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, leftValue->ValueAsInt32() >> shiftValue);
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, BitShiftRight<int64_t>(leftValue->ValueAsInt64(), shiftValue));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, leftValue->ValueAsInt64() >> shiftValue);
         case ExpressionValueType::Decimal:
         case ExpressionValueType::Double:
         case ExpressionValueType::String:
@@ -1561,11 +1896,11 @@ ValueExpressionPtr ExpressionTree::BitwiseAnd(const ValueExpressionPtr& leftValu
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, BitwiseAnd<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() & right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, BitwiseAnd<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() & right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, BitwiseAnd<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() & right->ValueAsInt64());
         case ExpressionValueType::Decimal:
         case ExpressionValueType::Double:
         case ExpressionValueType::String:
@@ -1590,11 +1925,11 @@ ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, BitwiseOr<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() | right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, BitwiseOr<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() | right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, BitwiseOr<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() | right->ValueAsInt64());
         case ExpressionValueType::Decimal:
         case ExpressionValueType::Double:
         case ExpressionValueType::String:
@@ -1619,21 +1954,21 @@ ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue,
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() < right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt32() < right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt64() < right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() < right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() < right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) < 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) < 0);
         case ExpressionValueType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() < right->ValueAsGuid());
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThan<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDateTime() < right->ValueAsDateTime());
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply less than \"<\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
@@ -1653,21 +1988,21 @@ ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& lef
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() <= right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt32() <= right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt64() <= right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() <= right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() <= right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) <= 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) <= 0);
         case ExpressionValueType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() <= right->ValueAsGuid());
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, LessThanOrEqual<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDateTime() <= right->ValueAsDateTime());
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply less than or equal \"<=\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
@@ -1687,21 +2022,21 @@ ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftVal
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() > right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt32() > right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt64() > right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() > right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() > right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) > 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) > 0);
         case ExpressionValueType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() > right->ValueAsGuid());
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThan<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDateTime() > right->ValueAsDateTime());
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply greater than \">\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
@@ -1721,21 +2056,21 @@ ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& 
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() >= right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt32() >= right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt64() >= right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() >= right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() >= right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Compare(left->ValueAsString(), right->ValueAsString()) >= 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) >= 0);
         case ExpressionValueType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() >= right->ValueAsGuid());
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GreaterThanOrEqual<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDateTime() >= right->ValueAsDateTime());
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply greater than or equal \">=\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
@@ -1743,7 +2078,7 @@ ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& 
     }
 }
 
-ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType, bool exactMatch) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -1755,21 +2090,21 @@ ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, co
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() == right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt32() == right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt64() == right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() == right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() == right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, IsEqual(left->ValueAsString(), right->ValueAsString()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, isEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
         case ExpressionValueType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() == right->ValueAsGuid());
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, Equal<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDateTime() == right->ValueAsDateTime());
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply equal \"=\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
@@ -1777,7 +2112,7 @@ ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, co
     }
 }
 
-ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType, bool exactMatch) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -1789,21 +2124,21 @@ ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue,
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<bool>(left->ValueAsBoolean(), right->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() != right->ValueAsBoolean());
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<int32_t>(left->ValueAsInt32(), right->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt32() != right->ValueAsInt32());
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<int64_t>(left->ValueAsInt64(), right->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsInt64() != right->ValueAsInt64());
         case ExpressionValueType::Decimal:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<decimal_t>(left->ValueAsDecimal(), right->ValueAsDecimal()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() != right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<float64_t>(left->ValueAsDouble(), right->ValueAsDouble()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() != right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !IsEqual(left->ValueAsString(), right->ValueAsString()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !isEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
         case ExpressionValueType::Guid:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<Guid>(left->ValueAsGuid(), right->ValueAsGuid()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() != right->ValueAsGuid());
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, NotEqual<time_t>(left->ValueAsDateTime(), right->ValueAsDateTime()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDateTime() != right->ValueAsDateTime());
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply not equal \"<>\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
@@ -1821,7 +2156,7 @@ ValueExpressionPtr ExpressionTree::IsNotNull(const ValueExpressionPtr& leftValue
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !leftValue->IsNull());
 }
 
-ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const
+ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, bool exactMatch) const
 {
     // If left value is Null, result is Null
     if (leftValue->IsNull())
@@ -1836,9 +2171,10 @@ ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, con
     const string leftOperand = leftValue->ValueAsString();
     const string rightOperand = rightValue->ValueAsString();
 
-    string testExpression = Replace(rightOperand, "%", "*", false);
-    const bool startsWithWildcard = StartsWith(testExpression, "*", false);
-    const bool endsWithWildcard = EndsWith(testExpression, "*", false);
+    string testExpression = replace(rightOperand, "%", "*", false);
+    const bool startsWithWildcard = startsWith(testExpression, "*", false);
+    const bool endsWithWildcard = endsWith(testExpression, "*", false);
+    const bool ignoreCase = !exactMatch;
 
     if (startsWithWildcard)
         testExpression = testExpression.substr(1);
@@ -1851,28 +2187,28 @@ ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, con
         return ExpressionTree::True;
 
     // Wild cards in the middle of the string are not supported
-    if (Contains(testExpression, "*", false))
+    if (contains(testExpression, "*", false))
         throw ExpressionTreeException("Right operand of \"LIKE\" expression \"" + rightOperand + "\" has an invalid pattern");
 
-    if (startsWithWildcard && EndsWith(leftOperand, testExpression))
+    if (startsWithWildcard && endsWith(leftOperand, testExpression, ignoreCase))
         return ExpressionTree::True;
 
-    if (endsWithWildcard && StartsWith(leftOperand, testExpression))
+    if (endsWithWildcard && startsWith(leftOperand, testExpression, ignoreCase))
         return ExpressionTree::True;
 
-    if (startsWithWildcard && endsWithWildcard && Contains(leftOperand, testExpression))
+    if (startsWithWildcard && endsWithWildcard && contains(leftOperand, testExpression, ignoreCase))
         return ExpressionTree::True;
 
     return ExpressionTree::False;
 }
 
-ValueExpressionPtr ExpressionTree::NotLike(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const
+ValueExpressionPtr ExpressionTree::NotLike(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, bool exactMatch) const
 {
     // If left value is Null, result is Null
     if (leftValue->IsNull())
         return NullValue(ExpressionValueType::Boolean);
 
-    const ValueExpressionPtr likeResult = Like(leftValue, rightValue);
+    const ValueExpressionPtr likeResult = Like(leftValue, rightValue, exactMatch);
 
     return likeResult->ValueAsBoolean() ? ExpressionTree::False : ExpressionTree::True;
 }
@@ -1907,94 +2243,50 @@ ValueExpressionPtr ExpressionTree::Or(const ValueExpressionPtr& leftValue, const
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left || right);
 }
 
-template <typename T>
-T ExpressionTree::Multiply(const T& leftValue, const T& rightValue)
+template<typename T>
+T ExpressionTree::Unary(const T& unaryValue, ExpressionUnaryType unaryOperation)
 {
-    return leftValue * rightValue;
+    switch (unaryOperation)
+    {
+        case ExpressionUnaryType::Plus:
+            return +unaryValue;
+        case ExpressionUnaryType::Minus:
+            return -unaryValue;
+        case ExpressionUnaryType::Not:
+            return ~unaryValue;
+        default:
+            throw ExpressionTreeException("Unexpected unary type encountered");
+    }
 }
 
-template <typename T>
-T ExpressionTree::Divide(const T& leftValue, const T& rightValue)
+template<typename T>
+T ExpressionTree::UnaryFloat(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType)
 {
-    return leftValue / rightValue;
+    switch (unaryOperation)
+    {
+        case ExpressionUnaryType::Plus:
+            return +unaryValue;
+        case ExpressionUnaryType::Minus:
+            return -unaryValue;
+        case ExpressionUnaryType::Not:
+            throw ExpressionTreeException("Cannot apply unary \"~\" operator to \"" + string(EnumName(unaryValueType)) + "\"");
+        default:
+            throw ExpressionTreeException("Unexpected unary type encountered");
+    }
 }
 
-template <typename T>
-T ExpressionTree::Modulus(const T& leftValue, const T& rightValue)
+bool ExpressionTree::UnaryBool(bool unaryValue, ExpressionUnaryType unaryOperation)
 {
-    return leftValue % rightValue;
-}
-
-template <typename T>
-T ExpressionTree::Add(const T& leftValue, const T& rightValue)
-{
-    return leftValue + rightValue;
-}
-
-template <typename T>
-T ExpressionTree::Subtract(const T& leftValue, const T& rightValue)
-{
-    return leftValue - rightValue;
-}
-
-template <typename T>
-T ExpressionTree::BitShiftLeft(const T& operandValue, int32_t shiftValue)
-{
-    return operandValue << shiftValue;
-}
-
-template <typename T>
-T ExpressionTree::BitShiftRight(const T& operandValue, int32_t shiftValue)
-{
-    return operandValue >> shiftValue;
-}
-
-template <typename T>
-T ExpressionTree::BitwiseAnd(const T& leftValue, const T& rightValue)
-{
-    return leftValue & rightValue;
-}
-
-template <typename T>
-T ExpressionTree::BitwiseOr(const T& leftValue, const T& rightValue)
-{
-    return leftValue | rightValue;
-}
-
-template <typename T>
-bool ExpressionTree::LessThan(const T& leftValue, const T& rightValue)
-{
-    return leftValue < rightValue;
-}
-
-template <typename T>
-bool ExpressionTree::LessThanOrEqual(const T& leftValue, const T& rightValue)
-{
-    return leftValue <= rightValue;
-}
-
-template <typename T>
-bool ExpressionTree::GreaterThan(const T& leftValue, const T& rightValue)
-{
-    return leftValue > rightValue;
-}
-
-template <typename T>
-bool ExpressionTree::GreaterThanOrEqual(const T& leftValue, const T& rightValue)
-{
-    return leftValue >= rightValue;
-}
-
-template <typename T>
-bool ExpressionTree::Equal(const T& leftValue, const T& rightValue)
-{
-    return leftValue == rightValue;
-}
-
-template <typename T>
-bool ExpressionTree::NotEqual(const T& leftValue, const T& rightValue)
-{
-    return leftValue != rightValue;
+    switch (unaryOperation)
+    {
+        case ExpressionUnaryType::Not:
+            return !unaryValue;
+        case ExpressionUnaryType::Plus:
+        case ExpressionUnaryType::Minus:
+            throw ExpressionTreeException("Cannot apply unary \"" + string(EnumName(unaryOperation)) + "\" operator to \"" + string(EnumName(ExpressionValueType::Boolean)) + "\"");
+        default:
+            throw ExpressionTreeException("Unexpected unary type encountered");
+    }
 }
 
 ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const
@@ -2175,9 +2467,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    if (IsEqual(value, "true") || IsEqual(value, "1"))
+                    if (isEqual(value, "true") || isEqual(value, "1"))
                         targetValue = true;
-                    else if (IsEqual(value, "false") || IsEqual(value, "0"))
+                    else if (isEqual(value, "false") || isEqual(value, "0"))
                         targetValue = false;
                     else
                         throw ExpressionTreeException("\"String\" value not recognized as a valid \"Boolean\"");
@@ -2292,7 +2584,7 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
     const regex expression(expressionText);
 
     cmatch match;
-    const bool result = regex_match(testText.c_str(), match, expression);
+    const bool result = regex_search(testText.c_str(), match, expression);
 
     if (returnMatchedValue)
     {
@@ -2303,7 +2595,7 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
         return ExpressionTree::EmptyString;
     }
 
-    // IsRegExMatch returns boolean result for if there was a matched value
+    // RegExMatch returns boolean result for if there was a matched value
     return result ? ExpressionTree::True : ExpressionTree::False;
 }
 
