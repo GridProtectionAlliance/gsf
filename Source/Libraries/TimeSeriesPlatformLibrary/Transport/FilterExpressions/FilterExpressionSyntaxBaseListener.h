@@ -79,6 +79,9 @@ public:
   virtual void enterFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext * /*ctx*/) override { }
   virtual void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext * /*ctx*/) override { }
 
+  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
+  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
+
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext * /*ctx*/) override { }
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext * /*ctx*/) override { }
 
@@ -87,9 +90,6 @@ public:
 
   virtual void enterOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext * /*ctx*/) override { }
   virtual void exitOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext * /*ctx*/) override { }
-
-  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
-  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext * /*ctx*/) override { }
 
 
   virtual void enterEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }

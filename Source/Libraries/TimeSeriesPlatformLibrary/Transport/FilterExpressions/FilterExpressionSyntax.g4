@@ -187,6 +187,16 @@ functionExpression
  : functionName '(' expressionList? ')'
  ;
 
+literalValue
+ : INTEGER_LITERAL
+ | NUMERIC_LITERAL
+ | STRING_LITERAL
+ | DATETIME_LITERAL
+ | GUID_LITERAL
+ | BOOLEAN_LITERAL
+ | K_NULL
+ ;
+
 tableName 
  : IDENTIFIER
  ;
@@ -199,15 +209,64 @@ orderByColumnName
  : IDENTIFIER
  ;
 
-literalValue
- : INTEGER_LITERAL
- | NUMERIC_LITERAL
- | STRING_LITERAL
- | DATETIME_LITERAL
- | GUID_LITERAL
- | BOOLEAN_LITERAL
- | K_NULL
- ;
+// Terminals for keywords should come before terminals with pattern expressions
+
+// Keywords
+K_ABS: A B S;
+K_AND : A N D;
+K_ASC : A S C;
+K_BINARY : B I N A R Y;
+K_BY : B Y;
+K_CEILING : C E I L I N G;
+K_COALESCE : C O A L E S C E;
+K_CONVERT : C O N V E R T;
+K_CONTAINS : C O N T A I N S;
+K_DATEADD : D A T E A D D;
+K_DATEDIFF : D A T E D I F F;
+K_DATEPART : D A T E P A R T;
+K_DESC : D E S C;
+K_ENDSWITH : E N D S W I T H;
+K_FILTER : F I L T E R;
+K_FLOOR : F L O O R;
+K_IIF : I I F;
+K_IN : I N;
+K_INDEXOF : I N D E X O F;
+K_IS : I S;
+K_ISDATE : I S D A T E;
+K_ISINTEGER : I S I N T E G E R;
+K_ISGUID : I S G U I D;
+K_ISNULL : I S N U L L;
+K_ISNUMERIC : I S N U M E R I C;
+K_LASTINDEXOF : L A S T I N D E X O F;
+K_LEN : L E N;
+K_LIKE : L I K E;
+K_LOWER : L O W E R;
+K_MAX : M A X;
+K_MIN : M I N;
+K_NOT : N O T;
+K_NOW : N O W;
+K_NULL : N U L L;
+K_OR : O R;
+K_ORDER : O R D E R;
+K_POWER : P O W E R;
+K_REGEXMATCH : R E G E X M A T C H;
+K_REGEXVAL : R E G E X V A L;
+K_REPLACE : R E P L A C E;
+K_REVERSE : R E V E R S E;
+K_ROUND : R O U N D;
+K_SQRT : S Q R T;
+K_SPLIT : S P L I T;
+K_STARTSWITH : S T A R T S W I T H;
+K_STRCOUNT : S T R C O U N T;
+K_STRCMP: S T R C M P;
+K_SUBSTR: S U B S T R;
+K_TOP : T O P;
+K_TRIM : T R I M;
+K_TRIMLEFT : T R I M L E F T;
+K_TRIMRIGHT : T R I M R I G H T;
+K_UPPER : U P P E R;
+K_UTCNOW : U T C N O W;
+K_WHERE : W H E R E;
 
 BOOLEAN_LITERAL
   : T R U E
@@ -267,63 +326,6 @@ SPACES
 UNEXPECTED_CHAR
  : .
  ;
-
-// Keywords
-K_ABS: A B S;
-K_AND : A N D;
-K_ASC : A S C;
-K_BINARY : B I N A R Y;
-K_BY : B Y;
-K_CEILING : C E I L I N G;
-K_COALESCE : C O A L E S C E;
-K_CONVERT : C O N V E R T;
-K_CONTAINS : C O N T A I N S;
-K_DATEADD : D A T E A D D;
-K_DATEDIFF : D A T E D I F F;
-K_DATEPART : D A T E P A R T;
-K_DESC : D E S C;
-K_ENDSWITH : E N D S W I T H;
-K_FILTER : F I L T E R;
-K_FLOOR : F L O O R;
-K_IIF : I I F;
-K_IN : I N;
-K_INDEXOF : I N D E X O F;
-K_IS : I S;
-K_ISDATE : I S D A T E;
-K_ISINTEGER : I S I N T E G E R;
-K_ISGUID : I S G U I D;
-K_ISNULL : I S N U L L;
-K_ISNUMERIC : I S N U M E R I C;
-K_LASTINDEXOF : L A S T I N D E X O F;
-K_LEN : L E N;
-K_LIKE : L I K E;
-K_LOWER : L O W E R;
-K_MAX : M A X;
-K_MIN : M I N;
-K_NOT : N O T;
-K_NOW : N O W;
-K_NULL : N U L L;
-K_OR : O R;
-K_ORDER : O R D E R;
-K_POWER : P O W E R;
-K_REGEXMATCH : R E G E X M A T C H;
-K_REGEXVAL : R E G E X V A L;
-K_REPLACE : R E P L A C E;
-K_REVERSE : R E V E R S E;
-K_ROUND : R O U N D;
-K_SQRT : S Q R T;
-K_SPLIT : S P L I T;
-K_STARTSWITH : S T A R T S W I T H;
-K_STRCOUNT : S T R C O U N T;
-K_STRCMP: S T R C M P;
-K_SUBSTR: S U B S T R;
-K_TOP : T O P;
-K_TRIM : T R I M;
-K_TRIMLEFT : T R I M L E F T;
-K_TRIMRIGHT : T R I M R I G H T;
-K_UPPER : U P P E R;
-K_UTCNOW : U T C N O W;
-K_WHERE : W H E R E;
 
 fragment DIGIT : [0-9];
 fragment HEX_DIGIT : [0-9a-fA-F];

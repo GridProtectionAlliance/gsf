@@ -385,7 +385,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 21
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SubStr(Coalesce(Trim(SignalType), 'OTHER'), 0, 2)) = 2");
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SubStr(Coalesce(Trim(SignalType), 'OTHER'), 0, 0X2)) = 2");
     parser->SetDataSet(dataSet);
     parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
     parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
@@ -413,7 +413,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 23
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SignalType) & 4 == 4");
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SignalType) & 0x4 == 4");
     parser->SetDataSet(dataSet);
     parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
     parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
@@ -560,7 +560,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 34
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SignalType) / 2 = 2");
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE Len(SignalType) / 0x2 = 2");
     parser->SetDataSet(dataSet);
     parser->SetMeasurementTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
     parser->SetPrimaryMeasurementTableName("ActiveMeasurements");
@@ -911,14 +911,14 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 79
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "!AccessID % 2 = 0 || FramesPerSecond % 4 = 2 && AccessID % 1 == 0");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "!AccessID % 2 = 0 || FramesPerSecond % 4 = 0x2 && AccessID % 1 == 0");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 80
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT AccessID % 2 = 0 OR FramesPerSecond % 4 >> 1 = 1 && AccessID % 1 == 0");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT AccessID % 2 = 0 OR FramesPerSecond % 4 >> 0x1 = 1 && AccessID % 1 == 0x0");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
@@ -1038,6 +1038,55 @@ int main(int argc, char* argv[])
 
     // Test 97
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "SubStr(RegExVal('Sh\\w+', Name), 3, 2) == 'lB'");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 98
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExVal('Sh\\w+', Name) IN ('NT', Acronym, 'NT')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 99
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExVal('Sh\\w+', Name) IN ===('NT', Acronym, 'NT')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 100
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "RegExVal('Sh\\w+', Name) IN BINARY ('NT', Acronym, 3.05)");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 101
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "Name IN===(0x9F, Acronym, 'Shelby')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 102
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "Acronym LIKE === 'Sh*'");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 103
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "name LiKe binaRY 'SH%'");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(!valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 104
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "Name === 'Shelby' && Name== 'SHelBy' && Name !=='SHelBy'");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());

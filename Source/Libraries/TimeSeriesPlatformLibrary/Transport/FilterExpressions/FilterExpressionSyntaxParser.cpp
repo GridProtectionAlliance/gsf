@@ -84,15 +84,6 @@ FilterExpressionSyntaxParser::ParseContext* FilterExpressionSyntaxParser::parse(
       case FilterExpressionSyntaxParser::T__4:
       case FilterExpressionSyntaxParser::T__6:
       case FilterExpressionSyntaxParser::T__7:
-      case FilterExpressionSyntaxParser::BOOLEAN_LITERAL:
-      case FilterExpressionSyntaxParser::IDENTIFIER:
-      case FilterExpressionSyntaxParser::INTEGER_LITERAL:
-      case FilterExpressionSyntaxParser::NUMERIC_LITERAL:
-      case FilterExpressionSyntaxParser::GUID_LITERAL:
-      case FilterExpressionSyntaxParser::MEASUREMENT_KEY_LITERAL:
-      case FilterExpressionSyntaxParser::POINT_TAG_LITERAL:
-      case FilterExpressionSyntaxParser::STRING_LITERAL:
-      case FilterExpressionSyntaxParser::DATETIME_LITERAL:
       case FilterExpressionSyntaxParser::K_ABS:
       case FilterExpressionSyntaxParser::K_CEILING:
       case FilterExpressionSyntaxParser::K_COALESCE:
@@ -135,7 +126,16 @@ FilterExpressionSyntaxParser::ParseContext* FilterExpressionSyntaxParser::parse(
       case FilterExpressionSyntaxParser::K_TRIMLEFT:
       case FilterExpressionSyntaxParser::K_TRIMRIGHT:
       case FilterExpressionSyntaxParser::K_UPPER:
-      case FilterExpressionSyntaxParser::K_UTCNOW: {
+      case FilterExpressionSyntaxParser::K_UTCNOW:
+      case FilterExpressionSyntaxParser::BOOLEAN_LITERAL:
+      case FilterExpressionSyntaxParser::IDENTIFIER:
+      case FilterExpressionSyntaxParser::INTEGER_LITERAL:
+      case FilterExpressionSyntaxParser::NUMERIC_LITERAL:
+      case FilterExpressionSyntaxParser::GUID_LITERAL:
+      case FilterExpressionSyntaxParser::MEASUREMENT_KEY_LITERAL:
+      case FilterExpressionSyntaxParser::POINT_TAG_LITERAL:
+      case FilterExpressionSyntaxParser::STRING_LITERAL:
+      case FilterExpressionSyntaxParser::DATETIME_LITERAL: {
         setState(50);
         filterExpressionStatementList();
         break;
@@ -438,10 +438,10 @@ FilterExpressionSyntaxParser::IdentifierStatementContext* FilterExpressionSyntax
     enterOuterAlt(_localctx, 1);
     setState(88);
     _la = _input->LA(1);
-    if (!((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & ((1ULL << FilterExpressionSyntaxParser::GUID_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::MEASUREMENT_KEY_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::POINT_TAG_LITERAL))) != 0))) {
+    if (!(((((_la - 87) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 87)) & ((1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 87))
+      | (1ULL << (FilterExpressionSyntaxParser::MEASUREMENT_KEY_LITERAL - 87))
+      | (1ULL << (FilterExpressionSyntaxParser::POINT_TAG_LITERAL - 87)))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -1211,13 +1211,13 @@ FilterExpressionSyntaxParser::ValueExpressionContext* FilterExpressionSyntaxPars
     setState(193);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
+      case FilterExpressionSyntaxParser::K_NULL:
       case FilterExpressionSyntaxParser::BOOLEAN_LITERAL:
       case FilterExpressionSyntaxParser::INTEGER_LITERAL:
       case FilterExpressionSyntaxParser::NUMERIC_LITERAL:
       case FilterExpressionSyntaxParser::GUID_LITERAL:
       case FilterExpressionSyntaxParser::STRING_LITERAL:
-      case FilterExpressionSyntaxParser::DATETIME_LITERAL:
-      case FilterExpressionSyntaxParser::K_NULL: {
+      case FilterExpressionSyntaxParser::DATETIME_LITERAL: {
         setState(183);
         literalValue();
         break;
@@ -1391,7 +1391,9 @@ FilterExpressionSyntaxParser::NotOperatorContext* FilterExpressionSyntaxParser::
     enterOuterAlt(_localctx, 1);
     setState(208);
     _la = _input->LA(1);
-    if (!(_la == FilterExpressionSyntaxParser::T__6 || _la == FilterExpressionSyntaxParser::K_NOT)) {
+    if (!(_la == FilterExpressionSyntaxParser::T__6
+
+    || _la == FilterExpressionSyntaxParser::K_NOT)) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -1452,7 +1454,8 @@ FilterExpressionSyntaxParser::UnaryOperatorContext* FilterExpressionSyntaxParser
       ((1ULL << _la) & ((1ULL << FilterExpressionSyntaxParser::T__2)
       | (1ULL << FilterExpressionSyntaxParser::T__3)
       | (1ULL << FilterExpressionSyntaxParser::T__6)
-      | (1ULL << FilterExpressionSyntaxParser::T__7))) != 0) || _la == FilterExpressionSyntaxParser::K_NOT)) {
+      | (1ULL << FilterExpressionSyntaxParser::T__7)
+      | (1ULL << FilterExpressionSyntaxParser::K_NOT))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -1635,11 +1638,11 @@ FilterExpressionSyntaxParser::LogicalOperatorContext* FilterExpressionSyntaxPars
     enterOuterAlt(_localctx, 1);
     setState(216);
     _la = _input->LA(1);
-    if (!(((((_la - 19) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 19)) & ((1ULL << (FilterExpressionSyntaxParser::T__18 - 19))
-      | (1ULL << (FilterExpressionSyntaxParser::T__19 - 19))
-      | (1ULL << (FilterExpressionSyntaxParser::K_AND - 19))
-      | (1ULL << (FilterExpressionSyntaxParser::K_OR - 19)))) != 0))) {
+    if (!((((_la & ~ 0x3fULL) == 0) &&
+      ((1ULL << _la) & ((1ULL << FilterExpressionSyntaxParser::T__18)
+      | (1ULL << FilterExpressionSyntaxParser::T__19)
+      | (1ULL << FilterExpressionSyntaxParser::K_AND)
+      | (1ULL << FilterExpressionSyntaxParser::K_OR))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -1967,47 +1970,47 @@ FilterExpressionSyntaxParser::FunctionNameContext* FilterExpressionSyntaxParser:
     enterOuterAlt(_localctx, 1);
     setState(222);
     _la = _input->LA(1);
-    if (!(((((_la - 41) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 41)) & ((1ULL << (FilterExpressionSyntaxParser::K_ABS - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_CEILING - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_COALESCE - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_CONVERT - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_CONTAINS - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_DATEADD - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_DATEDIFF - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_DATEPART - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ENDSWITH - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_FLOOR - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_IIF - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_INDEXOF - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ISDATE - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ISINTEGER - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ISGUID - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ISNULL - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ISNUMERIC - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_LASTINDEXOF - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_LEN - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_LOWER - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_MAX - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_MIN - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_NOW - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_POWER - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXVAL - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REPLACE - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REVERSE - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ROUND - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_SQRT - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_SPLIT - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_STARTSWITH - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_STRCOUNT - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_STRCMP - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_SUBSTR - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_TRIM - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMLEFT - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMRIGHT - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_UPPER - 41))
-      | (1ULL << (FilterExpressionSyntaxParser::K_UTCNOW - 41)))) != 0))) {
+    if (!(((((_la - 28) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 28)) & ((1ULL << (FilterExpressionSyntaxParser::K_ABS - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_CEILING - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_COALESCE - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_CONVERT - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_CONTAINS - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_DATEADD - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_DATEDIFF - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_DATEPART - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ENDSWITH - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_FLOOR - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_IIF - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_INDEXOF - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ISDATE - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ISINTEGER - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ISGUID - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ISNULL - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ISNUMERIC - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_LASTINDEXOF - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_LEN - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_LOWER - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_MAX - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_MIN - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_NOW - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_POWER - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXVAL - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REPLACE - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REVERSE - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ROUND - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_SQRT - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_SPLIT - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_STARTSWITH - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_STRCOUNT - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_STRCMP - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_SUBSTR - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_TRIM - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMLEFT - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMRIGHT - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_UPPER - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_UTCNOW - 28)))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -2080,13 +2083,6 @@ FilterExpressionSyntaxParser::FunctionExpressionContext* FilterExpressionSyntaxP
       | (1ULL << FilterExpressionSyntaxParser::T__4)
       | (1ULL << FilterExpressionSyntaxParser::T__6)
       | (1ULL << FilterExpressionSyntaxParser::T__7)
-      | (1ULL << FilterExpressionSyntaxParser::BOOLEAN_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::IDENTIFIER)
-      | (1ULL << FilterExpressionSyntaxParser::INTEGER_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::NUMERIC_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::GUID_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::STRING_LITERAL)
-      | (1ULL << FilterExpressionSyntaxParser::DATETIME_LITERAL)
       | (1ULL << FilterExpressionSyntaxParser::K_ABS)
       | (1ULL << FilterExpressionSyntaxParser::K_CEILING)
       | (1ULL << FilterExpressionSyntaxParser::K_COALESCE)
@@ -2101,18 +2097,18 @@ FilterExpressionSyntaxParser::FunctionExpressionContext* FilterExpressionSyntaxP
       | (1ULL << FilterExpressionSyntaxParser::K_INDEXOF)
       | (1ULL << FilterExpressionSyntaxParser::K_ISDATE)
       | (1ULL << FilterExpressionSyntaxParser::K_ISINTEGER)
-      | (1ULL << FilterExpressionSyntaxParser::K_ISGUID))) != 0) || ((((_la - 64) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 64)) & ((1ULL << (FilterExpressionSyntaxParser::K_ISNULL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ISNUMERIC - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_LASTINDEXOF - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_LEN - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_LOWER - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_MAX - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_MIN - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_NOT - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_NOW - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_NULL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_POWER - 64))
+      | (1ULL << FilterExpressionSyntaxParser::K_ISGUID)
+      | (1ULL << FilterExpressionSyntaxParser::K_ISNULL)
+      | (1ULL << FilterExpressionSyntaxParser::K_ISNUMERIC)
+      | (1ULL << FilterExpressionSyntaxParser::K_LASTINDEXOF)
+      | (1ULL << FilterExpressionSyntaxParser::K_LEN)
+      | (1ULL << FilterExpressionSyntaxParser::K_LOWER)
+      | (1ULL << FilterExpressionSyntaxParser::K_MAX)
+      | (1ULL << FilterExpressionSyntaxParser::K_MIN)
+      | (1ULL << FilterExpressionSyntaxParser::K_NOT)
+      | (1ULL << FilterExpressionSyntaxParser::K_NOW)
+      | (1ULL << FilterExpressionSyntaxParser::K_NULL))) != 0) || ((((_la - 64) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 64)) & ((1ULL << (FilterExpressionSyntaxParser::K_POWER - 64))
       | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 64))
       | (1ULL << (FilterExpressionSyntaxParser::K_REGEXVAL - 64))
       | (1ULL << (FilterExpressionSyntaxParser::K_REPLACE - 64))
@@ -2128,159 +2124,19 @@ FilterExpressionSyntaxParser::FunctionExpressionContext* FilterExpressionSyntaxP
       | (1ULL << (FilterExpressionSyntaxParser::K_TRIMLEFT - 64))
       | (1ULL << (FilterExpressionSyntaxParser::K_TRIMRIGHT - 64))
       | (1ULL << (FilterExpressionSyntaxParser::K_UPPER - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_UTCNOW - 64)))) != 0)) {
+      | (1ULL << (FilterExpressionSyntaxParser::K_UTCNOW - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::IDENTIFIER - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 64))
+      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 64)))) != 0)) {
       setState(226);
       expressionList();
     }
     setState(229);
     match(FilterExpressionSyntaxParser::T__5);
-   
-  }
-  catch (RecognitionException &e) {
-    _errHandler->reportError(this, e);
-    _localctx->exception = std::current_exception();
-    _errHandler->recover(this, _localctx->exception);
-  }
-
-  return _localctx;
-}
-
-//----------------- TableNameContext ------------------------------------------------------------------
-
-FilterExpressionSyntaxParser::TableNameContext::TableNameContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
-}
-
-tree::TerminalNode* FilterExpressionSyntaxParser::TableNameContext::IDENTIFIER() {
-  return getToken(FilterExpressionSyntaxParser::IDENTIFIER, 0);
-}
-
-
-size_t FilterExpressionSyntaxParser::TableNameContext::getRuleIndex() const {
-  return FilterExpressionSyntaxParser::RuleTableName;
-}
-
-void FilterExpressionSyntaxParser::TableNameContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterTableName(this);
-}
-
-void FilterExpressionSyntaxParser::TableNameContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitTableName(this);
-}
-
-FilterExpressionSyntaxParser::TableNameContext* FilterExpressionSyntaxParser::tableName() {
-  TableNameContext *_localctx = _tracker.createInstance<TableNameContext>(_ctx, getState());
-  enterRule(_localctx, 42, FilterExpressionSyntaxParser::RuleTableName);
-
-  auto onExit = finally([=] {
-    exitRule();
-  });
-  try {
-    enterOuterAlt(_localctx, 1);
-    setState(231);
-    match(FilterExpressionSyntaxParser::IDENTIFIER);
-   
-  }
-  catch (RecognitionException &e) {
-    _errHandler->reportError(this, e);
-    _localctx->exception = std::current_exception();
-    _errHandler->recover(this, _localctx->exception);
-  }
-
-  return _localctx;
-}
-
-//----------------- ColumnNameContext ------------------------------------------------------------------
-
-FilterExpressionSyntaxParser::ColumnNameContext::ColumnNameContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
-}
-
-tree::TerminalNode* FilterExpressionSyntaxParser::ColumnNameContext::IDENTIFIER() {
-  return getToken(FilterExpressionSyntaxParser::IDENTIFIER, 0);
-}
-
-
-size_t FilterExpressionSyntaxParser::ColumnNameContext::getRuleIndex() const {
-  return FilterExpressionSyntaxParser::RuleColumnName;
-}
-
-void FilterExpressionSyntaxParser::ColumnNameContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterColumnName(this);
-}
-
-void FilterExpressionSyntaxParser::ColumnNameContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitColumnName(this);
-}
-
-FilterExpressionSyntaxParser::ColumnNameContext* FilterExpressionSyntaxParser::columnName() {
-  ColumnNameContext *_localctx = _tracker.createInstance<ColumnNameContext>(_ctx, getState());
-  enterRule(_localctx, 44, FilterExpressionSyntaxParser::RuleColumnName);
-
-  auto onExit = finally([=] {
-    exitRule();
-  });
-  try {
-    enterOuterAlt(_localctx, 1);
-    setState(233);
-    match(FilterExpressionSyntaxParser::IDENTIFIER);
-   
-  }
-  catch (RecognitionException &e) {
-    _errHandler->reportError(this, e);
-    _localctx->exception = std::current_exception();
-    _errHandler->recover(this, _localctx->exception);
-  }
-
-  return _localctx;
-}
-
-//----------------- OrderByColumnNameContext ------------------------------------------------------------------
-
-FilterExpressionSyntaxParser::OrderByColumnNameContext::OrderByColumnNameContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
-}
-
-tree::TerminalNode* FilterExpressionSyntaxParser::OrderByColumnNameContext::IDENTIFIER() {
-  return getToken(FilterExpressionSyntaxParser::IDENTIFIER, 0);
-}
-
-
-size_t FilterExpressionSyntaxParser::OrderByColumnNameContext::getRuleIndex() const {
-  return FilterExpressionSyntaxParser::RuleOrderByColumnName;
-}
-
-void FilterExpressionSyntaxParser::OrderByColumnNameContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterOrderByColumnName(this);
-}
-
-void FilterExpressionSyntaxParser::OrderByColumnNameContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitOrderByColumnName(this);
-}
-
-FilterExpressionSyntaxParser::OrderByColumnNameContext* FilterExpressionSyntaxParser::orderByColumnName() {
-  OrderByColumnNameContext *_localctx = _tracker.createInstance<OrderByColumnNameContext>(_ctx, getState());
-  enterRule(_localctx, 46, FilterExpressionSyntaxParser::RuleOrderByColumnName);
-
-  auto onExit = finally([=] {
-    exitRule();
-  });
-  try {
-    enterOuterAlt(_localctx, 1);
-    setState(235);
-    match(FilterExpressionSyntaxParser::IDENTIFIER);
    
   }
   catch (RecognitionException &e) {
@@ -2345,7 +2201,7 @@ void FilterExpressionSyntaxParser::LiteralValueContext::exitRule(tree::ParseTree
 
 FilterExpressionSyntaxParser::LiteralValueContext* FilterExpressionSyntaxParser::literalValue() {
   LiteralValueContext *_localctx = _tracker.createInstance<LiteralValueContext>(_ctx, getState());
-  enterRule(_localctx, 48, FilterExpressionSyntaxParser::RuleLiteralValue);
+  enterRule(_localctx, 42, FilterExpressionSyntaxParser::RuleLiteralValue);
   size_t _la = 0;
 
   auto onExit = finally([=] {
@@ -2353,22 +2209,169 @@ FilterExpressionSyntaxParser::LiteralValueContext* FilterExpressionSyntaxParser:
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(237);
+    setState(231);
     _la = _input->LA(1);
-    if (!(((((_la - 28) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 28)) & ((1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::K_NULL - 28)))) != 0))) {
+    if (!(((((_la - 61) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 61)) & ((1ULL << (FilterExpressionSyntaxParser::K_NULL - 61))
+      | (1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 61))
+      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 61))
+      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 61))
+      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 61))
+      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 61))
+      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 61)))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
       _errHandler->reportMatch(this);
       consume();
     }
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- TableNameContext ------------------------------------------------------------------
+
+FilterExpressionSyntaxParser::TableNameContext::TableNameContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+tree::TerminalNode* FilterExpressionSyntaxParser::TableNameContext::IDENTIFIER() {
+  return getToken(FilterExpressionSyntaxParser::IDENTIFIER, 0);
+}
+
+
+size_t FilterExpressionSyntaxParser::TableNameContext::getRuleIndex() const {
+  return FilterExpressionSyntaxParser::RuleTableName;
+}
+
+void FilterExpressionSyntaxParser::TableNameContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterTableName(this);
+}
+
+void FilterExpressionSyntaxParser::TableNameContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitTableName(this);
+}
+
+FilterExpressionSyntaxParser::TableNameContext* FilterExpressionSyntaxParser::tableName() {
+  TableNameContext *_localctx = _tracker.createInstance<TableNameContext>(_ctx, getState());
+  enterRule(_localctx, 44, FilterExpressionSyntaxParser::RuleTableName);
+
+  auto onExit = finally([=] {
+    exitRule();
+  });
+  try {
+    enterOuterAlt(_localctx, 1);
+    setState(233);
+    match(FilterExpressionSyntaxParser::IDENTIFIER);
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- ColumnNameContext ------------------------------------------------------------------
+
+FilterExpressionSyntaxParser::ColumnNameContext::ColumnNameContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+tree::TerminalNode* FilterExpressionSyntaxParser::ColumnNameContext::IDENTIFIER() {
+  return getToken(FilterExpressionSyntaxParser::IDENTIFIER, 0);
+}
+
+
+size_t FilterExpressionSyntaxParser::ColumnNameContext::getRuleIndex() const {
+  return FilterExpressionSyntaxParser::RuleColumnName;
+}
+
+void FilterExpressionSyntaxParser::ColumnNameContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterColumnName(this);
+}
+
+void FilterExpressionSyntaxParser::ColumnNameContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitColumnName(this);
+}
+
+FilterExpressionSyntaxParser::ColumnNameContext* FilterExpressionSyntaxParser::columnName() {
+  ColumnNameContext *_localctx = _tracker.createInstance<ColumnNameContext>(_ctx, getState());
+  enterRule(_localctx, 46, FilterExpressionSyntaxParser::RuleColumnName);
+
+  auto onExit = finally([=] {
+    exitRule();
+  });
+  try {
+    enterOuterAlt(_localctx, 1);
+    setState(235);
+    match(FilterExpressionSyntaxParser::IDENTIFIER);
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- OrderByColumnNameContext ------------------------------------------------------------------
+
+FilterExpressionSyntaxParser::OrderByColumnNameContext::OrderByColumnNameContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+tree::TerminalNode* FilterExpressionSyntaxParser::OrderByColumnNameContext::IDENTIFIER() {
+  return getToken(FilterExpressionSyntaxParser::IDENTIFIER, 0);
+}
+
+
+size_t FilterExpressionSyntaxParser::OrderByColumnNameContext::getRuleIndex() const {
+  return FilterExpressionSyntaxParser::RuleOrderByColumnName;
+}
+
+void FilterExpressionSyntaxParser::OrderByColumnNameContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterOrderByColumnName(this);
+}
+
+void FilterExpressionSyntaxParser::OrderByColumnNameContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitOrderByColumnName(this);
+}
+
+FilterExpressionSyntaxParser::OrderByColumnNameContext* FilterExpressionSyntaxParser::orderByColumnName() {
+  OrderByColumnNameContext *_localctx = _tracker.createInstance<OrderByColumnNameContext>(_ctx, getState());
+  enterRule(_localctx, 48, FilterExpressionSyntaxParser::RuleOrderByColumnName);
+
+  auto onExit = finally([=] {
+    exitRule();
+  });
+  try {
+    enterOuterAlt(_localctx, 1);
+    setState(237);
+    match(FilterExpressionSyntaxParser::IDENTIFIER);
    
   }
   catch (RecognitionException &e) {
@@ -2440,8 +2443,7 @@ std::vector<std::string> FilterExpressionSyntaxParser::_ruleNames = {
   "expressionList", "expression", "predicateExpression", "valueExpression", 
   "notOperator", "unaryOperator", "exactMatchOperator", "comparisonOperator", 
   "logicalOperator", "bitwiseOperator", "mathOperator", "functionName", 
-  "functionExpression", "tableName", "columnName", "orderByColumnName", 
-  "literalValue"
+  "functionExpression", "literalValue", "tableName", "columnName", "orderByColumnName"
 };
 
 std::vector<std::string> FilterExpressionSyntaxParser::_literalNames = {
@@ -2452,19 +2454,19 @@ std::vector<std::string> FilterExpressionSyntaxParser::_literalNames = {
 
 std::vector<std::string> FilterExpressionSyntaxParser::_symbolicNames = {
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-  "", "", "", "", "", "", "", "", "", "", "BOOLEAN_LITERAL", "IDENTIFIER", 
-  "INTEGER_LITERAL", "NUMERIC_LITERAL", "GUID_LITERAL", "MEASUREMENT_KEY_LITERAL", 
-  "POINT_TAG_LITERAL", "STRING_LITERAL", "DATETIME_LITERAL", "SINGLE_LINE_COMMENT", 
-  "MULTILINE_COMMENT", "SPACES", "UNEXPECTED_CHAR", "K_ABS", "K_AND", "K_ASC", 
-  "K_BINARY", "K_BY", "K_CEILING", "K_COALESCE", "K_CONVERT", "K_CONTAINS", 
-  "K_DATEADD", "K_DATEDIFF", "K_DATEPART", "K_DESC", "K_ENDSWITH", "K_FILTER", 
-  "K_FLOOR", "K_IIF", "K_IN", "K_INDEXOF", "K_IS", "K_ISDATE", "K_ISINTEGER", 
-  "K_ISGUID", "K_ISNULL", "K_ISNUMERIC", "K_LASTINDEXOF", "K_LEN", "K_LIKE", 
-  "K_LOWER", "K_MAX", "K_MIN", "K_NOT", "K_NOW", "K_NULL", "K_OR", "K_ORDER", 
-  "K_POWER", "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", "K_REVERSE", "K_ROUND", 
-  "K_SQRT", "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", "K_STRCMP", "K_SUBSTR", 
-  "K_TOP", "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", "K_UPPER", "K_UTCNOW", 
-  "K_WHERE"
+  "", "", "", "", "", "", "", "", "", "", "K_ABS", "K_AND", "K_ASC", "K_BINARY", 
+  "K_BY", "K_CEILING", "K_COALESCE", "K_CONVERT", "K_CONTAINS", "K_DATEADD", 
+  "K_DATEDIFF", "K_DATEPART", "K_DESC", "K_ENDSWITH", "K_FILTER", "K_FLOOR", 
+  "K_IIF", "K_IN", "K_INDEXOF", "K_IS", "K_ISDATE", "K_ISINTEGER", "K_ISGUID", 
+  "K_ISNULL", "K_ISNUMERIC", "K_LASTINDEXOF", "K_LEN", "K_LIKE", "K_LOWER", 
+  "K_MAX", "K_MIN", "K_NOT", "K_NOW", "K_NULL", "K_OR", "K_ORDER", "K_POWER", 
+  "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", "K_REVERSE", "K_ROUND", "K_SQRT", 
+  "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", "K_STRCMP", "K_SUBSTR", "K_TOP", 
+  "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", "K_UPPER", "K_UTCNOW", "K_WHERE", 
+  "BOOLEAN_LITERAL", "IDENTIFIER", "INTEGER_LITERAL", "NUMERIC_LITERAL", 
+  "GUID_LITERAL", "MEASUREMENT_KEY_LITERAL", "POINT_TAG_LITERAL", "STRING_LITERAL", 
+  "DATETIME_LITERAL", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", "SPACES", 
+  "UNEXPECTED_CHAR"
 };
 
 dfa::Vocabulary FilterExpressionSyntaxParser::_vocabulary(_literalNames, _symbolicNames);
@@ -2527,13 +2529,13 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x1a, 0x3, 0x1a, 0x3, 0x1a, 0x2, 0x5, 0x14, 0x16, 0x18, 0x1b, 0x2, 0x4, 
     0x6, 0x8, 0xa, 0xc, 0xe, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e, 
     0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e, 0x30, 0x32, 0x2, 0xe, 
-    0x3, 0x2, 0x22, 0x24, 0x3, 0x2, 0x5, 0x6, 0x4, 0x2, 0x2d, 0x2d, 0x37, 
-    0x37, 0x4, 0x2, 0x9, 0x9, 0x4a, 0x4a, 0x5, 0x2, 0x5, 0x6, 0x9, 0xa, 
-    0x4a, 0x4a, 0x4, 0x2, 0xb, 0xb, 0x2e, 0x2e, 0x3, 0x2, 0xb, 0x14, 0x5, 
-    0x2, 0x15, 0x16, 0x2c, 0x2c, 0x4d, 0x4d, 0x3, 0x2, 0x17, 0x1a, 0x4, 
-    0x2, 0x5, 0x6, 0x1b, 0x1d, 0xc, 0x2, 0x2b, 0x2b, 0x30, 0x36, 0x38, 0x38, 
-    0x3a, 0x3b, 0x3d, 0x3d, 0x3f, 0x45, 0x47, 0x49, 0x4b, 0x4b, 0x4f, 0x5a, 
-    0x5c, 0x60, 0x6, 0x2, 0x1e, 0x1e, 0x20, 0x22, 0x25, 0x26, 0x4c, 0x4c, 
+    0x3, 0x2, 0x59, 0x5b, 0x3, 0x2, 0x5, 0x6, 0x4, 0x2, 0x20, 0x20, 0x2a, 
+    0x2a, 0x4, 0x2, 0x9, 0x9, 0x3d, 0x3d, 0x5, 0x2, 0x5, 0x6, 0x9, 0xa, 
+    0x3d, 0x3d, 0x4, 0x2, 0xb, 0xb, 0x21, 0x21, 0x3, 0x2, 0xb, 0x14, 0x5, 
+    0x2, 0x15, 0x16, 0x1f, 0x1f, 0x40, 0x40, 0x3, 0x2, 0x17, 0x1a, 0x4, 
+    0x2, 0x5, 0x6, 0x1b, 0x1d, 0xc, 0x2, 0x1e, 0x1e, 0x23, 0x29, 0x2b, 0x2b, 
+    0x2d, 0x2e, 0x30, 0x30, 0x32, 0x38, 0x3a, 0x3c, 0x3e, 0x3e, 0x42, 0x4d, 
+    0x4f, 0x53, 0x6, 0x2, 0x3f, 0x3f, 0x55, 0x55, 0x57, 0x59, 0x5c, 0x5d, 
     0x2, 0xf7, 0x2, 0x36, 0x3, 0x2, 0x2, 0x2, 0x4, 0x3a, 0x3, 0x2, 0x2, 
     0x2, 0x6, 0x40, 0x3, 0x2, 0x2, 0x2, 0x8, 0x58, 0x3, 0x2, 0x2, 0x2, 0xa, 
     0x5a, 0x3, 0x2, 0x2, 0x2, 0xc, 0x5c, 0x3, 0x2, 0x2, 0x2, 0xe, 0x71, 
@@ -2549,7 +2551,7 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x2, 0x35, 0x37, 0x5, 0x4, 0x3, 0x2, 0x36, 0x34, 0x3, 0x2, 0x2, 0x2, 
     0x36, 0x35, 0x3, 0x2, 0x2, 0x2, 0x37, 0x38, 0x3, 0x2, 0x2, 0x2, 0x38, 
     0x39, 0x7, 0x2, 0x2, 0x3, 0x39, 0x3, 0x3, 0x2, 0x2, 0x2, 0x3a, 0x3b, 
-    0x7, 0x2a, 0x2, 0x2, 0x3b, 0x3c, 0x8, 0x3, 0x1, 0x2, 0x3c, 0x5, 0x3, 
+    0x7, 0x61, 0x2, 0x2, 0x3b, 0x3c, 0x8, 0x3, 0x1, 0x2, 0x3c, 0x5, 0x3, 
     0x2, 0x2, 0x2, 0x3d, 0x3f, 0x7, 0x3, 0x2, 0x2, 0x3e, 0x3d, 0x3, 0x2, 
     0x2, 0x2, 0x3f, 0x42, 0x3, 0x2, 0x2, 0x2, 0x40, 0x3e, 0x3, 0x2, 0x2, 
     0x2, 0x40, 0x41, 0x3, 0x2, 0x2, 0x2, 0x41, 0x43, 0x3, 0x2, 0x2, 0x2, 
@@ -2567,12 +2569,12 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x2, 0x57, 0x59, 0x5, 0x14, 0xb, 0x2, 0x58, 0x55, 0x3, 0x2, 0x2, 0x2, 
     0x58, 0x56, 0x3, 0x2, 0x2, 0x2, 0x58, 0x57, 0x3, 0x2, 0x2, 0x2, 0x59, 
     0x9, 0x3, 0x2, 0x2, 0x2, 0x5a, 0x5b, 0x9, 0x2, 0x2, 0x2, 0x5b, 0xb, 
-    0x3, 0x2, 0x2, 0x2, 0x5c, 0x5f, 0x7, 0x39, 0x2, 0x2, 0x5d, 0x5e, 0x7, 
-    0x5b, 0x2, 0x2, 0x5e, 0x60, 0x5, 0xe, 0x8, 0x2, 0x5f, 0x5d, 0x3, 0x2, 
+    0x3, 0x2, 0x2, 0x2, 0x5c, 0x5f, 0x7, 0x2c, 0x2, 0x2, 0x5d, 0x5e, 0x7, 
+    0x4e, 0x2, 0x2, 0x5e, 0x60, 0x5, 0xe, 0x8, 0x2, 0x5f, 0x5d, 0x3, 0x2, 
     0x2, 0x2, 0x5f, 0x60, 0x3, 0x2, 0x2, 0x2, 0x60, 0x61, 0x3, 0x2, 0x2, 
-    0x2, 0x61, 0x62, 0x5, 0x2c, 0x17, 0x2, 0x62, 0x63, 0x7, 0x61, 0x2, 0x2, 
-    0x63, 0x6e, 0x5, 0x14, 0xb, 0x2, 0x64, 0x65, 0x7, 0x4e, 0x2, 0x2, 0x65, 
-    0x66, 0x7, 0x2f, 0x2, 0x2, 0x66, 0x6b, 0x5, 0x10, 0x9, 0x2, 0x67, 0x68, 
+    0x2, 0x61, 0x62, 0x5, 0x2e, 0x18, 0x2, 0x62, 0x63, 0x7, 0x54, 0x2, 0x2, 
+    0x63, 0x6e, 0x5, 0x14, 0xb, 0x2, 0x64, 0x65, 0x7, 0x41, 0x2, 0x2, 0x65, 
+    0x66, 0x7, 0x22, 0x2, 0x2, 0x66, 0x6b, 0x5, 0x10, 0x9, 0x2, 0x67, 0x68, 
     0x7, 0x4, 0x2, 0x2, 0x68, 0x6a, 0x5, 0x10, 0x9, 0x2, 0x69, 0x67, 0x3, 
     0x2, 0x2, 0x2, 0x6a, 0x6d, 0x3, 0x2, 0x2, 0x2, 0x6b, 0x69, 0x3, 0x2, 
     0x2, 0x2, 0x6b, 0x6c, 0x3, 0x2, 0x2, 0x2, 0x6c, 0x6f, 0x3, 0x2, 0x2, 
@@ -2580,8 +2582,8 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x6e, 0x6f, 0x3, 0x2, 0x2, 0x2, 0x6f, 0xd, 0x3, 0x2, 0x2, 0x2, 0x70, 
     0x72, 0x9, 0x3, 0x2, 0x2, 0x71, 0x70, 0x3, 0x2, 0x2, 0x2, 0x71, 0x72, 
     0x3, 0x2, 0x2, 0x2, 0x72, 0x73, 0x3, 0x2, 0x2, 0x2, 0x73, 0x74, 0x7, 
-    0x20, 0x2, 0x2, 0x74, 0xf, 0x3, 0x2, 0x2, 0x2, 0x75, 0x77, 0x5, 0x30, 
-    0x19, 0x2, 0x76, 0x78, 0x9, 0x4, 0x2, 0x2, 0x77, 0x76, 0x3, 0x2, 0x2, 
+    0x57, 0x2, 0x2, 0x74, 0xf, 0x3, 0x2, 0x2, 0x2, 0x75, 0x77, 0x5, 0x32, 
+    0x1a, 0x2, 0x76, 0x78, 0x9, 0x4, 0x2, 0x2, 0x77, 0x76, 0x3, 0x2, 0x2, 
     0x2, 0x77, 0x78, 0x3, 0x2, 0x2, 0x2, 0x78, 0x11, 0x3, 0x2, 0x2, 0x2, 
     0x79, 0x7e, 0x5, 0x14, 0xb, 0x2, 0x7a, 0x7b, 0x7, 0x4, 0x2, 0x2, 0x7b, 
     0x7d, 0x5, 0x14, 0xb, 0x2, 0x7c, 0x7a, 0x3, 0x2, 0x2, 0x2, 0x7d, 0x80, 
@@ -2599,26 +2601,26 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x93, 0x5, 0x18, 0xd, 0x2, 0x93, 0xb5, 0x3, 0x2, 0x2, 0x2, 0x94, 0x95, 
     0xc, 0x5, 0x2, 0x2, 0x95, 0x96, 0x5, 0x20, 0x11, 0x2, 0x96, 0x97, 0x5, 
     0x16, 0xc, 0x6, 0x97, 0xb4, 0x3, 0x2, 0x2, 0x2, 0x98, 0x9a, 0xc, 0x4, 
-    0x2, 0x2, 0x99, 0x9b, 0x7, 0x4a, 0x2, 0x2, 0x9a, 0x99, 0x3, 0x2, 0x2, 
+    0x2, 0x2, 0x99, 0x9b, 0x7, 0x3d, 0x2, 0x2, 0x9a, 0x99, 0x3, 0x2, 0x2, 
     0x2, 0x9a, 0x9b, 0x3, 0x2, 0x2, 0x2, 0x9b, 0x9c, 0x3, 0x2, 0x2, 0x2, 
-    0x9c, 0x9e, 0x7, 0x46, 0x2, 0x2, 0x9d, 0x9f, 0x5, 0x1e, 0x10, 0x2, 0x9e, 
+    0x9c, 0x9e, 0x7, 0x39, 0x2, 0x2, 0x9d, 0x9f, 0x5, 0x1e, 0x10, 0x2, 0x9e, 
     0x9d, 0x3, 0x2, 0x2, 0x2, 0x9e, 0x9f, 0x3, 0x2, 0x2, 0x2, 0x9f, 0xa0, 
     0x3, 0x2, 0x2, 0x2, 0xa0, 0xb4, 0x5, 0x16, 0xc, 0x5, 0xa1, 0xa3, 0xc, 
-    0x7, 0x2, 0x2, 0xa2, 0xa4, 0x7, 0x4a, 0x2, 0x2, 0xa3, 0xa2, 0x3, 0x2, 
+    0x7, 0x2, 0x2, 0xa2, 0xa4, 0x7, 0x3d, 0x2, 0x2, 0xa3, 0xa2, 0x3, 0x2, 
     0x2, 0x2, 0xa3, 0xa4, 0x3, 0x2, 0x2, 0x2, 0xa4, 0xa5, 0x3, 0x2, 0x2, 
-    0x2, 0xa5, 0xa7, 0x7, 0x3c, 0x2, 0x2, 0xa6, 0xa8, 0x5, 0x1e, 0x10, 0x2, 
+    0x2, 0xa5, 0xa7, 0x7, 0x2f, 0x2, 0x2, 0xa6, 0xa8, 0x5, 0x1e, 0x10, 0x2, 
     0xa7, 0xa6, 0x3, 0x2, 0x2, 0x2, 0xa7, 0xa8, 0x3, 0x2, 0x2, 0x2, 0xa8, 
     0xa9, 0x3, 0x2, 0x2, 0x2, 0xa9, 0xaa, 0x7, 0x7, 0x2, 0x2, 0xaa, 0xab, 
     0x5, 0x12, 0xa, 0x2, 0xab, 0xac, 0x7, 0x8, 0x2, 0x2, 0xac, 0xb4, 0x3, 
-    0x2, 0x2, 0x2, 0xad, 0xae, 0xc, 0x6, 0x2, 0x2, 0xae, 0xb0, 0x7, 0x3e, 
-    0x2, 0x2, 0xaf, 0xb1, 0x7, 0x4a, 0x2, 0x2, 0xb0, 0xaf, 0x3, 0x2, 0x2, 
+    0x2, 0x2, 0x2, 0xad, 0xae, 0xc, 0x6, 0x2, 0x2, 0xae, 0xb0, 0x7, 0x31, 
+    0x2, 0x2, 0xaf, 0xb1, 0x7, 0x3d, 0x2, 0x2, 0xb0, 0xaf, 0x3, 0x2, 0x2, 
     0x2, 0xb0, 0xb1, 0x3, 0x2, 0x2, 0x2, 0xb1, 0xb2, 0x3, 0x2, 0x2, 0x2, 
-    0xb2, 0xb4, 0x7, 0x4c, 0x2, 0x2, 0xb3, 0x94, 0x3, 0x2, 0x2, 0x2, 0xb3, 
+    0xb2, 0xb4, 0x7, 0x3f, 0x2, 0x2, 0xb3, 0x94, 0x3, 0x2, 0x2, 0x2, 0xb3, 
     0x98, 0x3, 0x2, 0x2, 0x2, 0xb3, 0xa1, 0x3, 0x2, 0x2, 0x2, 0xb3, 0xad, 
     0x3, 0x2, 0x2, 0x2, 0xb4, 0xb7, 0x3, 0x2, 0x2, 0x2, 0xb5, 0xb3, 0x3, 
     0x2, 0x2, 0x2, 0xb5, 0xb6, 0x3, 0x2, 0x2, 0x2, 0xb6, 0x17, 0x3, 0x2, 
     0x2, 0x2, 0xb7, 0xb5, 0x3, 0x2, 0x2, 0x2, 0xb8, 0xb9, 0x8, 0xd, 0x1, 
-    0x2, 0xb9, 0xc4, 0x5, 0x32, 0x1a, 0x2, 0xba, 0xc4, 0x5, 0x2e, 0x18, 
+    0x2, 0xb9, 0xc4, 0x5, 0x2c, 0x17, 0x2, 0xba, 0xc4, 0x5, 0x30, 0x19, 
     0x2, 0xbb, 0xc4, 0x5, 0x2a, 0x16, 0x2, 0xbc, 0xbd, 0x5, 0x1c, 0xf, 0x2, 
     0xbd, 0xbe, 0x5, 0x18, 0xd, 0x6, 0xbe, 0xc4, 0x3, 0x2, 0x2, 0x2, 0xbf, 
     0xc0, 0x7, 0x7, 0x2, 0x2, 0xc0, 0xc1, 0x5, 0x14, 0xb, 0x2, 0xc1, 0xc2, 
@@ -2643,10 +2645,10 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x5, 0x28, 0x15, 0x2, 0xe3, 0xe5, 0x7, 0x7, 0x2, 0x2, 0xe4, 0xe6, 0x5, 
     0x12, 0xa, 0x2, 0xe5, 0xe4, 0x3, 0x2, 0x2, 0x2, 0xe5, 0xe6, 0x3, 0x2, 
     0x2, 0x2, 0xe6, 0xe7, 0x3, 0x2, 0x2, 0x2, 0xe7, 0xe8, 0x7, 0x8, 0x2, 
-    0x2, 0xe8, 0x2b, 0x3, 0x2, 0x2, 0x2, 0xe9, 0xea, 0x7, 0x1f, 0x2, 0x2, 
-    0xea, 0x2d, 0x3, 0x2, 0x2, 0x2, 0xeb, 0xec, 0x7, 0x1f, 0x2, 0x2, 0xec, 
-    0x2f, 0x3, 0x2, 0x2, 0x2, 0xed, 0xee, 0x7, 0x1f, 0x2, 0x2, 0xee, 0x31, 
-    0x3, 0x2, 0x2, 0x2, 0xef, 0xf0, 0x9, 0xd, 0x2, 0x2, 0xf0, 0x33, 0x3, 
+    0x2, 0xe8, 0x2b, 0x3, 0x2, 0x2, 0x2, 0xe9, 0xea, 0x9, 0xd, 0x2, 0x2, 
+    0xea, 0x2d, 0x3, 0x2, 0x2, 0x2, 0xeb, 0xec, 0x7, 0x56, 0x2, 0x2, 0xec, 
+    0x2f, 0x3, 0x2, 0x2, 0x2, 0xed, 0xee, 0x7, 0x56, 0x2, 0x2, 0xee, 0x31, 
+    0x3, 0x2, 0x2, 0x2, 0xef, 0xf0, 0x7, 0x56, 0x2, 0x2, 0xf0, 0x33, 0x3, 
     0x2, 0x2, 0x2, 0x1b, 0x36, 0x40, 0x47, 0x4c, 0x52, 0x58, 0x5f, 0x6b, 
     0x6e, 0x71, 0x77, 0x7e, 0x86, 0x8e, 0x9a, 0x9e, 0xa3, 0xa7, 0xb0, 0xb3, 
     0xb5, 0xc3, 0xcd, 0xcf, 0xe5, 

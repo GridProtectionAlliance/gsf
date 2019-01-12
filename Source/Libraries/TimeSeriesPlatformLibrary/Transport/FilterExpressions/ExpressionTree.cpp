@@ -867,7 +867,9 @@ ExpressionValueType ExpressionTree::DeriveOperationValueType(ExpressionOperatorT
         case ExpressionOperatorType::IsNull:
         case ExpressionOperatorType::IsNotNull:
         case ExpressionOperatorType::Like:
+        case ExpressionOperatorType::LikeExactMatch:
         case ExpressionOperatorType::NotLike:
+        case ExpressionOperatorType::NotLikeExactMatch:
             return leftValueType;
         default:
             throw ExpressionTreeException("Unexpected expression operator type encountered");

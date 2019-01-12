@@ -77,6 +77,9 @@ public:
   virtual void enterFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext *ctx) = 0;
   virtual void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext *ctx) = 0;
 
+  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
+  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
+
   virtual void enterTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
   virtual void exitTableName(FilterExpressionSyntaxParser::TableNameContext *ctx) = 0;
 
@@ -85,9 +88,6 @@ public:
 
   virtual void enterOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext *ctx) = 0;
   virtual void exitOrderByColumnName(FilterExpressionSyntaxParser::OrderByColumnNameContext *ctx) = 0;
-
-  virtual void enterLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
-  virtual void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext *ctx) = 0;
 
 
 };
