@@ -29,6 +29,7 @@
 #include "../Data/DataSet.h"
 
 using namespace std;
+using namespace boost::posix_time;
 using namespace GSF;
 using namespace GSF::Data;
 using namespace GSF::TimeSeries;
@@ -1090,6 +1091,20 @@ int main(int argc, char* argv[])
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 105
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "Now()");
+
+    assert(valueExpression->ValueType == ExpressionValueType::DateTime);
+    assert(valueExpression->ValueAsDateTime() <= to_time_t(second_clock::local_time()));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 106
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "UtcNow()");
+
+    assert(valueExpression->ValueType == ExpressionValueType::DateTime);
+    assert(valueExpression->ValueAsDateTime() <= to_time_t(second_clock::universal_time()));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.

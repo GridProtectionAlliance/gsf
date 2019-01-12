@@ -693,10 +693,10 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
         case ExpressionFunctionType::Lower:
             // TODO: Develop implementation
             return ExpressionTree::NullValue(ExpressionValueType::Undefined);
-        case ExpressionFunctionType::Max:
+        case ExpressionFunctionType::MaxOf:
             // TODO: Develop implementation
             return ExpressionTree::NullValue(ExpressionValueType::Undefined);
-        case ExpressionFunctionType::Min:
+        case ExpressionFunctionType::MinOf:
             // TODO: Develop implementation
             return ExpressionTree::NullValue(ExpressionValueType::Undefined);
         case ExpressionFunctionType::Now:
@@ -1415,13 +1415,13 @@ ValueExpressionPtr ExpressionTree::Lower(const ValueExpressionPtr& sourceValue) 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::String, toLower(sourceText));
 }
 
-ValueExpressionPtr ExpressionTree::Max(const ExpressionCollectionPtr& arguments) const
+ValueExpressionPtr ExpressionTree::MaxOf(const ExpressionCollectionPtr& arguments) const
 {
     // TODO: Develop implementation
     return ExpressionTree::NullValue(ExpressionValueType::Undefined);
 }
 
-ValueExpressionPtr ExpressionTree::Min(const ExpressionCollectionPtr& arguments) const
+ValueExpressionPtr ExpressionTree::MinOf(const ExpressionCollectionPtr& arguments) const
 {
     // TODO: Develop implementation
     return ExpressionTree::NullValue(ExpressionValueType::Undefined);

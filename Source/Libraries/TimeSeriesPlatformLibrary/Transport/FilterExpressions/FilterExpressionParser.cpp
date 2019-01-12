@@ -1077,7 +1077,6 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     ExpressionFunctionType functionType;
     auto functionNameContext = context->functionName();
 
-    // TODO: Add remaining function tests...
     if (functionNameContext->K_ABS() != nullptr)
         functionType = ExpressionFunctionType::Abs;
     else if (functionNameContext->K_CEILING() != nullptr)
@@ -1118,35 +1117,65 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
         functionType = ExpressionFunctionType::Len;
     else if (functionNameContext->K_LOWER() != nullptr)
         functionType = ExpressionFunctionType::Lower;
-    else if (functionNameContext->K_MAX() != nullptr)
-        functionType = ExpressionFunctionType::Max;
-    else if (functionNameContext->K_MIN() != nullptr)
-        functionType = ExpressionFunctionType::Min;
+    else if (functionNameContext->K_MAXOF() != nullptr)
+        functionType = ExpressionFunctionType::MaxOf;
+    else if (functionNameContext->K_MINOF() != nullptr)
+        functionType = ExpressionFunctionType::MinOf;
     else if (functionNameContext->K_NOW() != nullptr)
         functionType = ExpressionFunctionType::Now;
+    else if (functionNameContext->K_POWER() != nullptr)
+        functionType = ExpressionFunctionType::Power;
     else if (functionNameContext->K_REGEXMATCH() != nullptr)
         functionType = ExpressionFunctionType::RegExMatch;
     else if (functionNameContext->K_REGEXVAL() != nullptr)
         functionType = ExpressionFunctionType::RegExVal;
+    else if (functionNameContext->K_REPLACE() != nullptr)
+        functionType = ExpressionFunctionType::Replace;
+    else if (functionNameContext->K_REVERSE() != nullptr)
+        functionType = ExpressionFunctionType::Reverse;
+    else if (functionNameContext->K_ROUND() != nullptr)
+        functionType = ExpressionFunctionType::Round;
+    else if (functionNameContext->K_SPLIT() != nullptr)
+        functionType = ExpressionFunctionType::Split;
+    else if (functionNameContext->K_SQRT() != nullptr)
+        functionType = ExpressionFunctionType::Sqrt;
+    else if (functionNameContext->K_STARTSWITH() != nullptr)
+        functionType = ExpressionFunctionType::StartsWith;
+    else if (functionNameContext->K_STRCOUNT() != nullptr)
+        functionType = ExpressionFunctionType::StrCount;
+    else if (functionNameContext->K_STRCMP() != nullptr)
+        functionType = ExpressionFunctionType::StrCmp;
     else if (functionNameContext->K_SUBSTR() != nullptr)
         functionType = ExpressionFunctionType::SubStr;
     else if (functionNameContext->K_TRIM() != nullptr)
         functionType = ExpressionFunctionType::Trim;
+    else if (functionNameContext->K_TRIMLEFT() != nullptr)
+        functionType = ExpressionFunctionType::TrimLeft;
+    else if (functionNameContext->K_TRIMRIGHT() != nullptr)
+        functionType = ExpressionFunctionType::TrimRight;
+    else if (functionNameContext->K_UPPER() != nullptr)
+        functionType = ExpressionFunctionType::Upper;
+    else if (functionNameContext->K_UTCNOW() != nullptr)
+        functionType = ExpressionFunctionType::UtcNow;
     else
         throw FilterExpressionParserException("Unexpected function type \"" + functionNameContext->getText() + "\"");
 
     ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
     const auto expressionList = context->expressionList();
-    const int32_t argumentCount = expressionList->expression().size();
 
-    for (int32_t i = 0; i < argumentCount; i++)
+    if (expressionList != nullptr)
     {
-        ExpressionPtr argument;
+        const int32_t argumentCount = expressionList->expression().size();
 
-        if (TryGetExpr(expressionList->expression(i), argument))
-            arguments->push_back(argument);
-        else
-            throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for function \"" + functionNameContext->getText() + "\"");
+        for (int32_t i = 0; i < argumentCount; i++)
+        {
+            ExpressionPtr argument;
+
+            if (TryGetExpr(expressionList->expression(i), argument))
+                arguments->push_back(argument);
+            else
+                throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for function \"" + functionNameContext->getText() + "\"");
+        }
     }
 
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));

@@ -105,8 +105,8 @@ FilterExpressionSyntaxParser::ParseContext* FilterExpressionSyntaxParser::parse(
       case FilterExpressionSyntaxParser::K_LASTINDEXOF:
       case FilterExpressionSyntaxParser::K_LEN:
       case FilterExpressionSyntaxParser::K_LOWER:
-      case FilterExpressionSyntaxParser::K_MAX:
-      case FilterExpressionSyntaxParser::K_MIN:
+      case FilterExpressionSyntaxParser::K_MAXOF:
+      case FilterExpressionSyntaxParser::K_MINOF:
       case FilterExpressionSyntaxParser::K_NOT:
       case FilterExpressionSyntaxParser::K_NOW:
       case FilterExpressionSyntaxParser::K_NULL:
@@ -1249,8 +1249,8 @@ FilterExpressionSyntaxParser::ValueExpressionContext* FilterExpressionSyntaxPars
       case FilterExpressionSyntaxParser::K_LASTINDEXOF:
       case FilterExpressionSyntaxParser::K_LEN:
       case FilterExpressionSyntaxParser::K_LOWER:
-      case FilterExpressionSyntaxParser::K_MAX:
-      case FilterExpressionSyntaxParser::K_MIN:
+      case FilterExpressionSyntaxParser::K_MAXOF:
+      case FilterExpressionSyntaxParser::K_MINOF:
       case FilterExpressionSyntaxParser::K_NOW:
       case FilterExpressionSyntaxParser::K_POWER:
       case FilterExpressionSyntaxParser::K_REGEXMATCH:
@@ -1861,12 +1861,12 @@ tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_LOWER()
   return getToken(FilterExpressionSyntaxParser::K_LOWER, 0);
 }
 
-tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_MAX() {
-  return getToken(FilterExpressionSyntaxParser::K_MAX, 0);
+tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_MAXOF() {
+  return getToken(FilterExpressionSyntaxParser::K_MAXOF, 0);
 }
 
-tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_MIN() {
-  return getToken(FilterExpressionSyntaxParser::K_MIN, 0);
+tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_MINOF() {
+  return getToken(FilterExpressionSyntaxParser::K_MINOF, 0);
 }
 
 tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_NOW() {
@@ -1991,8 +1991,8 @@ FilterExpressionSyntaxParser::FunctionNameContext* FilterExpressionSyntaxParser:
       | (1ULL << (FilterExpressionSyntaxParser::K_LASTINDEXOF - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_LEN - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_LOWER - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::K_MAX - 28))
-      | (1ULL << (FilterExpressionSyntaxParser::K_MIN - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_MAXOF - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_MINOF - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_NOW - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_POWER - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 28))
@@ -2103,8 +2103,8 @@ FilterExpressionSyntaxParser::FunctionExpressionContext* FilterExpressionSyntaxP
       | (1ULL << FilterExpressionSyntaxParser::K_LASTINDEXOF)
       | (1ULL << FilterExpressionSyntaxParser::K_LEN)
       | (1ULL << FilterExpressionSyntaxParser::K_LOWER)
-      | (1ULL << FilterExpressionSyntaxParser::K_MAX)
-      | (1ULL << FilterExpressionSyntaxParser::K_MIN)
+      | (1ULL << FilterExpressionSyntaxParser::K_MAXOF)
+      | (1ULL << FilterExpressionSyntaxParser::K_MINOF)
       | (1ULL << FilterExpressionSyntaxParser::K_NOT)
       | (1ULL << FilterExpressionSyntaxParser::K_NOW)
       | (1ULL << FilterExpressionSyntaxParser::K_NULL))) != 0) || ((((_la - 64) & ~ 0x3fULL) == 0) &&
@@ -2459,7 +2459,7 @@ std::vector<std::string> FilterExpressionSyntaxParser::_symbolicNames = {
   "K_DATEDIFF", "K_DATEPART", "K_DESC", "K_ENDSWITH", "K_FILTER", "K_FLOOR", 
   "K_IIF", "K_IN", "K_INDEXOF", "K_IS", "K_ISDATE", "K_ISINTEGER", "K_ISGUID", 
   "K_ISNULL", "K_ISNUMERIC", "K_LASTINDEXOF", "K_LEN", "K_LIKE", "K_LOWER", 
-  "K_MAX", "K_MIN", "K_NOT", "K_NOW", "K_NULL", "K_OR", "K_ORDER", "K_POWER", 
+  "K_MAXOF", "K_MINOF", "K_NOT", "K_NOW", "K_NULL", "K_OR", "K_ORDER", "K_POWER", 
   "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", "K_REVERSE", "K_ROUND", "K_SQRT", 
   "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", "K_STRCMP", "K_SUBSTR", "K_TOP", 
   "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", "K_UPPER", "K_UTCNOW", "K_WHERE", 

@@ -21,7 +21,7 @@ public:
     K_DATEDIFF = 38, K_DATEPART = 39, K_DESC = 40, K_ENDSWITH = 41, K_FILTER = 42, 
     K_FLOOR = 43, K_IIF = 44, K_IN = 45, K_INDEXOF = 46, K_IS = 47, K_ISDATE = 48, 
     K_ISINTEGER = 49, K_ISGUID = 50, K_ISNULL = 51, K_ISNUMERIC = 52, K_LASTINDEXOF = 53, 
-    K_LEN = 54, K_LIKE = 55, K_LOWER = 56, K_MAX = 57, K_MIN = 58, K_NOT = 59, 
+    K_LEN = 54, K_LIKE = 55, K_LOWER = 56, K_MAXOF = 57, K_MINOF = 58, K_NOT = 59, 
     K_NOW = 60, K_NULL = 61, K_OR = 62, K_ORDER = 63, K_POWER = 64, K_REGEXMATCH = 65, 
     K_REGEXVAL = 66, K_REPLACE = 67, K_REVERSE = 68, K_ROUND = 69, K_SQRT = 70, 
     K_SPLIT = 71, K_STARTSWITH = 72, K_STRCOUNT = 73, K_STRCMP = 74, K_SUBSTR = 75, 
@@ -390,8 +390,8 @@ public:
     antlr4::tree::TerminalNode *K_LASTINDEXOF();
     antlr4::tree::TerminalNode *K_LEN();
     antlr4::tree::TerminalNode *K_LOWER();
-    antlr4::tree::TerminalNode *K_MAX();
-    antlr4::tree::TerminalNode *K_MIN();
+    antlr4::tree::TerminalNode *K_MAXOF();
+    antlr4::tree::TerminalNode *K_MINOF();
     antlr4::tree::TerminalNode *K_NOW();
     antlr4::tree::TerminalNode *K_POWER();
     antlr4::tree::TerminalNode *K_REGEXMATCH();

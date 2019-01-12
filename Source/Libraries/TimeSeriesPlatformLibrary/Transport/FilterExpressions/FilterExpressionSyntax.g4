@@ -161,8 +161,8 @@ functionName
  | K_LASTINDEXOF
  | K_LEN
  | K_LOWER
- | K_MAX            // Max in list of values, not table aggregate
- | K_MIN            // Min in list of values, not table aggregate
+ | K_MAXOF
+ | K_MINOF
  | K_NOW
  | K_POWER
  | K_REGEXMATCH
@@ -241,8 +241,8 @@ K_LASTINDEXOF : L A S T I N D E X O F;
 K_LEN : L E N;
 K_LIKE : L I K E;
 K_LOWER : L O W E R;
-K_MAX : M A X;
-K_MIN : M I N;
+K_MAXOF : M A X O F;
+K_MINOF : M I N O F;
 K_NOT : N O T;
 K_NOW : N O W;
 K_NULL : N U L L;

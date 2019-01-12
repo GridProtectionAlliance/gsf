@@ -201,8 +201,8 @@ enum class ExpressionFunctionType
     LastIndexOf,
     Len,
     Lower,
-    Max,
-    Min,
+    MaxOf,
+    MinOf,
     Now,
     Power,
     RegExMatch,
@@ -319,8 +319,8 @@ private:
     ValueExpressionPtr LastIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr Len(const ValueExpressionPtr& sourceValue) const;
     ValueExpressionPtr Lower(const ValueExpressionPtr& sourceValue) const;
-    ValueExpressionPtr Max(const ExpressionCollectionPtr& arguments) const;
-    ValueExpressionPtr Min(const ExpressionCollectionPtr& arguments) const;
+    ValueExpressionPtr MaxOf(const ExpressionCollectionPtr& arguments) const;
+    ValueExpressionPtr MinOf(const ExpressionCollectionPtr& arguments) const;
     ValueExpressionPtr Now() const;
     ValueExpressionPtr Power(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& exponentValue) const;
     ValueExpressionPtr RegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
