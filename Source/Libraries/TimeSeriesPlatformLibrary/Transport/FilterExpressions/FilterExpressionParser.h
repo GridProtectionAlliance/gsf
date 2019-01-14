@@ -49,14 +49,14 @@ public:
     const char* what() const noexcept;
 };
 
-struct MeasurementTableIDFields
+struct TableIDFields
 {
     std::string SignalIDFieldName;
     std::string MeasurementKeyFieldName;
     std::string PointTagFieldName;
 };
 
-typedef SharedPtr<MeasurementTableIDFields> MeasurementTableIDFieldsPtr;
+typedef SharedPtr<TableIDFields> TableIDFieldsPtr;
 
 class FilterExpressionParser : public FilterExpressionSyntaxBaseListener // NOLINT
 {
@@ -70,13 +70,13 @@ private:
     bool m_trackFilteredSignalIDs;
     bool m_trackFilteredRows;
 
-    std::string m_primaryMeasurementTableName;
+    std::string m_primaryTableName;
     std::unordered_set<GSF::TimeSeries::Guid> m_filteredSignalIDSet;
     std::vector<GSF::TimeSeries::Guid> m_filteredSignalIDs;
     std::vector<GSF::Data::DataRowPtr> m_filteredRows;
     std::vector<ExpressionTreePtr> m_expressionTrees;
     std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
-    std::map<const std::string, MeasurementTableIDFieldsPtr> m_measurementTableIDFields;
+    std::map<const std::string, TableIDFieldsPtr> m_tableIDFields;
 
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
@@ -88,11 +88,11 @@ public:
     const GSF::Data::DataSetPtr& GetDataSet() const;
     void SetDataSet(const GSF::Data::DataSetPtr& dataSet);
 
-    MeasurementTableIDFieldsPtr GetMeasurementTableIDFields(const std::string& measurementTableName) const;
-    void SetMeasurementTableIDFields(const std::string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields);
+    TableIDFieldsPtr GetTableIDFields(const std::string& tableName) const;
+    void SetTableIDFields(const std::string& tableName, const TableIDFieldsPtr& tableIDFields);
 
-    const std::string& GetPrimaryMeasurementTableName() const;
-    void SetPrimaryMeasurementTableName(const std::string& tableName);
+    const std::string& GetPrimaryTableName() const;
+    void SetPrimaryTableName(const std::string& tableName);
 
     void Evaluate();
 

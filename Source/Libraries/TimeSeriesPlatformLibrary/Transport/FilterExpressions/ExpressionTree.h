@@ -204,6 +204,7 @@ enum class ExpressionFunctionType
     MaxOf,
     MinOf,
     Now,
+    NthIndexOf,
     Power,
     RegExMatch,
     RegExVal,
@@ -282,7 +283,7 @@ class ExpressionTree
 {
 private:
     Data::DataRowPtr m_currentRow;
-    Data::DataTablePtr m_measurements;
+    Data::DataTablePtr m_table;
 
     ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
@@ -308,7 +309,7 @@ private:
     ValueExpressionPtr DateDiff(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& intervalType) const;
     ValueExpressionPtr DatePart(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& intervalType) const;
     ValueExpressionPtr EndsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
-    ValueExpressionPtr Floor(const ExpressionCollectionPtr& arguments) const;
+    ValueExpressionPtr Floor(const ValueExpressionPtr& sourceValue) const;
     ValueExpressionPtr IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const;
     ValueExpressionPtr IndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr IsDate(const ValueExpressionPtr& testValue) const;
@@ -322,12 +323,14 @@ private:
     ValueExpressionPtr MaxOf(const ExpressionCollectionPtr& arguments) const;
     ValueExpressionPtr MinOf(const ExpressionCollectionPtr& arguments) const;
     ValueExpressionPtr Now() const;
+    ValueExpressionPtr NthIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr Power(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& exponentValue) const;
     ValueExpressionPtr RegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
     ValueExpressionPtr RegExVal(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const;
     ValueExpressionPtr Replace(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& replaceValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr Reverse(const ValueExpressionPtr& sourceValue) const;
-    ValueExpressionPtr Split(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& delimitersValue, const ValueExpressionPtr& valueIndex) const;
+    ValueExpressionPtr Round(const ValueExpressionPtr& sourceValue) const;
+    ValueExpressionPtr Split(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& delimiterValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr Sqrt(const ValueExpressionPtr& sourceValue) const;
     ValueExpressionPtr StartsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
     ValueExpressionPtr StrCount(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const;
@@ -373,9 +376,9 @@ private:
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
 public:
-    ExpressionTree(Data::DataTablePtr measurements);
+    ExpressionTree(Data::DataTablePtr table);
 
-    const Data::DataTablePtr& Measurements() const;
+    const Data::DataTablePtr& Table() const;
     int32_t TopLimit;
     std::vector<std::pair<Data::DataColumnPtr, bool>> OrderByTerms;
 

@@ -188,28 +188,28 @@ void FilterExpressionParser::SetDataSet(const DataSetPtr& dataSet)
     m_dataSet = dataSet;
 }
 
-MeasurementTableIDFieldsPtr FilterExpressionParser::GetMeasurementTableIDFields(const string& measurementTableName) const
+TableIDFieldsPtr FilterExpressionParser::GetTableIDFields(const string& tableName) const
 {
-    MeasurementTableIDFieldsPtr measurementTableFields;
+    TableIDFieldsPtr tableIDFields;
     
-    TryGetValue<const string, MeasurementTableIDFieldsPtr>(m_measurementTableIDFields, measurementTableName, measurementTableFields, nullptr);
+    TryGetValue<const string, TableIDFieldsPtr>(m_tableIDFields, tableName, tableIDFields, nullptr);
 
-    return measurementTableFields;
+    return tableIDFields;
 }
 
-void FilterExpressionParser::SetMeasurementTableIDFields(const string& measurementTableName, const MeasurementTableIDFieldsPtr& measurementTableIDFields)
+void FilterExpressionParser::SetTableIDFields(const string& tableName, const TableIDFieldsPtr& tableIDFields)
 {
-    m_measurementTableIDFields.insert_or_assign(measurementTableName, measurementTableIDFields);
+    m_tableIDFields.insert_or_assign(tableName, tableIDFields);
 }
 
-const string& FilterExpressionParser::GetPrimaryMeasurementTableName() const
+const string& FilterExpressionParser::GetPrimaryTableName() const
 {
-    return m_primaryMeasurementTableName;
+    return m_primaryTableName;
 }
 
-void FilterExpressionParser::SetPrimaryMeasurementTableName(const string& tableName)
+void FilterExpressionParser::SetPrimaryTableName(const string& tableName)
 {
-    m_primaryMeasurementTableName = tableName;
+    m_primaryTableName = tableName;
 }
 
 template<typename T>
@@ -251,12 +251,12 @@ void FilterExpressionParser::Evaluate()
     for (size_t x = 0; x < m_expressionTrees.size(); x++)
     {
         const ExpressionTreePtr& expressionTree = m_expressionTrees[x];
-        const DataTablePtr& measurements = expressionTree->Measurements();
+        const DataTablePtr& measurements = expressionTree->Table();
         int32_t signalIDColumnIndex = -1;
 
         if (m_trackFilteredSignalIDs)
         {
-            const MeasurementTableIDFieldsPtr& measurementTableIDFields = GetMeasurementTableIDFields(measurements->Name());
+            const TableIDFieldsPtr& measurementTableIDFields = GetTableIDFields(measurements->Name());
 
             if (measurementTableIDFields == nullptr)
                 throw FilterExpressionParserException("Failed to find ID fields record for measurement table \"" + measurements->Name() + "\"");
@@ -473,13 +473,13 @@ void FilterExpressionParser::enterFilterExpressionStatement(FilterExpressionSynt
  */
 void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext* context)
 {
-    const string& measurementTableName = context->tableName()->getText();
-    const DataTablePtr& measurements = m_dataSet->Table(measurementTableName);
+    const string& tableName = context->tableName()->getText();
+    const DataTablePtr& table = m_dataSet->Table(tableName);
 
-    if (measurements == nullptr)
-        throw FilterExpressionParserException("Failed to find measurement table \"" + measurementTableName + "\"");
+    if (table == nullptr)
+        throw FilterExpressionParserException("Failed to find table \"" + tableName + "\"");
 
-    m_activeExpressionTree = NewSharedPtr<ExpressionTree>(measurements);
+    m_activeExpressionTree = NewSharedPtr<ExpressionTree>(table);
     m_expressionTrees.push_back(m_activeExpressionTree);
 
     if (context->K_TOP() != nullptr)
@@ -491,10 +491,10 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
         {
             auto orderingTermContext = context->orderingTerm(i);
             const string& orderByColumnName = orderingTermContext->orderByColumnName()->getText();
-            const DataColumnPtr& orderByColumn = measurements->Column(orderByColumnName);
+            const DataColumnPtr& orderByColumn = table->Column(orderByColumnName);
 
             if (orderByColumn == nullptr)
-                throw FilterExpressionParserException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + measurements->Name() + "\"");
+                throw FilterExpressionParserException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + table->Name() + "\"");
 
             m_activeExpressionTree->OrderByTerms.emplace_back(
                 orderByColumn,
@@ -526,12 +526,12 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
             return;
     }
 
-    const DataTablePtr& measurements = m_dataSet->Table(m_primaryMeasurementTableName);
+    const DataTablePtr& measurements = m_dataSet->Table(m_primaryTableName);
 
     if (measurements == nullptr)
         return;
 
-    const MeasurementTableIDFieldsPtr& measurementTableIDFields = GetMeasurementTableIDFields(m_primaryMeasurementTableName);
+    const TableIDFieldsPtr& measurementTableIDFields = GetTableIDFields(m_primaryTableName);
 
     if (measurementTableIDFields == nullptr)
         return;
@@ -586,12 +586,12 @@ void FilterExpressionParser::enterExpression(FilterExpressionSyntaxParser::Expre
     // Handle case of encountering a standalone expression, i.e., an expression not within a filter statement context
     if (m_activeExpressionTree == nullptr)
     {
-        const DataTablePtr& measurements = m_dataSet->Table(m_primaryMeasurementTableName);
+        const DataTablePtr& table = m_dataSet->Table(m_primaryTableName);
 
-        if (measurements == nullptr)
-            throw FilterExpressionParserException("Failed to find measurement table \"" + m_primaryMeasurementTableName + "\"");
+        if (table == nullptr)
+            throw FilterExpressionParserException("Failed to find table \"" + m_primaryTableName + "\"");
 
-        m_activeExpressionTree = NewSharedPtr<ExpressionTree>(measurements);
+        m_activeExpressionTree = NewSharedPtr<ExpressionTree>(table);
         m_expressionTrees.push_back(m_activeExpressionTree);
     }
 }
@@ -700,7 +700,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     // Check for IN expressions
     const auto inKeywordContext = context->K_IN();
     const auto notKeywordContext = context->K_NOT();
-    const auto exactMatchOperatorContext = context->exactMatchOperator();
+    const auto exactMatchModifierContext = context->exactMatchModifier();
 
     if (inKeywordContext != nullptr)
     {
@@ -728,7 +728,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
                 throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for \"IN\" operation");
         }
 
-        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr, exactMatchOperatorContext != nullptr));
+        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr, exactMatchModifierContext != nullptr));
         return;
     }
 
@@ -802,7 +802,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
 
     if (likeKeywordContext != nullptr)
     {
-        if (exactMatchOperatorContext == nullptr)
+        if (exactMatchModifierContext == nullptr)
             operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
         else
             operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::LikeExactMatch : ExpressionOperatorType::NotLikeExactMatch;
@@ -1059,10 +1059,10 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
 void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext* context)
 {
     const string& columnName = context->IDENTIFIER()->getText();
-    const DataColumnPtr& dataColumn = m_activeExpressionTree->Measurements()->Column(columnName);
+    const DataColumnPtr& dataColumn = m_activeExpressionTree->Table()->Column(columnName);
 
     if (dataColumn == nullptr)
-        throw FilterExpressionParserException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Measurements()->Name() + "\"");
+        throw FilterExpressionParserException("Failed to find column \"" + columnName + "\" in table \"" + m_activeExpressionTree->Table()->Name() + "\"");
 
     AddExpr(context, NewSharedPtr<ColumnExpression>(dataColumn));
 }
@@ -1123,6 +1123,8 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
         functionType = ExpressionFunctionType::MinOf;
     else if (functionNameContext->K_NOW() != nullptr)
         functionType = ExpressionFunctionType::Now;
+    else if (functionNameContext->K_NTHINDEXOF() != nullptr)
+        functionType = ExpressionFunctionType::NthIndexOf;
     else if (functionNameContext->K_POWER() != nullptr)
         functionType = ExpressionFunctionType::Power;
     else if (functionNameContext->K_REGEXMATCH() != nullptr)
@@ -1186,7 +1188,7 @@ vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const 
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
 
     parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryMeasurementTableName(dataTable->Name());
+    parser->SetPrimaryTableName(dataTable->Name());
     parser->SetTrackFilteredSignalIDs(false);
     parser->SetTrackFilteredRows(false);
 
@@ -1217,7 +1219,7 @@ vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable,
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
 
     parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryMeasurementTableName(dataTable->Name());
+    parser->SetPrimaryTableName(dataTable->Name());
     parser->SetTrackFilteredSignalIDs(false);
     parser->SetTrackFilteredRows(true);
     parser->Evaluate();

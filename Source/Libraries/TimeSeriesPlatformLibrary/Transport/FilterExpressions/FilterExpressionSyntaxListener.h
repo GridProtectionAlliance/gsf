@@ -56,8 +56,8 @@ public:
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext *ctx) = 0;
 
-  virtual void enterExactMatchOperator(FilterExpressionSyntaxParser::ExactMatchOperatorContext *ctx) = 0;
-  virtual void exitExactMatchOperator(FilterExpressionSyntaxParser::ExactMatchOperatorContext *ctx) = 0;
+  virtual void enterExactMatchModifier(FilterExpressionSyntaxParser::ExactMatchModifierContext *ctx) = 0;
+  virtual void exitExactMatchModifier(FilterExpressionSyntaxParser::ExactMatchModifierContext *ctx) = 0;
 
   virtual void enterComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext *ctx) = 0;
   virtual void exitComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext *ctx) = 0;

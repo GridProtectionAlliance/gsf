@@ -86,10 +86,10 @@ expression
  ;
 
 predicateExpression
- : predicateExpression K_NOT? K_IN exactMatchOperator? '(' expressionList ')'
+ : predicateExpression K_NOT? K_IN exactMatchModifier? '(' expressionList ')'
  | predicateExpression K_IS K_NOT? K_NULL
  | predicateExpression comparisonOperator predicateExpression
- | predicateExpression K_NOT? K_LIKE exactMatchOperator? predicateExpression
+ | predicateExpression K_NOT? K_LIKE exactMatchModifier? predicateExpression
  | valueExpression
  ;
 
@@ -113,7 +113,7 @@ unaryOperator
  | '~' | '!' | K_NOT
  ;
 
-exactMatchOperator
+exactMatchModifier
  : K_BINARY
  | '==='
  ;
@@ -164,6 +164,7 @@ functionName
  | K_MAXOF
  | K_MINOF
  | K_NOW
+ | K_NTHINDEXOF
  | K_POWER
  | K_REGEXMATCH
  | K_REGEXVAL
@@ -245,6 +246,7 @@ K_MAXOF : M A X O F;
 K_MINOF : M I N O F;
 K_NOT : N O T;
 K_NOW : N O W;
+K_NTHINDEXOF : N T H I N D E X O F;
 K_NULL : N U L L;
 K_OR : O R;
 K_ORDER : O R D E R;

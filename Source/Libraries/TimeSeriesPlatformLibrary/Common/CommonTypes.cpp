@@ -28,8 +28,9 @@
 #include <boost/uuid/uuid_generators.hpp>
 
 using namespace std;
-using namespace GSF::TimeSeries;
+using namespace boost;
 using namespace boost::algorithm;
+using namespace GSF::TimeSeries;
 
 boost::uuids::random_generator RandomGuidGen;
 boost::uuids::nil_generator NilGuidGen;
@@ -70,9 +71,9 @@ size_t StringHasher::operator()(const string& value) const
     for (string::const_iterator it = value.begin(); it != value.end(); ++it)
     {
         if (m_ignoreCase)
-            boost::hash_combine(seed, toupper(*it, locale));
+            hash_combine(seed, toupper(*it, locale));
         else
-            boost::hash_combine(seed, *it);
+            hash_combine(seed, *it);
     }
 
     return seed;
@@ -98,15 +99,15 @@ Guid GSF::TimeSeries::NewGuid()
     return RandomGuidGen();
 }
 
-bool GSF::TimeSeries::IsEqual(const std::string& left, const std::string& right, bool ignoreCase)
+bool GSF::TimeSeries::IsEqual(const string& left, const string& right, bool ignoreCase)
 {
     if (ignoreCase)
-        return boost::iequals(left, right);
+        return iequals(left, right);
 
-    return boost::equals(left, right);
+    return equals(left, right);
 }
 
-bool GSF::TimeSeries::StartsWith(const std::string& value, const std::string& findValue, bool ignoreCase)
+bool GSF::TimeSeries::StartsWith(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return istarts_with(value, findValue);
@@ -114,7 +115,7 @@ bool GSF::TimeSeries::StartsWith(const std::string& value, const std::string& fi
     return starts_with(value, findValue);
 }
 
-bool GSF::TimeSeries::EndsWith(const std::string& value, const std::string& findValue, bool ignoreCase)
+bool GSF::TimeSeries::EndsWith(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return iends_with(value, findValue);
@@ -122,7 +123,7 @@ bool GSF::TimeSeries::EndsWith(const std::string& value, const std::string& find
     return ends_with(value, findValue);
 }
 
-bool GSF::TimeSeries::Contains(const std::string& value, const std::string& findValue, bool ignoreCase)
+bool GSF::TimeSeries::Contains(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return icontains(value, findValue);
@@ -130,7 +131,23 @@ bool GSF::TimeSeries::Contains(const std::string& value, const std::string& find
     return contains(value, findValue);
 }
 
-int32_t GSF::TimeSeries::Compare(const std::string& leftValue, const std::string& rightValue, bool ignoreCase)
+int32_t GSF::TimeSeries::Count(const string& value, const string& findValue, bool ignoreCase)
+{
+    find_iterator<string::const_iterator> it = ignoreCase ?
+        make_find_iterator(value, first_finder(findValue, is_iequal())) :
+        make_find_iterator(value, first_finder(findValue, is_equal()));
+
+    const find_iterator<string::const_iterator> end{};
+    int32_t count = 0;
+
+    for(; it != end; ++it, ++count)
+    {
+    }
+
+    return count;
+}
+
+int32_t GSF::TimeSeries::Compare(const string& leftValue, const string& rightValue, bool ignoreCase)
 {
     if (ignoreCase)
     {
@@ -152,9 +169,9 @@ int32_t GSF::TimeSeries::Compare(const std::string& leftValue, const std::string
     return 0;
 }
 
-int32_t GSF::TimeSeries::IndexOf(const std::string& value, const std::string& findValue, bool ignoreCase)
+int32_t GSF::TimeSeries::IndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
-    boost::iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
+    iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
 
     if (it.empty())
         return -1;
@@ -162,7 +179,62 @@ int32_t GSF::TimeSeries::IndexOf(const std::string& value, const std::string& fi
     return distance(value.begin(), it.begin());
 }
 
-std::string GSF::TimeSeries::Replace(const std::string& value, const std::string& findValue, const std::string& replaceValue, bool ignoreCase)
+int32_t GSF::TimeSeries::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
+{
+    iterator_range<string::const_iterator> it = ignoreCase ? ifind_nth(value, findValue, index) : find_nth(value, findValue, index);
+
+    if (it.empty())
+        return -1;
+
+    return distance(value.begin(), it.begin());
+}
+
+int32_t GSF::TimeSeries::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
+{
+    iterator_range<string::const_iterator> it = ignoreCase ? ifind_last(value, findValue) : find_last(value, findValue);
+
+    if (it.empty())
+        return -1;
+
+    return distance(value.begin(), it.begin());
+}
+
+vector<string> GSF::TimeSeries::Split(const string& value, const string& delimiterValue, bool ignoreCase)
+{
+    split_iterator<string::const_iterator> it = ignoreCase ?
+        make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
+        make_split_iterator(value, first_finder(delimiterValue, is_equal()));
+
+    const split_iterator<string::const_iterator> end{};
+    vector<string> values;
+
+    for(; it != end; ++it)
+    {
+        values.push_back(copy_range<string>(*it));
+    }
+
+    return values;
+}
+
+string GSF::TimeSeries::Split(const string& value, const string& delimiterValue, int32_t index, bool ignoreCase)
+{
+    split_iterator<string::const_iterator> it = ignoreCase ?
+        make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
+        make_split_iterator(value, first_finder(delimiterValue, is_equal()));
+
+    const split_iterator<string::const_iterator> end{};
+    int32_t count = 0;
+
+    for(; it != end; ++it, ++count)
+    {
+        if (count == index)
+            return copy_range<string>(*it);
+    }
+
+    return string{};
+}
+
+string GSF::TimeSeries::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
 {
     if (ignoreCase)
         return ireplace_all_copy(value, findValue, replaceValue);
@@ -170,27 +242,27 @@ std::string GSF::TimeSeries::Replace(const std::string& value, const std::string
     return replace_all_copy(value, findValue, replaceValue);
 }
 
-std::string GSF::TimeSeries::ToUpper(const std::string& value)
+string GSF::TimeSeries::ToUpper(const string& value)
 {
     return to_upper_copy(value);
 }
 
-std::string GSF::TimeSeries::ToLower(const std::string& value)
+string GSF::TimeSeries::ToLower(const string& value)
 {
     return to_lower_copy(value);
 }
 
-std::string GSF::TimeSeries::Trim(const std::string& value)
+string GSF::TimeSeries::Trim(const string& value)
 {
     return trim_copy(value);
 }
 
-std::string GSF::TimeSeries::TrimRight(const std::string& value)
+string GSF::TimeSeries::TrimRight(const string& value)
 {
     return trim_right_copy(value);
 }
 
-std::string GSF::TimeSeries::TrimLeft(const std::string& value)
+string GSF::TimeSeries::TrimLeft(const string& value)
 {
     return trim_left_copy(value);
 }

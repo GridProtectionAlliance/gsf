@@ -109,6 +109,7 @@ FilterExpressionSyntaxParser::ParseContext* FilterExpressionSyntaxParser::parse(
       case FilterExpressionSyntaxParser::K_MINOF:
       case FilterExpressionSyntaxParser::K_NOT:
       case FilterExpressionSyntaxParser::K_NOW:
+      case FilterExpressionSyntaxParser::K_NTHINDEXOF:
       case FilterExpressionSyntaxParser::K_NULL:
       case FilterExpressionSyntaxParser::K_POWER:
       case FilterExpressionSyntaxParser::K_REGEXMATCH:
@@ -438,10 +439,10 @@ FilterExpressionSyntaxParser::IdentifierStatementContext* FilterExpressionSyntax
     enterOuterAlt(_localctx, 1);
     setState(88);
     _la = _input->LA(1);
-    if (!(((((_la - 87) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 87)) & ((1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 87))
-      | (1ULL << (FilterExpressionSyntaxParser::MEASUREMENT_KEY_LITERAL - 87))
-      | (1ULL << (FilterExpressionSyntaxParser::POINT_TAG_LITERAL - 87)))) != 0))) {
+    if (!(((((_la - 88) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 88)) & ((1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 88))
+      | (1ULL << (FilterExpressionSyntaxParser::MEASUREMENT_KEY_LITERAL - 88))
+      | (1ULL << (FilterExpressionSyntaxParser::POINT_TAG_LITERAL - 88)))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -941,8 +942,8 @@ tree::TerminalNode* FilterExpressionSyntaxParser::PredicateExpressionContext::K_
   return getToken(FilterExpressionSyntaxParser::K_NOT, 0);
 }
 
-FilterExpressionSyntaxParser::ExactMatchOperatorContext* FilterExpressionSyntaxParser::PredicateExpressionContext::exactMatchOperator() {
-  return getRuleContext<FilterExpressionSyntaxParser::ExactMatchOperatorContext>(0);
+FilterExpressionSyntaxParser::ExactMatchModifierContext* FilterExpressionSyntaxParser::PredicateExpressionContext::exactMatchModifier() {
+  return getRuleContext<FilterExpressionSyntaxParser::ExactMatchModifierContext>(0);
 }
 
 tree::TerminalNode* FilterExpressionSyntaxParser::PredicateExpressionContext::K_IN() {
@@ -1050,7 +1051,7 @@ FilterExpressionSyntaxParser::PredicateExpressionContext* FilterExpressionSyntax
 
           || _la == FilterExpressionSyntaxParser::K_BINARY) {
             setState(155);
-            exactMatchOperator();
+            exactMatchModifier();
           }
           setState(158);
           predicateExpression(3);
@@ -1081,7 +1082,7 @@ FilterExpressionSyntaxParser::PredicateExpressionContext* FilterExpressionSyntax
 
           || _la == FilterExpressionSyntaxParser::K_BINARY) {
             setState(164);
-            exactMatchOperator();
+            exactMatchModifier();
           }
           setState(167);
           match(FilterExpressionSyntaxParser::T__4);
@@ -1252,6 +1253,7 @@ FilterExpressionSyntaxParser::ValueExpressionContext* FilterExpressionSyntaxPars
       case FilterExpressionSyntaxParser::K_MAXOF:
       case FilterExpressionSyntaxParser::K_MINOF:
       case FilterExpressionSyntaxParser::K_NOW:
+      case FilterExpressionSyntaxParser::K_NTHINDEXOF:
       case FilterExpressionSyntaxParser::K_POWER:
       case FilterExpressionSyntaxParser::K_REGEXMATCH:
       case FilterExpressionSyntaxParser::K_REGEXVAL:
@@ -1473,36 +1475,36 @@ FilterExpressionSyntaxParser::UnaryOperatorContext* FilterExpressionSyntaxParser
   return _localctx;
 }
 
-//----------------- ExactMatchOperatorContext ------------------------------------------------------------------
+//----------------- ExactMatchModifierContext ------------------------------------------------------------------
 
-FilterExpressionSyntaxParser::ExactMatchOperatorContext::ExactMatchOperatorContext(ParserRuleContext *parent, size_t invokingState)
+FilterExpressionSyntaxParser::ExactMatchModifierContext::ExactMatchModifierContext(ParserRuleContext *parent, size_t invokingState)
   : ParserRuleContext(parent, invokingState) {
 }
 
-tree::TerminalNode* FilterExpressionSyntaxParser::ExactMatchOperatorContext::K_BINARY() {
+tree::TerminalNode* FilterExpressionSyntaxParser::ExactMatchModifierContext::K_BINARY() {
   return getToken(FilterExpressionSyntaxParser::K_BINARY, 0);
 }
 
 
-size_t FilterExpressionSyntaxParser::ExactMatchOperatorContext::getRuleIndex() const {
-  return FilterExpressionSyntaxParser::RuleExactMatchOperator;
+size_t FilterExpressionSyntaxParser::ExactMatchModifierContext::getRuleIndex() const {
+  return FilterExpressionSyntaxParser::RuleExactMatchModifier;
 }
 
-void FilterExpressionSyntaxParser::ExactMatchOperatorContext::enterRule(tree::ParseTreeListener *listener) {
+void FilterExpressionSyntaxParser::ExactMatchModifierContext::enterRule(tree::ParseTreeListener *listener) {
   auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
   if (parserListener != nullptr)
-    parserListener->enterExactMatchOperator(this);
+    parserListener->enterExactMatchModifier(this);
 }
 
-void FilterExpressionSyntaxParser::ExactMatchOperatorContext::exitRule(tree::ParseTreeListener *listener) {
+void FilterExpressionSyntaxParser::ExactMatchModifierContext::exitRule(tree::ParseTreeListener *listener) {
   auto parserListener = dynamic_cast<FilterExpressionSyntaxListener *>(listener);
   if (parserListener != nullptr)
-    parserListener->exitExactMatchOperator(this);
+    parserListener->exitExactMatchModifier(this);
 }
 
-FilterExpressionSyntaxParser::ExactMatchOperatorContext* FilterExpressionSyntaxParser::exactMatchOperator() {
-  ExactMatchOperatorContext *_localctx = _tracker.createInstance<ExactMatchOperatorContext>(_ctx, getState());
-  enterRule(_localctx, 28, FilterExpressionSyntaxParser::RuleExactMatchOperator);
+FilterExpressionSyntaxParser::ExactMatchModifierContext* FilterExpressionSyntaxParser::exactMatchModifier() {
+  ExactMatchModifierContext *_localctx = _tracker.createInstance<ExactMatchModifierContext>(_ctx, getState());
+  enterRule(_localctx, 28, FilterExpressionSyntaxParser::RuleExactMatchModifier);
   size_t _la = 0;
 
   auto onExit = finally([=] {
@@ -1873,6 +1875,10 @@ tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_NOW() {
   return getToken(FilterExpressionSyntaxParser::K_NOW, 0);
 }
 
+tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_NTHINDEXOF() {
+  return getToken(FilterExpressionSyntaxParser::K_NTHINDEXOF, 0);
+}
+
 tree::TerminalNode* FilterExpressionSyntaxParser::FunctionNameContext::K_POWER() {
   return getToken(FilterExpressionSyntaxParser::K_POWER, 0);
 }
@@ -1994,6 +2000,7 @@ FilterExpressionSyntaxParser::FunctionNameContext* FilterExpressionSyntaxParser:
       | (1ULL << (FilterExpressionSyntaxParser::K_MAXOF - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_MINOF - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_NOW - 28))
+      | (1ULL << (FilterExpressionSyntaxParser::K_NTHINDEXOF - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_POWER - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 28))
       | (1ULL << (FilterExpressionSyntaxParser::K_REGEXVAL - 28))
@@ -2107,31 +2114,32 @@ FilterExpressionSyntaxParser::FunctionExpressionContext* FilterExpressionSyntaxP
       | (1ULL << FilterExpressionSyntaxParser::K_MINOF)
       | (1ULL << FilterExpressionSyntaxParser::K_NOT)
       | (1ULL << FilterExpressionSyntaxParser::K_NOW)
-      | (1ULL << FilterExpressionSyntaxParser::K_NULL))) != 0) || ((((_la - 64) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 64)) & ((1ULL << (FilterExpressionSyntaxParser::K_POWER - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXVAL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REPLACE - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_REVERSE - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_ROUND - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_SQRT - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_SPLIT - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_STARTSWITH - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_STRCOUNT - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_STRCMP - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_SUBSTR - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_TRIM - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMLEFT - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMRIGHT - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_UPPER - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::K_UTCNOW - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::IDENTIFIER - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 64))
-      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 64)))) != 0)) {
+      | (1ULL << FilterExpressionSyntaxParser::K_NTHINDEXOF)
+      | (1ULL << FilterExpressionSyntaxParser::K_NULL))) != 0) || ((((_la - 65) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 65)) & ((1ULL << (FilterExpressionSyntaxParser::K_POWER - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXMATCH - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REGEXVAL - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REPLACE - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_REVERSE - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_ROUND - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_SQRT - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_SPLIT - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_STARTSWITH - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_STRCOUNT - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_STRCMP - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_SUBSTR - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_TRIM - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMLEFT - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_TRIMRIGHT - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_UPPER - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::K_UTCNOW - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::IDENTIFIER - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 65))
+      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 65)))) != 0)) {
       setState(226);
       expressionList();
     }
@@ -2211,14 +2219,14 @@ FilterExpressionSyntaxParser::LiteralValueContext* FilterExpressionSyntaxParser:
     enterOuterAlt(_localctx, 1);
     setState(231);
     _la = _input->LA(1);
-    if (!(((((_la - 61) & ~ 0x3fULL) == 0) &&
-      ((1ULL << (_la - 61)) & ((1ULL << (FilterExpressionSyntaxParser::K_NULL - 61))
-      | (1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 61))
-      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 61))
-      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 61))
-      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 61))
-      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 61))
-      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 61)))) != 0))) {
+    if (!(((((_la - 62) & ~ 0x3fULL) == 0) &&
+      ((1ULL << (_la - 62)) & ((1ULL << (FilterExpressionSyntaxParser::K_NULL - 62))
+      | (1ULL << (FilterExpressionSyntaxParser::BOOLEAN_LITERAL - 62))
+      | (1ULL << (FilterExpressionSyntaxParser::INTEGER_LITERAL - 62))
+      | (1ULL << (FilterExpressionSyntaxParser::NUMERIC_LITERAL - 62))
+      | (1ULL << (FilterExpressionSyntaxParser::GUID_LITERAL - 62))
+      | (1ULL << (FilterExpressionSyntaxParser::STRING_LITERAL - 62))
+      | (1ULL << (FilterExpressionSyntaxParser::DATETIME_LITERAL - 62)))) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -2441,7 +2449,7 @@ std::vector<std::string> FilterExpressionSyntaxParser::_ruleNames = {
   "parse", "error", "filterExpressionStatementList", "filterExpressionStatement", 
   "identifierStatement", "filterStatement", "topLimit", "orderingTerm", 
   "expressionList", "expression", "predicateExpression", "valueExpression", 
-  "notOperator", "unaryOperator", "exactMatchOperator", "comparisonOperator", 
+  "notOperator", "unaryOperator", "exactMatchModifier", "comparisonOperator", 
   "logicalOperator", "bitwiseOperator", "mathOperator", "functionName", 
   "functionExpression", "literalValue", "tableName", "columnName", "orderByColumnName"
 };
@@ -2459,14 +2467,14 @@ std::vector<std::string> FilterExpressionSyntaxParser::_symbolicNames = {
   "K_DATEDIFF", "K_DATEPART", "K_DESC", "K_ENDSWITH", "K_FILTER", "K_FLOOR", 
   "K_IIF", "K_IN", "K_INDEXOF", "K_IS", "K_ISDATE", "K_ISINTEGER", "K_ISGUID", 
   "K_ISNULL", "K_ISNUMERIC", "K_LASTINDEXOF", "K_LEN", "K_LIKE", "K_LOWER", 
-  "K_MAXOF", "K_MINOF", "K_NOT", "K_NOW", "K_NULL", "K_OR", "K_ORDER", "K_POWER", 
-  "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", "K_REVERSE", "K_ROUND", "K_SQRT", 
-  "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", "K_STRCMP", "K_SUBSTR", "K_TOP", 
-  "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", "K_UPPER", "K_UTCNOW", "K_WHERE", 
-  "BOOLEAN_LITERAL", "IDENTIFIER", "INTEGER_LITERAL", "NUMERIC_LITERAL", 
-  "GUID_LITERAL", "MEASUREMENT_KEY_LITERAL", "POINT_TAG_LITERAL", "STRING_LITERAL", 
-  "DATETIME_LITERAL", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", "SPACES", 
-  "UNEXPECTED_CHAR"
+  "K_MAXOF", "K_MINOF", "K_NOT", "K_NOW", "K_NTHINDEXOF", "K_NULL", "K_OR", 
+  "K_ORDER", "K_POWER", "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", "K_REVERSE", 
+  "K_ROUND", "K_SQRT", "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", "K_STRCMP", 
+  "K_SUBSTR", "K_TOP", "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", "K_UPPER", 
+  "K_UTCNOW", "K_WHERE", "BOOLEAN_LITERAL", "IDENTIFIER", "INTEGER_LITERAL", 
+  "NUMERIC_LITERAL", "GUID_LITERAL", "MEASUREMENT_KEY_LITERAL", "POINT_TAG_LITERAL", 
+  "STRING_LITERAL", "DATETIME_LITERAL", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", 
+  "SPACES", "UNEXPECTED_CHAR"
 };
 
 dfa::Vocabulary FilterExpressionSyntaxParser::_vocabulary(_literalNames, _symbolicNames);
@@ -2489,7 +2497,7 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
 
   _serializedATN = {
     0x3, 0x608b, 0xa72a, 0x8133, 0xb9ed, 0x417c, 0x3be7, 0x7786, 0x5964, 
-    0x3, 0x61, 0xf2, 0x4, 0x2, 0x9, 0x2, 0x4, 0x3, 0x9, 0x3, 0x4, 0x4, 0x9, 
+    0x3, 0x62, 0xf2, 0x4, 0x2, 0x9, 0x2, 0x4, 0x3, 0x9, 0x3, 0x4, 0x4, 0x9, 
     0x4, 0x4, 0x5, 0x9, 0x5, 0x4, 0x6, 0x9, 0x6, 0x4, 0x7, 0x9, 0x7, 0x4, 
     0x8, 0x9, 0x8, 0x4, 0x9, 0x9, 0x9, 0x4, 0xa, 0x9, 0xa, 0x4, 0xb, 0x9, 
     0xb, 0x4, 0xc, 0x9, 0xc, 0x4, 0xd, 0x9, 0xd, 0x4, 0xe, 0x9, 0xe, 0x4, 
@@ -2529,13 +2537,13 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x1a, 0x3, 0x1a, 0x3, 0x1a, 0x2, 0x5, 0x14, 0x16, 0x18, 0x1b, 0x2, 0x4, 
     0x6, 0x8, 0xa, 0xc, 0xe, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e, 
     0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e, 0x30, 0x32, 0x2, 0xe, 
-    0x3, 0x2, 0x59, 0x5b, 0x3, 0x2, 0x5, 0x6, 0x4, 0x2, 0x20, 0x20, 0x2a, 
+    0x3, 0x2, 0x5a, 0x5c, 0x3, 0x2, 0x5, 0x6, 0x4, 0x2, 0x20, 0x20, 0x2a, 
     0x2a, 0x4, 0x2, 0x9, 0x9, 0x3d, 0x3d, 0x5, 0x2, 0x5, 0x6, 0x9, 0xa, 
     0x3d, 0x3d, 0x4, 0x2, 0xb, 0xb, 0x21, 0x21, 0x3, 0x2, 0xb, 0x14, 0x5, 
-    0x2, 0x15, 0x16, 0x1f, 0x1f, 0x40, 0x40, 0x3, 0x2, 0x17, 0x1a, 0x4, 
+    0x2, 0x15, 0x16, 0x1f, 0x1f, 0x41, 0x41, 0x3, 0x2, 0x17, 0x1a, 0x4, 
     0x2, 0x5, 0x6, 0x1b, 0x1d, 0xc, 0x2, 0x1e, 0x1e, 0x23, 0x29, 0x2b, 0x2b, 
-    0x2d, 0x2e, 0x30, 0x30, 0x32, 0x38, 0x3a, 0x3c, 0x3e, 0x3e, 0x42, 0x4d, 
-    0x4f, 0x53, 0x6, 0x2, 0x3f, 0x3f, 0x55, 0x55, 0x57, 0x59, 0x5c, 0x5d, 
+    0x2d, 0x2e, 0x30, 0x30, 0x32, 0x38, 0x3a, 0x3c, 0x3e, 0x3f, 0x43, 0x4e, 
+    0x50, 0x54, 0x6, 0x2, 0x40, 0x40, 0x56, 0x56, 0x58, 0x5a, 0x5d, 0x5e, 
     0x2, 0xf7, 0x2, 0x36, 0x3, 0x2, 0x2, 0x2, 0x4, 0x3a, 0x3, 0x2, 0x2, 
     0x2, 0x6, 0x40, 0x3, 0x2, 0x2, 0x2, 0x8, 0x58, 0x3, 0x2, 0x2, 0x2, 0xa, 
     0x5a, 0x3, 0x2, 0x2, 0x2, 0xc, 0x5c, 0x3, 0x2, 0x2, 0x2, 0xe, 0x71, 
@@ -2551,7 +2559,7 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x2, 0x35, 0x37, 0x5, 0x4, 0x3, 0x2, 0x36, 0x34, 0x3, 0x2, 0x2, 0x2, 
     0x36, 0x35, 0x3, 0x2, 0x2, 0x2, 0x37, 0x38, 0x3, 0x2, 0x2, 0x2, 0x38, 
     0x39, 0x7, 0x2, 0x2, 0x3, 0x39, 0x3, 0x3, 0x2, 0x2, 0x2, 0x3a, 0x3b, 
-    0x7, 0x61, 0x2, 0x2, 0x3b, 0x3c, 0x8, 0x3, 0x1, 0x2, 0x3c, 0x5, 0x3, 
+    0x7, 0x62, 0x2, 0x2, 0x3b, 0x3c, 0x8, 0x3, 0x1, 0x2, 0x3c, 0x5, 0x3, 
     0x2, 0x2, 0x2, 0x3d, 0x3f, 0x7, 0x3, 0x2, 0x2, 0x3e, 0x3d, 0x3, 0x2, 
     0x2, 0x2, 0x3f, 0x42, 0x3, 0x2, 0x2, 0x2, 0x40, 0x3e, 0x3, 0x2, 0x2, 
     0x2, 0x40, 0x41, 0x3, 0x2, 0x2, 0x2, 0x41, 0x43, 0x3, 0x2, 0x2, 0x2, 
@@ -2570,10 +2578,10 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x58, 0x56, 0x3, 0x2, 0x2, 0x2, 0x58, 0x57, 0x3, 0x2, 0x2, 0x2, 0x59, 
     0x9, 0x3, 0x2, 0x2, 0x2, 0x5a, 0x5b, 0x9, 0x2, 0x2, 0x2, 0x5b, 0xb, 
     0x3, 0x2, 0x2, 0x2, 0x5c, 0x5f, 0x7, 0x2c, 0x2, 0x2, 0x5d, 0x5e, 0x7, 
-    0x4e, 0x2, 0x2, 0x5e, 0x60, 0x5, 0xe, 0x8, 0x2, 0x5f, 0x5d, 0x3, 0x2, 
+    0x4f, 0x2, 0x2, 0x5e, 0x60, 0x5, 0xe, 0x8, 0x2, 0x5f, 0x5d, 0x3, 0x2, 
     0x2, 0x2, 0x5f, 0x60, 0x3, 0x2, 0x2, 0x2, 0x60, 0x61, 0x3, 0x2, 0x2, 
-    0x2, 0x61, 0x62, 0x5, 0x2e, 0x18, 0x2, 0x62, 0x63, 0x7, 0x54, 0x2, 0x2, 
-    0x63, 0x6e, 0x5, 0x14, 0xb, 0x2, 0x64, 0x65, 0x7, 0x41, 0x2, 0x2, 0x65, 
+    0x2, 0x61, 0x62, 0x5, 0x2e, 0x18, 0x2, 0x62, 0x63, 0x7, 0x55, 0x2, 0x2, 
+    0x63, 0x6e, 0x5, 0x14, 0xb, 0x2, 0x64, 0x65, 0x7, 0x42, 0x2, 0x2, 0x65, 
     0x66, 0x7, 0x22, 0x2, 0x2, 0x66, 0x6b, 0x5, 0x10, 0x9, 0x2, 0x67, 0x68, 
     0x7, 0x4, 0x2, 0x2, 0x68, 0x6a, 0x5, 0x10, 0x9, 0x2, 0x69, 0x67, 0x3, 
     0x2, 0x2, 0x2, 0x6a, 0x6d, 0x3, 0x2, 0x2, 0x2, 0x6b, 0x69, 0x3, 0x2, 
@@ -2582,7 +2590,7 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x6e, 0x6f, 0x3, 0x2, 0x2, 0x2, 0x6f, 0xd, 0x3, 0x2, 0x2, 0x2, 0x70, 
     0x72, 0x9, 0x3, 0x2, 0x2, 0x71, 0x70, 0x3, 0x2, 0x2, 0x2, 0x71, 0x72, 
     0x3, 0x2, 0x2, 0x2, 0x72, 0x73, 0x3, 0x2, 0x2, 0x2, 0x73, 0x74, 0x7, 
-    0x57, 0x2, 0x2, 0x74, 0xf, 0x3, 0x2, 0x2, 0x2, 0x75, 0x77, 0x5, 0x32, 
+    0x58, 0x2, 0x2, 0x74, 0xf, 0x3, 0x2, 0x2, 0x2, 0x75, 0x77, 0x5, 0x32, 
     0x1a, 0x2, 0x76, 0x78, 0x9, 0x4, 0x2, 0x2, 0x77, 0x76, 0x3, 0x2, 0x2, 
     0x2, 0x77, 0x78, 0x3, 0x2, 0x2, 0x2, 0x78, 0x11, 0x3, 0x2, 0x2, 0x2, 
     0x79, 0x7e, 0x5, 0x14, 0xb, 0x2, 0x7a, 0x7b, 0x7, 0x4, 0x2, 0x2, 0x7b, 
@@ -2615,7 +2623,7 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x2, 0x2, 0x2, 0xad, 0xae, 0xc, 0x6, 0x2, 0x2, 0xae, 0xb0, 0x7, 0x31, 
     0x2, 0x2, 0xaf, 0xb1, 0x7, 0x3d, 0x2, 0x2, 0xb0, 0xaf, 0x3, 0x2, 0x2, 
     0x2, 0xb0, 0xb1, 0x3, 0x2, 0x2, 0x2, 0xb1, 0xb2, 0x3, 0x2, 0x2, 0x2, 
-    0xb2, 0xb4, 0x7, 0x3f, 0x2, 0x2, 0xb3, 0x94, 0x3, 0x2, 0x2, 0x2, 0xb3, 
+    0xb2, 0xb4, 0x7, 0x40, 0x2, 0x2, 0xb3, 0x94, 0x3, 0x2, 0x2, 0x2, 0xb3, 
     0x98, 0x3, 0x2, 0x2, 0x2, 0xb3, 0xa1, 0x3, 0x2, 0x2, 0x2, 0xb3, 0xad, 
     0x3, 0x2, 0x2, 0x2, 0xb4, 0xb7, 0x3, 0x2, 0x2, 0x2, 0xb5, 0xb3, 0x3, 
     0x2, 0x2, 0x2, 0xb5, 0xb6, 0x3, 0x2, 0x2, 0x2, 0xb6, 0x17, 0x3, 0x2, 
@@ -2646,9 +2654,9 @@ FilterExpressionSyntaxParser::Initializer::Initializer() {
     0x12, 0xa, 0x2, 0xe5, 0xe4, 0x3, 0x2, 0x2, 0x2, 0xe5, 0xe6, 0x3, 0x2, 
     0x2, 0x2, 0xe6, 0xe7, 0x3, 0x2, 0x2, 0x2, 0xe7, 0xe8, 0x7, 0x8, 0x2, 
     0x2, 0xe8, 0x2b, 0x3, 0x2, 0x2, 0x2, 0xe9, 0xea, 0x9, 0xd, 0x2, 0x2, 
-    0xea, 0x2d, 0x3, 0x2, 0x2, 0x2, 0xeb, 0xec, 0x7, 0x56, 0x2, 0x2, 0xec, 
-    0x2f, 0x3, 0x2, 0x2, 0x2, 0xed, 0xee, 0x7, 0x56, 0x2, 0x2, 0xee, 0x31, 
-    0x3, 0x2, 0x2, 0x2, 0xef, 0xf0, 0x7, 0x56, 0x2, 0x2, 0xf0, 0x33, 0x3, 
+    0xea, 0x2d, 0x3, 0x2, 0x2, 0x2, 0xeb, 0xec, 0x7, 0x57, 0x2, 0x2, 0xec, 
+    0x2f, 0x3, 0x2, 0x2, 0x2, 0xed, 0xee, 0x7, 0x57, 0x2, 0x2, 0xee, 0x31, 
+    0x3, 0x2, 0x2, 0x2, 0xef, 0xf0, 0x7, 0x57, 0x2, 0x2, 0xf0, 0x33, 0x3, 
     0x2, 0x2, 0x2, 0x1b, 0x36, 0x40, 0x47, 0x4c, 0x52, 0x58, 0x5f, 0x6b, 
     0x6e, 0x71, 0x77, 0x7e, 0x86, 0x8e, 0x9a, 0x9e, 0xa3, 0xa7, 0xb0, 0xb3, 
     0xb5, 0xc3, 0xcd, 0xcf, 0xe5, 

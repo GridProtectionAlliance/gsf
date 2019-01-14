@@ -58,8 +58,8 @@ public:
   virtual void enterUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext * /*ctx*/) override { }
   virtual void exitUnaryOperator(FilterExpressionSyntaxParser::UnaryOperatorContext * /*ctx*/) override { }
 
-  virtual void enterExactMatchOperator(FilterExpressionSyntaxParser::ExactMatchOperatorContext * /*ctx*/) override { }
-  virtual void exitExactMatchOperator(FilterExpressionSyntaxParser::ExactMatchOperatorContext * /*ctx*/) override { }
+  virtual void enterExactMatchModifier(FilterExpressionSyntaxParser::ExactMatchModifierContext * /*ctx*/) override { }
+  virtual void exitExactMatchModifier(FilterExpressionSyntaxParser::ExactMatchModifierContext * /*ctx*/) override { }
 
   virtual void enterComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext * /*ctx*/) override { }
   virtual void exitComparisonOperator(FilterExpressionSyntaxParser::ComparisonOperatorContext * /*ctx*/) override { }

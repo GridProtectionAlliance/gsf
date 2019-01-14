@@ -259,8 +259,13 @@ namespace TimeSeries
     bool StartsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     bool EndsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     bool Contains(const std::string& value, const std::string& findValue, bool ignoreCase = true);
+    int32_t Count(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     int32_t Compare(const std::string& leftValue, const std::string& rightValue, bool ignoreCase = true);
     int32_t IndexOf(const std::string& value, const std::string& findValue, bool ignoreCase = true);
+    int32_t IndexOf(const std::string& value, const std::string& findValue, int32_t index, bool ignoreCase = true);
+    int32_t LastIndexOf(const std::string& value, const std::string& findValue, bool ignoreCase = true);
+    std::vector<std::string> Split(const std::string& value, const std::string& delimiterValue, bool ignoreCase = true);
+    std::string Split(const std::string& value, const std::string& delimiterValue, int32_t index, bool ignoreCase = true);
     std::string Replace(const std::string& value, const std::string& findValue, const std::string& replaceValue, bool ignoreCase = true);
     std::string ToUpper(const std::string& value);
     std::string ToLower(const std::string& value);

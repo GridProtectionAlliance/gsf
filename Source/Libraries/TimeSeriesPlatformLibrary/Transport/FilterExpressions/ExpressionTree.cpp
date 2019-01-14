@@ -35,8 +35,11 @@ using namespace GSF::TimeSeries::Transport;
 #define startsWith GSF::TimeSeries::StartsWith
 #define endsWith GSF::TimeSeries::EndsWith
 #define contains GSF::TimeSeries::Contains
+#define count GSF::TimeSeries::Count
 #define compare GSF::TimeSeries::Compare
 #define indexOf GSF::TimeSeries::IndexOf
+#define lastIndexOf GSF::TimeSeries::LastIndexOf
+#define split GSF::TimeSeries::Split
 #define replace GSF::TimeSeries::Replace
 #define toUpper GSF::TimeSeries::ToUpper
 #define toLower GSF::TimeSeries::ToLower
@@ -98,7 +101,9 @@ const char* GSF::TimeSeries::Transport::ExpressionOperatorTypeAcronym[] =
     "IS NULL",
     "IS NOT NULL",
     "LIKE",
+    "LIKE BINARY"
     "NOT LIKE",
+    "NOT LIKE BINARY"
     "AND",
     "OR"
 };
@@ -624,11 +629,15 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
     switch (functionExpression->FunctionType)
     {
         case ExpressionFunctionType::Abs:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Abs\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Abs(Evaluate(arguments->at(0), ExpressionValueType::Double));
         case ExpressionFunctionType::Ceiling:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Ceiling\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Ceiling(Evaluate(arguments->at(0), ExpressionValueType::Double));
         case ExpressionFunctionType::Coalesce:
             if (arguments->size() < 2)
                 throw ExpressionTreeException("\"Coalesce\" function expects at least 2 arguments, received " + ToString(arguments->size()));
@@ -641,23 +650,41 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
 
             return Convert(Evaluate(arguments->at(0)), Evaluate(arguments->at(1), ExpressionValueType::String));
         case ExpressionFunctionType::Contains:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"Contains\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return Contains(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return Contains(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::DateAdd:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 3)
+                throw ExpressionTreeException("\"DateAdd\" function expects 3 arguments, received " + ToString(arguments->size()));
+
+            return DateAdd(Evaluate(arguments->at(0), ExpressionValueType::DateTime), Evaluate(arguments->at(1), ExpressionValueType::Int32), Evaluate(arguments->at(2), ExpressionValueType::String));
         case ExpressionFunctionType::DateDiff:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 3)
+                throw ExpressionTreeException("\"DateDiff\" function expects 3 arguments, received " + ToString(arguments->size()));
+
+            return DateDiff(Evaluate(arguments->at(0), ExpressionValueType::DateTime), Evaluate(arguments->at(1), ExpressionValueType::DateTime), Evaluate(arguments->at(2), ExpressionValueType::String));
         case ExpressionFunctionType::DatePart:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 2)
+                throw ExpressionTreeException("\"DatePart\" function expects 2 arguments, received " + ToString(arguments->size()));
+
+            return DatePart(Evaluate(arguments->at(0), ExpressionValueType::DateTime), Evaluate(arguments->at(1), ExpressionValueType::String));
         case ExpressionFunctionType::EndsWith:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"EndsWith\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return EndsWith(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return EndsWith(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::Floor:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Floor\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Floor(Evaluate(arguments->at(0), ExpressionValueType::Double));
         case ExpressionFunctionType::IIf:
             if (arguments->size() != 3)
                 throw ExpressionTreeException("\"IIf\" function expects 3 arguments, received " + ToString(arguments->size()));
@@ -665,48 +692,84 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
             // Not pre-evaluating IIf result value arguments - only evaluating desired path
             return IIf(Evaluate(arguments->at(0), ExpressionValueType::Boolean), arguments->at(1), arguments->at(2));
         case ExpressionFunctionType::IndexOf:
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"IndexOf\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return IndexOf(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return IndexOf(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::IsDate:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"IsDate\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return IsDate(Evaluate(arguments->at(0), ExpressionValueType::Boolean));
         case ExpressionFunctionType::IsInteger:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"IsInteger\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return IsInteger(Evaluate(arguments->at(0), ExpressionValueType::Boolean));
         case ExpressionFunctionType::IsGuid:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"IsGuid\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return IsGuid(Evaluate(arguments->at(0), ExpressionValueType::Boolean));
         case ExpressionFunctionType::IsNull:
             if (arguments->size() != 2)
                 throw ExpressionTreeException("\"IsNull\" function expects 2 arguments, received " + ToString(arguments->size()));
 
             return IsNull(Evaluate(arguments->at(0)), Evaluate(arguments->at(1)));
         case ExpressionFunctionType::IsNumeric:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"IsNumeric\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return IsNumeric(Evaluate(arguments->at(0), ExpressionValueType::Boolean));
         case ExpressionFunctionType::LastIndexOf:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"LastIndexOf\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return LastIndexOf(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return LastIndexOf(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::Len:
             if (arguments->size() != 1)
                 throw ExpressionTreeException("\"Len\" function expects 1 argument, received " + ToString(arguments->size()));
 
             return Len(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::Lower:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Lower\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Lower(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::MaxOf:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2)
+                throw ExpressionTreeException("\"MaxOf\" function expects at least 2 arguments, received " + ToString(arguments->size()));
+
+            return MaxOf(arguments);
         case ExpressionFunctionType::MinOf:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2)
+                throw ExpressionTreeException("\"MinOf\" function expects at least 2 arguments, received " + ToString(arguments->size()));
+
+            return MinOf(arguments);
+        case ExpressionFunctionType::NthIndexOf:
+            if (arguments->size() < 3 || arguments->size() > 4)
+                throw ExpressionTreeException("\"NthIndexOf\" function expects 3 or 4 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 3)
+                return NthIndexOf(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Int32), NullValue(ExpressionValueType::Boolean));
+
+            return NthIndexOf(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Int32), Evaluate(arguments->at(3), ExpressionValueType::Boolean));
         case ExpressionFunctionType::Now:
             if (!arguments->empty())
                 throw ExpressionTreeException("\"Now\" function expects 0 arguments, received " + ToString(arguments->size()));
 
             return Now();
         case ExpressionFunctionType::Power:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 2)
+                throw ExpressionTreeException("\"Power\" function expects 2 arguments, received " + ToString(arguments->size()));
+
+            return Power(Evaluate(arguments->at(0), ExpressionValueType::Double), Evaluate(arguments->at(1), ExpressionValueType::Int32));
         case ExpressionFunctionType::RegExMatch:
             if (arguments->size() != 2)
                 throw ExpressionTreeException("\"RegExMatch\" function expects 2 arguments, received " + ToString(arguments->size()));
@@ -718,29 +781,60 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
 
             return RegExVal(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String));
         case ExpressionFunctionType::Replace:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 3 || arguments->size() > 4)
+                throw ExpressionTreeException("\"Replace\" function expects 3 or 4 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 3)
+                return Replace(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return Replace(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::String), Evaluate(arguments->at(3), ExpressionValueType::Boolean));
         case ExpressionFunctionType::Reverse:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Reverse\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Reverse(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::Round:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Round\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Round(Evaluate(arguments->at(0), ExpressionValueType::Double));
         case ExpressionFunctionType::Split:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 3 || arguments->size() > 4)
+                throw ExpressionTreeException("\"Split\" function expects 3 or 4 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 3)
+                return Split(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Int32), NullValue(ExpressionValueType::Boolean));
+
+            return Split(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Int32), Evaluate(arguments->at(3), ExpressionValueType::Boolean));
         case ExpressionFunctionType::Sqrt:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Sqrt\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Sqrt(Evaluate(arguments->at(0), ExpressionValueType::Double));
         case ExpressionFunctionType::StartsWith:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"StartsWith\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return StartsWith(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return StartsWith(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::StrCount:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"StrCount\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return StrCount(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return StrCount(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::StrCmp:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() < 2 || arguments->size() > 3)
+                throw ExpressionTreeException("\"StrCmp\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
+
+            if (arguments->size() == 2)
+                return StrCmp(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), NullValue(ExpressionValueType::Boolean));
+
+            return StrCmp(Evaluate(arguments->at(0), ExpressionValueType::String), Evaluate(arguments->at(1), ExpressionValueType::String), Evaluate(arguments->at(2), ExpressionValueType::Boolean));
         case ExpressionFunctionType::SubStr:
             if (arguments->size() < 2 || arguments->size() > 3)
                 throw ExpressionTreeException("\"SubStr\" function expects 2 or 3 arguments, received " + ToString(arguments->size()));
@@ -755,14 +849,20 @@ ValueExpressionPtr ExpressionTree::EvaluateFunction(const ExpressionPtr& express
 
             return Trim(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::TrimLeft:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"TrimLeft\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return TrimLeft(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::TrimRight:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"TrimRight\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return TrimRight(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::Upper:
-            // TODO: Develop implementation
-            return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+            if (arguments->size() != 1)
+                throw ExpressionTreeException("\"Upper\" function expects 1 argument, received " + ToString(arguments->size()));
+
+            return Upper(Evaluate(arguments->at(0), ExpressionValueType::String));
         case ExpressionFunctionType::UtcNow:
             if (!arguments->empty())
                 throw ExpressionTreeException("\"UtcNow\" function expects 0 arguments, received " + ToString(arguments->size()));
@@ -1200,14 +1300,51 @@ ExpressionValueType ExpressionTree::DeriveBooleanOperationValueType(ExpressionOp
 
 ValueExpressionPtr ExpressionTree::Abs(const ValueExpressionPtr& sourceValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (!IsNumericType(sourceValue->ValueType))
+        throw ExpressionTreeException("\"Abs\" function argument must be numeric");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(sourceValue->ValueType);
+
+    switch (sourceValue->ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, sourceValue->ValueAsBoolean());
+        case ExpressionValueType::Int32:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, abs(sourceValue->ValueAsInt32()));
+        case ExpressionValueType::Int64:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, abs(sourceValue->ValueAsInt64()));
+        case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, abs(sourceValue->ValueAsDecimal()));
+        case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, abs(sourceValue->ValueAsDouble()));
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
 }
 
 ValueExpressionPtr ExpressionTree::Ceiling(const ValueExpressionPtr& sourceValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (!IsNumericType(sourceValue->ValueType))
+        throw ExpressionTreeException("\"Ceiling\" function argument must be numeric");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
+    if (IsIntegerType(sourceValue->ValueType))
+        return sourceValue;
+
+    switch (sourceValue->ValueType)
+    {
+        case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, ceil(sourceValue->ValueAsDecimal()));
+        case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, ceil(sourceValue->ValueAsDouble()));
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
 }
 
 ValueExpressionPtr ExpressionTree::Coalesce(const ExpressionCollectionPtr& arguments) const
@@ -1283,8 +1420,20 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
 
 ValueExpressionPtr ExpressionTree::Contains(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Contains\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Contains\" function test value, second argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Boolean);
+
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, contains(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& addValue, const ValueExpressionPtr& intervalType) const
@@ -1307,14 +1456,43 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
 
 ValueExpressionPtr ExpressionTree::EndsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"EndsWith\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"EndsWith\" function test value, second argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Boolean);
+
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, endsWith(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
-ValueExpressionPtr ExpressionTree::Floor(const ExpressionCollectionPtr& arguments) const
+ValueExpressionPtr ExpressionTree::Floor(const ValueExpressionPtr& sourceValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (!IsNumericType(sourceValue->ValueType))
+        throw ExpressionTreeException("\"Floor\" function argument must be numeric");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
+    if (IsIntegerType(sourceValue->ValueType))
+        return sourceValue;
+
+    switch (sourceValue->ValueType)
+    {
+        case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, floor(sourceValue->ValueAsDecimal()));
+        case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, floor(sourceValue->ValueAsDouble()));
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
 }
 
 ValueExpressionPtr ExpressionTree::IIf(const ValueExpressionPtr& testValue, const ExpressionPtr& leftResultValue, const ExpressionPtr& rightResultValue) const
@@ -1328,19 +1506,20 @@ ValueExpressionPtr ExpressionTree::IIf(const ValueExpressionPtr& testValue, cons
 
 ValueExpressionPtr ExpressionTree::IndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    //if (sourceValue->ValueType != ExpressionValueType::String)
-    //    throw ExpressionTreeException("\"IndexOf\" function source value, first argument, must be a string");
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"IndexOf\" function source value, first argument, must be a string");
 
-    //// If source value is Null, result is Null
-    //if (sourceValue->IsNull())
-    //    return NullValue(ExpressionValueType::String);
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"IndexOf\" function test value, second argument, must be a string");
 
-    //const string sourceText = sourceValue->ValueAsString();
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"IndexOf\" function test value, second argument, is null");
 
-    //return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, indexOf(sourceText));
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
 
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, indexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::IsDate(const ValueExpressionPtr& testValue) const
@@ -1383,8 +1562,20 @@ ValueExpressionPtr ExpressionTree::IsNumeric(const ValueExpressionPtr& testValue
 
 ValueExpressionPtr ExpressionTree::LastIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"LastIndexOf\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, must be a string");
+
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, lastIndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) const
@@ -1417,14 +1608,36 @@ ValueExpressionPtr ExpressionTree::Lower(const ValueExpressionPtr& sourceValue) 
 
 ValueExpressionPtr ExpressionTree::MaxOf(const ExpressionCollectionPtr& arguments) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    ValueExpressionPtr testValue = Evaluate(arguments->at(0));
+
+    for (size_t i = 1; i < arguments->size(); i++)
+    {
+        const ValueExpressionPtr nextValue = Evaluate(arguments->at(i));
+        const ExpressionValueType valueType = DeriveOperationValueType(ExpressionOperatorType::GreaterThan, testValue->ValueType, nextValue->ValueType);
+        const ValueExpressionPtr result = GreaterThan(nextValue, testValue, valueType);
+
+        if (result->ValueAsBoolean() || testValue->IsNull() && !nextValue->IsNull())
+            testValue = nextValue;
+    }
+
+    return testValue;
 }
 
 ValueExpressionPtr ExpressionTree::MinOf(const ExpressionCollectionPtr& arguments) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    ValueExpressionPtr testValue = Evaluate(arguments->at(0));
+
+    for (size_t i = 1; i < arguments->size(); i++)
+    {
+        const ValueExpressionPtr nextValue = Evaluate(arguments->at(i));
+        const ExpressionValueType valueType = DeriveOperationValueType(ExpressionOperatorType::LessThan, testValue->ValueType, nextValue->ValueType);
+        const ValueExpressionPtr result = LessThan(nextValue, testValue, valueType);
+
+        if (result->ValueAsBoolean() || testValue->IsNull() && !nextValue->IsNull())
+            testValue = nextValue;
+    }
+
+    return testValue;
 }
 
 ValueExpressionPtr ExpressionTree::Now() const
@@ -1432,10 +1645,78 @@ ValueExpressionPtr ExpressionTree::Now() const
     return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, to_time_t(second_clock::local_time()));
 }
 
+ValueExpressionPtr ExpressionTree::NthIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& ignoreCase) const
+{
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"NthIndexOf\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"NthIndexOf\" function test value, second argument, must be a string");
+
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"NthIndexOf\" function test value, second argument, is null");
+
+    if (!IsIntegerType(indexValue->ValueType))
+        throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, must be an integer type");
+
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
+
+    int32_t index;
+
+    switch (indexValue->ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            index = indexValue->ValueAsBoolean() ? 1 : 0;
+            break;
+        case ExpressionValueType::Int32:
+            index = indexValue->ValueAsInt32();
+            break;
+        case ExpressionValueType::Int64:
+            index = static_cast<int32_t>(indexValue->ValueAsInt64());
+            break;
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, indexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), index, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+}
+
 ValueExpressionPtr ExpressionTree::Power(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& exponentValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (!IsNumericType(sourceValue->ValueType))
+        throw ExpressionTreeException("\"Power\" function source value, first argument, must be numeric");
+
+    if (!IsNumericType(exponentValue->ValueType))
+        throw ExpressionTreeException("\"Power\" function exponent value, second argument, must be numeric");
+
+    // If source value or exponent value is Null, result is Null
+    if (sourceValue->IsNull() || exponentValue->IsNull())
+        return NullValue(sourceValue->ValueType);    
+
+    const ExpressionValueType valueType = DeriveArithmeticOperationValueType(ExpressionOperatorType::Multiply, sourceValue->ValueType, exponentValue->ValueType);
+    const ValueExpressionPtr value = Convert(sourceValue, valueType);
+    const ValueExpressionPtr exponent = Convert(exponentValue, valueType);
+
+    switch (sourceValue->ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, pow(value->ValueAsBoolean(), exponent->ValueAsBoolean()));
+        case ExpressionValueType::Int32:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, pow(value->ValueAsInt32(), exponent->ValueAsInt32()));
+        case ExpressionValueType::Int64:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, pow(value->ValueAsInt64(), exponent->ValueAsInt64()));
+        case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, pow(value->ValueAsDecimal(), exponent->ValueAsDecimal()));
+        case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, pow(value->ValueAsDouble(), exponent->ValueAsDouble()));
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
 }
 
 ValueExpressionPtr ExpressionTree::RegExMatch(const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue) const
@@ -1450,44 +1731,188 @@ ValueExpressionPtr ExpressionTree::RegExVal(const ValueExpressionPtr& regexValue
 
 ValueExpressionPtr ExpressionTree::Replace(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& replaceValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Replace\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Replace\" function test value, second argument, must be a string");
+
+    if (replaceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Replace\" function replace value, third argument, must be a string");
+
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"Replace\" function test value, second argument, is null");
+
+    if (replaceValue->IsNull())
+        throw ExpressionTreeException("\"Replace\" function replace value, third argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, replace(sourceValue->ValueAsString(), testValue->ValueAsString(), replaceValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Reverse(const ValueExpressionPtr& sourceValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Reverse\" function source value, first argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
+    string value = sourceValue->ValueAsString();
+    value.reserve();
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, value);
 }
 
-ValueExpressionPtr ExpressionTree::Split(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& delimitersValue, const ValueExpressionPtr& valueIndex) const
+ValueExpressionPtr ExpressionTree::Round(const ValueExpressionPtr& sourceValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (!IsNumericType(sourceValue->ValueType))
+        throw ExpressionTreeException("\"Round\" function argument must be numeric");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
+    if (IsIntegerType(sourceValue->ValueType))
+        return sourceValue;
+
+    switch (sourceValue->ValueType)
+    {
+        case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, round(sourceValue->ValueAsDecimal()));
+        case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, round(sourceValue->ValueAsDouble()));
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
+}
+
+ValueExpressionPtr ExpressionTree::Split(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& delimiterValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& ignoreCase) const
+{
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Split\" function source value, first argument, must be a string");
+
+    if (delimiterValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Split\" function delimiter value, second argument, must be a string");
+
+    if (delimiterValue->IsNull())
+        throw ExpressionTreeException("\"Split\" function delimiter value, second argument, is null");
+
+    if (!IsIntegerType(indexValue->ValueType))
+        throw ExpressionTreeException("\"Split\" function index value, third argument, must be an integer type");
+
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"Split\" function index value, third argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
+    int32_t index;
+
+    switch (indexValue->ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            index = indexValue->ValueAsBoolean() ? 1 : 0;
+            break;
+        case ExpressionValueType::Int32:
+            index = indexValue->ValueAsInt32();
+            break;
+        case ExpressionValueType::Int64:
+            index = static_cast<int32_t>(indexValue->ValueAsInt64());
+            break;
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, split(sourceValue->ValueAsString(), delimiterValue->ValueAsString(), index, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Sqrt(const ValueExpressionPtr& sourceValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (!IsNumericType(sourceValue->ValueType))
+        throw ExpressionTreeException("\"Sqrt\" function argument must be numeric");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(sourceValue->ValueType);
+
+    switch (sourceValue->ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, sqrt(sourceValue->ValueAsBoolean()));
+        case ExpressionValueType::Int32:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sqrt(sourceValue->ValueAsInt32()));
+        case ExpressionValueType::Int64:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, sqrt(sourceValue->ValueAsInt64()));
+        case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, sqrt(sourceValue->ValueAsDecimal()));
+        case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, sqrt(sourceValue->ValueAsDouble()));
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
 }
 
 ValueExpressionPtr ExpressionTree::StartsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"StartsWith\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"StartsWith\" function test value, second argument, must be a string");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Boolean);
+
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, startsWith(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::StrCount(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"StrCount\" function source value, first argument, must be a string");
+
+    if (testValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"StrCount\" function test value, second argument, must be a string");
+
+    if (sourceValue->IsNull() || testValue->IsNull())
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, 0);
+
+    const string& findValue = testValue->ValueAsString();
+
+    if (findValue.empty())
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, 0);
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, count(sourceValue->ValueAsString(), findValue, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::StrCmp(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& ignoreCase) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (leftValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Contains\" function left value, first argument, must be a string");
+
+    if (rightValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"Contains\" function right value, second argument, must be a string");
+
+    if (leftValue->IsNull() && rightValue->IsNull())
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, 0);
+
+    if (leftValue->IsNull())
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, 1);
+
+    if (rightValue->IsNull())
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, -1);
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, compare(leftValue->ValueAsString(), rightValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::SubStr(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const
@@ -1495,18 +1920,18 @@ ValueExpressionPtr ExpressionTree::SubStr(const ValueExpressionPtr& sourceValue,
     if (sourceValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"SubStr\" function source value, first argument, must be a string");
 
-    // If source value is Null, result is Null
-    if (sourceValue->IsNull())
-        return NullValue(ExpressionValueType::String);
-
     if (!IsIntegerType(indexValue->ValueType))
-        throw ExpressionTreeException("\"SubStr\" function index value, second argument, must be an integer");
+        throw ExpressionTreeException("\"SubStr\" function index value, second argument, must be an integer type");
 
     if (!IsIntegerType(lengthValue->ValueType))
-        throw ExpressionTreeException("\"SubStr\" function length value, third argument, must be an integer");
+        throw ExpressionTreeException("\"SubStr\" function length value, third argument, must be an integer type");
 
     if (indexValue->IsNull())
         throw ExpressionTreeException("\"SubStr\" function index value, second argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::String);
 
     int32_t index, length = -1;
 
@@ -2601,15 +3026,15 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
     return result ? ExpressionTree::True : ExpressionTree::False;
 }
 
-ExpressionTree::ExpressionTree(DataTablePtr measurements) :
-    m_measurements(std::move(measurements)),
+ExpressionTree::ExpressionTree(DataTablePtr table) :
+    m_table(std::move(table)),
     TopLimit(-1)
 {
 }
 
-const DataTablePtr& ExpressionTree::Measurements() const
+const DataTablePtr& ExpressionTree::Table() const
 {
-    return m_measurements;
+    return m_table;
 }
 
 ValueExpressionPtr ExpressionTree::Evaluate(const DataRowPtr& row)
