@@ -75,10 +75,10 @@ public:
     void SetBooleanValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<bool>& value);
     void SetBooleanValue(const std::string& columnName, const GSF::TimeSeries::Nullable<bool>& value);
 
-    GSF::TimeSeries::Nullable<time_t> ValueAsDateTime(int32_t columnIndex) const;
-    GSF::TimeSeries::Nullable<time_t> ValueAsDateTime(const std::string& columnName) const;
-    void SetDateTimeValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<time_t>& value);
-    void SetDateTimeValue(const std::string& columnName, const GSF::TimeSeries::Nullable<time_t>& value);
+    GSF::TimeSeries::Nullable<GSF::TimeSeries::DateTime> ValueAsDateTime(int32_t columnIndex) const;
+    GSF::TimeSeries::Nullable<GSF::TimeSeries::DateTime> ValueAsDateTime(const std::string& columnName) const;
+    void SetDateTimeValue(int32_t columnIndex, const GSF::TimeSeries::Nullable<GSF::TimeSeries::DateTime>& value);
+    void SetDateTimeValue(const std::string& columnName, const GSF::TimeSeries::Nullable<GSF::TimeSeries::DateTime>& value);
 
     GSF::TimeSeries::Nullable<TimeSeries::float32_t> ValueAsSingle(int32_t columnIndex) const;
     GSF::TimeSeries::Nullable<TimeSeries::float32_t> ValueAsSingle(const std::string& columnName) const;

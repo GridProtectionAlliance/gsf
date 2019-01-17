@@ -81,7 +81,7 @@ enum class ExpressionValueType
     Double,     // float64_t
     String,     // string
     Guid,       // Guid
-    DateTime,   // time_t
+    DateTime,   // DateTime
     Undefined   // nullptr (make sure value is always last in enum)
 };
 
@@ -98,9 +98,9 @@ private:
     void ValidateValueType(ExpressionValueType valueType) const;
 
 public:
-    ValueExpression(ExpressionValueType valueType, GSF::TimeSeries::Object value, bool valueIsNullable = false);
+    ValueExpression(ExpressionValueType valueType, Object value, bool valueIsNullable = false);
 
-    const GSF::TimeSeries::Object Value;
+    const Object Value;
     const ExpressionValueType ValueType;
     const bool ValueIsNullable;
 
@@ -129,8 +129,8 @@ public:
     Guid ValueAsGuid() const;
     Nullable<Guid> ValueAsNullableGuid() const;
 
-    time_t ValueAsDateTime() const;
-    Nullable<time_t> ValueAsNullableDateTime() const;
+    DateTime ValueAsDateTime() const;
+    Nullable<DateTime> ValueAsNullableDateTime() const;
 };
 
 typedef SharedPtr<ValueExpression> ValueExpressionPtr;

@@ -23,7 +23,6 @@
     <ClCompile Include="Common\CommonTypes.cpp" />
     <ClInclude Include="Common\Convert.h" />
     <ClCompile Include="Common\Convert.cpp" />
-    <ClInclude Include="Common\Date.h" />
     <ClInclude Include="Common\EndianConverter.h" />
     <ClCompile Include="Common\EndianConverter.cpp" />
     <ClInclude Include="Common\Nullable.h" />

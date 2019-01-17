@@ -66,9 +66,14 @@ float64_t Measurement::AdjustedValue() const
     return Value * Multiplier + Adder;
 }
 
+DateTime Measurement::GetDateTime() const
+{
+    return FromTicks(Timestamp);
+}
+
 void Measurement::GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const
 {
-    GSF::TimeSeries::GetUnixTime(Timestamp, unixSOC, milliseconds);
+    ToUnixTime(Timestamp, unixSOC, milliseconds);
 }
 
 SignalReference::SignalReference() :

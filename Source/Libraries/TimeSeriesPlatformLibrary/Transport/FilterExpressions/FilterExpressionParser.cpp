@@ -61,7 +61,7 @@ static guid ParseGuidLiteral(string guidLiteral)
     return ParseGuid(guidLiteral.c_str());
 }
 
-static time_t ParseDateTimeLiteral(string time)
+static DateTime ParseDateTimeLiteral(string time)
 {
     // Remove any surrounding '#' symbols from date/time, ANTLR grammar already
     // ensures date/time starting with '#' symbol will also end with one

@@ -99,7 +99,10 @@ namespace TimeSeries
         // multiplicative and additive value modifiers.
         float64_t AdjustedValue() const;
 
-        // Gets time in UNIX second of century and milliseconds
+        // Gets Timestamp as DateTime
+        DateTime GetDateTime() const;
+
+        // Gets Timestamp in Unix second of century and milliseconds
         void GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const;
     };
 
@@ -150,7 +153,7 @@ namespace TimeSeries
         SignalReference Reference;	// Parsed signal reference structure
         uint16_t PhasorSourceIndex; // Measurement phasor index, if measurement represents a "Phasor"
         std::string Description;    // Detailed measurement description (free-form)
-        time_t UpdatedOn;			// Time of last meta-data update
+        DateTime UpdatedOn;			// Time of last meta-data update
     };
 
     typedef SharedPtr<MeasurementMetadata> MeasurementMetadataPtr;
@@ -162,7 +165,7 @@ namespace TimeSeries
         std::string Type;			// Phasor type, i.e., "V" for voltage or "I" for current
         std::string Phase;			// Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
         uint16_t SourceIndex;	    // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
-        time_t UpdatedOn;		    // Time of last meta-data update
+        DateTime UpdatedOn;		    // Time of last meta-data update
     };
 
     typedef SharedPtr<PhasorMetadata> PhasorMetadataPtr;
@@ -190,7 +193,7 @@ namespace TimeSeries
         std::string VendorDeviceName;   // Original vendor device name, e.g., PMU brand (if useful / provided)
         float64_t Longitude;	        // Device longitude (if reported)
         float64_t Latitude;		        // Device latitude (if reported)
-        time_t UpdatedOn;			    // Time of last meta-data update
+        DateTime UpdatedOn;			    // Time of last meta-data update
 
         // Associated measurement and phasor meta-data
         std::vector<MeasurementMetadataPtr> Measurements;   // DataPublisher does not need to assign
@@ -265,7 +268,7 @@ namespace TimeSeries
     //struct DataFrame
     //{
     //	string DeviceAcronym;
-    //	time_t SOC;
+    //	DateTime SOC;
     //	int milliseconds;
     //	Measurement StatusFlags;
     //  Measurement QualityFlags;

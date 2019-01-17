@@ -255,22 +255,22 @@ void DataRow::SetBooleanValue(const string& columnName, const Nullable<bool>& va
     SetBooleanValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<time_t> DataRow::ValueAsDateTime(int32_t columnIndex) const
+Nullable<DateTime> DataRow::ValueAsDateTime(int32_t columnIndex) const
 {
-    return GetValue<time_t>(columnIndex, DataType::DateTime);
+    return GetValue<DateTime>(columnIndex, DataType::DateTime);
 }
 
-Nullable<time_t> DataRow::ValueAsDateTime(const string& columnName) const
+Nullable<DateTime> DataRow::ValueAsDateTime(const string& columnName) const
 {
     return ValueAsDateTime(GetColumnIndex(columnName));
 }
 
-void DataRow::SetDateTimeValue(int32_t columnIndex, const Nullable<time_t>& value)
+void DataRow::SetDateTimeValue(int32_t columnIndex, const Nullable<DateTime>& value)
 {
-    SetValue<time_t>(columnIndex, value, DataType::DateTime);
+    SetValue<DateTime>(columnIndex, value, DataType::DateTime);
 }
 
-void DataRow::SetDateTimeValue(const string& columnName, const Nullable<time_t>& value)
+void DataRow::SetDateTimeValue(const string& columnName, const Nullable<DateTime>& value)
 {
     SetDateTimeValue(GetColumnIndex(columnName), value);
 }

@@ -29,9 +29,15 @@
 namespace GSF {
 namespace TimeSeries
 {
-    // Converts a GEP timestamp, in Ticks, to UNIX second of century and milliseconds
-    void GetUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds);
+    // Converts a timestamp, in Ticks, to Unix second of century and milliseconds
+    void ToUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds);
 
+    // Convert Unix second of century and milliseconds to DateTime
+    DateTime FromUnixTime(time_t unixSOC, uint16_t milliseconds);
+
+    // Converts a timestamp, in Ticks, to DateTime
+    DateTime FromTicks(int64_t ticks);
+    
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);
 
@@ -46,7 +52,7 @@ namespace TimeSeries
 
     std::string ToString(Guid value);
 
-    std::string ToString(time_t value, const char* format = "%F %T");
+    std::string ToString(DateTime value, const char* format = "%Y-%m-%d %H:%M:%S%F");
 
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ParseGuid(const uint8_t* data, bool swapBytes);
@@ -55,11 +61,11 @@ namespace TimeSeries
     // Returns a non-empty nor null value
     const char* Coalesce(const char* data, const char* nonEmptyValue);
 
-    // Converts a time string to a common epoch time
-    time_t ParseTimestamp(const char* time);
+    // Attempts to parse an time string in several common formats
+    bool TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsUTC = true);
 
-    // Converts an XML formatted time string to a common epoch time
-    time_t ParseXMLTimestamp(const char* time);
+    // Converts a string to a date-time that may be in several common formats
+    DateTime ParseTimestamp(const char* time, bool parseAsUTC = true);
 }}
 
 #endif

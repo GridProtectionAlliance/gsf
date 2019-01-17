@@ -391,7 +391,7 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
                     if (value.empty())
                         dataRow->SetNullValue(index);
                     else
-                        dataRow->SetDateTimeValue(index, ParseXMLTimestamp(value.as_string()));
+                        dataRow->SetDateTimeValue(index, ParseTimestamp(value.as_string()));
                     break;
                 case DataType::Single:
                     dataRow->SetSingleValue(index, value.as_float());

@@ -540,6 +540,10 @@ void SubscriberInstance::DataStartTime(time_t unixSOC, uint16_t milliseconds)
 {
 }
 
+void SubscriberInstance::DataStartTime(DateTime startTime)
+{
+}
+
 void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 {
     if (!m_autoParseMetadata)
@@ -609,7 +613,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         deviceMetadata->VendorDeviceName = device.child_value("VendorDeviceName");
         deviceMetadata->Longitude = stod(Coalesce(device.child_value("Longitude"), "0.0"));
         deviceMetadata->Latitude = stod(Coalesce(device.child_value("Latitude"), "0.0"));
-        deviceMetadata->UpdatedOn = ParseXMLTimestamp(device.child_value("UpdatedOn"));
+        deviceMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
 
         devices.insert(pair<string, DeviceMetadataPtr>(deviceMetadata->Acronym, deviceMetadata));
     }
@@ -628,7 +632,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         measurementMetadata->Reference = SignalReference(string(device.child_value("SignalReference")));
         measurementMetadata->PhasorSourceIndex = stoi(Coalesce(device.child_value("PhasorSourceIndex"), "0"));
         measurementMetadata->Description = device.child_value("Description");
-        measurementMetadata->UpdatedOn = ParseXMLTimestamp(device.child_value("UpdatedOn"));
+        measurementMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
 
         measurements.insert(pair<Guid, MeasurementMetadataPtr>(measurementMetadata->SignalID, measurementMetadata));
 
@@ -655,7 +659,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         phasorMetadata->Type = device.child_value("Type");
         phasorMetadata->Phase = device.child_value("Phase");
         phasorMetadata->SourceIndex = stoi(Coalesce(device.child_value("SourceIndex"), "0"));
-        phasorMetadata->UpdatedOn = ParseXMLTimestamp(device.child_value("UpdatedOn"));
+        phasorMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
 
         // Create a new phasor reference
         PhasorReferencePtr phasorReference = NewSharedPtr<PhasorReference>();
@@ -828,7 +832,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 phasorReference->Phasor->Type = "?";
                 phasorReference->Phasor->Phase = "+";
                 phasorReference->Phasor->SourceIndex = i;
-                phasorReference->Phasor->UpdatedOn = 0;
+                phasorReference->Phasor->UpdatedOn = DateTime();
                 
                 phasorReference->Angle = nullptr;
                 phasorReference->Magnitude = nullptr;
@@ -864,7 +868,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 measurement->Reference.Kind = SignalKind::Analog;
                 measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
-                measurement->UpdatedOn = 0;
+                measurement->UpdatedOn = DateTime();
 
                 configurationFrame->Analogs.push_back(measurement);
             }
@@ -898,7 +902,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMe
                 measurement->Reference.Kind = SignalKind::Digital;
                 measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
-                measurement->UpdatedOn = 0;
+                measurement->UpdatedOn = DateTime();
 
                 configurationFrame->Digitals.push_back(measurement);
             }
@@ -1009,9 +1013,10 @@ void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t sta
     time_t unixSOC;
     uint16_t milliseconds;
 
-    GetUnixTime(startTime, unixSOC, milliseconds);
+    ToUnixTime(startTime, unixSOC, milliseconds);
 
     instance->DataStartTime(unixSOC, milliseconds);
+    instance->DataStartTime(FromUnixTime(unixSOC, milliseconds));
 }
 
 void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uint8_t>& payload)

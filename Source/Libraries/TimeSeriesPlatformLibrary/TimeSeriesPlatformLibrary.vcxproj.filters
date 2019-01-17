@@ -10,9 +10,6 @@
     <ClInclude Include="Common\Convert.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Date.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClCompile Include="Common\EndianConverter.cpp">
       <Filter>Common</Filter>
     </ClCompile>

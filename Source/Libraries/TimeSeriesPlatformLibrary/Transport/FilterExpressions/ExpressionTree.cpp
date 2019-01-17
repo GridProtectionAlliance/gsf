@@ -46,6 +46,9 @@ using namespace GSF::TimeSeries::Transport;
 #define trim GSF::TimeSeries::Trim
 #define trimRight GSF::TimeSeries::TrimRight
 #define trimLeft GSF::TimeSeries::TrimLeft
+#define dateAdd GSF::TimeSeries::DateAdd
+#define dateDiff GSF::TimeSeries::DateDiff
+#define datePart GSF::TimeSeries::DatePart
 
 const int32_t GSF::TimeSeries::Transport::ExpressionValueTypeLength = static_cast<int32_t>(ExpressionValueType::Undefined) + 1;
 
@@ -139,6 +142,41 @@ bool Transport::IsNumericType(ExpressionValueType valueType)
         default:
             return false;
     }
+}
+
+TimeInterval ParseTimeInterval(const string& intervalName)
+{
+    if (IsEqual(intervalName, "DAY"))
+        return TimeInterval::Day;
+
+    if (IsEqual(intervalName, "HOUR"))
+        return TimeInterval::Hour;
+
+    if (IsEqual(intervalName, "MINUTE"))
+        return TimeInterval::Minute;
+
+    if (IsEqual(intervalName, "SECOND"))
+        return TimeInterval::Second;
+
+    if (IsEqual(intervalName, "MONTH"))
+        return TimeInterval::Month;
+
+    if (IsEqual(intervalName, "YEAR"))
+        return TimeInterval::Year;
+
+    if (IsEqual(intervalName, "MILLISECOND"))
+        return TimeInterval::Millisecond;
+
+    if (IsEqual(intervalName, "DAYOFYEAR"))
+        return TimeInterval::DayOfYear;
+
+    if (IsEqual(intervalName, "WEEK"))
+        return TimeInterval::Week;
+
+    if (IsEqual(intervalName, "WEEKDAY"))
+        return TimeInterval::WeekDay;
+
+    throw ExpressionTreeException("Time interval \"" + intervalName + "\" is not recognized");
 }
 
 ExpressionTreeException::ExpressionTreeException(string message) noexcept :
@@ -369,24 +407,24 @@ Nullable<Guid> ValueExpression::ValueAsNullableGuid() const
     return Cast<Guid>(Value);
 }
 
-time_t ValueExpression::ValueAsDateTime() const
+DateTime ValueExpression::ValueAsDateTime() const
 {
     ValidateValueType(ExpressionValueType::DateTime);
 
     if (ValueIsNullable)
-        return Cast<Nullable<time_t>>(Value).GetValueOrDefault();
+        return Cast<Nullable<DateTime>>(Value).GetValueOrDefault();
 
-    return Cast<time_t>(Value);
+    return Cast<DateTime>(Value);
 }
 
-Nullable<time_t> ValueExpression::ValueAsNullableDateTime() const
+Nullable<DateTime> ValueExpression::ValueAsNullableDateTime() const
 {
     ValidateValueType(ExpressionValueType::DateTime);
 
     if (ValueIsNullable)
-        return Cast<Nullable<time_t>>(Value);
+        return Cast<Nullable<DateTime>>(Value);
 
-    return Cast<time_t>(Value);
+    return Cast<DateTime>(Value);
 }
 
 UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr value) :
@@ -1438,20 +1476,95 @@ ValueExpressionPtr ExpressionTree::Contains(const ValueExpressionPtr& sourceValu
 
 ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& addValue, const ValueExpressionPtr& intervalType) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::DateTime && sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DateAdd\" source value, first argument, must be a date-time");
+
+    if (!IsIntegerType(addValue->ValueType))
+        throw ExpressionTreeException("\"DateAdd\" function add value, second argument, must be an integer type");
+
+    if (addValue->IsNull())
+        throw ExpressionTreeException("\"DateAdd\" function add value, second argument, is null");
+
+    if (intervalType->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, must be a string");
+
+    if (intervalType->IsNull())
+        throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, is null");
+
+    // DateTime parameters should support strings as well as literals
+    const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
+    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
+
+    // If source value is Null, result is Null
+    if (dateValue->IsNull())
+        return dateValue;
+
+    int32_t value;
+
+    switch (addValue->ValueType)
+    {
+        case ExpressionValueType::Boolean:
+            value = addValue->ValueAsBoolean() ? 1 : 0;
+            break;
+        case ExpressionValueType::Int32:
+            value = addValue->ValueAsInt32();
+            break;
+        case ExpressionValueType::Int64:
+            value = static_cast<int32_t>(addValue->ValueAsInt64());
+            break;
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, dateAdd(dateValue->ValueAsDateTime(), value, interval));
 }
 
 ValueExpressionPtr ExpressionTree::DateDiff(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& intervalType) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (leftValue->ValueType != ExpressionValueType::DateTime && leftValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DateDiff\" left value, first argument, must be a date-time");
+
+    if (rightValue->ValueType != ExpressionValueType::DateTime && rightValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DateDiff\" right value, second argument, must be a date-time");
+
+    if (intervalType->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DateDiff\" function interval type, third argument, must be a string");
+
+    if (intervalType->IsNull())
+        throw ExpressionTreeException("\"DateDiff\" function interval type, third argument, is null");
+
+    // DateTime parameters should support strings as well as literals
+    const ValueExpressionPtr leftDateValue = Convert(leftValue, ExpressionValueType::DateTime);
+    const ValueExpressionPtr rightDateValue = Convert(rightValue, ExpressionValueType::DateTime);
+    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
+
+    // If either test value is Null, result is Null
+    if (leftDateValue->IsNull() || rightDateValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, dateDiff(leftDateValue->ValueAsDateTime(), rightDateValue->ValueAsDateTime(), interval));
 }
 
 ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& intervalType) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (sourceValue->ValueType != ExpressionValueType::DateTime && sourceValue->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DatePart\" source value, first argument, must be a date-time");
+
+    if (intervalType->ValueType != ExpressionValueType::String)
+        throw ExpressionTreeException("\"DatePart\" function interval type, second argument, must be a string");
+
+    if (intervalType->IsNull())
+        throw ExpressionTreeException("\"DatePart\" function interval type, second argument, is null");
+
+    // DateTime parameters should support strings as well as literals
+    const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
+    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
+
+    // If source value is Null, result is Null
+    if (dateValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, datePart(dateValue->ValueAsDateTime(), interval));
 }
 
 ValueExpressionPtr ExpressionTree::EndsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
@@ -1642,7 +1755,7 @@ ValueExpressionPtr ExpressionTree::MinOf(const ExpressionCollectionPtr& argument
 
 ValueExpressionPtr ExpressionTree::Now() const
 {
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, to_time_t(second_clock::local_time()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, DateTime(second_clock::local_time()));
 }
 
 ValueExpressionPtr ExpressionTree::NthIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& ignoreCase) const
@@ -2034,7 +2147,7 @@ ValueExpressionPtr ExpressionTree::Upper(const ValueExpressionPtr& sourceValue) 
 
 ValueExpressionPtr ExpressionTree::UtcNow() const
 {
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, to_time_t(second_clock::universal_time()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, DateTime(second_clock::universal_time()));
 }
 
 ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
@@ -2953,24 +3066,24 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionValueType::DateTime:
         {
-            const time_t value = sourceValue->ValueAsDateTime();
+            const DateTime value = sourceValue->ValueAsDateTime();
 
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0;
+                    targetValue = to_time_t(value) == 0;
                     break;
                 case ExpressionValueType::Int32:
-                    targetValue = static_cast<int32_t>(value);
+                    targetValue = static_cast<int32_t>(to_time_t(value));
                     break;
                 case ExpressionValueType::Int64:
-                    targetValue = static_cast<int64_t>(value);
+                    targetValue = static_cast<int64_t>(to_time_t(value));
                     break;
                 case ExpressionValueType::Decimal:
-                    targetValue = static_cast<decimal_t>(value);
+                    targetValue = static_cast<decimal_t>(to_time_t(value));
                     break;
                 case ExpressionValueType::Double:
-                    targetValue = static_cast<float64_t>(value);
+                    targetValue = static_cast<float64_t>(to_time_t(value));
                     break;
                 case ExpressionValueType::String:
                     targetValue = sourceValue->ToString();
@@ -3069,7 +3182,7 @@ ValueExpressionPtr ExpressionTree::NullValue(ExpressionValueType targetValueType
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Guid, Nullable<Guid>(nullptr), true);
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, Nullable<time_t>(nullptr), true);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, Nullable<DateTime>(nullptr), true);
         default:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Undefined, nullptr);
     }

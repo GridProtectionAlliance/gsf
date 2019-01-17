@@ -200,6 +200,7 @@ namespace TimeSeries
 
     typedef boost::any Object;
     typedef boost::uuids::uuid Guid;
+    typedef boost::posix_time::ptime DateTime;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;
     typedef boost::exception Exception;
@@ -272,6 +273,25 @@ namespace TimeSeries
     std::string Trim(const std::string& value);
     std::string TrimRight(const std::string& value);
     std::string TrimLeft(const std::string& value);
+
+    // Handy date/time functions (boost wrappers)
+    enum class TimeInterval
+    {
+        Year,
+        Month,
+        DayOfYear,
+        Day,
+        Week,
+        WeekDay,
+        Hour,
+        Minute,
+        Second,
+        Millisecond
+    };
+
+    DateTime DateAdd(DateTime value, int32_t addValue, TimeInterval interval);
+    int32_t DateDiff(DateTime startTime, DateTime endTime, TimeInterval interval);
+    int32_t DatePart(DateTime value, TimeInterval interval);
 
     // Empty types
     struct Empty

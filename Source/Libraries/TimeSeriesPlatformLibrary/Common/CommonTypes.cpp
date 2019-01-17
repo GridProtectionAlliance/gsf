@@ -30,6 +30,8 @@
 using namespace std;
 using namespace boost;
 using namespace boost::algorithm;
+using namespace boost::posix_time;
+using namespace boost::gregorian;
 using namespace GSF::TimeSeries;
 
 boost::uuids::random_generator RandomGuidGen;
@@ -265,4 +267,110 @@ string GSF::TimeSeries::TrimRight(const string& value)
 string GSF::TimeSeries::TrimLeft(const string& value)
 {
     return trim_left_copy(value);
+}
+
+DateTime GSF::TimeSeries::DateAdd(DateTime value, int32_t addValue, TimeInterval interval)
+{
+    switch (interval)
+    {
+        case TimeInterval::Year:
+            value += years(addValue);
+            break;
+        case TimeInterval::Month:
+            value += months(addValue);
+            break;
+        case TimeInterval::DayOfYear:
+        case TimeInterval::Day:
+        case TimeInterval::WeekDay:
+            value += days(addValue);
+            break;
+        case TimeInterval::Week:
+            value += weeks(addValue);
+            break;
+        case TimeInterval::Hour:
+            value += hours(addValue);
+            break;
+        case TimeInterval::Minute:
+            value += minutes(addValue);
+            break;
+        case TimeInterval::Second:
+            value += seconds(addValue);
+            break;
+        case TimeInterval::Millisecond:
+            value += milliseconds(addValue);
+            break;
+        default:
+            throw runtime_error("Unexpected time interval encountered");
+    }
+
+    return value;
+}
+
+int32_t GSF::TimeSeries::DateDiff(DateTime startTime, DateTime endTime, TimeInterval interval)
+{
+    if (interval < TimeInterval::Hour)
+    {
+        switch (interval)
+        {
+            case TimeInterval::Year:
+                return endTime.date().year() - startTime.date().year();
+            case TimeInterval::Month:
+                return endTime.date().month() - startTime.date().month();
+            case TimeInterval::DayOfYear:
+            case TimeInterval::Day:
+            case TimeInterval::WeekDay:
+                return (endTime.date() - startTime.date()).days();
+            case TimeInterval::Week:
+                return (endTime.date() - startTime.date()).days() / 7;
+            default:
+                throw runtime_error("Unexpected time interval encountered");
+        }
+    }
+
+    time_duration duration = endTime - startTime;
+
+    switch (interval)
+    {
+        case TimeInterval::Hour:
+            return static_cast<int32_t>(duration.hours());
+        case TimeInterval::Minute:
+            return static_cast<int32_t>(duration.minutes());
+        case TimeInterval::Second:
+            return static_cast<int32_t>(duration.total_seconds());
+        case TimeInterval::Millisecond:
+            return static_cast<int32_t>(duration.total_milliseconds());
+        default:
+            throw runtime_error("Unexpected time interval encountered");
+    }
+}
+
+int32_t GSF::TimeSeries::DatePart(DateTime value, TimeInterval interval)
+{
+    static float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
+
+    switch (interval)
+    {
+        case TimeInterval::Year:
+            return value.date().year();
+        case TimeInterval::Month:
+            return value.date().month();
+        case TimeInterval::DayOfYear:
+            return value.date().day_of_year();
+        case TimeInterval::Day:
+            return value.date().day();
+        case TimeInterval::Week:
+            return value.date().week_number();
+        case TimeInterval::WeekDay:
+            return value.date().day_of_week();
+        case TimeInterval::Hour:
+            return static_cast<int32_t>(value.time_of_day().hours());
+        case TimeInterval::Minute:
+            return static_cast<int32_t>(value.time_of_day().minutes());
+        case TimeInterval::Second:
+            return static_cast<int32_t>(value.time_of_day().seconds());
+        case TimeInterval::Millisecond:
+            return static_cast<int32_t>(value.time_of_day().fractional_seconds() / baseFraction * 1000.0);
+        default:
+            throw runtime_error("Unexpected time interval encountered");
+    }
 }

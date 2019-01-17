@@ -21,27 +21,160 @@
 //
 //******************************************************************************************************
 
-#include <ctime>
 #include <iomanip>
 #include <sstream>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Convert.h"
-#include "Date.h"
 
 using namespace std;
 using namespace std::chrono;
-using namespace date;
 using namespace boost::uuids;
+using namespace boost::posix_time;
 using namespace GSF::TimeSeries;
 
-void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
+string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
+{
+    // 2018-03-14T19:23:11.665-04:00
+    vector<string> dateTimeParts = Split(timestamp, Contains(timestamp, "T") ? "T" : " ");
+
+    // Failed to understand timestamp format, just return input
+    if (dateTimeParts.empty() || dateTimeParts.size() > 2)
+        return timestamp;
+
+    string updatedTimestamp {};
+    string& datePart = dateTimeParts[0];
+    string part {};
+    vector<string> dateParts = Split(datePart, Contains(datePart, "/", false) ? "/" : "-", false);
+
+    if (dateParts.size() != 3)
+        return timestamp;
+
+    string year, month, day;
+
+    for (int32_t i = 0; i < 3; i++)
+    {
+        part = dateParts[i];
+
+        if (part.size() == 1)
+            part.insert(0, "0");
+
+        if (part.size() == 4)
+            year = part;
+        else if (month.empty())
+            month = part;
+        else
+            day = part;
+    }
+
+    updatedTimestamp.append(year);
+    updatedTimestamp.append("-");
+    updatedTimestamp.append(month);
+    updatedTimestamp.append("-");
+    updatedTimestamp.append(day);
+
+    if (dateTimeParts.size() == 1)
+    {
+        updatedTimestamp.append(" 00:00:00");
+        return updatedTimestamp;
+    }
+
+    string& timePart = dateTimeParts[1];
+
+    // Remove any time zone offset and hold on to it for later
+    const bool containsMinus = Contains(timePart, "-", false);
+    vector<string> timeParts = Split(timePart, containsMinus ? "-" : "+", false);
+    string timeZoneOffset {};
+
+    if (timeParts.size() == 2)
+    {
+        timePart = timeParts[0];
+
+        // Swap timezone sign for conversion to UTC
+        timeZoneOffset.append(containsMinus ? "+" : "-");
+        timeZoneOffset.append(Replace(timeParts[1], ":", "", false));
+    }
+
+    timeParts = Split(timePart, ":", false);
+
+    if (timeParts.size() == 2)
+        timeParts.push_back("00");
+
+    if (timeParts.size() != 3)
+        return timestamp;
+
+    updatedTimestamp.append(" ");
+
+    for (int32_t i = 0; i < 3; i++)
+    {
+        string fractionalSeconds {};
+        part = timeParts[i];
+
+        if (i == 2 && Contains(part, ".", false))
+        {
+            vector<string> secondParts = Split(part, ".", false);
+
+            if (secondParts.size() == 2)
+            {
+                part = secondParts[0];
+                fractionalSeconds.append(".");
+                fractionalSeconds.append(secondParts[1]);
+            }
+        }
+
+        if (i > 0)
+            updatedTimestamp.append(":");
+
+        if (part.size() == 1)
+            updatedTimestamp.append("0");
+
+        updatedTimestamp.append(part);
+
+        if (!fractionalSeconds.empty())
+            updatedTimestamp.append(fractionalSeconds);
+    }
+
+    if (timeZoneOffset.size() == 5)
+        utcOffset = time_duration(stoi(timeZoneOffset.substr(0, 3)), stoi(timeZoneOffset.substr(3)), 0);
+
+    return updatedTimestamp;
+}
+
+bool TryParseTimestampFormats(const string& time, DateTime& timestamp, const time_duration& utcOffset)
+{
+    // Parse an XML formatted timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
+    static const locale formats[] = {
+        locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
+        locale(locale::classic(), new time_input_facet("%Y%m%dT%H%M%S%F"))
+    };
+
+    static const int32_t formatsCount = sizeof(formats) / sizeof(formats[0]);
+
+    for (int32_t i = 0; i < formatsCount; i++)
+    {
+        istringstream stream(time);
+
+        stream.imbue(formats[i]);
+        stream >> timestamp;
+
+        if (bool(stream))
+        {
+            timestamp += utcOffset;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void GSF::TimeSeries::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
     const int64_t BaseTimeOffset = 621355968000000000L;
 
-    unixSOC = static_cast<time_t>((ticks - BaseTimeOffset) / 10000000);
+    unixSOC = (ticks - BaseTimeOffset) / 10000000;
 
     if (unixSOC < 0)
         unixSOC = 0;
@@ -49,12 +182,26 @@ void GSF::TimeSeries::GetUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t
     milliseconds = static_cast<uint16_t>(ticks / 10000 % 1000);
 }
 
+DateTime GSF::TimeSeries::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
+{
+    return from_time_t(unixSOC) + boost::posix_time::milliseconds(milliseconds);;
+}
+
+DateTime GSF::TimeSeries::FromTicks(const int64_t ticks)
+{
+    time_t unixSOC;
+    uint16_t milliseconds;
+
+    ToUnixTime(ticks, unixSOC, milliseconds);
+    return FromUnixTime(unixSOC, milliseconds);
+}
+
 uint32_t GSF::TimeSeries::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
 {
     time_t fromSeconds;
     uint16_t milliseconds;
 
-    GetUnixTime(ticks, fromSeconds, milliseconds);
+    ToUnixTime(ticks, fromSeconds, milliseconds);
 
     stringstream formatStream;
     uint32_t formatIndex = 0;
@@ -112,10 +259,17 @@ std::string GSF::TimeSeries::ToString(Guid value)
     return boost::uuids::to_string(value);
 }
 
-std::string GSF::TimeSeries::ToString(time_t value, const char* fmt)
+std::string GSF::TimeSeries::ToString(DateTime value, const char* format)
 {
+    using namespace boost::gregorian;
+
     stringstream stream;
-    stream << format(fmt, system_clock::from_time_t(value));
+
+    date_facet* facet = new date_facet();
+    facet->format(format);
+    stream.imbue(locale(locale::classic(), facet));
+    stream << value;
+
     return stream.str();
 }
 
@@ -180,57 +334,20 @@ const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValu
     return data;
 }
 
-time_t GSF::TimeSeries::ParseTimestamp(const char* time)
+bool GSF::TimeSeries::TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsUTC)
 {
-    // Need a "generic" ParseTimestamp function...
-//    istringstream in { time };
-//    sys_seconds timestamp;
-//
-//    // Try parsing several date-time formats formatted timestamp string
-//    // using the Hinnant date library: https://github.com/HowardHinnant/date
-//
-//    // Need to try several date/time format variations per:
-//    // https://howardhinnant.github.io/date/date.html#from_stream_formatting
-//    /*
-//        istringstream in { "2018-01-12 12:05:14" };
-//        sys_seconds timestamp;
-//    
-//        in >> parse("%Y-%m-%dT%T%z", timestamp);
-//
-//        if (bool(in))    
-//        {
-//            std::cout << "Parsed XML time: " << system_clock::to_time_t(timestamp) << "\n";
-//        }
-//        else
-//        {
-//            in.clear();
-//            in.str("2018-01-12 12:05:14");
-//            in >> parse("%F%n %T", timestamp);
-//    
-//            if (bool(in))    
-//            {
-//                std::cout << "Parsed std time: " << system_clock::to_time_t(timestamp) << "\n";
-//            }
-//            else
-//            {
-//                std::cout << "Failed to parse time...\n";
-//            }
-//        }
-//     */
-//
-//    // Try XML format, e.g.: 2018-03-14T19:23:11.665-04:00:
-//    in >> parse("%Y-%m-%dT%T%z", timestamp);
-    return ParseXMLTimestamp(time);
+    time_duration utcOffset(0, 0, 0);
+    const string& updatedTimestamp = PreparseTimestamp(time, utcOffset);
+
+    return TryParseTimestampFormats(updatedTimestamp, timestamp, parseAsUTC ? utcOffset : time_duration(0, 0, 0));
 }
 
-time_t GSF::TimeSeries::ParseXMLTimestamp(const char* time)
+DateTime GSF::TimeSeries::ParseTimestamp(const char* time, bool parseAsUTC)
 {
-    istringstream in { time };
-    sys_seconds timestamp;
+    DateTime timestamp;
 
-    // Parse an XML formatted timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00,
-    // using the Hinnant date library: https://github.com/HowardHinnant/date
-    in >> parse("%Y-%m-%dT%T%z", timestamp);
+    if (TryParseTimestamp(time, timestamp, parseAsUTC))
+        return timestamp;
 
-    return system_clock::to_time_t(timestamp);
+    throw runtime_error("Failed to parse timestamp \"" + string(time) + "\"");
 }

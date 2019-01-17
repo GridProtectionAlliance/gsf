@@ -1097,14 +1097,84 @@ int main(int argc, char* argv[])
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "Now()");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() <= to_time_t(second_clock::local_time()));
+    assert(valueExpression->ValueAsDateTime() <= second_clock::local_time());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 106
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "UtcNow()");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() <= to_time_t(second_clock::universal_time()));
+    assert(valueExpression->ValueAsDateTime() <= second_clock::universal_time());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 107
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "#2019-02-04T03:00:52.73-05:00#");
+
+    assert(valueExpression->ValueType == ExpressionValueType::DateTime);
+    assert(DatePart(valueExpression->ValueAsDateTime(), TimeInterval::Month) == 2);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 108
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "#2019-2-4T3:00:52.73-05:00#");
+
+    assert(valueExpression->ValueType == ExpressionValueType::DateTime);
+    assert(DatePart(valueExpression->ValueAsDateTime(), TimeInterval::Day) == 4);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 109
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#02/04/2019T03:00:52.73-05:00#, 'Year')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 2019);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 110
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#02/04/2019 03:00:52.73-05:00#, 'Month')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 2);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 111
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2019-02-04 03:00:52.73-05:00#, 'Day')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 4);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 112
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2019-02-04 3:00#, 'Hour')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 3);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 113
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2019-02-04 3:00:52.73-05:00#, 'Hour')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 8);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 114
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2/4/2019 3:21:55#, 'Minute')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 21);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 115
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#02/04/2019 03:21:55.33#, 'Second')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 55);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 116
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#02/04/2019 3:21:5.033#, 'Millisecond')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 33);
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.

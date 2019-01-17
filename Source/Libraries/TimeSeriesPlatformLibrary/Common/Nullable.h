@@ -360,7 +360,7 @@ namespace TimeSeries
         return {};
     }
 
-    inline std::string ToString(const Nullable<time_t>& value, const char* fmt = "%F %T")
+    inline std::string ToString(const Nullable<DateTime>& value, const char* fmt = "%Y-%m-%d %H:%M:%S%F")
     {
         if (value.HasValue())
             return GSF::TimeSeries::ToString(value.GetValueOrDefault(), fmt);
