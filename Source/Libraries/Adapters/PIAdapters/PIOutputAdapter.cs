@@ -25,15 +25,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -46,6 +37,15 @@ using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
 using OSIsoft.AF.PI;
 using OSIsoft.AF.Time;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
 
 namespace PIAdapters
 {
@@ -391,6 +391,9 @@ namespace PIAdapters
                 throw new InvalidOperationException($"The \"{nameof(ServerName)}\" setting is required for PI connections.");
 
             ServerName = setting;
+
+            // Track instance in static dictionary
+            Instances[ServerName] = this;
 
             UserName = settings.TryGetValue(nameof(UserName), out setting) ? setting : null;
             Password = settings.TryGetValue(nameof(Password), out setting) ? setting : null;
@@ -1138,6 +1141,15 @@ namespace PIAdapters
             // Since we may get a plethora of these requests, we use a synchronized operation to restart once
             m_restartConnection.RunOnceAsync();
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Accesses local output adapter instances (normally only one).
+        /// </summary>
+        public static readonly ConcurrentDictionary<string, PIOutputAdapter> Instances = new ConcurrentDictionary<string, PIOutputAdapter>(StringComparer.OrdinalIgnoreCase);
 
         #endregion
     }
