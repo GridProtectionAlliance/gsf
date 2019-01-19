@@ -1237,6 +1237,97 @@ int main(int argc, char* argv[])
     assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 1, 1), time_duration(0, 1, 0, fracSecond(1))));
     cout << "Test " << ++test << " succeeded..." << endl;
 
+    // Test 125
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd(#1/1/2019 0:0:1.029#, -FramesPerSecond, 'Millisecond')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::DateTime);
+    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 1, 1), time_duration(0, 0, 0, fracSecond(999))));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 126
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'Year')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 2);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 127
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'month')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 35);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 128
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'DAY')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 1095);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 129
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'Week')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 156);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 130
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'WeekDay')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 1095);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 131
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'Hour')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 26280);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 132
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'Minute')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 1576800);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 133
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2006-01-01 00:00:00#, #2008-12-31 00:00:00#, 'Second')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 94608000);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 134
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateDiff(#2008-12-30 00:02:50.546#, '2008-12-31', 'Millisecond')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 86229454);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 135
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2019-02-04 03:00:52.73-05:00#, 'DayOfyear')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 35);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 136
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2019-02-04 03:00:52.73-05:00#, 'Week')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 6);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 137
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "DatePart(#2019-02-04 03:00:52.73-05:00#, 'WeekDay')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 2);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
     string line;

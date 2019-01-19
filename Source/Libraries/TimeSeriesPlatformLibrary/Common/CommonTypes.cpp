@@ -315,7 +315,7 @@ int32_t GSF::TimeSeries::DateDiff(DateTime startTime, DateTime endTime, TimeInte
             case TimeInterval::Year:
                 return endTime.date().year() - startTime.date().year();
             case TimeInterval::Month:
-                return endTime.date().month() - startTime.date().month();
+                return DateDiff(startTime, endTime, TimeInterval::Year) * 12 + (endTime.date().month() - startTime.date().month());
             case TimeInterval::DayOfYear:
             case TimeInterval::Day:
             case TimeInterval::WeekDay:
@@ -334,7 +334,7 @@ int32_t GSF::TimeSeries::DateDiff(DateTime startTime, DateTime endTime, TimeInte
         case TimeInterval::Hour:
             return static_cast<int32_t>(duration.hours());
         case TimeInterval::Minute:
-            return static_cast<int32_t>(duration.minutes());
+            return static_cast<int32_t>(duration.total_seconds() / 60);
         case TimeInterval::Second:
             return static_cast<int32_t>(duration.total_seconds());
         case TimeInterval::Millisecond:
@@ -361,7 +361,7 @@ int32_t GSF::TimeSeries::DatePart(DateTime value, TimeInterval interval)
         case TimeInterval::Week:
             return value.date().week_number();
         case TimeInterval::WeekDay:
-            return value.date().day_of_week();
+            return value.date().day_of_week() + 1;
         case TimeInterval::Hour:
             return static_cast<int32_t>(value.time_of_day().hours());
         case TimeInterval::Minute:
