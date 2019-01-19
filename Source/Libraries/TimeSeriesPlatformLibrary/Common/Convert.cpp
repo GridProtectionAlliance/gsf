@@ -142,33 +142,6 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     return updatedTimestamp;
 }
 
-bool TryParseTimestampFormats(const string& time, DateTime& timestamp, const time_duration& utcOffset)
-{
-    // Parse an XML formatted timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
-    static const locale formats[] = {
-        locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
-        locale(locale::classic(), new time_input_facet("%Y%m%dT%H%M%S%F"))
-    };
-
-    static const int32_t formatsCount = sizeof(formats) / sizeof(formats[0]);
-
-    for (int32_t i = 0; i < formatsCount; i++)
-    {
-        istringstream stream(time);
-
-        stream.imbue(formats[i]);
-        stream >> timestamp;
-
-        if (bool(stream))
-        {
-            timestamp += utcOffset;
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void GSF::TimeSeries::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
@@ -334,12 +307,36 @@ const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValu
     return data;
 }
 
+// Parse a timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
 bool GSF::TimeSeries::TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsUTC)
 {
-    time_duration utcOffset(0, 0, 0);
+    static const locale formats[] = {
+        locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
+        locale(locale::classic(), new time_input_facet("%Y%m%dT%H%M%S%F"))
+    };
+
+    static const int32_t formatsCount = sizeof(formats) / sizeof(formats[0]);
+
+    time_duration utcOffset {};
     const string& updatedTimestamp = PreparseTimestamp(time, utcOffset);
 
-    return TryParseTimestampFormats(updatedTimestamp, timestamp, parseAsUTC ? utcOffset : time_duration(0, 0, 0));
+    for (int32_t i = 0; i < formatsCount; i++)
+    {
+        istringstream stream(updatedTimestamp);
+
+        stream.imbue(formats[i]);
+        stream >> timestamp;
+
+        if (bool(stream))
+        {
+            if (parseAsUTC)
+                timestamp += utcOffset;
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 DateTime GSF::TimeSeries::ParseTimestamp(const char* time, bool parseAsUTC)
