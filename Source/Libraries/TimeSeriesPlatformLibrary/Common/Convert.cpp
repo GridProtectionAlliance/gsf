@@ -317,12 +317,10 @@ bool GSF::TimeSeries::TryParseTimestamp(const char* time, DateTime& timestamp, b
 
     static const int32_t formatsCount = sizeof(formats) / sizeof(formats[0]);
 
-    time_duration utcOffset {};
-    const string& updatedTimestamp = PreparseTimestamp(time, utcOffset);
-
     for (int32_t i = 0; i < formatsCount; i++)
     {
-        istringstream stream(updatedTimestamp);
+        time_duration utcOffset {};
+        istringstream stream(PreparseTimestamp(time, utcOffset));
 
         stream.imbue(formats[i]);
         stream >> timestamp;
