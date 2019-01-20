@@ -215,6 +215,11 @@ void FilterExpressionParser::SetPrimaryTableName(const string& tableName)
     m_primaryTableName = tableName;
 }
 
+void FilterExpressionParser::AddErrorListener(ANTLRErrorListener* listener) const
+{
+    m_parser->addErrorListener(listener);
+}
+
 template<typename T>
 static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
 {

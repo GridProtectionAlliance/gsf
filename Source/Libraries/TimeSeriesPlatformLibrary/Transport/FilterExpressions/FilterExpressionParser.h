@@ -100,6 +100,8 @@ public:
     const std::string& GetPrimaryTableName() const;
     void SetPrimaryTableName(const std::string& tableName);
 
+    void AddErrorListener(antlr4::ANTLRErrorListener* listener) const;
+
     void Evaluate();
 
     bool GetTrackFilteredSignalIDs() const;
