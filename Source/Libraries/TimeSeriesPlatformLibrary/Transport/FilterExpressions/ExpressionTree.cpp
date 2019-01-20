@@ -1637,20 +1637,64 @@ ValueExpressionPtr ExpressionTree::IndexOf(const ValueExpressionPtr& sourceValue
 
 ValueExpressionPtr ExpressionTree::IsDate(const ValueExpressionPtr& testValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    if (testValue->ValueType == ExpressionValueType::DateTime)
+        return ExpressionTree::True;
+
+    DateTime timestamp;
+
+    if (testValue->ValueType == ExpressionValueType::String && TryParseTimestamp(testValue->ValueAsString().c_str(), timestamp))
+        return ExpressionTree::True;
+
+    return ExpressionTree::False;
 }
 
 ValueExpressionPtr ExpressionTree::IsInteger(const ValueExpressionPtr& testValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    if (IsIntegerType(testValue->ValueType))
+        return ExpressionTree::True;
+
+    if (testValue->ValueType == ExpressionValueType::String)
+    {
+        try
+        {
+            stoll(testValue->ValueAsString());
+            return ExpressionTree::True;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    return ExpressionTree::False;
 }
 
 ValueExpressionPtr ExpressionTree::IsGuid(const ValueExpressionPtr& testValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    if (testValue->ValueType == ExpressionValueType::Guid)
+        return ExpressionTree::True;
+
+    if (testValue->ValueType == ExpressionValueType::String)
+    {
+        try
+        {
+            ParseGuid(testValue->ValueAsString().c_str());
+            return ExpressionTree::True;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    return ExpressionTree::False;
 }
 
 ValueExpressionPtr ExpressionTree::IsNull(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
@@ -1669,8 +1713,25 @@ ValueExpressionPtr ExpressionTree::IsNull(const ValueExpressionPtr& testValue, c
 
 ValueExpressionPtr ExpressionTree::IsNumeric(const ValueExpressionPtr& testValue) const
 {
-    // TODO: Develop implementation
-    return ExpressionTree::NullValue(ExpressionValueType::Undefined);
+    if (testValue->IsNull())
+        return ExpressionTree::False;
+
+    if (IsNumericType(testValue->ValueType))
+        return ExpressionTree::True;
+
+    if (testValue->ValueType == ExpressionValueType::String)
+    {
+        try
+        {
+            stod(testValue->ValueAsString());
+            return ExpressionTree::True;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    return ExpressionTree::False;
 }
 
 ValueExpressionPtr ExpressionTree::LastIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const

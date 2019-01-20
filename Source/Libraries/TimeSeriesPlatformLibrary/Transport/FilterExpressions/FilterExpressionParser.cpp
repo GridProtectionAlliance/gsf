@@ -97,7 +97,7 @@ const char* FilterExpressionParserException::what() const noexcept
     return &m_message[0];
 }
 
-FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
+FilterExpressionParser::FilterExpressionParser(const string& filterExpression, bool suppressConsoleErrorOutput) :
     m_inputStream(filterExpression),
     m_dataSet(nullptr),
     m_trackFilteredSignalIDs(false),
@@ -106,6 +106,9 @@ FilterExpressionParser::FilterExpressionParser(const string& filterExpression) :
     m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
     m_tokens = new CommonTokenStream(m_lexer);
     m_parser = new FilterExpressionSyntaxParser(m_tokens);
+    
+    if (suppressConsoleErrorOutput)
+        m_parser->removeErrorListeners();
 }
 
 FilterExpressionParser::~FilterExpressionParser()
@@ -1183,9 +1186,9 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }
 
-vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression)
+vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
     parser->SetDataSet(dataTable->Parent());
     parser->SetPrimaryTableName(dataTable->Name());
@@ -1199,9 +1202,9 @@ vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const 
     return parser->m_expressionTrees;
 }
 
-ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression)
+ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
-    vector<ExpressionTreePtr> expressionTrees = GenerateExpressionTrees(dataTable, filterExpression);
+    vector<ExpressionTreePtr> expressionTrees = GenerateExpressionTrees(dataTable, filterExpression, suppressConsoleErrorOutput);
 
     if (!expressionTrees.empty())
         return expressionTrees[0];
@@ -1209,14 +1212,14 @@ ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTable
     throw FilterExpressionParserException("No expression trees generated with filter expression \"" + filterExpression + "\" for table \"" + dataTable->Name() + "\"");
 }
 
-ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, const string& filterExpression)
+ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
-    return GenerateExpressionTree(dataRow->Parent(), filterExpression)->Evaluate(dataRow);
+    return GenerateExpressionTree(dataRow->Parent(), filterExpression, suppressConsoleErrorOutput)->Evaluate(dataRow);
 }
 
-vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression)
+vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
     parser->SetDataSet(dataTable->Parent());
     parser->SetPrimaryTableName(dataTable->Name());

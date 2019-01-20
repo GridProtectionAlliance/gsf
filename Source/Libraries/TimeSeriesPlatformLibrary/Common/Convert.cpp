@@ -38,7 +38,7 @@ using namespace GSF::TimeSeries;
 string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
 {
     // 2018-03-14T19:23:11.665-04:00
-    vector<string> dateTimeParts = Split(timestamp, Contains(timestamp, "T") ? "T" : " ");
+    vector<string> dateTimeParts = Split(Replace(timestamp, "T", " "), " ", false);
 
     // Failed to understand timestamp format, just return input
     if (dateTimeParts.empty() || dateTimeParts.size() > 2)
@@ -47,7 +47,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     string updatedTimestamp {};
     string& datePart = dateTimeParts[0];
     string part {};
-    vector<string> dateParts = Split(datePart, Contains(datePart, "/", false) ? "/" : "-", false);
+    vector<string> dateParts = Split(Replace(datePart, "/", "-", false), "-", false);
 
     if (dateParts.size() != 3)
         return timestamp;

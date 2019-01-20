@@ -82,7 +82,7 @@ private:
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
     void MapMeasurement(const GSF::Data::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
 public:
-    FilterExpressionParser(const std::string& filterExpression);
+    FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = false);
     ~FilterExpressionParser();
 
     const GSF::Data::DataSetPtr& GetDataSet() const;
@@ -116,10 +116,10 @@ public:
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
     void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
 
-    static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
-    static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
-    static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression);
-    static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression);
+    static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = false);
+    static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = false);
+    static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression, bool suppressConsoleErrorOutput = false);
+    static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = false);
 };
 
 typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;

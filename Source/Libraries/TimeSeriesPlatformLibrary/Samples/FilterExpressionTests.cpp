@@ -1228,7 +1228,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     const float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
-    #define fracSecond(ms) static_cast<int64_t>(ms / 1000.0 * baseFraction)
+    #define fracSecond(ms) static_cast<int64_t>((ms) / 1000.0 * baseFraction)
 
     // Test 124
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd('2019-01-1 00:00:59.999', 2, 'Millisecond')");
@@ -1326,6 +1326,64 @@ int main(int argc, char* argv[])
 
     assert(valueExpression->ValueType == ExpressionValueType::Int32);
     assert(valueExpression->ValueAsInt32() == 2);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 138
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsDate(#2019-02-04 03:00:52.73-05:00#) AND IsDate('2/4/2019') && !ISDATE(2.5) && !IsDate('ImNotADate')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 139
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsInteger(32768) AND IsInteger('1024') and ISinTegeR(FaLsE) && !ISINTEGER(2.5) && !IsInteger('ImNotAnInteger')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 140
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsGuid({9448a8b5-35c1-4dc7-8c42-8712153ac08a}) AND IsGuid('9448a8b5-35c1-4dc7-8c42-8712153ac08a') and isGuid(9448a8b5-35c1-4dc7-8c42-8712153ac08a) AND IsGuid(Convert(9448a8b5-35c1-4dc7-8c42-8712153ac08a, 'string')) && !ISGUID(2.5) && !IsGuid('ImNotAGuid')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 141
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsNumeric(32768) && isNumeric(123.456e-67) AND IsNumeric(3.14159265) and ISnumeric(true) AND IsNumeric('1024' ) and IsNumeric(2.5) && !ISNUMERIC(9448a8b5-35c1-4dc7-8c42-8712153ac08a) && !IsNumeric('ImNotNumeric')");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Boolean);
+    assert(valueExpression->ValueAsBoolean());
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 142 - negative tests
+    bool result;
+
+    try
+    {
+        valueExpression = FilterExpressionParser::Evaluate(dataRow, "Convert(123, 'unknown')");
+        result = false;
+    }
+    catch (ExpressionTreeException&)
+    {
+        result = true;
+    }
+
+    assert(result);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 143
+    try
+    {
+        valueExpression = FilterExpressionParser::Evaluate(dataRow, "I am a bad expression", true);
+        result = false;
+    }
+    catch (FilterExpressionParserException&)
+    {
+        result = true;
+    }
+
+    assert(result);
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.
