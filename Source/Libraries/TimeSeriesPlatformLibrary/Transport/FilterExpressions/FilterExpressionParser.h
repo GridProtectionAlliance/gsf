@@ -36,7 +36,7 @@
 #ifdef _DEBUG
 #define SUPPRESS_CONSOLE_ERROR_OUTPUT false
 #else
-#define SUPRESS_CONSOLE_ERROR_OUTPUT true
+#define SUPPRESS_CONSOLE_ERROR_OUTPUT true
 #endif
 
 namespace GSF {
