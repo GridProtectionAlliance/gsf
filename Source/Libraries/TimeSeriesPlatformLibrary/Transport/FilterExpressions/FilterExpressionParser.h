@@ -86,7 +86,7 @@ private:
 
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
-    void MapMeasurement(const GSF::Data::DataTablePtr& measurements, const int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
+    void MapMeasurement(const GSF::Data::DataTablePtr& measurements, int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
 public:
     FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     ~FilterExpressionParser();

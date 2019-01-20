@@ -1361,7 +1361,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        valueExpression = FilterExpressionParser::Evaluate(dataRow, "Convert(123, 'unknown')");
+        FilterExpressionParser::Evaluate(dataRow, "Convert(123, 'unknown')");
         result = false;
     }
     catch (ExpressionTreeException&)
@@ -1375,7 +1375,7 @@ int main(int argc, char* argv[])
     // Test 143
     try
     {
-        valueExpression = FilterExpressionParser::Evaluate(dataRow, "I am a bad expression", true);
+        FilterExpressionParser::Evaluate(dataRow, "I am a bad expression", true);
         result = false;
     }
     catch (FilterExpressionParserException&)
