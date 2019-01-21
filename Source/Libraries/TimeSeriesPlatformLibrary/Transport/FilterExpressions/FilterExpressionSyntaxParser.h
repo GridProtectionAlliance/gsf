@@ -243,7 +243,7 @@ public:
     PredicateExpressionContext* predicateExpression(size_t i);
     ComparisonOperatorContext *comparisonOperator();
     antlr4::tree::TerminalNode *K_LIKE();
-    antlr4::tree::TerminalNode *K_NOT();
+    NotOperatorContext *notOperator();
     ExactMatchModifierContext *exactMatchModifier();
     antlr4::tree::TerminalNode *K_IN();
     ExpressionListContext *expressionList();

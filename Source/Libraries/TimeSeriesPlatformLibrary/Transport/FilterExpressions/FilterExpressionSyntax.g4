@@ -86,10 +86,10 @@ expression
  ;
 
 predicateExpression
- : predicateExpression K_NOT? K_IN exactMatchModifier? '(' expressionList ')'
- | predicateExpression K_IS K_NOT? K_NULL
+ : predicateExpression notOperator? K_IN exactMatchModifier? '(' expressionList ')'
+ | predicateExpression K_IS notOperator? K_NULL
  | predicateExpression comparisonOperator predicateExpression
- | predicateExpression K_NOT? K_LIKE exactMatchModifier? predicateExpression
+ | predicateExpression notOperator? K_LIKE exactMatchModifier? predicateExpression
  | valueExpression
  ;
 

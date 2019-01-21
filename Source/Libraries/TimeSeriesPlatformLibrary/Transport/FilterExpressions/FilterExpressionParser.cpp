@@ -707,7 +707,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
 
     // Check for IN expressions
     const auto inKeywordContext = context->K_IN();
-    const auto notKeywordContext = context->K_NOT();
+    const auto notKeywordContext = context->notOperator();
     const auto exactMatchModifierContext = context->exactMatchModifier();
 
     if (inKeywordContext != nullptr)

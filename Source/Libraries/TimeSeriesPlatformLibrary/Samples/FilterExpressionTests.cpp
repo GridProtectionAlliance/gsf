@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 20
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType IS NOT NULL");
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType IS !NULL");
     parser->SetDataSet(dataSet);
     parser->SetTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
     parser->SetPrimaryTableName("ActiveMeasurements");
@@ -797,7 +797,7 @@ int main(int argc, char* argv[])
         cout << "Test " << ++test << " succeeded..." << endl;
 
         // Test 48
-        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Acronym NOT IN ('Test', 'Apple')");
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE Acronym not IN ('Test', 'Apple')");
         parser->SetDataSet(dataSet);
         parser->SetTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryTableName("DeviceDetail");
@@ -833,7 +833,7 @@ int main(int argc, char* argv[])
         cout << "Test " << ++test << " succeeded..." << endl;
 
         // Test 51 - unary positive (negating negative)
-        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE NOT Acronym NOT IN ('Shelby', 'Apple')");
+        parser = NewSharedPtr<FilterExpressionParser>("FILTER DeviceDetail WHERE NOT Acronym !IN ('Shelby', 'Apple')");
         parser->SetDataSet(dataSet);
         parser->SetTableIDFields("DeviceDetail", deviceDetailIDFields);
         parser->SetPrimaryTableName("DeviceDetail");
@@ -927,7 +927,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 81
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "NOT AccessID % 2 = 0 OR FramesPerSecond % 4 >> 1 = 1 && AccessID % 3 << 1 & 4 >= 4");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "!AccessID % 2 = 0 OR FramesPerSecond % 4 >> 1 = 1 && AccessID % 3 << 1 & 4 >= 4");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
