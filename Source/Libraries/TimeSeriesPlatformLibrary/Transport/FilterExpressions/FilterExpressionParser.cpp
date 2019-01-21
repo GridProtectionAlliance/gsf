@@ -43,14 +43,7 @@ FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpre
 
 void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* recognizer, Token* offendingSymbol, size_t line, size_t charPositionInLine, const string &msg, std::exception_ptr e)
 {
-    stringstream exceptionMessage;
-
-    if (offendingSymbol)
-        exceptionMessage << "index " << charPositionInLine << ", symbol \"" << offendingSymbol->getText() << "\": " << msg << std::endl;
-    else
-        exceptionMessage << "index " << charPositionInLine << ": " << msg << std::endl;
-
-    m_parsingExceptionCallback(m_filterExpressionParser, exceptionMessage.str());
+    m_parsingExceptionCallback(m_filterExpressionParser, msg);
 }
 
 static string ParseStringLiteral(string stringLiteral)  // NOLINT
@@ -354,9 +347,10 @@ void FilterExpressionParser::Evaluate()
                 for (size_t i = 0; i < expressionTree->OrderByTerms.size(); i++)
                 {
                     const auto orderByTerm = expressionTree->OrderByTerms[i];
-                    const DataColumnPtr& orderByColumn = orderByTerm.first;
+                    const DataColumnPtr& orderByColumn = get<0>(orderByTerm);
                     const int32_t columnIndex = orderByColumn->Index();
-                    const bool ascending = orderByTerm.second;
+                    const bool ascending = get<1>(orderByTerm);
+                    const bool exactMatch = get<2>(orderByTerm);
                     const DataRowPtr& leftRow = ascending ? leftMatchedRow : rightMatchedRow;
                     const DataRowPtr& rightRow = ascending ? rightMatchedRow : leftMatchedRow;
                     int32_t result;
@@ -369,7 +363,7 @@ void FilterExpressionParser::Evaluate()
                             auto rightNullable = rightRow->ValueAsString(columnIndex);
 
                             if (leftNullable.HasValue() && rightNullable.HasValue())
-                                result = Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault());
+                                result = Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault(), !exactMatch);
                             else if (!leftNullable.HasValue() && !rightNullable.HasValue())
                                 result = 0;
                             else
@@ -533,7 +527,8 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
 
             m_activeExpressionTree->OrderByTerms.emplace_back(
                 orderByColumn,
-                orderingTermContext->K_DESC() == nullptr
+                orderingTermContext->K_DESC() == nullptr,
+                orderingTermContext->exactMatchModifier() == nullptr
             );
         }
     }

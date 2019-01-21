@@ -59,7 +59,7 @@ topLimit
  ;
 
 orderingTerm
- : orderByColumnName ( K_ASC | K_DESC )?
+ : exactMatchModifier? orderByColumnName ( K_ASC | K_DESC )?
  ;
 
 expressionList

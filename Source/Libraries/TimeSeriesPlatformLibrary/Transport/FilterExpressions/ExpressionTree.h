@@ -380,7 +380,7 @@ public:
 
     const Data::DataTablePtr& Table() const;
     int32_t TopLimit;
-    std::vector<std::pair<Data::DataColumnPtr, bool>> OrderByTerms;
+    std::vector<std::tuple<Data::DataColumnPtr, bool, bool>> OrderByTerms;
 
     ExpressionPtr Root = nullptr;
 

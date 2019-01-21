@@ -193,6 +193,7 @@ public:
     OrderingTermContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     OrderByColumnNameContext *orderByColumnName();
+    ExactMatchModifierContext *exactMatchModifier();
     antlr4::tree::TerminalNode *K_ASC();
     antlr4::tree::TerminalNode *K_DESC();
 

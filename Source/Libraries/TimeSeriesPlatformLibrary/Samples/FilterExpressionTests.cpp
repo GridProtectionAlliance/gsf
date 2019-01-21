@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 11
-    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ' OR SignalType = 'STAT' ORDER BY SignalType");
+    parser = NewSharedPtr<FilterExpressionParser>("FILTER ActiveMeasurements WHERE SignalType = 'FREQ' OR SignalType = 'STAT' ORDER BY BINARY SignalType");
     parser->SetDataSet(dataSet);
     parser->SetTableIDFields("ActiveMeasurements", activeMeasurementsIDFields);
     parser->SetPrimaryTableName("ActiveMeasurements");
@@ -1364,7 +1364,7 @@ int main(int argc, char* argv[])
         FilterExpressionParser::Evaluate(dataRow, "Convert(123, 'unknown')");
         result = false;
     }
-    catch (ExpressionTreeException&)
+    catch (const ExpressionTreeException&)
     {
         result = true;
     }
@@ -1378,7 +1378,7 @@ int main(int argc, char* argv[])
         FilterExpressionParser::Evaluate(dataRow, "I am a bad expression", true);
         result = false;
     }
-    catch (FilterExpressionParserException&)
+    catch (const FilterExpressionParserException&)
     {
         result = true;
     }
