@@ -64,13 +64,32 @@ struct TableIDFields
 
 typedef SharedPtr<TableIDFields> TableIDFieldsPtr;
 
-class FilterExpressionParser : public FilterExpressionSyntaxBaseListener // NOLINT
+class FilterExpressionParser;
+typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
+
+class FilterExpressionParser : 
+    public FilterExpressionSyntaxBaseListener,
+    public GSF::TimeSeries::EnableSharedThisPtr<FilterExpressionParser> // NOLINT
 {
 private:
+    typedef void(*ParsingExceptionCallback)(FilterExpressionParserPtr, const std::string&);
+
+    class CallbackErrorListener : public antlr4::BaseErrorListener
+    {
+    private:
+        const FilterExpressionParserPtr m_filterExpressionParser;
+        const ParsingExceptionCallback m_parsingExceptionCallback;
+
+    public:
+        CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback);
+        void syntaxError(antlr4::Recognizer* recognizer, antlr4::Token* offendingSymbol, size_t line, size_t charPositionInLine, const std::string& msg, std::exception_ptr e) override;
+    };
+
     antlr4::ANTLRInputStream m_inputStream;
     FilterExpressionSyntaxLexer* m_lexer;
     antlr4::CommonTokenStream* m_tokens;
     FilterExpressionSyntaxParser* m_parser;
+    CallbackErrorListener* m_callbackErrorListener;
     GSF::Data::DataSetPtr m_dataSet;
     ExpressionTreePtr m_activeExpressionTree;
     bool m_trackFilteredSignalIDs;
@@ -100,7 +119,9 @@ public:
     const std::string& GetPrimaryTableName() const;
     void SetPrimaryTableName(const std::string& tableName);
 
-    void AddErrorListener(antlr4::ANTLRErrorListener* listener) const;
+    // ParsingExceptionCallback function is defined with the following signature:
+    //   void HandleParsingException(FilterExpressionParserPtr, const string& message)
+    void RegisterParsingExceptionCallback(ParsingExceptionCallback parsingExceptionCallback);
 
     void Evaluate();
 

@@ -35,6 +35,24 @@ using namespace boost;
 // Mapped type for TimeSeries Guid (ANTLR4 also defines a Guid type)
 typedef GSF::TimeSeries::Guid guid;
 
+FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback) :
+    m_filterExpressionParser(filterExpressionParser),
+    m_parsingExceptionCallback(parsingExceptionCallback)
+{        
+}
+
+void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* recognizer, Token* offendingSymbol, size_t line, size_t charPositionInLine, const string &msg, std::exception_ptr e)
+{
+    stringstream exceptionMessage;
+
+    if (offendingSymbol)
+        exceptionMessage << "index " << charPositionInLine << ", symbol \"" << offendingSymbol->getText() << "\": " << msg << std::endl;
+    else
+        exceptionMessage << "index " << charPositionInLine << ": " << msg << std::endl;
+
+    m_parsingExceptionCallback(m_filterExpressionParser, exceptionMessage.str());
+}
+
 static string ParseStringLiteral(string stringLiteral)  // NOLINT
 {
     // Remove any surrounding quotes from string, ANTLR grammar already
@@ -94,11 +112,12 @@ FilterExpressionParserException::FilterExpressionParserException(string message)
 
 const char* FilterExpressionParserException::what() const noexcept
 {
-    return &m_message[0];
+    return m_message.c_str();
 }
 
 FilterExpressionParser::FilterExpressionParser(const string& filterExpression, bool suppressConsoleErrorOutput) :
     m_inputStream(filterExpression),
+    m_callbackErrorListener(nullptr),
     m_dataSet(nullptr),
     m_trackFilteredSignalIDs(false),
     m_trackFilteredRows(true)
@@ -116,6 +135,7 @@ FilterExpressionParser::~FilterExpressionParser()
     delete m_lexer;
     delete m_tokens;
     delete m_parser;
+    delete m_callbackErrorListener;
 }
 
 bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, ExpressionPtr& expression) const
@@ -215,9 +235,16 @@ void FilterExpressionParser::SetPrimaryTableName(const string& tableName)
     m_primaryTableName = tableName;
 }
 
-void FilterExpressionParser::AddErrorListener(ANTLRErrorListener* listener) const
+void FilterExpressionParser::RegisterParsingExceptionCallback(ParsingExceptionCallback parsingExceptionCallback)
 {
-    m_parser->addErrorListener(listener);
+    if (m_callbackErrorListener)
+    {
+        m_parser->removeErrorListener(m_callbackErrorListener);
+        delete m_callbackErrorListener;
+    }
+
+    m_callbackErrorListener = new CallbackErrorListener(shared_from_this(), parsingExceptionCallback);
+    m_parser->addErrorListener(m_callbackErrorListener);
 }
 
 template<typename T>
@@ -680,10 +707,10 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
 
 /*
     predicateExpression
-     : predicateExpression K_NOT? K_IN '(' expressionList ')'
-     | predicateExpression K_IS K_NOT? K_NULL
+     : predicateExpression notOperator? K_IN exactMatchModifier? '(' expressionList ')'
+     | predicateExpression K_IS notOperator? K_NULL
      | predicateExpression comparisonOperator predicateExpression
-     | predicateExpression K_NOT? K_LIKE predicateExpression
+     | predicateExpression notOperator? K_LIKE exactMatchModifier? predicateExpression
      | valueExpression
      ;
  */
@@ -707,7 +734,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
 
     // Check for IN expressions
     const auto inKeywordContext = context->K_IN();
-    const auto notKeywordContext = context->notOperator();
+    const auto notOperatorContext = context->notOperator();
     const auto exactMatchModifierContext = context->exactMatchModifier();
 
     if (inKeywordContext != nullptr)
@@ -736,7 +763,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
                 throw FilterExpressionParserException("Failed to find argument expression " + ToString(i) + " \"" + expressionList->expression(i)->getText() + "\" for \"IN\" operation");
         }
 
-        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notKeywordContext != nullptr, exactMatchModifierContext != nullptr));
+        AddExpr(context, NewSharedPtr<InListExpression>(value, arguments, notOperatorContext != nullptr, exactMatchModifierContext != nullptr));
         return;
     }
 
@@ -746,7 +773,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
 
     if (isKeywordContext != nullptr && nullKeywordContext != nullptr)
     {
-        const ExpressionOperatorType operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::IsNull : ExpressionOperatorType::IsNotNull;
+        const ExpressionOperatorType operatorType = notOperatorContext == nullptr ? ExpressionOperatorType::IsNull : ExpressionOperatorType::IsNotNull;
 
         // IS NULL expression expects one predicate
         if (context->predicateExpression().size() != 1)
@@ -811,9 +838,9 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     if (likeKeywordContext != nullptr)
     {
         if (exactMatchModifierContext == nullptr)
-            operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
+            operatorType = notOperatorContext == nullptr ? ExpressionOperatorType::Like : ExpressionOperatorType::NotLike;
         else
-            operatorType = notKeywordContext == nullptr ? ExpressionOperatorType::LikeExactMatch : ExpressionOperatorType::NotLikeExactMatch;
+            operatorType = notOperatorContext == nullptr ? ExpressionOperatorType::LikeExactMatch : ExpressionOperatorType::NotLikeExactMatch;
 
         AddExpr(context, NewSharedPtr<OperatorExpression>(operatorType, leftValue, rightValue));
         return;
