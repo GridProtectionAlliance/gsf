@@ -133,6 +133,7 @@ logicalOperator
 bitwiseOperator
  : '<<' | '>>'
  | '&' | '|'
+ | K_XOR | '^'
  ;
 
 mathOperator
@@ -269,6 +270,7 @@ K_TRIMRIGHT : T R I M R I G H T;
 K_UPPER : U P P E R;
 K_UTCNOW : U T C N O W;
 K_WHERE : W H E R E;
+K_XOR : X O R;
 
 BOOLEAN_LITERAL
   : T R U E

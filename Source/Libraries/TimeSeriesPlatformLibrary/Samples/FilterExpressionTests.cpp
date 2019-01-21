@@ -1386,6 +1386,13 @@ int main(int argc, char* argv[])
     assert(result);
     cout << "Test " << ++test << " succeeded..." << endl;
 
+    // Test 144
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID ^ 2 + FramesPerSecond XOR 4");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 38);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
     string line;

@@ -997,6 +997,8 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
             operatorType = ExpressionOperatorType::BitwiseAnd;
         else if (IsEqual(operatorSymbol, "|", false))
             operatorType = ExpressionOperatorType::BitwiseOr;
+        else if (IsEqual(operatorSymbol, "^", false) || bitwiseOperatorContext->K_XOR() != nullptr)
+            operatorType = ExpressionOperatorType::BitwiseXor;
         else
             throw FilterExpressionParserException("Unexpected bitwise operator \"" + operatorSymbol + "\"");
 

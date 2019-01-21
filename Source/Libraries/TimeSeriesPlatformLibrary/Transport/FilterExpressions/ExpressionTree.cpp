@@ -93,6 +93,7 @@ const char* GSF::TimeSeries::Transport::ExpressionOperatorTypeAcronym[] =
     ">>",
     "&",
     "|",
+    "^",
     "<",
     "<=",
     ">",
@@ -938,6 +939,8 @@ ValueExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& express
             return BitwiseAnd(leftValue, rightValue, valueType);
         case ExpressionOperatorType::BitwiseOr:
             return BitwiseOr(leftValue, rightValue, valueType);
+        case ExpressionOperatorType::BitwiseXor:
+            return BitwiseXor(leftValue, rightValue, valueType);
         case ExpressionOperatorType::LessThan:
             return LessThan(leftValue, rightValue, valueType);
         case ExpressionOperatorType::LessThanOrEqual:
@@ -987,6 +990,7 @@ ExpressionValueType ExpressionTree::DeriveOperationValueType(ExpressionOperatorT
         case ExpressionOperatorType::Modulus:
         case ExpressionOperatorType::BitwiseAnd:
         case ExpressionOperatorType::BitwiseOr:
+        case ExpressionOperatorType::BitwiseXor:
             return DeriveIntegerOperationValueType(operationType, leftValueType, rightValueType);        
         case ExpressionOperatorType::LessThan:
         case ExpressionOperatorType::LessThanOrEqual:
@@ -2535,6 +2539,35 @@ ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue
         case ExpressionValueType::DateTime:
         case ExpressionValueType::Undefined:
             throw ExpressionTreeException("Cannot apply bitwise \"|\" operator to \"" + string(EnumName(valueType)) + "\"");
+        default:
+            throw ExpressionTreeException("Unexpected expression value type encountered");
+    }
+}
+
+ValueExpressionPtr ExpressionTree::BitwiseXor(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+{
+    // If left or right value is Null, result is Null
+    if (leftValue->IsNull() || rightValue->IsNull())
+        return NullValue(valueType);
+
+    const ValueExpressionPtr left = Convert(leftValue, valueType);
+    const ValueExpressionPtr right = Convert(rightValue, valueType);
+
+    switch (valueType)
+    {
+        case ExpressionValueType::Boolean:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() ^ right->ValueAsBoolean());
+        case ExpressionValueType::Int32:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() ^ right->ValueAsInt32());
+        case ExpressionValueType::Int64:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() ^ right->ValueAsInt64());
+        case ExpressionValueType::Decimal:
+        case ExpressionValueType::Double:
+        case ExpressionValueType::String:
+        case ExpressionValueType::Guid:
+        case ExpressionValueType::DateTime:
+        case ExpressionValueType::Undefined:
+            throw ExpressionTreeException("Cannot apply bitwise \"^\" operator to \"" + string(EnumName(valueType)) + "\"");
         default:
             throw ExpressionTreeException("Unexpected expression value type encountered");
     }
