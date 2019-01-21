@@ -28,6 +28,7 @@
 #include "../Common/Convert.h"
 
 using namespace std;
+using namespace GSF;
 using namespace GSF::TimeSeries;
 
 SubscriberException::SubscriberException(string message) noexcept :

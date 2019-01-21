@@ -26,8 +26,7 @@
 
 #include "CommonTypes.h"
 
-namespace GSF {
-namespace TimeSeries
+namespace GSF
 {
     // Converts a timestamp, in Ticks, to Unix second of century and milliseconds
     void ToUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds);
@@ -66,6 +65,6 @@ namespace TimeSeries
 
     // Converts a string to a date-time that may be in several common formats
     DateTime ParseTimestamp(const char* time, bool parseAsUTC = true);
-}}
+}
 
 #endif

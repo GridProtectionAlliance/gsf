@@ -25,7 +25,7 @@
 #include <string>
 #include <boost/filesystem.hpp>
 
-#include "../Transport/FilterExpressions/FilterExpressionParser.h"
+#include "../FilterExpressions/FilterExpressionParser.h"
 #include "../Data/DataSet.h"
 
 using namespace std;
@@ -33,8 +33,7 @@ using namespace boost::gregorian;
 using namespace boost::posix_time;
 using namespace GSF;
 using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace GSF::FilterExpressions;
 
 void Evaluate(const FilterExpressionParserPtr& parser)
 {
@@ -75,14 +74,14 @@ int main(int argc, char* argv[])
     dataTable->AddColumn(dataColumn);
     const int32_t signalTypeField = dataTable->Column("SignalType")->Index();
 
-    const GSF::TimeSeries::Guid statID = NewGuid();
+    const GSF::Guid statID = NewGuid();
     dataRow = NewSharedPtr<DataRow>(dataTable);
     dataRow->SetGuidValue(signalIDField, statID);
     dataRow->SetStringValue(signalTypeField, string("STAT"));
     dataTable->AddRow(dataRow);
     cout << "Row 1 Statistic SignalID = " << ToString(statID) << endl;
 
-    const GSF::TimeSeries::Guid freqID = NewGuid();
+    const GSF::Guid freqID = NewGuid();
     dataRow = NewSharedPtr<DataRow>(dataTable);
     dataRow->SetGuidValue(signalIDField, freqID);
     dataRow->SetStringValue(signalTypeField, string("FREQ"));

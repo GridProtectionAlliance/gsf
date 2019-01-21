@@ -28,8 +28,7 @@
 #include "../../Data/DataSet.h"
 
 namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace FilterExpressions
 {
 
 // Simple exception type thrown by the expression tree
@@ -283,8 +282,8 @@ typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;
 class ExpressionTree
 {
 private:
-    Data::DataRowPtr m_currentRow;
-    Data::DataTablePtr m_table;
+    GSF::Data::DataRowPtr m_currentRow;
+    GSF::Data::DataTablePtr m_table;
 
     ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
     ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
@@ -378,15 +377,15 @@ private:
     ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
     ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
 public:
-    ExpressionTree(Data::DataTablePtr table);
+    ExpressionTree(GSF::Data::DataTablePtr table);
 
-    const Data::DataTablePtr& Table() const;
+    const GSF::Data::DataTablePtr& Table() const;
     int32_t TopLimit;
-    std::vector<std::tuple<Data::DataColumnPtr, bool, bool>> OrderByTerms;
+    std::vector<std::tuple<GSF::Data::DataColumnPtr, bool, bool>> OrderByTerms;
 
     ExpressionPtr Root = nullptr;
 
-    ValueExpressionPtr Evaluate(const Data::DataRowPtr& row);
+    ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& row);
 
     static const ValueExpressionPtr True;
     static const ValueExpressionPtr False;
@@ -396,6 +395,6 @@ public:
 
 typedef SharedPtr<ExpressionTree> ExpressionTreePtr;
 
-}}}
+}}
 
 #endif

@@ -54,10 +54,12 @@ const char* GSF::Data::EnumName(DataType type)
 
 const DataColumnPtr DataColumn::NullPtr = nullptr;
 
-DataColumn::DataColumn(DataTablePtr parent, string name, DataType type) :
+DataColumn::DataColumn(DataTablePtr parent, string name, DataType type, string expression) :
     m_parent(std::move(parent)),
     m_name(std::move(name)),
     m_type(type),
+    m_expression(std::move(expression)),
+    m_computed(!m_expression.empty()),
     m_index(-1)
 {
     if (m_parent == nullptr)
@@ -79,6 +81,16 @@ const string& DataColumn::Name() const
 DataType DataColumn::Type() const
 {
     return m_type;
+}
+
+const std::string& DataColumn::Expression() const
+{
+    return m_expression;
+}
+
+bool DataColumn::Computed() const
+{
+    return m_computed;
 }
 
 int32_t DataColumn::Index() const

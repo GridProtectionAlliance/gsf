@@ -27,32 +27,13 @@
 
 using namespace std;
 using namespace boost::posix_time;
+using namespace GSF;
 using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace GSF::FilterExpressions;
 
-#define isEqual GSF::TimeSeries::IsEqual
-#define startsWith GSF::TimeSeries::StartsWith
-#define endsWith GSF::TimeSeries::EndsWith
-#define contains GSF::TimeSeries::Contains
-#define count GSF::TimeSeries::Count
-#define compare GSF::TimeSeries::Compare
-#define indexOf GSF::TimeSeries::IndexOf
-#define lastIndexOf GSF::TimeSeries::LastIndexOf
-#define split GSF::TimeSeries::Split
-#define replace GSF::TimeSeries::Replace
-#define toUpper GSF::TimeSeries::ToUpper
-#define toLower GSF::TimeSeries::ToLower
-#define trim GSF::TimeSeries::Trim
-#define trimRight GSF::TimeSeries::TrimRight
-#define trimLeft GSF::TimeSeries::TrimLeft
-#define dateAdd GSF::TimeSeries::DateAdd
-#define dateDiff GSF::TimeSeries::DateDiff
-#define datePart GSF::TimeSeries::DatePart
+const int32_t GSF::FilterExpressions::ExpressionValueTypeLength = static_cast<int32_t>(ExpressionValueType::Undefined) + 1;
 
-const int32_t GSF::TimeSeries::Transport::ExpressionValueTypeLength = static_cast<int32_t>(ExpressionValueType::Undefined) + 1;
-
-const char* GSF::TimeSeries::Transport::ExpressionValueTypeAcronym[] =
+const char* GSF::FilterExpressions::ExpressionValueTypeAcronym[] =
 {
     "Boolean",
     "Int32",
@@ -65,24 +46,24 @@ const char* GSF::TimeSeries::Transport::ExpressionValueTypeAcronym[] =
     "Undefined"
 };
 
-const char* GSF::TimeSeries::Transport::EnumName(ExpressionValueType valueType)
+const char* GSF::FilterExpressions::EnumName(ExpressionValueType valueType)
 {
     return ExpressionValueTypeAcronym[static_cast<int32_t>(valueType)];
 }
 
-const char* GSF::TimeSeries::Transport::ExpressionUnaryTypeAcronym[] =
+const char* GSF::FilterExpressions::ExpressionUnaryTypeAcronym[] =
 {
     "+",
     "-",
     "~"
 };
 
-const char* GSF::TimeSeries::Transport::EnumName(ExpressionUnaryType unaryType)
+const char* GSF::FilterExpressions::EnumName(ExpressionUnaryType unaryType)
 {
     return ExpressionUnaryTypeAcronym[static_cast<int32_t>(unaryType)];
 }
 
-const char* GSF::TimeSeries::Transport::ExpressionOperatorTypeAcronym[] =
+const char* GSF::FilterExpressions::ExpressionOperatorTypeAcronym[] =
 {
     "*",
     "/",
@@ -112,12 +93,12 @@ const char* GSF::TimeSeries::Transport::ExpressionOperatorTypeAcronym[] =
     "OR"
 };
 
-const char* GSF::TimeSeries::Transport::EnumName(ExpressionOperatorType operatorType)
+const char* GSF::FilterExpressions::EnumName(ExpressionOperatorType operatorType)
 {
     return ExpressionOperatorTypeAcronym[static_cast<int32_t>(operatorType)];
 }
 
-bool Transport::IsIntegerType(ExpressionValueType valueType)
+bool GSF::FilterExpressions::IsIntegerType(ExpressionValueType valueType)
 {
     switch (valueType)
     {
@@ -130,7 +111,7 @@ bool Transport::IsIntegerType(ExpressionValueType valueType)
     }
 }
 
-bool Transport::IsNumericType(ExpressionValueType valueType)
+bool GSF::FilterExpressions::IsNumericType(ExpressionValueType valueType)
 {
     switch (valueType)
     {
@@ -246,21 +227,21 @@ string ValueExpression::ToString() const
     switch (ValueType)
     {
         case ExpressionValueType::Boolean:
-            return GSF::TimeSeries::ToString(ValueAsNullableBoolean());
+            return GSF::ToString(ValueAsNullableBoolean());
         case ExpressionValueType::Int32:
-            return GSF::TimeSeries::ToString(ValueAsNullableInt32());
+            return GSF::ToString(ValueAsNullableInt32());
         case ExpressionValueType::Int64:
-            return GSF::TimeSeries::ToString(ValueAsNullableInt64());
+            return GSF::ToString(ValueAsNullableInt64());
         case ExpressionValueType::Decimal:
-            return GSF::TimeSeries::ToString(ValueAsNullableDecimal());
+            return GSF::ToString(ValueAsNullableDecimal());
         case ExpressionValueType::Double:
-            return GSF::TimeSeries::ToString(ValueAsNullableDouble());
+            return GSF::ToString(ValueAsNullableDouble());
         case ExpressionValueType::String:
-            return GSF::TimeSeries::ToString(ValueAsNullableString());
+            return GSF::ToString(ValueAsNullableString());
         case ExpressionValueType::Guid:
-            return GSF::TimeSeries::ToString(ValueAsNullableGuid());
+            return GSF::ToString(ValueAsNullableGuid());
         case ExpressionValueType::DateTime:
-            return GSF::TimeSeries::ToString(ValueAsNullableDateTime());
+            return GSF::ToString(ValueAsNullableDateTime());
         case ExpressionValueType::Undefined:
             return nullptr;
         default:
@@ -437,7 +418,7 @@ UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr va
 
 ColumnExpression::ColumnExpression(DataColumnPtr dataColumn) :
     Expression(ExpressionType::Column),
-    DataColumn(std::move(dataColumn))
+    DataColumn(dataColumn)
 {
 }
 
@@ -1418,7 +1399,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     string targetTypeName = targetType->ValueAsString();
 
     // Remove any "System." prefix: 01234567
-    if (startsWith(targetTypeName, "System.") && targetTypeName.size() > 7)
+    if (GSF::StartsWith(targetTypeName, "System.") && targetTypeName.size() > 7)
         targetTypeName = targetTypeName.substr(7);
 
     ExpressionValueType targetValueType = ExpressionValueType::Undefined;
@@ -1426,7 +1407,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
 
     for (int32_t i = 0; i < ExpressionValueTypeLength; i++)
     {
-        if (isEqual(targetTypeName, ExpressionValueTypeAcronym[i]))
+        if (GSF::IsEqual(targetTypeName, ExpressionValueTypeAcronym[i]))
         {
             targetValueType = static_cast<ExpressionValueType>(i);
             foundValueType = true;
@@ -1437,17 +1418,17 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     if (!foundValueType)
     {
         // Handle a few common exceptions
-        if (isEqual(targetTypeName, "Single") || startsWith(targetTypeName, "float"))
+        if (GSF::IsEqual(targetTypeName, "Single") || GSF::StartsWith(targetTypeName, "float"))
         {
             targetValueType = ExpressionValueType::Double;
             foundValueType = true;
         }
-        else if (isEqual(targetTypeName, "bool"))
+        else if (GSF::IsEqual(targetTypeName, "bool"))
         {
             targetValueType = ExpressionValueType::Boolean;
             foundValueType = true;
         }
-        else if (startsWith(targetTypeName, "Int") || startsWith(targetTypeName, "UInt"))
+        else if (GSF::StartsWith(targetTypeName, "Int") || GSF::StartsWith(targetTypeName, "UInt"))
         {
             targetValueType = ExpressionValueType::Int64;
             foundValueType = true;
@@ -1475,7 +1456,7 @@ ValueExpressionPtr ExpressionTree::Contains(const ValueExpressionPtr& sourceValu
     if (testValue->IsNull())
         return ExpressionTree::False;
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, contains(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::Contains(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& addValue, const ValueExpressionPtr& intervalType) const
@@ -1520,7 +1501,7 @@ ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue
             throw ExpressionTreeException("Unexpected expression value type encountered");
     }
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, dateAdd(dateValue->ValueAsDateTime(), value, interval));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, GSF::DateAdd(dateValue->ValueAsDateTime(), value, interval));
 }
 
 ValueExpressionPtr ExpressionTree::DateDiff(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& intervalType) const
@@ -1546,7 +1527,7 @@ ValueExpressionPtr ExpressionTree::DateDiff(const ValueExpressionPtr& leftValue,
     if (leftDateValue->IsNull() || rightDateValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, dateDiff(leftDateValue->ValueAsDateTime(), rightDateValue->ValueAsDateTime(), interval));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::DateDiff(leftDateValue->ValueAsDateTime(), rightDateValue->ValueAsDateTime(), interval));
 }
 
 ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& intervalType) const
@@ -1568,7 +1549,7 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
     if (dateValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, datePart(dateValue->ValueAsDateTime(), interval));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::DatePart(dateValue->ValueAsDateTime(), interval));
 }
 
 ValueExpressionPtr ExpressionTree::EndsWith(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
@@ -1586,7 +1567,7 @@ ValueExpressionPtr ExpressionTree::EndsWith(const ValueExpressionPtr& sourceValu
     if (testValue->IsNull())
         return ExpressionTree::False;
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, endsWith(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::EndsWith(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Floor(const ValueExpressionPtr& sourceValue) const
@@ -1636,7 +1617,7 @@ ValueExpressionPtr ExpressionTree::IndexOf(const ValueExpressionPtr& sourceValue
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, indexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::IndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::IsDate(const ValueExpressionPtr& testValue) const
@@ -1750,7 +1731,7 @@ ValueExpressionPtr ExpressionTree::LastIndexOf(const ValueExpressionPtr& sourceV
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, lastIndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::LastIndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Len(const ValueExpressionPtr& sourceValue) const
@@ -1778,7 +1759,7 @@ ValueExpressionPtr ExpressionTree::Lower(const ValueExpressionPtr& sourceValue) 
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, toLower(sourceText));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::ToLower(sourceText));
 }
 
 ValueExpressionPtr ExpressionTree::MaxOf(const ExpressionCollectionPtr& arguments) const
@@ -1858,7 +1839,7 @@ ValueExpressionPtr ExpressionTree::NthIndexOf(const ValueExpressionPtr& sourceVa
             throw ExpressionTreeException("Unexpected expression value type encountered");
     }
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, indexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), index, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::IndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), index, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Power(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& exponentValue) const
@@ -1925,7 +1906,7 @@ ValueExpressionPtr ExpressionTree::Replace(const ValueExpressionPtr& sourceValue
     if (sourceValue->IsNull())
         return sourceValue;
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, replace(sourceValue->ValueAsString(), testValue->ValueAsString(), replaceValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::Replace(sourceValue->ValueAsString(), testValue->ValueAsString(), replaceValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Reverse(const ValueExpressionPtr& sourceValue) const
@@ -2004,7 +1985,7 @@ ValueExpressionPtr ExpressionTree::Split(const ValueExpressionPtr& sourceValue, 
             throw ExpressionTreeException("Unexpected expression value type encountered");
     }
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, split(sourceValue->ValueAsString(), delimiterValue->ValueAsString(), index, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::Split(sourceValue->ValueAsString(), delimiterValue->ValueAsString(), index, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::Sqrt(const ValueExpressionPtr& sourceValue) const
@@ -2048,7 +2029,7 @@ ValueExpressionPtr ExpressionTree::StartsWith(const ValueExpressionPtr& sourceVa
     if (testValue->IsNull())
         return ExpressionTree::False;
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, startsWith(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::StartsWith(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::StrCount(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& ignoreCase) const
@@ -2067,7 +2048,7 @@ ValueExpressionPtr ExpressionTree::StrCount(const ValueExpressionPtr& sourceValu
     if (findValue.empty())
         return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, 0);
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, count(sourceValue->ValueAsString(), findValue, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::Count(sourceValue->ValueAsString(), findValue, Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::StrCmp(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ValueExpressionPtr& ignoreCase) const
@@ -2087,7 +2068,7 @@ ValueExpressionPtr ExpressionTree::StrCmp(const ValueExpressionPtr& leftValue, c
     if (rightValue->IsNull())
         return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, -1);
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, compare(leftValue->ValueAsString(), rightValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, GSF::Compare(leftValue->ValueAsString(), rightValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
 
 ValueExpressionPtr ExpressionTree::SubStr(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& lengthValue) const
@@ -2162,7 +2143,7 @@ ValueExpressionPtr ExpressionTree::Trim(const ValueExpressionPtr& sourceValue) c
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, trim(sourceText));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::Trim(sourceText));
 }
 
 ValueExpressionPtr ExpressionTree::TrimLeft(const ValueExpressionPtr& sourceValue) const
@@ -2176,7 +2157,7 @@ ValueExpressionPtr ExpressionTree::TrimLeft(const ValueExpressionPtr& sourceValu
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, trimLeft(sourceText));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::TrimLeft(sourceText));
 }
 
 ValueExpressionPtr ExpressionTree::TrimRight(const ValueExpressionPtr& sourceValue) const
@@ -2190,7 +2171,7 @@ ValueExpressionPtr ExpressionTree::TrimRight(const ValueExpressionPtr& sourceVal
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, trimRight(sourceText));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::TrimRight(sourceText));
 }
 
 ValueExpressionPtr ExpressionTree::Upper(const ValueExpressionPtr& sourceValue) const
@@ -2204,7 +2185,7 @@ ValueExpressionPtr ExpressionTree::Upper(const ValueExpressionPtr& sourceValue) 
 
     const string sourceText = sourceValue->ValueAsString();
 
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, toUpper(sourceText));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, GSF::ToUpper(sourceText));
 }
 
 ValueExpressionPtr ExpressionTree::UtcNow() const
@@ -2595,7 +2576,7 @@ ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue,
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() < right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) < 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::Compare(left->ValueAsString(), right->ValueAsString()) < 0);
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() < right->ValueAsGuid());
         case ExpressionValueType::DateTime:
@@ -2629,7 +2610,7 @@ ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& lef
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() <= right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) <= 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::Compare(left->ValueAsString(), right->ValueAsString()) <= 0);
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() <= right->ValueAsGuid());
         case ExpressionValueType::DateTime:
@@ -2663,7 +2644,7 @@ ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftVal
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() > right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) > 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::Compare(left->ValueAsString(), right->ValueAsString()) > 0);
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() > right->ValueAsGuid());
         case ExpressionValueType::DateTime:
@@ -2697,7 +2678,7 @@ ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& 
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() >= right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, compare(left->ValueAsString(), right->ValueAsString()) >= 0);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::Compare(left->ValueAsString(), right->ValueAsString()) >= 0);
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() >= right->ValueAsGuid());
         case ExpressionValueType::DateTime:
@@ -2731,7 +2712,7 @@ ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, co
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() == right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, isEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, GSF::IsEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() == right->ValueAsGuid());
         case ExpressionValueType::DateTime:
@@ -2765,7 +2746,7 @@ ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue,
         case ExpressionValueType::Double:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() != right->ValueAsDouble());
         case ExpressionValueType::String:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !isEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !GSF::IsEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsGuid() != right->ValueAsGuid());
         case ExpressionValueType::DateTime:
@@ -2802,9 +2783,9 @@ ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, con
     const string leftOperand = leftValue->ValueAsString();
     const string rightOperand = rightValue->ValueAsString();
 
-    string testExpression = replace(rightOperand, "%", "*", false);
-    const bool startsWithWildcard = startsWith(testExpression, "*", false);
-    const bool endsWithWildcard = endsWith(testExpression, "*", false);
+    string testExpression = GSF::Replace(rightOperand, "%", "*", false);
+    const bool startsWithWildcard = GSF::StartsWith(testExpression, "*", false);
+    const bool endsWithWildcard = GSF::EndsWith(testExpression, "*", false);
     const bool ignoreCase = !exactMatch;
 
     if (startsWithWildcard)
@@ -2818,16 +2799,16 @@ ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, con
         return ExpressionTree::True;
 
     // Wild cards in the middle of the string are not supported
-    if (contains(testExpression, "*", false))
+    if (GSF::Contains(testExpression, "*", false))
         throw ExpressionTreeException("Right operand of \"LIKE\" expression \"" + rightOperand + "\" has an invalid pattern");
 
-    if (startsWithWildcard && endsWith(leftOperand, testExpression, ignoreCase))
+    if (startsWithWildcard && GSF::EndsWith(leftOperand, testExpression, ignoreCase))
         return ExpressionTree::True;
 
-    if (endsWithWildcard && startsWith(leftOperand, testExpression, ignoreCase))
+    if (endsWithWildcard && GSF::StartsWith(leftOperand, testExpression, ignoreCase))
         return ExpressionTree::True;
 
-    if (startsWithWildcard && endsWithWildcard && contains(leftOperand, testExpression, ignoreCase))
+    if (startsWithWildcard && endsWithWildcard && GSF::Contains(leftOperand, testExpression, ignoreCase))
         return ExpressionTree::True;
 
     return ExpressionTree::False;
@@ -3098,9 +3079,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    if (isEqual(value, "true") || isEqual(value, "1"))
+                    if (GSF::IsEqual(value, "true") || GSF::IsEqual(value, "1"))
                         targetValue = true;
-                    else if (isEqual(value, "false") || isEqual(value, "0"))
+                    else if (GSF::IsEqual(value, "false") || GSF::IsEqual(value, "0"))
                         targetValue = false;
                     else
                         throw ExpressionTreeException("\"String\" value not recognized as a valid \"Boolean\"");
@@ -3231,7 +3212,7 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
 }
 
 ExpressionTree::ExpressionTree(DataTablePtr table) :
-    m_table(std::move(table)),
+    m_table(table),
     TopLimit(-1)
 {
 }

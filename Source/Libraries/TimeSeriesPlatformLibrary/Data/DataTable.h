@@ -36,19 +36,19 @@ namespace Data
 {
 
 class DataSet;
-typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+typedef GSF::SharedPtr<DataSet> DataSetPtr;
 
 class DataTable;
-typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
+typedef GSF::SharedPtr<DataTable> DataTablePtr;
 
 enum class DataType;
 
-class DataTable : public TimeSeries::EnableSharedThisPtr<DataTable> // NOLINT
+class DataTable : public GSF::EnableSharedThisPtr<DataTable> // NOLINT
 {
 private:
     DataSetPtr m_parent;
     std::string m_name;
-    std::unordered_map<std::string, int32_t, TimeSeries::StringHasher, TimeSeries::StringComparer> m_columnIndexes;
+    std::unordered_map<std::string, int32_t, GSF::StringHasher, GSF::StringComparer> m_columnIndexes;
     std::vector<DataColumnPtr> m_columns;
     std::vector<DataRowPtr> m_rows;
 
@@ -85,7 +85,7 @@ public:
     static const DataTablePtr NullPtr;
 };
 
-typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
+typedef GSF::SharedPtr<DataTable> DataTablePtr;
 
 }}
 

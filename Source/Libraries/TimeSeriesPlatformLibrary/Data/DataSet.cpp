@@ -26,8 +26,8 @@
 
 using namespace std;
 using namespace pugi;
+using namespace GSF;
 using namespace GSF::Data;
-using namespace GSF::TimeSeries;
 
 DataSetException::DataSetException(string message) noexcept :
     m_message(move(message))

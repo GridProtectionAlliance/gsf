@@ -24,6 +24,7 @@
 #include "SignalIndexCache.h"
 
 using namespace std;
+using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 

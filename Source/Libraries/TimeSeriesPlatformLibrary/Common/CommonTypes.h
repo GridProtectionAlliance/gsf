@@ -39,8 +39,7 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/array.hpp>
 
-namespace GSF {
-namespace TimeSeries
+namespace GSF
 {
     // Floating-point types
     typedef float float32_t;
@@ -297,22 +296,22 @@ namespace TimeSeries
     struct Empty
     {
         static const std::string String;
-        static const GSF::TimeSeries::Guid Guid;
-        static const GSF::TimeSeries::Object Object;
-        static const GSF::TimeSeries::IPAddress IPAddress;
+        static const GSF::Guid Guid;
+        static const GSF::Object Object;
+        static const GSF::IPAddress IPAddress;
         static const uint8_t* ZeroLengthBytes;
     };
-}}
+}
 
 // Setup standard hash code for Guid
 namespace std  // NOLINT
 {
     template<>
-    struct hash<GSF::TimeSeries::Guid>
+    struct hash<GSF::Guid>
     {
-        size_t operator () (const GSF::TimeSeries::Guid& uid) const
+        size_t operator () (const GSF::Guid& uid) const
         {
-            return boost::hash<GSF::TimeSeries::Guid>()(uid);
+            return boost::hash<GSF::Guid>()(uid);
         }
     };
 }

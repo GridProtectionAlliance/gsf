@@ -25,15 +25,12 @@
 #include "tree/ParseTreeWalker.h"
 
 using namespace std;
+using namespace GSF;
 using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace GSF::FilterExpressions;
 using namespace antlr4;
 using namespace antlr4::tree;
 using namespace boost;
-
-// Mapped type for TimeSeries Guid (ANTLR4 also defines a Guid type)
-typedef GSF::TimeSeries::Guid guid;
 
 FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback) :
     m_filterExpressionParser(filterExpressionParser),
@@ -59,7 +56,7 @@ static string ParseStringLiteral(string stringLiteral)  // NOLINT
     return stringLiteral;
 }
 
-static guid ParseGuidLiteral(string guidLiteral)
+static GSF::Guid ParseGuidLiteral(string guidLiteral)
 {
     // Remove any quotes from GUID (boost currently only handles optional braces),
     // ANTLR grammar already ensures GUID starting with quote also ends with one
@@ -166,11 +163,11 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
             {
                 if (m_trackFilteredSignalIDs)
                 {
-                    const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+                    const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                     if (signalIDField.HasValue())
                     {
-                        const guid& signalID = signalIDField.GetValueOrDefault();
+                        const GSF::Guid& signalID = signalIDField.GetValueOrDefault();
 
                         if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
                         {
@@ -320,11 +317,11 @@ void FilterExpressionParser::Evaluate()
             {
                 if (m_trackFilteredSignalIDs)
                 {
-                    Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+                    Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                     if (signalIDField.HasValue())
                     {
-                        const guid& signalID = signalIDField.GetValueOrDefault();
+                        const GSF::Guid& signalID = signalIDField.GetValueOrDefault();
 
                         if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
                             matchedRows.push_back(row);
@@ -451,12 +448,12 @@ void FilterExpressionParser::SetTrackFilteredSignalIDs(bool trackFilteredSignalI
     m_trackFilteredSignalIDs = trackFilteredSignalIDs;
 }
 
-const vector<guid>& FilterExpressionParser::FilteredSignalIDs() const
+const vector<GSF::Guid>& FilterExpressionParser::FilteredSignalIDs() const
 {
     return m_filteredSignalIDs;
 }
 
-const unordered_set<guid>& FilterExpressionParser::FilteredSignalIDSet() const
+const unordered_set<GSF::Guid>& FilterExpressionParser::FilteredSignalIDSet() const
 {
     return m_filteredSignalIDSet;
 }
@@ -543,7 +540,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
  */
 void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext* context)
 {
-    guid signalID = Empty::Guid;
+    GSF::Guid signalID = Empty::Guid;
 
     if (context->GUID_LITERAL())
     {
@@ -581,7 +578,7 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
             if (row)
             {
-                const Nullable<guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+                const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                 if (signalIDField.HasValue() && signalIDField.GetValueOrDefault() == signalID)
                 {

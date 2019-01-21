@@ -26,8 +26,7 @@
 
 #include "CommonTypes.h"
 
-namespace GSF {
-namespace TimeSeries
+namespace GSF
 {
     // Converts values between the system's native byte
     // order and the big and little endian byte orders.
@@ -87,6 +86,6 @@ namespace TimeSeries
 
         return value;
     }
-}}
+}
 
 #endif

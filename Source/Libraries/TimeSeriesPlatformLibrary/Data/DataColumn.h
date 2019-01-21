@@ -55,10 +55,10 @@ const char* DataTypeAcronym[];
 const char* EnumName(DataType type);
 
 class DataTable;
-typedef TimeSeries::SharedPtr<DataTable> DataTablePtr;
+typedef GSF::SharedPtr<DataTable> DataTablePtr;
 
 class DataColumn;
-typedef TimeSeries::SharedPtr<DataColumn> DataColumnPtr;
+typedef GSF::SharedPtr<DataColumn> DataColumnPtr;
 
 class DataColumn // NOLINT
 {
@@ -66,10 +66,12 @@ private:
     DataTablePtr m_parent;
     std::string m_name;
     DataType m_type;
+    std::string m_expression;
+    bool m_computed;
     int32_t m_index;
 
 public:
-    DataColumn(DataTablePtr parent, std::string name, DataType type);
+    DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string {});
     ~DataColumn();
 
     const DataTablePtr& Parent() const;
@@ -77,6 +79,10 @@ public:
     const std::string& Name() const;
 
     DataType Type() const;
+
+    const std::string& Expression() const;
+
+    bool Computed() const;
 
     int32_t Index() const;
 

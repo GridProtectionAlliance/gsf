@@ -34,7 +34,7 @@ namespace Data
 {
 
 // Simple exception type thrown by data set operations
-class DataSetException : public GSF::TimeSeries::Exception
+class DataSetException : public GSF::Exception
 {
 private:
     std::string m_message;
@@ -45,9 +45,9 @@ public:
 };
 
 class DataSet;
-typedef TimeSeries::SharedPtr<DataSet> DataSetPtr;
+typedef GSF::SharedPtr<DataSet> DataSetPtr;
 
-class DataSet : public TimeSeries::EnableSharedThisPtr<DataSet> // NOLINT
+class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
 {
 private:
     std::map<std::string, DataTablePtr> m_tables;

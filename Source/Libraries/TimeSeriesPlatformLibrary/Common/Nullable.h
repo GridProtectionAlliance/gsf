@@ -28,10 +28,9 @@
 #include <cstddef>
 #include "Convert.h"
 
-namespace GSF {
-namespace TimeSeries
+namespace GSF
 {
-    class NullableType
+    class NullableType  // NOLINT
     {
     public:
         virtual ~NullableType() = default;
@@ -43,7 +42,7 @@ namespace TimeSeries
     };
 
     template <typename T>
-    class Nullable final : public NullableType
+    class Nullable final : public NullableType  // NOLINT
     {
     public:
         Nullable();
@@ -323,7 +322,7 @@ namespace TimeSeries
     std::string ToString(const Nullable<T>& value)
     {
         if (value.HasValue())
-            return GSF::TimeSeries::ToString(value.GetValueOrDefault());
+            return ToString(value.GetValueOrDefault());
 
         return {};
     }
@@ -344,7 +343,7 @@ namespace TimeSeries
         return {};
     }
 
-    inline std::string ToString(const Nullable<GSF::TimeSeries::decimal_t>& value)
+    inline std::string ToString(const Nullable<decimal_t>& value)
     {
         if (value.HasValue())
             return value.GetValueOrDefault().str();
@@ -352,10 +351,10 @@ namespace TimeSeries
         return {};
     }
 
-    inline std::string ToString(const Nullable<GSF::TimeSeries::Guid>& value)
+    inline std::string ToString(const Nullable<Guid>& value)
     {
         if (value.HasValue())
-            return GSF::TimeSeries::ToString(value.GetValueOrDefault());
+            return ToString(value.GetValueOrDefault());
 
         return {};
     }
@@ -363,10 +362,10 @@ namespace TimeSeries
     inline std::string ToString(const Nullable<DateTime>& value, const char* fmt = "%Y-%m-%d %H:%M:%S%F")
     {
         if (value.HasValue())
-            return GSF::TimeSeries::ToString(value.GetValueOrDefault(), fmt);
+            return ToString(value.GetValueOrDefault(), fmt);
 
         return {};
     }
-}}
+}
 
 #endif

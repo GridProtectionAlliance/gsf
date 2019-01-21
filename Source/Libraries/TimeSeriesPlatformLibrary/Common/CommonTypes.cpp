@@ -32,7 +32,7 @@ using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
-using namespace GSF::TimeSeries;
+using namespace GSF;
 
 boost::uuids::random_generator RandomGuidGen;
 boost::uuids::nil_generator NilGuidGen;
@@ -96,12 +96,12 @@ bool StringComparer::operator()(const string& left, const string& right) const
     return IsEqual(left, right, m_ignoreCase);
 }
 
-Guid GSF::TimeSeries::NewGuid()
+Guid GSF::NewGuid()
 {
     return RandomGuidGen();
 }
 
-bool GSF::TimeSeries::IsEqual(const string& left, const string& right, bool ignoreCase)
+bool GSF::IsEqual(const string& left, const string& right, bool ignoreCase)
 {
     if (ignoreCase)
         return iequals(left, right);
@@ -109,7 +109,7 @@ bool GSF::TimeSeries::IsEqual(const string& left, const string& right, bool igno
     return equals(left, right);
 }
 
-bool GSF::TimeSeries::StartsWith(const string& value, const string& findValue, bool ignoreCase)
+bool GSF::StartsWith(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return istarts_with(value, findValue);
@@ -117,7 +117,7 @@ bool GSF::TimeSeries::StartsWith(const string& value, const string& findValue, b
     return starts_with(value, findValue);
 }
 
-bool GSF::TimeSeries::EndsWith(const string& value, const string& findValue, bool ignoreCase)
+bool GSF::EndsWith(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return iends_with(value, findValue);
@@ -125,7 +125,7 @@ bool GSF::TimeSeries::EndsWith(const string& value, const string& findValue, boo
     return ends_with(value, findValue);
 }
 
-bool GSF::TimeSeries::Contains(const string& value, const string& findValue, bool ignoreCase)
+bool GSF::Contains(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return icontains(value, findValue);
@@ -133,7 +133,7 @@ bool GSF::TimeSeries::Contains(const string& value, const string& findValue, boo
     return contains(value, findValue);
 }
 
-int32_t GSF::TimeSeries::Count(const string& value, const string& findValue, bool ignoreCase)
+int32_t GSF::Count(const string& value, const string& findValue, bool ignoreCase)
 {
     find_iterator<string::const_iterator> it = ignoreCase ?
         make_find_iterator(value, first_finder(findValue, is_iequal())) :
@@ -149,7 +149,7 @@ int32_t GSF::TimeSeries::Count(const string& value, const string& findValue, boo
     return count;
 }
 
-int32_t GSF::TimeSeries::Compare(const string& leftValue, const string& rightValue, bool ignoreCase)
+int32_t GSF::Compare(const string& leftValue, const string& rightValue, bool ignoreCase)
 {
     if (ignoreCase)
     {
@@ -171,7 +171,7 @@ int32_t GSF::TimeSeries::Compare(const string& leftValue, const string& rightVal
     return 0;
 }
 
-int32_t GSF::TimeSeries::IndexOf(const string& value, const string& findValue, bool ignoreCase)
+int32_t GSF::IndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
     iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
 
@@ -181,7 +181,7 @@ int32_t GSF::TimeSeries::IndexOf(const string& value, const string& findValue, b
     return distance(value.begin(), it.begin());
 }
 
-int32_t GSF::TimeSeries::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
+int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
 {
     iterator_range<string::const_iterator> it = ignoreCase ? ifind_nth(value, findValue, index) : find_nth(value, findValue, index);
 
@@ -191,7 +191,7 @@ int32_t GSF::TimeSeries::IndexOf(const string& value, const string& findValue, i
     return distance(value.begin(), it.begin());
 }
 
-int32_t GSF::TimeSeries::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
+int32_t GSF::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
     iterator_range<string::const_iterator> it = ignoreCase ? ifind_last(value, findValue) : find_last(value, findValue);
 
@@ -201,7 +201,7 @@ int32_t GSF::TimeSeries::LastIndexOf(const string& value, const string& findValu
     return distance(value.begin(), it.begin());
 }
 
-vector<string> GSF::TimeSeries::Split(const string& value, const string& delimiterValue, bool ignoreCase)
+vector<string> GSF::Split(const string& value, const string& delimiterValue, bool ignoreCase)
 {
     split_iterator<string::const_iterator> it = ignoreCase ?
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
@@ -218,7 +218,7 @@ vector<string> GSF::TimeSeries::Split(const string& value, const string& delimit
     return values;
 }
 
-string GSF::TimeSeries::Split(const string& value, const string& delimiterValue, int32_t index, bool ignoreCase)
+string GSF::Split(const string& value, const string& delimiterValue, int32_t index, bool ignoreCase)
 {
     split_iterator<string::const_iterator> it = ignoreCase ?
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
@@ -236,7 +236,7 @@ string GSF::TimeSeries::Split(const string& value, const string& delimiterValue,
     return string{};
 }
 
-string GSF::TimeSeries::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
+string GSF::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
 {
     if (ignoreCase)
         return ireplace_all_copy(value, findValue, replaceValue);
@@ -244,32 +244,32 @@ string GSF::TimeSeries::Replace(const string& value, const string& findValue, co
     return replace_all_copy(value, findValue, replaceValue);
 }
 
-string GSF::TimeSeries::ToUpper(const string& value)
+string GSF::ToUpper(const string& value)
 {
     return to_upper_copy(value);
 }
 
-string GSF::TimeSeries::ToLower(const string& value)
+string GSF::ToLower(const string& value)
 {
     return to_lower_copy(value);
 }
 
-string GSF::TimeSeries::Trim(const string& value)
+string GSF::Trim(const string& value)
 {
     return trim_copy(value);
 }
 
-string GSF::TimeSeries::TrimRight(const string& value)
+string GSF::TrimRight(const string& value)
 {
     return trim_right_copy(value);
 }
 
-string GSF::TimeSeries::TrimLeft(const string& value)
+string GSF::TrimLeft(const string& value)
 {
     return trim_left_copy(value);
 }
 
-DateTime GSF::TimeSeries::DateAdd(DateTime value, int32_t addValue, TimeInterval interval)
+DateTime GSF::DateAdd(DateTime value, int32_t addValue, TimeInterval interval)
 {
     switch (interval)
     {
@@ -306,7 +306,7 @@ DateTime GSF::TimeSeries::DateAdd(DateTime value, int32_t addValue, TimeInterval
     return value;
 }
 
-int32_t GSF::TimeSeries::DateDiff(DateTime startTime, DateTime endTime, TimeInterval interval)
+int32_t GSF::DateDiff(DateTime startTime, DateTime endTime, TimeInterval interval)
 {
     if (interval < TimeInterval::Hour)
     {
@@ -344,7 +344,7 @@ int32_t GSF::TimeSeries::DateDiff(DateTime startTime, DateTime endTime, TimeInte
     }
 }
 
-int32_t GSF::TimeSeries::DatePart(DateTime value, TimeInterval interval)
+int32_t GSF::DatePart(DateTime value, TimeInterval interval)
 {
     static float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
 

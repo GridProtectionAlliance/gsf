@@ -33,7 +33,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace boost::uuids;
 using namespace boost::posix_time;
-using namespace GSF::TimeSeries;
+using namespace GSF;
 
 string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
 {
@@ -142,7 +142,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     return updatedTimestamp;
 }
 
-void GSF::TimeSeries::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
+void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
     const int64_t BaseTimeOffset = 621355968000000000L;
@@ -155,12 +155,12 @@ void GSF::TimeSeries::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t&
     milliseconds = static_cast<uint16_t>(ticks / 10000 % 1000);
 }
 
-DateTime GSF::TimeSeries::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
+DateTime GSF::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
 {
     return from_time_t(unixSOC) + boost::posix_time::milliseconds(milliseconds);;
 }
 
-DateTime GSF::TimeSeries::FromTicks(const int64_t ticks)
+DateTime GSF::FromTicks(const int64_t ticks)
 {
     time_t unixSOC;
     uint16_t milliseconds;
@@ -169,7 +169,7 @@ DateTime GSF::TimeSeries::FromTicks(const int64_t ticks)
     return FromUnixTime(unixSOC, milliseconds);
 }
 
-uint32_t GSF::TimeSeries::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
+uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
 {
     time_t fromSeconds;
     uint16_t milliseconds;
@@ -227,12 +227,12 @@ uint32_t GSF::TimeSeries::TicksToString(char* ptr, uint32_t maxsize, string form
     return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }
 
-std::string GSF::TimeSeries::ToString(Guid value)
+std::string GSF::ToString(Guid value)
 {
     return boost::uuids::to_string(value);
 }
 
-std::string GSF::TimeSeries::ToString(DateTime value, const char* format)
+std::string GSF::ToString(DateTime value, const char* format)
 {
     using namespace boost::gregorian;
 
@@ -246,7 +246,7 @@ std::string GSF::TimeSeries::ToString(DateTime value, const char* format)
     return stream.str();
 }
 
-Guid GSF::TimeSeries::ParseGuid(const uint8_t* data, bool swapBytes)
+Guid GSF::ParseGuid(const uint8_t* data, bool swapBytes)
 {
     Guid id;
     uint8_t swappedBytes[16];
@@ -290,13 +290,13 @@ Guid GSF::TimeSeries::ParseGuid(const uint8_t* data, bool swapBytes)
     return id;
 }
 
-Guid GSF::TimeSeries::ParseGuid(const char* data)
+Guid GSF::ParseGuid(const char* data)
 {
     const string_generator generator;
     return generator(data);
 }
 
-const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValue)
+const char* GSF::Coalesce(const char* data, const char* nonEmptyValue)
 {
     if (data == nullptr)
         return nonEmptyValue;
@@ -308,7 +308,7 @@ const char* GSF::TimeSeries::Coalesce(const char* data, const char* nonEmptyValu
 }
 
 // Parse a timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
-bool GSF::TimeSeries::TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsUTC)
+bool GSF::TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsUTC)
 {
     static const locale formats[] = {
         locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
@@ -337,7 +337,7 @@ bool GSF::TimeSeries::TryParseTimestamp(const char* time, DateTime& timestamp, b
     return false;
 }
 
-DateTime GSF::TimeSeries::ParseTimestamp(const char* time, bool parseAsUTC)
+DateTime GSF::ParseTimestamp(const char* time, bool parseAsUTC)
 {
     DateTime timestamp;
 

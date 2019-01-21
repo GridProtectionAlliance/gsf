@@ -28,6 +28,7 @@
 
 using namespace std;
 using namespace pugi;
+using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 

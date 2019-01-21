@@ -25,7 +25,7 @@
 #include "DataSet.h"
 
 using namespace std;
-using namespace GSF::TimeSeries;
+using namespace GSF;
 using namespace GSF::Data;
 
 const DataTablePtr DataTable::NullPtr = nullptr;

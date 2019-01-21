@@ -23,7 +23,7 @@
 
 #include "EndianConverter.h"
 
-using namespace GSF::TimeSeries;
+using namespace GSF;
 
 // Creates a new instance of the EndianConverter.
 EndianConverter::EndianConverter()

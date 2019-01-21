@@ -33,6 +33,7 @@ using namespace pugi;
 using namespace boost;
 using namespace boost::asio;
 using namespace boost::asio::ip;
+using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 

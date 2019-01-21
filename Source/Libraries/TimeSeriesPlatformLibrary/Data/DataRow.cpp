@@ -26,7 +26,7 @@
 #include "DataSet.h"
 
 using namespace std;
-using namespace GSF::TimeSeries;
+using namespace GSF;
 using namespace GSF::Data;
 
 const DataRowPtr DataRow::NullPtr = nullptr;
@@ -73,9 +73,12 @@ void DataRow::ValidateColumnType(int32_t columnIndex, DataType targetType, bool 
     if (columnType != targetType)
     {
         stringstream errorMessageStream;
-        errorMessageStream << "Cannot" << (read ? " read " : " assign ") << "\"" << EnumName(targetType)  << "\" value" << (read ? " from " : " to ") << "DataColumn " << columnIndex << ", column data type is \"" << EnumName(columnType) << "\"";
+        errorMessageStream << "Cannot" << (read ? " read " : " assign ") << "\"" << EnumName(targetType)  << "\" value" << (read ? " from " : " to ") << "DataColumn \"" << column->Name() << "\" for table \"" << m_parent->Name() << "\", column data type is \"" << EnumName(columnType) << "\"";
         throw DataSetException(errorMessageStream.str());
     }
+
+    if (!read && column->Computed())
+        throw DataSetException("Cannot assign value to DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\", column is computed with an expression");
 }
 
 template<typename T>

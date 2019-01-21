@@ -40,8 +40,7 @@
 #endif
 
 namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace FilterExpressions
 {
 
 // Simple exception type thrown by the filter expression parser
@@ -69,7 +68,7 @@ typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
 class FilterExpressionParser : 
     public FilterExpressionSyntaxBaseListener,
-    public GSF::TimeSeries::EnableSharedThisPtr<FilterExpressionParser> // NOLINT
+    public GSF::EnableSharedThisPtr<FilterExpressionParser> // NOLINT
 {
 private:
     typedef void(*ParsingExceptionCallback)(FilterExpressionParserPtr, const std::string&);
@@ -96,8 +95,8 @@ private:
     bool m_trackFilteredRows;
 
     std::string m_primaryTableName;
-    std::unordered_set<GSF::TimeSeries::Guid> m_filteredSignalIDSet;
-    std::vector<GSF::TimeSeries::Guid> m_filteredSignalIDs;
+    std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
+    std::vector<GSF::Guid> m_filteredSignalIDs;
     std::vector<GSF::Data::DataRowPtr> m_filteredRows;
     std::vector<ExpressionTreePtr> m_expressionTrees;
     std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
@@ -127,8 +126,8 @@ public:
 
     bool GetTrackFilteredSignalIDs() const;
     void SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs);
-    const std::vector<GSF::TimeSeries::Guid>& FilteredSignalIDs() const;
-    const std::unordered_set<GSF::TimeSeries::Guid>& FilteredSignalIDSet() const;
+    const std::vector<GSF::Guid>& FilteredSignalIDs() const;
+    const std::unordered_set<GSF::Guid>& FilteredSignalIDSet() const;
     
     bool GetTrackFilteredRows() const;
     void SetTrackFilteredRows(bool trackFilteredRows);
@@ -153,6 +152,6 @@ public:
 
 typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
-}}}
+}}
 
 #endif

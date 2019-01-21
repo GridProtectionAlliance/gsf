@@ -28,8 +28,7 @@
 
 #include "CommonTypes.h"
 
-namespace GSF {
-namespace TimeSeries
+namespace GSF
 {
     // Simple queue with locking mechanisms to make its operations thread-safe.
     //
@@ -166,6 +165,6 @@ namespace TimeSeries
         ScopeLock lock(m_mutex);
         m_release = false;
     }
-}}
+}
 
 #endif
