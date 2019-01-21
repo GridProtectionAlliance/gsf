@@ -1699,9 +1699,6 @@ ValueExpressionPtr ExpressionTree::IsGuid(const ValueExpressionPtr& testValue) c
 
 ValueExpressionPtr ExpressionTree::IsNull(const ValueExpressionPtr& testValue, const ValueExpressionPtr& defaultValue) const
 {
-    if (testValue->ValueType != defaultValue->ValueType)
-        throw ExpressionTreeException("\"IsNull\" function arguments must be the same type");
-
     if (defaultValue->IsNull())
         throw ExpressionTreeException("\"IsNull\" default value, second argument, is null");
 
