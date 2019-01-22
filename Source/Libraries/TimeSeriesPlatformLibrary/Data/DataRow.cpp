@@ -123,6 +123,9 @@ void DataRow::SetNullValue(int32_t columnIndex)
     if (column == nullptr)
         throw DataSetException("Column index " + ToString(columnIndex) + " is out of range for table \"" + m_parent->Name() + "\"");
 
+    if (column->Computed())
+        throw DataSetException("Cannot assign NULL value to DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\", column is computed with an expression");
+
     switch (column->Type())
     {
         case DataType::String:                    
