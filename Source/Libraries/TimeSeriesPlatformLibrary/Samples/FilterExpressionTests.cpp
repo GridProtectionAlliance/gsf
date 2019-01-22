@@ -74,14 +74,14 @@ int main(int argc, char* argv[])
     dataTable->AddColumn(dataColumn);
     const int32_t signalTypeField = dataTable->Column("SignalType")->Index();
 
-    const GSF::Guid statID = NewGuid();
+    const auto statID = NewGuid();
     dataRow = NewSharedPtr<DataRow>(dataTable);
     dataRow->SetGuidValue(signalIDField, statID);
     dataRow->SetStringValue(signalTypeField, string("STAT"));
     dataTable->AddRow(dataRow);
     cout << "Row 1 Statistic SignalID = " << ToString(statID) << endl;
 
-    const GSF::Guid freqID = NewGuid();
+    const auto freqID = NewGuid();
     dataRow = NewSharedPtr<DataRow>(dataTable);
     dataRow->SetGuidValue(signalIDField, freqID);
     dataRow->SetStringValue(signalTypeField, string("FREQ"));
@@ -1328,28 +1328,28 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 138
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsDate(#2019-02-04 03:00:52.73-05:00#) AND IsDate('2/4/2019') && !ISDATE(2.5) && !IsDate('ImNotADate')");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsDate(#2019-02-04 03:00:52.73-05:00#) AND IsDate('2/4/2019') ANd isdate(updatedon) && !ISDATE(2.5) && !IsDate('ImNotADate')");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 139
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsInteger(32768) AND IsInteger('1024') and ISinTegeR(FaLsE) && !ISINTEGER(2.5) && !IsInteger('ImNotAnInteger')");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsInteger(32768) AND IsInteger('1024') and ISinTegeR(FaLsE) And isinteger(accessid) && !ISINTEGER(2.5) && !IsInteger('ImNotAnInteger')");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 140
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsGuid({9448a8b5-35c1-4dc7-8c42-8712153ac08a}) AND IsGuid('9448a8b5-35c1-4dc7-8c42-8712153ac08a') and isGuid(9448a8b5-35c1-4dc7-8c42-8712153ac08a) AND IsGuid(Convert(9448a8b5-35c1-4dc7-8c42-8712153ac08a, 'string')) && !ISGUID(2.5) && !IsGuid('ImNotAGuid')");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsGuid({9448a8b5-35c1-4dc7-8c42-8712153ac08a}) AND IsGuid('9448a8b5-35c1-4dc7-8c42-8712153ac08a') anD isGuid(9448a8b5-35c1-4dc7-8c42-8712153ac08a) AND IsGuid(Convert(9448a8b5-35c1-4dc7-8c42-8712153ac08a, 'string')) aND isguid(nodeid) && !ISGUID(2.5) && !IsGuid('ImNotAGuid')");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 141
-    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsNumeric(32768) && isNumeric(123.456e-67) AND IsNumeric(3.14159265) and ISnumeric(true) AND IsNumeric('1024' ) and IsNumeric(2.5) && !ISNUMERIC(9448a8b5-35c1-4dc7-8c42-8712153ac08a) && !IsNumeric('ImNotNumeric')");
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "IsNumeric(32768) && isNumeric(123.456e-67) AND IsNumeric(3.14159265) and ISnumeric(true) AND IsNumeric('1024' ) and IsNumeric(2.5) aNd isnumeric(longitude) && !ISNUMERIC(9448a8b5-35c1-4dc7-8c42-8712153ac08a) && !IsNumeric('ImNotNumeric')");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);
     assert(valueExpression->ValueAsBoolean());
