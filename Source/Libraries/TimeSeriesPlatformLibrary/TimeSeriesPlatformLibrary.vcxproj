@@ -337,6 +337,7 @@
     <ClCompile Include="FilterExpressions\antlr4-runtime\WritableToken.cpp" />
     <ClInclude Include="FilterExpressions\ExpressionTree.h" />
     <ClInclude Include="FilterExpressions\FilterExpressionParser.h" />
+    <ClInclude Include="FilterExpressions\FilterExpressions.h" />
     <ClInclude Include="FilterExpressions\FilterExpressionSyntaxBaseListener.h" />
     <ClInclude Include="FilterExpressions\FilterExpressionSyntaxLexer.h" />
     <ClInclude Include="FilterExpressions\FilterExpressionSyntaxListener.h" />

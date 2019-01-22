@@ -21,13 +21,17 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable once CppUnusedIncludeDirective
+#include "../FilterExpressions/FilterExpressions.h"
 #include "DataRow.h"
 #include "DataTable.h"
 #include "DataSet.h"
+#include "../FilterExpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace GSF;
 using namespace GSF::Data;
+using namespace GSF::FilterExpressions;
 
 const DataRowPtr DataRow::NullPtr = nullptr;
 
@@ -61,7 +65,7 @@ int32_t DataRow::GetColumnIndex(const string& columnName) const
     return column->Index();
 }
 
-void DataRow::ValidateColumnType(int32_t columnIndex, DataType targetType, bool read) const
+DataColumnPtr DataRow::ValidateColumnType(int32_t columnIndex, DataType targetType, bool read) const
 {
     const DataColumnPtr column = m_parent->Column(columnIndex);
 
@@ -79,12 +83,82 @@ void DataRow::ValidateColumnType(int32_t columnIndex, DataType targetType, bool 
 
     if (!read && column->Computed())
         throw DataSetException("Cannot assign value to DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\", column is computed with an expression");
+
+    return column;
+}
+
+ValueExpressionPtr DataRow::EvaluateExpression(const DataColumnPtr& column)
+{
+    const int columnIndex = column->Index();
+
+    FilterExpressionParser* parser = static_cast<FilterExpressionParser*>(m_values[columnIndex]);
+
+    if (parser)
+        return parser->GetExpressionTrees()[0]->Evaluate(shared_from_this());
+
+    const DataTablePtr dataTable = column->Parent();
+    parser = new FilterExpressionParser(column->Expression());
+
+    parser->SetDataSet(dataTable->Parent());
+    parser->SetPrimaryTableName(dataTable->Name());
+    parser->SetTrackFilteredSignalIDs(false);
+    parser->SetTrackFilteredRows(false);
+
+    const auto expressionTrees = parser->GetExpressionTrees();
+
+    if (expressionTrees.empty())
+        throw DataSetException("Expression defined for computed DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\" cannot produce a value");
+
+    m_values[columnIndex] = parser;
+    
+    return expressionTrees[0]->Evaluate(shared_from_this());
+}
+
+template<typename T>
+T DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetType) const
+{
+    try
+    {
+        //const ValueExpressionPtr computedValue = EvaluateExpression(column);
+
+        // TODO: Evaluate value for type T
+        //switch (computedValue->ValueType)
+        //{
+        //    case ExpressionValueType::Boolean:
+        //        break;
+        //    case ExpressionValueType::Int32:
+        //        break;
+        //    case ExpressionValueType::Int64:
+        //        break;
+        //    case ExpressionValueType::Decimal:
+        //        break;
+        //    case ExpressionValueType::Double:
+        //        break;
+        //    case ExpressionValueType::String:
+        //        break;
+        //    case ExpressionValueType::Guid:
+        //        break;
+        //    case ExpressionValueType::DateTime:
+        //        break;
+        //    default:
+        //        throw ExpressionTreeException("Unexpected expression value type encountered");
+        //}
+    }
+    catch (const ExpressionTreeException& ex)
+    {
+        throw DataSetException("Expression exception in computed DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\": " + string(ex.what()));
+    }
+
+    return T {};
 }
 
 template<typename T>
 Nullable<T> DataRow::GetValue(int32_t columnIndex, DataType targetType) const
 {
-    ValidateColumnType(columnIndex, targetType, true);
+    const DataColumnPtr& column = ValidateColumnType(columnIndex, targetType, true);
+
+    if (column->Computed())
+        return GetComputedValue<T>(column, targetType);
 
     T* value = static_cast<T*>(m_values[columnIndex]);
 
@@ -363,7 +437,7 @@ void DataRow::SetDecimalValue(const string& columnName, const Nullable<decimal_t
     SetDecimalValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<Guid> DataRow::ValueAsGuid(int32_t columnIndex) const
+Nullable<GSF::Guid> DataRow::ValueAsGuid(int32_t columnIndex) const
 {
     ValidateColumnType(columnIndex, DataType::Guid, true);
 
@@ -371,7 +445,7 @@ Nullable<Guid> DataRow::ValueAsGuid(int32_t columnIndex) const
 
     if (data)
     {
-        Guid value;
+        GSF::Guid value;
         memcpy(value.data, data, 16);
         return value;
     }
@@ -379,12 +453,12 @@ Nullable<Guid> DataRow::ValueAsGuid(int32_t columnIndex) const
     return nullptr;
 }
 
-Nullable<Guid> DataRow::ValueAsGuid(const string& columnName) const
+Nullable<GSF::Guid> DataRow::ValueAsGuid(const string& columnName) const
 {
     return ValueAsGuid(GetColumnIndex(columnName));
 }
 
-void DataRow::SetGuidValue(int32_t columnIndex, const Nullable<Guid>& value)
+void DataRow::SetGuidValue(int32_t columnIndex, const Nullable<GSF::Guid>& value)
 {
     ValidateColumnType(columnIndex, DataType::Guid);
 
@@ -400,7 +474,7 @@ void DataRow::SetGuidValue(int32_t columnIndex, const Nullable<Guid>& value)
     }
 }
 
-void DataRow::SetGuidValue(const string& columnName, const Nullable<Guid>& value)
+void DataRow::SetGuidValue(const string& columnName, const Nullable<GSF::Guid>& value)
 {
     SetGuidValue(GetColumnIndex(columnName), value);
 }

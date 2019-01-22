@@ -723,15 +723,6 @@
     <None Include="FilterExpressions\CompileGrammar.bat">
       <Filter>FilterExpressions</Filter>
     </None>
-    <None Include="FilterExpressions\antlr4-runtime\atn\Makefile">
-      <Filter>FilterExpressions\antlr4-runtime\atn</Filter>
-    </None>
-    <None Include="FilterExpressions\antlr4-runtime\tree\xpath\XPathLexer.g4">
-      <Filter>FilterExpressions\antlr4-runtime\tree\xpath</Filter>
-    </None>
-    <None Include="FilterExpressions\antlr4-runtime\tree\xpath\XPathLexer.tokens">
-      <Filter>FilterExpressions\antlr4-runtime\tree\xpath</Filter>
-    </None>
     <None Include="FilterExpressions\FilterExpressionSyntax.g4">
       <Filter>FilterExpressions</Filter>
     </None>
@@ -1123,6 +1114,9 @@
     </ClInclude>
     <ClInclude Include="Data\DataTable.h">
       <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterExpressions\FilterExpressions.h">
+      <Filter>FilterExpressions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

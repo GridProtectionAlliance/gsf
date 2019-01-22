@@ -28,6 +28,14 @@
 
 #include "../Common/CommonTypes.h"
 #include "../Common/Nullable.h"
+#include "DataColumn.h"
+
+namespace GSF {
+namespace FilterExpressions
+{
+    class ValueExpression;
+    typedef GSF::SharedPtr<ValueExpression> ValueExpressionPtr;
+}}
 
 namespace GSF {
 namespace Data
@@ -41,14 +49,19 @@ typedef GSF::SharedPtr<DataTable> DataTablePtr;
 class DataRow;
 typedef GSF::SharedPtr<DataRow> DataRowPtr;
 
-class DataRow // NOLINT
+class DataRow : public GSF::EnableSharedThisPtr<DataRow> // NOLINT
 {
 private:
     DataTablePtr m_parent;
     std::vector<void*> m_values;
 
     int32_t GetColumnIndex(const std::string& columnName) const;
-    void ValidateColumnType(int32_t columnIndex, DataType targetType, bool read = false) const;
+    DataColumnPtr ValidateColumnType(int32_t columnIndex, DataType targetType, bool read = false) const;
+
+    GSF::FilterExpressions::ValueExpressionPtr EvaluateExpression(const DataColumnPtr& column);
+
+    template<typename T>
+    T GetComputedValue(const DataColumnPtr& column, DataType targetType) const;
 
     template<typename T>
     GSF::Nullable<T> GetValue(int32_t columnIndex, DataType targetType) const;

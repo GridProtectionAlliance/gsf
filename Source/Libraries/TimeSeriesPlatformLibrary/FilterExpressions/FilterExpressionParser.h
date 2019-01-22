@@ -24,13 +24,8 @@
 #ifndef __FILTER_EXPRESSION_PARSER_H
 #define __FILTER_EXPRESSION_PARSER_H
 
+#include "FilterExpressions.h"
 #include "FilterExpressionSyntaxLexer.h"
-#include "FilterExpressionSyntaxBaseListener.h"
-
-#ifndef EOF
-#define EOF (-1)
-#endif
-
 #include "ExpressionTree.h"
 
 #ifdef _DEBUG
@@ -61,14 +56,14 @@ struct TableIDFields
     std::string PointTagFieldName;
 };
 
-typedef SharedPtr<TableIDFields> TableIDFieldsPtr;
+typedef GSF::SharedPtr<TableIDFields> TableIDFieldsPtr;
 
 class FilterExpressionParser;
-typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
+typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
-class FilterExpressionParser : 
+class FilterExpressionParser : // NOLINT
     public FilterExpressionSyntaxBaseListener,
-    public GSF::EnableSharedThisPtr<FilterExpressionParser> // NOLINT
+    public GSF::EnableSharedThisPtr<FilterExpressionParser>
 {
 private:
     typedef void(*ParsingExceptionCallback)(FilterExpressionParserPtr, const std::string&);
@@ -105,6 +100,7 @@ private:
     bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
     void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
     void MapMeasurement(const GSF::Data::DataTablePtr& measurements, int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
+    void VisitParseTreeNodes();
 public:
     FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     ~FilterExpressionParser();
@@ -133,6 +129,8 @@ public:
     void SetTrackFilteredRows(bool trackFilteredRows);
     const std::vector<GSF::Data::DataRowPtr>& FilteredRows() const;
 
+    const std::vector<ExpressionTreePtr>& GetExpressionTrees();
+
     void enterFilterExpressionStatement(FilterExpressionSyntaxParser::FilterExpressionStatementContext*) override;
     void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
     void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
@@ -150,7 +148,7 @@ public:
     static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
 };
 
-typedef SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
+typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
 }}
 

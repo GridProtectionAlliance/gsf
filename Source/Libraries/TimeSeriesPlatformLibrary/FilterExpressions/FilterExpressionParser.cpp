@@ -32,17 +32,6 @@ using namespace antlr4;
 using namespace antlr4::tree;
 using namespace boost;
 
-FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback) :
-    m_filterExpressionParser(filterExpressionParser),
-    m_parsingExceptionCallback(parsingExceptionCallback)
-{        
-}
-
-void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* recognizer, Token* offendingSymbol, size_t line, size_t charPositionInLine, const string &msg, std::exception_ptr e)
-{
-    m_parsingExceptionCallback(m_filterExpressionParser, msg);
-}
-
 static string ParseStringLiteral(string stringLiteral)  // NOLINT
 {
     // Remove any surrounding quotes from string, ANTLR grammar already
@@ -128,6 +117,17 @@ FilterExpressionParser::~FilterExpressionParser()
     delete m_callbackErrorListener;
 }
 
+FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback) :
+    m_filterExpressionParser(std::move(filterExpressionParser)),
+    m_parsingExceptionCallback(parsingExceptionCallback)
+{        
+}
+
+void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* recognizer, Token* offendingSymbol, size_t line, size_t charPositionInLine, const string &msg, std::exception_ptr e)
+{
+    m_parsingExceptionCallback(m_filterExpressionParser, msg);
+}
+
 bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, ExpressionPtr& expression) const
 {
     return TryGetValue<const ParserRuleContext*, ExpressionPtr>(m_expressions, context, expression, nullptr);
@@ -189,6 +189,14 @@ void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, co
             }
         }
     }
+}
+
+void FilterExpressionParser::VisitParseTreeNodes()
+{
+    // Create parse tree and visit listener methods
+    ParseTreeWalker walker;
+    const auto parseTree = m_parser->parse();
+    walker.walk(this, parseTree);
 }
 
 const DataSetPtr& FilterExpressionParser::GetDataSet() const
@@ -267,10 +275,7 @@ void FilterExpressionParser::Evaluate()
     m_expressionTrees.clear();
     m_expressions.clear();
 
-    // Create parse tree and visit listener methods
-    ParseTreeWalker walker;
-    const auto parseTree = m_parser->parse();
-    walker.walk(this, parseTree);
+    VisitParseTreeNodes();
 
     // Each filter expression statement will have its own expression tree, evaluate each
     for (size_t x = 0; x < m_expressionTrees.size(); x++)
@@ -471,6 +476,14 @@ void FilterExpressionParser::SetTrackFilteredRows(bool trackFilteredRows)
 const vector<DataRowPtr>& FilterExpressionParser::FilteredRows() const
 {
     return m_filteredRows;
+}
+
+const vector<ExpressionTreePtr>& FilterExpressionParser::GetExpressionTrees()
+{
+    if (m_expressionTrees.empty())
+        VisitParseTreeNodes();
+
+    return m_expressionTrees;
 }
 
 /*
@@ -1221,11 +1234,7 @@ vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const 
     parser->SetTrackFilteredSignalIDs(false);
     parser->SetTrackFilteredRows(false);
 
-    ParseTreeWalker walker;
-    const auto parseTree = parser->m_parser->parse();
-    walker.walk(parser.get(), parseTree);
-
-    return parser->m_expressionTrees;
+    return parser->GetExpressionTrees();
 }
 
 ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)

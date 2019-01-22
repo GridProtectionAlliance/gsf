@@ -62,9 +62,9 @@ public:
     const ExpressionType Type;
 };
 
-typedef SharedPtr<Expression> ExpressionPtr;
+typedef GSF::SharedPtr<Expression> ExpressionPtr;
 typedef std::vector<ExpressionPtr> ExpressionCollection;
-typedef SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
+typedef GSF::SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
 
 // These expression value data types are reduced to a reasonable set of possible types
 // that can be represented in a filter expression. All data table column values will be
@@ -97,9 +97,9 @@ private:
     void ValidateValueType(ExpressionValueType valueType) const;
 
 public:
-    ValueExpression(ExpressionValueType valueType, Object value, bool valueIsNullable = false);
+    ValueExpression(ExpressionValueType valueType, GSF::Object value, bool valueIsNullable = false);
 
-    const Object Value;
+    const GSF::Object Value;
     const ExpressionValueType ValueType;
     const bool ValueIsNullable;
 
@@ -117,22 +117,22 @@ public:
     Nullable<int64_t> ValueAsNullableInt64() const;
 
     decimal_t ValueAsDecimal() const;
-    Nullable<decimal_t> ValueAsNullableDecimal() const;
+    Nullable<GSF::decimal_t> ValueAsNullableDecimal() const;
 
     float64_t ValueAsDouble() const;
-    Nullable<float64_t> ValueAsNullableDouble() const;
+    Nullable<GSF::float64_t> ValueAsNullableDouble() const;
 
     std::string ValueAsString() const;
     Nullable<std::string> ValueAsNullableString() const;
 
-    Guid ValueAsGuid() const;
-    Nullable<Guid> ValueAsNullableGuid() const;
+    GSF::Guid ValueAsGuid() const;
+    Nullable<GSF::Guid> ValueAsNullableGuid() const;
 
-    DateTime ValueAsDateTime() const;
-    Nullable<DateTime> ValueAsNullableDateTime() const;
+    GSF::DateTime ValueAsDateTime() const;
+    Nullable<GSF::DateTime> ValueAsNullableDateTime() const;
 };
 
-typedef SharedPtr<ValueExpression> ValueExpressionPtr;
+typedef GSF::SharedPtr<ValueExpression> ValueExpressionPtr;
 
 enum class ExpressionUnaryType
 {
@@ -153,7 +153,7 @@ public:
     const ExpressionPtr Value;
 };
 
-typedef SharedPtr<UnaryExpression> UnaryExpressionPtr;
+typedef GSF::SharedPtr<UnaryExpression> UnaryExpressionPtr;
 
 class ColumnExpression : public Expression
 {
@@ -163,7 +163,7 @@ public:
     const GSF::Data::DataColumnPtr DataColumn;
 };
 
-typedef SharedPtr<ColumnExpression> ColumnExpressionPtr;
+typedef GSF::SharedPtr<ColumnExpression> ColumnExpressionPtr;
 
 class InListExpression : public Expression
 {
@@ -176,7 +176,7 @@ public:
     const bool ExactMatch;
 };
 
-typedef SharedPtr<InListExpression> InListExpressionPtr;
+typedef GSF::SharedPtr<InListExpression> InListExpressionPtr;
 
 enum class ExpressionFunctionType
 {
@@ -232,7 +232,7 @@ public:
     const ExpressionCollectionPtr Arguments;
 };
 
-typedef SharedPtr<FunctionExpression> FunctionExpressionPtr;
+typedef GSF::SharedPtr<FunctionExpression> FunctionExpressionPtr;
 
 enum class ExpressionOperatorType
 {
@@ -277,7 +277,7 @@ public:
     const ExpressionPtr RightValue;
 };
 
-typedef SharedPtr<OperatorExpression> OperatorExpressionPtr;
+typedef GSF::SharedPtr<OperatorExpression> OperatorExpressionPtr;
 
 class ExpressionTree
 {
@@ -393,7 +393,7 @@ public:
     static ValueExpressionPtr NullValue(ExpressionValueType targetValueType);
 };
 
-typedef SharedPtr<ExpressionTree> ExpressionTreePtr;
+typedef GSF::SharedPtr<ExpressionTree> ExpressionTreePtr;
 
 }}
 
