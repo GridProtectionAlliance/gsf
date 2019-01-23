@@ -52,6 +52,7 @@ function hashPassword(password) {
 // Authorize user with basic authentication using provided credentials
 function authenticateBasic(username, password) {
     $.ajax({
+        cache: false,
         url: securePage,
         complete: function (xhr) {
             switch (xhr.status) {
@@ -91,6 +92,7 @@ function authenticateNTLM(username, password) {
 // using pre-authorized authentication token cookie with remember me option
 function passthroughBasic() {
     $.ajax({
+        cache: false,
         url: securePage,
         complete: function (xhr) {
             switch (xhr.status) {
@@ -112,6 +114,7 @@ function passthroughBasic() {
 // NTLM implementation on some browsers may prompt for credentials anyway
 function passthroughNTLM() {
     $.ajax({
+        cache: false,
         url: securePage + "?scheme=NTLM",
         complete: function (xhr) {
             switch (xhr.status) {
