@@ -1653,6 +1653,7 @@ ValueExpressionPtr ExpressionTree::IsInteger(const ValueExpressionPtr& testValue
         }
         catch (...)
         {
+            return ExpressionTree::False;
         }
     }
 
@@ -1676,6 +1677,7 @@ ValueExpressionPtr ExpressionTree::IsGuid(const ValueExpressionPtr& testValue) c
         }
         catch (...)
         {
+            return ExpressionTree::False;
         }
     }
 
@@ -1710,6 +1712,7 @@ ValueExpressionPtr ExpressionTree::IsNumeric(const ValueExpressionPtr& testValue
         }
         catch (...)
         {
+            return ExpressionTree::False;
         }
     }
 
@@ -1772,7 +1775,7 @@ ValueExpressionPtr ExpressionTree::MaxOf(const ExpressionCollectionPtr& argument
         const ExpressionValueType valueType = DeriveOperationValueType(ExpressionOperatorType::GreaterThan, testValue->ValueType, nextValue->ValueType);
         const ValueExpressionPtr result = GreaterThan(nextValue, testValue, valueType);
 
-        if (result->ValueAsBoolean() || testValue->IsNull() && !nextValue->IsNull())
+        if (result->ValueAsBoolean() || (testValue->IsNull() && !nextValue->IsNull()))
             testValue = nextValue;
     }
 
@@ -1789,7 +1792,7 @@ ValueExpressionPtr ExpressionTree::MinOf(const ExpressionCollectionPtr& argument
         const ExpressionValueType valueType = DeriveOperationValueType(ExpressionOperatorType::LessThan, testValue->ValueType, nextValue->ValueType);
         const ValueExpressionPtr result = LessThan(nextValue, testValue, valueType);
 
-        if (result->ValueAsBoolean() || testValue->IsNull() && !nextValue->IsNull())
+        if (result->ValueAsBoolean() || (testValue->IsNull() && !nextValue->IsNull()))
             testValue = nextValue;
     }
 
@@ -2277,19 +2280,6 @@ ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, 
 
     switch (valueType)
     {
-        case ExpressionValueType::Boolean:
-        {
-            const int32_t leftInt = left->ValueAsBoolean() ? 1 : 0;
-            const int32_t rightInt = right->ValueAsBoolean() ? 1 : 0;
-            bool result;
-
-            if (rightInt == 0)
-                result = false;
-            else
-                result = leftInt % rightInt != 0;
-
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, result);
-        }
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() % right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -3047,7 +3037,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0.0;
+                    targetValue = value == 0.0; //-V550
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = static_cast<int32_t>(value);

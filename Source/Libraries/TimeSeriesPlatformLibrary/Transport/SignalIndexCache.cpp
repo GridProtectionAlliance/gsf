@@ -30,10 +30,10 @@ using namespace GSF::TimeSeries::Transport;
 
 // Adds a measurement key to the cache.
 void SignalIndexCache::AddMeasurementKey(
-    uint16_t signalIndex,
-    Guid signalID,
-    string source,
-    uint32_t id)
+    const uint16_t signalIndex,
+    const Guid& signalID,
+    const string& source,
+    const uint32_t id)
 {
     const uint32_t vectorIndex = m_signalIDList.size();
 
@@ -56,7 +56,7 @@ void SignalIndexCache::Clear()
 }
 
 // Determines whether an element with the given runtime ID exists in the signal index cache.
-bool SignalIndexCache::Contains(uint16_t signalIndex) const
+bool SignalIndexCache::Contains(const uint16_t signalIndex) const
 {
     return m_reference.find(signalIndex) != m_reference.end();
 }
@@ -77,7 +77,7 @@ Guid SignalIndexCache::GetSignalID(uint16_t signalIndex) const
 
 // Gets the first half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
-const string& SignalIndexCache::GetSource(uint16_t signalIndex) const
+const string& SignalIndexCache::GetSource(const uint16_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -92,7 +92,7 @@ const string& SignalIndexCache::GetSource(uint16_t signalIndex) const
 
 // Gets the second half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
-uint32_t SignalIndexCache::GetID(uint16_t signalIndex) const
+uint32_t SignalIndexCache::GetID(const uint16_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -108,7 +108,7 @@ uint32_t SignalIndexCache::GetID(uint16_t signalIndex) const
 // Gets the globally unique signal ID as well as the human-readable
 // measurement key associated with the given 16-bit runtime ID.
 bool SignalIndexCache::GetMeasurementKey(
-    uint16_t signalIndex,
+    const uint16_t signalIndex,
     Guid& signalID,
     string& source,
     uint32_t& id) const
@@ -130,7 +130,7 @@ bool SignalIndexCache::GetMeasurementKey(
 }
 
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-uint16_t SignalIndexCache::GetSignalIndex(Guid signalID) const
+uint16_t SignalIndexCache::GetSignalIndex(const Guid& signalID) const
 {
     const auto result = m_signalIDCache.find(signalID);
     uint16_t signalIndex = UInt16::MaxValue;

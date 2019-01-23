@@ -425,7 +425,7 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
         case ServerCommand::Unsubscribe:
             // Do not break on these messages because there is
             // still an associated message to be processed.
-            m_subscribed = (commandCode == ServerCommand::Subscribe);
+            m_subscribed = (commandCode == ServerCommand::Subscribe); //-V796
 
         case ServerCommand::Authenticate:
         case ServerCommand::RotateCipherKeys:
@@ -600,7 +600,7 @@ void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint3
         return;
 
     int32_t* timeIndexPtr = reinterpret_cast<int32_t*>(data + offset);
-    int64_t* timeOffsetsPtr = reinterpret_cast<int64_t*>(timeIndexPtr + 1);
+    int64_t* timeOffsetsPtr = reinterpret_cast<int64_t*>(timeIndexPtr + 1); //-V1032
 
     m_timeIndex = m_endianConverter.ConvertBigEndian(*timeIndexPtr);
     m_baseTimeOffsets[0] = m_endianConverter.ConvertBigEndian(timeOffsetsPtr[0]);
@@ -1131,7 +1131,7 @@ void DataSubscriber::SetSubscriptionInfo(const SubscriptionInfo& info)
 }
 
 // Synchronously connects to publisher.
-void DataSubscriber::Connect(string hostname, uint16_t port)
+void DataSubscriber::Connect(const string& hostname, const uint16_t port)
 {
     DnsResolver resolver(m_commandChannelService);
     const DnsResolver::query query(hostname, to_string(port));
@@ -1220,7 +1220,7 @@ void DataSubscriber::Disconnect()
     Disconnect(false);
 }
 
-void DataSubscriber::Subscribe(const SubscriptionInfo info)
+void DataSubscriber::Subscribe(const SubscriptionInfo& info)
 {
     SetSubscriptionInfo(info);
     Subscribe();
@@ -1229,8 +1229,6 @@ void DataSubscriber::Subscribe(const SubscriptionInfo info)
 // Subscribe to publisher in order to start receiving data.
 void DataSubscriber::Subscribe()
 {
-    udp ipVersion = udp::v4();
-
     stringstream connectionStream;
     string connectionString;
 
@@ -1264,6 +1262,8 @@ void DataSubscriber::Subscribe()
 
     if (m_subscriptionInfo.UdpDataChannel)
     {
+        udp ipVersion = udp::v4();
+
         if (m_hostAddress.is_v6())
             ipVersion = udp::v6();
 

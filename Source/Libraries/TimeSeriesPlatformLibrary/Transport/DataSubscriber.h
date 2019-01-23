@@ -314,7 +314,7 @@ namespace Transport
         const SubscriptionInfo& GetSubscriptionInfo() const;
 
         // Synchronously connects to publisher.
-        void Connect(std::string hostname, uint16_t port);
+        void Connect(const std::string& hostname, uint16_t port);
 
         // Disconnects from the publisher.
         //
@@ -326,7 +326,7 @@ namespace Transport
 
         // Subscribe to measurements to start receiving data.
         void Subscribe();
-        void Subscribe(SubscriptionInfo info);
+        void Subscribe(const SubscriptionInfo& info);
 
         // Cancel the current subscription to stop receiving data.
         void Unsubscribe();

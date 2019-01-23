@@ -100,7 +100,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     timeParts = Split(timePart, ":", false);
 
     if (timeParts.size() == 2)
-        timeParts.push_back("00");
+        timeParts.emplace_back("00");
 
     if (timeParts.size() != 3)
         return timestamp;
@@ -227,12 +227,12 @@ uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t 
     return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }
 
-std::string GSF::ToString(Guid value)
+std::string GSF::ToString(const Guid& value)
 {
     return boost::uuids::to_string(value);
 }
 
-std::string GSF::ToString(DateTime value, const char* format)
+std::string GSF::ToString(const DateTime& value, const char* format)
 {
     using namespace boost::gregorian;
 
@@ -301,7 +301,7 @@ const char* GSF::Coalesce(const char* data, const char* nonEmptyValue)
     if (data == nullptr)
         return nonEmptyValue;
 
-    if (strlen(data) == 0)
+    if (data[0] == '\0')
         return nonEmptyValue;
 
     return data;

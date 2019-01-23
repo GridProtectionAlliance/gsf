@@ -144,7 +144,7 @@ bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer
         {
             // Read 4-byte offset from the buffer and apply the appropriate base time offset
             timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*reinterpret_cast<const uint32_t*>(&buffer[offset]));
-            timestamp += m_baseTimeOffsets[timeIndex];
+            timestamp += m_baseTimeOffsets[timeIndex]; //-V522
             offset += 4;
         }
         else

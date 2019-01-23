@@ -49,9 +49,9 @@ namespace GSF
         return stream.str();
     }
 
-    std::string ToString(Guid value);
+    std::string ToString(const Guid& value);
 
-    std::string ToString(DateTime value, const char* format = "%Y-%m-%d %H:%M:%S%F");
+    std::string ToString(const DateTime& value, const char* format = "%Y-%m-%d %H:%M:%S%F");
 
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ParseGuid(const uint8_t* data, bool swapBytes);

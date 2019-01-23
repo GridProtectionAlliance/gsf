@@ -288,9 +288,9 @@ namespace GSF
         Millisecond
     };
 
-    DateTime DateAdd(DateTime value, int32_t addValue, TimeInterval interval);
-    int32_t DateDiff(DateTime startTime, DateTime endTime, TimeInterval interval);
-    int32_t DatePart(DateTime value, TimeInterval interval);
+    DateTime DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval);
+    int32_t DateDiff(const DateTime& startTime, const DateTime& endTime, TimeInterval interval);
+    int32_t DatePart(const DateTime& value, TimeInterval interval);
 
     // Empty types
     struct Empty

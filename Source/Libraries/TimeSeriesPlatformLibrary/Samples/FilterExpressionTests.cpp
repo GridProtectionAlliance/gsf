@@ -640,17 +640,19 @@ int main(int argc, char* argv[])
         cout << "Test " << ++test << " succeeded..." << endl;
 
         // Test 36 - validate data load
+        dataRow = dataSet->Table("DeviceDetail")->Row(0);
+
         assert(IsEqual(
-            dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Acronym").GetValueOrDefault(),
-            dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("Name").GetValueOrDefault()
+            dataRow->ValueAsString("Acronym").GetValueOrDefault(),
+            dataRow->ValueAsString("Name").GetValueOrDefault()
         ));
 
         // In test data set, DeviceDetail.OriginalSource is null
-        assert(!dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("OriginalSource").HasValue());
+        assert(!dataRow->ValueAsString("OriginalSource").HasValue());
 
         // In test data set, DeviceDetail.ParentAcronym is not null, but is an empty string
-        assert(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").HasValue());
-        assert(static_cast<string>(dataSet->Table("DeviceDetail")->Row(0)->ValueAsString("ParentAcronym").Value).empty());
+        assert(dataRow->ValueAsString("ParentAcronym").HasValue());
+        assert(static_cast<string>(dataRow->ValueAsString("ParentAcronym").Value).empty());
         cout << "Test " << ++test << " succeeded..." << endl;
 
         TableIDFieldsPtr measurementDetailIDFields = NewSharedPtr<TableIDFields>();
@@ -876,7 +878,6 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 74
-    dataRow = dataSet->Table("DeviceDetail")->Row(0);
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "AccessID % 2 = 0 AND FramesPerSecond % 4 <> 2 OR AccessID % 1 = 0");
 
     assert(valueExpression->ValueType == ExpressionValueType::Boolean);

@@ -269,44 +269,34 @@ string GSF::TrimLeft(const string& value)
     return trim_left_copy(value);
 }
 
-DateTime GSF::DateAdd(DateTime value, int32_t addValue, TimeInterval interval)
+DateTime GSF::DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval)
 {
     switch (interval)
     {
         case TimeInterval::Year:
-            value += years(addValue);
-            break;
+            return value + years(addValue);
         case TimeInterval::Month:
-            value += months(addValue);
-            break;
+            return value + months(addValue);
         case TimeInterval::DayOfYear:
         case TimeInterval::Day:
         case TimeInterval::WeekDay:
-            value += days(addValue);
-            break;
+            return value + days(addValue);
         case TimeInterval::Week:
-            value += weeks(addValue);
-            break;
+            return value + weeks(addValue);
         case TimeInterval::Hour:
-            value += hours(addValue);
-            break;
+            return value + hours(addValue);
         case TimeInterval::Minute:
-            value += minutes(addValue);
-            break;
+            return value + minutes(addValue);
         case TimeInterval::Second:
-            value += seconds(addValue);
-            break;
+            return value + seconds(addValue);
         case TimeInterval::Millisecond:
-            value += milliseconds(addValue);
-            break;
+            return value + milliseconds(addValue);
         default:
             throw runtime_error("Unexpected time interval encountered");
     }
-
-    return value;
 }
 
-int32_t GSF::DateDiff(DateTime startTime, DateTime endTime, TimeInterval interval)
+int32_t GSF::DateDiff(const DateTime& startTime, const DateTime& endTime, TimeInterval interval)
 {
     if (interval < TimeInterval::Hour)
     {
@@ -344,7 +334,7 @@ int32_t GSF::DateDiff(DateTime startTime, DateTime endTime, TimeInterval interva
     }
 }
 
-int32_t GSF::DatePart(DateTime value, TimeInterval interval)
+int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
 {
     static float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
 

@@ -45,7 +45,7 @@ namespace Transport
     {
     private:
         const DataPublisherPtr m_parent;
-        const Guid m_clientID;
+        const GSF::Guid m_clientID;
 
         // Command channel
         TcpSocket m_commandChannelSocket;   // Client
@@ -70,7 +70,7 @@ namespace Transport
 
         TcpSocket& CommandChannelSocket();
 
-        Guid ClientID() const;
+        GSF::Guid ClientID() const;
 
         void Start();
     };
@@ -83,7 +83,7 @@ namespace Transport
         // Function pointer types
         typedef void(*DispatcherFunction)(DataPublisher*, const std::vector<uint8_t>&);
         typedef void(*MessageCallback)(DataPublisher*, const std::string&);
-        typedef void(*ClientConnectedCallback)(DataPublisher*, const Guid&, const std::string&, const std::string&);
+        typedef void(*ClientConnectedCallback)(DataPublisher*, const GSF::Guid&, const std::string&, const std::string&);
 
         // Structure used to dispatch
         // callbacks on the callback thread.
@@ -96,7 +96,7 @@ namespace Transport
             CallbackDispatcher();
         };
 
-        std::map<Guid, ClientConnectionPtr> m_clientConnections;
+        std::map<GSF::Guid, ClientConnectionPtr> m_clientConnections;
         SecurityMode m_securityMode;
         bool m_allowMetadataRefresh;
         bool m_allowNaNValueFilter;
@@ -152,15 +152,15 @@ namespace Transport
         void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
         void DispatchStatusMessage(const std::string& message);
         void DispatchErrorMessage(const std::string& message);
-        void DispatchClientConnected(const Guid& clientID, const std::string& connectionInfo, const std::string& subscriberInfo);
+        void DispatchClientConnected(const GSF::Guid& clientID, const std::string& connectionInfo, const std::string& subscriberInfo);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         
-        static void SerializeSignalIndexCache(const Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
-        //static void SerializeMetadata(const Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer);
-        //static void SerializeMetadata(const Guid& clientID, const pugi::xml_document& metadata, std::vector<uint8_t>& buffer);
+        static void SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
+        //static void SerializeMetadata(const GSF::Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer);
+        //static void SerializeMetadata(const GSF::Guid& clientID, const pugi::xml_document& metadata, std::vector<uint8_t>& buffer);
 
     public:
         // Creates a new instance of the data publisher.
@@ -213,7 +213,7 @@ namespace Transport
         // Callback functions are defined with the following signatures:
         //   void ProcessStatusMessage(DataPublisher*, const string& message)
         //   void ProcessErrorMessage(DataPublisher*, const string& message)
-        //   void ProcessClientConnected(DataPublisher*, const Guid& clientID, const string& connectionInfo, const string& subscriberInfo);
+        //   void ProcessClientConnected(DataPublisher*, const GSF::Guid& clientID, const string& connectionInfo, const string& subscriberInfo);
         void RegisterStatusMessageCallback(MessageCallback statusMessageCallback);
         void RegisterErrorMessageCallback(MessageCallback errorMessageCallback);
         void RegisterClientConnectedCallback(ClientConnectedCallback clientConnectedCallback);

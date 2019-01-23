@@ -49,10 +49,7 @@ DataRow::DataRow(DataTablePtr parent) :
 DataRow::~DataRow()
 {
     for (uint32_t i = 0; i < m_values.size(); i++)
-    {
-        if (m_values[i])
-            free(m_values[i]);
-    }
+        free(m_values[i]);
 }
 
 int32_t DataRow::GetColumnIndex(const string& columnName) const
@@ -107,7 +104,10 @@ ValueExpressionPtr DataRow::EvaluateExpression(const DataColumnPtr& column)
     const auto expressionTrees = parser->GetExpressionTrees();
 
     if (expressionTrees.empty())
+    {
+        delete parser;
         throw DataSetException("Expression defined for computed DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\" cannot produce a value");
+    }
 
     m_values[columnIndex] = parser;
     
@@ -176,7 +176,7 @@ void DataRow::SetValue(int32_t columnIndex, const Nullable<T>& value, DataType t
     if (value.HasValue())
     {
         uint8_t* copy = static_cast<uint8_t*>(malloc(sizeof(T)));
-        memcpy(copy, &value.Value, sizeof(T));
+        memcpy(copy, &value.Value, sizeof(T)); //-V575
         m_values[columnIndex] = copy;
     }
     else
@@ -321,7 +321,7 @@ void DataRow::SetBooleanValue(int32_t columnIndex, const Nullable<bool>& value)
     if (value.HasValue())
     {
         uint8_t* copy = static_cast<uint8_t*>(malloc(1));
-        *copy = value.GetValueOrDefault() ? 1 : 0;
+        *copy = value.GetValueOrDefault() ? 1 : 0; //-V522
         m_values[columnIndex] = copy;
     }
     else
@@ -465,7 +465,7 @@ void DataRow::SetGuidValue(int32_t columnIndex, const Nullable<GSF::Guid>& value
     if (value.HasValue())
     {
         int8_t* copy = static_cast<int8_t*>(malloc(16));
-        memcpy(copy, value.GetValueOrDefault().data, 16);
+        memcpy(copy, value.GetValueOrDefault().data, 16); //-V575
         m_values[columnIndex] = copy;
     }
     else

@@ -41,17 +41,17 @@ namespace Transport
     {
     private:
         std::map<uint16_t, uint32_t> m_reference;
-        std::vector<Guid> m_signalIDList;
+        std::vector<GSF::Guid> m_signalIDList;
         std::vector<std::string> m_sourceList;
         std::vector<uint32_t> m_idList;
-        std::map<Guid, uint16_t> m_signalIDCache;
+        std::map<GSF::Guid, uint16_t> m_signalIDCache;
 
     public:
         // Adds a measurement key to the cache.
         void AddMeasurementKey(
             uint16_t signalIndex,
-            Guid signalID,
-            std::string source,
+            const GSF::Guid& signalID,
+            const std::string& source,
             uint32_t id);
 
         // Empties the cache.
@@ -61,7 +61,7 @@ namespace Transport
         bool Contains(uint16_t signalIndex) const;
 
         // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-        Guid GetSignalID(uint16_t signalIndex) const;
+        GSF::Guid GetSignalID(uint16_t signalIndex) const;
 
         // Gets the first half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
@@ -75,12 +75,12 @@ namespace Transport
         // measurement key associated with the given 16-bit runtime ID.
         bool GetMeasurementKey(
             uint16_t signalIndex,
-            Guid& signalID,
+            GSF::Guid& signalID,
             std::string& source,
             uint32_t& id) const;
 
         // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-        uint16_t GetSignalIndex(Guid signalID) const;
+        uint16_t GetSignalIndex(const GSF::Guid& signalID) const;
     };
 }}}
 
