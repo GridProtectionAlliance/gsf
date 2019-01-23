@@ -140,12 +140,25 @@ void FilterExpressionParser::VisitParseTreeNodes()
 void FilterExpressionParser::InitializeSetOperations()
 {
     // As an optimization, set operations are not engaged until second filter expression statement
-    // is encountered, only then will duplicate results be a concern
+    // is encountered, only then will duplicate results be a concern. Note that only using an
+    // unordered_set is not an option because results can be sorted with the "ORDER BY" clause.
     if (m_trackFilteredRows && m_filteredRowSet.empty() && !m_filteredRows.empty())
-        copy(m_filteredRows.begin(), m_filteredRows.end(), inserter(m_filteredRowSet, m_filteredRowSet.end()));
+    {
+        const size_t count = m_filteredRows.size();
+        m_filteredRowSet.reserve(count);
+
+        for (size_t i = 0; i < count; i++)
+            m_filteredRowSet.insert(m_filteredRows[i]);
+    }
 
     if (m_trackFilteredSignalIDs && m_filteredSignalIDSet.empty() && !m_filteredSignalIDs.empty())
-        copy(m_filteredSignalIDs.begin(), m_filteredSignalIDs.end(), inserter(m_filteredSignalIDSet, m_filteredSignalIDSet.end()));
+    {
+        const size_t count = m_filteredSignalIDs.size();
+        m_filteredSignalIDSet.reserve(count);
+
+        for (size_t i = 0; i < count; i++)
+            m_filteredSignalIDSet.insert(m_filteredSignalIDs[i]);
+    }
 }
 
 void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, int32_t signalIDColumnIndex)

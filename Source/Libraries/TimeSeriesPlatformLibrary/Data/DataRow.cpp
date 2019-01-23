@@ -84,16 +84,16 @@ DataColumnPtr DataRow::ValidateColumnType(int32_t columnIndex, DataType targetTy
     return column;
 }
 
-ValueExpressionPtr DataRow::EvaluateExpression(const DataColumnPtr& column)
+ExpressionTreePtr DataRow::GetExpressionTree(const DataColumnPtr& column)
 {
     const int columnIndex = column->Index();
 
     FilterExpressionParser* parser = static_cast<FilterExpressionParser*>(m_values[columnIndex]);
 
     if (parser)
-        return parser->GetExpressionTrees()[0]->Evaluate(shared_from_this());
+        return parser->GetExpressionTrees()[0];
 
-    const DataTablePtr dataTable = column->Parent();
+    const DataTablePtr& dataTable = column->Parent();
     parser = new FilterExpressionParser(column->Expression());
 
     parser->SetDataSet(dataTable->Parent());
@@ -111,54 +111,344 @@ ValueExpressionPtr DataRow::EvaluateExpression(const DataColumnPtr& column)
 
     m_values[columnIndex] = parser;
     
-    return expressionTrees[0]->Evaluate(shared_from_this());
+    return expressionTrees[0];
 }
 
-template<typename T>
-T DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetType) const
+Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetType)
 {
     try
     {
-        //const ValueExpressionPtr computedValue = EvaluateExpression(column);
+        const ExpressionTreePtr& expressionTree = GetExpressionTree(column);
+        const ValueExpressionPtr& sourceValue = expressionTree->Evaluate(shared_from_this());
 
-        // TODO: Evaluate value for type T
-        //switch (computedValue->ValueType)
-        //{
-        //    case ExpressionValueType::Boolean:
-        //        break;
-        //    case ExpressionValueType::Int32:
-        //        break;
-        //    case ExpressionValueType::Int64:
-        //        break;
-        //    case ExpressionValueType::Decimal:
-        //        break;
-        //    case ExpressionValueType::Double:
-        //        break;
-        //    case ExpressionValueType::String:
-        //        break;
-        //    case ExpressionValueType::Guid:
-        //        break;
-        //    case ExpressionValueType::DateTime:
-        //        break;
-        //    default:
-        //        throw ExpressionTreeException("Unexpected expression value type encountered");
-        //}
+        switch (sourceValue->ValueType)
+        {
+            case ExpressionValueType::Boolean:
+            {
+                const bool result = sourceValue->ValueAsBoolean();
+                const int32_t value = result ? 1 : 0;
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Boolean:
+                        return result;
+                    case DataType::Single:
+                        return static_cast<float32_t>(value);
+                    case DataType::Double:
+                        return static_cast<float64_t>(value);
+                    case DataType::Decimal:
+                        return static_cast<decimal_t>(value);
+                    case DataType::Int8:
+                        return static_cast<int8_t>(value);
+                    case DataType::Int16:
+                        return static_cast<int16_t>(value);
+                    case DataType::Int32:
+                        return static_cast<int32_t>(value);
+                    case DataType::Int64:
+                        return static_cast<int64_t>(value);
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(value);
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(value);
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(value);
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(value);
+                    case DataType::DateTime:
+                    case DataType::Guid:
+                        throw DataSetException("Cannot convert \"Boolean\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::Int32:
+            {
+                const int32_t value = sourceValue->ValueAsInt32();
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Boolean:
+                        return value == 0;
+                    case DataType::Single:
+                        return static_cast<float32_t>(value);
+                    case DataType::Double:
+                        return static_cast<float64_t>(value);
+                    case DataType::Decimal:
+                        return static_cast<decimal_t>(value);
+                    case DataType::Int8:
+                        return static_cast<int8_t>(value);
+                    case DataType::Int16:
+                        return static_cast<int16_t>(value);
+                    case DataType::Int32:
+                        return value;
+                    case DataType::Int64:
+                        return static_cast<int64_t>(value);
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(value);
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(value);
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(value);
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(value);
+                    case DataType::DateTime:
+                    case DataType::Guid:
+                        throw DataSetException("Cannot convert \"Int32\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::Int64:
+            {
+                const int64_t value = sourceValue->ValueAsInt64();
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Boolean:
+                        return value == 0LL;
+                    case DataType::Single:
+                        return static_cast<float32_t>(value);
+                    case DataType::Double:
+                        return static_cast<float64_t>(value);
+                    case DataType::Decimal:
+                        return static_cast<decimal_t>(value);
+                    case DataType::Int8:
+                        return static_cast<int8_t>(value);
+                    case DataType::Int16:
+                        return static_cast<int16_t>(value);
+                    case DataType::Int32:
+                        return static_cast<int32_t>(value);
+                    case DataType::Int64:
+                        return value;
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(value);
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(value);
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(value);
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(value);
+                    case DataType::DateTime:
+                    case DataType::Guid:
+                        throw DataSetException("Cannot convert \"Int64\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::Decimal:
+            {
+                const decimal_t value = sourceValue->ValueAsDecimal();
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Boolean:
+                        return value == decimal_t(0);
+                    case DataType::Single:
+                        return static_cast<float32_t>(value);
+                    case DataType::Double:
+                        return static_cast<float64_t>(value);
+                    case DataType::Decimal:
+                        return value;
+                    case DataType::Int8:
+                        return static_cast<int8_t>(value);
+                    case DataType::Int16:
+                        return static_cast<int16_t>(value);
+                    case DataType::Int32:
+                        return static_cast<int32_t>(value);
+                    case DataType::Int64:
+                        return static_cast<int64_t>(value);
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(value);
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(value);
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(value);
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(value);
+                    case DataType::DateTime:
+                    case DataType::Guid:
+                        throw DataSetException("Cannot convert \"Decimal\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::Double:
+            {
+                const float64_t value = sourceValue->ValueAsDouble();
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Boolean:
+                        return value == 0.0; //-V550
+                    case DataType::Single:
+                        return static_cast<float32_t>(value);
+                    case DataType::Double:
+                        return value;
+                    case DataType::Decimal:
+                        return static_cast<decimal_t>(value);
+                    case DataType::Int8:
+                        return static_cast<int8_t>(value);
+                    case DataType::Int16:
+                        return static_cast<int16_t>(value);
+                    case DataType::Int32:
+                        return static_cast<int32_t>(value);
+                    case DataType::Int64:
+                        return static_cast<int64_t>(value);
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(value);
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(value);
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(value);
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(value);
+                    case DataType::DateTime:
+                    case DataType::Guid:
+                        throw DataSetException("Cannot convert \"Double\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::String:
+            {
+                const string value = sourceValue->ValueAsString();
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return value;
+                    case DataType::Boolean:
+                        if (IsEqual(value, "true") || IsEqual(value, "1"))
+                            return true;
+                        
+                        if (IsEqual(value, "false") || IsEqual(value, "0"))
+                            return false;
+                        
+                        throw DataSetException("Cannot convert \"String\" expression value \"" + value + "\" to \"Boolean\" column");
+                    case DataType::DateTime:
+                        return ParseTimestamp(value.c_str());
+                    case DataType::Single:
+                        return static_cast<float32_t>(stod(value));
+                    case DataType::Double:
+                        return stod(value);
+                    case DataType::Decimal:
+                        return decimal_t(value);
+                    case DataType::Guid:
+                        return ParseGuid(value.c_str());
+                    case DataType::Int8:
+                        return static_cast<int8_t>(stoi(value));
+                    case DataType::Int16:
+                        return static_cast<int16_t>(stoi(value));
+                    case DataType::Int32:
+                        return static_cast<int32_t>(stoi(value));
+                    case DataType::Int64:
+                        return static_cast<int64_t>(stoll(value));
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(stoul(value));
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(stoul(value));
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(stoul(value));
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(stoull(value));
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::Guid:
+            {
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Guid:
+                        return sourceValue->ValueAsGuid();
+                    case DataType::Boolean:
+                    case DataType::DateTime:
+                    case DataType::Single:
+                    case DataType::Double:
+                    case DataType::Decimal:
+                    case DataType::Int8:
+                    case DataType::Int16:
+                    case DataType::Int32:
+                    case DataType::Int64:
+                    case DataType::UInt8:
+                    case DataType::UInt16:
+                    case DataType::UInt32:
+                    case DataType::UInt64:
+                        throw DataSetException("Cannot convert \"Guid\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            case ExpressionValueType::DateTime:
+            {
+                const DateTime result = sourceValue->ValueAsDateTime();
+                const time_t value = to_time_t(result);
+
+                switch (targetType)
+                {
+                    case DataType::String:
+                        return sourceValue->ToString();
+                    case DataType::Boolean:
+                        return value == 0;
+                    case DataType::DateTime:
+                        return result;
+                    case DataType::Single:
+                        return static_cast<float32_t>(value);
+                    case DataType::Double:
+                        return static_cast<float64_t>(value);
+                    case DataType::Decimal:
+                        return static_cast<decimal_t>(value);
+                    case DataType::Int8:
+                        return static_cast<int8_t>(value);
+                    case DataType::Int16:
+                        return static_cast<int16_t>(value);
+                    case DataType::Int32:
+                        return static_cast<int32_t>(value);
+                    case DataType::Int64:
+                        return static_cast<int64_t>(value);
+                    case DataType::UInt8:
+                        return static_cast<uint8_t>(value);
+                    case DataType::UInt16:
+                        return static_cast<uint16_t>(value);
+                    case DataType::UInt32:
+                        return static_cast<uint32_t>(value);
+                    case DataType::UInt64:
+                        return static_cast<uint64_t>(value);
+                    case DataType::Guid:
+                        throw DataSetException("Cannot convert \"DateTime\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+            default:
+                throw DataSetException("Unexpected expression value type encountered");
+        }
     }
     catch (const ExpressionTreeException& ex)
     {
         throw DataSetException("Expression exception in computed DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\": " + string(ex.what()));
     }
-
-    return T {};
 }
 
 template<typename T>
-Nullable<T> DataRow::GetValue(int32_t columnIndex, DataType targetType) const
+Nullable<T> DataRow::GetValue(int32_t columnIndex, DataType targetType)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, targetType, true);
 
     if (column->Computed())
-        return GetComputedValue<T>(column, targetType);
+        return Cast<T>(GetComputedValue(column, targetType));
 
     T* value = static_cast<T*>(m_values[columnIndex]);
 
@@ -257,9 +547,12 @@ void DataRow::SetNullValue(const string& columnName)
     SetNullValue(GetColumnIndex(columnName));
 }
 
-Nullable<string> DataRow::ValueAsString(int32_t columnIndex) const
+Nullable<string> DataRow::ValueAsString(int32_t columnIndex)
 {
-    ValidateColumnType(columnIndex, DataType::String, true);
+    const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::String, true);
+
+    if (column->Computed())
+        return Cast<string>(GetComputedValue(column, DataType::String));
 
     const char* value  = static_cast<const char*>(m_values[columnIndex]);
 
@@ -269,7 +562,7 @@ Nullable<string> DataRow::ValueAsString(int32_t columnIndex) const
     return nullptr;
 }
 
-Nullable<string> DataRow::ValueAsString(const string& columnName) const
+Nullable<string> DataRow::ValueAsString(const string& columnName)
 {
     return ValueAsString(GetColumnIndex(columnName));
 }
@@ -297,9 +590,12 @@ void DataRow::SetStringValue(const string& columnName, const Nullable<string>& v
     SetStringValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<bool> DataRow::ValueAsBoolean(int32_t columnIndex) const
+Nullable<bool> DataRow::ValueAsBoolean(int32_t columnIndex)
 {
-    ValidateColumnType(columnIndex, DataType::Boolean, true);
+    const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Boolean, true);
+
+    if (column->Computed())
+        return Cast<bool>(GetComputedValue(column, DataType::Boolean));
 
     uint8_t* value = static_cast<uint8_t*>(m_values[columnIndex]);
     
@@ -309,7 +605,7 @@ Nullable<bool> DataRow::ValueAsBoolean(int32_t columnIndex) const
     return nullptr;
 }
 
-Nullable<bool> DataRow::ValueAsBoolean(const string& columnName) const
+Nullable<bool> DataRow::ValueAsBoolean(const string& columnName)
 {
     return ValueAsBoolean(GetColumnIndex(columnName));
 }
@@ -335,12 +631,12 @@ void DataRow::SetBooleanValue(const string& columnName, const Nullable<bool>& va
     SetBooleanValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<DateTime> DataRow::ValueAsDateTime(int32_t columnIndex) const
+Nullable<DateTime> DataRow::ValueAsDateTime(int32_t columnIndex)
 {
     return GetValue<DateTime>(columnIndex, DataType::DateTime);
 }
 
-Nullable<DateTime> DataRow::ValueAsDateTime(const string& columnName) const
+Nullable<DateTime> DataRow::ValueAsDateTime(const string& columnName)
 {
     return ValueAsDateTime(GetColumnIndex(columnName));
 }
@@ -355,12 +651,12 @@ void DataRow::SetDateTimeValue(const string& columnName, const Nullable<DateTime
     SetDateTimeValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<float32_t> DataRow::ValueAsSingle(int32_t columnIndex) const
+Nullable<float32_t> DataRow::ValueAsSingle(int32_t columnIndex)
 {
     return GetValue<float32_t>(columnIndex, DataType::Single);
 }
 
-Nullable<float32_t> DataRow::ValueAsSingle(const string& columnName) const
+Nullable<float32_t> DataRow::ValueAsSingle(const string& columnName)
 {
     return ValueAsSingle(GetColumnIndex(columnName));
 }
@@ -375,12 +671,12 @@ void DataRow::SetSingleValue(const string& columnName, const Nullable<float32_t>
     SetSingleValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<float64_t> DataRow::ValueAsDouble(int32_t columnIndex) const
+Nullable<float64_t> DataRow::ValueAsDouble(int32_t columnIndex)
 {
     return GetValue<float64_t>(columnIndex, DataType::Double);
 }
 
-Nullable<float64_t> DataRow::ValueAsDouble(const string& columnName) const
+Nullable<float64_t> DataRow::ValueAsDouble(const string& columnName)
 {
     return ValueAsDouble(GetColumnIndex(columnName));
 }
@@ -395,10 +691,13 @@ void DataRow::SetDoubleValue(const string& columnName, const Nullable<float64_t>
     SetDoubleValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<decimal_t> DataRow::ValueAsDecimal(int32_t columnIndex) const
+Nullable<decimal_t> DataRow::ValueAsDecimal(int32_t columnIndex)
 {
-    ValidateColumnType(columnIndex, DataType::Decimal, true);
- 
+    const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Decimal, true);
+
+    if (column->Computed())
+        return Cast<decimal_t>(GetComputedValue(column, DataType::Decimal));
+
     const char* value = static_cast<const char*>(m_values[columnIndex]);
 
     if (value)
@@ -407,7 +706,7 @@ Nullable<decimal_t> DataRow::ValueAsDecimal(int32_t columnIndex) const
     return nullptr;
 }
 
-Nullable<decimal_t> DataRow::ValueAsDecimal(const string& columnName) const
+Nullable<decimal_t> DataRow::ValueAsDecimal(const string& columnName)
 {
     return ValueAsDecimal(GetColumnIndex(columnName));
 }
@@ -437,9 +736,12 @@ void DataRow::SetDecimalValue(const string& columnName, const Nullable<decimal_t
     SetDecimalValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<GSF::Guid> DataRow::ValueAsGuid(int32_t columnIndex) const
+Nullable<GSF::Guid> DataRow::ValueAsGuid(int32_t columnIndex)
 {
-    ValidateColumnType(columnIndex, DataType::Guid, true);
+    const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Guid, true);
+
+    if (column->Computed())
+        return Cast<GSF::Guid>(GetComputedValue(column, DataType::Guid));
 
     int8_t* data = static_cast<int8_t*>(m_values[columnIndex]);
 
@@ -453,7 +755,7 @@ Nullable<GSF::Guid> DataRow::ValueAsGuid(int32_t columnIndex) const
     return nullptr;
 }
 
-Nullable<GSF::Guid> DataRow::ValueAsGuid(const string& columnName) const
+Nullable<GSF::Guid> DataRow::ValueAsGuid(const string& columnName)
 {
     return ValueAsGuid(GetColumnIndex(columnName));
 }
@@ -479,12 +781,12 @@ void DataRow::SetGuidValue(const string& columnName, const Nullable<GSF::Guid>& 
     SetGuidValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<int8_t> DataRow::ValueAsInt8(int32_t columnIndex) const
+Nullable<int8_t> DataRow::ValueAsInt8(int32_t columnIndex)
 {
     return GetValue<int8_t>(columnIndex, DataType::Int8);
 }
 
-Nullable<int8_t> DataRow::ValueAsInt8(const string& columnName) const
+Nullable<int8_t> DataRow::ValueAsInt8(const string& columnName)
 {
     return ValueAsInt8(GetColumnIndex(columnName));
 }
@@ -499,12 +801,12 @@ void DataRow::SetInt8Value(const string& columnName, const Nullable<int8_t>& val
     SetInt8Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<int16_t> DataRow::ValueAsInt16(int32_t columnIndex) const
+Nullable<int16_t> DataRow::ValueAsInt16(int32_t columnIndex)
 {
     return GetValue<int16_t>(columnIndex, DataType::Int16);
 }
 
-Nullable<int16_t> DataRow::ValueAsInt16(const string& columnName) const
+Nullable<int16_t> DataRow::ValueAsInt16(const string& columnName)
 {
     return ValueAsInt16(GetColumnIndex(columnName));
 }
@@ -519,12 +821,12 @@ void DataRow::SetInt16Value(const string& columnName, const Nullable<int16_t>& v
     SetInt16Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<int32_t> DataRow::ValueAsInt32(int32_t columnIndex) const
+Nullable<int32_t> DataRow::ValueAsInt32(int32_t columnIndex)
 {
     return GetValue<int32_t>(columnIndex, DataType::Int32);
 }
 
-Nullable<int32_t> DataRow::ValueAsInt32(const string& columnName) const
+Nullable<int32_t> DataRow::ValueAsInt32(const string& columnName)
 {
     return ValueAsInt32(GetColumnIndex(columnName));
 }
@@ -539,12 +841,12 @@ void DataRow::SetInt32Value(const string& columnName, const Nullable<int32_t>& v
     SetInt32Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<int64_t> DataRow::ValueAsInt64(int32_t columnIndex) const
+Nullable<int64_t> DataRow::ValueAsInt64(int32_t columnIndex)
 {
     return GetValue<int64_t>(columnIndex, DataType::Int64);
 }
 
-Nullable<int64_t> DataRow::ValueAsInt64(const string& columnName) const
+Nullable<int64_t> DataRow::ValueAsInt64(const string& columnName)
 {
     return ValueAsInt64(GetColumnIndex(columnName));
 }
@@ -559,12 +861,12 @@ void DataRow::SetInt64Value(const string& columnName, const Nullable<int64_t>& v
     SetInt64Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint8_t> DataRow::ValueAsUInt8(int32_t columnIndex) const
+Nullable<uint8_t> DataRow::ValueAsUInt8(int32_t columnIndex)
 {
     return GetValue<uint8_t>(columnIndex, DataType::UInt8);
 }
 
-Nullable<uint8_t> DataRow::ValueAsUInt8(const string& columnName) const
+Nullable<uint8_t> DataRow::ValueAsUInt8(const string& columnName)
 {
     return ValueAsUInt8(GetColumnIndex(columnName));
 }
@@ -579,12 +881,12 @@ void DataRow::SetUInt8Value(const string& columnName, const Nullable<uint8_t>& v
     SetUInt8Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint16_t> DataRow::ValueAsUInt16(int32_t columnIndex) const
+Nullable<uint16_t> DataRow::ValueAsUInt16(int32_t columnIndex)
 {
     return GetValue<uint16_t>(columnIndex, DataType::UInt16);
 }
 
-Nullable<uint16_t> DataRow::ValueAsUInt16(const string& columnName) const
+Nullable<uint16_t> DataRow::ValueAsUInt16(const string& columnName)
 {
     return ValueAsUInt16(GetColumnIndex(columnName));
 }
@@ -599,12 +901,12 @@ void DataRow::SetUInt16Value(const string& columnName, const Nullable<uint16_t>&
     SetUInt16Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint32_t> DataRow::ValueAsUInt32(int32_t columnIndex) const
+Nullable<uint32_t> DataRow::ValueAsUInt32(int32_t columnIndex)
 {
     return GetValue<uint32_t>(columnIndex, DataType::UInt32);
 }
 
-Nullable<uint32_t> DataRow::ValueAsUInt32(const string& columnName) const
+Nullable<uint32_t> DataRow::ValueAsUInt32(const string& columnName)
 {
     return ValueAsUInt32(GetColumnIndex(columnName));
 }
@@ -619,12 +921,12 @@ void DataRow::SetUInt32Value(const string& columnName, const Nullable<uint32_t>&
     SetUInt32Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint64_t> DataRow::ValueAsUInt64(int32_t columnIndex) const
+Nullable<uint64_t> DataRow::ValueAsUInt64(int32_t columnIndex)
 {
     return GetValue<uint64_t>(columnIndex, DataType::UInt64);
 }
 
-Nullable<uint64_t> DataRow::ValueAsUInt64(const string& columnName) const
+Nullable<uint64_t> DataRow::ValueAsUInt64(const string& columnName)
 {
     return ValueAsUInt64(GetColumnIndex(columnName));
 }

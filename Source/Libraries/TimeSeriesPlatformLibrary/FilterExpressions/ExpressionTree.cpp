@@ -2973,7 +2973,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0;
+                    targetValue = value == 0LL;
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = static_cast<int32_t>(value);
@@ -3074,7 +3074,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else if (GSF::IsEqual(value, "false") || GSF::IsEqual(value, "0"))
                         targetValue = false;
                     else
-                        throw ExpressionTreeException("\"String\" value not recognized as a valid \"Boolean\"");
+                        throw ExpressionTreeException("\"String\" value \"" + value + "\" not recognized as a valid \"Boolean\"");
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = stoi(value);
@@ -3104,15 +3104,13 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionValueType::Guid:
         {
-            const Guid value = sourceValue->ValueAsGuid();
-
             switch (targetValueType)
             {
                 case ExpressionValueType::String:
-                    targetValue = ToString(value);
+                    targetValue = sourceValue->ToString();
                     break;
                 case ExpressionValueType::Guid:
-                    targetValue = value;
+                    targetValue = sourceValue->ValueAsGuid();
                     break;
                 case ExpressionValueType::Boolean:
                 case ExpressionValueType::Int32:
@@ -3128,33 +3126,34 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionValueType::DateTime:
         {
-            const DateTime value = sourceValue->ValueAsDateTime();
+            const DateTime result = sourceValue->ValueAsDateTime();
+            const time_t value = to_time_t(result);
 
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = to_time_t(value) == 0;
+                    targetValue = value == 0;
                     break;
                 case ExpressionValueType::Int32:
-                    targetValue = static_cast<int32_t>(to_time_t(value));
+                    targetValue = static_cast<int32_t>(value);
                     break;
                 case ExpressionValueType::Int64:
-                    targetValue = static_cast<int64_t>(to_time_t(value));
+                    targetValue = static_cast<int64_t>(value);
                     break;
                 case ExpressionValueType::Decimal:
-                    targetValue = static_cast<decimal_t>(to_time_t(value));
+                    targetValue = static_cast<decimal_t>(value);
                     break;
                 case ExpressionValueType::Double:
-                    targetValue = static_cast<float64_t>(to_time_t(value));
+                    targetValue = static_cast<float64_t>(value);
                     break;
                 case ExpressionValueType::String:
                     targetValue = sourceValue->ToString();
                     break;
+                case ExpressionValueType::DateTime:
+                    targetValue = result;
+                    break;
                 case ExpressionValueType::Guid:
                     throw ExpressionTreeException("Cannot convert \"DateTime\" to \"" + string(EnumName(targetValueType)) + "\"");
-                case ExpressionValueType::DateTime:
-                    targetValue = value;
-                    break;
                 default:
                     throw ExpressionTreeException("Unexpected expression value type encountered");
             }
