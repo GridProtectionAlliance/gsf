@@ -32,7 +32,7 @@ using namespace antlr4;
 using namespace antlr4::tree;
 using namespace boost;
 
-static string ParseStringLiteral(string stringLiteral)  // NOLINT
+static string ParseStringLiteral(string stringLiteral)
 {
     // Remove any surrounding quotes from string, ANTLR grammar already
     // ensures strings starting with quote also ends with one
@@ -99,7 +99,8 @@ FilterExpressionParser::FilterExpressionParser(const string& filterExpression, b
     m_callbackErrorListener(nullptr),
     m_dataSet(nullptr),
     m_trackFilteredSignalIDs(false),
-    m_trackFilteredRows(true)
+    m_trackFilteredRows(true),
+    m_filterExpressionStatementCount(0)
 {
     m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
     m_tokens = new CommonTokenStream(m_lexer);
@@ -128,6 +129,67 @@ void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* reco
     m_parsingExceptionCallback(m_filterExpressionParser, msg);
 }
 
+void FilterExpressionParser::VisitParseTreeNodes()
+{
+    // Create parse tree and visit listener methods
+    ParseTreeWalker walker;
+    const auto parseTree = m_parser->parse();
+    walker.walk(this, parseTree);
+}
+
+void FilterExpressionParser::InitializeSetOperations()
+{
+    // As an optimization, set operations are not engaged until second filter expression statement
+    // is encountered, only then will duplicate results be a concern
+    if (m_trackFilteredRows && m_filteredRowSet.empty() && !m_filteredRows.empty())
+        copy(m_filteredRows.begin(), m_filteredRows.end(), inserter(m_filteredRowSet, m_filteredRowSet.end()));
+
+    if (m_trackFilteredSignalIDs && m_filteredSignalIDSet.empty() && !m_filteredSignalIDs.empty())
+        copy(m_filteredSignalIDs.begin(), m_filteredSignalIDs.end(), inserter(m_filteredSignalIDSet, m_filteredSignalIDSet.end()));
+}
+
+void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, int32_t signalIDColumnIndex)
+{
+    if (m_filterExpressionStatementCount > 1)
+    {
+        // Set operations
+        if (m_trackFilteredRows && m_filteredRowSet.insert(row).second)
+            m_filteredRows.push_back(row);
+
+        if (m_trackFilteredSignalIDs)
+        {
+            const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+
+            if (signalIDField.HasValue())
+            {
+                const GSF::Guid signalID = signalIDField.GetValueOrDefault();
+
+                if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
+                    m_filteredSignalIDs.push_back(signalID);
+            }
+        }
+    }
+    else
+    {
+        // Vector only operations
+        if (m_trackFilteredRows)
+            m_filteredRows.push_back(row);
+
+        if (m_trackFilteredSignalIDs)
+        {
+            const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+
+            if (signalIDField.HasValue())
+            {
+                const GSF::Guid signalID = signalIDField.GetValueOrDefault();
+
+                if (signalID != Empty::Guid)
+                    m_filteredSignalIDs.push_back(signalID);
+            }
+        }
+    }
+}
+
 bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, ExpressionPtr& expression) const
 {
     return TryGetValue<const ParserRuleContext*, ExpressionPtr>(m_expressions, context, expression, nullptr);
@@ -142,61 +204,30 @@ void FilterExpressionParser::AddExpr(const ParserRuleContext* context, const Exp
     m_activeExpressionTree->Root = expression;
 }
 
-void FilterExpressionParser::MapMeasurement(const DataTablePtr& measurements, const int32_t signalIDColumnIndex, const string& columnName, const string& mappingValue)
+void FilterExpressionParser::MapMatchedFieldRow(const DataTablePtr& primaryTable, const string& columnName, const string& matchValue, const int32_t signalIDColumnIndex)
 {
-    const DataColumnPtr& column = measurements->Column(columnName);
+    const DataColumnPtr& column = primaryTable->Column(columnName);
 
     if (column == nullptr)
         return;
 
     const int32_t columnIndex = column->Index();
 
-    for (int32_t i = 0; i < measurements->RowCount(); i++)
+    for (int32_t i = 0; i < primaryTable->RowCount(); i++)
     {
-        const DataRowPtr& row = measurements->Row(i);
+        const DataRowPtr& row = primaryTable->Row(i);
 
         if (row)
         {
             const Nullable<string> field = row->ValueAsString(columnIndex);
 
-            if (field.HasValue() && IsEqual(mappingValue, field.GetValueOrDefault()))
+            if (field.HasValue() && IsEqual(matchValue, field.GetValueOrDefault()))
             {
-                if (m_trackFilteredSignalIDs)
-                {
-                    const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
-
-                    if (signalIDField.HasValue())
-                    {
-                        const GSF::Guid& signalID = signalIDField.GetValueOrDefault();
-
-                        if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
-                        {
-                            m_filteredSignalIDs.push_back(signalID);
-
-                            // TODO: Should filtered rows be subject to signal ID limits? ID could be empty, still want row?
-                            if (m_trackFilteredRows)
-                                m_filteredRows.push_back(row);
-
-                            return;
-                        }
-                    }
-                }
-                else if (m_trackFilteredRows)
-                {
-                    // TODO: Multiple filter expressions could duplicate rows, should an unordered_set be used??
-                    m_filteredRows.push_back(row);
-                }
+                AddMatchedRow(row, signalIDColumnIndex);
+                return;
             }
         }
     }
-}
-
-void FilterExpressionParser::VisitParseTreeNodes()
-{
-    // Create parse tree and visit listener methods
-    ParseTreeWalker walker;
-    const auto parseTree = m_parser->parse();
-    walker.walk(this, parseTree);
 }
 
 const DataSetPtr& FilterExpressionParser::GetDataSet() const
@@ -269,9 +300,14 @@ void FilterExpressionParser::Evaluate()
     if (m_dataSet == nullptr)
         throw FilterExpressionParserException("Cannot evaluate filter expression, no dataset has been defined");
 
-    m_filteredSignalIDSet.clear();
-    m_filteredSignalIDs.clear();
+    if (!m_trackFilteredRows && !m_trackFilteredSignalIDs)
+        throw FilterExpressionParserException("No use in evaluating filter expression, neither filtered rows nor signal IDs have been set for tracking");
+
+    m_filterExpressionStatementCount = 0;
     m_filteredRows.clear();
+    m_filteredRowSet.clear();
+    m_filteredSignalIDs.clear();
+    m_filteredSignalIDSet.clear();
     m_expressionTrees.clear();
     m_expressions.clear();
 
@@ -281,32 +317,32 @@ void FilterExpressionParser::Evaluate()
     for (size_t x = 0; x < m_expressionTrees.size(); x++)
     {
         const ExpressionTreePtr& expressionTree = m_expressionTrees[x];
-        const DataTablePtr& measurements = expressionTree->Table();
+        const DataTablePtr& table = expressionTree->Table();
         int32_t signalIDColumnIndex = -1;
 
         if (m_trackFilteredSignalIDs)
         {
-            const TableIDFieldsPtr& measurementTableIDFields = GetTableIDFields(measurements->Name());
+            const TableIDFieldsPtr& primaryTableIDFields = GetTableIDFields(table->Name());
 
-            if (measurementTableIDFields == nullptr)
-                throw FilterExpressionParserException("Failed to find ID fields record for measurement table \"" + measurements->Name() + "\"");
+            if (primaryTableIDFields == nullptr)
+                throw FilterExpressionParserException("Failed to find ID fields record for table \"" + table->Name() + "\"");
 
-            const DataColumnPtr& signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
+            const DataColumnPtr& signalIDColumn = table->Column(primaryTableIDFields->SignalIDFieldName);
 
             if (signalIDColumn == nullptr)
-                throw FilterExpressionParserException("Failed to find signal ID field \"" + measurementTableIDFields->SignalIDFieldName + "\" for measurement table \"" + measurements->Name() + "\"");
+                throw FilterExpressionParserException("Failed to find signal ID field \"" + primaryTableIDFields->SignalIDFieldName + "\" for table \"" + table->Name() + "\"");
 
             signalIDColumnIndex = signalIDColumn->Index();
         }
 
         vector<DataRowPtr> matchedRows;
 
-        for (int32_t y = 0; y < measurements->RowCount(); y++)
+        for (int32_t y = 0; y < table->RowCount(); y++)
         {
             if (expressionTree->TopLimit > -1 && static_cast<int32_t>(matchedRows.size()) >= expressionTree->TopLimit)
                 break;
 
-            const DataRowPtr& row = measurements->Row(y);
+            const DataRowPtr& row = table->Row(y);
 
             if (row == nullptr)
                 continue;
@@ -319,24 +355,7 @@ void FilterExpressionParser::Evaluate()
 
             // If final result is Null, i.e., has no value due to Null propagation, treat result as False
             if (resultExpression->ValueAsBoolean())
-            {
-                if (m_trackFilteredSignalIDs)
-                {
-                    Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
-
-                    if (signalIDField.HasValue())
-                    {
-                        const GSF::Guid& signalID = signalIDField.GetValueOrDefault();
-
-                        if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
-                            matchedRows.push_back(row);
-                    }
-                }
-                else
-                {
-                    matchedRows.push_back(row);
-                }
-            }
+                matchedRows.push_back(row);
         }
 
         if (matchedRows.empty())
@@ -433,14 +452,29 @@ void FilterExpressionParser::Evaluate()
         }
 
         for (size_t i = 0; i < matchedRows.size(); i++)
-        {
-            if (m_trackFilteredSignalIDs)
-                m_filteredSignalIDs.push_back(matchedRows[i]->ValueAsGuid(signalIDColumnIndex).GetValueOrDefault());
-
-            if (m_trackFilteredRows)
-                m_filteredRows.push_back(matchedRows[i]);
-        }
+            AddMatchedRow(matchedRows[i], signalIDColumnIndex);
     }
+}
+
+bool FilterExpressionParser::GetTrackFilteredRows() const
+{
+    return m_trackFilteredRows;
+}
+
+void FilterExpressionParser::SetTrackFilteredRows(bool trackFilteredRows)
+{
+    m_trackFilteredRows = trackFilteredRows;
+}
+
+const vector<DataRowPtr>& FilterExpressionParser::FilteredRows() const
+{
+    return m_filteredRows;
+}
+
+const unordered_set<DataRowPtr>& FilterExpressionParser::FilteredRowSet()
+{
+    InitializeSetOperations();
+    return m_filteredRowSet;
 }
 
 bool FilterExpressionParser::GetTrackFilteredSignalIDs() const
@@ -458,24 +492,10 @@ const vector<GSF::Guid>& FilterExpressionParser::FilteredSignalIDs() const
     return m_filteredSignalIDs;
 }
 
-const unordered_set<GSF::Guid>& FilterExpressionParser::FilteredSignalIDSet() const
+const unordered_set<GSF::Guid>& FilterExpressionParser::FilteredSignalIDSet()
 {
+    InitializeSetOperations();
     return m_filteredSignalIDSet;
-}
-
-bool FilterExpressionParser::GetTrackFilteredRows() const
-{
-    return m_trackFilteredRows;
-}
-
-void FilterExpressionParser::SetTrackFilteredRows(bool trackFilteredRows)
-{
-    m_trackFilteredRows = trackFilteredRows;
-}
-
-const vector<DataRowPtr>& FilterExpressionParser::FilteredRows() const
-{
-    return m_filteredRows;
 }
 
 const vector<ExpressionTreePtr>& FilterExpressionParser::GetExpressionTrees()
@@ -499,15 +519,25 @@ void FilterExpressionParser::enterFilterExpressionStatement(FilterExpressionSynt
     // so we track each as an independent expression tree
     m_expressions.clear();
     m_activeExpressionTree = nullptr;
+    m_filterExpressionStatementCount++;
+
+    // Encountering second filter expression statement necessitates the use of set operations
+    // to prevent possible result duplications
+    if (m_filterExpressionStatementCount == 2)
+        InitializeSetOperations();
 }
 
 /*
     filterStatement
-     : K_FILTER ( K_TOP INTEGER_LITERAL )? tableName K_WHERE expression ( K_ORDER K_BY orderingTerm ( ',' orderingTerm )* )?
+     : K_FILTER ( K_TOP topLimit )? tableName K_WHERE expression ( K_ORDER K_BY orderingTerm ( ',' orderingTerm )* )?
+     ;
+
+    topLimit
+     : ( '-' | '+' )? INTEGER_LITERAL
      ;
 
     orderingTerm
-     : columnName ( K_ASC | K_DESC )?
+     : exactMatchModifier? columnName ( K_ASC | K_DESC )?
      ;
  */
 void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext* context)
@@ -533,7 +563,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
             const DataColumnPtr& orderByColumn = table->Column(orderByColumnName);
 
             if (orderByColumn == nullptr)
-                throw FilterExpressionParserException("Failed to find order by field \"" + orderByColumnName + "\" for measurement table \"" + table->Name() + "\"");
+                throw FilterExpressionParserException("Failed to find order by field \"" + orderByColumnName + "\" for table \"" + table->Name() + "\"");
 
             m_activeExpressionTree->OrderByTerms.emplace_back(
                 orderByColumn,
@@ -559,24 +589,34 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
     {
         signalID = ParseGuidLiteral(context->GUID_LITERAL()->getText());
         
-        if (m_trackFilteredSignalIDs && signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
-            m_filteredSignalIDs.push_back(signalID);
+        if (m_trackFilteredSignalIDs && signalID != Empty::Guid)
+        {
+            if (m_filterExpressionStatementCount > 1)
+            {
+                if (m_filteredSignalIDSet.insert(signalID).second)
+                    m_filteredSignalIDs.push_back(signalID);
+            }
+            else
+            {
+                m_filteredSignalIDs.push_back(signalID);
+            }
+        }
 
         if (!m_trackFilteredRows)
             return;
     }
 
-    const DataTablePtr& measurements = m_dataSet->Table(m_primaryTableName);
+    const DataTablePtr& primaryTable = m_dataSet->Table(m_primaryTableName);
 
-    if (measurements == nullptr)
+    if (primaryTable == nullptr)
         return;
 
-    const TableIDFieldsPtr& measurementTableIDFields = GetTableIDFields(m_primaryTableName);
+    const TableIDFieldsPtr& primaryTableIDFields = GetTableIDFields(m_primaryTableName);
 
-    if (measurementTableIDFields == nullptr)
+    if (primaryTableIDFields == nullptr)
         return;
 
-    const DataColumnPtr& signalIDColumn = measurements->Column(measurementTableIDFields->SignalIDFieldName);
+    const DataColumnPtr& signalIDColumn = primaryTable->Column(primaryTableIDFields->SignalIDFieldName);
 
     if (signalIDColumn == nullptr)
         return;
@@ -585,9 +625,10 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
     if (m_trackFilteredRows && signalID != Empty::Guid)
     {
-        for (int32_t i = 0; i < measurements->RowCount(); i++)
+        // Map matching row for manually specified Guid
+        for (int32_t i = 0; i < primaryTable->RowCount(); i++)
         {
-            const DataRowPtr& row = measurements->Row(i);
+            const DataRowPtr& row = primaryTable->Row(i);
 
             if (row)
             {
@@ -595,7 +636,16 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
                 if (signalIDField.HasValue() && signalIDField.GetValueOrDefault() == signalID)
                 {
-                    m_filteredRows.push_back(row);
+                    if (m_filterExpressionStatementCount > 1)
+                    {
+                        if (m_filteredRowSet.insert(row).second)
+                            m_filteredRows.push_back(row);
+                    }
+                    else
+                    {
+                        m_filteredRows.push_back(row);
+                    }
+
                     return;
                 }
             }
@@ -606,12 +656,12 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
     if (context->MEASUREMENT_KEY_LITERAL())
     {
-        MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->MeasurementKeyFieldName, context->MEASUREMENT_KEY_LITERAL()->getText());
+        MapMatchedFieldRow(primaryTable, primaryTableIDFields->MeasurementKeyFieldName, context->MEASUREMENT_KEY_LITERAL()->getText(), signalIDColumnIndex);
         return;
     }
 
     if (context->POINT_TAG_LITERAL())
-        MapMeasurement(measurements, signalIDColumnIndex, measurementTableIDFields->PointTagFieldName, ParsePointTagLiteral(context->POINT_TAG_LITERAL()->getText()));
+        MapMatchedFieldRow(primaryTable, primaryTableIDFields->PointTagFieldName, ParsePointTagLiteral(context->POINT_TAG_LITERAL()->getText()), signalIDColumnIndex);
 }
 
 /*

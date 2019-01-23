@@ -418,7 +418,7 @@ UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr va
 
 ColumnExpression::ColumnExpression(DataColumnPtr dataColumn) :
     Expression(ExpressionType::Column),
-    DataColumn(dataColumn)
+    DataColumn(std::move(dataColumn))
 {
 }
 
@@ -3202,7 +3202,7 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
 }
 
 ExpressionTree::ExpressionTree(DataTablePtr table) :
-    m_table(table),
+    m_table(std::move(table)),
     TopLimit(-1)
 {
 }

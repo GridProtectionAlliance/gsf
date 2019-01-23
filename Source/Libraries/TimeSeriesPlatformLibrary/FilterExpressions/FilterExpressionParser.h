@@ -85,22 +85,27 @@ private:
     FilterExpressionSyntaxParser* m_parser;
     CallbackErrorListener* m_callbackErrorListener;
     GSF::Data::DataSetPtr m_dataSet;
-    ExpressionTreePtr m_activeExpressionTree;
-    bool m_trackFilteredSignalIDs;
-    bool m_trackFilteredRows;
-
     std::string m_primaryTableName;
-    std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
-    std::vector<GSF::Guid> m_filteredSignalIDs;
-    std::vector<GSF::Data::DataRowPtr> m_filteredRows;
-    std::vector<ExpressionTreePtr> m_expressionTrees;
-    std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
     std::map<const std::string, TableIDFieldsPtr> m_tableIDFields;
 
-    bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
-    void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
-    void MapMeasurement(const GSF::Data::DataTablePtr& measurements, int32_t signalIDColumnIndex, const std::string& columnName, const std::string& mappingValue);
+    bool m_trackFilteredSignalIDs;
+    bool m_trackFilteredRows;
+    int32_t m_filterExpressionStatementCount;
+    std::unordered_set<GSF::Data::DataRowPtr> m_filteredRowSet;
+    std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
+    std::vector<GSF::Data::DataRowPtr> m_filteredRows;
+    std::vector<GSF::Guid> m_filteredSignalIDs;
+
+    ExpressionTreePtr m_activeExpressionTree;
+    std::vector<ExpressionTreePtr> m_expressionTrees;
+    std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
+
     void VisitParseTreeNodes();
+    void InitializeSetOperations();
+    inline void AddMatchedRow(const GSF::Data::DataRowPtr& row, int32_t signalIDColumnIndex);
+    inline void MapMatchedFieldRow(const GSF::Data::DataTablePtr& primaryTable, const std::string& columnName, const std::string& matchValue, int32_t signalIDColumnIndex);
+    inline bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
+    inline void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
 public:
     FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     ~FilterExpressionParser();
@@ -119,15 +124,16 @@ public:
     void RegisterParsingExceptionCallback(ParsingExceptionCallback parsingExceptionCallback);
 
     void Evaluate();
-
-    bool GetTrackFilteredSignalIDs() const;
-    void SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs);
-    const std::vector<GSF::Guid>& FilteredSignalIDs() const;
-    const std::unordered_set<GSF::Guid>& FilteredSignalIDSet() const;
     
     bool GetTrackFilteredRows() const;
     void SetTrackFilteredRows(bool trackFilteredRows);
     const std::vector<GSF::Data::DataRowPtr>& FilteredRows() const;
+    const std::unordered_set<GSF::Data::DataRowPtr>& FilteredRowSet();
+
+    bool GetTrackFilteredSignalIDs() const;
+    void SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs);
+    const std::vector<GSF::Guid>& FilteredSignalIDs() const;
+    const std::unordered_set<GSF::Guid>& FilteredSignalIDSet();
 
     const std::vector<ExpressionTreePtr>& GetExpressionTrees();
 

@@ -160,4 +160,17 @@ public:
 
 }}
 
+// Setup standard hash code for DataRowPtr
+namespace std  // NOLINT
+{
+    template<>
+    struct hash<GSF::Data::DataRowPtr>
+    {
+        size_t operator () (const GSF::Data::DataRowPtr& dataRow) const
+        {
+            return boost::hash<GSF::Data::DataRowPtr>()(dataRow);
+        }
+    };
+}
+
 #endif
