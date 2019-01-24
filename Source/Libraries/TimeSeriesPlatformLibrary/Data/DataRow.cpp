@@ -328,10 +328,10 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
                     case DataType::String:
                         return value;
                     case DataType::Boolean:
-                        if (IsEqual(value, "true") || IsEqual(value, "1"))
+                        if (IsEqual(value, "true") || IsEqual(value, "1", false))
                             return true;
                         
-                        if (IsEqual(value, "false") || IsEqual(value, "0"))
+                        if (IsEqual(value, "false") || IsEqual(value, "0", false))
                             return false;
                         
                         throw DataSetException("Cannot convert \"String\" expression value \"" + value + "\" to \"Boolean\" column");
@@ -463,6 +463,9 @@ void DataRow::SetValue(int32_t columnIndex, const Nullable<T>& value, DataType t
 {
     ValidateColumnType(columnIndex, targetType);
 
+    // Free any existing value on updates
+    free(m_values[columnIndex]);
+
     if (value.HasValue())
     {
         uint8_t* copy = static_cast<uint8_t*>(malloc(sizeof(T)));
@@ -571,6 +574,9 @@ void DataRow::SetStringValue(int32_t columnIndex, const Nullable<string>& value)
 {
     ValidateColumnType(columnIndex, DataType::String);
 
+    // Free any existing value on updates
+    free(m_values[columnIndex]);
+
     if (value.HasValue())
     {
         const string& strval = value.GetValueOrDefault();
@@ -613,6 +619,9 @@ Nullable<bool> DataRow::ValueAsBoolean(const string& columnName)
 void DataRow::SetBooleanValue(int32_t columnIndex, const Nullable<bool>& value)
 {
     ValidateColumnType(columnIndex, DataType::Boolean);
+
+    // Free any existing value on updates
+    free(m_values[columnIndex]);
 
     if (value.HasValue())
     {
@@ -715,6 +724,9 @@ void DataRow::SetDecimalValue(int32_t columnIndex, const Nullable<decimal_t>& va
 {
     ValidateColumnType(columnIndex, DataType::Decimal);
 
+    // Free any existing value on updates
+    free(m_values[columnIndex]);
+
     if (value.HasValue())
     {
         // The boost decimal type has a very complex internal representation,
@@ -763,6 +775,9 @@ Nullable<GSF::Guid> DataRow::ValueAsGuid(const string& columnName)
 void DataRow::SetGuidValue(int32_t columnIndex, const Nullable<GSF::Guid>& value)
 {
     ValidateColumnType(columnIndex, DataType::Guid);
+
+    // Free any existing value on updates
+    free(m_values[columnIndex]);
 
     if (value.HasValue())
     {
