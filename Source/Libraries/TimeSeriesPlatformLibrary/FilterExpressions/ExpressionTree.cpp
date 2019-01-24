@@ -23,7 +23,6 @@
 
 #include "ExpressionTree.h"
 #include <regex>
-#include <utility>
 
 using namespace std;
 using namespace boost::posix_time;

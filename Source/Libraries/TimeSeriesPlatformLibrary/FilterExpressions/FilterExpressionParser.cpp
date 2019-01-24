@@ -601,6 +601,17 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
     if (context->GUID_LITERAL())
     {
         signalID = ParseGuidLiteral(context->GUID_LITERAL()->getText());
+
+        if (!m_trackFilteredRows && !m_trackFilteredSignalIDs)
+        {
+            // Handle edge case of encountering standalone Guid when not tracking rows or table identifiers.
+            // In this scenario the filter expression parser would only be used to generate expression trees
+            // for general expression parsing, e.g., for a DataColumn expression, so here the Guid should be
+            // treated as a literal expression value instead of an identifier to track:
+            enterExpression(nullptr);
+            m_activeExpressionTree->Root = CastSharedPtr<Expression>(NewSharedPtr<ValueExpression>(ExpressionValueType::Guid, signalID));
+            return;
+        }
         
         if (m_trackFilteredSignalIDs && signalID != Empty::Guid)
         {

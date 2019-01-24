@@ -1400,6 +1400,13 @@ int main(int argc, char* argv[])
     assert(valueExpression->ValueAsInt32() == 32);
     cout << "Test " << ++test << " succeeded..." << endl;
 
+    // Test 146 - test edge case of evaluating standalone Guid not used as a row identifier
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, ToString(freqID));
+
+    assert(valueExpression->ValueType == ExpressionValueType::Guid);
+    assert(valueExpression->ValueAsGuid() == freqID);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
     string line;
