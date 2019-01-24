@@ -296,6 +296,7 @@ namespace GSF
     struct Empty
     {
         static const std::string String;
+        static const GSF::DateTime DateTime;
         static const GSF::Guid Guid;
         static const GSF::Object Object;
         static const GSF::IPAddress IPAddress;

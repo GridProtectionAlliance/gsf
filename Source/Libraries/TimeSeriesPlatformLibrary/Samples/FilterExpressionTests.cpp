@@ -631,7 +631,7 @@ int main(int argc, char* argv[])
         assert(dataSet->Table("MeasurementDetail")->RowCount() > 0);
 
         assert(dataSet->Table("DeviceDetail"));
-        assert(dataSet->Table("DeviceDetail")->ColumnCount() == 19);
+        assert(dataSet->Table("DeviceDetail")->ColumnCount() == 19 + i); // Second test adds a computed column
         assert(dataSet->Table("DeviceDetail")->Column("Acronym"));
         assert(dataSet->Table("DeviceDetail")->Column("Acronym")->Type() == DataType::String);
         assert(dataSet->Table("DeviceDetail")->Column("Name"));
@@ -1391,6 +1391,13 @@ int main(int argc, char* argv[])
 
     assert(valueExpression->ValueType == ExpressionValueType::Int32);
     assert(valueExpression->ValueAsInt32() == 38);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 145 - test computed column with expression defined in schema
+    valueExpression = FilterExpressionParser::Evaluate(dataRow, "ComputedCol");
+
+    assert(valueExpression->ValueType == ExpressionValueType::Int32);
+    assert(valueExpression->ValueAsInt32() == 32);
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.

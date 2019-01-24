@@ -45,13 +45,15 @@ const decimal_t Decimal::DotNetMaxValue = decimal_t("792281625142643375935439503
 
 const decimal_t Decimal::DotNetMinValue = decimal_t("-79228162514264337593543950335");
 
-const string Empty::String;
+const string Empty::String{};
+
+const DateTime Empty::DateTime{};
 
 const Guid Empty::Guid = NilGuidGen();
 
 const Object Empty::Object(nullptr);
 
-const IPAddress Empty::IPAddress;
+const IPAddress Empty::IPAddress{};
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
 

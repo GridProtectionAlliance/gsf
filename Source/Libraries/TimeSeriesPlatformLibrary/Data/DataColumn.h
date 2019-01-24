@@ -71,7 +71,7 @@ private:
     int32_t m_index;
 
 public:
-    DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string {});
+    DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string{});
     ~DataColumn();
 
     const DataTablePtr& Parent() const;

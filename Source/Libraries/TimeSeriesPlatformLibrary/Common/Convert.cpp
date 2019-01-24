@@ -44,9 +44,9 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     if (dateTimeParts.empty() || dateTimeParts.size() > 2)
         return timestamp;
 
-    string updatedTimestamp {};
+    string updatedTimestamp{};
     string& datePart = dateTimeParts[0];
-    string part {};
+    string part{};
     vector<string> dateParts = Split(Replace(datePart, "/", "-", false), "-", false);
 
     if (dateParts.size() != 3)
@@ -86,7 +86,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     // Remove any time zone offset and hold on to it for later
     const bool containsMinus = Contains(timePart, "-", false);
     vector<string> timeParts = Split(timePart, containsMinus ? "-" : "+", false);
-    string timeZoneOffset {};
+    string timeZoneOffset{};
 
     if (timeParts.size() == 2)
     {
@@ -109,7 +109,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
 
     for (int32_t i = 0; i < 3; i++)
     {
-        string fractionalSeconds {};
+        string fractionalSeconds{};
         part = timeParts[i];
 
         if (i == 2 && Contains(part, ".", false))
@@ -319,7 +319,7 @@ bool GSF::TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsU
 
     for (int32_t i = 0; i < formatsCount; i++)
     {
-        time_duration utcOffset {};
+        time_duration utcOffset{};
         istringstream stream(PreparseTimestamp(time, utcOffset));
 
         stream.imbue(formats[i]);

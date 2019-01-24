@@ -148,12 +148,15 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
     if (!StartsWith(schemaNode.name(), schemaPrefix, false))
         throw DataSetException("Failed to parse dataset XML: schema node \"" + string(schemaNode.name()) + "\" prefix is not \"" + schemaPrefix + "\"");
 
-    string extDataTypeAttributeName{};
+    string extDataTypeAttributeName{}, extExpressionAttributeName{};
 
     if (!extSchemaDataPrefix.empty())
+    {
         extDataTypeAttributeName = extSchemaDataPrefix + "DataType";
+        extExpressionAttributeName = extSchemaDataPrefix + "Expression";
+    }
 
-    xml_attribute nameAttribute, typeAttribute, extDataTypeAttribute;
+    xml_attribute nameAttribute, typeAttribute, extDataTypeAttribute, extExpressionAttribute;
 
     // Find element node
     xml_node elementNode;
@@ -272,21 +275,31 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
             if (StartsWith(typeName, schemaPrefix))
                 typeName = typeName.substr(schemaPrefix.size());
 
-            string extDataTypeName{};
+            string extDataType{};
 
             if (!extDataTypeAttributeName.empty())
             {
                 extDataTypeAttribute = node.attribute(extDataTypeAttributeName.c_str());
 
                 if (extDataTypeAttribute)
-                    extDataTypeName = extDataTypeAttribute.value();
+                    extDataType = extDataTypeAttribute.value();
+            }
+
+            string columnExpression{};
+
+            if (!extExpressionAttributeName.empty())
+            {
+                extExpressionAttribute = node.attribute(extExpressionAttributeName.c_str());
+
+                if (extExpressionAttribute)
+                    columnExpression = extExpressionAttribute.value();
             }
 
             DataType columnDataType;
 
             if (IsEqual(typeName, "string", false))
             {
-                if (!extDataTypeName.empty() && StartsWith(extDataTypeName, "System.Guid", false))
+                if (!extDataType.empty() && StartsWith(extDataType, "System.Guid", false))
                     columnDataType = DataType::Guid;
                 else
                     columnDataType = DataType::String;
@@ -351,7 +364,7 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
             }
 
             // Create column 
-            const DataColumnPtr dataColumn = dataTable->CreateColumn(columnName, columnDataType);
+            const DataColumnPtr dataColumn = dataTable->CreateColumn(columnName, columnDataType, columnExpression);
             dataTable->AddColumn(dataColumn);
         }
 
@@ -389,7 +402,7 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
                     break;
                 case DataType::DateTime:
                     if (value.empty())
-                        dataRow->SetNullValue(index);
+                        dataRow->SetDateTimeValue(index, Empty::DateTime);
                     else
                         dataRow->SetDateTimeValue(index, ParseTimestamp(value.as_string()));
                     break;
@@ -407,7 +420,7 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
                     break;
                 case DataType::Guid:
                     if (value.empty())
-                        dataRow->SetNullValue(index);
+                        dataRow->SetGuidValue(index, Empty::Guid);
                     else
                         dataRow->SetGuidValue(index, ParseGuid(value.as_string()));
                     break;

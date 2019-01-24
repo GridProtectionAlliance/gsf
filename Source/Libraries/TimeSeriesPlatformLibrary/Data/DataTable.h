@@ -70,7 +70,7 @@ public:
 
     const DataColumnPtr& operator[](int32_t index) const;
 
-    DataColumnPtr CreateColumn(const std::string& name, DataType type);
+    DataColumnPtr CreateColumn(const std::string& name, DataType type, std::string expression = std::string{});
 
     int32_t ColumnCount() const;
 
