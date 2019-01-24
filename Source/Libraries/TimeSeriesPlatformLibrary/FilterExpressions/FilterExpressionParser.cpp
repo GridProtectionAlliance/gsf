@@ -98,8 +98,8 @@ FilterExpressionParser::FilterExpressionParser(const string& filterExpression, b
     m_inputStream(filterExpression),
     m_callbackErrorListener(nullptr),
     m_dataSet(nullptr),
-    m_trackFilteredSignalIDs(false),
     m_trackFilteredRows(true),
+    m_trackFilteredSignalIDs(false),
     m_filterExpressionStatementCount(0)
 {
     m_lexer = new FilterExpressionSyntaxLexer(&m_inputStream);
@@ -203,20 +203,6 @@ void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, int
     }
 }
 
-bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, ExpressionPtr& expression) const
-{
-    return TryGetValue<const ParserRuleContext*, ExpressionPtr>(m_expressions, context, expression, nullptr);
-}
-
-void FilterExpressionParser::AddExpr(const ParserRuleContext* context, const ExpressionPtr& expression)
-{
-    // Track expression in parser rule context map
-    m_expressions.insert(pair<const ParserRuleContext*, ExpressionPtr>(context, expression));
-
-    // Update active expression tree root
-    m_activeExpressionTree->Root = expression;
-}
-
 void FilterExpressionParser::MapMatchedFieldRow(const DataTablePtr& primaryTable, const string& columnName, const string& matchValue, const int32_t signalIDColumnIndex)
 {
     const DataColumnPtr& column = primaryTable->Column(columnName);
@@ -241,6 +227,20 @@ void FilterExpressionParser::MapMatchedFieldRow(const DataTablePtr& primaryTable
             }
         }
     }
+}
+
+bool FilterExpressionParser::TryGetExpr(const ParserRuleContext* context, ExpressionPtr& expression) const
+{
+    return TryGetValue<const ParserRuleContext*, ExpressionPtr>(m_expressions, context, expression, nullptr);
+}
+
+void FilterExpressionParser::AddExpr(const ParserRuleContext* context, const ExpressionPtr& expression)
+{
+    // Track expression in parser rule context map
+    m_expressions.insert(pair<const ParserRuleContext*, ExpressionPtr>(context, expression));
+
+    // Update active expression tree root
+    m_activeExpressionTree->Root = expression;
 }
 
 const DataSetPtr& FilterExpressionParser::GetDataSet() const
@@ -1305,7 +1305,6 @@ vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const 
 
     parser->SetDataSet(dataTable->Parent());
     parser->SetPrimaryTableName(dataTable->Name());
-    parser->SetTrackFilteredSignalIDs(false);
     parser->SetTrackFilteredRows(false);
 
     return parser->GetExpressionTrees();
@@ -1332,8 +1331,6 @@ vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable,
 
     parser->SetDataSet(dataTable->Parent());
     parser->SetPrimaryTableName(dataTable->Name());
-    parser->SetTrackFilteredSignalIDs(false);
-    parser->SetTrackFilteredRows(true);
     parser->Evaluate();
 
     return parser->m_filteredRows;

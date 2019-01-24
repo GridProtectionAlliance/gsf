@@ -88,13 +88,15 @@ private:
     std::string m_primaryTableName;
     std::map<const std::string, TableIDFieldsPtr> m_tableIDFields;
 
-    bool m_trackFilteredSignalIDs;
     bool m_trackFilteredRows;
-    int32_t m_filterExpressionStatementCount;
-    std::unordered_set<GSF::Data::DataRowPtr> m_filteredRowSet;
-    std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
     std::vector<GSF::Data::DataRowPtr> m_filteredRows;
+    std::unordered_set<GSF::Data::DataRowPtr> m_filteredRowSet;
+
+    bool m_trackFilteredSignalIDs;
     std::vector<GSF::Guid> m_filteredSignalIDs;
+    std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
+
+    int32_t m_filterExpressionStatementCount;
 
     ExpressionTreePtr m_activeExpressionTree;
     std::vector<ExpressionTreePtr> m_expressionTrees;
