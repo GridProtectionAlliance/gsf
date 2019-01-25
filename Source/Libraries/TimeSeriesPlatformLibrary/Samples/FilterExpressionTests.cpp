@@ -21,9 +21,14 @@
 //
 //******************************************************************************************************
 
+#define BOOST_TEST_MAIN
+
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <iterator>
 #include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "../FilterExpressions/FilterExpressionParser.h"
 #include "../Data/DataSet.h"
@@ -31,6 +36,7 @@
 using namespace std;
 using namespace boost::gregorian;
 using namespace boost::posix_time;
+using namespace boost::filesystem;
 using namespace GSF;
 using namespace GSF::Data;
 using namespace GSF::FilterExpressions;
@@ -58,7 +64,7 @@ void Evaluate(const FilterExpressionParserPtr& parser)
 // Sample application to test the filter expression parser.
 int main(int argc, char* argv[])
 {
-    cout << "Current path: " << boost::filesystem::current_path() << endl << endl;
+    cout << "Current path: " << current_path() << endl << endl;
 
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
     DataTablePtr dataTable = dataSet->CreateTable("ActiveMeasurements");
@@ -583,27 +589,13 @@ int main(int argc, char* argv[])
     for (int32_t i = 0; i < 2; i++)
     {
         // Prep new dataset
-        cout << endl << "Loading XML metadata from \"" << MetadataSampleFileName[i] << "\"..." << endl;
-
-        ifstream metadataStream(MetadataSampleFileName[i], ios::binary);
-        metadataStream >> noskipws;
-        vector<uint8_t> xmlMetadata;
-        CopyStream(metadataStream, xmlMetadata);
-
-        if (xmlMetadata.empty())
-        {
-            cerr << "Failed to load XML metadata from \"" + MetadataSampleFileName[i] + "\"" << endl;
-            return 1;
-        }
-
-        cout << "Loaded " << xmlMetadata.size() << " bytes of data." << endl;
-        cout << "Parsing XML metadata into data set..." << endl;
+        cout << endl << "Loading XML dataset from \"" << MetadataSampleFileName[i] << "\"..." << endl;
 
         dataSet = nullptr;
 
         try
         {
-            dataSet = DataSet::ParseXmlDataSet(xmlMetadata);
+            dataSet = DataSet::FromXml(MetadataSampleFileName[i]);
         }
         catch (const DataSetException& ex)
         {
@@ -1405,6 +1397,21 @@ int main(int argc, char* argv[])
 
     assert(valueExpression->ValueType == ExpressionValueType::Guid);
     assert(valueExpression->ValueAsGuid() == freqID);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 147 - test write then read of XML datasets
+    dataSet->WriteXml("Test.xml");
+
+    DataSetPtr testDataSet = DataSet::FromXml("Test.xml");
+    testDataSet->WriteXml("Test2.xml");
+    
+    std::ifstream ifs1("Test.xml");
+    std::ifstream ifs2("Test2.xml");
+
+    std::istream_iterator<char> b1(ifs1), e1;
+    std::istream_iterator<char> b2(ifs2), e2;
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(b1, e1, b2, e2);
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.

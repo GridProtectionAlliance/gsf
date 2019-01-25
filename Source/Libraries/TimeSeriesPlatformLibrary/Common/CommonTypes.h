@@ -270,8 +270,11 @@ namespace GSF
     std::string ToUpper(const std::string& value);
     std::string ToLower(const std::string& value);
     std::string Trim(const std::string& value);
+    std::string Trim(const std::string& value, const std::string& trimValues);
     std::string TrimRight(const std::string& value);
+    std::string TrimRight(const std::string& value, const std::string& trimValues);
     std::string TrimLeft(const std::string& value);
+    std::string TrimLeft(const std::string& value, const std::string& trimValues);
 
     // Handy date/time functions (boost wrappers)
     enum class TimeInterval

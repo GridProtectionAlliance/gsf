@@ -24,10 +24,13 @@
 #ifndef __DATA_SET_H
 #define __DATA_SET_H
 
-#include <map>
-
 #include "../Common/CommonTypes.h"
 #include "DataTable.h"
+
+namespace pugi
+{
+    class xml_document;
+}
 
 namespace GSF {
 namespace Data
@@ -52,11 +55,12 @@ class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
 private:
     std::map<std::string, DataTablePtr> m_tables;
 
+    void ParseXml(const pugi::xml_document& document);
+    void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;
+
 public:
      DataSet();
     ~DataSet();
-
-    typedef void(*TableIteratorHandlerFunction)(const DataTablePtr&, void* userData);
 
     const DataTablePtr& Table(const std::string& tableName) const;
 
@@ -66,18 +70,24 @@ public:
 
     int32_t TableCount() const;
 
-    void IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData);
+    std::vector<std::string> TableNames() const;
+
+    std::vector<DataTablePtr> Tables() const;
 
     bool AddOrUpdateTable(DataTablePtr table);
 
     bool RemoveTable(const std::string& tableName);
 
-    static DataSetPtr ParseXmlDataSet(const std::vector<uint8_t>& xmlDataSet);
+    void ReadXml(const std::string& fileName);
+    void ReadXml(const std::vector<uint8_t>& buffer);
 
-    static std::vector<uint8_t> GenerateXmlDataSet(const DataSetPtr& dataSet, const std::string& dataSetName = "DataSet");
+    void WriteXml(const std::string& fileName, const std::string& dataSetName = "DataSet") const;
+    void WriteXml(std::vector<uint8_t>& buffer, const std::string& dataSetName = "DataSet") const;
+
+    static DataSetPtr FromXml(const std::string& fileName);
+    static DataSetPtr FromXml(const std::vector<uint8_t>& buffer);
 
     static const std::string XmlSchemaNamespace;
-
     static const std::string ExtXmlSchemaDataNamespace;
 };
 

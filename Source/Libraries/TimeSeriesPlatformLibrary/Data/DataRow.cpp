@@ -62,7 +62,7 @@ int32_t DataRow::GetColumnIndex(const string& columnName) const
     return column->Index();
 }
 
-DataColumnPtr DataRow::ValidateColumnType(int32_t columnIndex, DataType targetType, bool read) const
+DataColumnPtr DataRow::ValidateColumnType(const int32_t columnIndex, DataType targetType, bool read) const
 {
     const DataColumnPtr column = m_parent->Column(columnIndex);
 
@@ -443,7 +443,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
 }
 
 template<typename T>
-Nullable<T> DataRow::GetValue(int32_t columnIndex, DataType targetType)
+Nullable<T> DataRow::GetValue(const int32_t columnIndex, DataType targetType)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, targetType, true);
 
@@ -459,7 +459,7 @@ Nullable<T> DataRow::GetValue(int32_t columnIndex, DataType targetType)
 }
 
 template<typename T>
-void DataRow::SetValue(int32_t columnIndex, const Nullable<T>& value, DataType targetType)
+void DataRow::SetValue(const int32_t columnIndex, const Nullable<T>& value, DataType targetType)
 {
     ValidateColumnType(columnIndex, targetType);
 
@@ -483,7 +483,51 @@ const DataTablePtr& DataRow::Parent() const
     return m_parent;
 }
 
-void DataRow::SetNullValue(int32_t columnIndex)
+bool DataRow::IsNull(const int32_t columnIndex)
+{
+    const DataColumnPtr column = m_parent->Column(columnIndex);
+
+    if (column == nullptr)
+        throw DataSetException("Column index " + ToString(columnIndex) + " is out of range for table \"" + m_parent->Name() + "\"");
+
+    switch (column->Type())
+    {
+        case DataType::String:                    
+            return !ValueAsString(columnIndex).HasValue();
+        case DataType::Boolean:
+            return !ValueAsBoolean(columnIndex).HasValue();
+        case DataType::DateTime:
+            return !ValueAsDateTime(columnIndex).HasValue();
+        case DataType::Single:
+            return !ValueAsSingle(columnIndex).HasValue();
+        case DataType::Double:
+            return !ValueAsDouble(columnIndex).HasValue();
+        case DataType::Decimal:
+            return !ValueAsDecimal(columnIndex).HasValue();
+        case DataType::Guid:
+            return !ValueAsGuid(columnIndex).HasValue();
+        case DataType::Int8:
+            return !ValueAsInt8(columnIndex).HasValue();
+        case DataType::Int16:
+            return !ValueAsInt16(columnIndex).HasValue();
+        case DataType::Int32:
+            return !ValueAsInt32(columnIndex).HasValue();
+        case DataType::Int64:
+            return !ValueAsInt64(columnIndex).HasValue();
+        case DataType::UInt8:
+            return !ValueAsUInt8(columnIndex).HasValue();
+        case DataType::UInt16:
+            return !ValueAsUInt16(columnIndex).HasValue();
+        case DataType::UInt32:
+            return !ValueAsUInt32(columnIndex).HasValue();
+        case DataType::UInt64:
+            return !ValueAsUInt64(columnIndex).HasValue();
+        default:
+            throw DataSetException("Unexpected column data type encountered");
+    }
+}
+
+void DataRow::SetNullValue(const int32_t columnIndex)
 {
     const DataColumnPtr column = m_parent->Column(columnIndex);
 
@@ -550,7 +594,7 @@ void DataRow::SetNullValue(const string& columnName)
     SetNullValue(GetColumnIndex(columnName));
 }
 
-Nullable<string> DataRow::ValueAsString(int32_t columnIndex)
+Nullable<string> DataRow::ValueAsString(const int32_t columnIndex)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::String, true);
 
@@ -570,7 +614,7 @@ Nullable<string> DataRow::ValueAsString(const string& columnName)
     return ValueAsString(GetColumnIndex(columnName));
 }
 
-void DataRow::SetStringValue(int32_t columnIndex, const Nullable<string>& value)
+void DataRow::SetStringValue(const int32_t columnIndex, const Nullable<string>& value)
 {
     ValidateColumnType(columnIndex, DataType::String);
 
@@ -596,7 +640,7 @@ void DataRow::SetStringValue(const string& columnName, const Nullable<string>& v
     SetStringValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<bool> DataRow::ValueAsBoolean(int32_t columnIndex)
+Nullable<bool> DataRow::ValueAsBoolean(const int32_t columnIndex)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Boolean, true);
 
@@ -616,7 +660,7 @@ Nullable<bool> DataRow::ValueAsBoolean(const string& columnName)
     return ValueAsBoolean(GetColumnIndex(columnName));
 }
 
-void DataRow::SetBooleanValue(int32_t columnIndex, const Nullable<bool>& value)
+void DataRow::SetBooleanValue(const int32_t columnIndex, const Nullable<bool>& value)
 {
     ValidateColumnType(columnIndex, DataType::Boolean);
 
@@ -640,7 +684,7 @@ void DataRow::SetBooleanValue(const string& columnName, const Nullable<bool>& va
     SetBooleanValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<DateTime> DataRow::ValueAsDateTime(int32_t columnIndex)
+Nullable<DateTime> DataRow::ValueAsDateTime(const int32_t columnIndex)
 {
     return GetValue<DateTime>(columnIndex, DataType::DateTime);
 }
@@ -650,7 +694,7 @@ Nullable<DateTime> DataRow::ValueAsDateTime(const string& columnName)
     return ValueAsDateTime(GetColumnIndex(columnName));
 }
 
-void DataRow::SetDateTimeValue(int32_t columnIndex, const Nullable<DateTime>& value)
+void DataRow::SetDateTimeValue(const int32_t columnIndex, const Nullable<DateTime>& value)
 {
     SetValue<DateTime>(columnIndex, value, DataType::DateTime);
 }
@@ -660,7 +704,7 @@ void DataRow::SetDateTimeValue(const string& columnName, const Nullable<DateTime
     SetDateTimeValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<float32_t> DataRow::ValueAsSingle(int32_t columnIndex)
+Nullable<float32_t> DataRow::ValueAsSingle(const int32_t columnIndex)
 {
     return GetValue<float32_t>(columnIndex, DataType::Single);
 }
@@ -670,7 +714,7 @@ Nullable<float32_t> DataRow::ValueAsSingle(const string& columnName)
     return ValueAsSingle(GetColumnIndex(columnName));
 }
 
-void DataRow::SetSingleValue(int32_t columnIndex, const Nullable<float32_t>& value)
+void DataRow::SetSingleValue(const int32_t columnIndex, const Nullable<float32_t>& value)
 {
     SetValue<float32_t>(columnIndex, value, DataType::Single);
 }
@@ -680,7 +724,7 @@ void DataRow::SetSingleValue(const string& columnName, const Nullable<float32_t>
     SetSingleValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<float64_t> DataRow::ValueAsDouble(int32_t columnIndex)
+Nullable<float64_t> DataRow::ValueAsDouble(const int32_t columnIndex)
 {
     return GetValue<float64_t>(columnIndex, DataType::Double);
 }
@@ -690,7 +734,7 @@ Nullable<float64_t> DataRow::ValueAsDouble(const string& columnName)
     return ValueAsDouble(GetColumnIndex(columnName));
 }
 
-void DataRow::SetDoubleValue(int32_t columnIndex, const Nullable<float64_t>& value)
+void DataRow::SetDoubleValue(const int32_t columnIndex, const Nullable<float64_t>& value)
 {
     SetValue<float64_t>(columnIndex, value, DataType::Double);
 }
@@ -700,7 +744,7 @@ void DataRow::SetDoubleValue(const string& columnName, const Nullable<float64_t>
     SetDoubleValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<decimal_t> DataRow::ValueAsDecimal(int32_t columnIndex)
+Nullable<decimal_t> DataRow::ValueAsDecimal(const int32_t columnIndex)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Decimal, true);
 
@@ -720,7 +764,7 @@ Nullable<decimal_t> DataRow::ValueAsDecimal(const string& columnName)
     return ValueAsDecimal(GetColumnIndex(columnName));
 }
 
-void DataRow::SetDecimalValue(int32_t columnIndex, const Nullable<decimal_t>& value)
+void DataRow::SetDecimalValue(const int32_t columnIndex, const Nullable<decimal_t>& value)
 {
     ValidateColumnType(columnIndex, DataType::Decimal);
 
@@ -748,7 +792,7 @@ void DataRow::SetDecimalValue(const string& columnName, const Nullable<decimal_t
     SetDecimalValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<GSF::Guid> DataRow::ValueAsGuid(int32_t columnIndex)
+Nullable<GSF::Guid> DataRow::ValueAsGuid(const int32_t columnIndex)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Guid, true);
 
@@ -772,7 +816,7 @@ Nullable<GSF::Guid> DataRow::ValueAsGuid(const string& columnName)
     return ValueAsGuid(GetColumnIndex(columnName));
 }
 
-void DataRow::SetGuidValue(int32_t columnIndex, const Nullable<GSF::Guid>& value)
+void DataRow::SetGuidValue(const int32_t columnIndex, const Nullable<GSF::Guid>& value)
 {
     ValidateColumnType(columnIndex, DataType::Guid);
 
@@ -796,7 +840,7 @@ void DataRow::SetGuidValue(const string& columnName, const Nullable<GSF::Guid>& 
     SetGuidValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<int8_t> DataRow::ValueAsInt8(int32_t columnIndex)
+Nullable<int8_t> DataRow::ValueAsInt8(const int32_t columnIndex)
 {
     return GetValue<int8_t>(columnIndex, DataType::Int8);
 }
@@ -806,7 +850,7 @@ Nullable<int8_t> DataRow::ValueAsInt8(const string& columnName)
     return ValueAsInt8(GetColumnIndex(columnName));
 }
 
-void DataRow::SetInt8Value(int32_t columnIndex, const Nullable<int8_t>& value)
+void DataRow::SetInt8Value(const int32_t columnIndex, const Nullable<int8_t>& value)
 {
     SetValue<int8_t>(columnIndex, value, DataType::Int8);
 }
@@ -816,7 +860,7 @@ void DataRow::SetInt8Value(const string& columnName, const Nullable<int8_t>& val
     SetInt8Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<int16_t> DataRow::ValueAsInt16(int32_t columnIndex)
+Nullable<int16_t> DataRow::ValueAsInt16(const int32_t columnIndex)
 {
     return GetValue<int16_t>(columnIndex, DataType::Int16);
 }
@@ -826,7 +870,7 @@ Nullable<int16_t> DataRow::ValueAsInt16(const string& columnName)
     return ValueAsInt16(GetColumnIndex(columnName));
 }
 
-void DataRow::SetInt16Value(int32_t columnIndex, const Nullable<int16_t>& value)
+void DataRow::SetInt16Value(const int32_t columnIndex, const Nullable<int16_t>& value)
 {
     SetValue<int16_t>(columnIndex, value, DataType::Int16);
 }
@@ -836,7 +880,7 @@ void DataRow::SetInt16Value(const string& columnName, const Nullable<int16_t>& v
     SetInt16Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<int32_t> DataRow::ValueAsInt32(int32_t columnIndex)
+Nullable<int32_t> DataRow::ValueAsInt32(const int32_t columnIndex)
 {
     return GetValue<int32_t>(columnIndex, DataType::Int32);
 }
@@ -846,7 +890,7 @@ Nullable<int32_t> DataRow::ValueAsInt32(const string& columnName)
     return ValueAsInt32(GetColumnIndex(columnName));
 }
 
-void DataRow::SetInt32Value(int32_t columnIndex, const Nullable<int32_t>& value)
+void DataRow::SetInt32Value(const int32_t columnIndex, const Nullable<int32_t>& value)
 {
     SetValue<int32_t>(columnIndex, value, DataType::Int32);
 }
@@ -856,7 +900,7 @@ void DataRow::SetInt32Value(const string& columnName, const Nullable<int32_t>& v
     SetInt32Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<int64_t> DataRow::ValueAsInt64(int32_t columnIndex)
+Nullable<int64_t> DataRow::ValueAsInt64(const int32_t columnIndex)
 {
     return GetValue<int64_t>(columnIndex, DataType::Int64);
 }
@@ -866,7 +910,7 @@ Nullable<int64_t> DataRow::ValueAsInt64(const string& columnName)
     return ValueAsInt64(GetColumnIndex(columnName));
 }
 
-void DataRow::SetInt64Value(int32_t columnIndex, const Nullable<int64_t>& value)
+void DataRow::SetInt64Value(const int32_t columnIndex, const Nullable<int64_t>& value)
 {
     SetValue<int64_t>(columnIndex, value, DataType::Int64);
 }
@@ -876,7 +920,7 @@ void DataRow::SetInt64Value(const string& columnName, const Nullable<int64_t>& v
     SetInt64Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint8_t> DataRow::ValueAsUInt8(int32_t columnIndex)
+Nullable<uint8_t> DataRow::ValueAsUInt8(const int32_t columnIndex)
 {
     return GetValue<uint8_t>(columnIndex, DataType::UInt8);
 }
@@ -886,7 +930,7 @@ Nullable<uint8_t> DataRow::ValueAsUInt8(const string& columnName)
     return ValueAsUInt8(GetColumnIndex(columnName));
 }
 
-void DataRow::SetUInt8Value(int32_t columnIndex, const Nullable<uint8_t>& value)
+void DataRow::SetUInt8Value(const int32_t columnIndex, const Nullable<uint8_t>& value)
 {
     SetValue<uint8_t>(columnIndex, value, DataType::UInt8);
 }
@@ -896,7 +940,7 @@ void DataRow::SetUInt8Value(const string& columnName, const Nullable<uint8_t>& v
     SetUInt8Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint16_t> DataRow::ValueAsUInt16(int32_t columnIndex)
+Nullable<uint16_t> DataRow::ValueAsUInt16(const int32_t columnIndex)
 {
     return GetValue<uint16_t>(columnIndex, DataType::UInt16);
 }
@@ -906,7 +950,7 @@ Nullable<uint16_t> DataRow::ValueAsUInt16(const string& columnName)
     return ValueAsUInt16(GetColumnIndex(columnName));
 }
 
-void DataRow::SetUInt16Value(int32_t columnIndex, const Nullable<uint16_t>& value)
+void DataRow::SetUInt16Value(const int32_t columnIndex, const Nullable<uint16_t>& value)
 {
     SetValue<uint16_t>(columnIndex, value, DataType::UInt16);
 }
@@ -916,7 +960,7 @@ void DataRow::SetUInt16Value(const string& columnName, const Nullable<uint16_t>&
     SetUInt16Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint32_t> DataRow::ValueAsUInt32(int32_t columnIndex)
+Nullable<uint32_t> DataRow::ValueAsUInt32(const int32_t columnIndex)
 {
     return GetValue<uint32_t>(columnIndex, DataType::UInt32);
 }
@@ -926,7 +970,7 @@ Nullable<uint32_t> DataRow::ValueAsUInt32(const string& columnName)
     return ValueAsUInt32(GetColumnIndex(columnName));
 }
 
-void DataRow::SetUInt32Value(int32_t columnIndex, const Nullable<uint32_t>& value)
+void DataRow::SetUInt32Value(const int32_t columnIndex, const Nullable<uint32_t>& value)
 {
     SetValue<uint32_t>(columnIndex, value, DataType::UInt32);
 }
@@ -936,7 +980,7 @@ void DataRow::SetUInt32Value(const string& columnName, const Nullable<uint32_t>&
     SetUInt32Value(GetColumnIndex(columnName), value);
 }
 
-Nullable<uint64_t> DataRow::ValueAsUInt64(int32_t columnIndex)
+Nullable<uint64_t> DataRow::ValueAsUInt64(const int32_t columnIndex)
 {
     return GetValue<uint64_t>(columnIndex, DataType::UInt64);
 }
@@ -946,7 +990,7 @@ Nullable<uint64_t> DataRow::ValueAsUInt64(const string& columnName)
     return ValueAsUInt64(GetColumnIndex(columnName));
 }
 
-void DataRow::SetUInt64Value(int32_t columnIndex, const Nullable<uint64_t>& value)
+void DataRow::SetUInt64Value(const int32_t columnIndex, const Nullable<uint64_t>& value)
 {
     SetValue<uint64_t>(columnIndex, value, DataType::UInt64);
 }

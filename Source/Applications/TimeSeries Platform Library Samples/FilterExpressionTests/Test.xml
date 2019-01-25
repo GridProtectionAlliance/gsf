@@ -1,0 +1,1632 @@
+<?xml version="1.0" standalone="yes"?>
+<DataSet>
+  <xs:schema id="DataSet" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ext="urn:schemas-microsoft-com:xml-msdata">
+    <xs:element name="DataSet">
+      <xs:complexType>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="DeviceDetail">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="NodeID" ext:DataType="System.Guid" type="xs:string" minOccurs="0" />
+                <xs:element name="UniqueID" ext:DataType="System.Guid" type="xs:string" minOccurs="0" />
+                <xs:element name="OriginalSource" type="xs:string" minOccurs="0" />
+                <xs:element name="IsConcentrator" type="xs:boolean" minOccurs="0" />
+                <xs:element name="Acronym" type="xs:string" minOccurs="0" />
+                <xs:element name="Name" type="xs:string" minOccurs="0" />
+                <xs:element name="AccessID" type="xs:int" minOccurs="0" />
+                <xs:element name="ParentAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="ProtocolName" type="xs:string" minOccurs="0" />
+                <xs:element name="FramesPerSecond" type="xs:int" minOccurs="0" />
+                <xs:element name="CompanyAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="VendorAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="VendorDeviceName" type="xs:string" minOccurs="0" />
+                <xs:element name="Longitude" type="xs:decimal" minOccurs="0" />
+                <xs:element name="Latitude" type="xs:decimal" minOccurs="0" />
+                <xs:element name="InterconnectionName" type="xs:string" minOccurs="0" />
+                <xs:element name="ContactList" type="xs:string" minOccurs="0" />
+                <xs:element name="Enabled" type="xs:boolean" minOccurs="0" />
+                <xs:element name="UpdatedOn" type="xs:dateTime" minOccurs="0" />
+                <xs:element name="ComputedCol" ext:Expression="aBs(-AccessiD xOR 2+ framespersecond^4 -6)" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="MeasurementDetail">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="DeviceAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="ID" type="xs:string" minOccurs="0" />
+                <xs:element name="SignalID" ext:DataType="System.Guid" type="xs:string" minOccurs="0" />
+                <xs:element name="PointTag" type="xs:string" minOccurs="0" />
+                <xs:element name="SignalReference" type="xs:string" minOccurs="0" />
+                <xs:element name="SignalAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="PhasorSourceIndex" type="xs:int" minOccurs="0" />
+                <xs:element name="Description" type="xs:string" minOccurs="0" />
+                <xs:element name="Internal" type="xs:boolean" minOccurs="0" />
+                <xs:element name="Enabled" type="xs:boolean" minOccurs="0" />
+                <xs:element name="UpdatedOn" type="xs:dateTime" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="PhasorDetail">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="ID" type="xs:int" minOccurs="0" />
+                <xs:element name="DeviceAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="Label" type="xs:string" minOccurs="0" />
+                <xs:element name="Type" type="xs:string" minOccurs="0" />
+                <xs:element name="Phase" type="xs:string" minOccurs="0" />
+                <xs:element name="DestinationPhasorID" type="xs:int" minOccurs="0" />
+                <xs:element name="SourceIndex" type="xs:int" minOccurs="0" />
+                <xs:element name="UpdatedOn" type="xs:dateTime" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="SchemaVersion">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="VersionNumber" type="xs:int" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
+  <DeviceDetail>
+    <NodeID>e7a5235d-cb6f-4864-a96e-a8686f36e599</NodeID>
+    <UniqueID>b9650400-d17c-41df-b974-83a6662afab6</UniqueID>
+    <IsConcentrator>false</IsConcentrator>
+    <Acronym>SHELBY</Acronym>
+    <Name>Shelby</Name>
+    <AccessID>2</AccessID>
+    <ParentAcronym></ParentAcronym>
+    <ProtocolName>IEEE 1344-1995</ProtocolName>
+    <FramesPerSecond>30</FramesPerSecond>
+    <CompanyAcronym>TVA</CompanyAcronym>
+    <VendorAcronym>ABB</VendorAcronym>
+    <VendorDeviceName>ABB-521</VendorDeviceName>
+    <Longitude>-89.8038</Longitude>
+    <Latitude>35.3871</Latitude>
+    <InterconnectionName>Eastern Interconnection</InterconnectionName>
+    <ContactList></ContactList>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.73Z</UpdatedOn>
+  </DeviceDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:31</ID>
+    <SignalID>24a1c8d9-9ca5-488b-921f-00c1e230450c</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST10</PointTag>
+    <SignalReference>SHELBY!IS-ST10</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of configuration changes reported by input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.793Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:87</ID>
+    <SignalID>c571fab4-3eb3-459c-8e41-00f660c6d631</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST25</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST25</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of discarded measurements reported by output stream during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.633Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:63</ID>
+    <SignalID>b72e48e6-edb6-4a6e-a6b4-018e54a7a1e2</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST1</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of discarded measurements reported by output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:16.803Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:93</ID>
+    <SignalID>5a935f6b-88f7-4129-b1d3-04a4b67b8251</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST4</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of bytes sent by the publisher during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.76Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:71</ID>
+    <SignalID>808fb21e-febf-413c-8998-059399a3711d</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST9</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST9</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of frames ahead of schedule reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.137Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:129</ID>
+    <SignalID>ebc90716-d8b5-4b4a-96f5-07ad2c709d48</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST12</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST12</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Average latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.38Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:35</ID>
+    <SignalID>75f43e31-8cc6-45fa-baa2-0c80b7056846</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST14</PointTag>
+    <SignalReference>SHELBY!IS-ST14</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Average latency, in milliseconds, for data received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.95Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:29</ID>
+    <SignalID>3348629a-206b-44c0-999d-0e36da46c841</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST8</PointTag>
+    <SignalReference>SHELBY!IS-ST8</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Boolean value representing if input stream was continually connected during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.727Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:106</ID>
+    <SignalID>bac63f36-2e3d-4749-a736-0fcbd9ab2144</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST4</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average amount of memory used by this process in megabytes.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.967Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:121</ID>
+    <SignalID>a52a393a-4e12-4648-b621-120410339d45</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST4</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of bytes sent by the publisher during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.83Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:84</ID>
+    <SignalID>533b8528-9c54-4e9c-aaa4-14c9203bb790</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST22</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST22</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Minimum latency from output stream, in milliseconds, during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.59Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:103</ID>
+    <SignalID>0616dbae-3f1d-4ed6-a166-176c9dff06c8</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST1</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Percentage of CPU currently used by this process.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.9Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:86</ID>
+    <SignalID>ea192d13-0530-42b0-9dd9-17b260670c80</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST24</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST24</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Average latency from output stream, in milliseconds, during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.617Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:80</ID>
+    <SignalID>a07302ce-16e2-4883-8382-18b428b30149</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST18</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST18</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of bytes sent from the output source during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.463Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:112</ID>
+    <SignalID>46f0fdcb-99b9-47e3-863f-198398a929c9</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST10</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST10</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average amount of IO used by this process in kilobytes per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.23Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:59</ID>
+    <SignalID>aaa646a5-0c7e-4aba-abbe-1a39026ce785</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST10</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST10</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:15.887Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:18</ID>
+    <SignalID>f1319b39-17d0-4df6-8029-1a986d5fc6fd</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST4</PointTag>
+    <SignalReference>SHELBY!PMU-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Number of measurements received from device during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:11.79Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:66</ID>
+    <SignalID>67f006fb-bfbe-4498-b5e1-1c0f68791c81</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST4</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of processed measurements reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:17.517Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:102</ID>
+    <SignalID>1b628c02-11be-47e5-a4db-1c28f40416c6</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST13</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST13</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Total number of seconds publisher has been running.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.857Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:98</ID>
+    <SignalID>519601bc-0a31-4e74-a780-1d1f15423bec</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST9</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST9</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The average number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.807Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:65</ID>
+    <SignalID>5348d289-0b27-4d18-88ea-2003a1dd8504</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST3</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of expected measurements reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:17.247Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:113</ID>
+    <SignalID>53271e32-e7a5-4e89-a420-202872d4d341</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST11</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST11</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Number of IP datagrams (or bytes on Mono) currently sent by this process per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.337Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:41</ID>
+    <SignalID>6f885d53-0d1b-44a7-92e9-238e5d85cd80</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST20</PointTag>
+    <SignalReference>SHELBY!IS-ST20</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of processed measurements reported by the input stream during the lifetime of the input stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.22Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:128</ID>
+    <SignalID>f3ff91f5-b469-442e-88d6-28b3f12be8c1</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST11</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST11</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.267Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:117</ID>
+    <SignalID>58c2b866-ff41-40c9-a4e8-2929922f2bda</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST15</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST15</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Total number of seconds system has been running.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.463Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:67</ID>
+    <SignalID>0adc188e-2410-4a59-b6ae-298583390a51</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST5</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of measurements sorted by arrival reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:17.7Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:76</ID>
+    <SignalID>938d245a-b141-45e0-875a-2b49a55e2215</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST14</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST14</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Average latency, in milliseconds, for data published from output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.397Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:99</ID>
+    <SignalID>c0b72599-8302-469a-aec6-2b514e763444</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST10</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST10</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.817Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:70</ID>
+    <SignalID>139deaaf-c6f6-4fc3-8b6c-34f466da1618</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST8</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST8</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of missed sorts by timeout reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.087Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:36</ID>
+    <SignalID>b2a1a23e-f7ed-491e-809b-36a43391ad6a</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST15</PointTag>
+    <SignalReference>SHELBY!IS-ST15</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Frame rate as defined by input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.983Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:130</ID>
+    <SignalID>db1c9582-759e-425a-b174-39d11be00085</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST13</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST13</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Total number of seconds publisher has been running.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.43Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:125</ID>
+    <SignalID>ac304d0f-a2fd-457a-99d0-3bcfa699b0a5</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST8</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST8</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The maximum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.09Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:127</ID>
+    <SignalID>3c0a76fa-002d-45cd-81df-3ec6b3ec6c2a</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST10</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST10</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.2Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:24</ID>
+    <SignalID>c87db563-9b1e-4999-b98f-43785728479a</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST3</PointTag>
+    <SignalReference>SHELBY!IS-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of frames that were not received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.39Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:44</ID>
+    <SignalID>8e0f64b5-8e12-4f41-810b-4468a9256fa8</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST23</PointTag>
+    <SignalReference>SHELBY!IS-ST23</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for The maximum number of measurements received per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.4Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:122</ID>
+    <SignalID>7c69aa35-146e-48e8-a85f-44ab12031f0d</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST5</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of processed measurements reported by the publisher during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.88Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:33</ID>
+    <SignalID>e50c8b9d-0042-481c-9dc7-4664cb91a318</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST12</PointTag>
+    <SignalReference>SHELBY!IS-ST12</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of configuration frames received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.863Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:12</ID>
+    <SignalID>c635e906-8bfb-486d-901e-46c8e07afdc3</SignalID>
+    <PointTag>TVA_SHELBY-DELL:ABBIH</PointTag>
+    <SignalReference>SHELBY-PA4</SignalReference>
+    <SignalAcronym>IPHA</SignalAcronym>
+    <PhasorSourceIndex>4</PhasorSourceIndex>
+    <Description>Shelby ABB-521 Dell Positive Sequence Current Phase Angle</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.79Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:81</ID>
+    <SignalID>a4b46c39-4d55-468b-89b6-4a19bd72214f</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST19</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST19</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for The minimum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.527Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:32</ID>
+    <SignalID>ece653a2-71ac-4726-9c32-4b164444d1ed</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST11</PointTag>
+    <SignalReference>SHELBY!IS-ST11</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of data frames received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.827Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:64</ID>
+    <SignalID>915e2ea2-b505-4085-9e38-4c086816f4a2</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST2</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of received measurements reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:16.98Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:51</ID>
+    <SignalID>6129026d-1034-42ff-ba22-4daf85aa4f30</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST2</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of clients connected to the command channel of the publisher during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.997Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:114</ID>
+    <SignalID>bef2653d-98e1-46d4-92a3-4dcf622413b1</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST12</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST12</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average number of IP datagrams (or bytes on Mono) sent by this process per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.36Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:6</ID>
+    <SignalID>25355a7b-2a9d-4ef2-99ba-4dd791461379</SignalID>
+    <PointTag>TVA_SHELBY-BUS1:ABBVH</PointTag>
+    <SignalReference>SHELBY-PA1</SignalReference>
+    <SignalAcronym>VPHA</SignalAcronym>
+    <PhasorSourceIndex>1</PhasorSourceIndex>
+    <Description>Shelby ABB-521 500 kV Bus 1 Positive Sequence Voltage Phase Angle</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.78Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:23</ID>
+    <SignalID>e7a79169-1194-40d6-b47a-4e6eca7c3797</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST2</PointTag>
+    <SignalReference>SHELBY!IS-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Timestamp of last received data frame from input stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.32Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:8</ID>
+    <SignalID>96cb33be-f7e4-4dfe-a20a-50976aa507fd</SignalID>
+    <PointTag>TVA_SHELBY-BUS2:ABBVH</PointTag>
+    <SignalReference>SHELBY-PA2</SignalReference>
+    <SignalAcronym>VPHA</SignalAcronym>
+    <PhasorSourceIndex>2</PhasorSourceIndex>
+    <Description>Shelby ABB-521 500 kV Bus 2 Positive Sequence Voltage Phase Angle</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.783Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:105</ID>
+    <SignalID>819e5341-3900-43c7-b48b-57c35d855da5</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST3</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Amount of memory currently used by this process in megabytes.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.937Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:30</ID>
+    <SignalID>7b76b429-3d8c-4b5c-8040-5ec875d82a87</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST9</PointTag>
+    <SignalReference>SHELBY!IS-ST9</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Boolean value representing if input stream has received (or has cached) a configuration frame during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.763Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:10</ID>
+    <SignalID>70e72607-dbbc-458b-9c66-5fd32b447a03</SignalID>
+    <PointTag>TVA_SHELBY-CORD:ABBIH</PointTag>
+    <SignalReference>SHELBY-PA3</SignalReference>
+    <SignalAcronym>IPHA</SignalAcronym>
+    <PhasorSourceIndex>3</PhasorSourceIndex>
+    <Description>Shelby ABB-521 Cordova Positive Sequence Current Phase Angle</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.787Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:126</ID>
+    <SignalID>5fb2adc8-0992-46a4-b964-631b5b849caa</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST9</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST9</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The average number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.15Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:110</ID>
+    <SignalID>6e8c88e7-898f-4913-bff5-65f3c21ad359</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST8</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST8</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average thread lock contention rate in attempts per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.083Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:42</ID>
+    <SignalID>5ade065a-fd8d-49ac-8a26-6833299949de</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST21</PointTag>
+    <SignalReference>SHELBY!IS-ST21</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of bytes received from the input source during the lifetime of the input stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.273Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:39</ID>
+    <SignalID>01b086e7-408e-4866-85ca-69ad593199f7</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST18</PointTag>
+    <SignalReference>SHELBY!IS-ST18</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of data units that were not received at least once from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.127Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:123</ID>
+    <SignalID>42199c24-e385-4d25-ba9e-6ab3a7261a4b</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST6</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of bytes sent by the publisher during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.933Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:16</ID>
+    <SignalID>571b7a65-6919-4ba1-84c3-6c40191f8c71</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST2</PointTag>
+    <SignalReference>SHELBY!PMU-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Number of time quality errors reported by device during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:11.53Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:15</ID>
+    <SignalID>fc8fe07b-aa95-4336-8aae-6d309a1e3a71</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST1</PointTag>
+    <SignalReference>SHELBY!PMU-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Number of data quality errors reported by device during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:11.417Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:74</ID>
+    <SignalID>f9031f5e-0342-4bbc-89f5-6f416c61a470</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST12</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST12</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Minimum latency from output stream, in milliseconds, during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.29Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:72</ID>
+    <SignalID>559a46ce-549c-4a13-b04c-707c8b89a228</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST10</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST10</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of published frames reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.207Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:26</ID>
+    <SignalID>a76ac886-a3c3-4cb1-ad21-7281f4c56942</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST5</PointTag>
+    <SignalReference>SHELBY!IS-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of out-of-order frames received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.59Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:49</ID>
+    <SignalID>10f2bdf4-63ce-472f-88c0-732dfd413052</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST28</PointTag>
+    <SignalReference>SHELBY!IS-ST28</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Total number of seconds input stream has been running.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.62Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:91</ID>
+    <SignalID>47f678ef-570a-46d3-9034-7347854e215a</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST2</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of clients connected to the command channel of the publisher during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.737Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:54</ID>
+    <SignalID>f0b07767-2334-45c3-a824-73b6ba312808</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST5</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of processed measurements reported by the publisher during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:14.42Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:17</ID>
+    <SignalID>7bae65b9-f3f4-443f-a98c-7a4ea3811b48</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST3</PointTag>
+    <SignalReference>SHELBY!PMU-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Number of device errors reported by device during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:11.683Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:111</ID>
+    <SignalID>8dabb646-0656-40fe-b921-7b9666f87cd6</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST9</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST9</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Amount of IO currently used by this process in kilobytes per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.17Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:88</ID>
+    <SignalID>ba0d8c19-fe0b-4a6d-b7df-7c95ac7f23ae</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST26</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST26</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of downsampled measurements reported by the output stream during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.643Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:60</ID>
+    <SignalID>8869c8f9-b27e-416f-8b32-8addff7a21f5</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST11</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST11</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:16.12Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:38</ID>
+    <SignalID>756b9946-7f90-4994-a81d-8bbbc25144b7</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST17</PointTag>
+    <SignalReference>SHELBY!IS-ST17</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Latest actual mean Mbps data rate for data received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.08Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:56</ID>
+    <SignalID>c7d78f5c-8832-42a0-8646-8cccaf60e7ca</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST7</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The minimum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:14.89Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:89</ID>
+    <SignalID>85346ea3-ed57-4140-badf-9005048f5064</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST27</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST27</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Total number of seconds output stream has been running.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.697Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:96</ID>
+    <SignalID>a5c6a29d-5a9b-4291-8366-90211c33a108</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST7</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The minimum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.793Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:73</ID>
+    <SignalID>c6a4a1ed-c3f9-4501-bab9-91170e131f73</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST11</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST11</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Boolean value representing if the output stream was continually connected during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.23Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:95</ID>
+    <SignalID>838fe62e-0b08-4be1-9007-9242ce962fb7</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST6</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of bytes sent by the publisher during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.78Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:124</ID>
+    <SignalID>c316b2dd-31c8-4b15-8799-924476b80a00</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST7</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The minimum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:20.007Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:7</ID>
+    <SignalID>ee130f0f-8c94-414f-b081-9551ffb73753</SignalID>
+    <PointTag>TVA_SHELBY-BUS2:ABBV</PointTag>
+    <SignalReference>SHELBY-PM2</SignalReference>
+    <SignalAcronym>VPHM</SignalAcronym>
+    <PhasorSourceIndex>2</PhasorSourceIndex>
+    <Description>Shelby ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.78Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:20</ID>
+    <SignalID>b7ec02fd-b9e5-4ece-a17c-96e087d9d789</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST6</PointTag>
+    <SignalReference>SHELBY!PMU-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Number of measurements received while device was reporting errors during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.043Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:116</ID>
+    <SignalID>30a8c300-3ac8-47f4-b73f-972efa692d52</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST14</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST14</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average number of IP datagrams (or bytes on Mono) received by this process per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.423Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:34</ID>
+    <SignalID>8809a71e-e859-4ea6-a7be-97ead7b80571</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST13</PointTag>
+    <SignalReference>SHELBY!IS-ST13</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of header frames received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.91Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:90</ID>
+    <SignalID>dc1ab1ae-9c5d-4fb9-a729-9acba390e122</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST1</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Boolean value representing if the publisher was continually connected during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.717Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:27</ID>
+    <SignalID>76044f19-a2f1-40ba-8697-9b64e1c547ea</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST6</PointTag>
+    <SignalReference>SHELBY!IS-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Minimum latency from input stream, in milliseconds, during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.677Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:52</ID>
+    <SignalID>61fccb97-4079-465a-a4a4-9b7115d859f5</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST3</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of processed measurements reported by the publisher during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:14.153Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:14</ID>
+    <SignalID>bcd7aa41-32f1-4d3c-96d5-9e1da2c9469e</SignalID>
+    <PointTag>TVA_SHELBY-LAGO:ABBIH</PointTag>
+    <SignalReference>SHELBY-PA5</SignalReference>
+    <SignalAcronym>IPHA</SignalAcronym>
+    <PhasorSourceIndex>5</PhasorSourceIndex>
+    <Description>Shelby ABB-521 Lagoon Creek Positive Sequence Current Phase Angle</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.797Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:109</ID>
+    <SignalID>e45d742c-e0b5-4d8b-8dbb-9e8494f771f5</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST7</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Current thread lock contention rate in attempts per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.023Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:69</ID>
+    <SignalID>25b803ce-f43d-491a-8293-a5442f3c21b6</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST7</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of downsampled measurements reported by the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:17.993Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:120</ID>
+    <SignalID>8c1ee3d0-7f57-4d92-a9cb-a7c20a312e34</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST3</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of processed measurements reported by the publisher during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.77Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:85</ID>
+    <SignalID>0b45c820-cfe2-41e9-8b16-a8345ce88db2</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST23</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST23</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Maximum latency from output stream, in milliseconds, during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.603Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:94</ID>
+    <SignalID>07641a68-752d-4a3b-b2fe-acc41057ba0e</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST5</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of processed measurements reported by the publisher during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.767Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:79</ID>
+    <SignalID>a7406764-947e-4592-9334-b2bc64d24cb5</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST17</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST17</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of processed measurements reported by the output stream during the lifetime of the output stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.45Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:83</ID>
+    <SignalID>321b4fc9-fd8c-41c7-ac0e-b534e7dc3e9d</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST21</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST21</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for The average number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.573Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:55</ID>
+    <SignalID>bf684304-7207-44b9-a39e-b886f27ca322</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST6</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of bytes sent by the publisher during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:14.643Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:46</ID>
+    <SignalID>3e8e247e-d06a-41f2-a702-bb12e334e7d2</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST25</PointTag>
+    <SignalReference>SHELBY!IS-ST25</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Minimum latency from input stream, in milliseconds, during the lifetime of the input stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.48Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:3</ID>
+    <SignalID>65ac9cf6-ae33-4ece-91b6-bb79343855d5</SignalID>
+    <PointTag>TVA_SHELBY:ABBD1</PointTag>
+    <SignalReference>SHELBY-DV1</SignalReference>
+    <SignalAcronym>DIGI</SignalAcronym>
+    <Description>Shelby ABB-521 Digital Value 1</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.77Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:40</ID>
+    <SignalID>a7499bbb-bc0d-4bd8-8644-bf190f4038ac</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST19</PointTag>
+    <SignalReference>SHELBY!IS-ST19</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of bytes received from the input source during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.167Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:21</ID>
+    <SignalID>3d210859-a0a8-4a38-a86e-bf2d980aecc0</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST7</PointTag>
+    <SignalReference>SHELBY!PMU-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Number of defined measurements (per frame) from device during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.13Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:11</ID>
+    <SignalID>28bbb1fc-3434-48d3-87a8-bf5024c089d5</SignalID>
+    <PointTag>TVA_SHELBY-DELL:ABBI</PointTag>
+    <SignalReference>SHELBY-PM4</SignalReference>
+    <SignalAcronym>IPHM</SignalAcronym>
+    <PhasorSourceIndex>4</PhasorSourceIndex>
+    <Description>Shelby ABB-521 Dell Positive Sequence Current Magnitude</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.79Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:43</ID>
+    <SignalID>fb8b9770-ed3e-4521-bf7e-c26d278a1d95</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST22</PointTag>
+    <SignalReference>SHELBY!IS-ST22</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for The minimum number of measurements received per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.337Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:107</ID>
+    <SignalID>89126127-2d2d-4cc0-ad26-c426e7220c46</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST5</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Number of threads currently used by this process.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.98Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:108</ID>
+    <SignalID>e2c48bf9-0d77-4b2c-982b-c61a7533f30d</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST6</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average number of threads used by this process.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.013Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:5</ID>
+    <SignalID>069c5e29-f78a-46f6-9dff-c92cb4f69371</SignalID>
+    <PointTag>TVA_SHELBY-BUS1:ABBV</PointTag>
+    <SignalReference>SHELBY-PM1</SignalReference>
+    <SignalAcronym>VPHM</SignalAcronym>
+    <PhasorSourceIndex>1</PhasorSourceIndex>
+    <Description>Shelby ABB-521 500 kV Bus 1 Positive Sequence Voltage Magnitude</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.777Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:13</ID>
+    <SignalID>ed6def67-54c4-4e74-af95-c95fa6915fbc</SignalID>
+    <PointTag>TVA_SHELBY-LAGO:ABBI</PointTag>
+    <SignalReference>SHELBY-PM5</SignalReference>
+    <SignalAcronym>IPHM</SignalAcronym>
+    <PhasorSourceIndex>5</PhasorSourceIndex>
+    <Description>Shelby ABB-521 Lagoon Creek Positive Sequence Current Magnitude</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.797Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:28</ID>
+    <SignalID>ca1bc1af-9e11-4226-bee0-caa90fa1e894</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST7</PointTag>
+    <SignalReference>SHELBY!IS-ST7</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Maximum latency from input stream, in milliseconds, during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.7Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:50</ID>
+    <SignalID>31277b4c-7aea-4e4a-84f0-cdb077eccbd0</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST1</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Boolean value representing if the publisher was continually connected during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.917Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:22</ID>
+    <SignalID>be3e89c7-2270-4638-ab07-ce732d324174</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST1</PointTag>
+    <SignalReference>SHELBY!IS-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Total number of frames received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.247Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:78</ID>
+    <SignalID>0ba99f94-fd40-4d42-8b23-cf87a8369d45</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST16</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST16</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of bytes sent from output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.427Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:19</ID>
+    <SignalID>cd094989-3bf9-4f14-8356-d1396a17dc14</SignalID>
+    <PointTag>TVA_SHELBY!PMU:ST5</PointTag>
+    <SignalReference>SHELBY!PMU-ST5</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Device statistic for Expected number of measurements received from device during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:11.903Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:82</ID>
+    <SignalID>f38b53f1-f007-45f4-b56d-d1814744e5a0</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST20</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST20</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for The maximum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.557Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:101</ID>
+    <SignalID>c3aaafab-ef3e-4983-ab2f-d66e36f4be79</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST12</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST12</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Average latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.84Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:47</ID>
+    <SignalID>b931f585-aa65-4fd8-a60f-d9326b8b49f8</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST26</PointTag>
+    <SignalReference>SHELBY!IS-ST26</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Maximum latency from input stream, in milliseconds, during the lifetime of the input stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.52Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:53</ID>
+    <SignalID>adaae555-02f2-426e-b3b6-d9c73c1c3aeb</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST4</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of bytes sent by the publisher during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:14.257Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:118</ID>
+    <SignalID>26536a59-63c1-4eff-a8aa-d9e4cc5b2c0e</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST1</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST1</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Boolean value representing if the publisher was continually connected during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.597Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:4</ID>
+    <SignalID>3647f729-d0ed-4f79-85ad-dae2149cd432</SignalID>
+    <PointTag>TVA_SHELBY:ABBDF</PointTag>
+    <SignalReference>SHELBY-DF</SignalReference>
+    <SignalAcronym>DFDT</SignalAcronym>
+    <Description>Shelby ABB-521 Frequency Delta (dF/dt)</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.773Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:45</ID>
+    <SignalID>39a61233-dc8d-4e5e-8218-dbd7b833ec29</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST24</PointTag>
+    <SignalReference>SHELBY!IS-ST24</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for The average number of measurements received per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.44Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:61</ID>
+    <SignalID>6012ff40-519e-4684-b529-e14f57a3a405</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST12</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST12</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Average latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:16.397Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:75</ID>
+    <SignalID>bdbb8420-cbd4-4d81-a49a-e6ac5872f214</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST13</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST13</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Maximum latency from output stream, in milliseconds, during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.36Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:2</ID>
+    <SignalID>93673c68-d59d-4926-b7e9-e7678f9f66b4</SignalID>
+    <PointTag>TVA_SHELBY:ABBF</PointTag>
+    <SignalReference>SHELBY-FQ</SignalReference>
+    <SignalAcronym>FREQ</SignalAcronym>
+    <Description>Shelby ABB-521 Frequency</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.77Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:92</ID>
+    <SignalID>5454d514-be98-453f-8d8e-e865b6f96396</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST3</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST3</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of processed measurements reported by the publisher during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.74Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:68</ID>
+    <SignalID>390e7e96-ac8d-4f33-8d31-eb48e6159b3c</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST6</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST6</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of published measurements reported by output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:17.857Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:37</ID>
+    <SignalID>b11a1ef0-cd01-4721-87e7-ebf37be26ad0</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST16</PointTag>
+    <SignalReference>SHELBY!IS-ST16</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Latest actual mean frame rate for data received from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.007Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:1</ID>
+    <SignalID>7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255</SignalID>
+    <PointTag>TVA_SHELBY:ABBS</PointTag>
+    <SignalReference>SHELBY-SF</SignalReference>
+    <SignalAcronym>FLAG</SignalAcronym>
+    <Description>Shelby ABB-521 Status Flags</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.763Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:57</ID>
+    <SignalID>d16f950d-78c5-4f75-9a38-f07aba080c8b</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST8</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST8</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The maximum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:15.29Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>PPA:9</ID>
+    <SignalID>34172112-0565-4ad7-b314-f0876d978751</SignalID>
+    <PointTag>TVA_SHELBY-CORD:ABBI</PointTag>
+    <SignalReference>SHELBY-PM3</SignalReference>
+    <SignalAcronym>IPHM</SignalAcronym>
+    <PhasorSourceIndex>3</PhasorSourceIndex>
+    <Description>Shelby ABB-521 Cordova Positive Sequence Current Magnitude</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:00:52.783Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:104</ID>
+    <SignalID>4061efd0-5993-406e-8584-f1c95148806d</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST2</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Average percentage of CPU used by this process.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.923Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:119</ID>
+    <SignalID>99cbfe51-0db3-4a97-bbea-f2745cc5adde</SignalID>
+    <PointTag>GPA_TLS!DATAPUBLISHER!PUB:ST2</PointTag>
+    <SignalReference>TLS!DATAPUBLISHER!PUB-ST2</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Number of clients connected to the command channel of the publisher during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.73Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:58</ID>
+    <SignalID>1bdae3ea-5fc2-4486-806a-f3b9aebcabcd</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST9</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST9</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The average number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:15.63Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:77</ID>
+    <SignalID>b9a1bc89-5d00-448c-8370-f46e03e979bc</SignalID>
+    <PointTag>GPA_TESTSTREAM!OS:ST15</PointTag>
+    <SignalReference>TESTSTREAM!OS-ST15</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>OutputStream statistic for Number of clients connected to the command channel of the output stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.403Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:48</ID>
+    <SignalID>0b00b550-b688-4f70-9a1c-f62098d58848</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST27</PointTag>
+    <SignalReference>SHELBY!IS-ST27</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Average latency, in milliseconds, for data received from input stream during the lifetime of the input stream.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:13.563Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:100</ID>
+    <SignalID>8e4a4dff-cbaf-44ad-867b-fae1dcfbd6fb</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST11</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST11</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.83Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <ID>STAT:25</ID>
+    <SignalID>b9adaed8-3e18-4f7a-af67-fb33ccd1f77c</SignalID>
+    <PointTag>TVA_SHELBY!IS:ST4</PointTag>
+    <SignalReference>SHELBY!IS-ST4</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>InputStream statistic for Number of CRC errors reported from input stream during last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:12.48Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:115</ID>
+    <SignalID>b595842b-6623-40f1-be0c-fca206809a68</SignalID>
+    <PointTag>GPA_DEFAULT!SYSTEM:ST13</PointTag>
+    <SignalReference>DEFAULT!SYSTEM-ST13</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>System statistic for Number of IP datagrams (or bytes on Mono) currently received by this process per second.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:19.39Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:62</ID>
+    <SignalID>a0d8d191-82cf-40be-ac08-fe488515a05d</SignalID>
+    <PointTag>GPA_EXTERNAL!DATAPUBLISHER!PUB:ST13</PointTag>
+    <SignalReference>EXTERNAL!DATAPUBLISHER!PUB-ST13</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for Total number of seconds publisher has been running.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:16.607Z</UpdatedOn>
+  </MeasurementDetail>
+  <MeasurementDetail>
+    <ID>STAT:97</ID>
+    <SignalID>d113d016-0420-4ce1-bd80-fec477d74c4e</SignalID>
+    <PointTag>GPA_INTERNAL!DATAPUBLISHER!PUB:ST8</PointTag>
+    <SignalReference>INTERNAL!DATAPUBLISHER!PUB-ST8</SignalReference>
+    <SignalAcronym>STAT</SignalAcronym>
+    <Description>Publisher statistic for The maximum number of measurements sent per second during the last reporting interval.</Description>
+    <Internal>true</Internal>
+    <Enabled>true</Enabled>
+    <UpdatedOn>2019-01-04T08:01:18.8Z</UpdatedOn>
+  </MeasurementDetail>
+  <PhasorDetail>
+    <ID>1</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>500 kV Bus 1</Label>
+    <Type>V</Type>
+    <Phase>+</Phase>
+    <SourceIndex>1</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.757Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>2</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>500 kV Bus 2</Label>
+    <Type>V</Type>
+    <Phase>+</Phase>
+    <SourceIndex>2</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>3</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>Cordova</Label>
+    <Type>I</Type>
+    <Phase>+</Phase>
+    <SourceIndex>3</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>4</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>Dell</Label>
+    <Type>I</Type>
+    <Phase>+</Phase>
+    <SourceIndex>4</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>5</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>Lagoon Creek</Label>
+    <Type>I</Type>
+    <Phase>+</Phase>
+    <SourceIndex>5</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <SchemaVersion>
+    <VersionNumber>9</VersionNumber>
+  </SchemaVersion>
+</DataSet>

@@ -29,6 +29,26 @@ using namespace pugi;
 using namespace GSF;
 using namespace GSF::Data;
 
+class XMLVectorWriter: public xml_writer
+{
+private:
+    vector<uint8_t>& m_target;
+
+public:
+    XMLVectorWriter(vector<uint8_t>& target) :
+        m_target(target)
+    {
+    }
+
+    void write(const void* data, size_t size) override
+    {
+        const char* chunk = static_cast<const char*>(data);
+
+        for (size_t i = 0; i < size; i++)
+            m_target.push_back(static_cast<uint8_t>(chunk[i]));
+    }
+};
+
 DataSetException::DataSetException(string message) noexcept :
     m_message(move(message))
 {
@@ -72,10 +92,24 @@ int32_t DataSet::TableCount() const
     return m_tables.size();
 }
 
-void DataSet::IterateTables(TableIteratorHandlerFunction iteratorHandler, void* userData)
+vector<string> DataSet::TableNames() const
 {
+    vector<string> tableNames;
+
     for (auto const& item : m_tables)
-        iteratorHandler(item.second, userData);
+        tableNames.push_back(item.first);
+
+    return tableNames;
+}
+
+vector<DataTablePtr> DataSet::Tables() const
+{
+    vector<DataTablePtr> tables;
+
+    for (auto const& item : m_tables)
+        tables.push_back(item.second);
+
+    return tables;
 }
 
 bool DataSet::AddOrUpdateTable(DataTablePtr table)
@@ -89,18 +123,61 @@ bool DataSet::RemoveTable(const string& tableName)
     return m_tables.erase(tableName) > 0;
 }
 
-DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
+void DataSet::ReadXml(const string& fileName)
 {
     xml_document document;
 
-    // Load dataset into an XML parser
-    const xml_parse_result result = document.load_buffer_inplace(const_cast<uint8_t*>(xmlDataSet.data()), xmlDataSet.size());
+    const xml_parse_result result = document.load_file(fileName.c_str());
 
     if (result.status != xml_parse_status::status_ok)
-        throw DataSetException("Failed to parse dataset XML: " + string(result.description()));
+        throw DataSetException("Failed to load XML from file: " + string(result.description()));
 
+    ParseXml(document);
+}
+
+void DataSet::ReadXml(const vector<uint8_t>& buffer)
+{
+    xml_document document;
+
+    const xml_parse_result result = document.load_buffer_inplace(const_cast<uint8_t*>(buffer.data()), buffer.size());
+
+    if (result.status != xml_parse_status::status_ok)
+        throw DataSetException("Failed to load XML from buffer: " + string(result.description()));
+
+    ParseXml(document);
+}
+
+void DataSet::WriteXml(const string& fileName, const string& dataSetName) const
+{
+    xml_document document;    
+    GenerateXml(document, dataSetName);
+    document.save_file(fileName.c_str(), "  ", format_default | format_save_file_text);
+}
+
+void DataSet::WriteXml(vector<uint8_t>& buffer, const string& dataSetName) const
+{
+    xml_document document;
+    XMLVectorWriter writer(buffer);
+    GenerateXml(document, dataSetName);
+    document.save(writer, "  ");
+}
+
+DataSetPtr DataSet::FromXml(const std::string& fileName)
+{
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
+    dataSet->ReadXml(fileName);
+    return dataSet;
+}
 
+DataSetPtr DataSet::FromXml(const std::vector<uint8_t>& buffer)
+{
+    DataSetPtr dataSet = NewSharedPtr<DataSet>();
+    dataSet->ReadXml(buffer);
+    return dataSet;
+}
+
+void DataSet::ParseXml(const xml_document& document)
+{
     // Find root node
     xml_node rootNode = document.document_element();
     const string rootNodeName = string(rootNode.name());
@@ -158,7 +235,7 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
 
     xml_attribute nameAttribute, typeAttribute, extDataTypeAttribute, extExpressionAttribute;
 
-    // Find element node
+    // Find schema element node
     xml_node elementNode;
     const string elementNodeName = schemaPrefix + "element";
 
@@ -241,7 +318,7 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
         if (!IsEqual(sequenceNode.name(), schemaPrefix + "sequence", false))
             continue;
 
-        const DataTablePtr dataTable = NewSharedPtr<DataTable>(dataSet, tableName);
+        const DataTablePtr dataTable = CreateTable(tableName);
 
         // Each sequence node child element node represents a table field definition
         for (xml_node node = sequenceNode.first_child(); node; node = node.next_sibling())
@@ -295,66 +372,66 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
                     columnExpression = extExpressionAttribute.value();
             }
 
-            DataType columnDataType;
+            DataType dataType;
 
             if (IsEqual(typeName, "string", false))
             {
                 if (!extDataType.empty() && StartsWith(extDataType, "System.Guid", false))
-                    columnDataType = DataType::Guid;
+                    dataType = DataType::Guid;
                 else
-                    columnDataType = DataType::String;
+                    dataType = DataType::String;
             }
             else if (IsEqual(typeName, "boolean", false))
             {
-                columnDataType = DataType::Boolean;
+                dataType = DataType::Boolean;
             }
             else if (IsEqual(typeName, "dateTime", false))
             {
-                columnDataType = DataType::DateTime;
+                dataType = DataType::DateTime;
             }
             else if (IsEqual(typeName, "float", false))
             {
-                columnDataType = DataType::Single;
+                dataType = DataType::Single;
             }
             else if (IsEqual(typeName, "double", false))
             {
-                columnDataType = DataType::Double;
+                dataType = DataType::Double;
             }
             else if (IsEqual(typeName, "decimal", false))
             {
-                columnDataType = DataType::Decimal;
+                dataType = DataType::Decimal;
             }
             else if (IsEqual(typeName, "byte", false))
             {
-                columnDataType = DataType::Int8;
+                dataType = DataType::Int8;
             }
             else if (IsEqual(typeName, "short", false))
             {
-                columnDataType = DataType::Int16;
+                dataType = DataType::Int16;
             }
             else if (IsEqual(typeName, "int", false))
             {
-                columnDataType = DataType::Int32;
+                dataType = DataType::Int32;
             }
             else if (IsEqual(typeName, "long", false))
             {
-                columnDataType = DataType::Int64;
+                dataType = DataType::Int64;
             }
             else if (IsEqual(typeName, "unsignedByte", false))
             {
-                columnDataType = DataType::UInt8;
+                dataType = DataType::UInt8;
             }
             else if (IsEqual(typeName, "unsignedShort", false))
             {
-                columnDataType = DataType::UInt16;
+                dataType = DataType::UInt16;
             }
             else if (IsEqual(typeName, "unsignedInt", false))
             {
-                columnDataType = DataType::UInt32;
+                dataType = DataType::UInt32;
             }
             else if (IsEqual(typeName, "unsignedLong", false))
             {
-                columnDataType = DataType::UInt64;
+                dataType = DataType::UInt64;
             }
             else
             {
@@ -364,116 +441,343 @@ DataSetPtr DataSet::ParseXmlDataSet(const vector<uint8_t>& xmlDataSet)
             }
 
             // Create column 
-            const DataColumnPtr dataColumn = dataTable->CreateColumn(columnName, columnDataType, columnExpression);
+            const DataColumnPtr dataColumn = dataTable->CreateColumn(columnName, dataType, columnExpression);
             dataTable->AddColumn(dataColumn);
         }
 
-        dataSet->AddOrUpdateTable(dataTable);
+        AddOrUpdateTable(dataTable);
     }
 
     // Each root node child that matches a table name represents a record
     for (xml_node recordNode = rootNode.first_child(); recordNode; recordNode = recordNode.next_sibling())
     {
-        const DataTablePtr dataTable = dataSet->Table(recordNode.name());
+        const DataTablePtr table = Table(recordNode.name());
 
-        if (dataTable == nullptr)
+        if (table == nullptr)
             continue;
 
-        const DataRowPtr dataRow = dataTable->CreateRow();
+        const DataRowPtr row = table->CreateRow();
 
         // Each record node child represents a field value
         for (xml_node fieldNode = recordNode.first_child(); fieldNode; fieldNode = fieldNode.next_sibling())
         {
-            const DataColumnPtr dataColumn = dataTable->Column(fieldNode.name());
+            const DataColumnPtr column = table->Column(fieldNode.name());
 
-            if (dataColumn == nullptr)
+            if (column == nullptr)
                 continue;
 
-            const int32_t index = dataColumn->Index();
-            const xml_text value = fieldNode.text();
+            const int32_t columnIndex = column->Index();
+            const xml_text nodeText = fieldNode.text();
             
-            switch (dataColumn->Type())
+            switch (column->Type())
             {
                 case DataType::String:                    
-                    dataRow->SetStringValue(index, string(value.as_string("")));
+                    row->SetStringValue(columnIndex, string(nodeText.as_string("")));
                     break;
                 case DataType::Boolean:
-                    dataRow->SetBooleanValue(index, value.as_bool());
+                    row->SetBooleanValue(columnIndex, nodeText.as_bool());
                     break;
                 case DataType::DateTime:
-                    if (value.empty())
-                        dataRow->SetDateTimeValue(index, Empty::DateTime);
+                    if (nodeText.empty())
+                        row->SetDateTimeValue(columnIndex, Empty::DateTime);
                     else
-                        dataRow->SetDateTimeValue(index, ParseTimestamp(value.as_string()));
+                        row->SetDateTimeValue(columnIndex, ParseTimestamp(nodeText.as_string()));
                     break;
                 case DataType::Single:
-                    dataRow->SetSingleValue(index, value.as_float());
+                    row->SetSingleValue(columnIndex, nodeText.as_float());
                     break;
                 case DataType::Double:
-                    dataRow->SetDoubleValue(index, value.as_double());
+                    row->SetDoubleValue(columnIndex, nodeText.as_double());
                     break;
                 case DataType::Decimal:
-                    if (value.empty())
-                        dataRow->SetDecimalValue(index, decimal_t(0));
+                    if (nodeText.empty())
+                        row->SetDecimalValue(columnIndex, decimal_t(0));
                     else
-                        dataRow->SetDecimalValue(index, decimal_t(value.as_string()));
+                        row->SetDecimalValue(columnIndex, decimal_t(nodeText.as_string()));
                     break;
                 case DataType::Guid:
-                    if (value.empty())
-                        dataRow->SetGuidValue(index, Empty::Guid);
+                    if (nodeText.empty())
+                        row->SetGuidValue(columnIndex, Empty::Guid);
                     else
-                        dataRow->SetGuidValue(index, ParseGuid(value.as_string()));
+                        row->SetGuidValue(columnIndex, ParseGuid(nodeText.as_string()));
                     break;
                 case DataType::Int8:
-                    dataRow->SetInt8Value(index, static_cast<int8_t>(value.as_int()));
+                    row->SetInt8Value(columnIndex, static_cast<int8_t>(nodeText.as_int()));
                     break;
                 case DataType::Int16:
-                    dataRow->SetInt16Value(index, static_cast<int16_t>(value.as_int()));
+                    row->SetInt16Value(columnIndex, static_cast<int16_t>(nodeText.as_int()));
                     break;
                 case DataType::Int32:
-                    dataRow->SetInt32Value(index, value.as_int());
+                    row->SetInt32Value(columnIndex, nodeText.as_int());
                     break;
                 case DataType::Int64:
-                    dataRow->SetInt64Value(index, value.as_llong());
+                    row->SetInt64Value(columnIndex, nodeText.as_llong());
                     break;
                 case DataType::UInt8:
-                    dataRow->SetUInt8Value(index, static_cast<uint8_t>(value.as_uint()));
+                    row->SetUInt8Value(columnIndex, static_cast<uint8_t>(nodeText.as_uint()));
                     break;
                 case DataType::UInt16:
-                    dataRow->SetUInt16Value(index, static_cast<uint16_t>(value.as_uint()));
+                    row->SetUInt16Value(columnIndex, static_cast<uint16_t>(nodeText.as_uint()));
                     break;
                 case DataType::UInt32:
-                    dataRow->SetUInt32Value(index, value.as_uint());
+                    row->SetUInt32Value(columnIndex, nodeText.as_uint());
                     break;
                 case DataType::UInt64:
-                    dataRow->SetUInt64Value(index, value.as_ullong());
+                    row->SetUInt64Value(columnIndex, nodeText.as_ullong());
                     break;
                 default:
                     throw DataSetException("Unexpected column data type encountered");
             }
         }
 
-        dataTable->AddRow(dataRow);
+        table->AddRow(row);
     }
-
-    return dataSet;
 }
 
-vector<uint8_t> DataSet::GenerateXmlDataSet(const DataSetPtr& dataSet, const string& dataSetName)
+void DataSet::GenerateXml(xml_document& document, const string& dataSetName) const
 {
-    xml_document document;
     const char* rootNodeName = dataSetName.c_str();
+    const char* schemaNodeName = "xs:schema";
+    const char* elementNodeName = "xs:element";
+    const char* complexNodeName = "xs:complexType";
+    const char* choiceNodeName = "xs:choice";
+    const char* sequenceNodeName = "xs:sequence";
+    const char* extDataTypeAttributeName = "ext:DataType";
+    const char* extExpressionAttributeName = "ext:Expression";
+    const vector<DataTablePtr> tables = Tables();
 
+    // <?xml version="1.0" standalone="yes"?>
+    xml_node declaration = document.prepend_child(node_declaration);
+    declaration.append_attribute("version") = "1.0";
+    declaration.append_attribute("standalone") = "yes";
+
+    // <DataSet>
     xml_node rootNode = document.append_child(rootNodeName);
 
-    // <xs:schema id="DataSet" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ext="urn:schemas-microsoft-com:xml-msdata">
-    xml_node schemaNode = rootNode.append_child("xs:schema");
-
+    //   <xs:schema id="DataSet" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ext="urn:schemas-microsoft-com:xml-msdata">
+    xml_node schemaNode = rootNode.append_child(schemaNodeName);
     schemaNode.append_attribute("id") = rootNodeName;
     schemaNode.append_attribute("xmlns:xs") = XmlSchemaNamespace.c_str();
     schemaNode.append_attribute("xmlns:ext") = ExtXmlSchemaDataNamespace.c_str();
 
-    vector<uint8_t> xmlDataSet;
+    //     <xs:element name="DataSet">
+    xml_node elementNode = schemaNode.append_child(elementNodeName);
+    elementNode.append_attribute("name") = rootNodeName;
 
-    return xmlDataSet;
+    //       <xs:complexType>
+    xml_node complexNode = elementNode.append_child(complexNodeName);
+
+    //         <xs:choice minOccurs="0" maxOccurs="unbounded">
+    xml_node choiceNode = complexNode.append_child(choiceNodeName);
+    choiceNode.append_attribute("minOccurs") = "0";
+    choiceNode.append_attribute("maxOccurs") = "unbounded";
+
+    // Write schema definition for each table
+    for (auto const& table : tables)
+    {
+        //       <xs:element name="TableName">
+        elementNode = choiceNode.append_child(elementNodeName);
+        elementNode.append_attribute("name") = table->Name().c_str();
+
+        //         <xs:complexType>
+        complexNode = elementNode.append_child(complexNodeName);
+
+        //           <xs:sequence>
+        xml_node sequenceNode = complexNode.append_child(sequenceNodeName);
+
+        // Write schema definition for each table field
+        for (int32_t columnIndex = 0; columnIndex < table->ColumnCount(); columnIndex++)
+        {
+            const DataColumnPtr& column = table->Column(columnIndex);
+
+            //         <xs:element name="FieldName" type="xs:string" minOccurs="0" />
+            elementNode = sequenceNode.append_child(elementNodeName);
+            elementNode.append_attribute("name") = column->Name().c_str();
+
+            // Map DataType to XML schema type
+            const char* dataType = [column]()
+            {
+                switch (column->Type())
+                {
+                    case DataType::String:
+                    case DataType::Guid:
+                        return "xs:string";
+                    case DataType::Boolean:
+                        return "xs:boolean";
+                    case DataType::DateTime:
+                        return "xs:dateTime";
+                    case DataType::Single:
+                        return "xs:float";
+                    case DataType::Double:
+                        return "xs:double";
+                    case DataType::Decimal:
+                        return "xs:decimal";
+                    case DataType::Int8:
+                        return "xs:byte";
+                    case DataType::Int16:
+                        return "xs:short";
+                    case DataType::Int32:
+                        return "xs:int";
+                    case DataType::Int64:
+                        return "xs:long";
+                    case DataType::UInt8:
+                        return "xs:unsignedByte";
+                    case DataType::UInt16:
+                        return "xs:unsignedShort";
+                    case DataType::UInt32:
+                        return "xs:unsignedInt";
+                    case DataType::UInt64:
+                        return "xs:unsignedLong";
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }();
+
+            // Guid is an extended schema data type: ext:DataType="System.Guid"
+            if (column->Type() == DataType::Guid)
+                elementNode.append_attribute(extDataTypeAttributeName) = "System.Guid";
+
+            // Computed columns define an expression: ext:Expression="FieldNameA + FieldNameB"
+            if (column->Computed())
+                elementNode.append_attribute(extExpressionAttributeName) = column->Expression().c_str();
+
+            elementNode.append_attribute("type") = dataType;
+            elementNode.append_attribute("minOccurs") = "0";
+        }
+    }
+
+    // Write records for each table
+    for (auto const& table : tables)
+    {
+        const char* tableName = table->Name().c_str();
+
+        for (int32_t rowIndex = 0; rowIndex < table->RowCount(); rowIndex++)
+        {
+            const DataRowPtr& row = table->Row(rowIndex);
+
+            if (row == nullptr)
+                continue;
+
+            xml_node recordNode = rootNode.append_child(tableName);
+
+            for (int32_t columnIndex = 0; columnIndex < table->ColumnCount(); columnIndex++)
+            {
+                // Null records are not written into the XML document
+                if (row->IsNull(columnIndex))
+                    continue;
+
+                const DataColumnPtr& column = table->Column(columnIndex);
+
+                // Computed records are not written into the XML document
+                if (column->Computed())
+                    continue;
+
+                xml_node fieldNode = recordNode.append_child(column->Name().c_str());
+                xml_text nodeText = fieldNode.text();
+
+                switch (column->Type())
+                {
+                    case DataType::String:
+                    {
+                        auto result = row->ValueAsString(columnIndex);
+                        nodeText.set(result.GetValueOrDefault().c_str());
+                        break;
+                    }
+                    case DataType::Boolean:
+                    {
+                        auto result = row->ValueAsBoolean(columnIndex);
+                        nodeText.set(result.GetValueOrDefault() ? "true" : "false");
+                        break;
+                    }
+                    case DataType::DateTime:
+                    {
+                        auto result = row->ValueAsDateTime(columnIndex);
+                        string dateTime = ToString(result.GetValueOrDefault(), "%Y-%m-%dT%H:%M:%S%F");
+
+                        if (Contains(dateTime, ".", false))
+                            dateTime = TrimRight(dateTime, "0");
+
+                        dateTime.append("Z");
+
+                        nodeText.set(dateTime.c_str());
+                        break;
+                    }
+                    case DataType::Single:
+                    {
+                        auto result = row->ValueAsSingle(columnIndex);
+                        nodeText.set(result.GetValueOrDefault());
+                        break;
+                    }
+                    case DataType::Double:
+                    {
+                        auto result = row->ValueAsDouble(columnIndex);
+                        nodeText.set(result.GetValueOrDefault());
+                        break;
+                    }
+                    case DataType::Decimal:
+                    {
+                        auto result = row->ValueAsDecimal(columnIndex);
+                        nodeText.set(result.GetValueOrDefault().str().c_str());
+                        break;
+                    }
+                    case DataType::Guid:
+                    {
+                        auto result = row->ValueAsGuid(columnIndex);
+                        nodeText.set(ToString(result.GetValueOrDefault()).c_str());
+                        break;
+                    }
+                    case DataType::Int8:
+                    {
+                        auto result = row->ValueAsInt8(columnIndex);
+                        nodeText.set(static_cast<int>(result.GetValueOrDefault()));
+                        break;
+                    }
+                    case DataType::Int16:
+                    {
+                        auto result = row->ValueAsInt16(columnIndex);
+                        nodeText.set(static_cast<int>(result.GetValueOrDefault()));
+                        break;
+                    }
+                    case DataType::Int32:
+                    {
+                        auto result = row->ValueAsInt32(columnIndex);
+                        nodeText.set(result.GetValueOrDefault());
+                        break;
+                    }
+                    case DataType::Int64:
+                    {
+                        auto result = row->ValueAsInt64(columnIndex);
+                        nodeText.set(result.GetValueOrDefault());
+                        break;
+                    }
+                    case DataType::UInt8:
+                    {
+                        auto result = row->ValueAsUInt8(columnIndex);
+                        nodeText.set(static_cast<unsigned>(result.GetValueOrDefault()));
+                        break;
+                    }
+                    case DataType::UInt16:
+                    {
+                        auto result = row->ValueAsUInt16(columnIndex);
+                        nodeText.set(static_cast<unsigned>(result.GetValueOrDefault()));
+                        break;
+                    }
+                    case DataType::UInt32:
+                    {
+                        auto result = row->ValueAsUInt32(columnIndex);
+                        nodeText.set(result.GetValueOrDefault());
+                        break;
+                    }
+                    case DataType::UInt64:
+                    {
+                        auto result = row->ValueAsUInt64(columnIndex);
+                        nodeText.set(result.GetValueOrDefault());
+                        break;
+                    }
+                    default:
+                        throw DataSetException("Unexpected column data type encountered");
+                }
+            }
+        }
+    }
 }

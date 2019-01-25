@@ -26,7 +26,8 @@
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/c_local_time_adjustor.hpp>
 #include "Convert.h"
 
 using namespace std;
@@ -157,7 +158,7 @@ void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& millisecond
 
 DateTime GSF::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
 {
-    return from_time_t(unixSOC) + boost::posix_time::milliseconds(milliseconds);;
+    return from_time_t(unixSOC) + boost::posix_time::milliseconds(milliseconds);
 }
 
 DateTime GSF::FromTicks(const int64_t ticks)
@@ -227,6 +228,11 @@ uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t 
     return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
 }
 
+DateTime GSF::LocalFromUtc(const DateTime& timestamp)
+{
+    return DateTime(boost::date_time::c_local_adjustor<DateTime>::utc_to_local(timestamp));
+}
+
 std::string GSF::ToString(const Guid& value)
 {
     return boost::uuids::to_string(value);
@@ -238,7 +244,7 @@ std::string GSF::ToString(const DateTime& value, const char* format)
 
     stringstream stream;
 
-    date_facet* facet = new date_facet();
+    time_facet* facet = new time_facet();
     facet->format(format);
     stream.imbue(locale(locale::classic(), facet));
     stream << value;

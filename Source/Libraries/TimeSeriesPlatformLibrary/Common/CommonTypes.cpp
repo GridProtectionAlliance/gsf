@@ -261,14 +261,29 @@ string GSF::Trim(const string& value)
     return trim_copy(value);
 }
 
+string GSF::Trim(const string& value, const string& trimValues)
+{
+    return trim_copy_if(value, is_any_of(trimValues));
+}
+
 string GSF::TrimRight(const string& value)
 {
     return trim_right_copy(value);
 }
 
+string GSF::TrimRight(const string& value, const string& trimValues)
+{
+    return trim_right_copy_if(value, is_any_of(trimValues));
+}
+
 string GSF::TrimLeft(const string& value)
 {
     return trim_left_copy(value);
+}
+
+string GSF::TrimLeft(const string& value, const string& trimValues)
+{
+    return trim_left_copy_if(value, is_any_of(trimValues));
 }
 
 DateTime GSF::DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval)

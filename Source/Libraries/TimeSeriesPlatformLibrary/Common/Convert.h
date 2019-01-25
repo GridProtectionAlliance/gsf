@@ -40,6 +40,8 @@ namespace GSF
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);
 
+    DateTime LocalFromUtc(const DateTime& timestamp);
+
     // Converts an object to a string
     template <class T>
     std::string ToString(const T& obj)

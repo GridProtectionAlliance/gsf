@@ -75,6 +75,7 @@ public:
 
     const DataTablePtr& Parent() const;
 
+    bool IsNull(int32_t columnIndex);
     void SetNullValue(int32_t columnIndex);
     void SetNullValue(const std::string& columnName);
 
