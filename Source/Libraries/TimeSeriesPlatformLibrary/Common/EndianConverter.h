@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/19/2012 - Stephen C. Wills
 //       Generated original version of source code.
+//  01/26/2019 - J. Ritchie Carroll
+//      Added static converters for buffers that use default instance.
 //
 //******************************************************************************************************
 
@@ -46,12 +48,24 @@ namespace GSF
         // Converts between big endian and
         // the system's native byte order.
         template <class T>
-        T ConvertBigEndian(T value) const;
+        T ConvertBigEndian(T value) const
+        {
+            if (m_nativeOrder != EndianConverter::BigEndian)
+                ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
+
+            return value;
+        }
 
         // Converts between little endian and
         // the system's native byte order.
         template <class T>
-        T ConvertLittleEndian(T value) const;
+        T ConvertLittleEndian(T value) const
+        {
+            if (m_nativeOrder != EndianConverter::LittleEndian)
+                ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
+
+            return value;
+        }
 
         // Returns an integer value indicating which byte order is
         // the native byte order used by the system. The value is
@@ -63,29 +77,21 @@ namespace GSF
 
         // Class constant defining the little endian byte order.
         static const int LittleEndian = 1;
+
+        static EndianConverter Default;
+
+        template <class T>
+        static T ToBigEndian(const uint8_t* buffer, const uint32_t startIndex)
+        {
+            return Default.ConvertBigEndian(*reinterpret_cast<T*>(buffer[startIndex]));
+        }
+
+        template <class T>
+        static T ToLitteEndian(const uint8_t* buffer, const uint32_t startIndex)
+        {
+            return Default.ConvertLittleEndian(*reinterpret_cast<T*>(buffer[startIndex]));
+        }
     };
-
-    // Converts between big endian and
-    // the system's native byte order.
-    template <class T>
-    T EndianConverter::ConvertBigEndian(T value) const
-    {
-        if (m_nativeOrder != EndianConverter::BigEndian)
-            ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
-
-        return value;
-    }
-
-    // Converts between little endian and
-    // the system's native byte order.
-    template <class T>
-    T EndianConverter::ConvertLittleEndian(T value) const
-    {
-        if (m_nativeOrder != EndianConverter::LittleEndian)
-            ByteSwap(reinterpret_cast<uint8_t*>(&value), sizeof(T));
-
-        return value;
-    }
 }
 
 #endif
