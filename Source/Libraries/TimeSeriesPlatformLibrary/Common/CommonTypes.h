@@ -172,11 +172,7 @@ namespace GSF
         return false;
     }
 
-    // std::map string comparer options
-    #define StringComparator boost::locale::comparator<char, boost::locale::collator_base::identical>
-    #define StringComparatorIgnoreCase boost::locale::comparator<char, boost::locale::collator_base::secondary>
-
-    // std::unordered_map string comparer options
+    // std::unordered_map string hasher
     struct StringHasher : std::unary_function<std::string, std::size_t>
     {
     private:
@@ -187,6 +183,7 @@ namespace GSF
         std::size_t operator()(const std::string& value) const;
     };
 
+    // std::map / std::unordered_map string comparer
     struct StringComparer : std::binary_function<std::string, std::string, bool>
     {
     private:
@@ -294,6 +291,8 @@ namespace GSF
     DateTime DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval);
     int32_t DateDiff(const DateTime& startTime, const DateTime& endTime, TimeInterval interval);
     int32_t DatePart(const DateTime& value, TimeInterval interval);
+    DateTime Now();
+    DateTime UtcNow();
 
     // Empty types
     struct Empty

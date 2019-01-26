@@ -381,3 +381,13 @@ int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
             throw runtime_error("Unexpected time interval encountered");
     }
 }
+
+DateTime GSF::Now()
+{
+    return DateTime(microsec_clock::local_time());
+}
+
+DateTime GSF::UtcNow()
+{
+    return DateTime(microsec_clock::universal_time());
+}

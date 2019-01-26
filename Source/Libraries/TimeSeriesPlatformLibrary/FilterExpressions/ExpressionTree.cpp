@@ -25,7 +25,6 @@
 #include <regex>
 
 using namespace std;
-using namespace boost::posix_time;
 using namespace GSF;
 using namespace GSF::Data;
 using namespace GSF::FilterExpressions;
@@ -1800,7 +1799,7 @@ ValueExpressionPtr ExpressionTree::MinOf(const ExpressionCollectionPtr& argument
 
 ValueExpressionPtr ExpressionTree::Now() const
 {
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, DateTime(second_clock::local_time()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, GSF::Now());
 }
 
 ValueExpressionPtr ExpressionTree::NthIndexOf(const ValueExpressionPtr& sourceValue, const ValueExpressionPtr& testValue, const ValueExpressionPtr& indexValue, const ValueExpressionPtr& ignoreCase) const
@@ -2192,7 +2191,7 @@ ValueExpressionPtr ExpressionTree::Upper(const ValueExpressionPtr& sourceValue) 
 
 ValueExpressionPtr ExpressionTree::UtcNow() const
 {
-    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, DateTime(second_clock::universal_time()));
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, GSF::UtcNow());
 }
 
 ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const

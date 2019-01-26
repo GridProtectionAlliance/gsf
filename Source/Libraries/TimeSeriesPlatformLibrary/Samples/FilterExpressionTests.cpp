@@ -1090,14 +1090,14 @@ int main(int argc, char* argv[])
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "Now()");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() <= second_clock::local_time());
+    assert(valueExpression->ValueAsDateTime() <= Now());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 106
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "UtcNow()");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() <= second_clock::universal_time());
+    assert(valueExpression->ValueAsDateTime() <= UtcNow());
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 107
@@ -1402,14 +1402,14 @@ int main(int argc, char* argv[])
     // Test 147 - test write then read of XML datasets
     dataSet->WriteXml("Test.xml");
 
-    DataSetPtr testDataSet = DataSet::FromXml("Test.xml");
+    const DataSetPtr testDataSet = DataSet::FromXml("Test.xml");
     testDataSet->WriteXml("Test2.xml");
     
     std::ifstream ifs1("Test.xml");
     std::ifstream ifs2("Test2.xml");
 
-    std::istream_iterator<char> b1(ifs1), e1;
-    std::istream_iterator<char> b2(ifs2), e2;
+    const istream_iterator<char> b1(ifs1), e1;
+    const istream_iterator<char> b2(ifs2), e2;
 
     BOOST_CHECK_EQUAL_COLLECTIONS(b1, e1, b2, e2);
     cout << "Test " << ++test << " succeeded..." << endl;
