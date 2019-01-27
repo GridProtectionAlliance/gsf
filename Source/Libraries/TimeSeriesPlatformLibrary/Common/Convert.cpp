@@ -23,6 +23,8 @@
 
 #include <iomanip>
 #include <sstream>
+#include <locale>
+#include <codecvt>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -250,6 +252,18 @@ std::string GSF::ToString(const DateTime& value, const char* format)
     stream << value;
 
     return stream.str();
+}
+
+wstring GSF::ToUTF16(const string& value)
+{
+    wstring_convert<codecvt_utf8<wchar_t>, wchar_t> converter;
+    return converter.from_bytes(value);
+}
+
+string GSF::ToUTF8(const wstring& value)
+{
+    wstring_convert<codecvt_utf8<wchar_t>, wchar_t> converter;
+    return converter.to_bytes(value);
 }
 
 Guid GSF::ParseGuid(const uint8_t* data, bool swapBytes)

@@ -435,7 +435,7 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
             {
                 messageStart = reinterpret_cast<char*>(data + offset);
                 messageEnd = messageStart + messageLength;
-                messageStream << "Received success code in response to server command 0x" << hex << static_cast<int>(commandCode) << ": ";
+                messageStream << "Received success code in response to server command " << ToHex(commandCode) << ": ";
 
                 for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
                     messageStream << *messageIter;
@@ -448,7 +448,7 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
             // If we don't know what the message is, we can't interpret
             // the data sent with the packet. Deliver an error message
             // to the user via the error message callback.
-            messageStream << "Received success code in response to unknown server command 0x" << hex << static_cast<int>(commandCode);
+            messageStream << "Received success code in response to unknown server command 0x" << ToHex(commandCode);
             DispatchErrorMessage(messageStream.str());
             break;
     }
@@ -469,7 +469,7 @@ void DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t o
 
     messageStart = reinterpret_cast<char*>(data + offset);
     messageEnd = messageStart + messageLength;
-    messageStream << "Received failure code from server command 0x" << hex << static_cast<int>(commandCode) << ": ";
+    messageStream << "Received failure code from server command " << ToHex(commandCode) << ": ";
 
     for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
         messageStream << *messageIter;
@@ -781,8 +781,8 @@ void DataSubscriber::ParseTSSCMeasurements(DataSubscriber* source, const vector<
     {
         stringstream errorMessageStream;
 
-        errorMessageStream << "TSSC version not recognized: 0x";
-        errorMessageStream << hex << static_cast<int>(buffer[offset]);
+        errorMessageStream << "TSSC version not recognized: ";
+        errorMessageStream << ToHex(buffer[offset]);
 
         throw SubscriberException(errorMessageStream.str());
     }
@@ -998,8 +998,8 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, uint32_t offset, uin
 
         default:
             stringstream errorMessageStream;
-            errorMessageStream << "Encountered unexpected server response code: 0x";
-            errorMessageStream << hex << static_cast<int>(responseCode);
+            errorMessageStream << "Encountered unexpected server response code: ";
+            errorMessageStream << ToHex(responseCode);
             DispatchErrorMessage(errorMessageStream.str());
             break;
     }

@@ -1299,15 +1299,20 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }
 
-vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataSetPtr& dataSet, const string& primaryTableName, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
-    parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryTableName(dataTable->Name());
+    parser->SetDataSet(dataSet);
+    parser->SetPrimaryTableName(primaryTableName);
     parser->SetTrackFilteredRows(false);
 
     return parser->GetExpressionTrees();
+}
+
+vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+{
+    return GenerateExpressionTrees(dataTable->Parent(), dataTable->Name(), filterExpression, suppressConsoleErrorOutput);
 }
 
 ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)

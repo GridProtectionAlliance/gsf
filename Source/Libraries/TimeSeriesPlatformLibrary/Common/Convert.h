@@ -55,6 +55,18 @@ namespace GSF
 
     std::string ToString(const DateTime& value, const char* format = "%Y-%m-%d %H:%M:%S%F");
 
+    std::wstring ToUTF16(const std::string& value);
+    std::string ToUTF8(const std::wstring& value);
+
+    // Converts an integer value to a hex representation
+    template <class T>
+    std::string ToHex(const T& value)
+    {
+        std::stringstream stream;
+        stream << "0x" << std::hex << static_cast<int>(value);
+        return stream.str();
+    }
+
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ParseGuid(const uint8_t* data, bool swapBytes);
     Guid ParseGuid(const char* data);

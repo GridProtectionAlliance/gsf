@@ -79,6 +79,8 @@ namespace GSF
         static const int LittleEndian = 1;
 
         static EndianConverter Default;
+        static bool IsLittleEndian();
+        static bool IsBigEndian();
 
         template <class T>
         static T ToBigEndian(const uint8_t* buffer, const uint32_t startIndex)
@@ -87,7 +89,7 @@ namespace GSF
         }
 
         template <class T>
-        static T ToLitteEndian(const uint8_t* buffer, const uint32_t startIndex)
+        static T ToLittleEndian(const uint8_t* buffer, const uint32_t startIndex)
         {
             return Default.ConvertLittleEndian(*reinterpret_cast<T*>(buffer[startIndex]));
         }

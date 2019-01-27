@@ -60,3 +60,15 @@ int EndianConverter::NativeOrder() const
 {
     return m_nativeOrder;
 }
+
+bool EndianConverter::IsLittleEndian()
+{
+    static const bool isLittleEndian = Default.NativeOrder() == LittleEndian;
+    return isLittleEndian;
+}
+
+bool EndianConverter::IsBigEndian()
+{
+    static const bool isBigEndian = Default.NativeOrder() == BigEndian;
+    return isBigEndian;
+}

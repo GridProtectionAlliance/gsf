@@ -21,29 +21,37 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable once CppUnusedIncludeDirective
+#include "../FilterExpressions/FilterExpressions.h"
 #include <boost/bind.hpp>
+#include <boost/locale.hpp>
 #include <utility>
 
 #include "DataPublisher.h"
 #include "Constants.h"
 #include "../Common/Convert.h"
+#include "../Common/EndianConverter.h"
+#include "../FilterExpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace pugi;
 using namespace boost;
+using namespace boost::locale::conv;
 using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace GSF;
+using namespace GSF::Data;
+using namespace GSF::FilterExpressions;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 struct ClientConnectedInfo
 {
-    const Guid ClientID;
+    const GSF::Guid ClientID;
     const string ConnectionInfo;
     const string SubscriberInfo;
 
-    ClientConnectedInfo(const Guid& clientID, string connectionInfo, string subscriberInfo) :
+    ClientConnectedInfo(const GSF::Guid& clientID, string connectionInfo, string subscriberInfo) :
         ClientID(clientID),
         ConnectionInfo(std::move(connectionInfo)),
         SubscriberInfo(std::move(subscriberInfo))
@@ -66,9 +74,35 @@ ClientConnection::~ClientConnection()
 {
 }
 
-Guid ClientConnection::ClientID() const
+GSF::Guid ClientConnection::ClientID() const
 {
     return m_clientID;
+}
+
+const std::string ClientConnection::ConnectionID()
+{
+    if (m_connectionID.empty())
+    {
+        // TODO: Develop good connection ID for client...
+    }
+
+    return m_connectionID;
+}
+
+uint32_t ClientConnection::GetOperationalModes() const
+{
+    return m_operationalModes;
+}
+
+void ClientConnection::SetOperationalModes(uint32_t value)
+{
+    m_operationalModes = value;
+    m_encoding = m_operationalModes & OperationalModes::EncodingMask;
+}
+
+uint32_t ClientConnection::GetEncoding() const
+{
+    return m_encoding;
 }
 
 TcpSocket& ClientConnection::CommandChannelSocket()
@@ -149,7 +183,7 @@ void DataPublisher::AcceptConnection(const ClientConnectionPtr& clientConnection
 {
     if (!error)
     {
-        m_clientConnections.insert(pair<Guid, ClientConnectionPtr>(clientConnection->ClientID(), clientConnection));
+        m_clientConnections.insert(pair<GSF::Guid, ClientConnectionPtr>(clientConnection->ClientID(), clientConnection));
         clientConnection->Start();
     }
 
@@ -164,8 +198,43 @@ void DataPublisher::HandleUnsubscribe(ClientConnection& connection)
 {
 }
 
-void DataPublisher::HandleMetadataRefresh(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleMetadataRefresh(ClientConnection& connection, uint8_t* buffer, uint32_t startIndex, uint32_t length)
 {
+    // Ensure that the subscriber is allowed to request meta-data
+    if (!m_allowMetadataRefresh)
+        throw PublisherException("Meta-data refresh has been disallowed by the DataPublisher.");
+
+    DispatchStatusMessage("Received meta-data refresh request from " + connection.ConnectionID() + ", preparing response...");
+
+    const GSF::Guid clientID = connection.ClientID();
+    map<string, ExpressionTreePtr, StringComparer> filterExpressions;
+    string message, tableName, filterExpression, sortField;
+    DateTime startTime = UtcNow();
+
+    try
+    {
+        // Note that these client provided meta-data filter expressions are applied only to the
+        // in-memory DataSet and therefore are not subject to SQL injection attacks
+        if (length > 4)
+        {
+            const uint32_t responseLength = EndianConverter::ToBigEndian<uint32_t>(buffer, startIndex);
+            startIndex += 4;
+
+            if (length >= responseLength + 4)
+            {
+                const string metadataFilters = DecodeClientString(clientID, buffer, startIndex, responseLength);
+                const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_clientMetadata, "MeasurementDetail", metadataFilters);
+
+                // Go through each subscriber specified filter expressions and add it to dictionary
+                for (const auto& expression : expressions)
+                    filterExpressions[expression->Table()->Name()] = expression;
+            }
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: " + string(ex.what()));
+    }
 }
 
 void DataPublisher::HandleUpdateProcessingInterval(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
@@ -233,7 +302,7 @@ void DataPublisher::DispatchErrorMessage(const string& message)
     Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
 }
 
-void DataPublisher::DispatchClientConnected(const Guid& clientID, const string& connectionInfo, const string& subscriberInfo)
+void DataPublisher::DispatchClientConnected(const GSF::Guid& clientID, const string& connectionInfo, const string& subscriberInfo)
 {
     const ClientConnectedInfo* data = new ClientConnectedInfo(clientID, connectionInfo, subscriberInfo);
     Dispatch(&ClientConnectedDispatcher, reinterpret_cast<const uint8_t*>(data), 0, sizeof(ClientConnectedInfo*));
@@ -293,17 +362,120 @@ void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vecto
     }
 }
 
-void DataPublisher::SerializeSignalIndexCache(const Guid& clientID, const SignalIndexCache& signalIndexCache, vector<uint8_t>& buffer)
+void DataPublisher::SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, vector<uint8_t>& buffer)
 {
 }
 
-//void DataPublisher::SerializeMetadata(const Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer)
+//void DataPublisher::SerializeMetadata(const GSF:Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer)
 //{
 //}
-//
-//void DataPublisher::SerializeMetadata(const Guid& clientID, const xml_document& metadata, vector<uint8_t>& buffer)
+
+//void DataPublisher::SerializeMetadata(const GSF:Guid& clientID, const xml_document& metadata, vector<uint8_t>& buffer)
 //{
 //}
+
+ClientConnectionPtr DataPublisher::GetClient(const GSF::Guid& clientID) const
+{
+    ClientConnectionPtr clientConnection;
+    TryGetValue<GSF::Guid, ClientConnectionPtr>(m_clientConnections, clientID, clientConnection, nullptr);
+    return clientConnection;
+}
+
+string DataPublisher::DecodeClientString(const GSF::Guid& clientID, const uint8_t* data, uint32_t offset, uint32_t length) const
+{
+    const ClientConnectionPtr clientConnection = GetClient(clientID);
+    uint32_t encoding = OperationalEncoding::UTF8;
+    bool swapBytes = EndianConverter::IsLittleEndian();
+
+    if (clientConnection != nullptr)
+        encoding = clientConnection->GetEncoding();
+
+    switch (encoding)
+    {
+        case OperationalEncoding::UTF8:
+            return string(reinterpret_cast<const char_t*>(data + offset), length / sizeof(char_t));
+        case OperationalEncoding::Unicode:
+        case OperationalEncoding::ANSI:
+            swapBytes = !swapBytes;
+        case OperationalEncoding::BigEndianUnicode:
+        {
+            wstring value{};
+            value.reserve(length / sizeof(wchar_t));
+
+            for (size_t i = 0; i < length; i += sizeof(wchar_t))
+            {
+                if (swapBytes)
+                    value.append(1, EndianConverter::ToLittleEndian<wchar_t>(data, offset + i));
+                else
+                    value.append(1, *reinterpret_cast<const wchar_t*>(data + offset + i));
+            }
+
+            return ToUTF8(value);
+        }
+        default:
+            throw PublisherException("Encountered unexpected operational encoding " + ToHex(encoding));
+    }
+}
+
+vector<uint8_t> DataPublisher::EncodeClientString(const GSF::Guid& clientID, const std::string& value) const
+{
+    const ClientConnectionPtr clientConnection = GetClient(clientID);
+    uint32_t encoding = OperationalEncoding::UTF8;
+    bool swapBytes = EndianConverter::IsLittleEndian();
+
+    if (clientConnection != nullptr)
+        encoding = clientConnection->GetEncoding();
+
+    vector<uint8_t> result{};
+
+    switch (encoding)
+    {
+        case OperationalEncoding::UTF8:
+            result.reserve(value.size() * sizeof(char_t));
+            result.assign(value.begin(), value.end());
+            break;
+        case OperationalEncoding::Unicode:
+        case OperationalEncoding::ANSI:
+            swapBytes = !swapBytes;
+        case OperationalEncoding::BigEndianUnicode:
+        {
+            wstring utf16 = ToUTF16(value);            
+            const int32_t size = utf16.size() * sizeof(wchar_t);
+            const uint8_t* data = reinterpret_cast<const uint8_t*>(&utf16[0]);
+
+            result.reserve(size);
+
+            for (int32_t i = 0; i < size; i += sizeof(wchar_t))
+            {
+                if (swapBytes)
+                {
+                    result.push_back(data[i + 1]);
+                    result.push_back(data[i]);
+                }
+                else
+                {
+                    result.push_back(data[i]);
+                    result.push_back(data[i + 1]);
+                }
+            }
+
+            break;
+        }
+        default:
+            throw PublisherException("Encountered unexpected operational encoding " + ToHex(encoding));
+    }
+
+    return result;
+}
+
+DataSetPtr DataPublisher::FilterClientMetadata(ClientConnection& connection, map<string, ExpressionTreePtr> filterExpressions)
+{
+    if (filterExpressions.empty())
+        return m_clientMetadata;
+
+    // TODO: Apply filters
+    return m_clientMetadata;
+}
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata)
 {

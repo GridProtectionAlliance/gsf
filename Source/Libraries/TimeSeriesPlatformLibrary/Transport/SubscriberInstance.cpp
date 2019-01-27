@@ -587,7 +587,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
             delete uncompressed;
 
         stringstream errorMessageStream;
-        errorMessageStream << "Failed to parse meta data XML, status code = 0x" << hex << result.status;
+        errorMessageStream << "Failed to parse meta data XML, status code = " << ToHex(result.status);
         ErrorMessage(errorMessageStream.str());
         return;
     }

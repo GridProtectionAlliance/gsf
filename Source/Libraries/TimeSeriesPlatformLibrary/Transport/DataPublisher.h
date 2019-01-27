@@ -32,6 +32,7 @@
 #include "TSSCMeasurementParser.h"
 #include "../Common/ThreadSafeQueue.h"
 #include "../Common/pugixml.hpp"
+#include "../Data/DataSet.h"
 #include "Constants.h"
 
 namespace GSF {
@@ -46,6 +47,9 @@ namespace Transport
     private:
         const DataPublisherPtr m_parent;
         const GSF::Guid m_clientID;
+        std::string m_connectionID;
+        uint32_t m_operationalModes;
+        uint32_t m_encoding;
 
         // Command channel
         TcpSocket m_commandChannelSocket;   // Client
@@ -72,6 +76,13 @@ namespace Transport
 
         GSF::Guid ClientID() const;
 
+        const std::string ConnectionID();
+
+        uint32_t GetOperationalModes() const;
+        void SetOperationalModes(uint32_t value);
+
+        uint32_t GetEncoding() const;
+
         void Start();
     };
 
@@ -96,6 +107,7 @@ namespace Transport
             CallbackDispatcher();
         };
 
+        GSF::Data::DataSetPtr m_clientMetadata;
         std::map<GSF::Guid, ClientConnectionPtr> m_clientConnections;
         SecurityMode m_securityMode;
         bool m_allowMetadataRefresh;
@@ -162,6 +174,10 @@ namespace Transport
         //static void SerializeMetadata(const GSF::Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer);
         //static void SerializeMetadata(const GSF::Guid& clientID, const pugi::xml_document& metadata, std::vector<uint8_t>& buffer);
 
+        ClientConnectionPtr GetClient(const GSF::Guid& clientID) const;
+        std::string DecodeClientString(const GSF::Guid& clientID, const uint8_t* data, uint32_t offset, uint32_t length) const;
+        std::vector<uint8_t> EncodeClientString(const GSF::Guid& clientID, const std::string& value) const;
+        GSF::Data::DataSetPtr FilterClientMetadata(ClientConnection& connection, std::map<std::string, GSF::FilterExpressions::ExpressionTreePtr> filterExpressions);
     public:
         // Creates a new instance of the data publisher.
         DataPublisher(const boost::asio::ip::tcp::endpoint& endpoint);
