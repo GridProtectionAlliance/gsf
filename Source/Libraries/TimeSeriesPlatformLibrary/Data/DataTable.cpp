@@ -87,7 +87,12 @@ const DataColumnPtr& DataTable::operator[](int32_t index) const
 
 DataColumnPtr DataTable::CreateColumn(const string& name, DataType type, string expression)
 {
-    return NewSharedPtr<DataColumn, DataTablePtr, string, DataType>(shared_from_this(), name, type, expression);
+    return NewSharedPtr<DataColumn, DataTablePtr, string, DataType>(shared_from_this(), name, type, std::move(expression));
+}
+
+DataColumnPtr DataTable::CloneColumn(const DataColumnPtr& source)
+{
+    return CreateColumn(source->Name(), source->Type(), source->Expression());
 }
 
 int32_t DataTable::ColumnCount() const
@@ -111,6 +116,67 @@ void DataTable::AddRow(DataRowPtr row)
 DataRowPtr DataTable::CreateRow()
 {
     return NewSharedPtr<DataRow, DataTablePtr>(shared_from_this());
+}
+
+DataRowPtr DataTable::CloneRow(const DataRowPtr& source)
+{
+    DataRowPtr row = CreateRow();
+
+    for (size_t i = 0; i < m_columns.size(); i++)
+    {
+        switch (m_columns[i]->m_type)
+        {
+            case DataType::String:
+                row->SetStringValue(i, source->ValueAsString(i));
+                break;
+            case DataType::Boolean:
+                row->SetBooleanValue(i, source->ValueAsBoolean(i));
+                break;
+            case DataType::DateTime:
+                row->SetDateTimeValue(i, source->ValueAsDateTime(i));
+                break;
+            case DataType::Single:
+                row->SetSingleValue(i, source->ValueAsSingle(i));
+                break;
+            case DataType::Double:
+                row->SetDoubleValue(i, source->ValueAsDouble(i));
+                break;
+            case DataType::Decimal:
+                row->SetDecimalValue(i, source->ValueAsDecimal(i));
+                break;
+            case DataType::Guid:
+                row->SetGuidValue(i, source->ValueAsGuid(i));
+                break;
+            case DataType::Int8:
+                row->SetInt8Value(i, source->ValueAsInt8(i));
+                break;
+            case DataType::Int16:
+                row->SetInt16Value(i, source->ValueAsInt16(i));
+                break;
+            case DataType::Int32:
+                row->SetInt32Value(i, source->ValueAsInt32(i));
+                break;
+            case DataType::Int64:
+                row->SetInt64Value(i, source->ValueAsInt64(i));
+                break;
+            case DataType::UInt8:
+                row->SetUInt8Value(i, source->ValueAsUInt8(i));
+                break;
+            case DataType::UInt16:
+                row->SetUInt16Value(i, source->ValueAsUInt16(i));
+                break;
+            case DataType::UInt32:
+                row->SetUInt32Value(i, source->ValueAsUInt32(i));
+                break;
+            case DataType::UInt64:
+                row->SetUInt64Value(i, source->ValueAsUInt64(i));
+                break;
+            default:
+                throw DataSetException("Unexpected column data type encountered");
+        }
+    }
+
+    return row;
 }
 
 int32_t DataTable::RowCount() const

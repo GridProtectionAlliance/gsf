@@ -536,14 +536,15 @@ void DataSet::ParseXml(const xml_document& document)
 
 void DataSet::GenerateXml(xml_document& document, const string& dataSetName) const
 {
+    static const char* schemaNodeName = "xs:schema";
+    static const char* elementNodeName = "xs:element";
+    static const char* complexNodeName = "xs:complexType";
+    static const char* choiceNodeName = "xs:choice";
+    static const char* sequenceNodeName = "xs:sequence";
+    static const char* extDataTypeAttributeName = "ext:DataType";
+    static const char* extExpressionAttributeName = "ext:Expression";
+
     const char* rootNodeName = dataSetName.c_str();
-    const char* schemaNodeName = "xs:schema";
-    const char* elementNodeName = "xs:element";
-    const char* complexNodeName = "xs:complexType";
-    const char* choiceNodeName = "xs:choice";
-    const char* sequenceNodeName = "xs:sequence";
-    const char* extDataTypeAttributeName = "ext:DataType";
-    const char* extExpressionAttributeName = "ext:Expression";
     const vector<DataTablePtr> tables = Tables();
 
     // <?xml version="1.0" standalone="yes"?>

@@ -72,6 +72,8 @@ public:
 
     DataColumnPtr CreateColumn(const std::string& name, DataType type, std::string expression = std::string{});
 
+    DataColumnPtr CloneColumn(const DataColumnPtr& source);
+
     int32_t ColumnCount() const;
 
     const DataRowPtr& Row(int32_t index);
@@ -79,6 +81,8 @@ public:
     void AddRow(DataRowPtr row);
 
     DataRowPtr CreateRow();
+
+    DataRowPtr CloneRow(const DataRowPtr& source);
 
     int32_t RowCount() const;
 
