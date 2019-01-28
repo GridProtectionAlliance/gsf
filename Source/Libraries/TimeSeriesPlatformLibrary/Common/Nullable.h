@@ -366,6 +366,25 @@ namespace GSF
 
         return {};
     }
+
+    template<typename T>
+    static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
+    {
+        const bool leftHasValue = leftNullable.HasValue();
+        const bool rightHasValue = rightNullable.HasValue();
+
+        if (leftHasValue && rightHasValue)
+        {
+            const T& leftValue = leftNullable.GetValueOrDefault();
+            const T& rightValue = rightNullable.GetValueOrDefault();
+            return leftValue < rightValue ? -1 : (leftValue > rightValue ? 1 : 0);
+        }
+
+        if (!leftHasValue && !rightHasValue)
+            return 0;
+
+        return leftHasValue ? 1 : -1;
+    }
 }
 
 #endif

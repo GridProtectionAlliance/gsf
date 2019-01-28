@@ -105,6 +105,27 @@ uint32_t ClientConnection::GetEncoding() const
     return m_encoding;
 }
 
+bool ClientConnection::CipherKeysDefined() const
+{
+    return !m_keys[0].empty();
+}
+
+std::vector<uint8_t> ClientConnection::Keys(int cipherIndex)
+{
+    if (cipherIndex < 0 || cipherIndex > 1)
+        throw out_of_range("Cipher index must be 0 or 1");
+
+    return m_keys[cipherIndex];
+}
+
+std::vector<uint8_t> ClientConnection::IVs(int cipherIndex)
+{
+    if (cipherIndex < 0 || cipherIndex > 1)
+        throw out_of_range("Cipher index must be 0 or 1");
+
+    return m_ivs[cipherIndex];
+}
+
 TcpSocket& ClientConnection::CommandChannelSocket()
 {
     return m_commandChannelSocket;
@@ -258,9 +279,11 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
 
         //SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
     }
-    catch (const std::exception&)
+    catch (const std::exception& ex)
     {
-
+        message = "Failed to transfer meta-data due to exception: " + string(ex.what());
+        //SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
+        DispatchErrorMessage(message);
     }
 }
 
@@ -522,14 +545,14 @@ DataSetPtr DataPublisher::FilterClientMetadata(const ClientConnectionPtr& connec
 
         if (TryGetValue<ExpressionTreePtr>(filterExpressions, table->Name(), expression, nullptr))
         {
-            vector<DataRowPtr> matchedRows = FilterExpressionParser::Evaluate(expression);
+            vector<DataRowPtr> matchedRows = FilterExpressionParser::Select(expression);
 
             for (size_t j = 0; j < matchedRows.size(); j++)
                 filteredTable->AddRow(filteredTable->CloneRow(matchedRows[j]));
         }
         else
         {
-            for (size_t j = 0; j < table->RowCount(); j++)
+            for (int32_t j = 0; j < table->RowCount(); j++)
                 filteredTable->AddRow(filteredTable->CloneRow(table->Row(j)));
         }
 
@@ -557,19 +580,122 @@ vector<uint8_t> DataPublisher::SerializeMetadata(const ClientConnectionPtr& conn
 
         if (compressMetadata && (compressionModes & CompressionModes::GZip) > 0)
         {
-            // TODO: Compress metadata
-            //    const MemoryStream payloadStream(payload);
-            //    Decompressor decompressor;
+            const MemoryStream metadataStream(serializedMetadata);
+            StreamBuffer streamBuffer;
 
-            //    decompressor.push(GZipDecompressor());
-            //    decompressor.push(payloadStream);
+            streamBuffer.push(GZipCompressor());
+            streamBuffer.push(metadataStream);
 
-            //    uncompressed = new vector<uint8_t>();
-            //    CopyStream(&decompressor, *uncompressed);
+            vector<uint8_t> compressed;
+            CopyStream(&streamBuffer, compressed);
+
+            return compressed;
         }
     }
 
     return serializedMetadata;
+}
+
+bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data)
+{
+    bool success = false;
+
+    try
+    {
+        const bool dataPacketResponse = responseCode == ServerResponse::DataPacket;
+        const bool useDataChannel = dataPacketResponse || responseCode == ServerResponse::BufferBlock;
+        vector<uint8_t> buffer {};
+
+        buffer.reserve(data.size() + 6);
+
+        // Add response code
+        buffer.push_back(responseCode);
+
+        // Add original in response to command code
+        buffer.push_back(commandCode);
+
+        if (data.empty())
+        {
+            // Add zero sized data buffer to response packet
+            buffer.push_back(0);
+            buffer.push_back(0);
+            buffer.push_back(0);
+            buffer.push_back(0);
+        }
+        else
+        {
+            if (dataPacketResponse && connection->CipherKeysDefined())
+            {
+                // TODO: Implement UDP AES data packet encryption
+                //// Get a local copy of volatile keyIVs and cipher index since these can change at any time
+                //byte[][][] keyIVs = connection.KeyIVs;
+                //int cipherIndex = connection.CipherIndex;
+
+                //// Reserve space for size of data buffer to go into response packet
+                //workingBuffer.Write(ZeroLengthBytes, 0, 4);
+
+                //// Get data packet flags
+                //DataPacketFlags flags = (DataPacketFlags)data[0];
+
+                //// Encode current cipher index into data packet flags
+                //if (cipherIndex > 0)
+                //    flags |= DataPacketFlags.CipherIndex;
+
+                //// Write data packet flags into response packet
+                //workingBuffer.WriteByte((byte)flags);
+
+                //// Copy source data payload into a memory stream
+                //MemoryStream sourceData = new MemoryStream(data, 1, data.Length - 1);
+
+                //// Encrypt payload portion of data packet and copy into the response packet
+                //Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+
+                //// Calculate length of encrypted data payload
+                //int payloadLength = (int)workingBuffer.Length - 6;
+
+                //// Move the response packet position back to the packet size reservation
+                //workingBuffer.Seek(2, SeekOrigin.Begin);
+
+                //// Add the actual size of payload length to response packet
+                //workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
+            }
+            else
+            {
+                // Add size of data buffer to response packet
+                EndianConverter::WriteBigEndianBytes(buffer, static_cast<int32_t>(data.size()));
+
+                // Write data buffer
+                buffer.assign(data.begin(), data.end());
+            }
+
+            // TODO: Publish packet
+            //IServer publishChannel;
+
+            //// Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+            //if (useDataChannel)
+            //    publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
+            //else
+            //    publishChannel = m_commandChannel;
+
+            //// Send response packet
+            //if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
+            //{
+            //    if (publishChannel is UdpServer)
+            //        publishChannel.MulticastAsync(buffer, 0, buffer.size());
+            //    else
+            //        publishChannel.SendToAsync(connection, buffer, 0, buffer.size());
+
+            //    m_totalBytesSent += buffer.size();
+            //    success = true;
+            //}
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        DispatchErrorMessage(ex.what());
+    }
+
+    return success;
 }
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata)

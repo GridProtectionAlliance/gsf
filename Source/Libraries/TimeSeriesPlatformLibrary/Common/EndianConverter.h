@@ -93,6 +93,32 @@ namespace GSF
         {
             return Default.ConvertLittleEndian(*reinterpret_cast<T*>(buffer[startIndex]));
         }
+
+        template <class T>
+        static int32_t WriteBigEndianBytes(std::vector<uint8_t> buffer, T value)
+        {
+            int32_t length = sizeof(T);
+            value = Default.ConvertBigEndian(value);
+            uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+
+            for (int32_t i = 0; i < length; i++)
+                buffer.push_back(bytes[i]);
+
+            return length;
+        }
+
+        template <class T>
+        static int32_t WriteLittleEndianBytes(std::vector<uint8_t> buffer, T value)
+        {
+            int32_t length = sizeof(T);
+            value = Default.ConvertLittleEndian(value);
+            uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+
+            for (int32_t i = 0; i < length; i++)
+                buffer.push_back(bytes[i]);
+
+            return length;
+        }
     };
 }
 

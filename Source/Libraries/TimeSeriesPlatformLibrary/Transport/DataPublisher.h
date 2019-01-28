@@ -56,7 +56,9 @@ namespace Transport
 
         // Data channel
         int16_t m_udpPort;
-        UdpSocket m_dataChannelSocket;
+        UdpSocket m_dataChannelSocket;        
+        std::vector<uint8_t> m_keys[2];
+        std::vector<uint8_t> m_ivs[2];
 
         // Measurement parsing
         SignalIndexCache m_signalIndexCache;
@@ -82,6 +84,10 @@ namespace Transport
         void SetOperationalModes(uint32_t value);
 
         uint32_t GetEncoding() const;
+
+        bool CipherKeysDefined() const;
+        std::vector<uint8_t> Keys(int cipherIndex);
+        std::vector<uint8_t> IVs(int cipherIndex);
 
         void Start();
     };
@@ -178,6 +184,7 @@ namespace Transport
         std::vector<uint8_t> EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const;
         GSF::Data::DataSetPtr FilterClientMetadata(const ClientConnectionPtr& connection, const std::map<std::string, GSF::FilterExpressions::ExpressionTreePtr, StringComparer>& filterExpressions) const;
         std::vector<uint8_t> SerializeMetadata(const ClientConnectionPtr& connection, const GSF::Data::DataSetPtr& metadata);
+        bool SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data);
     public:
         // Creates a new instance of the data publisher.
         DataPublisher(const boost::asio::ip::tcp::endpoint& endpoint);

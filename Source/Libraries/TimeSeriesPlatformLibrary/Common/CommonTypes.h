@@ -224,8 +224,9 @@ namespace GSF
     typedef boost::asio::ip::tcp::socket TcpSocket;
     typedef boost::asio::ip::udp::socket UdpSocket;
     typedef boost::asio::ip::tcp::resolver DnsResolver;
-    typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> Decompressor;
+    typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> StreamBuffer;
     typedef boost::iostreams::gzip_decompressor GZipDecompressor;
+    typedef boost::iostreams::gzip_compressor GZipCompressor;
 
     template<class T>
     T Cast(const Object& source)

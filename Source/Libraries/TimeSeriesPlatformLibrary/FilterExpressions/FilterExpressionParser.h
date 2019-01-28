@@ -150,12 +150,14 @@ public:
     void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
     void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
 
-    static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataSetPtr& dataSet, const std::string& primaryTableName, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+    
     static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
-    static std::vector<GSF::Data::DataRowPtr> Evaluate(const ExpressionTreePtr& expressionTree);
+    
+    static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+    static std::vector<GSF::Data::DataRowPtr> Select(const ExpressionTreePtr& expressionTree);
 };
 
 typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;

@@ -563,13 +563,13 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     {
         // Perform zlib decompression on buffer
         const MemoryStream payloadStream(payload);
-        Decompressor decompressor;
+        StreamBuffer streamBuffer;
 
-        decompressor.push(GZipDecompressor());
-        decompressor.push(payloadStream);
+        streamBuffer.push(GZipDecompressor());
+        streamBuffer.push(payloadStream);
 
         uncompressed = new vector<uint8_t>();
-        CopyStream(&decompressor, *uncompressed);
+        CopyStream(&streamBuffer, *uncompressed);
     }
     else
     {

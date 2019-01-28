@@ -23,6 +23,7 @@
 
 #include "FilterExpressionParser.h"
 #include "tree/ParseTreeWalker.h"
+#include "../Common/Nullable.h"
 
 using namespace std;
 using namespace GSF;
@@ -285,27 +286,11 @@ void FilterExpressionParser::RegisterParsingExceptionCallback(ParsingExceptionCa
         delete m_callbackErrorListener;
     }
 
+    if (parsingExceptionCallback == nullptr)
+        return;
+
     m_callbackErrorListener = new CallbackErrorListener(shared_from_this(), parsingExceptionCallback);
     m_parser->addErrorListener(m_callbackErrorListener);
-}
-
-template<typename T>
-static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
-{
-    const bool leftHasValue = leftNullable.HasValue();
-    const bool rightHasValue = rightNullable.HasValue();
-
-    if (leftHasValue && rightHasValue)
-    {
-        const T& leftValue = leftNullable.GetValueOrDefault();
-        const T& rightValue = rightNullable.GetValueOrDefault();
-        return leftValue < rightValue ? -1 : (leftValue > rightValue ? 1 : 0);
-    }
-
-    if (!leftHasValue && !rightHasValue)
-        return 0;
-
-    return leftHasValue ? 1 : -1;
 }
 
 void FilterExpressionParser::Evaluate()
@@ -330,7 +315,7 @@ void FilterExpressionParser::Evaluate()
     for (size_t i = 0; i < m_expressionTrees.size(); i++)
     {
         const ExpressionTreePtr& expressionTree = m_expressionTrees[i];
-        const vector<DataRowPtr> matchedRows = Evaluate(expressionTree);
+        const vector<DataRowPtr> matchedRows = Select(expressionTree);
         int32_t signalIDColumnIndex = -1;
 
         if (m_trackFilteredSignalIDs)
@@ -1184,17 +1169,6 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }
 
-vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
-{
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
-
-    parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryTableName(dataTable->Name());
-    parser->Evaluate();
-
-    return parser->m_filteredRows;
-}
-
 vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataSetPtr& dataSet, const string& primaryTableName, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
@@ -1226,7 +1200,18 @@ ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, c
     return GenerateExpressionTree(dataRow->Parent(), filterExpression, suppressConsoleErrorOutput)->Evaluate(dataRow);
 }
 
-vector<DataRowPtr> FilterExpressionParser::Evaluate(const ExpressionTreePtr& expressionTree)
+vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+{
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
+
+    parser->SetDataSet(dataTable->Parent());
+    parser->SetPrimaryTableName(dataTable->Name());
+    parser->Evaluate();
+
+    return parser->m_filteredRows;
+}
+
+vector<DataRowPtr> FilterExpressionParser::Select(const ExpressionTreePtr& expressionTree)
 {
     const DataTablePtr& table = expressionTree->Table();
     vector<DataRowPtr> matchedRows;
