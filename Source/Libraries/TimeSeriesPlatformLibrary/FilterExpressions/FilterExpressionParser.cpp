@@ -327,14 +327,15 @@ void FilterExpressionParser::Evaluate()
     VisitParseTreeNodes();
 
     // Each filter expression statement will have its own expression tree, evaluate each
-    for (size_t x = 0; x < m_expressionTrees.size(); x++)
+    for (size_t i = 0; i < m_expressionTrees.size(); i++)
     {
-        const ExpressionTreePtr& expressionTree = m_expressionTrees[x];
-        const DataTablePtr& table = expressionTree->Table();
+        const ExpressionTreePtr& expressionTree = m_expressionTrees[i];
+        const vector<DataRowPtr> matchedRows = Evaluate(expressionTree);
         int32_t signalIDColumnIndex = -1;
 
         if (m_trackFilteredSignalIDs)
         {
+            const DataTablePtr& table = expressionTree->Table();
             const TableIDFieldsPtr& primaryTableIDFields = GetTableIDFields(table->Name());
 
             if (primaryTableIDFields == nullptr)
@@ -348,124 +349,8 @@ void FilterExpressionParser::Evaluate()
             signalIDColumnIndex = signalIDColumn->Index();
         }
 
-        vector<DataRowPtr> matchedRows;
-
-        for (int32_t y = 0; y < table->RowCount(); y++)
-        {
-            if (expressionTree->TopLimit > -1 && static_cast<int32_t>(matchedRows.size()) >= expressionTree->TopLimit)
-                break;
-
-            const DataRowPtr& row = table->Row(y);
-
-            if (row == nullptr)
-                continue;
-
-            const ValueExpressionPtr& resultExpression = expressionTree->Evaluate(row);
-
-            // Final expression should have a boolean data type (it's part of a WHERE clause)
-            if (resultExpression->ValueType != ExpressionValueType::Boolean)
-                throw FilterExpressionParserException("Final expression tree evaluation did not result in a boolean value, result data type is \"" + string(EnumName(resultExpression->ValueType)) + "\"");
-
-            // If final result is Null, i.e., has no value due to Null propagation, treat result as False
-            if (resultExpression->ValueAsBoolean())
-                matchedRows.push_back(row);
-        }
-
-        if (matchedRows.empty())
-            continue;
-
-        if (!expressionTree->OrderByTerms.empty())
-        {
-            sort(matchedRows.begin(), matchedRows.end(), [expressionTree](const DataRowPtr& leftMatchedRow, const DataRowPtr& rightMatchedRow)
-            {
-                for (size_t i = 0; i < expressionTree->OrderByTerms.size(); i++)
-                {
-                    const auto orderByTerm = expressionTree->OrderByTerms[i];
-                    const DataColumnPtr& orderByColumn = get<0>(orderByTerm);
-                    const int32_t columnIndex = orderByColumn->Index();
-                    const bool ascending = get<1>(orderByTerm);
-                    const bool exactMatch = get<2>(orderByTerm);
-                    const DataRowPtr& leftRow = ascending ? leftMatchedRow : rightMatchedRow;
-                    const DataRowPtr& rightRow = ascending ? rightMatchedRow : leftMatchedRow;
-                    int32_t result;
-
-                    switch (orderByColumn->Type())
-                    {
-                        case DataType::String:
-                        {
-                            auto leftNullable = leftRow->ValueAsString(columnIndex);
-                            auto rightNullable = rightRow->ValueAsString(columnIndex);
-
-                            if (leftNullable.HasValue() && rightNullable.HasValue())
-                                result = Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault(), !exactMatch);
-                            else if (!leftNullable.HasValue() && !rightNullable.HasValue())
-                                result = 0;
-                            else
-                                result = leftNullable.HasValue() ? 1 : -1;
-
-                            break;
-                        }
-                        case DataType::Boolean:
-                            result = CompareValues(leftRow->ValueAsBoolean(columnIndex), rightRow->ValueAsBoolean(columnIndex));
-                            break;
-                        case DataType::DateTime:
-                            result = CompareValues(leftRow->ValueAsDateTime(columnIndex), rightRow->ValueAsDateTime(columnIndex));
-                            break;
-                        case DataType::Single:
-                            result = CompareValues(leftRow->ValueAsSingle(columnIndex), rightRow->ValueAsSingle(columnIndex));
-                            break;
-                        case DataType::Double:
-                            result = CompareValues(leftRow->ValueAsDouble(columnIndex), rightRow->ValueAsDouble(columnIndex));
-                            break;
-                        case DataType::Decimal:
-                            result = CompareValues(leftRow->ValueAsDecimal(columnIndex), rightRow->ValueAsDecimal(columnIndex));
-                            break;
-                        case DataType::Guid:
-                            result = CompareValues(leftRow->ValueAsGuid(columnIndex), rightRow->ValueAsGuid(columnIndex));
-                            break;
-                        case DataType::Int8:
-                            result = CompareValues(leftRow->ValueAsInt8(columnIndex), rightRow->ValueAsInt8(columnIndex));
-                            break;
-                        case DataType::Int16:
-                            result = CompareValues(leftRow->ValueAsInt16(columnIndex), rightRow->ValueAsInt16(columnIndex));
-                            break;
-                        case DataType::Int32:
-                            result = CompareValues(leftRow->ValueAsInt32(columnIndex), rightRow->ValueAsInt32(columnIndex));
-                            break;
-                        case DataType::Int64:
-                            result = CompareValues(leftRow->ValueAsInt64(columnIndex), rightRow->ValueAsInt64(columnIndex));
-                            break;
-                        case DataType::UInt8:
-                            result = CompareValues(leftRow->ValueAsUInt8(columnIndex), rightRow->ValueAsUInt8(columnIndex));
-                            break;
-                        case DataType::UInt16:
-                            result = CompareValues(leftRow->ValueAsUInt16(columnIndex), rightRow->ValueAsUInt16(columnIndex));
-                            break;
-                        case DataType::UInt32:
-                            result = CompareValues(leftRow->ValueAsUInt32(columnIndex), rightRow->ValueAsUInt32(columnIndex));
-                            break;
-                        case DataType::UInt64:
-                            result = CompareValues(leftRow->ValueAsUInt64(columnIndex), rightRow->ValueAsUInt64(columnIndex));
-                            break;
-                        default:
-                            throw FilterExpressionParserException("Unexpected column data type encountered");
-                    }
-
-                    if (result < 0)
-                        return true;
-
-                    if (result > 0)
-                        return false;
-
-                    // Last compare result was equal, continue sort based on next order-by term
-                }
-
-                return false;
-            });
-        }
-
-        for (size_t i = 0; i < matchedRows.size(); i++)
-            AddMatchedRow(matchedRows[i], signalIDColumnIndex);
+        for (size_t j = 0; j < matchedRows.size(); j++)
+            AddMatchedRow(matchedRows[j], signalIDColumnIndex);
     }
 }
 
@@ -1299,6 +1184,17 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }
 
+vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+{
+    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
+
+    parser->SetDataSet(dataTable->Parent());
+    parser->SetPrimaryTableName(dataTable->Name());
+    parser->Evaluate();
+
+    return parser->m_filteredRows;
+}
+
 vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataSetPtr& dataSet, const string& primaryTableName, const string& filterExpression, bool suppressConsoleErrorOutput)
 {
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
@@ -1330,13 +1226,121 @@ ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, c
     return GenerateExpressionTree(dataRow->Parent(), filterExpression, suppressConsoleErrorOutput)->Evaluate(dataRow);
 }
 
-vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+vector<DataRowPtr> FilterExpressionParser::Evaluate(const ExpressionTreePtr& expressionTree)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
+    const DataTablePtr& table = expressionTree->Table();
+    vector<DataRowPtr> matchedRows;
 
-    parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryTableName(dataTable->Name());
-    parser->Evaluate();
+    for (int32_t i = 0; i < table->RowCount(); i++)
+    {
+        if (expressionTree->TopLimit > -1 && static_cast<int32_t>(matchedRows.size()) >= expressionTree->TopLimit)
+            break;
 
-    return parser->m_filteredRows;
+        const DataRowPtr& row = table->Row(i);
+
+        if (row == nullptr)
+            continue;
+
+        const ValueExpressionPtr& resultExpression = expressionTree->Evaluate(row);
+
+        // Final expression should have a boolean data type (it's part of a WHERE clause)
+        if (resultExpression->ValueType != ExpressionValueType::Boolean)
+            throw FilterExpressionParserException("Final expression tree evaluation did not result in a boolean value, result data type is \"" + string(EnumName(resultExpression->ValueType)) + "\"");
+
+        // If final result is Null, i.e., has no value due to Null propagation, treat result as False
+        if (resultExpression->ValueAsBoolean())
+            matchedRows.push_back(row);
+    }
+
+    if (!matchedRows.empty() && !expressionTree->OrderByTerms.empty())
+    {
+        sort(matchedRows.begin(), matchedRows.end(), [expressionTree](const DataRowPtr& leftMatchedRow, const DataRowPtr& rightMatchedRow)
+        {
+            for (size_t i = 0; i < expressionTree->OrderByTerms.size(); i++)
+            {
+                const auto orderByTerm = expressionTree->OrderByTerms[i];
+                const DataColumnPtr& orderByColumn = get<0>(orderByTerm);
+                const int32_t columnIndex = orderByColumn->Index();
+                const bool ascending = get<1>(orderByTerm);
+                const bool exactMatch = get<2>(orderByTerm);
+                const DataRowPtr& leftRow = ascending ? leftMatchedRow : rightMatchedRow;
+                const DataRowPtr& rightRow = ascending ? rightMatchedRow : leftMatchedRow;
+                int32_t result;
+
+                switch (orderByColumn->Type())
+                {
+                    case DataType::String:
+                    {
+                        auto leftNullable = leftRow->ValueAsString(columnIndex);
+                        auto rightNullable = rightRow->ValueAsString(columnIndex);
+
+                        if (leftNullable.HasValue() && rightNullable.HasValue())
+                            result = Compare(leftNullable.GetValueOrDefault(), rightNullable.GetValueOrDefault(), !exactMatch);
+                        else if (!leftNullable.HasValue() && !rightNullable.HasValue())
+                            result = 0;
+                        else
+                            result = leftNullable.HasValue() ? 1 : -1;
+
+                        break;
+                    }
+                    case DataType::Boolean:
+                        result = CompareValues(leftRow->ValueAsBoolean(columnIndex), rightRow->ValueAsBoolean(columnIndex));
+                        break;
+                    case DataType::DateTime:
+                        result = CompareValues(leftRow->ValueAsDateTime(columnIndex), rightRow->ValueAsDateTime(columnIndex));
+                        break;
+                    case DataType::Single:
+                        result = CompareValues(leftRow->ValueAsSingle(columnIndex), rightRow->ValueAsSingle(columnIndex));
+                        break;
+                    case DataType::Double:
+                        result = CompareValues(leftRow->ValueAsDouble(columnIndex), rightRow->ValueAsDouble(columnIndex));
+                        break;
+                    case DataType::Decimal:
+                        result = CompareValues(leftRow->ValueAsDecimal(columnIndex), rightRow->ValueAsDecimal(columnIndex));
+                        break;
+                    case DataType::Guid:
+                        result = CompareValues(leftRow->ValueAsGuid(columnIndex), rightRow->ValueAsGuid(columnIndex));
+                        break;
+                    case DataType::Int8:
+                        result = CompareValues(leftRow->ValueAsInt8(columnIndex), rightRow->ValueAsInt8(columnIndex));
+                        break;
+                    case DataType::Int16:
+                        result = CompareValues(leftRow->ValueAsInt16(columnIndex), rightRow->ValueAsInt16(columnIndex));
+                        break;
+                    case DataType::Int32:
+                        result = CompareValues(leftRow->ValueAsInt32(columnIndex), rightRow->ValueAsInt32(columnIndex));
+                        break;
+                    case DataType::Int64:
+                        result = CompareValues(leftRow->ValueAsInt64(columnIndex), rightRow->ValueAsInt64(columnIndex));
+                        break;
+                    case DataType::UInt8:
+                        result = CompareValues(leftRow->ValueAsUInt8(columnIndex), rightRow->ValueAsUInt8(columnIndex));
+                        break;
+                    case DataType::UInt16:
+                        result = CompareValues(leftRow->ValueAsUInt16(columnIndex), rightRow->ValueAsUInt16(columnIndex));
+                        break;
+                    case DataType::UInt32:
+                        result = CompareValues(leftRow->ValueAsUInt32(columnIndex), rightRow->ValueAsUInt32(columnIndex));
+                        break;
+                    case DataType::UInt64:
+                        result = CompareValues(leftRow->ValueAsUInt64(columnIndex), rightRow->ValueAsUInt64(columnIndex));
+                        break;
+                    default:
+                        throw FilterExpressionParserException("Unexpected column data type encountered");
+                }
+
+                if (result < 0)
+                    return true;
+
+                if (result > 0)
+                    return false;
+
+                // Last compare result was equal, continue sort based on next order-by term
+            }
+
+            return false;
+        });
+    }
+
+    return matchedRows;
 }
