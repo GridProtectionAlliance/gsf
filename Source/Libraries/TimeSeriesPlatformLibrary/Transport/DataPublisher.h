@@ -149,15 +149,15 @@ namespace Transport
         ClientConnectedCallback m_clientConnectedCallback;
 
         // Server request handlers
-        void HandleSubscribe(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleUnsubscribe(ClientConnection& connection);
-        void HandleMetadataRefresh(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleUpdateProcessingInterval(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleDefineOperationalModes(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleConfirmNotification(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleConfirmBufferBlock(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandlePublishCommandMeasurements(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleUserCommand(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleUnsubscribe(const ClientConnectionPtr& connection);
+        void HandleMetadataRefresh(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleUpdateProcessingInterval(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleDefineOperationalModes(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleConfirmNotification(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleConfirmBufferBlock(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandlePublishCommandMeasurements(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleUserCommand(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
 
         // Dispatchers
         void Dispatch(DispatcherFunction function);
@@ -168,16 +168,16 @@ namespace Transport
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        
+        static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);        
         static void SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
-        //static void SerializeMetadata(const GSF::Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer);
-        //static void SerializeMetadata(const GSF::Guid& clientID, const pugi::xml_document& metadata, std::vector<uint8_t>& buffer);
 
         ClientConnectionPtr GetClient(const GSF::Guid& clientID) const;
         std::string DecodeClientString(const GSF::Guid& clientID, const uint8_t* data, uint32_t offset, uint32_t length) const;
+        std::string DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const;
         std::vector<uint8_t> EncodeClientString(const GSF::Guid& clientID, const std::string& value) const;
-        GSF::Data::DataSetPtr FilterClientMetadata(ClientConnection& connection, std::map<std::string, GSF::FilterExpressions::ExpressionTreePtr> filterExpressions);
+        std::vector<uint8_t> EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const;
+        GSF::Data::DataSetPtr FilterClientMetadata(const ClientConnectionPtr& connection, const std::map<std::string, GSF::FilterExpressions::ExpressionTreePtr, StringComparer>& filterExpressions) const;
+        std::vector<uint8_t> SerializeMetadata(const ClientConnectionPtr& connection, const GSF::Data::DataSetPtr& metadata);
     public:
         // Creates a new instance of the data publisher.
         DataPublisher(const boost::asio::ip::tcp::endpoint& endpoint);

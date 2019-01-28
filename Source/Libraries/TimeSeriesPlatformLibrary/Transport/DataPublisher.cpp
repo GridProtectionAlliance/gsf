@@ -190,23 +190,23 @@ void DataPublisher::AcceptConnection(const ClientConnectionPtr& clientConnection
     StartAccept();
 }
 
-void DataPublisher::HandleSubscribe(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
-void DataPublisher::HandleUnsubscribe(ClientConnection& connection)
+void DataPublisher::HandleUnsubscribe(const ClientConnectionPtr& connection)
 {
 }
 
-void DataPublisher::HandleMetadataRefresh(ClientConnection& connection, uint8_t* buffer, uint32_t startIndex, uint32_t length)
+void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection, uint8_t* buffer, uint32_t startIndex, uint32_t length)
 {
     // Ensure that the subscriber is allowed to request meta-data
     if (!m_allowMetadataRefresh)
         throw PublisherException("Meta-data refresh has been disallowed by the DataPublisher.");
 
-    DispatchStatusMessage("Received meta-data refresh request from " + connection.ConnectionID() + ", preparing response...");
+    DispatchStatusMessage("Received meta-data refresh request from " + connection->ConnectionID() + ", preparing response...");
 
-    const GSF::Guid clientID = connection.ClientID();
+    //const GSF::Guid clientID = connection.ClientID();
     map<string, ExpressionTreePtr, StringComparer> filterExpressions;
     string message, tableName, filterExpression, sortField;
     DateTime startTime = UtcNow();
@@ -222,7 +222,7 @@ void DataPublisher::HandleMetadataRefresh(ClientConnection& connection, uint8_t*
 
             if (length >= responseLength + 4)
             {
-                const string metadataFilters = DecodeClientString(clientID, buffer, startIndex, responseLength);
+                const string metadataFilters = DecodeClientString(connection, buffer, startIndex, responseLength);
                 const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_clientMetadata, "MeasurementDetail", metadataFilters);
 
                 // Go through each subscriber specified filter expressions and add it to dictionary
@@ -235,29 +235,56 @@ void DataPublisher::HandleMetadataRefresh(ClientConnection& connection, uint8_t*
     {
         DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: " + string(ex.what()));
     }
+
+    try
+    {
+        const DataSetPtr metadata = FilterClientMetadata(connection, filterExpressions);
+        vector<uint8_t> serializedMetadata = SerializeMetadata(connection, metadata);
+        vector<DataTablePtr> tables = metadata->Tables();
+        uint64_t rowCount = 0;
+
+        for (size_t i = 0; i < tables.size(); i++)
+            rowCount += tables[i]->RowCount();
+
+        if (rowCount > 0)
+        {
+            //Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
+            //OnStatusMessage(MessageLevel.Info, $"{rowCount:N0} records spanning {metadata.Tables.Count:N0} tables of meta-data prepared in {elapsedTime.ToString(2)}, sending response to {connection.ConnectionID}...");
+        }
+        else
+        {
+            //OnStatusMessage(MessageLevel.Info, $"No meta-data is available, sending an empty response to {connection.ConnectionID}...");
+        }
+
+        //SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
+    }
+    catch (const std::exception&)
+    {
+
+    }
 }
 
-void DataPublisher::HandleUpdateProcessingInterval(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleUpdateProcessingInterval(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
-void DataPublisher::HandleDefineOperationalModes(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleDefineOperationalModes(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
-void DataPublisher::HandleConfirmNotification(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleConfirmNotification(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
-void DataPublisher::HandleConfirmBufferBlock(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleConfirmBufferBlock(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
-void DataPublisher::HandlePublishCommandMeasurements(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandlePublishCommandMeasurements(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
-void DataPublisher::HandleUserCommand(ClientConnection& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleUserCommand(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
 {
 }
 
@@ -383,12 +410,16 @@ ClientConnectionPtr DataPublisher::GetClient(const GSF::Guid& clientID) const
 
 string DataPublisher::DecodeClientString(const GSF::Guid& clientID, const uint8_t* data, uint32_t offset, uint32_t length) const
 {
-    const ClientConnectionPtr clientConnection = GetClient(clientID);
+    return DecodeClientString(GetClient(clientID), data, offset, length);
+}
+
+std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const
+{
     uint32_t encoding = OperationalEncoding::UTF8;
     bool swapBytes = EndianConverter::IsLittleEndian();
 
-    if (clientConnection != nullptr)
-        encoding = clientConnection->GetEncoding();
+    if (connection != nullptr)
+        encoding = connection->GetEncoding();
 
     switch (encoding)
     {
@@ -419,12 +450,16 @@ string DataPublisher::DecodeClientString(const GSF::Guid& clientID, const uint8_
 
 vector<uint8_t> DataPublisher::EncodeClientString(const GSF::Guid& clientID, const std::string& value) const
 {
-    const ClientConnectionPtr clientConnection = GetClient(clientID);
+    return EncodeClientString(GetClient(clientID), value);
+}
+
+std::vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const
+{
     uint32_t encoding = OperationalEncoding::UTF8;
     bool swapBytes = EndianConverter::IsLittleEndian();
 
-    if (clientConnection != nullptr)
-        encoding = clientConnection->GetEncoding();
+    if (connection != nullptr)
+        encoding = connection->GetEncoding();
 
     vector<uint8_t> result{};
 
@@ -468,13 +503,73 @@ vector<uint8_t> DataPublisher::EncodeClientString(const GSF::Guid& clientID, con
     return result;
 }
 
-DataSetPtr DataPublisher::FilterClientMetadata(ClientConnection& connection, map<string, ExpressionTreePtr> filterExpressions)
+DataSetPtr DataPublisher::FilterClientMetadata(const ClientConnectionPtr& connection, const map<string, ExpressionTreePtr, StringComparer>& filterExpressions) const
 {
     if (filterExpressions.empty())
         return m_clientMetadata;
 
-    // TODO: Apply filters
-    return m_clientMetadata;
+    DataSetPtr dataSet = NewSharedPtr<DataSet>();
+    vector<DataTablePtr> tables = m_clientMetadata->Tables();
+
+    for (size_t i = 0; i < tables.size(); i++)
+    {
+        const DataTablePtr table = tables[i];
+        DataTablePtr filteredTable = dataSet->CreateTable(table->Name());
+        ExpressionTreePtr expression;
+
+        for (int32_t j = 0; j < table->ColumnCount(); j++)
+            filteredTable->AddColumn(filteredTable->CloneColumn(table->Column(j)));
+
+        if (TryGetValue<ExpressionTreePtr>(filterExpressions, table->Name(), expression, nullptr))
+        {
+            vector<DataRowPtr> matchedRows = FilterExpressionParser::Evaluate(expression);
+
+            for (size_t j = 0; j < matchedRows.size(); j++)
+                filteredTable->AddRow(filteredTable->CloneRow(matchedRows[j]));
+        }
+        else
+        {
+            for (size_t j = 0; j < table->RowCount(); j++)
+                filteredTable->AddRow(filteredTable->CloneRow(table->Row(j)));
+        }
+
+        dataSet->AddOrUpdateTable(filteredTable);
+    }
+
+    return dataSet;
+}
+
+vector<uint8_t> DataPublisher::SerializeMetadata(const ClientConnectionPtr& connection, const DataSetPtr& metadata)
+{
+    vector<uint8_t> serializedMetadata;
+
+    if (connection != nullptr)
+    {
+        const uint32_t operationalModes = connection->GetOperationalModes();
+        const uint32_t compressionModes = operationalModes & OperationalModes::CompressionModeMask;
+        const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
+        const bool compressMetadata = (operationalModes & OperationalModes::CompressMetadata) > 0;
+
+        if (!useCommonSerializationFormat)
+            throw PublisherException("DataPublisher only supports common serialization format");
+
+        metadata->WriteXml(serializedMetadata);
+
+        if (compressMetadata && (compressionModes & CompressionModes::GZip) > 0)
+        {
+            // TODO: Compress metadata
+            //    const MemoryStream payloadStream(payload);
+            //    Decompressor decompressor;
+
+            //    decompressor.push(GZipDecompressor());
+            //    decompressor.push(payloadStream);
+
+            //    uncompressed = new vector<uint8_t>();
+            //    CopyStream(&decompressor, *uncompressed);
+        }
+    }
+
+    return serializedMetadata;
 }
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata)
