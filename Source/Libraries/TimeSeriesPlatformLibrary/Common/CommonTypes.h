@@ -157,21 +157,6 @@ namespace GSF
     template<typename T>
     using Func = std::function<T()>;
 
-    template<typename TKey, typename TValue>
-    bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
-    {
-        auto iterator = dictionary.find(key);
-
-        if (iterator != dictionary.end())
-        {
-            value = iterator->second;
-            return true;
-        }
-
-        value = defaultValue;
-        return false;
-    }
-
     // std::unordered_map string hasher
     struct StringHasher : std::unary_function<std::string, std::size_t>
     {
@@ -193,6 +178,36 @@ namespace GSF
         explicit StringComparer(bool ignoreCase);
         bool operator()(const std::string& left, const std::string& right) const;
     };
+
+    template<typename TKey, typename TValue>
+    bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
+    {
+        auto iterator = dictionary.find(key);
+
+        if (iterator != dictionary.end())
+        {
+            value = iterator->second;
+            return true;
+        }
+
+        value = defaultValue;
+        return false;
+    }
+
+    template<typename TValue>
+    bool TryGetValue(const std::map<std::string, TValue, StringComparer>& dictionary, const std::string& key, TValue& value, const TValue& defaultValue)
+    {
+        auto iterator = dictionary.find(key);
+
+        if (iterator != dictionary.end())
+        {
+            value = iterator->second;
+            return true;
+        }
+
+        value = defaultValue;
+        return false;
+    }
 
     typedef boost::any Object;
     typedef boost::uuids::uuid Guid;
