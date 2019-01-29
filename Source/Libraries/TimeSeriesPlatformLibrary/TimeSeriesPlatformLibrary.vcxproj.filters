@@ -1118,5 +1118,8 @@
     <ClInclude Include="FilterExpressions\FilterExpressions.h">
       <Filter>FilterExpressions</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Timer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

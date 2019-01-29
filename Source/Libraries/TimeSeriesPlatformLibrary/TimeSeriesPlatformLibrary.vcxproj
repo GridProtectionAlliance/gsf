@@ -30,6 +30,7 @@
     <ClInclude Include="Common\pugixml.hpp" />
     <ClCompile Include="Common\pugixml.cpp" />
     <ClInclude Include="Common\ThreadSafeQueue.h" />
+    <ClInclude Include="Common\Timer.h" />
     <ClInclude Include="FilterExpressions\antlr4-runtime\atn\AbstractPredicateTransition.h" />
     <ClInclude Include="FilterExpressions\antlr4-runtime\atn\ActionTransition.h" />
     <ClInclude Include="FilterExpressions\antlr4-runtime\atn\AmbiguityInfo.h" />
