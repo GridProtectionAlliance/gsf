@@ -48,7 +48,7 @@ namespace GSF
             m_timerContext.run();
 
             // Reset timer thread when context has nothing left to run
-            free(m_timerThread);
+            delete m_timerThread;
             m_timerThread = nullptr;
 
             // Restart context in preparation for next run
@@ -84,7 +84,7 @@ namespace GSF
         ~Timer()
         {
             Stop();
-            free(m_timerThread);
+            delete m_timerThread;
         }
 
         int32_t GetInterval() const

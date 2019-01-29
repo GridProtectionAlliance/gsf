@@ -25,7 +25,6 @@
 #include "../FilterExpressions/FilterExpressions.h"
 #include <boost/bind.hpp>
 #include <boost/locale.hpp>
-#include <utility>
 
 #include "DataPublisher.h"
 #include "Constants.h"
@@ -45,48 +44,111 @@ using namespace GSF::FilterExpressions;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
+// Convenience functions to perform simple conversions.
+void _DataPublisherWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+
+// --- ClientConnectedInfo ---
+
 struct ClientConnectedInfo
 {
-    const GSF::Guid ClientID;
+    const GSF::Guid SubscriberID;
     const string ConnectionInfo;
     const string SubscriberInfo;
 
     ClientConnectedInfo(const GSF::Guid& clientID, string connectionInfo, string subscriberInfo) :
-        ClientID(clientID),
+        SubscriberID(clientID),
         ConnectionInfo(std::move(connectionInfo)),
         SubscriberInfo(std::move(subscriberInfo))
     {
     }
 };
 
-ClientConnection::ClientConnection(DataPublisherPtr parent, io_context& commandChannelService, io_context& dataChannelService) :  // NOLINT(modernize-pass-by-value)
-    m_parent(parent),
-    m_clientID(),
+// --- ClientConnection ---
+
+ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
+    m_parent(std::move(parent)),
+    m_subscriberID(NewGuid()),
+    m_operationalModes(OperationalModes::NoFlags),
+    m_encoding(OperationalEncoding::UTF8),
     m_commandChannelSocket(commandChannelService),
     m_udpPort(0),
     m_dataChannelSocket(dataChannelService),
     m_timeIndex(0),
     m_baseTimeOffsets{0L, 0L}
 {
-}
+    // Setup ping timer
+    m_pingTimer.SetInteval(5000);
+    m_pingTimer.SetAutoReset(true);
+    m_pingTimer.SetCallback(&ClientConnection::PingTimerElapsed);
+    m_pingTimer.SetUserData(this);
 
-ClientConnection::~ClientConnection()
-{
-}
+    // Attempt to lookup remote connection identification for logging purposes
+    auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
+    m_ipAddress = remoteEndPoint.address();
 
-GSF::Guid ClientConnection::ClientID() const
-{
-    return m_clientID;
-}
+    if (remoteEndPoint.protocol() == tcp::v6())
+        m_connectionID = "[" + m_ipAddress.to_string() + "]:" + ToString(remoteEndPoint.port());
+    else
+        m_connectionID = m_ipAddress.to_string() + ":" + ToString(remoteEndPoint.port());
 
-const std::string ClientConnection::ConnectionID()
-{
-    if (m_connectionID.empty())
+    try
     {
-        // TODO: Develop good connection ID for client...
+        DnsResolver resolver(commandChannelService);
+        const DnsResolver::query query(m_ipAddress.to_string(), ToString(remoteEndPoint.port()));
+        DnsResolver::iterator iterator = resolver.resolve(query);
+        const DnsResolver::iterator end;
+
+        while (iterator != end)
+        {
+            auto endPoint = *iterator++;
+            
+            if (!endPoint.host_name().empty())
+            {
+                m_hostName = endPoint.host_name();
+                m_connectionID = m_hostName + " (" + m_connectionID + ")";
+                break;
+            }
+        }
+    }
+    catch (...)
+    {   //-V565
+        // DNS lookup failure is not a catastrophe
     }
 
+    if (m_hostName.empty())
+        m_hostName = m_ipAddress.to_string();
+}
+
+ClientConnection::~ClientConnection() = default;
+
+TcpSocket& ClientConnection::CommandChannelSocket()
+{
+    return m_commandChannelSocket;
+}
+
+const GSF::Guid& ClientConnection::GetSubscriberID() const
+{
+    return m_subscriberID;
+}
+
+void ClientConnection::SetSubscriberID(const GSF::Guid& id)
+{
+    m_subscriberID = id;
+}
+
+const std::string& ClientConnection::GetConnectionID() const
+{
     return m_connectionID;
+}
+
+const GSF::IPAddress& ClientConnection::GetIPAddress() const
+{
+    return m_ipAddress;
+}
+
+const std::string& ClientConnection::GetHostName() const
+{
+    return m_hostName;
 }
 
 uint32_t ClientConnection::GetOperationalModes() const
@@ -126,14 +188,20 @@ std::vector<uint8_t> ClientConnection::IVs(int cipherIndex)
     return m_ivs[cipherIndex];
 }
 
-TcpSocket& ClientConnection::CommandChannelSocket()
-{
-    return m_commandChannelSocket;
-}
-
 void ClientConnection::Start()
 {
     
+}
+
+void ClientConnection::CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
+{
+    async_write(m_commandChannelSocket, buffer(&data[offset], length), &_DataPublisherWriteHandler);
+}
+
+void ClientConnection::DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
+{
+    // TODO: Implement UDP send
+    CommandChannelSendAsync(data, offset, length);
 }
 
 //void ClientConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred)
@@ -144,13 +212,26 @@ void ClientConnection::Start()
 //{
 //}
 
-DataPublisher::DataPublisher(const tcp::endpoint& endpoint) :    
+void ClientConnection::PingTimerElapsed(Timer* timer, void* userData)
+{
+    ClientConnection* clientConnection = static_cast<ClientConnection*>(userData);
+
+    if (clientConnection == nullptr)
+        return;
+
+    clientConnection->m_parent->SendClientResponse(clientConnection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
+}
+
+// --- DataPublisher ---
+
+DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :    
     m_securityMode(SecurityMode::None),
     m_allowMetadataRefresh(true),
     m_allowNaNValueFilter(true),
     m_forceNaNValueFilter(false),
     m_cipherKeyRotationPeriod(60000),
     m_disconnecting(false),
+    m_userData(nullptr),
     m_totalCommandChannelBytesSent(0L),
     m_totalDataChannelBytesSent(0L),
     m_totalMeasurementsSent(0L),
@@ -166,13 +247,11 @@ DataPublisher::DataPublisher(const tcp::endpoint& endpoint) :
 }
 
 DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
-    DataPublisher(tcp::endpoint(ipV6 ? tcp::v6() : tcp::v4(), port))
+    DataPublisher(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port))
 {
 }
 
-DataPublisher::~DataPublisher()
-{
-}
+DataPublisher::~DataPublisher() = default;
 
 void DataPublisher::RunCallbackThread()
 {
@@ -196,7 +275,7 @@ void DataPublisher::RunCommandChannelAcceptThread()
 
 void DataPublisher::StartAccept()
 {
-    ClientConnectionPtr clientConnection = NewSharedPtr<ClientConnection, DataPublisherPtr, io_context&, io_context&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
+    const ClientConnectionPtr clientConnection = NewSharedPtr<ClientConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
     m_clientAcceptor.async_accept(clientConnection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, clientConnection, asio::placeholders::error));
 }
 
@@ -204,7 +283,7 @@ void DataPublisher::AcceptConnection(const ClientConnectionPtr& clientConnection
 {
     if (!error)
     {
-        m_clientConnections.insert(pair<GSF::Guid, ClientConnectionPtr>(clientConnection->ClientID(), clientConnection));
+        m_clientConnections.insert(clientConnection);
         clientConnection->Start();
     }
 
@@ -225,12 +304,10 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
     if (!m_allowMetadataRefresh)
         throw PublisherException("Meta-data refresh has been disallowed by the DataPublisher.");
 
-    DispatchStatusMessage("Received meta-data refresh request from " + connection->ConnectionID() + ", preparing response...");
+    DispatchStatusMessage("Received meta-data refresh request from " + connection->GetConnectionID() + ", preparing response...");
 
-    //const GSF::Guid clientID = connection.ClientID();
     map<string, ExpressionTreePtr, StringComparer> filterExpressions;
-    string message, tableName, filterExpression, sortField;
-    DateTime startTime = UtcNow();
+    const DateTime startTime = UtcNow(); //-V821
 
     try
     {
@@ -260,7 +337,7 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
     try
     {
         const DataSetPtr metadata = FilterClientMetadata(connection, filterExpressions);
-        vector<uint8_t> serializedMetadata = SerializeMetadata(connection, metadata);
+        const vector<uint8_t> serializedMetadata = SerializeMetadata(connection, metadata);
         vector<DataTablePtr> tables = metadata->Tables();
         uint64_t rowCount = 0;
 
@@ -269,20 +346,20 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
 
         if (rowCount > 0)
         {
-            //Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-            //OnStatusMessage(MessageLevel.Info, $"{rowCount:N0} records spanning {metadata.Tables.Count:N0} tables of meta-data prepared in {elapsedTime.ToString(2)}, sending response to {connection.ConnectionID}...");
+            const auto elapsedTime = (UtcNow() - startTime).total_seconds();
+            DispatchStatusMessage(ToString(rowCount) + " records spanning " + ToString(tables.size()) + " tables of meta-data prepared in " + ToString(elapsedTime) + " seconds, sending response to " + connection->GetConnectionID() + "...");
         }
         else
         {
-            //OnStatusMessage(MessageLevel.Info, $"No meta-data is available, sending an empty response to {connection.ConnectionID}...");
+            DispatchStatusMessage("No meta-data is available" + string(filterExpressions.empty() ? "" : " due to user applied meta-data filters") + ", sending an empty response to " + connection->GetConnectionID() + "...");
         }
 
-        //SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
+        SendClientResponse(connection, ServerResponse::Succeeded, ServerCommand::MetadataRefresh, serializedMetadata);
     }
     catch (const std::exception& ex)
     {
-        message = "Failed to transfer meta-data due to exception: " + string(ex.what());
-        //SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
+        const string message = "Failed to transfer meta-data due to exception: " + string(ex.what());
+        SendClientResponse(connection, ServerResponse::Failed, ServerCommand::MetadataRefresh, message);
         DispatchErrorMessage(message);
     }
 }
@@ -352,9 +429,9 @@ void DataPublisher::DispatchErrorMessage(const string& message)
     Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
 }
 
-void DataPublisher::DispatchClientConnected(const GSF::Guid& clientID, const string& connectionInfo, const string& subscriberInfo)
+void DataPublisher::DispatchClientConnected(const GSF::Guid& subscriberID, const string& connectionInfo, const string& subscriberInfo)
 {
-    const ClientConnectedInfo* data = new ClientConnectedInfo(clientID, connectionInfo, subscriberInfo);
+    const ClientConnectedInfo* data = new ClientConnectedInfo(subscriberID, connectionInfo, subscriberInfo);
     Dispatch(&ClientConnectedDispatcher, reinterpret_cast<const uint8_t*>(data), 0, sizeof(ClientConnectedInfo*));
 }
 
@@ -407,7 +484,7 @@ void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vecto
     if (clientConnectedCallback != nullptr)
     {
         const ClientConnectedInfo* data = reinterpret_cast<const ClientConnectedInfo*>(&buffer[0]);
-        clientConnectedCallback(source, data->ClientID, data->ConnectionInfo, data->SubscriberInfo);
+        clientConnectedCallback(source, data->SubscriberID, data->ConnectionInfo, data->SubscriberInfo);
         delete data;
     }
 }
@@ -423,18 +500,6 @@ void DataPublisher::SerializeSignalIndexCache(const GSF::Guid& clientID, const S
 //void DataPublisher::SerializeMetadata(const GSF:Guid& clientID, const xml_document& metadata, vector<uint8_t>& buffer)
 //{
 //}
-
-ClientConnectionPtr DataPublisher::GetClient(const GSF::Guid& clientID) const
-{
-    ClientConnectionPtr clientConnection;
-    TryGetValue<GSF::Guid, ClientConnectionPtr>(m_clientConnections, clientID, clientConnection, nullptr);
-    return clientConnection;
-}
-
-string DataPublisher::DecodeClientString(const GSF::Guid& clientID, const uint8_t* data, uint32_t offset, uint32_t length) const
-{
-    return DecodeClientString(GetClient(clientID), data, offset, length);
-}
 
 std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const
 {
@@ -469,11 +534,6 @@ std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connect
         default:
             throw PublisherException("Encountered unexpected operational encoding " + ToHex(encoding));
     }
-}
-
-vector<uint8_t> DataPublisher::EncodeClientString(const GSF::Guid& clientID, const std::string& value) const
-{
-    return EncodeClientString(GetClient(clientID), value);
 }
 
 std::vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const
@@ -596,6 +656,11 @@ vector<uint8_t> DataPublisher::SerializeMetadata(const ClientConnectionPtr& conn
     return serializedMetadata;
 }
 
+bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message)
+{
+    return SendClientResponse(connection, responseCode, commandCode, EncodeClientString(connection, message));
+}
+
 bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data)
 {
     bool success = false;
@@ -668,9 +733,7 @@ bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, ui
                 buffer.assign(data.begin(), data.end());
             }
 
-            // TODO: Publish packet
-            //IServer publishChannel;
-
+            // TODO: Publish packet on UDP
             //// Data packets and buffer blocks can be published on a UDP data channel, so check for this...
             //if (useDataChannel)
             //    publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
@@ -685,9 +748,11 @@ bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, ui
             //    else
             //        publishChannel.SendToAsync(connection, buffer, 0, buffer.size());
 
-            //    m_totalBytesSent += buffer.size();
-            //    success = true;
             //}
+
+            connection->CommandChannelSendAsync(buffer.data(), 0, buffer.size());
+            m_totalCommandChannelBytesSent += buffer.size();
+            success = true;
         }
     }
     catch (const std::exception& ex)
@@ -814,4 +879,12 @@ void DataPublisher::RegisterErrorMessageCallback(MessageCallback errorMessageCal
 void DataPublisher::RegisterClientConnectedCallback(ClientConnectedCallback clientConnectedCallback)
 {
     m_clientConnectedCallback = clientConnectedCallback;
+}
+
+// --- Convenience Methods ---
+
+// This method does nothing. It is used as the callback for asynchronous write operations.
+void _DataPublisherWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+{
+    // TODO: Dispatch exception message...
 }

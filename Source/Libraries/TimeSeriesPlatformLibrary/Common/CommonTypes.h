@@ -151,12 +151,6 @@ namespace GSF
         return boost::dynamic_pointer_cast<T>(source);
     }
 
-    template<typename T>
-    using Action = std::function<void(T)>;
-
-    template<typename T>
-    using Func = std::function<T()>;
-
     // std::unordered_map string hasher
     struct StringHasher : std::unary_function<std::string, std::size_t>
     {
@@ -220,9 +214,12 @@ namespace GSF
     typedef boost::condition_variable WaitHandle;
     typedef boost::lock_guard<Mutex> ScopeLock;
     typedef boost::unique_lock<Mutex> UniqueLock;
+    typedef boost::asio::io_context IOContext;
     typedef boost::asio::ip::address IPAddress;
     typedef boost::asio::ip::tcp::socket TcpSocket;
     typedef boost::asio::ip::udp::socket UdpSocket;
+    typedef boost::asio::ip::tcp::acceptor TcpAcceptor;
+    typedef boost::asio::ip::tcp::endpoint TcpEndPoint;
     typedef boost::asio::ip::tcp::resolver DnsResolver;
     typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> StreamBuffer;
     typedef boost::iostreams::gzip_decompressor GZipDecompressor;

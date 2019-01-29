@@ -41,7 +41,7 @@ using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 // Convenience functions to perform simple conversions.
-void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+void _DataSubscriberWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
 // --- SubscriptionInfo ---
 
@@ -1397,7 +1397,7 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data,
             m_writeBuffer[9 + i] = data[offset + i];
     }
 
-    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), &WriteHandler);
+    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), &_DataSubscriberWriteHandler);
 }
 
 // Convenience method to send the currently defined
@@ -1460,6 +1460,6 @@ bool DataSubscriber::IsSubscribed() const
 // --- Convenience Methods ---
 
 // This method does nothing. It is used as the callback for asynchronous write operations.
-void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+void _DataSubscriberWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
 {
 }
