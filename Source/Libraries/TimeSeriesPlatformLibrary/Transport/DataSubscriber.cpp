@@ -486,7 +486,14 @@ void DataSubscriber::HandleMetadataRefresh(uint8_t* data, uint32_t offset, uint3
 // Handles data packets from the server.
 void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length)
 {
-    Dispatch(&NewMeasurementsDispatcher, data, offset, length);
+    vector<uint8_t> buffer(length);
+
+    for (size_t i = 0; i < length; i++)
+        buffer[i] = data[offset + i];
+
+    NewMeasurementsDispatcher(this, buffer);
+
+    //Dispatch(&NewMeasurementsDispatcher, data, offset, length);
 }
 
 // Handles data start time reported by the server at the beginning of a subscription.
