@@ -25,16 +25,18 @@
 #include <string>
 #include <vector>
 
+#include "../Common/CommonTypes.h"
 #include "../Common/Convert.h"
 #include "../Transport/DataSubscriber.h"
 
 using namespace std;
+using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 DataSubscriber Subscriber;
 
-bool RunSubscriber(string hostname, uint16_t port);
+bool RunSubscriber(const string& hostname, uint16_t port);
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
@@ -86,7 +88,7 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Connect to publisher
 //   - Subscribe
-bool RunSubscriber(string hostname, uint16_t port)
+bool RunSubscriber(const string& hostname, uint16_t port)
 {
     // SubscriptionInfo is a helper object which allows the user
     // to set up their subscription and reuse subscription settings.
@@ -118,7 +120,7 @@ bool RunSubscriber(string hostname, uint16_t port)
     }
     catch (...)
     {
-        errorMessage = current_exception_diagnostic_information(true);
+        errorMessage = boost::current_exception_diagnostic_information(true);
     }
 
     if (connected)

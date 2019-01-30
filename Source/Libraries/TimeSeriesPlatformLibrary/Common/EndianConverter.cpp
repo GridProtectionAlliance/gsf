@@ -61,6 +61,8 @@ int EndianConverter::NativeOrder() const
     return m_nativeOrder;
 }
 
+EndianConverter EndianConverter::Default;
+
 bool EndianConverter::IsLittleEndian()
 {
     static const bool isLittleEndian = Default.NativeOrder() == LittleEndian;
