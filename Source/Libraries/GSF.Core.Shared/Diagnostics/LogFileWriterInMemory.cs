@@ -91,6 +91,10 @@ namespace GSF.Diagnostics
             m_logCount++;
         }
 
+        /// <summary>
+        /// Returns a byte array of the log zip stream.
+        /// </summary>
+        /// <returns>Byte array of the log zip stream.</returns>
         public byte[] ToByteArray()
         {
             m_zipStream.Write(false);
