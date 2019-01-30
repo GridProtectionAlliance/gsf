@@ -41,21 +41,34 @@ namespace GSF.Data
         #region [ Members ]
 
         // Events
+
+        /// <summary>
+        /// Disposed event.
+        /// </summary>
         public event EventHandler Disposed;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="DataDeleter"/>.
+        /// </summary>
         public DataDeleter()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataDeleter"/>.
+        /// </summary>
         public DataDeleter(string fromConnectString, string toConnectString)
             : base(fromConnectString, toConnectString)
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataDeleter"/>.
+        /// </summary>
         public DataDeleter(Schema fromSchema, Schema toSchema)
             : base(fromSchema, toSchema)
         {
@@ -282,7 +295,7 @@ namespace GSF.Data
                         }
                         catch (Exception ex)
                         {
-                            OnSQLFailure(deleteSQL.ToString(), new DataException("ERROR: No \"WHERE\" criteria was generated for Sql delete statement, primary key value missing?  Delete not performed"));
+                            OnSQLFailure(deleteSQL.ToString(), new DataException("ERROR: No \"WHERE\" criteria was generated for Sql delete statement, primary key value missing?  Delete not performed", ex));
                         }
                     }
 

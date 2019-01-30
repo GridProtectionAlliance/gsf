@@ -41,21 +41,34 @@ namespace GSF.Data
         #region [ Members ]
 
         // Events
+
+        /// <summary>
+        /// Disposed event.
+        /// </summary>
         public event EventHandler Disposed;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="DataUpdater"/>.
+        /// </summary>
         public DataUpdater()
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataUpdater"/>.
+        /// </summary>
         public DataUpdater(string fromConnectString, string toConnectString)
             : base(fromConnectString, toConnectString)
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataUpdater"/>.
+        /// </summary>
         public DataUpdater(Schema fromSchema, Schema toSchema)
             : base(fromSchema, toSchema)
         {

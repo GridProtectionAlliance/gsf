@@ -125,7 +125,15 @@ namespace GSF.Data
         #region [ Members ]
 
         // Fields - Variables Declaration
+
+        /// <summary>
+        /// From schema.
+        /// </summary>
         protected Schema m_fromSchema;
+
+        /// <summary>
+        /// To schema.
+        /// </summary>
         protected Schema m_toSchema;
 
         /// <summary>
@@ -406,6 +414,9 @@ namespace GSF.Data
 
         }
 
+        /// <summary>
+        /// Executes bulk data operation.
+        /// </summary>
         public abstract void Execute();
 
         /// <summary>

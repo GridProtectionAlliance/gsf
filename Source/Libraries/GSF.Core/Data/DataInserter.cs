@@ -68,27 +68,55 @@ namespace GSF.Data
         private bool m_preserveAutoIncValues;
         private bool m_forceTruncateTable;
 
+        /// <summary>
+        /// Table cleared event.
+        /// </summary>
         public event EventHandler<EventArgs<string>> TableCleared;
+        
+        /// <summary>
+        /// Bulk-insert executing event.
+        /// </summary>
         public event EventHandler<EventArgs<string>> BulkInsertExecuting;
+        
+        /// <summary>
+        /// Bulk-insert completed event.
+        /// </summary>
         public event EventHandler<EventArgs<string, int, int>> BulkInsertCompleted;
+        
+        /// <summary>
+        /// Bulk-insert exception event.
+        /// </summary>
         public event EventHandler<EventArgs<string, string, Exception>> BulkInsertException;
+
+        /// <summary>
+        /// Disposed event.
+        /// </summary>
         public event EventHandler Disposed;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="DataInserter"/>.
+        /// </summary>
         public DataInserter()
         {
 
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataInserter"/>.
+        /// </summary>
         public DataInserter(string FromConnectString, string ToConnectString)
             : base(FromConnectString, ToConnectString)
         {
 
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataInserter"/>.
+        /// </summary>
         public DataInserter(Schema FromSchema, Schema ToSchema)
             : base(FromSchema, ToSchema)
         {

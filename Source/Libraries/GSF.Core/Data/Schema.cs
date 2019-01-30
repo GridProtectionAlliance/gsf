@@ -161,6 +161,11 @@ namespace GSF.Data
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="Field"/>.
+        /// </summary>
+        /// <param name="Name">Field name.</param>
+        /// <param name="Type">OLEDB data type for field.</param>
         public Field(string Name, OleDbType Type)
         {
             // We only allow internal creation of this object
@@ -1449,6 +1454,9 @@ namespace GSF.Data
             m_fieldList.Remove(field);
         }
 
+        /// <summary>
+        /// Clears the field list.
+        /// </summary>
         public void Clear()
         {
             foreach (Field field in m_fieldList)
@@ -1544,16 +1552,25 @@ namespace GSF.Data
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="Table"/>.
+        /// </summary>
         public Table()
             : this(null)
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Table"/>.
+        /// </summary>
         public Table(string name)
             : this(null, null, name, TableType.Table.ToString(), null, 0)
         {
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Table"/>.
+        /// </summary>
         public Table(string catalog, string schema, string name, string type, string description, int rows)
         {
             // We only allow internal creation of this object
@@ -2050,15 +2067,20 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Check for table reference
+        /// Check for direct table reference by <paramref name="otherTable"/>.
         /// </summary>
-        /// <param name="otherTable"></param>
-        /// <returns></returns>
+        /// <param name="otherTable">Table to check for relation.</param>
+        /// <returns><c>true</c> if directly referenced; otherwise, <c>false</c>.</returns>
         public bool IsReferencedBy(Table otherTable)
         {
             return IsReferencedBy(otherTable, null);
         }
 
+        /// <summary>
+        /// Checks for indirect table reference through <paramref name="otherTable"/>.
+        /// </summary>
+        /// <param name="otherTable">Table to check for relation.</param>
+        /// <returns><c>true</c> if indirectly referenced; otherwise, <c>false</c>.</returns>
         public bool IsReferencedVia(Table otherTable)
         {
             Table table;
@@ -2149,6 +2171,9 @@ namespace GSF.Data
             return false;
         }
 
+        /// <summary>
+        /// Re-evaluates identity SQL for database type.
+        /// </summary>
         public void ReevalulateIdentitySQL()
         {
             switch (m_parent?.Parent.DataSourceType)
@@ -2179,6 +2204,9 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Calculates row count.
+        /// </summary>
         public void CalculateRowCount()
         {
             if (m_tableType == TableType.Table)
@@ -2251,6 +2279,9 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Gets table count.
+        /// </summary>
         public int Count
         {
             get
@@ -2259,6 +2290,9 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Gets or sets parent <see cref="Schema"/>.
+        /// </summary>
         public Schema Parent
         {
             get
@@ -2280,6 +2314,10 @@ namespace GSF.Data
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Adds new table.
+        /// </summary>
+        /// <param name="table">Table to add.</param>
         public void Add(Table table)
         {
             if ((object)table.Parent == null)
@@ -2289,6 +2327,10 @@ namespace GSF.Data
             m_tableList.Add(table);
         }
 
+        /// <summary>
+        /// Removes table.
+        /// </summary>
+        /// <param name="table">Table to remove.</param>
         public void Remove(Table table)
         {
             if (table.Parent == this)
@@ -2298,6 +2340,9 @@ namespace GSF.Data
             m_tableList.Remove(table);
         }
 
+        /// <summary>
+        /// Clears all tables.
+        /// </summary>
         public void Clear()
         {
             foreach (Table table in m_tableList)
@@ -2310,6 +2355,11 @@ namespace GSF.Data
             m_tableList.Clear();
         }
 
+        /// <summary>
+        /// Gets table at index.
+        /// </summary>
+        /// <param name="index">Index of table</param>
+        /// <returns>Table at index.</returns>
         public Table this[int index]
         {
             get
@@ -2321,6 +2371,11 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Gets table by name.
+        /// </summary>
+        /// <param name="name">Table name.</param>
+        /// <returns>Table with specified name.</returns>
         public Table this[string name]
         {
             get
@@ -2331,6 +2386,11 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Finds table by mapped named.
+        /// </summary>
+        /// <param name="mapName">Mapped table name.</param>
+        /// <returns>Table with mapped name.</returns>
         public Table FindByMapName(string mapName)
         {
 
@@ -2344,11 +2404,19 @@ namespace GSF.Data
 
         }
 
+        /// <summary>
+        /// Gets table enumerator.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator<Table> GetEnumerator()
         {
             return m_tableList.GetEnumerator();
         }
 
+        /// <summary>
+        /// Gets table field list.
+        /// </summary>
+        /// <returns>Comma separated field list.</returns>
         public string GetList()
         {
             StringBuilder fieldList = new StringBuilder();
@@ -2466,6 +2534,9 @@ namespace GSF.Data
         // Fields
         private Tables m_tables;
 
+        /// <summary>
+        /// Defines a table filter that specifies no restrictions.
+        /// </summary>
         public const TableType NoRestriction = TableType.Table | TableType.View | TableType.SystemTable | TableType.SystemView | TableType.Alias | TableType.Synonym | TableType.GlobalTemp | TableType.LocalTemp | TableType.Link | TableType.Undetermined;
 
         [NonSerialized]
@@ -2484,6 +2555,9 @@ namespace GSF.Data
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="Schema"/>.
+        /// </summary>
         public Schema()
         {
             m_connectionString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\\SourceDB.mdb";
@@ -2495,6 +2569,9 @@ namespace GSF.Data
             m_tables = new Tables(this);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Schema"/>.
+        /// </summary>
         public Schema(string connectionString, TableType tableTypeRestriction = NoRestriction, bool immediateClose = true, bool analyzeNow = true)
         {
             m_connectionString = connectionString;
@@ -2990,6 +3067,11 @@ namespace GSF.Data
 
         // Static Methods
 
+        /// <summary>
+        /// Opens an ADO connection.
+        /// </summary>
+        /// <param name="connectionString">ADO connection string.</param>
+        /// <returns>Opened connection.</returns>
         public static IDbConnection OpenConnection(string connectionString)
         {
             DatabaseType databaseType;
@@ -2998,6 +3080,14 @@ namespace GSF.Data
             return OpenConnection(connectionString, out databaseType, out schema, out isAdoConnection);
         }
 
+        /// <summary>
+        /// Opens an ADO connection.
+        /// </summary>
+        /// <param name="connectionString">ADO connection string.</param>
+        /// <param name="databaseType">Database type.</param>
+        /// <param name="deserializedSchema">The deserialized schema.</param>
+        /// <param name="isAdoConnection">Flag that determines if connection is ADO.</param>
+        /// <returns>Opened connection.</returns>
         public static IDbConnection OpenConnection(string connectionString, out DatabaseType databaseType, out Schema deserializedSchema, out bool isAdoConnection)
         {
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
