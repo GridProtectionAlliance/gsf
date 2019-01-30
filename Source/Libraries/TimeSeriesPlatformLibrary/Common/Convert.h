@@ -55,6 +55,8 @@ namespace GSF
 
     std::string ToString(const DateTime& value, const char* format = "%Y-%m-%d %H:%M:%S%F");
 
+    std::string ToString(const TimeSpan& value);
+
     std::wstring ToUTF16(const std::string& value);
     std::string ToUTF8(const std::wstring& value);
 

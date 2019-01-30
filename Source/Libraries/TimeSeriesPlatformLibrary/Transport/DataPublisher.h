@@ -65,6 +65,7 @@ namespace Transport
     {
     private:
         const DataPublisherPtr m_parent;
+        GSF::IOContext& m_commandChannelService;
         GSF::Guid m_subscriberID;
         std::string m_connectionID;
         uint32_t m_operationalModes;
@@ -273,6 +274,8 @@ namespace Transport
 
         friend class ClientConnection;
     };
+
+    typedef SharedPtr<DataPublisher> DataPublisherPtr;
 }}}
 
 #endif

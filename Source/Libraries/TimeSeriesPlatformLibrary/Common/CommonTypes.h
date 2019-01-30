@@ -206,6 +206,7 @@ namespace GSF
     typedef boost::any Object;
     typedef boost::uuids::uuid Guid;
     typedef boost::posix_time::ptime DateTime;
+    typedef boost::posix_time::time_duration TimeSpan;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;
     typedef boost::exception Exception;

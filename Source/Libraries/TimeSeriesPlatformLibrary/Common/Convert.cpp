@@ -254,6 +254,13 @@ std::string GSF::ToString(const DateTime& value, const char* format)
     return stream.str();
 }
 
+std::string GSF::ToString(const TimeSpan& value)
+{
+    // TODO: Consider improving elapsed time string with hours, minutes, etc.
+    const float64_t seconds = value.total_milliseconds() / 1000.0;
+    return ToString(seconds) + " seconds";
+}
+
 wstring GSF::ToUTF16(const string& value)
 {
     wstring_convert<codecvt_utf8<wchar_t>, wchar_t> converter;

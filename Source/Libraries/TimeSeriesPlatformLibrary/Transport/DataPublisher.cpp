@@ -67,10 +67,11 @@ struct ClientConnectedInfo
 
 ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
     m_parent(std::move(parent)),
+    m_commandChannelService(commandChannelService),
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
-    m_commandChannelSocket(commandChannelService),
+    m_commandChannelSocket(m_commandChannelService),
     m_udpPort(0),
     m_dataChannelSocket(dataChannelService),
     m_timeIndex(0),
@@ -81,42 +82,6 @@ ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandCh
     m_pingTimer.SetAutoReset(true);
     m_pingTimer.SetCallback(&ClientConnection::PingTimerElapsed);
     m_pingTimer.SetUserData(this);
-
-    // Attempt to lookup remote connection identification for logging purposes
-    auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
-    m_ipAddress = remoteEndPoint.address();
-
-    if (remoteEndPoint.protocol() == tcp::v6())
-        m_connectionID = "[" + m_ipAddress.to_string() + "]:" + ToString(remoteEndPoint.port());
-    else
-        m_connectionID = m_ipAddress.to_string() + ":" + ToString(remoteEndPoint.port());
-
-    try
-    {
-        DnsResolver resolver(commandChannelService);
-        const DnsResolver::query query(m_ipAddress.to_string(), ToString(remoteEndPoint.port()));
-        DnsResolver::iterator iterator = resolver.resolve(query);
-        const DnsResolver::iterator end;
-
-        while (iterator != end)
-        {
-            auto endPoint = *iterator++;
-            
-            if (!endPoint.host_name().empty())
-            {
-                m_hostName = endPoint.host_name();
-                m_connectionID = m_hostName + " (" + m_connectionID + ")";
-                break;
-            }
-        }
-    }
-    catch (...)
-    {   //-V565
-        // DNS lookup failure is not a catastrophe
-    }
-
-    if (m_hostName.empty())
-        m_hostName = m_ipAddress.to_string();
 }
 
 ClientConnection::~ClientConnection() = default;
@@ -190,7 +155,43 @@ std::vector<uint8_t> ClientConnection::IVs(int cipherIndex)
 
 void ClientConnection::Start()
 {
-    
+    // Attempt to lookup remote connection identification for logging purposes
+    auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
+    m_ipAddress = remoteEndPoint.address();
+
+    if (remoteEndPoint.protocol() == tcp::v6())
+        m_connectionID = "[" + m_ipAddress.to_string() + "]:" + ToString(remoteEndPoint.port());
+    else
+        m_connectionID = m_ipAddress.to_string() + ":" + ToString(remoteEndPoint.port());
+
+    try
+    {
+        DnsResolver resolver(m_commandChannelService);
+        const DnsResolver::query query(m_ipAddress.to_string(), ToString(remoteEndPoint.port()));
+        DnsResolver::iterator iterator = resolver.resolve(query);
+        const DnsResolver::iterator end;
+
+        while (iterator != end)
+        {
+            auto endPoint = *iterator++;
+
+            if (!endPoint.host_name().empty())
+            {
+                m_hostName = endPoint.host_name();
+                m_connectionID = m_hostName + " (" + m_connectionID + ")";
+                break;
+            }
+        }
+    }
+    catch (...)
+    {   //-V565
+        // DNS lookup failure is not a catastrophe
+    }
+
+    if (m_hostName.empty())
+        m_hostName = m_ipAddress.to_string();
+
+    m_pingTimer.Start();
 }
 
 void ClientConnection::CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
@@ -241,7 +242,6 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_errorMessageCallback(nullptr),
     m_clientConnectedCallback(nullptr)
 {
-    m_commandChannelService.restart();
     m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
     m_commandChannelAcceptThread = Thread(bind(&DataPublisher::RunCommandChannelAcceptThread, this));
 }
@@ -252,6 +252,13 @@ DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
 }
 
 DataPublisher::~DataPublisher() = default;
+
+DataPublisher::CallbackDispatcher::CallbackDispatcher() :
+    Source(nullptr),
+    Data(nullptr),
+    Function(nullptr)
+{
+}
 
 void DataPublisher::RunCallbackThread()
 {
@@ -346,8 +353,8 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
 
         if (rowCount > 0)
         {
-            const auto elapsedTime = (UtcNow() - startTime).total_seconds();
-            DispatchStatusMessage(ToString(rowCount) + " records spanning " + ToString(tables.size()) + " tables of meta-data prepared in " + ToString(elapsedTime) + " seconds, sending response to " + connection->GetConnectionID() + "...");
+            const TimeSpan elapsedTime = UtcNow() - startTime;
+            DispatchStatusMessage(ToString(rowCount) + " records spanning " + ToString(tables.size()) + " tables of meta-data prepared in " + ToString(elapsedTime) + ", sending response to " + connection->GetConnectionID() + "...");
         }
         else
         {
