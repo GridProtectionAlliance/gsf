@@ -25,11 +25,11 @@
 
 // TODO: These includes are just for temporary testing code
 #include "../Common/Convert.h"
-#include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <iostream>
 
 using namespace std;
+using namespace GSF;
 using namespace GSF::TimeSeries;
 
 SubscriberHandler::SubscriberHandler(const string& name)
@@ -151,27 +151,27 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
     const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
     const uint32_t MaxTimestampSize = 80;
 
-    //static long processCount = 0;
+    static long processCount = 0;
     static char timestamp[MaxTimestampSize];
-    //static const long interval = 5 * 60;
-    //const long measurementCount = measurements.size();
+    static const long interval = 5 * 60;
+    const long measurementCount = measurements.size();
     const bool showMessage = true; // (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
-    //processCount += measurementCount;
+    processCount += measurementCount;
 
     // Only display messages every few seconds
     if (showMessage)
     {
         stringstream message;
 
-        //message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
+        message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
         if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
             message << string(timestamp);
         
-        //message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
+        message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
 
-        //message << "Point\tValue" << endl;
+        message << "Point\tValue" << endl;
 
         for (const auto& measurement : measurements)
             message << '\t' << measurement->ID << '\t' << measurement->Value;
