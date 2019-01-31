@@ -596,7 +596,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     xml_node rootNode = document.document_element();
 
     // Query DeviceDetail records from metadata
-    map<string, DeviceMetadataPtr> devices;
+    StringMap<DeviceMetadataPtr> devices;
 
     for (xml_node device = rootNode.child("DeviceDetail"); device; device = device.next_sibling("DeviceDetail"))
     {
@@ -620,7 +620,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     }
 
     // Query MeasurementDetail records from metadata
-    map<Guid, MeasurementMetadataPtr> measurements;
+    unordered_map<Guid, MeasurementMetadataPtr> measurements;
 
     for (xml_node device = rootNode.child("MeasurementDetail"); device; device = device.next_sibling("MeasurementDetail"))
     {
@@ -720,7 +720,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     }
 
     // Construct a "configuration frame" for each of the devices
-    map<string, ConfigurationFramePtr> configurationFrames;
+    StringMap<ConfigurationFramePtr> configurationFrames;
     ConstructConfigurationFrames(devices, measurements, configurationFrames);
 
     m_configurationUpdateLock.lock();
@@ -743,7 +743,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     ParsedMetadata();
 }
 
-void SubscriberInstance::ConstructConfigurationFrames(const map<string, DeviceMetadataPtr>& devices, const map<Guid, MeasurementMetadataPtr>& measurements, map<string, ConfigurationFramePtr>& configurationFrames)
+void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMetadataPtr>& devices, const unordered_map<Guid, MeasurementMetadataPtr>& measurements, StringMap<ConfigurationFramePtr>& configurationFrames)
 {
     for (auto const& deviceMapRecord : devices)
     {

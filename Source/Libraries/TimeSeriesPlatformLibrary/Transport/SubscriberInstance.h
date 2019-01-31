@@ -53,13 +53,13 @@ namespace Transport
         EndianConverter m_endianConverter;
         void* m_userData;
 
-        std::map<std::string, DeviceMetadataPtr> m_devices;
-        std::map<Guid, MeasurementMetadataPtr> m_measurements;
-        std::map<std::string, ConfigurationFramePtr> m_configurationFrames;
+        GSF::StringMap<DeviceMetadataPtr> m_devices;
+        std::unordered_map<Guid, MeasurementMetadataPtr> m_measurements;
+        GSF::StringMap<ConfigurationFramePtr> m_configurationFrames;
 
         Mutex m_configurationUpdateLock;
 
-        static void ConstructConfigurationFrames(const std::map<std::string, DeviceMetadataPtr>& devices, const std::map<Guid, MeasurementMetadataPtr>& measurements, std::map<std::string, ConfigurationFramePtr>& configurationFrames);
+        static void ConstructConfigurationFrames(const GSF::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, GSF::StringMap<ConfigurationFramePtr>& configurationFrames);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata);
         static uint16_t GetSignalKindCount(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind);

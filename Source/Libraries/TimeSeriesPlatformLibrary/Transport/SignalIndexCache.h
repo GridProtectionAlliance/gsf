@@ -24,7 +24,6 @@
 #ifndef __SIGNAL_INDEX_CACHE_H
 #define __SIGNAL_INDEX_CACHE_H
 
-#include <map>
 #include <vector>
 #include <string>
 
