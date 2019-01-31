@@ -86,7 +86,7 @@ private:
     CallbackErrorListener* m_callbackErrorListener;
     GSF::Data::DataSetPtr m_dataSet;
     std::string m_primaryTableName;
-    std::map<const std::string, TableIDFieldsPtr> m_tableIDFields;
+    GSF::StringMap<TableIDFieldsPtr> m_tableIDFields;
 
     bool m_trackFilteredRows;
     std::vector<GSF::Data::DataRowPtr> m_filteredRows;

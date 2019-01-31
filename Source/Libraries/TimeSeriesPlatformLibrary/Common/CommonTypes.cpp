@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 #include "CommonTypes.h"
+#include "Convert.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -45,57 +46,37 @@ const decimal_t Decimal::DotNetMaxValue = decimal_t("792281625142643375935439503
 
 const decimal_t Decimal::DotNetMinValue = decimal_t("-79228162514264337593543950335");
 
-const string Empty::String{};
+const string Empty::String {};
 
-const DateTime Empty::DateTime{};
+const DateTime Empty::DateTime {};
 
 const Guid Empty::Guid = NilGuidGen();
 
 const Object Empty::Object(nullptr);
 
-const IPAddress Empty::IPAddress{};
+const IPAddress Empty::IPAddress {};
 
 const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
 
-StringHasher::StringHasher() :
-    m_ignoreCase(true)
-{
-}
-
-StringHasher::StringHasher(bool ignoreCase) :
-    m_ignoreCase(ignoreCase)
-{
-}
-
-size_t StringHasher::operator()(const string& value) const
+size_t StringHash::operator()(const string& value) const
 {
     size_t seed = 0;
     const locale locale;
 
     for (string::const_iterator it = value.begin(); it != value.end(); ++it)
-    {
-        if (m_ignoreCase)
-            hash_combine(seed, toupper(*it, locale));
-        else
-            hash_combine(seed, *it);
-    }
+        hash_combine(seed, toupper(*it, locale));
 
     return seed;
 }
 
-StringComparer::StringComparer() :
-    m_ignoreCase(true)
+bool StringEqual::operator()(const string& left, const string& right) const
 {
+    return IsEqual(left, right);
 }
 
-StringComparer::StringComparer(bool ignoreCase) :
-    m_ignoreCase(ignoreCase)
+bool StringComparer::operator()(const std::string& left, const std::string& right) const
 {
-}
-
-bool StringComparer::operator()(const string& left, const string& right) const
-{
-    return IsEqual(left, right, m_ignoreCase);
+    return Compare(left, right) < 0;
 }
 
 Guid GSF::NewGuid()
@@ -141,10 +122,10 @@ int32_t GSF::Count(const string& value, const string& findValue, bool ignoreCase
         make_find_iterator(value, first_finder(findValue, is_iequal())) :
         make_find_iterator(value, first_finder(findValue, is_equal()));
 
-    const find_iterator<string::const_iterator> end{};
+    const find_iterator<string::const_iterator> end {};
     int32_t count = 0;
 
-    for(; it != end; ++it, ++count)
+    for (; it != end; ++it, ++count)
     {
     }
 
@@ -209,10 +190,10 @@ vector<string> GSF::Split(const string& value, const string& delimiterValue, boo
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
         make_split_iterator(value, first_finder(delimiterValue, is_equal()));
 
-    const split_iterator<string::const_iterator> end{};
+    const split_iterator<string::const_iterator> end {};
     vector<string> values;
 
-    for(; it != end; ++it)
+    for (; it != end; ++it)
     {
         values.push_back(copy_range<string>(*it));
     }
@@ -226,16 +207,16 @@ string GSF::Split(const string& value, const string& delimiterValue, int32_t ind
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
         make_split_iterator(value, first_finder(delimiterValue, is_equal()));
 
-    const split_iterator<string::const_iterator> end{};
+    const split_iterator<string::const_iterator> end {};
     int32_t count = 0;
 
-    for(; it != end; ++it, ++count)
+    for (; it != end; ++it, ++count)
     {
         if (count == index)
             return copy_range<string>(*it);
     }
 
-    return string{};
+    return string {};
 }
 
 string GSF::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
@@ -284,6 +265,158 @@ string GSF::TrimLeft(const string& value)
 string GSF::TrimLeft(const string& value, const string& trimValues)
 {
     return trim_left_copy_if(value, is_any_of(trimValues));
+}
+
+string GSF::PadLeft(const string& value, uint32_t count, char padChar)
+{
+    if (value.size() < count)
+        return string(count - value.size(), padChar) + value;
+
+    return value;
+}
+
+string GSF::PadRight(const string& value, uint32_t count, char padChar)
+{
+    if (value.size() < count)
+        return value + string(count - value.size(), padChar);
+
+    return value;
+}
+
+StringMap<string> GSF::ParseKeyValuePairs(const string& value, const char parameterDelimiter, const char keyValueDelimiter, const char startValueDelimiter, const char endValueDelimiter)
+{
+    if (parameterDelimiter == keyValueDelimiter ||
+        parameterDelimiter == startValueDelimiter ||
+        parameterDelimiter == endValueDelimiter ||
+        keyValueDelimiter == startValueDelimiter ||
+        keyValueDelimiter == endValueDelimiter ||
+        startValueDelimiter == endValueDelimiter)
+            throw invalid_argument("All delimiters must be unique");
+
+    const string& escapedParameterDelimiter = RegExEncode(parameterDelimiter);
+    const string& escapedKeyValueDelimiter = RegExEncode(keyValueDelimiter);
+    const string& escapedStartValueDelimiter = RegExEncode(startValueDelimiter);
+    const string& escapedEndValueDelimiter = RegExEncode(endValueDelimiter);
+    const string& escapedBackslashDelimiter = RegExEncode('\\');
+    const string& parameterDelimiterStr = string(1, parameterDelimiter);
+    const string& keyValueDelimiterStr = string(1, keyValueDelimiter);
+    const string& startValueDelimiterStr = string(1, startValueDelimiter);
+    const string& endValueDelimiterStr = string(1, endValueDelimiter);
+    const string& backslashDelimiterStr = "\\";
+
+    StringMap<string> keyValuePairs;
+    vector<string> escapedValue;
+    bool valueEscaped = false;
+    uint32_t delimiterDepth = 0;
+
+    // Escape any parameter or key/value delimiters within tagged value sequences
+    //      For example, the following string:
+    //          "normalKVP=-1; nestedKVP={p1=true; p2=false}")
+    //      would be encoded as:
+    //          "normalKVP=-1; nestedKVP=p1\\u003dtrue\\u003b p2\\u003dfalse")
+    for (uint32_t i = 0; i < value.size(); i++)
+    {
+        const char character = value[i];
+
+        if (character == startValueDelimiter)
+        {
+            if (!valueEscaped)
+            {
+                valueEscaped = true;
+                continue;   // Don't add tag start delimiter to final value
+            }
+
+            // Handle nested delimiters
+            delimiterDepth++;
+        }
+
+        if (character == endValueDelimiter)
+        {
+            if (valueEscaped)
+            {
+                if (delimiterDepth > 0)
+                {
+                    // Handle nested delimiters
+                    delimiterDepth--;
+                }
+                else
+                {
+                    valueEscaped = false;
+                    continue;   // Don't add tag stop delimiter to final value
+                }
+            }
+            else
+            {
+                throw runtime_error("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter '" + endValueDelimiterStr + "' before start value delimiter '" + startValueDelimiterStr + "'.");  // NOLINT
+            }
+        }
+
+        if (valueEscaped)
+        {
+            // Escape any delimiter characters inside nested key/value pair
+            if (character == parameterDelimiter)
+                escapedValue.push_back(escapedParameterDelimiter);
+            else if (character == keyValueDelimiter)
+                escapedValue.push_back(escapedKeyValueDelimiter);
+            else if (character == startValueDelimiter)
+                escapedValue.push_back(escapedStartValueDelimiter);
+            else if (character == endValueDelimiter)
+                escapedValue.push_back(escapedEndValueDelimiter);
+            else if (character == '\\')
+                escapedValue.push_back(escapedBackslashDelimiter);
+            else
+                escapedValue.emplace_back(1, character);
+        }
+        else
+        {
+            if (character == '\\')
+                escapedValue.push_back(escapedBackslashDelimiter);
+            else
+                escapedValue.emplace_back(1, character);
+        }
+    }
+
+    if (delimiterDepth != 0 || valueEscaped)
+    {
+        // If value is still escaped, tagged expression was not terminated
+        if (valueEscaped)
+            delimiterDepth = 1;
+
+        const bool moreStartDelimiters = delimiterDepth > 0;
+
+        throw runtime_error(
+            "Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more " +
+            (moreStartDelimiters ? "start value delimiters '" + startValueDelimiterStr + "'" : "end value delimiters '" + endValueDelimiterStr + "'") + " than " +
+            (moreStartDelimiters ? "end value delimiters '" + endValueDelimiterStr + "'" : "start value delimiters '" + startValueDelimiterStr + "'") + ".");
+    }
+
+    // Parse key/value pairs from escaped value
+    vector<string> pairs = Split(join(escapedValue, ""), parameterDelimiterStr, false);
+
+    for (uint32_t i = 0; i < pairs.size(); i++)
+    {
+        // Separate key from value
+        vector<string> elements = Split(pairs[i], keyValueDelimiterStr, false);
+
+        if (elements.size() == 2)
+        {
+            // Get key
+            const string key = Trim(elements[0]);
+
+            // Get unescaped value
+            const string unescapedValue = Replace(Replace(Replace(Replace(Replace(Trim(elements[1]),
+                escapedParameterDelimiter, parameterDelimiterStr, false),
+                escapedKeyValueDelimiter, keyValueDelimiterStr, false),
+                escapedStartValueDelimiter, startValueDelimiterStr, false),
+                escapedEndValueDelimiter, endValueDelimiterStr, false),                    
+                escapedBackslashDelimiter, backslashDelimiterStr, false);
+
+            // Add or replace key elements with unescaped value
+            keyValuePairs[key] = unescapedValue;
+        }
+    }
+
+    return keyValuePairs;
 }
 
 DateTime GSF::DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval)
@@ -384,10 +517,10 @@ int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
 
 DateTime GSF::Now()
 {
-    return DateTime(microsec_clock::local_time());
+    return DateTime { microsec_clock::local_time() };
 }
 
 DateTime GSF::UtcNow()
 {
-    return DateTime(microsec_clock::universal_time());
+    return DateTime { microsec_clock::universal_time() };
 }

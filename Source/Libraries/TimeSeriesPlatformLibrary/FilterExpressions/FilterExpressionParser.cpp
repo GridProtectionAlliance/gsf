@@ -258,14 +258,14 @@ TableIDFieldsPtr FilterExpressionParser::GetTableIDFields(const string& tableNam
 {
     TableIDFieldsPtr tableIDFields;
     
-    TryGetValue<const string, TableIDFieldsPtr>(m_tableIDFields, tableName, tableIDFields, nullptr);
+    TryGetValue<TableIDFieldsPtr>(m_tableIDFields, tableName, tableIDFields, nullptr);
 
     return tableIDFields;
 }
 
 void FilterExpressionParser::SetTableIDFields(const string& tableName, const TableIDFieldsPtr& tableIDFields)
 {
-    m_tableIDFields.insert_or_assign(tableName, tableIDFields);
+    m_tableIDFields[tableName] = tableIDFields;
 }
 
 const string& FilterExpressionParser::GetPrimaryTableName() const

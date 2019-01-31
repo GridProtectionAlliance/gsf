@@ -1414,6 +1414,14 @@ int main(int argc, char* argv[])
     BOOST_CHECK_EQUAL_COLLECTIONS(b1, e1, b2, e2);
     cout << "Test " << ++test << " succeeded..." << endl;
 
+    // Test 148
+    auto settings = GSF::ParseKeyValuePairs("a=1; b=2; c={a=3; b=4}");
+
+    assert(settings.size() == 3);
+    assert(IsEqual(settings["B"], "2", false));
+    assert(IsEqual(settings["c"], "a=3; b=4"));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
     string line;

@@ -273,6 +273,13 @@ string GSF::ToUTF8(const wstring& value)
     return converter.to_bytes(value);
 }
 
+std::string GSF::RegExEncode(const char value)
+{
+    std::stringstream stream;
+    stream << std::hex << static_cast<int>(value);
+    return "\\u" + PadLeft(stream.str(), 4, '0');
+}
+
 Guid GSF::ParseGuid(const uint8_t* data, bool swapBytes)
 {
     Guid id;

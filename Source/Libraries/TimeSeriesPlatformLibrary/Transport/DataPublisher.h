@@ -66,15 +66,13 @@ namespace Transport
     private:
         const DataPublisherPtr m_parent;
         GSF::IOContext& m_commandChannelService;
+        GSF::Timer m_pingTimer;
         GSF::Guid m_subscriberID;
         std::string m_connectionID;
         uint32_t m_operationalModes;
         uint32_t m_encoding;
         bool m_isSubscribed;
         bool m_stopped;
-
-        std::unordered_set<GSF::Guid> m_subscribedSignalIDs;
-        GSF::Timer m_pingTimer;
 
         // Command channel
         GSF::TcpSocket m_commandChannelSocket;
@@ -226,7 +224,7 @@ namespace Transport
 
         std::string DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const;
         std::vector<uint8_t> EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const;
-        GSF::Data::DataSetPtr FilterClientMetadata(const ClientConnectionPtr& connection, const std::map<std::string, GSF::FilterExpressions::ExpressionTreePtr, StringComparer>& filterExpressions) const;
+        GSF::Data::DataSetPtr FilterClientMetadata(const ClientConnectionPtr& connection, const GSF::StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
         std::vector<uint8_t> SerializeMetadata(const ClientConnectionPtr& connection, const GSF::Data::DataSetPtr& metadata) const;
         bool SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message);
         bool SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data = {});

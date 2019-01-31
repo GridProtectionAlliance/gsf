@@ -69,6 +69,9 @@ namespace GSF
         return stream.str();
     }
 
+    // Encodes a character value into an escaped RegEx value
+    std::string RegExEncode(char value);
+
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ParseGuid(const uint8_t* data, bool swapBytes);
     Guid ParseGuid(const char* data);

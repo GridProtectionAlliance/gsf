@@ -40,9 +40,6 @@ using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-// Convenience functions to perform simple conversions.
-void _DataSubscriberWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
-
 // --- SubscriptionInfo ---
 
 SubscriptionInfo::SubscriptionInfo() :
@@ -1404,7 +1401,30 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data,
             m_writeBuffer[9 + i] = data[offset + i];
     }
 
-    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), &_DataSubscriberWriteHandler);
+    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), bind(&DataSubscriber::WriteHandler, this, _1, _2));
+}
+
+void DataSubscriber::WriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+{
+    if (m_disconnecting)
+        return;
+
+    if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
+    {
+        // Connection closed by peer; terminate connection
+        Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        return;
+    }
+
+    if (error)
+    {
+        stringstream errorMessageStream;
+
+        errorMessageStream << "Error reading data from command channel: ";
+        errorMessageStream << SystemError(error).what();
+
+        DispatchErrorMessage(errorMessageStream.str());
+    }
 }
 
 // Convenience method to send the currently defined
@@ -1462,11 +1482,4 @@ bool DataSubscriber::IsConnected() const
 bool DataSubscriber::IsSubscribed() const
 {
     return m_subscribed;
-}
-
-// --- Convenience Methods ---
-
-// This method does nothing. It is used as the callback for asynchronous write operations.
-void _DataSubscriberWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
-{
 }

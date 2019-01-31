@@ -25,6 +25,8 @@
 #define __COMMON_TYPES_H
 
 #include <cstddef>
+#include <map>
+#include <unordered_map>
 #include <boost/any.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
@@ -152,26 +154,28 @@ namespace GSF
     }
 
     // std::unordered_map string hasher
-    struct StringHasher : std::unary_function<std::string, std::size_t>
+    struct StringHash : std::unary_function<std::string, std::size_t>
     {
-    private:
-        const bool m_ignoreCase; // Defaults to true
-    public:
-        StringHasher();
-        explicit StringHasher(bool ignoreCase);
         std::size_t operator()(const std::string& value) const;
     };
 
-    // std::map / std::unordered_map string comparer
-    struct StringComparer : std::binary_function<std::string, std::string, bool>
+    // std::unordered_map string equality tester
+    struct StringEqual : std::binary_function<std::string, std::string, bool>
     {
-    private:
-        const bool m_ignoreCase; // Defaults to true
-    public:
-        StringComparer();
-        explicit StringComparer(bool ignoreCase);
         bool operator()(const std::string& left, const std::string& right) const;
     };
+
+    template<class T>
+    using StringHashSet = std::unordered_map<std::string, T, GSF::StringHash, GSF::StringEqual>;
+
+    // std::map string comparer
+    struct StringComparer : std::binary_function<std::string, std::string, bool>
+    {
+        bool operator()(const std::string& left, const std::string& right) const;
+    };
+
+    template<class T>
+    using StringMap = std::map<std::string, T, GSF::StringComparer>;
 
     template<typename TKey, typename TValue>
     bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
@@ -189,7 +193,7 @@ namespace GSF
     }
 
     template<typename TValue>
-    bool TryGetValue(const std::map<std::string, TValue, StringComparer>& dictionary, const std::string& key, TValue& value, const TValue& defaultValue)
+    bool TryGetValue(const StringMap<TValue>& dictionary, const std::string& key, TValue& value, const TValue& defaultValue)
     {
         auto iterator = dictionary.find(key);
 
@@ -201,6 +205,11 @@ namespace GSF
 
         value = defaultValue;
         return false;
+    }
+
+    inline bool TryGetValue(const StringMap<std::string>& dictionary, const std::string& key, std::string& value)
+    {
+        return TryGetValue<std::string>(dictionary, key, value, nullptr);
     }
 
     typedef boost::any Object;
@@ -286,6 +295,9 @@ namespace GSF
     std::string TrimRight(const std::string& value, const std::string& trimValues);
     std::string TrimLeft(const std::string& value);
     std::string TrimLeft(const std::string& value, const std::string& trimValues);
+    std::string PadLeft(const std::string& value, uint32_t count, char padChar);
+    std::string PadRight(const std::string& value, uint32_t count, char padChar);
+    StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');
 
     // Handy date/time functions (boost wrappers)
     enum class TimeInterval

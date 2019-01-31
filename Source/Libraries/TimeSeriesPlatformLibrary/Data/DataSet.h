@@ -53,7 +53,7 @@ typedef GSF::SharedPtr<DataSet> DataSetPtr;
 class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
 {
 private:
-    std::map<std::string, DataTablePtr> m_tables;
+    GSF::StringMap<DataTablePtr> m_tables;
 
     void ParseXml(const pugi::xml_document& document);
     void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;

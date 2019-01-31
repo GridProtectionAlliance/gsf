@@ -219,6 +219,7 @@ namespace Transport
         // Command channel callbacks
         void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
         void ReadPacket(const ErrorCode& error, uint32_t bytesTransferred);
+        void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
         // Server response handlers
         void HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);

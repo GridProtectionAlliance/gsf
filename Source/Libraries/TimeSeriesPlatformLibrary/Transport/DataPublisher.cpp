@@ -499,8 +499,46 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
     {
         if (length >= 6)
         {
-            
-            connection->SetIsSubscribed(true);
+            const uint8_t flags = data[0];
+            int32_t index = 1;
+
+            if ((flags & DataPacketFlags::Synchronized) > 0)
+            {
+                // Remotely synchronized subscriptions are currently disallowed by data publisher
+                const string message = "Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.";
+                SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
+                DispatchErrorMessage(message);
+            }
+            else
+            {
+                const bool usePayloadCompression = (connection->GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
+                const uint32_t compressionModes = connection->GetOperationalModes() & OperationalModes::CompressionModeMask;
+                const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
+                bool addSubscription = false;
+
+                // Next 4 bytes are an integer representing the length of the connection string that follows
+                const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
+                index += 4;
+
+                if (byteLength > 0 && length >= byteLength + 6U)
+                {
+                    const string connectionString = DecodeClientString(connection, data, index, byteLength);
+
+                    // TODO: Explore re-subscription details
+                    // if (connection->GetIsSubscribed()) ...
+
+
+                }
+                else
+                {
+                    const string message = byteLength > 0 ?
+                        "Not enough buffer was provided to parse client data subscription." :
+                        "Cannot initialize client data subscription without a connection string.";
+
+                    SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
+                    DispatchErrorMessage(message);
+                }            
+            }            
         }
         else
         {
@@ -530,7 +568,7 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
 
     DispatchStatusMessage("Received meta-data refresh request from " + connection->GetConnectionID() + ", preparing response...");
 
-    map<string, ExpressionTreePtr, StringComparer> filterExpressions;
+    StringMap<ExpressionTreePtr> filterExpressions;
     const DateTime startTime = UtcNow(); //-V821
 
     try
@@ -846,7 +884,7 @@ std::vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr
     return result;
 }
 
-DataSetPtr DataPublisher::FilterClientMetadata(const ClientConnectionPtr& connection, const map<string, ExpressionTreePtr, StringComparer>& filterExpressions) const
+DataSetPtr DataPublisher::FilterClientMetadata(const ClientConnectionPtr& connection, const StringMap<ExpressionTreePtr>& filterExpressions) const
 {
     if (filterExpressions.empty())
         return m_clientMetadata;
