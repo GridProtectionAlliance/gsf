@@ -40,11 +40,11 @@ namespace Transport
     class SignalIndexCache
     {
     private:
-        std::map<uint16_t, uint32_t> m_reference;
+        std::unordered_map<uint16_t, uint32_t> m_reference;
         std::vector<GSF::Guid> m_signalIDList;
         std::vector<std::string> m_sourceList;
         std::vector<uint32_t> m_idList;
-        std::map<GSF::Guid, uint16_t> m_signalIDCache;
+        std::unordered_map<GSF::Guid, uint16_t> m_signalIDCache;
 
     public:
         // Adds a measurement key to the cache.

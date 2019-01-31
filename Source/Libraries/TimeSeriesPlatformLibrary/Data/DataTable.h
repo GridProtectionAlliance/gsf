@@ -47,7 +47,7 @@ class DataTable : public GSF::EnableSharedThisPtr<DataTable> // NOLINT
 private:
     DataSetPtr m_parent;
     std::string m_name;
-    GSF::StringHashSet<int32_t> m_columnIndexes;
+    GSF::StringMap<int32_t> m_columnIndexes;
     std::vector<DataColumnPtr> m_columns;
     std::vector<DataRowPtr> m_rows;
 

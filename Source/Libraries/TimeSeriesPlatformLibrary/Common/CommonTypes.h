@@ -166,7 +166,7 @@ namespace GSF
     };
 
     template<class T>
-    using StringHashSet = std::unordered_map<std::string, T, GSF::StringHash, GSF::StringEqual>;
+    using StringMap = std::unordered_map<std::string, T, GSF::StringHash, GSF::StringEqual>;
 
     // std::map string comparer
     struct StringComparer : std::binary_function<std::string, std::string, bool>
@@ -175,10 +175,25 @@ namespace GSF
     };
 
     template<class T>
-    using StringMap = std::map<std::string, T, GSF::StringComparer>;
+    using SortedStringMap = std::map<std::string, T, GSF::StringComparer>;
 
     template<typename TKey, typename TValue>
     bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
+    {
+        auto iterator = dictionary.find(key);
+
+        if (iterator != dictionary.end())
+        {
+            value = iterator->second;
+            return true;
+        }
+
+        value = defaultValue;
+        return false;
+    }
+
+    template<typename TKey, typename TValue>
+    bool TryGetValue(const std::unordered_map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
     {
         auto iterator = dictionary.find(key);
 
