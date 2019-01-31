@@ -153,6 +153,40 @@ namespace GSF
         return boost::dynamic_pointer_cast<T>(source);
     }
 
+    typedef boost::any Object;
+    typedef boost::uuids::uuid Guid;
+    typedef boost::posix_time::ptime DateTime;
+    typedef boost::posix_time::time_duration TimeSpan;
+    typedef boost::system::error_code ErrorCode;
+    typedef boost::system::system_error SystemError;
+    typedef boost::exception Exception;
+    typedef boost::thread Thread;
+    typedef boost::mutex Mutex;
+    typedef boost::condition_variable WaitHandle;
+    typedef boost::lock_guard<Mutex> ScopeLock;
+    typedef boost::unique_lock<Mutex> UniqueLock;
+    typedef boost::asio::io_context IOContext;
+    typedef boost::asio::ip::address IPAddress;
+    typedef boost::asio::ip::tcp::socket TcpSocket;
+    typedef boost::asio::ip::udp::socket UdpSocket;
+    typedef boost::asio::ip::tcp::acceptor TcpAcceptor;
+    typedef boost::asio::ip::tcp::endpoint TcpEndPoint;
+    typedef boost::asio::ip::tcp::resolver DnsResolver;
+    typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> StreamBuffer;
+    typedef boost::iostreams::gzip_decompressor GZipDecompressor;
+    typedef boost::iostreams::gzip_compressor GZipCompressor;
+
+    // Empty types
+    struct Empty
+    {
+        static const std::string String;
+        static const GSF::DateTime DateTime;
+        static const GSF::Guid Guid;
+        static const GSF::Object Object;
+        static const GSF::IPAddress IPAddress;
+        static const uint8_t* ZeroLengthBytes;
+    };
+
     // std::unordered_map string hasher
     struct StringHash : std::unary_function<std::string, std::size_t>
     {
@@ -224,31 +258,8 @@ namespace GSF
 
     inline bool TryGetValue(const StringMap<std::string>& dictionary, const std::string& key, std::string& value)
     {
-        return TryGetValue<std::string>(dictionary, key, value, nullptr);
+        return TryGetValue<std::string>(dictionary, key, value, Empty::String);
     }
-
-    typedef boost::any Object;
-    typedef boost::uuids::uuid Guid;
-    typedef boost::posix_time::ptime DateTime;
-    typedef boost::posix_time::time_duration TimeSpan;
-    typedef boost::system::error_code ErrorCode;
-    typedef boost::system::system_error SystemError;
-    typedef boost::exception Exception;
-    typedef boost::thread Thread;
-    typedef boost::mutex Mutex;
-    typedef boost::condition_variable WaitHandle;
-    typedef boost::lock_guard<Mutex> ScopeLock;
-    typedef boost::unique_lock<Mutex> UniqueLock;
-    typedef boost::asio::io_context IOContext;
-    typedef boost::asio::ip::address IPAddress;
-    typedef boost::asio::ip::tcp::socket TcpSocket;
-    typedef boost::asio::ip::udp::socket UdpSocket;
-    typedef boost::asio::ip::tcp::acceptor TcpAcceptor;
-    typedef boost::asio::ip::tcp::endpoint TcpEndPoint;
-    typedef boost::asio::ip::tcp::resolver DnsResolver;
-    typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> StreamBuffer;
-    typedef boost::iostreams::gzip_decompressor GZipDecompressor;
-    typedef boost::iostreams::gzip_compressor GZipCompressor;
 
     template<class T>
     T Cast(const Object& source)
@@ -334,17 +345,6 @@ namespace GSF
     int32_t DatePart(const DateTime& value, TimeInterval interval);
     DateTime Now();
     DateTime UtcNow();
-
-    // Empty types
-    struct Empty
-    {
-        static const std::string String;
-        static const GSF::DateTime DateTime;
-        static const GSF::Guid Guid;
-        static const GSF::Object Object;
-        static const GSF::IPAddress IPAddress;
-        static const uint8_t* ZeroLengthBytes;
-    };
 }
 
 // Setup standard hash code for Guid
