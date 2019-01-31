@@ -32,9 +32,9 @@ using namespace std;
 using namespace GSF;
 using namespace GSF::TimeSeries;
 
-SubscriberHandler::SubscriberHandler(const string& name)
+SubscriberHandler::SubscriberHandler(string  name) :
+    m_name(std::move(name))
 {
-    m_name = name;
 }
 
 SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
@@ -153,9 +153,9 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
     static long processCount = 0;
     static char timestamp[MaxTimestampSize];
-    static const long interval = 5 * 60;
+    static const long interval = 10 * 60;
     const long measurementCount = measurements.size();
-    const bool showMessage = true; // (processCount + measurementCount >= (processCount / interval + 1) * interval);
+    const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
     processCount += measurementCount;
 
@@ -194,8 +194,7 @@ void SubscriberHandler::HistoricalReadComplete()
 
 void SubscriberHandler::ConnectionEstablished()
 {
-    StatusMessage("Connection established.");
-    
+    StatusMessage("Connection established.");    
 }
 
 void SubscriberHandler::ConnectionTerminated()

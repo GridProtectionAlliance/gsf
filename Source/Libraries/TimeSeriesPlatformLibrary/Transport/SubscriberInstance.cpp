@@ -107,6 +107,11 @@ void SubscriberInstance::EstablishHistoricalRead(const string& startTime, const 
     m_stopTime = stopTime;
 }
 
+const std::string& SubscriberInstance::GetFilterExpression() const
+{
+    return m_filterExpression;
+}
+
 void SubscriberInstance::SetFilterExpression(const string& filterExpression)
 {
     m_filterExpression = filterExpression;
@@ -117,6 +122,16 @@ void SubscriberInstance::SetFilterExpression(const string& filterExpression)
         m_subscriptionInfo.FilterExpression = m_filterExpression;
         m_subscriber.Subscribe(m_subscriptionInfo);
     }
+}
+
+const std::string& SubscriberInstance::GetMetadataFilters() const
+{
+    return m_metadataFilters;
+}
+
+void SubscriberInstance::SetMetadataFilters(const std::string& metadataFilters)
+{
+    m_metadataFilters = metadataFilters;
 }
 
 void SubscriberInstance::ConnectAsync()
@@ -163,7 +178,7 @@ void SubscriberInstance::Connect()
         // after metadata is handled the SubscriberInstance will then initiate subscribe;
         // otherwise, initiate subscribe immediately
         if (m_autoParseMetadata)
-            m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh);
+            SendMetadataRefreshCommand();
         else
             m_subscriber.Subscribe();
     }
@@ -743,6 +758,31 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     ParsedMetadata();
 }
 
+void SubscriberInstance::SendMetadataRefreshCommand()
+{
+    if (m_metadataFilters.empty())
+    {
+        m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh);
+        return;
+    }
+
+    // Send meta-data filters when some are specified
+    vector<uint8_t> buffer;
+    
+    const uint8_t* metadataFiltersPtr = reinterpret_cast<uint8_t*>(&m_metadataFilters[0]);
+    const uint32_t metadataFiltersSize = static_cast<uint32_t>(m_metadataFilters.size() * sizeof(char));
+    const uint32_t bufferSize = 4 + metadataFiltersSize;
+
+    buffer.reserve(bufferSize);
+
+    EndianConverter::WriteBigEndianBytes(buffer, metadataFiltersSize);
+
+    for (uint32_t i = 0; i < metadataFiltersSize; ++i)
+        buffer.push_back(metadataFiltersPtr[i]);
+
+    m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh, &buffer[0], 0, bufferSize);
+}
+
 void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMetadataPtr>& devices, const unordered_map<Guid, MeasurementMetadataPtr>& measurements, StringMap<ConfigurationFramePtr>& configurationFrames)
 {
     for (auto const& deviceMapRecord : devices)
@@ -1046,7 +1086,7 @@ void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
     instance->ConfigurationChanged();
 
     // When publisher configuration has changed, request updated metadata
-    source->SendServerCommand(ServerCommand::MetadataRefresh);
+    instance->SendMetadataRefreshCommand();
 }
 
 void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, const string& message)

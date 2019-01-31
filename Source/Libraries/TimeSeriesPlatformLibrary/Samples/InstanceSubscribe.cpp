@@ -67,6 +67,9 @@ int main(int argc, char* argv[])
                 break;
             case 1:
                 subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHA'");
+                
+                // In this example we also specify a meta-data filtering expression:
+                subscriber->SetMetadataFilters(SubscriberInstance::FilterMetadataStatsExpression);
                 break;
             case 2:
                 subscriber->SetFilterExpression("FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PHM'");

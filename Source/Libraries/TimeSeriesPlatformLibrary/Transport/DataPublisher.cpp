@@ -66,6 +66,8 @@ ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandCh
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
+    m_usePayloadCompression(false),
+    m_useCompactMeasurementFormat(true),
     m_isSubscribed(false),
     m_stopped(true),
     m_commandChannelSocket(m_commandChannelService),
@@ -130,6 +132,26 @@ uint32_t ClientConnection::GetEncoding() const
     return m_encoding;
 }
 
+bool ClientConnection::GetUsePayloadCompression() const
+{
+    return m_usePayloadCompression;
+}
+
+void ClientConnection::SetUsePayloadCompression(bool value)
+{
+    m_usePayloadCompression = value;
+}
+
+bool ClientConnection::GetUseCompactMeasurementFormat() const
+{
+    return m_useCompactMeasurementFormat;
+}
+
+void ClientConnection::SetUseCompactMeasurementFormat(bool value)
+{
+    m_useCompactMeasurementFormat = value;
+}
+
 bool ClientConnection::GetIsSubscribed() const
 {
     return m_isSubscribed;
@@ -140,12 +162,49 @@ void ClientConnection::SetIsSubscribed(bool value)
     m_isSubscribed = value;
 }
 
+string ClientConnection::GetSubscriptionInfo() const
+{
+    return m_subscriptionInfo;
+}
+
+void ClientConnection::SetSubscriptionInfo(const string& value)
+{
+    if (value.empty())
+    {
+        m_subscriptionInfo = "";
+        return;
+    }
+
+    const StringMap<string> settings = ParseKeyValuePairs(value);
+    string source, version, buildDate;
+
+    TryGetValue(settings, "source", source);
+    TryGetValue(settings, "version", version);
+    TryGetValue(settings, "buildDate", buildDate);
+
+    if (source.empty())
+        source = "unknown source";
+
+    if (version.empty())
+        version = "?.?.?.?";
+
+    if (buildDate.empty())
+        buildDate = "undefined date";
+
+    m_subscriptionInfo = source + " version " + version + " built on " + buildDate;
+}
+
+const SignalIndexCache& ClientConnection::GetSignalIndexCache() const
+{
+    return m_signalIndexCache;
+}
+
 bool ClientConnection::CipherKeysDefined() const
 {
     return !m_keys[0].empty();
 }
 
-std::vector<uint8_t> ClientConnection::Keys(int cipherIndex)
+vector<uint8_t> ClientConnection::Keys(int32_t cipherIndex)
 {
     if (cipherIndex < 0 || cipherIndex > 1)
         throw out_of_range("Cipher index must be 0 or 1");
@@ -153,7 +212,7 @@ std::vector<uint8_t> ClientConnection::Keys(int cipherIndex)
     return m_keys[cipherIndex];
 }
 
-std::vector<uint8_t> ClientConnection::IVs(int cipherIndex)
+vector<uint8_t> ClientConnection::IVs(int32_t cipherIndex)
 {
     if (cipherIndex < 0 || cipherIndex > 1)
         throw out_of_range("Cipher index must be 0 or 1");
@@ -523,11 +582,68 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
                 if (byteLength > 0 && length >= byteLength + 6U)
                 {
                     const string connectionString = DecodeClientString(connection, data, index, byteLength);
+                    const StringMap<string> settings = ParseKeyValuePairs(connectionString);
+                    string setting;
 
                     // TODO: Explore re-subscription details
                     // if (connection->GetIsSubscribed()) ...
 
+                    connection->SetUsePayloadCompression(usePayloadCompression);
+                    connection->SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
 
+                    // Pass subscriber assembly information to connection, if defined
+                    if (TryGetValue(settings, "assemblyInfo", setting))
+                    {
+                        connection->SetSubscriptionInfo(setting);
+                        DispatchStatusMessage("Reported client subscription info: " + connection->GetSubscriptionInfo());
+                    }
+
+                    // TODO: Set up UDP data channel if client has requested this
+                    if (TryGetValue(settings, "dataChannel", setting))
+                    {
+                    /*
+                        Socket clientSocket = connection.GetCommandChannelSocket();
+                        Dictionary<string, string> settings = setting.ParseKeyValuePairs();
+                        IPEndPoint localEndPoint = null;
+                        string networkInterface = "::0";
+
+                        // Make sure return interface matches incoming client connection
+                        if ((object)clientSocket != null)
+                            localEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
+
+                        if ((object)localEndPoint != null)
+                        {
+                            networkInterface = localEndPoint.Address.ToString();
+
+                            // Remove dual-stack prefix
+                            if (networkInterface.StartsWith("::ffff:", true, CultureInfo.InvariantCulture))
+                                networkInterface = networkInterface.Substring(7);
+                        }
+
+                        if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
+                        {
+                            if ((compressionModes & CompressionModes.TSSC) > 0)
+                            {
+                                // TSSC is a stateful compression algorithm which will not reliably support UDP
+                                OnStatusMessage(MessageLevel.Warning, "Cannot use TSSC compression mode with UDP - special compression mode disabled");
+
+                                // Disable TSSC compression processing
+                                compressionModes &= ~CompressionModes.TSSC;
+                                connection.OperationalModes &= ~OperationalModes.CompressionModeMask;
+                                connection.OperationalModes |= (OperationalModes)compressionModes;
+                            }
+
+                            connection.DataChannel = new UdpServer($"Port=-1; Clients={connection.IPAddress}:{int.Parse(setting)}; interface={networkInterface}");
+                            connection.DataChannel.Start();
+                        }
+                    */
+                    }
+
+                    const string message = "Client subscribed as " + string(useCompactMeasurementFormat ? "" : "non-") + "compact unsynchronized with " + ToString(connection->GetSignalIndexCache().Count()) + " signals.";
+
+                    connection->SetIsSubscribed(true);
+                    SendClientResponse(connection, ServerResponse::Succeeded, ServerCommand::Subscribe, message);
+                    DispatchStatusMessage(message);
                 }
                 else
                 {

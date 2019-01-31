@@ -95,7 +95,7 @@ namespace GSF
         }
 
         template <class T>
-        static int32_t WriteBigEndianBytes(std::vector<uint8_t> buffer, T value)
+        static int32_t WriteBigEndianBytes(std::vector<uint8_t>& buffer, T value)
         {
             int32_t length = sizeof(T);
             value = Default.ConvertBigEndian(value);
@@ -108,7 +108,7 @@ namespace GSF
         }
 
         template <class T>
-        static int32_t WriteLittleEndianBytes(std::vector<uint8_t> buffer, T value)
+        static int32_t WriteLittleEndianBytes(std::vector<uint8_t>& buffer, T value)
         {
             int32_t length = sizeof(T);
             value = Default.ConvertLittleEndian(value);

@@ -46,6 +46,7 @@ namespace Transport
         int16_t m_maxRetries;
         int16_t m_retryInterval;
         std::string m_filterExpression;
+        std::string m_metadataFilters;
         DataSubscriber m_subscriber;
         SubscriptionInfo m_subscriptionInfo;
         std::string m_startTime;
@@ -58,6 +59,7 @@ namespace Transport
         GSF::StringMap<ConfigurationFramePtr> m_configurationFrames;
 
         Mutex m_configurationUpdateLock;
+        void SendMetadataRefreshCommand();
 
         static void ConstructConfigurationFrames(const GSF::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, GSF::StringMap<ConfigurationFramePtr>& configurationFrames);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
@@ -98,6 +100,7 @@ namespace Transport
         // Constants
         static constexpr const char* SubscribeAllExpression = "FILTER ActiveMeasurements WHERE ID IS NOT NULL";
         static constexpr const char* SubscribeAllNoStatsExpression = "FILTER ActiveMeasurements WHERE SignalType <> 'STAT'";
+        static constexpr const char* FilterMetadataStatsExpression = "FILTER MeasurementDetail WHERE SignalAcronym <> 'STAT'";
 
         // Iterator handler delegates
         typedef void(*DeviceMetadataIteratorHandlerFunction)(const DeviceMetadataPtr&, void* userData);
@@ -151,7 +154,13 @@ namespace Transport
         // defaults to all non-static points available. When specified before the Connect function,
         // this filter expression will be used for the initial connection. Updating the filter
         // expression while a subscription is active will cause a resubscribe with new expression.
+        const std::string& GetFilterExpression() const;
         void SetFilterExpression(const std::string& filterExpression);
+
+        // Define any metadata filters to be applied to incoming metadata. Each separate filter should
+        // be separated by semi-colons.
+        const std::string& GetMetadataFilters() const;
+        void SetMetadataFilters(const std::string& metadataFilters);
 
         // Starts the connection cycle to a GEP publisher. Upon connection, meta-data will be requested,
         // when received, a subscription will be established

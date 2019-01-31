@@ -80,6 +80,9 @@ namespace Transport
 
         // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
         uint16_t GetSignalIndex(const GSF::Guid& signalID) const;
+
+        // Gets the mapped signal count
+        uint32_t Count() const;
     };
 }}}
 

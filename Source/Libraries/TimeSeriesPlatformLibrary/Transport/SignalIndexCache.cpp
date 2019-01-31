@@ -140,3 +140,8 @@ uint16_t SignalIndexCache::GetSignalIndex(const Guid& signalID) const
 
     return signalIndex;
 }
+
+uint32_t SignalIndexCache::Count() const
+{
+    return m_signalIDCache.size();
+}

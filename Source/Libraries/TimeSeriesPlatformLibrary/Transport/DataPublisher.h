@@ -69,8 +69,11 @@ namespace Transport
         GSF::Timer m_pingTimer;
         GSF::Guid m_subscriberID;
         std::string m_connectionID;
+        std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
         uint32_t m_encoding;
+        bool m_usePayloadCompression;
+        bool m_useCompactMeasurementFormat;
         bool m_isSubscribed;
         bool m_stopped;
 
@@ -117,12 +120,23 @@ namespace Transport
 
         uint32_t GetEncoding() const;
 
+        bool GetUsePayloadCompression() const;
+        void SetUsePayloadCompression(bool value);
+
+        bool GetUseCompactMeasurementFormat() const;
+        void SetUseCompactMeasurementFormat(bool value);
+
         bool GetIsSubscribed() const;
         void SetIsSubscribed(bool value);
 
+        std::string GetSubscriptionInfo() const;
+        void SetSubscriptionInfo(const std::string& value);
+
+        const SignalIndexCache& GetSignalIndexCache() const;
+
         bool CipherKeysDefined() const;
-        std::vector<uint8_t> Keys(int cipherIndex);
-        std::vector<uint8_t> IVs(int cipherIndex);
+        std::vector<uint8_t> Keys(int32_t cipherIndex);
+        std::vector<uint8_t> IVs(int32_t cipherIndex);
 
         void Start();
         void Stop();
