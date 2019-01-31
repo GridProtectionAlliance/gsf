@@ -42,12 +42,14 @@ namespace Transport
         // Internal subscription event handlers
         static void HandleStatusMessage(DataPublisher* source, const std::string& message);
         static void HandleErrorMessage(DataPublisher* source, const std::string& message);
-        static void HandleClientConnected(DataPublisher* source, const Guid& clientID, const std::string& connectionInfo, const std::string& subscriberInfo);
+        static void HandleClientConnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID);
+        static void HandleClientDisconnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID);
 
     protected:
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
         virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
-        virtual void ClientConnected(const Guid& clientID, const std::string& connectionInfo, const std::string& subscriberInfo);
+        virtual void ClientConnected(const Guid& subscriberID, const std::string& connectionID);
+        virtual void ClientDisconnected(const Guid& subscriberID, const std::string& connectionID);
 
     public:
         PublisherInstance(uint16_t port, bool ipV6);

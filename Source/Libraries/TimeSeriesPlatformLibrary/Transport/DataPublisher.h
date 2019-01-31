@@ -70,12 +70,15 @@ namespace Transport
         std::string m_connectionID;
         uint32_t m_operationalModes;
         uint32_t m_encoding;
+        bool m_isSubscribed;
+        bool m_stopped;
 
         std::unordered_set<GSF::Guid> m_subscribedSignalIDs;
         GSF::Timer m_pingTimer;
 
         // Command channel
         GSF::TcpSocket m_commandChannelSocket;
+        std::vector<uint8_t> m_readBuffer;
         GSF::IPAddress m_ipAddress;
         std::string m_hostName;
 
@@ -93,8 +96,9 @@ namespace Transport
         //bool m_tsscResetRequested;
         //uint16_t m_tsscSequenceNumber;
 
-        //void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
-        //void ReadResponse(const ErrorCode& error, uint32_t bytesTransferred);
+        void ReadCommandChannel();
+        void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
+        void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
         static void PingTimerElapsed(Timer* timer, void* userData);
     public:
         ClientConnection(DataPublisherPtr parent, GSF::IOContext& commandChannelService, GSF::IOContext& dataChannelService);
@@ -115,14 +119,19 @@ namespace Transport
 
         uint32_t GetEncoding() const;
 
+        bool GetIsSubscribed() const;
+        void SetIsSubscribed(bool value);
+
         bool CipherKeysDefined() const;
         std::vector<uint8_t> Keys(int cipherIndex);
         std::vector<uint8_t> IVs(int cipherIndex);
 
         void Start();
+        void Stop();
 
         void CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
         void DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
+        void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
     };
 
     typedef SharedPtr<ClientConnection> ClientConnectionPtr;
@@ -133,7 +142,7 @@ namespace Transport
         // Function pointer types
         typedef void(*DispatcherFunction)(DataPublisher*, const std::vector<uint8_t>&);
         typedef void(*MessageCallback)(DataPublisher*, const std::string&);
-        typedef void(*ClientConnectedCallback)(DataPublisher*, const GSF::Guid&, const std::string&, const std::string&);
+        typedef void(*ClientConnectionCallback)(DataPublisher*, const GSF::Guid&, const std::string&);
 
         // Structure used to dispatch
         // callbacks on the callback thread.
@@ -178,42 +187,47 @@ namespace Transport
         void RunCallbackThread();
         void RunCommandChannelAcceptThread();
 
-        // Command channel accept handlers
+        // Command channel handlers
         void StartAccept();
-        void AcceptConnection(const ClientConnectionPtr& clientConnection, const ErrorCode& error);
+        void AcceptConnection(const ClientConnectionPtr& connection, const ErrorCode& error);
+        void RemoveConnection(const ClientConnectionPtr& connection);
 
         // Callbacks
         MessageCallback m_statusMessageCallback;
         MessageCallback m_errorMessageCallback;
-        ClientConnectedCallback m_clientConnectedCallback;
+        ClientConnectionCallback m_clientConnectedCallback;
+        ClientConnectionCallback m_clientDisconnectedCallback;
 
         // Server request handlers
-        void HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
         void HandleUnsubscribe(const ClientConnectionPtr& connection);
-        void HandleMetadataRefresh(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleUpdateProcessingInterval(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleDefineOperationalModes(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleConfirmNotification(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleConfirmBufferBlock(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandlePublishCommandMeasurements(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleUserCommand(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleMetadataRefresh(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
+        void HandleRotateCipherKeys(const ClientConnectionPtr& connection);
+        void HandleUpdateProcessingInterval(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
+        void HandleDefineOperationalModes(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
+        void HandleConfirmNotification(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
+        void HandleConfirmBufferBlock(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
+        void HandlePublishCommandMeasurements(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length);
+        void HandleUserCommand(const ClientConnectionPtr& connection, uint8_t command, uint8_t* data, uint32_t length);
 
         // Dispatchers
         void Dispatch(DispatcherFunction function);
         void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
         void DispatchStatusMessage(const std::string& message);
         void DispatchErrorMessage(const std::string& message);
-        void DispatchClientConnected(const GSF::Guid& clientID, const std::string& connectionInfo, const std::string& subscriberInfo);
+        void DispatchClientConnected(const GSF::Guid& subscriberID, const std::string& connectionID);
+        void DispatchClientDisconnected(const GSF::Guid& subscriberID, const std::string& connectionID);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);        
+        static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
 
         std::string DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const;
         std::vector<uint8_t> EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const;
         GSF::Data::DataSetPtr FilterClientMetadata(const ClientConnectionPtr& connection, const std::map<std::string, GSF::FilterExpressions::ExpressionTreePtr, StringComparer>& filterExpressions) const;
-        std::vector<uint8_t> SerializeMetadata(const ClientConnectionPtr& connection, const GSF::Data::DataSetPtr& metadata);
+        std::vector<uint8_t> SerializeMetadata(const ClientConnectionPtr& connection, const GSF::Data::DataSetPtr& metadata) const;
         bool SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message);
         bool SendClientResponse(const ClientConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data = {});
     public:
@@ -267,10 +281,12 @@ namespace Transport
         // Callback functions are defined with the following signatures:
         //   void ProcessStatusMessage(DataPublisher*, const string& message)
         //   void ProcessErrorMessage(DataPublisher*, const string& message)
-        //   void ProcessClientConnected(DataPublisher*, const GSF::Guid& clientID, const string& connectionInfo, const string& subscriberInfo);
+        //   void ProcessClientConnected(DataPublisher*, const GSF::Guid& subscriberID, const string& connectionID);
+        //   void ProcessClientDisconnected(DataPublisher*, const GSF::Guid& subscriberID, const string& connectionID);
         void RegisterStatusMessageCallback(MessageCallback statusMessageCallback);
         void RegisterErrorMessageCallback(MessageCallback errorMessageCallback);
-        void RegisterClientConnectedCallback(ClientConnectedCallback clientConnectedCallback);
+        void RegisterClientConnectedCallback(ClientConnectionCallback clientConnectedCallback);
+        void RegisterClientDisconnectedCallback(ClientConnectionCallback clientDisconnectedCallback);
 
         friend class ClientConnection;
     };

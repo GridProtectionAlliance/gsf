@@ -56,10 +56,16 @@ void PublisherInstance::HandleErrorMessage(DataPublisher* source, const string& 
     instance->ErrorMessage(message);
 }
 
-void PublisherInstance::HandleClientConnected(DataPublisher* source, const Guid& clientID, const string& connectionInfo, const string& subscriberInfo)
+void PublisherInstance::HandleClientConnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
-    instance->ClientConnected(clientID, connectionInfo, subscriberInfo);;
+    instance->ClientConnected(subscriberID, connectionID);
+}
+
+void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+    instance->ClientDisconnected(subscriberID, connectionID);
 }
 
 void PublisherInstance::StatusMessage(const string& message)
@@ -72,15 +78,24 @@ void PublisherInstance::ErrorMessage(const string& message)
     cerr << message << endl << endl;
 }
 
-void PublisherInstance::ClientConnected(const Guid& clientID, const string& connectionInfo, const string& subscriberInfo)
+void PublisherInstance::ClientConnected(const Guid& subscriberID, const string& connectionID)
 {
-    cout << "Client \"" << subscriberInfo << "\" with ID " << ToString(clientID) << " connected..." << endl;
-    cout << "Connection Info:" << endl;
-    cout << connectionInfo << endl << endl;
+    cout << "Client \"" << connectionID << "\" with subscriber ID " << ToString(subscriberID) << " connected..." << endl << endl;
+}
+
+void PublisherInstance::ClientDisconnected(const Guid& subscriberID, const std::string& connectionID)
+{
+    cout << "Client \"" << connectionID << "\" with subscriber ID " << ToString(subscriberID) << " disconnected..." << endl << endl;
 }
 
 void PublisherInstance::Initialize()
 {
+    // Register callbacks
+    m_publisher.RegisterStatusMessageCallback(&HandleStatusMessage);
+    m_publisher.RegisterErrorMessageCallback(&HandleErrorMessage);
+    m_publisher.RegisterClientConnectedCallback(&HandleClientConnected);
+    m_publisher.RegisterClientDisconnectedCallback(&HandleClientDisconnected);
+
     m_initialized = true;
 }
 

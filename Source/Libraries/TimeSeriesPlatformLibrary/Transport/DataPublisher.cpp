@@ -44,21 +44,16 @@ using namespace GSF::FilterExpressions;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-// Convenience functions to perform simple conversions.
-void _DataPublisherWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
-
 // --- ClientConnectedInfo ---
 
-struct ClientConnectedInfo
+struct ClientConnectionInfo
 {
     const GSF::Guid SubscriberID;
-    const string ConnectionInfo;
-    const string SubscriberInfo;
+    const string ConnectionID;
 
-    ClientConnectedInfo(const GSF::Guid& clientID, string connectionInfo, string subscriberInfo) :
+    ClientConnectionInfo(const GSF::Guid& clientID, const string& connectionID) :
         SubscriberID(clientID),
-        ConnectionInfo(std::move(connectionInfo)),
-        SubscriberInfo(std::move(subscriberInfo))
+        ConnectionID(connectionID)
     {
     }
 };
@@ -71,7 +66,10 @@ ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandCh
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
+    m_isSubscribed(false),
+    m_stopped(true),
     m_commandChannelSocket(m_commandChannelService),
+    m_readBuffer(Common::MaxPacketSize),
     m_udpPort(0),
     m_dataChannelSocket(dataChannelService),
     m_timeIndex(0),
@@ -130,6 +128,16 @@ void ClientConnection::SetOperationalModes(uint32_t value)
 uint32_t ClientConnection::GetEncoding() const
 {
     return m_encoding;
+}
+
+bool ClientConnection::GetIsSubscribed() const
+{
+    return m_isSubscribed;
+}
+
+void ClientConnection::SetIsSubscribed(bool value)
+{
+    m_isSubscribed = value;
 }
 
 bool ClientConnection::CipherKeysDefined() const
@@ -192,11 +200,171 @@ void ClientConnection::Start()
         m_hostName = m_ipAddress.to_string();
 
     m_pingTimer.Start();
+    m_stopped = false;
+    ReadCommandChannel();
+}
+
+void ClientConnection::Stop()
+{
+    m_stopped = true;
+    m_pingTimer.Stop();
+    m_parent->RemoveConnection(shared_from_this());
+    m_commandChannelSocket.shutdown(socket_base::shutdown_both);
+}
+
+// All commands received from the client are handled by this thread.
+void ClientConnection::ReadCommandChannel()
+{
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&ClientConnection::ReadPayloadHeader, this, _1, _2));
+}
+
+void ClientConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred)
+{
+    const uint32_t PacketSizeOffset = 4;
+
+    if (m_stopped)
+        return;
+
+    // Stop cleanly, i.e., don't report, on these errors
+    if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
+    {
+        Stop();
+        return;
+    }
+
+    if (error)
+    {
+        stringstream messageStream;
+
+        messageStream << "Error reading data from client \"";
+        messageStream << m_connectionID;
+        messageStream << "\" command channel: ";
+        messageStream << SystemError(error).what();
+
+        m_parent->DispatchErrorMessage(messageStream.str());
+
+        Stop();
+        return;
+    }
+
+    const uint32_t packetSize = EndianConverter::ToLittleEndian<uint32_t>(&m_readBuffer[0], PacketSizeOffset);
+
+    if (packetSize > static_cast<uint32_t>(m_readBuffer.size()))
+        m_readBuffer.resize(packetSize);
+
+    // Read packet (payload body)
+    // This read method is guaranteed not to return until the
+    // requested size has been read or an error has occurred.
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), bind(&ClientConnection::ParseCommand, this, _1, _2));
+}
+
+void ClientConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTransferred)
+{
+    if (m_stopped)
+        return;
+
+    // Stop cleanly, i.e., don't report, on these errors
+    if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
+    {
+        Stop();
+        return;
+    }
+
+    if (error)
+    {
+        stringstream messageStream;
+
+        messageStream << "Error reading data from client \"";
+        messageStream << m_connectionID;
+        messageStream << "\" command channel: ";
+        messageStream << SystemError(error).what();
+
+        m_parent->DispatchErrorMessage(messageStream.str());
+
+        Stop();
+        return;
+    }
+
+    try
+    {
+        const ClientConnectionPtr connection = shared_from_this();
+        uint8_t* data = &m_readBuffer[0];
+        const uint32_t command = data[0];
+        data++;
+
+        switch (command)
+        {
+            case ServerCommand::Subscribe:
+                m_parent->HandleSubscribe(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::Unsubscribe:
+                m_parent->HandleUnsubscribe(connection);
+                break;
+            case ServerCommand::MetadataRefresh:
+                m_parent->HandleMetadataRefresh(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::RotateCipherKeys:
+                m_parent->HandleRotateCipherKeys(connection);
+                break;
+            case ServerCommand::UpdateProcessingInterval:
+                m_parent->HandleUpdateProcessingInterval(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::DefineOperationalModes:
+                m_parent->HandleDefineOperationalModes(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::ConfirmNotification:
+                m_parent->HandleConfirmNotification(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::ConfirmBufferBlock:
+                m_parent->HandleConfirmBufferBlock(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::PublishCommandMeasurements:
+                m_parent->HandlePublishCommandMeasurements(connection, data, bytesTransferred);
+                break;
+            case ServerCommand::UserCommand00:
+            case ServerCommand::UserCommand01:
+            case ServerCommand::UserCommand02:
+            case ServerCommand::UserCommand03:
+            case ServerCommand::UserCommand04:
+            case ServerCommand::UserCommand05:
+            case ServerCommand::UserCommand06:
+            case ServerCommand::UserCommand07:
+            case ServerCommand::UserCommand08:
+            case ServerCommand::UserCommand09:
+            case ServerCommand::UserCommand10:
+            case ServerCommand::UserCommand11:
+            case ServerCommand::UserCommand12:
+            case ServerCommand::UserCommand13:
+            case ServerCommand::UserCommand14:
+            case ServerCommand::UserCommand15:
+                m_parent->HandleUserCommand(connection, command, data, bytesTransferred);
+                break;
+            default:
+            {
+                stringstream messageStream;
+
+                messageStream << "\"" << m_connectionID << "\"";
+                messageStream << " sent an unrecognized server command: ";
+                messageStream << ToHex(command);
+
+                const string message = messageStream.str();
+                m_parent->SendClientResponse(connection, ServerResponse::Failed, command, message);
+                m_parent->DispatchErrorMessage(message);
+                break;
+            }
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        m_parent->DispatchErrorMessage("Encountered an exception while processing received client data: " + string(ex.what()));
+    }
+
+    ReadCommandChannel();
 }
 
 void ClientConnection::CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
 {
-    async_write(m_commandChannelSocket, buffer(&data[offset], length), &_DataPublisherWriteHandler);
+    async_write(m_commandChannelSocket, buffer(&data[offset], length), bind(&ClientConnection::WriteHandler, this, _1, _2));
 }
 
 void ClientConnection::DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
@@ -205,22 +373,41 @@ void ClientConnection::DataChannelSendAsync(uint8_t* data, uint32_t offset, uint
     CommandChannelSendAsync(data, offset, length);
 }
 
-//void ClientConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred)
-//{
-//}
+void ClientConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+{
+    if (m_stopped)
+        return;
 
-//void ClientConnection::ReadResponse(const ErrorCode& error, uint32_t bytesTransferred)
-//{
-//}
+    // Stop cleanly, i.e., don't report, on these errors
+    if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
+    {
+        Stop();
+        return;
+    }
+
+    if (error)
+    {
+        stringstream messageStream;
+
+        messageStream << "Error writing data to client \"";
+        messageStream << m_connectionID;
+        messageStream << "\" command channel: ";
+        messageStream << SystemError(error).what();
+
+        m_parent->DispatchErrorMessage(messageStream.str());
+
+        Stop();
+    }
+}
 
 void ClientConnection::PingTimerElapsed(Timer* timer, void* userData)
 {
-    ClientConnection* clientConnection = static_cast<ClientConnection*>(userData);
+    ClientConnection* connection = static_cast<ClientConnection*>(userData);
 
-    if (clientConnection == nullptr)
+    if (connection == nullptr)
         return;
 
-    clientConnection->m_parent->SendClientResponse(clientConnection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
+    connection->m_parent->SendClientResponse(connection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
 }
 
 // --- DataPublisher ---
@@ -240,7 +427,8 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_clientAcceptor(m_commandChannelService, endpoint),
     m_statusMessageCallback(nullptr),
     m_errorMessageCallback(nullptr),
-    m_clientConnectedCallback(nullptr)
+    m_clientConnectedCallback(nullptr),
+    m_clientDisconnectedCallback(nullptr)
 {
     m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
     m_commandChannelAcceptThread = Thread(bind(&DataPublisher::RunCommandChannelAcceptThread, this));
@@ -282,30 +470,59 @@ void DataPublisher::RunCommandChannelAcceptThread()
 
 void DataPublisher::StartAccept()
 {
-    const ClientConnectionPtr clientConnection = NewSharedPtr<ClientConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
-    m_clientAcceptor.async_accept(clientConnection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, clientConnection, asio::placeholders::error));
+    const ClientConnectionPtr connection = NewSharedPtr<ClientConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
+    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, asio::placeholders::error));
 }
 
-void DataPublisher::AcceptConnection(const ClientConnectionPtr& clientConnection, const ErrorCode& error)
+void DataPublisher::AcceptConnection(const ClientConnectionPtr& connection, const ErrorCode& error)
 {
     if (!error)
     {
-        m_clientConnections.insert(clientConnection);
-        clientConnection->Start();
+        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+        m_clientConnections.insert(connection);
+        connection->Start();
+        DispatchClientConnected(connection->GetSubscriberID(), connection->GetConnectionID());
     }
 
     StartAccept();
 }
 
-void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::RemoveConnection(const ClientConnectionPtr& connection)
 {
+    if (m_clientConnections.erase(connection))
+        DispatchClientDisconnected(connection->GetSubscriberID(), connection->GetConnectionID());
+}
+
+void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
+{
+    try
+    {
+        if (length >= 6)
+        {
+            
+            connection->SetIsSubscribed(true);
+        }
+        else
+        {
+            const string message = "Not enough buffer was provided to parse client data subscription.";
+            SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
+            DispatchErrorMessage(message);
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        const string message = "Failed to process client data subscription due to exception: " + string(ex.what());
+        SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
+        DispatchErrorMessage(message);
+    }
 }
 
 void DataPublisher::HandleUnsubscribe(const ClientConnectionPtr& connection)
 {
+    connection->SetIsSubscribed(false);
 }
 
-void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection, uint8_t* buffer, uint32_t startIndex, uint32_t length)
+void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
 {
     // Ensure that the subscriber is allowed to request meta-data
     if (!m_allowMetadataRefresh)
@@ -318,16 +535,18 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
 
     try
     {
+        uint32_t index = 0;
+
         // Note that these client provided meta-data filter expressions are applied only to the
         // in-memory DataSet and therefore are not subject to SQL injection attacks
         if (length > 4)
         {
-            const uint32_t responseLength = EndianConverter::ToBigEndian<uint32_t>(buffer, startIndex);
-            startIndex += 4;
+            const uint32_t responseLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
+            index += 4;
 
             if (length >= responseLength + 4)
             {
-                const string metadataFilters = DecodeClientString(connection, buffer, startIndex, responseLength);
+                const string metadataFilters = DecodeClientString(connection, data, index, responseLength);
                 const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_clientMetadata, "MeasurementDetail", metadataFilters);
 
                 // Go through each subscriber specified filter expressions and add it to dictionary
@@ -371,27 +590,40 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
     }
 }
 
-void DataPublisher::HandleUpdateProcessingInterval(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleRotateCipherKeys(const ClientConnectionPtr& connection)
 {
 }
 
-void DataPublisher::HandleDefineOperationalModes(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleUpdateProcessingInterval(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
 {
 }
 
-void DataPublisher::HandleConfirmNotification(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleDefineOperationalModes(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
+{
+    if (length < 4)
+        return;
+
+    const uint32_t operationalModes = EndianConverter::Default.ToBigEndian<uint32_t>(data, 0);
+
+    if ((operationalModes & OperationalModes::VersionMask) != 0U)
+        DispatchStatusMessage("Protocol version not supported. Operational modes may not be set correctly for client \"" + connection->GetConnectionID() + "\".");
+
+    connection->SetOperationalModes(operationalModes);
+}
+
+void DataPublisher::HandleConfirmNotification(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
 {
 }
 
-void DataPublisher::HandleConfirmBufferBlock(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleConfirmBufferBlock(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
 {
 }
 
-void DataPublisher::HandlePublishCommandMeasurements(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandlePublishCommandMeasurements(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
 {
 }
 
-void DataPublisher::HandleUserCommand(const ClientConnectionPtr& connection, uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::HandleUserCommand(const ClientConnectionPtr& connection, uint8_t command, uint8_t* data, uint32_t length)
 {
 }
 
@@ -436,10 +668,16 @@ void DataPublisher::DispatchErrorMessage(const string& message)
     Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
 }
 
-void DataPublisher::DispatchClientConnected(const GSF::Guid& subscriberID, const string& connectionInfo, const string& subscriberInfo)
+void DataPublisher::DispatchClientConnected(const GSF::Guid& subscriberID, const string& connectionID)
 {
-    const ClientConnectedInfo* data = new ClientConnectedInfo(subscriberID, connectionInfo, subscriberInfo);
-    Dispatch(&ClientConnectedDispatcher, reinterpret_cast<const uint8_t*>(data), 0, sizeof(ClientConnectedInfo*));
+    ClientConnectionInfo* data = new ClientConnectionInfo(subscriberID, connectionID);
+    Dispatch(&ClientConnectedDispatcher, reinterpret_cast<uint8_t*>(&data), 0, sizeof(ClientConnectionInfo**));
+}
+
+void DataPublisher::DispatchClientDisconnected(const GSF::Guid& subscriberID, const std::string& connectionID)
+{
+    ClientConnectionInfo* data = new ClientConnectionInfo(subscriberID, connectionID);
+    Dispatch(&ClientDisconnectedDispatcher, reinterpret_cast<uint8_t*>(&data), 0, sizeof(ClientConnectionInfo**));
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
@@ -483,17 +721,32 @@ void DataPublisher::ErrorMessageDispatcher(DataPublisher* source, const vector<u
 
 void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
-        return;
+    ClientConnectionInfo* data = *reinterpret_cast<ClientConnectionInfo**>(const_cast<uint8_t*>(&buffer[0]));
 
-    const ClientConnectedCallback clientConnectedCallback = source->m_clientConnectedCallback;
-
-    if (clientConnectedCallback != nullptr)
+    if (source != nullptr)
     {
-        const ClientConnectedInfo* data = reinterpret_cast<const ClientConnectedInfo*>(&buffer[0]);
-        clientConnectedCallback(source, data->SubscriberID, data->ConnectionInfo, data->SubscriberInfo);
-        delete data;
+        const ClientConnectionCallback clientConnectedCallback = source->m_clientConnectedCallback;
+
+        if (clientConnectedCallback != nullptr)
+            clientConnectedCallback(source, data->SubscriberID, data->ConnectionID);
     }
+
+    delete data;
+}
+
+void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+{
+    ClientConnectionInfo* data = *reinterpret_cast<ClientConnectionInfo**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (source != nullptr)
+    {
+        const ClientConnectionCallback clientDisconnectedCallback = source->m_clientDisconnectedCallback;
+
+        if (clientDisconnectedCallback != nullptr)
+            clientDisconnectedCallback(source, data->SubscriberID, data->ConnectionID);
+    }
+
+    delete data;
 }
 
 void DataPublisher::SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, vector<uint8_t>& buffer)
@@ -629,7 +882,7 @@ DataSetPtr DataPublisher::FilterClientMetadata(const ClientConnectionPtr& connec
     return dataSet;
 }
 
-vector<uint8_t> DataPublisher::SerializeMetadata(const ClientConnectionPtr& connection, const DataSetPtr& metadata)
+vector<uint8_t> DataPublisher::SerializeMetadata(const ClientConnectionPtr& connection, const DataSetPtr& metadata) const
 {
     vector<uint8_t> serializedMetadata;
 
@@ -883,15 +1136,12 @@ void DataPublisher::RegisterErrorMessageCallback(MessageCallback errorMessageCal
     m_errorMessageCallback = errorMessageCallback;
 }
 
-void DataPublisher::RegisterClientConnectedCallback(ClientConnectedCallback clientConnectedCallback)
+void DataPublisher::RegisterClientConnectedCallback(ClientConnectionCallback clientConnectedCallback)
 {
     m_clientConnectedCallback = clientConnectedCallback;
 }
 
-// --- Convenience Methods ---
-
-// This method does nothing. It is used as the callback for asynchronous write operations.
-void _DataPublisherWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+void DataPublisher::RegisterClientDisconnectedCallback(ClientConnectionCallback clientDisconnectedCallback)
 {
-    // TODO: Dispatch exception message...
+    m_clientDisconnectedCallback = clientDisconnectedCallback;
 }

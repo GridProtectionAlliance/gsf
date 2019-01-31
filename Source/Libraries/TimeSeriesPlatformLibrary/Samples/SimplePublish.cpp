@@ -34,16 +34,17 @@ using namespace GSF::TimeSeries::Transport;
 DataPublisherPtr Publisher;
 
 bool RunPublisher(uint16_t port);
-//void ProcessMeasurements(DataPublisher* source, const vector<MeasurementPtr>& measurements);
+void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
+void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
 void DisplayStatusMessage(DataPublisher* source, const string& message);
 void DisplayErrorMessage(DataPublisher* source, const string& message);
 
 // Sample application to demonstrate the most simple use of the publisher API.
 //
-// This application accepts the port of the publisher via command line arguments,
-// starts listening for subscriber connections, and displays information about the
-// measurements it publishes. It provides fourteen measurements, i.e., PPA:1 through
-// PPA:14
+// This application accepts the port of the publisher via command line argument,
+// starts listening for subscriber connections, the displays summary information
+// about the measurements it publishes. It provides fourteen measurements, i.e.,
+// PPA:1 through PPA:14
 //
 // Measurements are transmitted via the TCP command channel.
 int main(int argc, char* argv[])
@@ -110,6 +111,8 @@ bool RunPublisher(uint16_t port)
         cout << endl << "Listening on port: " << port << "..." << endl << endl;
 
         // Register callbacks
+        Publisher->RegisterClientConnectedCallback(&DisplayClientConnected);
+        Publisher->RegisterClientDisconnectedCallback(&DisplayClientDisconnected);
         Publisher->RegisterStatusMessageCallback(&DisplayStatusMessage);
         Publisher->RegisterErrorMessageCallback(&DisplayErrorMessage);
     }
@@ -121,41 +124,19 @@ bool RunPublisher(uint16_t port)
     return connected;
 }
 
-//// Callback which is called when the subscriber has
-//// received a new packet of measurements from the publisher.
-//void ProcessMeasurements(DataPublisher* source, const vector<MeasurementPtr>& measurements)
-//{
-//    const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-//    const uint32_t MaxTimestampSize = 80;
-//
-//    static long processCount = 0;
-//    static char timestamp[MaxTimestampSize];
-//    static const long interval = 5 * 60;
-//    const long measurementCount = measurements.size();
-//    const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
-//
-//    processCount += measurementCount;
-//
-//    // Only display messages every few seconds
-//    if (showMessage)
-//    {
-//        stringstream message;
-//
-//        message << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
-//
-//        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-//            message << "Timestamp: " << string(timestamp) << endl;
-//
-//        message << "Point\tValue" << endl;
-//
-//        for (const auto& measurement : measurements)
-//            message << measurement->ID << '\t' << measurement->Value << endl;
-//
-//        message << endl;
-//
-//        cout << message.str();
-//    }
-//}
+void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)
+{
+    cout << ">> New Client Connected:" << endl;
+    cout << "   Subscriber ID: " << ToString(subscriberID) << endl;
+    cout << "   Connection ID: " << connectionID << endl << endl;
+}
+
+void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)
+{
+    cout << ">> Client Disconnected:" << endl;
+    cout << "   Subscriber ID: " << ToString(subscriberID) << endl;
+    cout << "   Connection ID: " << connectionID << endl << endl;
+}
 
 // Callback which is called to display status messages from the subscriber.
 void DisplayStatusMessage(DataPublisher* source, const string& message)

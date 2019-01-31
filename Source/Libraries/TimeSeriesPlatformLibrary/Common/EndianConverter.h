@@ -85,13 +85,13 @@ namespace GSF
         template <class T>
         static T ToBigEndian(const uint8_t* buffer, const uint32_t startIndex)
         {
-            return Default.ConvertBigEndian(*reinterpret_cast<T*>(buffer[startIndex]));
+            return Default.ConvertBigEndian(*reinterpret_cast<T*>(const_cast<uint8_t*>(buffer + startIndex)));
         }
 
         template <class T>
         static T ToLittleEndian(const uint8_t* buffer, const uint32_t startIndex)
         {
-            return Default.ConvertLittleEndian(*reinterpret_cast<T*>(buffer[startIndex]));
+            return Default.ConvertLittleEndian(*reinterpret_cast<T*>(const_cast<uint8_t*>(buffer + startIndex)));
         }
 
         template <class T>
