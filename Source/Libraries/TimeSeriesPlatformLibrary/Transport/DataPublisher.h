@@ -129,7 +129,7 @@ namespace Transport
         bool GetIsSubscribed() const;
         void SetIsSubscribed(bool value);
 
-        std::string GetSubscriptionInfo() const;
+        const std::string& GetSubscriptionInfo() const;
         void SetSubscriptionInfo(const std::string& value);
 
         const SignalIndexCache& GetSignalIndexCache() const;

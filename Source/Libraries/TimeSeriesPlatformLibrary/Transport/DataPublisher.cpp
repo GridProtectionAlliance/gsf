@@ -162,7 +162,7 @@ void ClientConnection::SetIsSubscribed(bool value)
     m_isSubscribed = value;
 }
 
-string ClientConnection::GetSubscriptionInfo() const
+const string& ClientConnection::GetSubscriptionInfo() const
 {
     return m_subscriptionInfo;
 }
@@ -268,7 +268,6 @@ void ClientConnection::Stop()
     m_stopped = true;
     m_pingTimer.Stop();
     m_parent->RemoveConnection(shared_from_this());
-    m_commandChannelSocket.shutdown(socket_base::shutdown_both);
 }
 
 // All commands received from the client are handled by this thread.
@@ -466,7 +465,7 @@ void ClientConnection::PingTimerElapsed(Timer* timer, void* userData)
     if (connection == nullptr)
         return;
 
-    connection->m_parent->SendClientResponse(connection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
+    //connection->m_parent->SendClientResponse(connection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
 }
 
 // --- DataPublisher ---
@@ -808,18 +807,14 @@ void DataPublisher::Dispatch(DispatcherFunction function, const uint8_t* data, u
 
 void DataPublisher::DispatchStatusMessage(const string& message)
 {
-    const uint32_t messageSize = message.size() * sizeof(char);
-    const char* data = message.c_str();
-
-    Dispatch(&StatusMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
+    const uint32_t messageSize = (message.size() + 1) * sizeof(char);
+    Dispatch(&StatusMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
 void DataPublisher::DispatchErrorMessage(const string& message)
 {
-    const uint32_t messageSize = message.size() * sizeof(char);
-    const char* data = message.c_str();
-
-    Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
+    const uint32_t messageSize = (message.size() + 1) * sizeof(char);
+    Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
 void DataPublisher::DispatchClientConnected(const GSF::Guid& subscriberID, const string& connectionID)
@@ -843,15 +838,7 @@ void DataPublisher::StatusMessageDispatcher(DataPublisher* source, const vector<
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
 
     if (statusMessageCallback != nullptr)
-    {
-        stringstream messageStream;
-
-        for (unsigned char i : buffer)
-            messageStream << buffer[i];
-
-        statusMessageCallback(source, messageStream.str());
-    }
-
+        statusMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
@@ -863,14 +850,7 @@ void DataPublisher::ErrorMessageDispatcher(DataPublisher* source, const vector<u
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 
     if (errorMessageCallback != nullptr)
-    {
-        stringstream messageStream;
-
-        for (unsigned char i : buffer)
-            messageStream << i;
-
-        errorMessageCallback(source, messageStream.str());
-    }
+        errorMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
 }
 
 void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
@@ -1083,9 +1063,18 @@ bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, ui
     {
         const bool dataPacketResponse = responseCode == ServerResponse::DataPacket;
         const bool useDataChannel = dataPacketResponse || responseCode == ServerResponse::BufferBlock;
+        const uint32_t packetSize = data.size() + 6;
         vector<uint8_t> buffer {};
 
-        buffer.reserve(data.size() + 6);
+        buffer.reserve(Common::PayloadHeaderSize + packetSize);
+
+        // Add command payload alignment header (deprecated)
+        buffer.push_back(0xAA);
+        buffer.push_back(0xBB);
+        buffer.push_back(0xCC);
+        buffer.push_back(0xDD);
+
+        EndianConverter::WriteLittleEndianBytes(buffer, packetSize);
 
         // Add response code
         buffer.push_back(responseCode);
@@ -1144,7 +1133,8 @@ bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, ui
                 EndianConverter::WriteBigEndianBytes(buffer, static_cast<int32_t>(data.size()));
 
                 // Write data buffer
-                buffer.assign(data.begin(), data.end());
+                for (size_t i = 0; i < data.size(); i++)
+                    buffer.push_back(data[i]);
             }
 
             // TODO: Publish packet on UDP

@@ -647,19 +647,15 @@ void DataSubscriber::Dispatch(DispatcherFunction function, const uint8_t* data, 
 // Invokes the status message callback on the callback thread and provides the given message to it.
 void DataSubscriber::DispatchStatusMessage(const string& message)
 {
-    const uint32_t messageSize = message.size() * sizeof(char);
-    const char* data = message.c_str();
-
-    Dispatch(&StatusMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
+    const uint32_t messageSize = (message.size() + 1) * sizeof(char);
+    Dispatch(&StatusMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
 // Invokes the error message callback on the callback thread and provides the given message to it.
 void DataSubscriber::DispatchErrorMessage(const string& message)
 {
-    const uint32_t messageSize = message.size() * sizeof(char);
-    const char* data = message.c_str();
-
-    Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(data), 0, messageSize);
+    const uint32_t messageSize = (message.size() + 1) * sizeof(char);
+    Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
@@ -671,14 +667,7 @@ void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vecto
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
     
     if (statusMessageCallback != nullptr)
-    {
-        stringstream messageStream;
-
-        for (unsigned char i : buffer)
-            messageStream << i;
-
-        statusMessageCallback(source, messageStream.str());
-    }
+        statusMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
@@ -690,14 +679,7 @@ void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 
     if (errorMessageCallback != nullptr)
-    {
-        stringstream messageStream;
-
-        for (unsigned char i : buffer)
-            messageStream << i;
-
-        errorMessageCallback(source, messageStream.str());
-    }
+        errorMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.

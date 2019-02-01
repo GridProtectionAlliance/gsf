@@ -41,11 +41,22 @@ namespace GSF
         TimerElapsedCallback m_callback;
         void* m_userData;
         bool m_autoReset;
+        bool m_disposing;
 
         void TimerThread()
         {
-            // Running context will block while items are queued to execute
-            m_timerContext.run();
+            try
+            {
+                // Running context will block while items are queued to execute
+                m_timerContext.run();
+            }
+            catch (...)
+            {
+                return;
+            }
+
+            if (m_disposing)
+                return;
 
             // Reset timer thread when context has nothing left to run
             delete m_timerThread;
@@ -77,14 +88,17 @@ namespace GSF
             m_interval(interval),
             m_callback(callback),
             m_userData(nullptr),
-            m_autoReset(autoReset)
+            m_autoReset(autoReset),
+            m_disposing(false)
         {
         }
 
         ~Timer()
         {
-            Stop();
+            m_disposing = true;
             delete m_timerThread;
+            m_timerThread = nullptr;
+            Stop();
         }
 
         int32_t GetInterval() const
