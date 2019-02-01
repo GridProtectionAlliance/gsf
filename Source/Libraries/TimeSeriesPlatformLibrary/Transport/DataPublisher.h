@@ -169,13 +169,14 @@ namespace Transport
 
         GSF::Data::DataSetPtr m_clientMetadata;
         std::unordered_set<ClientConnectionPtr> m_clientConnections;
+        GSF::Mutex m_clientConnectionsLock;
         SecurityMode m_securityMode;
         bool m_allowMetadataRefresh;
         bool m_allowNaNValueFilter;
         bool m_forceNaNValueFilter;
         uint32_t m_cipherKeyRotationPeriod;
-        bool m_disconnecting;
         void* m_userData;
+        bool m_disposing;
 
         // Statistics counters
         uint64_t m_totalCommandChannelBytesSent;

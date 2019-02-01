@@ -267,13 +267,16 @@ void ClientConnection::Stop()
 {
     m_stopped = true;
     m_pingTimer.Stop();
+    m_commandChannelSocket.shutdown(socket_base::shutdown_both);
+    m_commandChannelSocket.cancel();
     m_parent->RemoveConnection(shared_from_this());
 }
 
 // All commands received from the client are handled by this thread.
 void ClientConnection::ReadCommandChannel()
 {
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&ClientConnection::ReadPayloadHeader, this, _1, _2));
+    if (!m_stopped)
+        async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&ClientConnection::ReadPayloadHeader, this, _1, _2));
 }
 
 void ClientConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred)
@@ -422,7 +425,8 @@ void ClientConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTransf
 
 void ClientConnection::CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
 {
-    async_write(m_commandChannelSocket, buffer(&data[offset], length), bind(&ClientConnection::WriteHandler, this, _1, _2));
+    if (!m_stopped)
+        async_write(m_commandChannelSocket, buffer(&data[offset], length), bind(&ClientConnection::WriteHandler, this, _1, _2));
 }
 
 void ClientConnection::DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
@@ -465,7 +469,8 @@ void ClientConnection::PingTimerElapsed(Timer* timer, void* userData)
     if (connection == nullptr)
         return;
 
-    //connection->m_parent->SendClientResponse(connection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
+    if (!connection->m_stopped)
+        connection->m_parent->SendClientResponse(connection->shared_from_this(), ServerResponse::NoOP, ServerCommand::Subscribe);
 }
 
 // --- DataPublisher ---
@@ -476,8 +481,8 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_allowNaNValueFilter(true),
     m_forceNaNValueFilter(false),
     m_cipherKeyRotationPeriod(60000),
-    m_disconnecting(false),
     m_userData(nullptr),
+    m_disposing(false),
     m_totalCommandChannelBytesSent(0L),
     m_totalDataChannelBytesSent(0L),
     m_totalMeasurementsSent(0L),
@@ -497,7 +502,10 @@ DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
 {
 }
 
-DataPublisher::~DataPublisher() = default;
+DataPublisher::~DataPublisher()
+{
+    m_disposing = true;
+}
 
 DataPublisher::CallbackDispatcher::CallbackDispatcher() :
     Source(nullptr),
@@ -512,7 +520,7 @@ void DataPublisher::RunCallbackThread()
     {
         m_callbackQueue.WaitForData();
 
-        if (m_disconnecting)
+        if (m_disposing)
             break;
 
         const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
@@ -537,7 +545,10 @@ void DataPublisher::AcceptConnection(const ClientConnectionPtr& connection, cons
     if (!error)
     {
         // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+        m_clientConnectionsLock.lock();
         m_clientConnections.insert(connection);
+        m_clientConnectionsLock.unlock();
+
         connection->Start();
         DispatchClientConnected(connection->GetSubscriberID(), connection->GetConnectionID());
     }
@@ -547,8 +558,12 @@ void DataPublisher::AcceptConnection(const ClientConnectionPtr& connection, cons
 
 void DataPublisher::RemoveConnection(const ClientConnectionPtr& connection)
 {
+    m_clientConnectionsLock.lock();
+
     if (m_clientConnections.erase(connection))
         DispatchClientDisconnected(connection->GetSubscriberID(), connection->GetConnectionID());
+
+    m_clientConnectionsLock.unlock();
 }
 
 void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)

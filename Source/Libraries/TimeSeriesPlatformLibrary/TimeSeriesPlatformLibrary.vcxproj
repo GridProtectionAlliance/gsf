@@ -461,7 +461,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -501,7 +501,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
