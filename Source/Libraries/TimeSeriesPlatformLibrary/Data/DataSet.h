@@ -80,12 +80,17 @@ public:
 
     void ReadXml(const std::string& fileName);
     void ReadXml(const std::vector<uint8_t>& buffer);
+    void ReadXml(const uint8_t* buffer, uint32_t length);
+    void ReadXml(const pugi::xml_document& document);
 
     void WriteXml(const std::string& fileName, const std::string& dataSetName = "DataSet") const;
     void WriteXml(std::vector<uint8_t>& buffer, const std::string& dataSetName = "DataSet") const;
+    void WriteXml(pugi::xml_document& document, const std::string& dataSetName = "DataSet") const;
 
     static DataSetPtr FromXml(const std::string& fileName);
     static DataSetPtr FromXml(const std::vector<uint8_t>& buffer);
+    static DataSetPtr FromXml(const uint8_t* buffer, uint32_t length);
+    static DataSetPtr FromXml(const pugi::xml_document& document);
 
     static const std::string XmlSchemaNamespace;
     static const std::string ExtXmlSchemaDataNamespace;

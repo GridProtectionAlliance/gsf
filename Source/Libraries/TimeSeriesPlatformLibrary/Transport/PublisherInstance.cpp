@@ -29,6 +29,7 @@
 using namespace std;
 using namespace pugi;
 using namespace GSF;
+using namespace GSF::Data;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
@@ -109,7 +110,7 @@ void PublisherInstance::DefineMetadata(const vector<ConfigurationFramePtr>& devi
     m_publisher.DefineMetadata(devices, qualityFlags);
 }
 
-void PublisherInstance::DefineMetadata(const xml_document& metadata)
+void PublisherInstance::DefineMetadata(const DataSetPtr& metadata)
 {
     m_publisher.DefineMetadata(metadata);
 }

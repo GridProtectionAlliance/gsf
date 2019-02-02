@@ -137,13 +137,23 @@ void DataSet::ReadXml(const string& fileName)
 
 void DataSet::ReadXml(const vector<uint8_t>& buffer)
 {
+    ReadXml(buffer.data(), buffer.size());
+}
+
+void DataSet::ReadXml(const uint8_t* buffer, uint32_t length)
+{
     xml_document document;
 
-    const xml_parse_result result = document.load_buffer_inplace(const_cast<uint8_t*>(buffer.data()), buffer.size());
+    const xml_parse_result result = document.load_buffer_inplace(const_cast<uint8_t*>(buffer), length);
 
     if (result.status != xml_parse_status::status_ok)
         throw DataSetException("Failed to load XML from buffer: " + string(result.description()));
 
+    ParseXml(document);
+}
+
+void DataSet::ReadXml(const pugi::xml_document& document)
+{
     ParseXml(document);
 }
 
@@ -162,6 +172,11 @@ void DataSet::WriteXml(vector<uint8_t>& buffer, const string& dataSetName) const
     document.save(writer, "  ");
 }
 
+void DataSet::WriteXml(pugi::xml_document& document, const std::string& dataSetName) const
+{
+    GenerateXml(document, dataSetName);
+}
+
 DataSetPtr DataSet::FromXml(const std::string& fileName)
 {
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
@@ -173,6 +188,19 @@ DataSetPtr DataSet::FromXml(const std::vector<uint8_t>& buffer)
 {
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
     dataSet->ReadXml(buffer);
+    return dataSet;
+}
+
+DataSetPtr DataSet::FromXml(const uint8_t* buffer, uint32_t length)
+{
+    DataSetPtr dataSet = NewSharedPtr<DataSet>();
+    dataSet->ReadXml(buffer, length);
+    return dataSet;}
+
+DataSetPtr DataSet::FromXml(const pugi::xml_document& document)
+{
+    DataSetPtr dataSet = NewSharedPtr<DataSet>();
+    dataSet->ReadXml(document);
     return dataSet;
 }
 

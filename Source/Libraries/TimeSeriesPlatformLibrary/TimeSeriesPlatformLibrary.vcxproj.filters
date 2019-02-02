@@ -634,6 +634,12 @@
     <ClCompile Include="Data\DataTable.cpp">
       <Filter>Data</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\ActiveMeasurementsSchema.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
+    <ClCompile Include="Transport\MetadataSchema.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">
@@ -1120,6 +1126,12 @@
     </ClInclude>
     <ClInclude Include="Common\Timer.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\ActiveMeasurementsSchema.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\MetadataSchema.h">
+      <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

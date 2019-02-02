@@ -66,8 +66,8 @@ namespace Transport
         // Define metadata from existing configuration frames
         void DefineMetadata(const std::vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
 
-        // Define metadata from existing XML document
-        void DefineMetadata(const pugi::xml_document& metadata);
+        // Define metadata from existing dataset
+        void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
 
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);

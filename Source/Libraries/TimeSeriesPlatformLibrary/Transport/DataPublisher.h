@@ -132,7 +132,7 @@ namespace Transport
         const std::string& GetSubscriptionInfo() const;
         void SetSubscriptionInfo(const std::string& value);
 
-        const SignalIndexCache& GetSignalIndexCache() const;
+        SignalIndexCache& GetSignalIndexCache();
 
         bool CipherKeysDefined() const;
         std::vector<uint8_t> Keys(int32_t cipherIndex);
@@ -167,7 +167,8 @@ namespace Transport
             CallbackDispatcher();
         };
 
-        GSF::Data::DataSetPtr m_clientMetadata;
+        GSF::Data::DataSetPtr m_allMetadata;
+        GSF::Data::DataSetPtr m_activeMetadata;
         std::unordered_set<ClientConnectionPtr> m_clientConnections;
         GSF::Mutex m_clientConnectionsLock;
         SecurityMode m_securityMode;
@@ -257,9 +258,9 @@ namespace Transport
 
         // Define metadata from existing configuration frames
         void DefineMetadata(const std::vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
-        
-        // Define metadata from existing XML document
-        void DefineMetadata(const pugi::xml_document& metadata);
+
+        // Define metadata from an existing dataset
+        void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
 
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);

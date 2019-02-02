@@ -31,6 +31,8 @@
 #include "../Common/Convert.h"
 #include "../Common/EndianConverter.h"
 #include "../FilterExpressions/FilterExpressionParser.h"
+#include "MetadataSchema.h"
+#include "ActiveMeasurementsSchema.h"
 
 using namespace std;
 using namespace pugi;
@@ -194,7 +196,7 @@ void ClientConnection::SetSubscriptionInfo(const string& value)
     m_subscriptionInfo = source + " version " + version + " built on " + buildDate;
 }
 
-const SignalIndexCache& ClientConnection::GetSignalIndexCache() const
+SignalIndexCache& ClientConnection::GetSignalIndexCache()
 {
     return m_signalIndexCache;
 }
@@ -252,7 +254,7 @@ void ClientConnection::Start()
     }
     catch (...)
     {   //-V565
-        // DNS lookup failure is not a catastrophe
+        // DNS lookup failure is not catastrophic
     }
 
     if (m_hostName.empty())
@@ -605,6 +607,24 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
                     connection->SetUsePayloadCompression(usePayloadCompression);
                     connection->SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
 
+                    // Apply client filter expression and build signal index cache
+                    if (TryGetValue(settings, "inputMeasurementKeys", setting))
+                    {
+                        SignalIndexCache& signalIndexCache = connection->GetSignalIndexCache();
+                        const DataTablePtr& filterTable = m_activeMetadata->Table("ActiveMeasurements");
+                        vector<DataRowPtr> rows = FilterExpressionParser::Select(filterTable, setting); //??
+                        const int32_t signalIDColumn = filterTable->Column("SignalID")->Index();
+
+                        for (size_t i = 0; i < rows.size(); i++)
+                        {
+                            const DataRowPtr& row = rows[i];
+                            const uint16_t signalIndex = 0;
+                            const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
+                            signalIndexCache.AddMeasurementKey(signalIndex, signalID, "", 0);
+                        }
+                        
+                    }
+
                     // Pass subscriber assembly information to connection, if defined
                     if (TryGetValue(settings, "assemblyInfo", setting))
                     {
@@ -715,7 +735,7 @@ void DataPublisher::HandleMetadataRefresh(const ClientConnectionPtr& connection,
             if (length >= responseLength + 4)
             {
                 const string metadataFilters = DecodeClientString(connection, data, index, responseLength);
-                const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_clientMetadata, "MeasurementDetail", metadataFilters);
+                const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_allMetadata, "MeasurementDetail", metadataFilters);
 
                 // Go through each subscriber specified filter expressions and add it to dictionary
                 for (const auto& expression : expressions)
@@ -902,14 +922,6 @@ void DataPublisher::SerializeSignalIndexCache(const GSF::Guid& clientID, const S
 {
 }
 
-//void DataPublisher::SerializeMetadata(const GSF:Guid& clientID, const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags, vector<uint8_t>& buffer)
-//{
-//}
-
-//void DataPublisher::SerializeMetadata(const GSF:Guid& clientID, const xml_document& metadata, vector<uint8_t>& buffer)
-//{
-//}
-
 std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const
 {
     uint32_t encoding = OperationalEncoding::UTF8;
@@ -998,10 +1010,10 @@ std::vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr
 DataSetPtr DataPublisher::FilterClientMetadata(const ClientConnectionPtr& connection, const StringMap<ExpressionTreePtr>& filterExpressions) const
 {
     if (filterExpressions.empty())
-        return m_clientMetadata;
+        return m_allMetadata;
 
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
-    vector<DataTablePtr> tables = m_clientMetadata->Tables();
+    vector<DataTablePtr> tables = m_allMetadata->Tables();
 
     for (size_t i = 0; i < tables.size(); i++)
     {
@@ -1188,10 +1200,17 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
 void DataPublisher::DefineMetadata(const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags)
 {
+    DataSetPtr metadata = DataSet::FromXml(MetadataSchema, MetadataSchemaLength);
+
+    DefineMetadata(metadata);
 }
 
-void DataPublisher::DefineMetadata(const xml_document& metadata)
+void DataPublisher::DefineMetadata(const GSF::Data::DataSetPtr& metadata)
 {
+    m_allMetadata = metadata;
+
+    // Build active meta-data measurements from all meta-data
+    m_activeMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
 }
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
