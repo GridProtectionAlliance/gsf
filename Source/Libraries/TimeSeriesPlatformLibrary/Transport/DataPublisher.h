@@ -167,6 +167,7 @@ namespace Transport
             CallbackDispatcher();
         };
 
+        GSF::Guid m_nodeID;
         GSF::Data::DataSetPtr m_allMetadata;
         GSF::Data::DataSetPtr m_activeMetadata;
         std::unordered_set<ClientConnectionPtr> m_clientConnections;
@@ -254,16 +255,19 @@ namespace Transport
         ~DataPublisher();
 
         // Define metadata from existing metadata tables
-        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata);
-
-        // Define metadata from existing configuration frames
-        void DefineMetadata(const std::vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
+        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
 
         // Define metadata from an existing dataset
         void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
 
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
+
+        // Node ID defines a unique identification for the DataPublisher
+        // instance that gets included in published metadata so that clients
+        // can easily distinguish the source of the measurements
+        const GSF::Guid& GetNodeID() const;
+        void SetNodeID(const GSF::Guid& nodeID);
 
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode securityMode);

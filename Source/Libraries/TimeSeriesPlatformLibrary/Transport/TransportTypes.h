@@ -128,6 +128,15 @@ namespace TimeSeries
 
     extern const char* SignalKindAcronym[];
 
+    // Map signal kind to signal type acronym
+    std::string GetSignalTypeAcronym(SignalKind kind, char phasorType = 'I');
+
+    // Map signal type acronym to engineering units
+    std::string GetEngineeringUnits(const std::string& signalType);
+
+    // Map protocol name to type
+    std::string GetProtocolType(const std::string& protocolName);
+
     // Helper function to parse signal kind
     SignalKind ParseSignalKind(const std::string& acronym);
 

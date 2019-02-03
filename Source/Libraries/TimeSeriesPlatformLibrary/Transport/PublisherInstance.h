@@ -61,10 +61,7 @@ namespace Transport
         void Initialize();
 
         // Define metadata from existing metadata tables
-        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata);
-
-        // Define metadata from existing configuration frames
-        void DefineMetadata(const std::vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags = nullptr);
+        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
 
         // Define metadata from existing dataset
         void DefineMetadata(const GSF::Data::DataSetPtr& metadata);

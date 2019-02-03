@@ -160,6 +160,65 @@ ostream& GSF::TimeSeries::operator << (ostream& stream, const SignalReference& r
     return stream << reference.Acronym << "-" << SignalKindAcronym[reference.Kind];
 }
 
+string GSF::TimeSeries::GetSignalTypeAcronym(SignalKind kind, char phasorType)
+{
+    switch (kind)
+    {
+        case Angle:
+            return toupper(phasorType) == 'V' ? "VPHA" : "IPHA";
+        case Magnitude:
+            return toupper(phasorType) == 'V' ? "VPHM" : "IPHM";
+        case Frequency:
+            return "FREQ";
+        case DfDt:
+            return "DFDT";
+        case Status:
+            return "FLAG";
+        case Digital:
+            return "DIGI";
+        case Analog:
+            return "ALOG";
+        case Calculation:
+            return "CALC";
+        case Statistic:
+            return "STAT";
+        case Alarm:
+            return "ALRM";
+        case Quality:
+            return "QUAL";
+        case Unknown:
+        default:
+            return "NULL";
+    }
+}
+
+std::string TimeSeries::GetEngineeringUnits(const std::string& signalType)
+{
+    if (IsEqual(signalType, "IPHM"))
+        return "Amps";
+
+    if (IsEqual(signalType, "VPHM"))
+        return "Volts";
+
+    if (IsEqual(signalType, "FREQ"))
+        return "Hz";
+
+    if (EndsWith(signalType, "PHA"))
+        return "Degrees";
+
+    return Empty::String;
+}
+
+std::string GSF::TimeSeries::GetProtocolType(const std::string& protocolName)
+{
+    if (StartsWith(protocolName, "Gateway") ||
+        StartsWith(protocolName, "Modbus") ||
+        StartsWith(protocolName, "DNP"))
+            return "Measurement";
+
+    return "Frame";
+}
+
 // Gets the "SignalKind" enum for the specified "acronym".
 //  params:
 //	   acronym: Acronym of the desired "SignalKind"

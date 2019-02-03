@@ -100,14 +100,9 @@ void PublisherInstance::Initialize()
     m_initialized = true;
 }
 
-void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata)
+void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber)
 {
-    m_publisher.DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata);
-}
-
-void PublisherInstance::DefineMetadata(const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags)
-{
-    m_publisher.DefineMetadata(devices, qualityFlags);
+    m_publisher.DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata, versionNumber);
 }
 
 void PublisherInstance::DefineMetadata(const DataSetPtr& metadata)

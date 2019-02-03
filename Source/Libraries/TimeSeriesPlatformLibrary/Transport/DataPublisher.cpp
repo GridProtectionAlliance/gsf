@@ -477,7 +477,8 @@ void ClientConnection::PingTimerElapsed(Timer* timer, void* userData)
 
 // --- DataPublisher ---
 
-DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :    
+DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
+    m_nodeID(NewGuid()),
     m_securityMode(SecurityMode::None),
     m_allowMetadataRefresh(true),
     m_allowNaNValueFilter(true),
@@ -1194,23 +1195,396 @@ bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, ui
     return success;
 }
 
-void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata)
+inline int32_t GetColumnIndex(const DataTablePtr& table, const string& columnName)
 {
+    const DataColumnPtr& column = table->Column(columnName);
+
+    if (column == nullptr)
+        throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
+
+    return column->Index();
 }
 
-void DataPublisher::DefineMetadata(const vector<ConfigurationFramePtr>& devices, const MeasurementMetadataPtr& qualityFlags)
+void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber)
 {
-    DataSetPtr metadata = DataSet::FromXml(MetadataSchema, MetadataSchemaLength);
+    typedef unordered_map<uint16_t, char> PhasorTypeMap;
+    typedef SharedPtr<PhasorTypeMap> PhasorTypeMapPtr;
+    const PhasorTypeMapPtr nullPhasorTypeMap = nullptr;
+
+    // Load meta-data schema
+    const DataSetPtr metadata = DataSet::FromXml(MetadataSchema, MetadataSchemaLength);
+    const DataTablePtr& deviceDetail = metadata->Table("DeviceDetail");
+    const DataTablePtr& measurementDetail = metadata->Table("MeasurementDetail");
+    const DataTablePtr& phasorDetail = metadata->Table("PhasorDetail");
+    const DataTablePtr& schemaVersion = metadata->Table("SchemaVersion");
+
+    StringMap<PhasorTypeMapPtr> phasorTypes;
+    PhasorTypeMapPtr phasors;
+
+    if (deviceDetail != nullptr)
+    {
+        const int32_t nodeID = GetColumnIndex(deviceDetail, "NodeID");
+        const int32_t uniqueID = GetColumnIndex(deviceDetail, "UniqueID");
+        const int32_t isConcentrator = GetColumnIndex(deviceDetail, "IsConcentrator");
+        const int32_t acronym = GetColumnIndex(deviceDetail, "Acronym");
+        const int32_t name = GetColumnIndex(deviceDetail, "Name");
+        const int32_t accessID = GetColumnIndex(deviceDetail, "AccessID");
+        const int32_t parentAcronym = GetColumnIndex(deviceDetail, "ParentAcronym");
+        const int32_t protocolName = GetColumnIndex(deviceDetail, "ProtocolName");
+        const int32_t framesPerSecond = GetColumnIndex(deviceDetail, "FramesPerSecond");
+        const int32_t companyAcronym = GetColumnIndex(deviceDetail, "CompanyAcronym");
+        const int32_t vendorAcronym = GetColumnIndex(deviceDetail, "VendorAcronym");
+        const int32_t vendorDeviceName = GetColumnIndex(deviceDetail, "VendorDeviceAcronym");
+        const int32_t longitude = GetColumnIndex(deviceDetail, "Longitude");
+        const int32_t latitude = GetColumnIndex(deviceDetail, "Latitude");
+        const int32_t enabled = GetColumnIndex(deviceDetail, "Enabled");
+        const int32_t updatedOn = GetColumnIndex(deviceDetail, "UpdatedOn");
+
+        for (size_t i = 0; i < deviceMetadata.size(); i++)
+        {
+            const DeviceMetadataPtr device = deviceMetadata[i];
+
+            if (device == nullptr)
+                continue;
+
+            DataRowPtr row = deviceDetail->CreateRow();
+
+            row->SetGuidValue(nodeID, m_nodeID);
+            row->SetGuidValue(uniqueID, device->UniqueID);
+            row->SetBooleanValue(isConcentrator, device->ParentAcronym.empty());
+            row->SetStringValue(acronym, device->Acronym);
+            row->SetStringValue(name, device->Name);
+            row->SetInt32Value(accessID, device->AccessID);
+            row->SetStringValue(parentAcronym, device->ParentAcronym);
+            row->SetStringValue(protocolName, device->ProtocolName);
+            row->SetInt32Value(framesPerSecond, device->FramesPerSecond);
+            row->SetStringValue(companyAcronym, device->CompanyAcronym);
+            row->SetStringValue(vendorAcronym, device->VendorAcronym);
+            row->SetStringValue(vendorDeviceName, device->VendorDeviceName);
+            row->SetDecimalValue(longitude, decimal_t(device->Longitude));
+            row->SetDecimalValue(latitude, decimal_t(device->Latitude));
+            row->SetBooleanValue(enabled, true);
+            row->SetDateTimeValue(updatedOn, device->UpdatedOn);
+
+            deviceDetail->AddRow(row);
+        }
+    }
+
+    if (phasorDetail != nullptr)
+    {
+        const int32_t id = GetColumnIndex(phasorDetail, "ID");
+        const int32_t deviceAcronym = GetColumnIndex(phasorDetail, "DeviceAcronym");
+        const int32_t label = GetColumnIndex(phasorDetail, "Label");
+        const int32_t type = GetColumnIndex(phasorDetail, "Type");
+        const int32_t phase = GetColumnIndex(phasorDetail, "Phase");
+        const int32_t sourceIndex = GetColumnIndex(phasorDetail, "SourceIndex");
+        const int32_t updatedOn = GetColumnIndex(phasorDetail, "UpdatedOn");
+
+        for (size_t i = 0; i < phasorMetadata.size(); i++)
+        {
+            const PhasorMetadataPtr phasor = phasorMetadata[i];
+
+            if (phasor == nullptr)
+                continue;
+
+            DataRowPtr row = phasorDetail->CreateRow();
+
+            row->SetInt32Value(id, static_cast<int32_t>(i));
+            row->SetStringValue(deviceAcronym, phasor->DeviceAcronym);
+            row->SetStringValue(label, phasor->Label);
+            row->SetStringValue(type, phasor->Type);
+            row->SetStringValue(phase, phasor->Phase);
+            row->SetInt32Value(sourceIndex, phasor->SourceIndex);
+            row->SetDateTimeValue(updatedOn, phasor->UpdatedOn);
+
+            phasorDetail->AddRow(row);
+
+            // Track phasor information related to device for measurement signal type derivation later
+            if (!TryGetValue(phasorTypes, phasor->DeviceAcronym, phasors, nullPhasorTypeMap))
+            {
+                phasors = NewSharedPtr<PhasorTypeMap>();
+                phasorTypes[phasor->DeviceAcronym] = phasors;
+            }
+
+            phasors->at(phasor->SourceIndex) = phasor->Type.empty() ? 'I' : phasor->Type[0];
+        }
+    }
+
+    if (measurementDetail != nullptr)
+    {
+        const int32_t deviceAcronym = GetColumnIndex(measurementDetail, "DeviceAcronym");
+        const int32_t id = GetColumnIndex(measurementDetail, "ID");
+        const int32_t signalID = GetColumnIndex(measurementDetail, "SignalID");
+        const int32_t pointTag = GetColumnIndex(measurementDetail, "PointTag");
+        const int32_t signalReference = GetColumnIndex(measurementDetail, "SignalReference");
+        const int32_t signalAcronym = GetColumnIndex(measurementDetail, "SignalAcronym");
+        const int32_t phasorSourceIndex = GetColumnIndex(measurementDetail, "PhasorSourceIndex");
+        const int32_t description = GetColumnIndex(measurementDetail, "Description");
+        const int32_t internal = GetColumnIndex(measurementDetail, "Internal");
+        const int32_t enabled = GetColumnIndex(measurementDetail, "Enabled");
+        const int32_t updatedOn = GetColumnIndex(measurementDetail, "UpdatedOn");
+        char phasorType = 'I';
+
+        for (size_t i = 0; i < measurementMetadata.size(); i++)
+        {
+            const MeasurementMetadataPtr measurement = measurementMetadata[i];
+            DataRowPtr row = measurementDetail->CreateRow();
+
+            row->SetStringValue(deviceAcronym, measurement->DeviceAcronym);
+            row->SetStringValue(id, measurement->ID);
+            row->SetGuidValue(signalID, measurement->SignalID);
+            row->SetStringValue(pointTag, measurement->PointTag);
+            row->SetStringValue(signalReference, ToString(measurement->Reference));
+
+            if (TryGetValue(phasorTypes, measurement->DeviceAcronym, phasors, nullPhasorTypeMap))
+                TryGetValue(*phasors, measurement->PhasorSourceIndex, phasorType, 'I');
+
+            row->SetStringValue(signalAcronym, GetSignalTypeAcronym(measurement->Reference.Kind, phasorType));
+            row->SetInt32Value(phasorSourceIndex, measurement->PhasorSourceIndex);
+            row->SetStringValue(description, measurement->Description);
+            row->SetBooleanValue(internal, true);
+            row->SetBooleanValue(enabled, true);
+            row->SetDateTimeValue(updatedOn, measurement->UpdatedOn);
+
+            measurementDetail->AddRow(row);
+        }
+    }
+
+    if (schemaVersion != nullptr)
+    {
+        DataRowPtr row = schemaVersion->CreateRow();
+        row->SetInt32Value("VersionNumber", versionNumber);
+        schemaVersion->AddRow(row);
+    }
 
     DefineMetadata(metadata);
 }
 
-void DataPublisher::DefineMetadata(const GSF::Data::DataSetPtr& metadata)
+void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
 {
     m_allMetadata = metadata;
 
-    // Build active meta-data measurements from all meta-data
+    // Create device data map used to build a flatter meta-data view used for easier client filtering
+    struct DeviceData
+    {
+        int32_t DeviceID{};
+        int32_t FramesPerSecond{};
+        string Company;
+        string Protocol;
+        string ProtocolType;
+        decimal_t Longitude;
+        decimal_t Latitude;
+    };
+
+    typedef SharedPtr<DeviceData> DeviceDataPtr;
+    const DeviceDataPtr nullDeviceData = nullptr;
+
+    const DataTablePtr& deviceDetail = metadata->Table("DeviceDetail");
+    StringMap<DeviceDataPtr> deviceData;
+
+    if (deviceDetail != nullptr)
+    {
+        const int32_t name = GetColumnIndex(deviceDetail, "Name");
+        const int32_t protocolName = GetColumnIndex(deviceDetail, "ProtocolName");
+        const int32_t framesPerSecond = GetColumnIndex(deviceDetail, "FramesPerSecond");
+        const int32_t companyAcronym = GetColumnIndex(deviceDetail, "CompanyAcronym");
+        const int32_t longitude = GetColumnIndex(deviceDetail, "Longitude");
+        const int32_t latitude = GetColumnIndex(deviceDetail, "Latitude");
+
+        for (int32_t i = 0; i < deviceDetail->RowCount(); i++)
+        {
+            const DataRowPtr& row = deviceDetail->Row(i);
+            const DeviceDataPtr device = NewSharedPtr<DeviceData>();
+
+            device->DeviceID = i;
+            device->FramesPerSecond = row->ValueAsInt32(framesPerSecond).GetValueOrDefault();
+            device->Company = row->ValueAsString(companyAcronym).GetValueOrDefault();
+            device->Protocol = row->ValueAsString(protocolName).GetValueOrDefault();
+            device->ProtocolType = GetProtocolType(device->Protocol);
+            device->Longitude = row->ValueAsDecimal(longitude).GetValueOrDefault();
+            device->Latitude = row->ValueAsDecimal(latitude).GetValueOrDefault();
+
+            string deviceName = row->ValueAsString(name).GetValueOrDefault();
+
+            if (!deviceName.empty())
+                deviceData[deviceName] = device;
+        }
+    }
+
+    // Create phasor data map used to build a flatter meta-data view used for easier client filtering
+    struct PhasorData
+    {
+        int32_t PhasorID{};
+        string PhasorType;
+        string Phase;
+    };
+
+    typedef SharedPtr<PhasorData> PhasorDataPtr;
+    const PhasorDataPtr nullPhasorData = nullptr;
+
+    typedef unordered_map<int32_t, PhasorDataPtr> PhasorDataMap;
+    typedef SharedPtr<PhasorDataMap> PhasorDataMapPtr;
+    const PhasorDataMapPtr nullPhasorDataMap = nullptr;
+
+    const DataTablePtr& phasorDetail = metadata->Table("PhasorDetail");
+    StringMap<PhasorDataMapPtr> phasorData;
+
+    if (phasorDetail != nullptr)
+    {
+        const int32_t id = GetColumnIndex(phasorDetail, "ID");
+        const int32_t deviceAcronym = GetColumnIndex(phasorDetail, "DeviceAcronym");
+        const int32_t type = GetColumnIndex(phasorDetail, "Type");
+        const int32_t phase = GetColumnIndex(phasorDetail, "Phase");
+        const int32_t sourceIndex = GetColumnIndex(phasorDetail, "SourceIndex");
+        
+        for (int32_t i = 0; i < phasorDetail->RowCount(); i++)
+        {
+            const DataRowPtr& row = phasorDetail->Row(i);
+            
+            string deviceName = row->ValueAsString(deviceAcronym).GetValueOrDefault();
+
+            if (deviceName.empty())
+                continue;
+
+            PhasorDataMapPtr phasorMap;
+            const PhasorDataPtr phasor = NewSharedPtr<PhasorData>();
+
+            phasor->PhasorID = row->ValueAsInt32(id).GetValueOrDefault();
+            phasor->PhasorType = row->ValueAsString(type).GetValueOrDefault();
+            phasor->Phase = row->ValueAsString(phase).GetValueOrDefault();
+
+            if (!TryGetValue(phasorData, deviceName, phasorMap, nullPhasorDataMap))
+            {
+                phasorMap = NewSharedPtr<PhasorDataMap>();
+                phasorData[deviceName] = phasorMap;
+            }
+
+            phasorMap->at(row->ValueAsInt32(sourceIndex).GetValueOrDefault()) = phasor;
+        }
+    }
+
+    // Load active meta-data measurements schema
     m_activeMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
+
+    // Build active meta-data measurements from all meta-data
+    const DataTablePtr& measurementDetail = metadata->Table("MeasurementDetail");
+    const DataTablePtr& activeMeasurements = m_activeMetadata->Table("ActiveMeasurements");
+
+    if (measurementDetail != nullptr && activeMeasurements != nullptr)
+    {
+        // Lookup column indices for measurement detail table
+        const int32_t md_deviceAcronym = GetColumnIndex(measurementDetail, "DeviceAcronym");
+        const int32_t md_id = GetColumnIndex(measurementDetail, "ID");
+        const int32_t md_signalID = GetColumnIndex(measurementDetail, "SignalID");
+        const int32_t md_pointTag = GetColumnIndex(measurementDetail, "PointTag");
+        const int32_t md_signalReference = GetColumnIndex(measurementDetail, "SignalReference");
+        const int32_t md_signalAcronym = GetColumnIndex(measurementDetail, "SignalAcronym");
+        const int32_t md_phasorSourceIndex = GetColumnIndex(measurementDetail, "PhasorSourceIndex");
+        const int32_t md_description = GetColumnIndex(measurementDetail, "Description");
+        const int32_t md_internal = GetColumnIndex(measurementDetail, "Internal");
+        const int32_t md_enabled = GetColumnIndex(measurementDetail, "Enabled");
+        const int32_t md_updatedOn = GetColumnIndex(measurementDetail, "UpdatedOn");
+
+        // Lookup column indices for active measurements table
+        const int32_t am_sourceNodeID = GetColumnIndex(activeMeasurements, "SourceNodeID");
+        const int32_t am_id = GetColumnIndex(activeMeasurements, "ID");
+        const int32_t am_signalID = GetColumnIndex(activeMeasurements, "SignalID");
+        const int32_t am_pointTag = GetColumnIndex(activeMeasurements, "PointTag");
+        const int32_t am_signalReference = GetColumnIndex(activeMeasurements, "SignalReference");
+        const int32_t am_internal = GetColumnIndex(activeMeasurements, "Internal");
+        const int32_t am_subscribed = GetColumnIndex(activeMeasurements, "Subscribed");
+        const int32_t am_device = GetColumnIndex(activeMeasurements, "Device");
+        const int32_t am_deviceID = GetColumnIndex(activeMeasurements, "DeviceID");
+        const int32_t am_framesPerSecond = GetColumnIndex(activeMeasurements, "FramesPerSecond");
+        const int32_t am_protocol = GetColumnIndex(activeMeasurements, "Protocol");
+        const int32_t am_protocolType = GetColumnIndex(activeMeasurements, "ProtocolType");
+        const int32_t am_signalType = GetColumnIndex(activeMeasurements, "SignalType");
+        const int32_t am_engineeringUnits = GetColumnIndex(activeMeasurements, "EngineeringUnits");
+        const int32_t am_phasorID = GetColumnIndex(activeMeasurements, "PhasorID");
+        const int32_t am_phasorType = GetColumnIndex(activeMeasurements, "PhasorType");
+        const int32_t am_phase = GetColumnIndex(activeMeasurements, "Phase");
+        const int32_t am_adder = GetColumnIndex(activeMeasurements, "Adder");
+        const int32_t am_multiplier = GetColumnIndex(activeMeasurements, "Multiplier");
+        const int32_t am_company = GetColumnIndex(activeMeasurements, "Company");
+        const int32_t am_longitude = GetColumnIndex(activeMeasurements, "Longitude");
+        const int32_t am_latitude = GetColumnIndex(activeMeasurements, "Latitude");
+        const int32_t am_description = GetColumnIndex(activeMeasurements, "Description");
+        const int32_t am_updatedOn = GetColumnIndex(activeMeasurements, "UpdatedOn");
+
+        for (int32_t i = 0; i < measurementDetail->RowCount(); i++)
+        {
+            const DataRowPtr& md_row = measurementDetail->Row(i);
+
+            if (!md_row->ValueAsBoolean(md_enabled).GetValueOrDefault())
+                continue;
+            
+            DataRowPtr am_row = activeMeasurements->CreateRow();
+
+            am_row->SetGuidValue(am_sourceNodeID, m_nodeID);
+            am_row->SetStringValue(am_id, md_row->ValueAsString(md_id));
+            am_row->SetGuidValue(am_signalID, md_row->ValueAsGuid(md_signalID));
+            am_row->SetStringValue(am_pointTag, md_row->ValueAsString(md_pointTag));
+            am_row->SetStringValue(am_signalReference, md_row->ValueAsString(md_signalReference));
+            am_row->SetInt32Value(am_internal, md_row->ValueAsInt32(md_internal));
+            am_row->SetBooleanValue(am_subscribed, false);
+            am_row->SetStringValue(am_description, md_row->ValueAsString(md_description));
+            am_row->SetDoubleValue(am_adder, 0.0);
+            am_row->SetDoubleValue(am_multiplier, 1.0);
+            am_row->SetDateTimeValue(am_updatedOn, md_row->ValueAsDateTime(md_updatedOn));
+
+            string signalType = md_row->ValueAsString(md_signalAcronym).GetValueOrDefault();
+
+            if (signalType.empty())
+                signalType = "CALC";
+
+            am_row->SetStringValue(am_signalType, signalType);
+            am_row->SetStringValue(am_engineeringUnits, GetEngineeringUnits(signalType));
+
+            string deviceName = md_row->ValueAsString(md_deviceAcronym).GetValueOrDefault();
+
+            if (deviceName.empty())
+            {
+                // Set any default values when measurement is not associated with a device
+                am_row->SetInt32Value(am_framesPerSecond, 30);
+            }
+            else
+            {
+                am_row->SetStringValue(am_device, deviceName);
+
+                DeviceDataPtr device;
+
+                // Lookup associated device record
+                if (TryGetValue(deviceData, deviceName, device, nullDeviceData))
+                {
+                    am_row->SetInt32Value(am_deviceID, device->DeviceID);
+                    am_row->SetInt32Value(am_framesPerSecond, device->FramesPerSecond);
+                    am_row->SetStringValue(am_company, device->Company);
+                    am_row->SetStringValue(am_protocol, device->Protocol);
+                    am_row->SetStringValue(am_protocolType, device->ProtocolType);
+                    am_row->SetDecimalValue(am_longitude, device->Longitude);
+                    am_row->SetDecimalValue(am_latitude, device->Latitude);
+                }
+
+                PhasorDataMapPtr phasorMap;
+
+                // Lookup associated phasor records
+                if (TryGetValue(phasorData, deviceName, phasorMap, nullPhasorDataMap))
+                {
+                    PhasorDataPtr phasor;
+                    int32_t sourceIndex = md_row->ValueAsInt32(md_phasorSourceIndex).GetValueOrDefault();
+
+                    if (TryGetValue(*phasorMap, sourceIndex, phasor, nullPhasorData))
+                    {
+                        am_row->SetInt32Value(am_phasorID, phasor->PhasorID);
+                        am_row->SetStringValue(am_phasorType, phasor->PhasorType);
+                        am_row->SetStringValue(am_phase, phasor->Phase);
+                    }
+                }
+            }
+
+            activeMeasurements->AddRow(am_row);
+        }
+    }
 }
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
@@ -1219,6 +1593,16 @@ void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
 
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
+}
+
+const GSF::Guid& DataPublisher::GetNodeID() const
+{
+    return m_nodeID;
+}
+
+void DataPublisher::SetNodeID(const GSF::Guid& nodeID)
+{
+    m_nodeID = nodeID;
 }
 
 SecurityMode DataPublisher::GetSecurityMode() const
