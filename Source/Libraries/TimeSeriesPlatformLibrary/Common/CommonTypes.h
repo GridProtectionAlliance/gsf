@@ -323,7 +323,6 @@ namespace GSF
     std::string TrimLeft(const std::string& value, const std::string& trimValues);
     std::string PadLeft(const std::string& value, uint32_t count, char padChar);
     std::string PadRight(const std::string& value, uint32_t count, char padChar);
-    StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');
 
     // Handy date/time functions (boost wrappers)
     enum class TimeInterval

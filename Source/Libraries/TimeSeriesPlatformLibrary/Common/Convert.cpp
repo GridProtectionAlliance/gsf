@@ -25,11 +25,12 @@
 #include <sstream>
 #include <locale>
 #include <codecvt>
-#include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/string_generator.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
+#include <boost/algorithm/string.hpp>
 #include "Convert.h"
 
 using namespace std;
@@ -232,7 +233,7 @@ uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t 
 
 DateTime GSF::LocalFromUtc(const DateTime& timestamp)
 {
-    return DateTime(boost::date_time::c_local_adjustor<DateTime>::utc_to_local(timestamp));
+    return boost::date_time::c_local_adjustor<DateTime>::utc_to_local(timestamp);
 }
 
 std::string GSF::ToString(const Guid& value)
@@ -271,6 +272,48 @@ string GSF::ToUTF8(const wstring& value)
 {
     wstring_convert<codecvt_utf8<wchar_t>, wchar_t> converter;
     return converter.to_bytes(value);
+}
+
+bool GSF::ParseBoolean(const string& value)
+{
+    if (value.empty())
+        return false;
+
+    const string result = Trim(value);
+
+    if (result.empty())
+    {
+        if (IsEqual(result, "true"))
+            return true;
+
+        if (IsEqual(result, "false"))
+            return false;
+
+        try
+        {
+            return stoi(result) != 0;
+        }
+        catch (...)
+        {
+            const char first = toupper(result[0]);
+            return first == 'T' || first == 'Y';
+        }
+    }
+
+    return false;
+}
+
+bool GSF::TryParseDouble(const string& value, float64_t& result)
+{
+    try
+    {
+        result = stod(value);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
 }
 
 std::string GSF::RegExEncode(const char value)
@@ -379,4 +422,140 @@ DateTime GSF::ParseTimestamp(const char* time, bool parseAsUTC)
         return timestamp;
 
     throw runtime_error("Failed to parse timestamp \"" + string(time) + "\"");
+}
+
+StringMap<string> GSF::ParseKeyValuePairs(const string& value, const char parameterDelimiter, const char keyValueDelimiter, const char startValueDelimiter, const char endValueDelimiter)
+{
+    if (parameterDelimiter == keyValueDelimiter ||
+        parameterDelimiter == startValueDelimiter ||
+        parameterDelimiter == endValueDelimiter ||
+        keyValueDelimiter == startValueDelimiter ||
+        keyValueDelimiter == endValueDelimiter ||
+        startValueDelimiter == endValueDelimiter)
+        throw invalid_argument("All delimiters must be unique");
+
+    const string& escapedParameterDelimiter = RegExEncode(parameterDelimiter);
+    const string& escapedKeyValueDelimiter = RegExEncode(keyValueDelimiter);
+    const string& escapedStartValueDelimiter = RegExEncode(startValueDelimiter);
+    const string& escapedEndValueDelimiter = RegExEncode(endValueDelimiter);
+    const string& escapedBackslashDelimiter = RegExEncode('\\');
+    const string& parameterDelimiterStr = string(1, parameterDelimiter);
+    const string& keyValueDelimiterStr = string(1, keyValueDelimiter);
+    const string& startValueDelimiterStr = string(1, startValueDelimiter);
+    const string& endValueDelimiterStr = string(1, endValueDelimiter);
+    const string& backslashDelimiterStr = "\\";
+
+    StringMap<string> keyValuePairs;
+    vector<string> escapedValue;
+    bool valueEscaped = false;
+    uint32_t delimiterDepth = 0;
+
+    // Escape any parameter or key/value delimiters within tagged value sequences
+    //      For example, the following string:
+    //          "normalKVP=-1; nestedKVP={p1=true; p2=false}")
+    //      would be encoded as:
+    //          "normalKVP=-1; nestedKVP=p1\\u003dtrue\\u003b p2\\u003dfalse")
+    for (uint32_t i = 0; i < value.size(); i++)
+    {
+        const char character = value[i];
+
+        if (character == startValueDelimiter)
+        {
+            if (!valueEscaped)
+            {
+                valueEscaped = true;
+                continue;   // Don't add tag start delimiter to final value
+            }
+
+            // Handle nested delimiters
+            delimiterDepth++;
+        }
+
+        if (character == endValueDelimiter)
+        {
+            if (valueEscaped)
+            {
+                if (delimiterDepth > 0)
+                {
+                    // Handle nested delimiters
+                    delimiterDepth--;
+                }
+                else
+                {
+                    valueEscaped = false;
+                    continue;   // Don't add tag stop delimiter to final value
+                }
+            }
+            else
+            {
+                throw runtime_error("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter '" + endValueDelimiterStr + "' before start value delimiter '" + startValueDelimiterStr + "'.");  // NOLINT
+            }
+        }
+
+        if (valueEscaped)
+        {
+            // Escape any delimiter characters inside nested key/value pair
+            if (character == parameterDelimiter)
+                escapedValue.push_back(escapedParameterDelimiter);
+            else if (character == keyValueDelimiter)
+                escapedValue.push_back(escapedKeyValueDelimiter);
+            else if (character == startValueDelimiter)
+                escapedValue.push_back(escapedStartValueDelimiter);
+            else if (character == endValueDelimiter)
+                escapedValue.push_back(escapedEndValueDelimiter);
+            else if (character == '\\')
+                escapedValue.push_back(escapedBackslashDelimiter);
+            else
+                escapedValue.emplace_back(1, character);
+        }
+        else
+        {
+            if (character == '\\')
+                escapedValue.push_back(escapedBackslashDelimiter);
+            else
+                escapedValue.emplace_back(1, character);
+        }
+    }
+
+    if (delimiterDepth != 0 || valueEscaped)
+    {
+        // If value is still escaped, tagged expression was not terminated
+        if (valueEscaped)
+            delimiterDepth = 1;
+
+        const bool moreStartDelimiters = delimiterDepth > 0;
+
+        throw runtime_error(
+            "Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more " +
+            (moreStartDelimiters ? "start value delimiters '" + startValueDelimiterStr + "'" : "end value delimiters '" + endValueDelimiterStr + "'") + " than " +
+            (moreStartDelimiters ? "end value delimiters '" + endValueDelimiterStr + "'" : "start value delimiters '" + startValueDelimiterStr + "'") + ".");
+    }
+
+    // Parse key/value pairs from escaped value
+    vector<string> pairs = Split(boost::algorithm::join(escapedValue, ""), parameterDelimiterStr, false);
+
+    for (uint32_t i = 0; i < pairs.size(); i++)
+    {
+        // Separate key from value
+        vector<string> elements = Split(pairs[i], keyValueDelimiterStr, false);
+
+        if (elements.size() == 2)
+        {
+            // Get key
+            const string key = Trim(elements[0]);
+
+            // Get unescaped value
+            const string unescapedValue = Replace(Replace(Replace(Replace(Replace(Trim(elements[1]),
+                escapedParameterDelimiter, parameterDelimiterStr, false),
+                escapedKeyValueDelimiter, keyValueDelimiterStr, false),
+                escapedStartValueDelimiter, startValueDelimiterStr, false),
+                escapedEndValueDelimiter, endValueDelimiterStr, false),                    
+                escapedBackslashDelimiter, backslashDelimiterStr, false);
+
+            // Add or replace key elements with unescaped value
+            keyValuePairs[key] = unescapedValue;
+        }
+    }
+
+    return keyValuePairs;
 }

@@ -69,6 +69,10 @@ namespace GSF
         return stream.str();
     }
 
+    bool ParseBoolean(const std::string& value);
+
+    bool TryParseDouble(const std::string& value, float64_t& result);
+
     // Encodes a character value into an escaped RegEx value
     std::string RegExEncode(char value);
 
@@ -84,6 +88,9 @@ namespace GSF
 
     // Converts a string to a date-time that may be in several common formats
     DateTime ParseTimestamp(const char* time, bool parseAsUTC = true);
+
+    // Parses a string of key/value pairs into a case-insensitive string dictionary
+    StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');
 }
 
 #endif

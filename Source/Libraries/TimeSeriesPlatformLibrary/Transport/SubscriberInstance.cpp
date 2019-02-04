@@ -267,7 +267,7 @@ bool SubscriberInstance::IsSubscribed() const
     return m_subscriber.IsSubscribed();
 }
 
-void SubscriberInstance::IterateDeviceMetadata(DeviceMetadataIteratorHandlerFunction iteratorHandler, void* userData)
+void SubscriberInstance::IterateDeviceMetadata(const DeviceMetadataIteratorHandlerFunction& iteratorHandler, void* userData)
 {
     m_configurationUpdateLock.lock();
 
@@ -277,7 +277,7 @@ void SubscriberInstance::IterateDeviceMetadata(DeviceMetadataIteratorHandlerFunc
     m_configurationUpdateLock.unlock();
 }
 
-void SubscriberInstance::IterateMeasurementMetadata(MeasurementMetadataIteratorHandlerFunction iteratorHandler, void* userData)
+void SubscriberInstance::IterateMeasurementMetadata(const MeasurementMetadataIteratorHandlerFunction& iteratorHandler, void* userData)
 {
     m_configurationUpdateLock.lock();
 
@@ -287,7 +287,7 @@ void SubscriberInstance::IterateMeasurementMetadata(MeasurementMetadataIteratorH
     m_configurationUpdateLock.unlock();
 }
 
-void SubscriberInstance::IterateConfigurationFrames(ConfigurationFrameIteratorHandlerFunction iteratorHandler, void* userData)
+void SubscriberInstance::IterateConfigurationFrames(const ConfigurationFrameIteratorHandlerFunction& iteratorHandler, void* userData)
 {
     m_configurationUpdateLock.lock();
 

@@ -75,7 +75,7 @@ private:
         const ParsingExceptionCallback m_parsingExceptionCallback;
 
     public:
-        CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback);
+        CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, const ParsingExceptionCallback& parsingExceptionCallback);
         void syntaxError(antlr4::Recognizer* recognizer, antlr4::Token* offendingSymbol, size_t line, size_t charPositionInLine, const std::string& msg, std::exception_ptr e) override;
     };
 
@@ -123,7 +123,7 @@ public:
 
     // ParsingExceptionCallback function is defined with the following signature:
     //   void HandleParsingException(FilterExpressionParserPtr, const string& message)
-    void RegisterParsingExceptionCallback(ParsingExceptionCallback parsingExceptionCallback);
+    void RegisterParsingExceptionCallback(const ParsingExceptionCallback& parsingExceptionCallback);
 
     void Evaluate();
 

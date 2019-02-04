@@ -328,13 +328,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
                     case DataType::String:
                         return value;
                     case DataType::Boolean:
-                        if (IsEqual(value, "true") || IsEqual(value, "1", false))
-                            return true;
-                        
-                        if (IsEqual(value, "false") || IsEqual(value, "0", false))
-                            return false;
-                        
-                        throw DataSetException("Cannot convert \"String\" expression value \"" + value + "\" to \"Boolean\" column");
+                        return ParseBoolean(value);
                     case DataType::DateTime:
                         return ParseTimestamp(value.c_str());
                     case DataType::Single:

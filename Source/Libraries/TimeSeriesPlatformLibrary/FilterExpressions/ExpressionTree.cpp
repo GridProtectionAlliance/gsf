@@ -3067,12 +3067,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    if (GSF::IsEqual(value, "true") || GSF::IsEqual(value, "1", false))
-                        targetValue = true;
-                    else if (GSF::IsEqual(value, "false") || GSF::IsEqual(value, "0", false))
-                        targetValue = false;
-                    else
-                        throw ExpressionTreeException("\"String\" value \"" + value + "\" not recognized as a valid \"Boolean\"");
+                    targetValue = ParseBoolean(value);
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = stoi(value);

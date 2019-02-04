@@ -72,8 +72,8 @@ namespace Transport
     class SubscriberConnector
     {
     private:
-        typedef void(*ErrorMessageCallback)(DataSubscriber*, const std::string&);
-        typedef void(*ReconnectCallback)(DataSubscriber*);
+        typedef std::function<void(DataSubscriber*, const std::string&)> ErrorMessageCallback;
+        typedef std::function<void(DataSubscriber*)> ReconnectCallback;
 
         ErrorMessageCallback m_errorMessageCallback;
         ReconnectCallback m_reconnectCallback;
@@ -98,12 +98,12 @@ namespace Transport
 
         // Registers a callback to provide error messages each time
         // the subscriber fails to connect during a connection sequence.
-        void RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback);
+        void RegisterErrorMessageCallback(const ErrorMessageCallback& errorMessageCallback);
 
         // Registers a callback to notify after an automatic reconnection attempt has been made.
         // This callback will be called whether the connection was successful or not, so it is
         // recommended to check the connected state of the subscriber using the IsConnected() method.
-        void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
+        void RegisterReconnectCallback(const ReconnectCallback& reconnectCallback);
 
         // Begin connection sequence
         bool Connect(DataSubscriber& subscriber, const SubscriptionInfo& info);
@@ -140,13 +140,13 @@ namespace Transport
     {
     private:
         // Function pointer types
-        typedef void(*DispatcherFunction)(DataSubscriber*, const std::vector<uint8_t>&);
-        typedef void(*MessageCallback)(DataSubscriber*, const std::string&);
-        typedef void(*DataStartTimeCallback)(DataSubscriber*, int64_t);
-        typedef void(*MetadataCallback)(DataSubscriber*, const std::vector<uint8_t>&);
-        typedef void(*NewMeasurementsCallback)(DataSubscriber*, const std::vector<MeasurementPtr>&);
-        typedef void(*ConfigurationChangedCallback)(DataSubscriber*);
-        typedef void(*ConnectionTerminatedCallback)(DataSubscriber*);
+        typedef std::function<void(DataSubscriber*, const std::vector<uint8_t>&)> DispatcherFunction;
+        typedef std::function<void(DataSubscriber*, const std::string&)> MessageCallback;
+        typedef std::function<void(DataSubscriber*, int64_t)> DataStartTimeCallback;
+        typedef std::function<void(DataSubscriber*, const std::vector<uint8_t>&)> MetadataCallback;
+        typedef std::function<void(DataSubscriber*, const std::vector<MeasurementPtr>&)> NewMeasurementsCallback;
+        typedef std::function<void(DataSubscriber*)> ConfigurationChangedCallback;
+        typedef std::function<void(DataSubscriber*)> ConnectionTerminatedCallback;
 
         // Structure used to dispatch
         // callbacks on the callback thread.
@@ -234,8 +234,8 @@ namespace Transport
         void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
 
         // Dispatchers
-        void Dispatch(DispatcherFunction function);
-        void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
+        void Dispatch(const DispatcherFunction& function);
+        void Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length);
         void DispatchStatusMessage(const std::string& message);
         void DispatchErrorMessage(const std::string& message);
 
@@ -280,15 +280,15 @@ namespace Transport
         //
         // Metadata is provided to the user as zlib-compressed XML,
         // and must be decompressed and interpreted before it can be used.
-        void RegisterStatusMessageCallback(MessageCallback statusMessageCallback);
-        void RegisterErrorMessageCallback(MessageCallback errorMessageCallback);
-        void RegisterDataStartTimeCallback(DataStartTimeCallback dataStartTimeCallback);
-        void RegisterMetadataCallback(MetadataCallback metadataCallback);
-        void RegisterNewMeasurementsCallback(NewMeasurementsCallback newMeasurementsCallback);
-        void RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback);
-        void RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback);
-        void RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback);
-        void RegisterAutoReconnectCallback(ConnectionTerminatedCallback autoReconnectCallback);
+        void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
+        void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
+        void RegisterDataStartTimeCallback(const DataStartTimeCallback& dataStartTimeCallback);
+        void RegisterMetadataCallback(const MetadataCallback& metadataCallback);
+        void RegisterNewMeasurementsCallback(const NewMeasurementsCallback& newMeasurementsCallback);
+        void RegisterProcessingCompleteCallback(const MessageCallback& processingCompleteCallback);
+        void RegisterConfigurationChangedCallback(const ConfigurationChangedCallback& configurationChangedCallback);
+        void RegisterConnectionTerminatedCallback(const ConnectionTerminatedCallback& connectionTerminatedCallback);
+        void RegisterAutoReconnectCallback(const ConnectionTerminatedCallback& autoReconnectCallback);
 
         // Gets or sets value that determines whether
         // payload data is compressed using TSSC.

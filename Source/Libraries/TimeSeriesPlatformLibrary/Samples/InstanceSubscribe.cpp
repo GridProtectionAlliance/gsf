@@ -23,9 +23,11 @@
 
 #include <iostream>
 
+#include "../Common/Convert.h"
 #include "SubscriberHandler.h"
 
 using namespace std;
+using namespace GSF;
 
 #define TotalInstances 3
 
@@ -52,11 +54,7 @@ int main(int argc, char* argv[])
     // Initialize the subscribers.
     for (uint32_t i = 0; i < TotalInstances; i++)
     {
-        stringstream name;
-        
-        name << "Subscriber" << (i + 1);
-
-        SubscriberHandler* subscriber = new SubscriberHandler(name.str());
+        SubscriberHandler* subscriber = new SubscriberHandler("Subscriber " + ToString(i + 1));
 
         subscriber->Initialize(hostname, port);
 

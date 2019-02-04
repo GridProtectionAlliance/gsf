@@ -155,9 +155,9 @@ namespace Transport
     {
     private:
         // Function pointer types
-        typedef void(*DispatcherFunction)(DataPublisher*, const std::vector<uint8_t>&);
-        typedef void(*MessageCallback)(DataPublisher*, const std::string&);
-        typedef void(*ClientConnectionCallback)(DataPublisher*, const GSF::Guid&, const std::string&);
+        typedef std::function<void(DataPublisher*, const std::vector<uint8_t>&)> DispatcherFunction;
+        typedef std::function<void(DataPublisher*, const std::string&)> MessageCallback;
+        typedef std::function<void(DataPublisher*, const GSF::Guid&, const std::string&)> ClientConnectionCallback;
 
         // Structure used to dispatch
         // callbacks on the callback thread.
@@ -210,6 +210,7 @@ namespace Transport
         void StartAccept();
         void AcceptConnection(const ClientConnectionPtr& connection, const ErrorCode& error);
         void RemoveConnection(const ClientConnectionPtr& connection);
+        bool ParseClientSubscription(const ClientConnectionPtr& connection, const std::string& filterExpression, SignalIndexCachePtr& signalIndexCache);
 
         // Callbacks
         MessageCallback m_statusMessageCallback;
@@ -230,8 +231,8 @@ namespace Transport
         void HandleUserCommand(const ClientConnectionPtr& connection, uint8_t command, uint8_t* data, uint32_t length);
 
         // Dispatchers
-        void Dispatch(DispatcherFunction function);
-        void Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length);
+        void Dispatch(const DispatcherFunction& function);
+        void Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length);
         void DispatchStatusMessage(const std::string& message);
         void DispatchErrorMessage(const std::string& message);
         void DispatchClientConnected(const GSF::Guid& subscriberID, const std::string& connectionID);
@@ -305,10 +306,10 @@ namespace Transport
         //   void ProcessErrorMessage(DataPublisher*, const string& message)
         //   void ProcessClientConnected(DataPublisher*, const GSF::Guid& subscriberID, const string& connectionID);
         //   void ProcessClientDisconnected(DataPublisher*, const GSF::Guid& subscriberID, const string& connectionID);
-        void RegisterStatusMessageCallback(MessageCallback statusMessageCallback);
-        void RegisterErrorMessageCallback(MessageCallback errorMessageCallback);
-        void RegisterClientConnectedCallback(ClientConnectionCallback clientConnectedCallback);
-        void RegisterClientDisconnectedCallback(ClientConnectionCallback clientDisconnectedCallback);
+        void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
+        void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
+        void RegisterClientConnectedCallback(const ClientConnectionCallback& clientConnectedCallback);
+        void RegisterClientDisconnectedCallback(const ClientConnectionCallback& clientDisconnectedCallback);
 
         friend class ClientConnection;
     };

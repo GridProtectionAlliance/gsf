@@ -49,7 +49,7 @@ protected:
     void ConnectionTerminated() override;
 
 public:
-    SubscriberHandler(string  name);
+    SubscriberHandler(const string& name);
 };
 
 #endif

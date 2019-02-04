@@ -497,11 +497,7 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_totalDataChannelBytesSent(0L),
     m_totalMeasurementsSent(0L),
     m_connected(false),
-    m_clientAcceptor(m_commandChannelService, endpoint),
-    m_statusMessageCallback(nullptr),
-    m_errorMessageCallback(nullptr),
-    m_clientConnectedCallback(nullptr),
-    m_clientDisconnectedCallback(nullptr)
+    m_clientAcceptor(m_commandChannelService, endpoint)
 {
     m_tableIDFields = NewSharedPtr<TableIDFields>();
     m_tableIDFields->SignalIDFieldName = "SignalID";
@@ -581,6 +577,73 @@ void DataPublisher::RemoveConnection(const ClientConnectionPtr& connection)
     m_clientConnectionsLock.unlock();
 }
 
+bool DataPublisher::ParseClientSubscription(const ClientConnectionPtr& connection, const string& filterExpression, SignalIndexCachePtr& signalIndexCache)
+{
+    signalIndexCache = NewSharedPtr<SignalIndexCache>();
+    string exceptionMessage, parsingException;
+    FilterExpressionParser parser(filterExpression);
+                        
+    parser.SetDataSet(m_activeMetadata);
+    parser.SetTableIDFields("ActiveMeasurements", m_tableIDFields);
+    parser.RegisterParsingExceptionCallback([&parsingException](FilterExpressionParserPtr, const string& exception) { parsingException = exception; });
+
+    try
+    {
+        parser.Evaluate();
+    }
+    catch (const FilterExpressionParserException& ex)
+    {
+        exceptionMessage = "FilterExpressionParser exception: " + string(ex.what());
+    }
+    catch (const ExpressionTreeException& ex)
+    {
+        exceptionMessage = "ExpressionTree exception: " + string(ex.what());
+    }
+    catch (...)
+    {
+        exceptionMessage = current_exception_diagnostic_information(true);
+    }
+
+    if (!exceptionMessage.empty())
+    {
+        if (!parsingException.empty())
+            exceptionMessage += "\n" + parsingException;
+
+        SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, exceptionMessage);
+        DispatchErrorMessage(exceptionMessage);
+        return false;
+    }
+
+    const DataTablePtr& activeMeasurements = m_activeMetadata->Table("ActiveMeasurements");
+    const vector<DataRowPtr>& rows = parser.FilteredRows();
+    const int32_t idColumn = GetColumnIndex(activeMeasurements, "ID");
+    const int32_t signalIDColumn = GetColumnIndex(activeMeasurements, "SignalID");
+
+    for (size_t i = 0; i < rows.size(); i++)
+    {
+        const DataRowPtr& row = rows[i];
+        const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
+        const vector<string> parts = Split(row->ValueAsString(idColumn).GetValueOrDefault(), ":");
+        uint16_t signalIndex = 0;
+        string source;
+        int32_t id = 0;
+
+        if (parts.size() == 2)
+        {
+            source = parts[0];
+            id = stoi(parts[1]);
+        }
+        else
+        {
+            source = parts[0];
+        }
+
+        signalIndexCache->AddMeasurementKey(signalIndex++, signalID, source, id);
+    }
+    
+    return true;
+}
+
 void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8_t* data, uint32_t length)
 {
     try
@@ -599,20 +662,30 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
             }
             else
             {
-                const bool usePayloadCompression = (connection->GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
-                //const uint32_t compressionModes = connection->GetOperationalModes() & OperationalModes::CompressionModeMask;
-                const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
-                bool addSubscription = false;
-
                 // Next 4 bytes are an integer representing the length of the connection string that follows
                 const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
                 index += 4;
 
                 if (byteLength > 0 && length >= byteLength + 6U)
                 {
+                    const bool usePayloadCompression = (connection->GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
+                    const uint32_t compressionModes = connection->GetOperationalModes() & OperationalModes::CompressionModeMask;
+                    const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
                     const string connectionString = DecodeClientString(connection, data, index, byteLength);
                     const StringMap<string> settings = ParseKeyValuePairs(connectionString);
                     string setting;
+                    bool includeTime = true;
+                    bool useMillisecondResolution = false; // Default to tick resolution
+                    bool isNaNFiltered = false;
+
+                    if (TryGetValue(settings, "includeTime", setting))
+                        includeTime = ParseBoolean(setting);
+
+                    if (TryGetValue(settings, "useMillisecondResolution", setting))
+                        useMillisecondResolution = ParseBoolean(setting);
+
+                    if (TryGetValue(settings, "requestNaNValueFilter", setting))
+                        isNaNFiltered = ParseBoolean(setting);
 
                     connection->SetUsePayloadCompression(usePayloadCompression);
                     connection->SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
@@ -622,67 +695,8 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
                     // Apply subscriber filter expression and build signal index cache
                     if (TryGetValue(settings, "inputMeasurementKeys", setting))
                     {
-                        signalIndexCache = NewSharedPtr<SignalIndexCache>();
-                        string exceptionMessage, parsingException;
-                        FilterExpressionParser parser(setting);
-                        
-                        parser.SetDataSet(m_activeMetadata);
-                        parser.SetTableIDFields("ActiveMeasurements", m_tableIDFields);
-                        parser.RegisterParsingExceptionCallback([&parsingException](FilterExpressionParserPtr, const string& exception) { parsingException = exception; });
-
-                        try
-                        {
-                            parser.Evaluate();
-                        }
-                        catch (const FilterExpressionParserException& ex)
-                        {
-                            exceptionMessage = "FilterExpressionParser exception: " + string(ex.what());
-                        }
-                        catch (const ExpressionTreeException& ex)
-                        {
-                            exceptionMessage = "ExpressionTree exception: " + string(ex.what());
-                        }
-                        catch (...)
-                        {
-                            exceptionMessage = current_exception_diagnostic_information(true);
-                        }
-
-                        if (!exceptionMessage.empty())
-                        {
-                            if (!parsingException.empty())
-                                exceptionMessage += "\n" + parsingException;
-
-                            SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, exceptionMessage);
-                            DispatchErrorMessage(exceptionMessage);
+                        if (!ParseClientSubscription(connection, setting, signalIndexCache))
                             return;
-                        }
-
-                        const DataTablePtr& activeMeasurements = m_activeMetadata->Table("ActiveMeasurements");
-                        const vector<DataRowPtr>& rows = parser.FilteredRows();
-                        const int32_t idColumn = GetColumnIndex(activeMeasurements, "ID");
-                        const int32_t signalIDColumn = GetColumnIndex(activeMeasurements, "SignalID");
-
-                        for (size_t i = 0; i < rows.size(); i++)
-                        {
-                            const DataRowPtr& row = rows[i];
-                            const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
-                            const vector<string> parts = Split(row->ValueAsString(idColumn).GetValueOrDefault(), ":");
-                            uint16_t signalIndex = 0;
-                            string source;
-                            int32_t id = 0;
-
-                            if (parts.size() == 2)
-                            {
-                                source = parts[0];
-                                id = stoi(parts[1]);
-                            }
-                            else
-                            {
-                                source = parts[0];
-                            }
-
-                            signalIndexCache->AddMeasurementKey(signalIndex++, signalID, source, id);
-                        }
                     }
 
                     // Pass subscriber assembly information to connection, if defined
@@ -886,12 +900,12 @@ void DataPublisher::HandleUserCommand(const ClientConnectionPtr& connection, uin
 {
 }
 
-void DataPublisher::Dispatch(DispatcherFunction function)
+void DataPublisher::Dispatch(const DispatcherFunction& function)
 {
     Dispatch(function, nullptr, 0, 0);
 }
 
-void DataPublisher::Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length)
 {
     CallbackDispatcher dispatcher;
     SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
@@ -1750,22 +1764,22 @@ bool DataPublisher::IsConnected() const
     return m_connected;
 }
 
-void DataPublisher::RegisterStatusMessageCallback(MessageCallback statusMessageCallback)
+void DataPublisher::RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback)
 {
     m_statusMessageCallback = statusMessageCallback;
 }
 
-void DataPublisher::RegisterErrorMessageCallback(MessageCallback errorMessageCallback)
+void DataPublisher::RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback)
 {
     m_errorMessageCallback = errorMessageCallback;
 }
 
-void DataPublisher::RegisterClientConnectedCallback(ClientConnectionCallback clientConnectedCallback)
+void DataPublisher::RegisterClientConnectedCallback(const ClientConnectionCallback& clientConnectedCallback)
 {
     m_clientConnectedCallback = clientConnectedCallback;
 }
 
-void DataPublisher::RegisterClientDisconnectedCallback(ClientConnectionCallback clientDisconnectedCallback)
+void DataPublisher::RegisterClientDisconnectedCallback(const ClientConnectionCallback& clientDisconnectedCallback)
 {
     m_clientDisconnectedCallback = clientDisconnectedCallback;
 }

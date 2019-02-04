@@ -119,7 +119,7 @@ FilterExpressionParser::~FilterExpressionParser()
     delete m_callbackErrorListener;
 }
 
-FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback) :
+FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, const ParsingExceptionCallback& parsingExceptionCallback) :
     m_filterExpressionParser(std::move(filterExpressionParser)),
     m_parsingExceptionCallback(parsingExceptionCallback)
 {        
@@ -278,7 +278,7 @@ void FilterExpressionParser::SetPrimaryTableName(const string& tableName)
     m_primaryTableName = tableName;
 }
 
-void FilterExpressionParser::RegisterParsingExceptionCallback(ParsingExceptionCallback parsingExceptionCallback)
+void FilterExpressionParser::RegisterParsingExceptionCallback(const ParsingExceptionCallback& parsingExceptionCallback)
 {
     if (m_callbackErrorListener)
     {

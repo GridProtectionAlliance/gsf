@@ -59,8 +59,6 @@ SubscriptionInfo::SubscriptionInfo() :
 // --- SubscriberConnector ---
 
 SubscriberConnector::SubscriberConnector() :
-    m_errorMessageCallback(nullptr),
-    m_reconnectCallback(nullptr),
     m_port(0),
     m_maxRetries(-1),
     m_retryInterval(2000),
@@ -87,13 +85,13 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 
 // Registers a callback to provide error messages each time
 // the subscriber fails to connect during a connection sequence.
-void SubscriberConnector::RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback)
+void SubscriberConnector::RegisterErrorMessageCallback(const ErrorMessageCallback& errorMessageCallback)
 {
     m_errorMessageCallback = errorMessageCallback;
 }
 
 // Registers a callback to notify after an automatic reconnection attempt has been made.
-void SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectCallback)
+void SubscriberConnector::RegisterReconnectCallback(const ReconnectCallback& reconnectCallback)
 {
     m_reconnectCallback = reconnectCallback;
 }
@@ -242,16 +240,7 @@ DataSubscriber::DataSubscriber() :  // NOLINT
     m_commandChannelSocket(m_commandChannelService),
     m_readBuffer(Common::MaxPacketSize),
     m_writeBuffer(Common::MaxPacketSize),
-    m_dataChannelSocket(m_dataChannelService),
-    m_statusMessageCallback(nullptr),
-    m_errorMessageCallback(nullptr),
-    m_dataStartTimeCallback(nullptr),
-    m_metadataCallback(nullptr),
-    m_newMeasurementsCallback(nullptr),
-    m_processingCompleteCallback(nullptr),
-    m_configurationChangedCallback(nullptr),
-    m_connectionTerminatedCallback(nullptr),
-    m_autoReconnectCallback(nullptr)
+    m_dataChannelSocket(m_dataChannelService)
 {
     m_baseTimeOffsets[0] = 0;
     m_baseTimeOffsets[1] = 0;
@@ -618,13 +607,13 @@ void DataSubscriber::HandleConfigurationChanged(uint8_t* data, uint32_t offset, 
 }
 
 // Dispatches the given function to the callback thread.
-void DataSubscriber::Dispatch(DispatcherFunction function)
+void DataSubscriber::Dispatch(const DispatcherFunction& function)
 {
     Dispatch(function, nullptr, 0, 0);
 }
 
 // Dispatches the given function to the callback thread and provides the given data to that function when it is called.
-void DataSubscriber::Dispatch(DispatcherFunction function, const uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length)
 {
     CallbackDispatcher dispatcher;
     SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
@@ -992,55 +981,55 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, uint32_t offset, uin
 }
 
 // Registers the status message callback.
-void DataSubscriber::RegisterStatusMessageCallback(MessageCallback statusMessageCallback)
+void DataSubscriber::RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback)
 {
     m_statusMessageCallback = statusMessageCallback;
 }
 
 // Registers the error message callback.
-void DataSubscriber::RegisterErrorMessageCallback(MessageCallback errorMessageCallback)
+void DataSubscriber::RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback)
 {
     m_errorMessageCallback = errorMessageCallback;
 }
 
 // Registers the data start time callback.
-void DataSubscriber::RegisterDataStartTimeCallback(DataStartTimeCallback dataStartTimeCallback)
+void DataSubscriber::RegisterDataStartTimeCallback(const DataStartTimeCallback& dataStartTimeCallback)
 {
     m_dataStartTimeCallback = dataStartTimeCallback;
 }
 
 // Registers the metadata callback.
-void DataSubscriber::RegisterMetadataCallback(MetadataCallback metadataCallback)
+void DataSubscriber::RegisterMetadataCallback(const MetadataCallback& metadataCallback)
 {
     m_metadataCallback = metadataCallback;
 }
 
 // Registers the new measurements callback.
-void DataSubscriber::RegisterNewMeasurementsCallback(NewMeasurementsCallback newMeasurementsCallback)
+void DataSubscriber::RegisterNewMeasurementsCallback(const NewMeasurementsCallback& newMeasurementsCallback)
 {
     m_newMeasurementsCallback = newMeasurementsCallback;
 }
 
 // Registers the processing complete callback.
-void DataSubscriber::RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback)
+void DataSubscriber::RegisterProcessingCompleteCallback(const MessageCallback& processingCompleteCallback)
 {
     m_processingCompleteCallback = processingCompleteCallback;
 }
 
 // Registers the configuration changed callback.
-void DataSubscriber::RegisterConfigurationChangedCallback(ConfigurationChangedCallback configurationChangedCallback)
+void DataSubscriber::RegisterConfigurationChangedCallback(const ConfigurationChangedCallback& configurationChangedCallback)
 {
     m_configurationChangedCallback = configurationChangedCallback;
 }
 
 // Registers the connection terminated callback.
-void DataSubscriber::RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback)
+void DataSubscriber::RegisterConnectionTerminatedCallback(const ConnectionTerminatedCallback& connectionTerminatedCallback)
 {
     m_connectionTerminatedCallback = connectionTerminatedCallback;
 }
 
 // Registers the auto-reconnect callback.
-void DataSubscriber::RegisterAutoReconnectCallback(ConnectionTerminatedCallback autoReconnectCallback)
+void DataSubscriber::RegisterAutoReconnectCallback(const ConnectionTerminatedCallback& autoReconnectCallback)
 {
     m_autoReconnectCallback = autoReconnectCallback;
 }

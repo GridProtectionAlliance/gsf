@@ -103,9 +103,9 @@ namespace Transport
         static constexpr const char* FilterMetadataStatsExpression = "FILTER MeasurementDetail WHERE SignalAcronym <> 'STAT'";
 
         // Iterator handler delegates
-        typedef void(*DeviceMetadataIteratorHandlerFunction)(const DeviceMetadataPtr&, void* userData);
-        typedef void(*MeasurementMetadataIteratorHandlerFunction)(const MeasurementMetadataPtr&, void* userData);
-        typedef void(*ConfigurationFrameIteratorHandlerFunction)(const ConfigurationFramePtr&, void* userData);
+        typedef std::function<void(const DeviceMetadataPtr&, void* userData)> DeviceMetadataIteratorHandlerFunction;
+        typedef std::function<void(const MeasurementMetadataPtr&, void* userData)> MeasurementMetadataIteratorHandlerFunction;
+        typedef std::function<void(const ConfigurationFramePtr&, void* userData)> ConfigurationFrameIteratorHandlerFunction;
 
         // Subscription functions
 
@@ -207,9 +207,9 @@ namespace Transport
 
         // Metadata iteration functions - note that full lock will be maintained on source collections
         // for the entire call, so keep work time minimized or clone collection before work
-        void IterateDeviceMetadata(DeviceMetadataIteratorHandlerFunction iteratorHandler, void* userData);
-        void IterateMeasurementMetadata(MeasurementMetadataIteratorHandlerFunction iteratorHandler, void* userData);
-        void IterateConfigurationFrames(ConfigurationFrameIteratorHandlerFunction iteratorHandler, void* userData);
+        void IterateDeviceMetadata(const DeviceMetadataIteratorHandlerFunction& iteratorHandler, void* userData);
+        void IterateMeasurementMetadata(const MeasurementMetadataIteratorHandlerFunction& iteratorHandler, void* userData);
+        void IterateConfigurationFrames(const ConfigurationFrameIteratorHandlerFunction& iteratorHandler, void* userData);
 
         // Safely get list of device acronyms (accessed from metadata after successful auto-parse),
         // vector will be cleared then appended to, returns true if any devices were added

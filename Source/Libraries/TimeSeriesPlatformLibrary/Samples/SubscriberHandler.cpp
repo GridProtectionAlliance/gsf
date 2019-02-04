@@ -32,8 +32,8 @@ using namespace std;
 using namespace GSF;
 using namespace GSF::TimeSeries;
 
-SubscriberHandler::SubscriberHandler(string  name) :
-    m_name(std::move(name))
+SubscriberHandler::SubscriberHandler(const string& name) :
+    m_name(name)
 {
 }
 
@@ -178,7 +178,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
         message << '\t' << GetTotalMeasurementsReceived() << endl;
 
-        cout << message.str();
+        StatusMessage(message.str());
     }
 }
 
