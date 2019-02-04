@@ -73,7 +73,6 @@ namespace Transport
         std::string m_connectionID;
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
-        uint32_t m_compressionModes;
         uint32_t m_encoding;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
@@ -120,9 +119,6 @@ namespace Transport
 
         uint32_t GetOperationalModes() const;
         void SetOperationalModes(uint32_t value);
-
-        uint32_t GetCompressionModes() const;
-        void SetCompressionModes(uint32_t value);
 
         uint32_t GetEncoding() const;
 

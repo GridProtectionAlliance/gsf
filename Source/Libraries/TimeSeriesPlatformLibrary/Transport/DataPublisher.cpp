@@ -69,7 +69,6 @@ ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandCh
     m_commandChannelService(commandChannelService),
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
-    m_compressionModes(CompressionModes::None),
     m_encoding(OperationalEncoding::UTF8),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
@@ -130,16 +129,6 @@ void ClientConnection::SetOperationalModes(uint32_t value)
 {
     m_operationalModes = value;
     m_encoding = m_operationalModes & OperationalModes::EncodingMask;
-}
-
-uint32_t ClientConnection::GetCompressionModes() const
-{
-    return m_compressionModes;
-}
-
-void ClientConnection::SetCompressionModes(uint32_t value)
-{
-    m_compressionModes = value;
 }
 
 uint32_t ClientConnection::GetEncoding() const
@@ -611,7 +600,7 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
             else
             {
                 const bool usePayloadCompression = (connection->GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
-                const uint32_t compressionModes = connection->GetOperationalModes() & OperationalModes::CompressionModeMask;
+                //const uint32_t compressionModes = connection->GetOperationalModes() & OperationalModes::CompressionModeMask;
                 const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
                 bool addSubscription = false;
 
