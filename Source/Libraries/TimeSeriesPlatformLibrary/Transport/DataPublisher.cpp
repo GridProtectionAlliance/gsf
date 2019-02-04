@@ -21,23 +21,15 @@
 //
 //******************************************************************************************************
 
-// ReSharper disable once CppUnusedIncludeDirective
-#include "../FilterExpressions/FilterExpressions.h"
-#include <boost/bind.hpp>
-#include <boost/locale.hpp>
-
 #include "DataPublisher.h"
 #include "Constants.h"
 #include "../Common/Convert.h"
 #include "../Common/EndianConverter.h"
-#include "../FilterExpressions/FilterExpressionParser.h"
 #include "MetadataSchema.h"
 #include "ActiveMeasurementsSchema.h"
 
 using namespace std;
-using namespace pugi;
 using namespace boost;
-using namespace boost::locale::conv;
 using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace GSF;
@@ -45,6 +37,16 @@ using namespace GSF::Data;
 using namespace GSF::FilterExpressions;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
+
+inline int32_t GetColumnIndex(const DataTablePtr& table, const string& columnName)
+{
+    const DataColumnPtr& column = table->Column(columnName);
+
+    if (column == nullptr)
+        throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
+
+    return column->Index();
+}
 
 // --- ClientConnectedInfo ---
 
@@ -67,6 +69,7 @@ ClientConnection::ClientConnection(DataPublisherPtr parent, IOContext& commandCh
     m_commandChannelService(commandChannelService),
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
+    m_compressionModes(CompressionModes::None),
     m_encoding(OperationalEncoding::UTF8),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
@@ -127,6 +130,16 @@ void ClientConnection::SetOperationalModes(uint32_t value)
 {
     m_operationalModes = value;
     m_encoding = m_operationalModes & OperationalModes::EncodingMask;
+}
+
+uint32_t ClientConnection::GetCompressionModes() const
+{
+    return m_compressionModes;
+}
+
+void ClientConnection::SetCompressionModes(uint32_t value)
+{
+    m_compressionModes = value;
 }
 
 uint32_t ClientConnection::GetEncoding() const
@@ -196,9 +209,14 @@ void ClientConnection::SetSubscriptionInfo(const string& value)
     m_subscriptionInfo = source + " version " + version + " built on " + buildDate;
 }
 
-SignalIndexCache& ClientConnection::GetSignalIndexCache()
+const SignalIndexCachePtr& ClientConnection::GetSignalIndexCache() const
 {
     return m_signalIndexCache;
+}
+
+void ClientConnection::SetSignalIndexCache(SignalIndexCachePtr signalIndexCache)
+{
+    m_signalIndexCache = std::move(signalIndexCache);
 }
 
 bool ClientConnection::CipherKeysDefined() const
@@ -496,6 +514,11 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_clientConnectedCallback(nullptr),
     m_clientDisconnectedCallback(nullptr)
 {
+    m_tableIDFields = NewSharedPtr<TableIDFields>();
+    m_tableIDFields->SignalIDFieldName = "SignalID";
+    m_tableIDFields->MeasurementKeyFieldName = "ID";
+    m_tableIDFields->PointTagFieldName = "PointTag";
+
     m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
     m_commandChannelAcceptThread = Thread(bind(&DataPublisher::RunCommandChannelAcceptThread, this));
 }
@@ -602,28 +625,75 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
                     const StringMap<string> settings = ParseKeyValuePairs(connectionString);
                     string setting;
 
-                    // TODO: Explore re-subscription details
-                    // if (connection->GetIsSubscribed()) ...
-
                     connection->SetUsePayloadCompression(usePayloadCompression);
                     connection->SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
 
-                    // Apply client filter expression and build signal index cache
+                    SignalIndexCachePtr signalIndexCache = nullptr;
+
+                    // Apply subscriber filter expression and build signal index cache
                     if (TryGetValue(settings, "inputMeasurementKeys", setting))
                     {
-                        SignalIndexCache& signalIndexCache = connection->GetSignalIndexCache();
-                        const DataTablePtr& filterTable = m_activeMetadata->Table("ActiveMeasurements");
-                        vector<DataRowPtr> rows = FilterExpressionParser::Select(filterTable, setting); //??
-                        const int32_t signalIDColumn = filterTable->Column("SignalID")->Index();
+                        signalIndexCache = NewSharedPtr<SignalIndexCache>();
+                        string exceptionMessage, parsingException;
+                        FilterExpressionParser parser(setting);
+                        
+                        parser.SetDataSet(m_activeMetadata);
+                        parser.SetTableIDFields("ActiveMeasurements", m_tableIDFields);
+                        parser.RegisterParsingExceptionCallback([&parsingException](FilterExpressionParserPtr, const string& exception) { parsingException = exception; });
+
+                        try
+                        {
+                            parser.Evaluate();
+                        }
+                        catch (const FilterExpressionParserException& ex)
+                        {
+                            exceptionMessage = "FilterExpressionParser exception: " + string(ex.what());
+                        }
+                        catch (const ExpressionTreeException& ex)
+                        {
+                            exceptionMessage = "ExpressionTree exception: " + string(ex.what());
+                        }
+                        catch (...)
+                        {
+                            exceptionMessage = current_exception_diagnostic_information(true);
+                        }
+
+                        if (!exceptionMessage.empty())
+                        {
+                            if (!parsingException.empty())
+                                exceptionMessage += "\n" + parsingException;
+
+                            SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, exceptionMessage);
+                            DispatchErrorMessage(exceptionMessage);
+                            return;
+                        }
+
+                        const DataTablePtr& activeMeasurements = m_activeMetadata->Table("ActiveMeasurements");
+                        const vector<DataRowPtr>& rows = parser.FilteredRows();
+                        const int32_t idColumn = GetColumnIndex(activeMeasurements, "ID");
+                        const int32_t signalIDColumn = GetColumnIndex(activeMeasurements, "SignalID");
 
                         for (size_t i = 0; i < rows.size(); i++)
                         {
                             const DataRowPtr& row = rows[i];
-                            const uint16_t signalIndex = 0;
                             const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
-                            signalIndexCache.AddMeasurementKey(signalIndex, signalID, "", 0);
+                            const vector<string> parts = Split(row->ValueAsString(idColumn).GetValueOrDefault(), ":");
+                            uint16_t signalIndex = 0;
+                            string source;
+                            int32_t id = 0;
+
+                            if (parts.size() == 2)
+                            {
+                                source = parts[0];
+                                id = stoi(parts[1]);
+                            }
+                            else
+                            {
+                                source = parts[0];
+                            }
+
+                            signalIndexCache->AddMeasurementKey(signalIndex++, signalID, source, id);
                         }
-                        
                     }
 
                     // Pass subscriber assembly information to connection, if defined
@@ -674,7 +744,18 @@ void DataPublisher::HandleSubscribe(const ClientConnectionPtr& connection, uint8
                     */
                     }
 
-                    const string message = "Client subscribed as " + string(useCompactMeasurementFormat ? "" : "non-") + "compact unsynchronized with " + ToString(connection->GetSignalIndexCache().Count()) + " signals.";
+                    // Send updated signal index cache to client with validated rights of the selected input measurement keys
+                    vector<uint8_t> serializedSignalIndexCache;
+                    SerializeSignalIndexCache(connection, signalIndexCache, serializedSignalIndexCache);
+                    SendClientResponse(connection, ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, serializedSignalIndexCache);
+                    connection->SetSignalIndexCache(signalIndexCache);
+
+                    int32_t signalCount = 0;
+
+                    if (signalIndexCache != nullptr)
+                        signalCount = signalIndexCache->Count();
+
+                    const string message = "Client subscribed as " + string(useCompactMeasurementFormat ? "" : "non-") + "compact unsynchronized with " + ToString(signalCount) + " signals.";
 
                     connection->SetIsSubscribed(true);
                     SendClientResponse(connection, ServerResponse::Succeeded, ServerCommand::Subscribe, message);
@@ -919,11 +1000,12 @@ void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const st
     delete data;
 }
 
-void DataPublisher::SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, vector<uint8_t>& buffer)
+void DataPublisher::SerializeSignalIndexCache(const ClientConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache, vector<uint8_t>& buffer)
 {
+    // TODO: Serialize signal index cache
 }
 
-std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const
+string DataPublisher::DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const
 {
     uint32_t encoding = OperationalEncoding::UTF8;
     bool swapBytes = EndianConverter::IsLittleEndian();
@@ -934,7 +1016,7 @@ std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connect
     switch (encoding)
     {
         case OperationalEncoding::UTF8:
-            return string(reinterpret_cast<const char_t*>(data + offset), length / sizeof(char_t));
+            return string(reinterpret_cast<const char*>(data + offset), length / sizeof(char));
         case OperationalEncoding::Unicode:
         case OperationalEncoding::ANSI:
             swapBytes = !swapBytes;
@@ -958,7 +1040,7 @@ std::string DataPublisher::DecodeClientString(const ClientConnectionPtr& connect
     }
 }
 
-std::vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const
+vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const
 {
     uint32_t encoding = OperationalEncoding::UTF8;
     bool swapBytes = EndianConverter::IsLittleEndian();
@@ -971,7 +1053,7 @@ std::vector<uint8_t> DataPublisher::EncodeClientString(const ClientConnectionPtr
     switch (encoding)
     {
         case OperationalEncoding::UTF8:
-            result.reserve(value.size() * sizeof(char_t));
+            result.reserve(value.size() * sizeof(char));
             result.assign(value.begin(), value.end());
             break;
         case OperationalEncoding::Unicode:
@@ -1193,16 +1275,6 @@ bool DataPublisher::SendClientResponse(const ClientConnectionPtr& connection, ui
     }
 
     return success;
-}
-
-inline int32_t GetColumnIndex(const DataTablePtr& table, const string& columnName)
-{
-    const DataColumnPtr& column = table->Column(columnName);
-
-    if (column == nullptr)
-        throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
-
-    return column->Index();
 }
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber)
@@ -1589,6 +1661,7 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
 {
+    // TODO: Publish measurements to subscribed connections - routing?
 }
 
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)

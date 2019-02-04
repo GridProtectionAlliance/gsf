@@ -24,11 +24,13 @@
 #ifndef __DATA_PUBLISHER_H
 #define __DATA_PUBLISHER_H
 
+// ReSharper disable once CppUnusedIncludeDirective
+#include "../FilterExpressions/FilterExpressions.h"
 #include "../Common/CommonTypes.h"
 #include "../Common/ThreadSafeQueue.h"
 #include "../Common/Timer.h"
-#include "../Common/pugixml.hpp"
 #include "../Data/DataSet.h"
+#include "../FilterExpressions/FilterExpressionParser.h"
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "Constants.h"
@@ -71,6 +73,7 @@ namespace Transport
         std::string m_connectionID;
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
+        uint32_t m_compressionModes;
         uint32_t m_encoding;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
@@ -90,7 +93,7 @@ namespace Transport
         std::vector<uint8_t> m_ivs[2];
 
         // Measurement parsing
-        SignalIndexCache m_signalIndexCache;
+        SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         //TSSCMeasurementParser m_tsscMeasurementParser;
@@ -118,6 +121,9 @@ namespace Transport
         uint32_t GetOperationalModes() const;
         void SetOperationalModes(uint32_t value);
 
+        uint32_t GetCompressionModes() const;
+        void SetCompressionModes(uint32_t value);
+
         uint32_t GetEncoding() const;
 
         bool GetUsePayloadCompression() const;
@@ -132,7 +138,8 @@ namespace Transport
         const std::string& GetSubscriptionInfo() const;
         void SetSubscriptionInfo(const std::string& value);
 
-        SignalIndexCache& GetSignalIndexCache();
+        const SignalIndexCachePtr& GetSignalIndexCache() const;
+        void SetSignalIndexCache(SignalIndexCachePtr signalIndexCache);
 
         bool CipherKeysDefined() const;
         std::vector<uint8_t> Keys(int32_t cipherIndex);
@@ -170,6 +177,7 @@ namespace Transport
         GSF::Guid m_nodeID;
         GSF::Data::DataSetPtr m_allMetadata;
         GSF::Data::DataSetPtr m_activeMetadata;
+        GSF::FilterExpressions::TableIDFieldsPtr m_tableIDFields;
         std::unordered_set<ClientConnectionPtr> m_clientConnections;
         GSF::Mutex m_clientConnectionsLock;
         SecurityMode m_securityMode;
@@ -237,7 +245,7 @@ namespace Transport
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void SerializeSignalIndexCache(const GSF::Guid& clientID, const SignalIndexCache& signalIndexCache, std::vector<uint8_t>& buffer);
+        static void SerializeSignalIndexCache(const ClientConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache, std::vector<uint8_t>& buffer);
 
         std::string DecodeClientString(const ClientConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length) const;
         std::vector<uint8_t> EncodeClientString(const ClientConnectionPtr& connection, const std::string& value) const;

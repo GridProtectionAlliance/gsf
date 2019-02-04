@@ -84,6 +84,8 @@ namespace Transport
         // Gets the mapped signal count
         uint32_t Count() const;
     };
+
+    typedef SharedPtr<SignalIndexCache> SignalIndexCachePtr;
 }}}
 
 #endif

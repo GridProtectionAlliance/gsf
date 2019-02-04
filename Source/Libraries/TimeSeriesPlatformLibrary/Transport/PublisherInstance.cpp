@@ -57,13 +57,13 @@ void PublisherInstance::HandleErrorMessage(DataPublisher* source, const string& 
     instance->ErrorMessage(message);
 }
 
-void PublisherInstance::HandleClientConnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID)
+void PublisherInstance::HandleClientConnected(DataPublisher* source, const GSF::Guid& subscriberID, const std::string& connectionID)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
     instance->ClientConnected(subscriberID, connectionID);
 }
 
-void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID)
+void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const GSF::Guid& subscriberID, const std::string& connectionID)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
     instance->ClientDisconnected(subscriberID, connectionID);
@@ -79,12 +79,12 @@ void PublisherInstance::ErrorMessage(const string& message)
     cerr << message << endl << endl;
 }
 
-void PublisherInstance::ClientConnected(const Guid& subscriberID, const string& connectionID)
+void PublisherInstance::ClientConnected(const GSF::Guid& subscriberID, const string& connectionID)
 {
     cout << "Client \"" << connectionID << "\" with subscriber ID " << ToString(subscriberID) << " connected..." << endl << endl;
 }
 
-void PublisherInstance::ClientDisconnected(const Guid& subscriberID, const std::string& connectionID)
+void PublisherInstance::ClientDisconnected(const GSF::Guid& subscriberID, const std::string& connectionID)
 {
     cout << "Client \"" << connectionID << "\" with subscriber ID " << ToString(subscriberID) << " disconnected..." << endl << endl;
 }

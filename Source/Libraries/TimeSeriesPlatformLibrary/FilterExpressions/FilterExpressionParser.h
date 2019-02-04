@@ -61,13 +61,13 @@ typedef GSF::SharedPtr<TableIDFields> TableIDFieldsPtr;
 class FilterExpressionParser;
 typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
+typedef std::function<void(FilterExpressionParserPtr, const std::string&)> ParsingExceptionCallback;
+
 class FilterExpressionParser : // NOLINT
     public FilterExpressionSyntaxBaseListener,
     public GSF::EnableSharedThisPtr<FilterExpressionParser>
 {
 private:
-    typedef void(*ParsingExceptionCallback)(FilterExpressionParserPtr, const std::string&);
-
     class CallbackErrorListener : public antlr4::BaseErrorListener
     {
     private:
