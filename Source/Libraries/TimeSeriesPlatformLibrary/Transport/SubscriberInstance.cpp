@@ -34,7 +34,7 @@ using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-SubscriberInstance::SubscriberInstance() :  // NOLINT
+SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),
     m_port(6165),
     m_udpPort(0U),
@@ -44,7 +44,8 @@ SubscriberInstance::SubscriberInstance() :  // NOLINT
     m_retryInterval(2000),
     m_filterExpression(SubscribeAllNoStatsExpression),
     m_startTime(""),
-    m_stopTime("")
+    m_stopTime(""),
+    m_userData(nullptr)
 {
     // Reference this SubscriberInstance in DataSubsciber user data
     m_subscriber.SetUserData(this);
@@ -197,7 +198,7 @@ void SubscriberInstance::SetHistoricalReplayInterval(int32_t replayInterval)
 {
     if (m_subscriber.IsSubscribed())
     {
-        replayInterval = m_endianConverter.ConvertBigEndian(replayInterval);
+        replayInterval = EndianConverter::Default.ConvertBigEndian(replayInterval);
         m_subscriber.SendServerCommand(ServerCommand::UpdateProcessingInterval, reinterpret_cast<uint8_t*>(&replayInterval), 0, 4);
     }
 }

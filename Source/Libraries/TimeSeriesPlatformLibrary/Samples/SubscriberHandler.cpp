@@ -31,10 +31,16 @@
 using namespace std;
 using namespace GSF;
 using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
 
-SubscriberHandler::SubscriberHandler(const string& name) :
-    m_name(name)
+SubscriberHandler::SubscriberHandler(string name) :
+    m_name(std::move(name))
 {
+}
+
+SubscriberHandler::~SubscriberHandler()
+{
+    cout << "Calling " << m_name << " destructor...";
 }
 
 SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
@@ -63,6 +69,12 @@ SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
     return info;
 }
 
+void SubscriberHandler::SetupSubscriberConnector(SubscriberConnector& connector)
+{
+    // TODO: Modify connector properties as desired...
+    //connector.SetMaxRetries(-1);
+}
+
 void SubscriberHandler::StatusMessage(const string& message)
 {
     // TODO: Make sure these messages get logged to an appropriate location
@@ -71,7 +83,9 @@ void SubscriberHandler::StatusMessage(const string& message)
 
     status << "[" << m_name << "] " << message;
 
+    m_coutLock.lock();
     SubscriberInstance::StatusMessage(status.str());
+    m_coutLock.unlock();
 }
 
 void SubscriberHandler::ErrorMessage(const string& message)
@@ -82,12 +96,19 @@ void SubscriberHandler::ErrorMessage(const string& message)
 
     status << "[" << m_name << "] " << message;
 
+    m_coutLock.lock();
     SubscriberInstance::ErrorMessage(status.str());
+    m_coutLock.unlock();
 }
 
 void SubscriberHandler::DataStartTime(time_t unixSOC, uint16_t milliseconds)
 {
-    // TODO: This reports timestamp of very first received measurement (if useful)
+    // TODO: This reports timestamp, time_t format, of very first received measurement (if useful)
+}
+
+void SubscriberHandler::DataStartTime(DateTime startTime)
+{
+    // TODO: This reports timestamp, ptime format, of very first received measurement (if useful)
 }
 
 void SubscriberHandler::ReceivedMetadata(const vector<uint8_t>& payload)
@@ -167,16 +188,16 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
         message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
 
         if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-            message << string(timestamp);
+            message << string(timestamp)  << endl;
         
         message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
 
-        message << "Point\tValue" << endl;
+        message << "\tPoint\tValue" << endl;
 
         for (const auto& measurement : measurements)
-            message << '\t' << measurement->ID << '\t' << measurement->Value;
+            message << '\t' << measurement->ID << '\t' << measurement->Value << endl;
 
-        message << '\t' << GetTotalMeasurementsReceived() << endl;
+        message << "Total measurements: " << GetTotalMeasurementsReceived() << endl;
 
         StatusMessage(message.str());
     }

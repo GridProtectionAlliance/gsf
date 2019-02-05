@@ -136,7 +136,7 @@ namespace Transport
         bool GetAutoReconnect() const;
     };
 
-    class DataSubscriber  // NOLINT
+    class DataSubscriber
     {
     private:
         // Function pointer types

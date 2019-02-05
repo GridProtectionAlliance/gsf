@@ -37,7 +37,8 @@ PublisherInstance::PublisherInstance(uint16_t port, bool ipV6) :
     m_port(port),
     m_isIPV6(ipV6),
     m_publisher(port, ipV6),
-    m_initialized(false)
+    m_initialized(false),
+    m_userData(nullptr)
 {
     // Reference this PublisherInstance in DataPublisher user data
     m_publisher.SetUserData(this);
@@ -174,6 +175,16 @@ uint16_t PublisherInstance::GetPort() const
 bool PublisherInstance::IsIPv6() const
 {
     return m_isIPV6;
+}
+
+void* PublisherInstance::GetUserData() const
+{
+    return m_userData;
+}
+
+void PublisherInstance::SetUserData(void* userData)
+{
+    m_userData = userData;
 }
 
 uint64_t PublisherInstance::GetTotalCommandChannelBytesSent() const

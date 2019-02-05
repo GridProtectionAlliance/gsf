@@ -51,7 +51,6 @@ namespace Transport
         SubscriptionInfo m_subscriptionInfo;
         std::string m_startTime;
         std::string m_stopTime;
-        EndianConverter m_endianConverter;
         void* m_userData;
 
         GSF::StringMap<DeviceMetadataPtr> m_devices;

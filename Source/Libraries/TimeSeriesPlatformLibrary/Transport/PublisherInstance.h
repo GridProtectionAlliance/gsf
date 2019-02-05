@@ -38,6 +38,7 @@ namespace Transport
         bool m_isIPV6;
         DataPublisher m_publisher;
         bool m_initialized;
+        void* m_userData;
 
         // Internal subscription event handlers
         static void HandleStatusMessage(DataPublisher* source, const std::string& message);
@@ -83,6 +84,10 @@ namespace Transport
 
         uint16_t GetPort() const;
         bool IsIPv6() const;
+
+        // Gets or sets user defined data reference for PublisherInstance
+        void* GetUserData() const;
+        void SetUserData(void* userData);
 
         // Statistical functions
         uint64_t GetTotalCommandChannelBytesSent() const;

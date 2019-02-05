@@ -22,15 +22,15 @@
 //******************************************************************************************************
 
 #include <iostream>
-
-#include "../Common/Convert.h"
 #include "SubscriberHandler.h"
+#include "../Common/Convert.h"
 
 using namespace std;
 using namespace GSF;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Transport;
 
 #define TotalInstances 3
-
 SubscriberHandler* Subscriber[TotalInstances];
 
 int main(int argc, char* argv[])
@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
     for (uint32_t i = 0; i < TotalInstances; i++)
     {
         SubscriberHandler* subscriber = new SubscriberHandler("Subscriber " + ToString(i + 1));
-
         subscriber->Initialize(hostname, port);
 
         switch (i)
@@ -87,13 +86,14 @@ int main(int argc, char* argv[])
 
     // Shutdown subscriber instances
     for (uint32_t i = 0; i < TotalInstances; i++)
-    {
         Subscriber[i]->Disconnect();
-        delete Subscriber[i];
-    }
 
     // Disconnect the subscriber to stop background threads.
     cout << "Disconnected." << endl;
+
+    // Delete subscriber instances
+    for (uint32_t i = 0; i < TotalInstances; i++)
+        delete Subscriber[i];
 
     return 0;
 }

@@ -24,24 +24,24 @@
 #ifndef __SUBSCRIBER_HANDLER_H
 #define __SUBSCRIBER_HANDLER_H
 
+#include "../Common/CommonTypes.h"
 #include "../Transport/SubscriberInstance.h"
 
-using namespace std;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
-
-class SubscriberHandler : public SubscriberInstance
+class SubscriberHandler : public GSF::TimeSeries::Transport::SubscriberInstance
 {
 private:
-    string m_name;
+    std::string m_name;
+    GSF::Mutex m_coutLock;
 
 protected:
-    SubscriptionInfo CreateSubscriptionInfo() override;
-    void StatusMessage(const string& message) override;
-    void ErrorMessage(const string& message) override;
+    GSF::TimeSeries::Transport::SubscriptionInfo CreateSubscriptionInfo() override;
+    void SetupSubscriberConnector(GSF::TimeSeries::Transport::SubscriberConnector& connector) override;
+    void StatusMessage(const std::string& message) override;
+    void ErrorMessage(const std::string& message) override;
     void DataStartTime(time_t unixSOC, uint16_t milliseconds) override;
-    void ReceivedMetadata(const vector<uint8_t>& payload) override;
-    void ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements) override;
+    void DataStartTime(GSF::DateTime startTime) override;
+    void ReceivedMetadata(const std::vector<uint8_t>& payload) override;
+    void ReceivedNewMeasurements(const std::vector<GSF::TimeSeries::MeasurementPtr>& measurements) override;
     void ParsedMetadata() override;
     void ConfigurationChanged() override;
     void HistoricalReadComplete() override;
@@ -49,7 +49,10 @@ protected:
     void ConnectionTerminated() override;
 
 public:
-    SubscriberHandler(const string& name);
+    SubscriberHandler(std::string name);
+    ~SubscriberHandler();
 };
+
+typedef GSF::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;
 
 #endif
