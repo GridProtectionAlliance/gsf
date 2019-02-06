@@ -281,7 +281,7 @@ bool GSF::ParseBoolean(const string& value)
 
     const string result = Trim(value);
 
-    if (result.empty())
+    if (!result.empty())
     {
         if (IsEqual(result, "true"))
             return true;
