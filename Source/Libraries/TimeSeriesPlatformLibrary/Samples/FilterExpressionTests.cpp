@@ -1408,8 +1408,8 @@ int main(int argc, char* argv[])
     std::ifstream ifs1("Test.xml");
     std::ifstream ifs2("Test2.xml");
 
-    const istream_iterator<char> b1(ifs1), e1;
-    const istream_iterator<char> b2(ifs2), e2;
+    const istream_iterator<char> b1(ifs1), e1 {};
+    const istream_iterator<char> b2(ifs2), e2 {};
 
     BOOST_CHECK_EQUAL_COLLECTIONS(b1, e1, b2, e2);
     cout << "Test " << ++test << " succeeded..." << endl;

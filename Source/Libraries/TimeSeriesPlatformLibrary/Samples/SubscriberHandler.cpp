@@ -26,7 +26,6 @@
 // TODO: These includes are just for temporary testing code
 #include "../Common/Convert.h"
 #include <boost/uuid/uuid_io.hpp>
-#include <iostream>
 
 using namespace std;
 using namespace GSF;

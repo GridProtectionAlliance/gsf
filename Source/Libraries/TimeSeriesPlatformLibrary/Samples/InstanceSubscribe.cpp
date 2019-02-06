@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
     // Initialize the subscribers.
     for (uint32_t i = 0; i < TotalInstances; i++)
     {
+        // Maintain the life-time of SubscriberHandler instances within main
         SubscriberHandler* subscriber = new SubscriberHandler("Subscriber " + ToString(i + 1));
         subscriber->Initialize(hostname, port);
 

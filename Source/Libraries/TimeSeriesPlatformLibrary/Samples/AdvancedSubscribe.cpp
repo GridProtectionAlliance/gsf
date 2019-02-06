@@ -33,11 +33,11 @@ using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-DataSubscriber Subscriber;
+DataSubscriber* Subscriber;
 SubscriptionInfo Info;
 
 // Create helper objects for subscription.
-void SetupSubscriberConnector(SubscriberConnector& connector, string hostname, uint16_t port);
+void SetupSubscriberConnector(SubscriberConnector& connector, const string& hostname, uint16_t port);
 SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
@@ -47,7 +47,7 @@ void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
 // Runs the subscriber.
-void RunSubscriber(string hostname, uint16_t port);
+void RunSubscriber(const string& hostname, uint16_t port);
 
 // Sample application to demonstrate the more advanced use of the subscriber API.
 //
@@ -77,6 +77,9 @@ int main(int argc, char* argv[])
     hostname = argv[1];
     stringstream(argv[2]) >> port;
 
+    // Maintain the life-time of DataSubscriber within main
+    Subscriber = new DataSubscriber();
+
     // Run the subscriber.
     RunSubscriber(hostname, port);
 
@@ -85,8 +88,10 @@ int main(int argc, char* argv[])
     getline(cin, line);
 
     // Disconnect the subscriber to stop background threads.
-    Subscriber.Disconnect();
+    Subscriber->Disconnect();
     cout << "Disconnected." << endl;
+
+    delete Subscriber;
 
     return 0;
 }
@@ -96,26 +101,26 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Connect to publisher
 //   - Subscribe
-void RunSubscriber(string hostname, uint16_t port)
+void RunSubscriber(const string& hostname, uint16_t port)
 {
-    SubscriberConnector& connector = Subscriber.GetSubscriberConnector();
+    SubscriberConnector& connector = Subscriber->GetSubscriberConnector();
 
     // Set up helper objects
     SetupSubscriberConnector(connector, hostname, port);
     Info = CreateSubscriptionInfo();
 
     // Register callbacks
-    Subscriber.RegisterStatusMessageCallback(&DisplayStatusMessage);
-    Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
-    Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
+    Subscriber->RegisterStatusMessageCallback(&DisplayStatusMessage);
+    Subscriber->RegisterErrorMessageCallback(&DisplayErrorMessage);
+    Subscriber->RegisterNewMeasurementsCallback(&ProcessMeasurements);
 
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
 
     // Connect and subscribe to publisher
-    if (connector.Connect(Subscriber, Info))
+    if (connector.Connect(*Subscriber, Info))
     {
         cout << "Connected! Subscribing to data..." << endl << endl;
-        Subscriber.Subscribe();
+        Subscriber->Subscribe();
     }
     else
     {
@@ -169,7 +174,7 @@ SubscriptionInfo CreateSubscriptionInfo()
     return info;
 }
 
-void SetupSubscriberConnector(SubscriberConnector& connector, string hostname, uint16_t port)
+void SetupSubscriberConnector(SubscriberConnector& connector, const string& hostname, uint16_t port)
 {
     // SubscriberConnector is another helper object which allows the
     // user to modify settings for auto-reconnects and retry cycles.

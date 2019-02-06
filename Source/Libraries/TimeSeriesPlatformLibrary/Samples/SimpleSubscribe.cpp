@@ -34,7 +34,7 @@ using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-DataSubscriber Subscriber;
+DataSubscriber* Subscriber;
 
 bool RunSubscriber(const string& hostname, uint16_t port);
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
@@ -68,6 +68,9 @@ int main(int argc, char* argv[])
     hostname = argv[1];
     stringstream(argv[2]) >> port;
 
+    // Maintain the life-time of DataSubscriber within main
+    Subscriber = new DataSubscriber();
+
     // Run the subscriber.
     if (RunSubscriber(hostname, port))
     {
@@ -77,8 +80,10 @@ int main(int argc, char* argv[])
     }
 
     // Disconnect the subscriber to stop background threads.
-    Subscriber.Disconnect();
+    Subscriber->Disconnect();
     cout << "Disconnected." << endl;
+
+    delete Subscriber;
 
     return 0;
 }
@@ -96,9 +101,9 @@ bool RunSubscriber(const string& hostname, uint16_t port)
     info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
 
     // Register callbacks
-    Subscriber.RegisterStatusMessageCallback(&DisplayStatusMessage);
-    Subscriber.RegisterErrorMessageCallback(&DisplayErrorMessage);
-    Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
+    Subscriber->RegisterStatusMessageCallback(&DisplayStatusMessage);
+    Subscriber->RegisterErrorMessageCallback(&DisplayErrorMessage);
+    Subscriber->RegisterNewMeasurementsCallback(&ProcessMeasurements);
 
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
 
@@ -107,7 +112,7 @@ bool RunSubscriber(const string& hostname, uint16_t port)
 
     try
     {
-        Subscriber.Connect(hostname, port);
+        Subscriber->Connect(hostname, port);
         connected = true;
     }
     catch (SubscriberException& ex)
@@ -126,7 +131,7 @@ bool RunSubscriber(const string& hostname, uint16_t port)
     if (connected)
     {
         cout << "Connected! Subscribing to data..." << endl << endl;
-        Subscriber.Subscribe(info);
+        Subscriber->Subscribe(info);
     }
     else
     {

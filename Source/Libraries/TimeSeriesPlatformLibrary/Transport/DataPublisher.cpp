@@ -175,7 +175,7 @@ void ClientConnection::SetSubscriptionInfo(const string& value)
 {
     if (value.empty())
     {
-        m_subscriptionInfo = "";
+        m_subscriptionInfo.clear();
         return;
     }
 
