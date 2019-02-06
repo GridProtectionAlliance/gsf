@@ -161,17 +161,19 @@ namespace TestingAdapters
         /// </summary>
         public override void Initialize()
         {
+            Dictionary<string, string> settings = Settings;
+
+            // Force facile adapter to use incoming timestamps as time source, i.e., "RealTime"
+            settings[nameof(UseLocalClockAsRealTime)] = false.ToString();
+            settings[nameof(TrackLatestMeasurements)] = true.ToString();
+
             base.Initialize();
 
-            if (Settings.TryGetValue(nameof(UpdateFrequency), out string setting))
+            if (settings.TryGetValue(nameof(UpdateFrequency), out string setting))
             {
                 if (int.TryParse(setting, out int updateFrequency) && updateFrequency > 0)
                     UpdateFrequency = updateFrequency;
             }
-
-            // Force facile adapter to use incoming timestamps as time source, i.e., "RealTime"
-            UseLocalClockAsRealTime = false;
-            TrackLatestMeasurements = true;
 
             m_updateTimer = new Timer(UpdateFrequency);
             m_updateTimer.Elapsed += m_updateTimer_Elapsed;
