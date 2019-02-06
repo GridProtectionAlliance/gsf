@@ -28,9 +28,6 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
-    // TODO: Define function to map IEEE C37.118 status flags to GEP flags
-
-
     // Common constants.
     struct Common
     {
@@ -260,6 +257,51 @@ namespace Transport
         static const uint8_t ValueXOR28 = 27;
         static const uint8_t ValueXOR32 = 28;
     };
+
+    // These constants represent each flag in the 8-bit compact measurement state flags.
+    static const uint8_t CompactDataRangeFlag = 0x01;
+    static const uint8_t CompactDataQualityFlag = 0x02;
+    static const uint8_t CompactTimeQualityFlag = 0x04;
+    static const uint8_t CompactSystemIssueFlag = 0x08;
+    static const uint8_t CompactCalculatedValueFlag = 0x10;
+    static const uint8_t CompactDiscardedValueFlag = 0x20;
+    static const uint8_t CompactBaseTimeOffsetFlag = 0x40;
+    static const uint8_t CompactTimeIndexFlag = 0x80;
+
+    // These constants are masks used to set flags within the full 32-bit measurement state flags.
+    static const uint32_t DataRangeMask = 0x000000FC;
+    static const uint32_t DataQualityMask = 0x0000EF03;
+    static const uint32_t TimeQualityMask = 0x00BF0000;
+    static const uint32_t SystemIssueMask = 0xE0000000;
+    static const uint32_t CalculatedValueMask = 0x00001000;
+    static const uint32_t DiscardedValueMask = 0x00400000;
+
+    // Takes the 8-bit compact measurement flags and maps
+    // them to the full 32-bit measurement flags format.
+    inline uint32_t MapToFullFlags(uint8_t compactFlags)
+    {
+        unsigned int fullFlags = 0;
+
+        if ((compactFlags & CompactDataRangeFlag) > 0)
+            fullFlags |= DataRangeMask;
+
+        if ((compactFlags & CompactDataQualityFlag) > 0)
+            fullFlags |= DataQualityMask;
+
+        if ((compactFlags & CompactTimeQualityFlag) > 0)
+            fullFlags |= TimeQualityMask;
+
+        if ((compactFlags & CompactSystemIssueFlag) > 0)
+            fullFlags |= SystemIssueMask;
+
+        if ((compactFlags & CompactCalculatedValueFlag) > 0)
+            fullFlags |= CalculatedValueMask;
+
+        if ((compactFlags & CompactDiscardedValueFlag) > 0)
+            fullFlags |= DiscardedValueMask;
+
+        return fullFlags;
+    }
 }}}
 
 #endif

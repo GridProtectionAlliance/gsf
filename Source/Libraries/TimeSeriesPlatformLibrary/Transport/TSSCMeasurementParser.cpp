@@ -29,8 +29,8 @@ using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
-uint32_t Decode7BitUInt32(const uint8_t* stream, int32_t& position);
-uint64_t Decode7BitUInt64(const uint8_t* stream, int32_t& position);
+uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position);
+uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position);
 
 TSSCPointMetadata::TSSCPointMetadata(TSSCMeasurementParser* parent) :
     m_parent(parent),
@@ -226,7 +226,7 @@ void TSSCPointMetadata::AdaptCommands()
 }
 
 TSSCMeasurementParser::TSSCMeasurementParser() :
-    m_data(m_empty),
+    m_data(nullptr),
     m_position(0),
     m_lastPosition(0),
     m_prevTimestamp1(0L),
@@ -243,7 +243,7 @@ TSSCMeasurementParser::TSSCMeasurementParser() :
 
 void TSSCMeasurementParser::Reset()
 {
-    m_data = m_empty;
+    m_data = nullptr;
     m_points.clear();
     m_lastPoint = NewSharedPtr<TSSCPointMetadata>(this);
     m_position = 0;
@@ -257,12 +257,12 @@ void TSSCMeasurementParser::Reset()
     m_prevTimestamp2 = 0L;
 }
 
-void TSSCMeasurementParser::SetBuffer(const vector<uint8_t>& data, const int32_t offset)
+void TSSCMeasurementParser::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
 {
     ClearBitStream();
     m_data = data;
     m_position = offset;
-    m_lastPosition = data.size();
+    m_lastPosition = length;
 }
 
 bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value)
@@ -626,7 +626,7 @@ int32_t TSSCMeasurementParser::ReadBits5()
     return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
 }
 
-uint32_t Decode7BitUInt32(const uint8_t* stream, int32_t& position)
+uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)
 {
     stream += position;    
     uint32_t value = *stream;
@@ -667,7 +667,7 @@ uint32_t Decode7BitUInt32(const uint8_t* stream, int32_t& position)
     return value ^ 0x10204080;
 }
 
-uint64_t Decode7BitUInt64(const uint8_t* stream, int32_t& position)
+uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
 {
     stream += position;
     uint64_t value = *stream;

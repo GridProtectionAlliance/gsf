@@ -161,7 +161,6 @@ namespace Transport
 
         SubscriberConnector m_connector;
         SubscriptionInfo m_subscriptionInfo;
-        EndianConverter m_endianConverter;
         IPAddress m_hostAddress;
         bool m_compressPayloadData;
         bool m_compressMetadata;
@@ -222,16 +221,18 @@ namespace Transport
         void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
         // Server response handlers
+        void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
         void HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);
         void HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);
         void HandleMetadataRefresh(uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleDataStartTime(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleProcessingComplete(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleConfigurationChanged(uint8_t* data, uint32_t offset, uint32_t length);
-        void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
+        void HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length);
+        void ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint32_t length, std::vector<MeasurementPtr>& measurements);
+        void ParseCompactMeasurements(uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
@@ -243,12 +244,8 @@ namespace Transport
         static void ErrorMessageDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void DataStartTimeDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void MetadataDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
-        static void NewMeasurementsDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
-        
-        static void ParseTSSCMeasurements(DataSubscriber* source, const std::vector<uint8_t>& buffer, uint32_t offset, std::vector<MeasurementPtr>& measurements);
-        static void ParseCompactMeasurements(DataSubscriber* source, const std::vector<uint8_t>& buffer, uint32_t offset, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
 
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can

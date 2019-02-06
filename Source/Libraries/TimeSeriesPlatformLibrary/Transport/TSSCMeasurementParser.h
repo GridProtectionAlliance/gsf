@@ -59,6 +59,7 @@ namespace Transport
 
         void UpdatedCodeStatistics(int32_t code);
         void AdaptCommands();
+
     public:
         TSSCPointMetadata(TSSCMeasurementParser* parent);
 
@@ -79,10 +80,9 @@ namespace Transport
     class TSSCMeasurementParser
     {
     private:
-        std::vector<uint8_t> m_empty;
-        std::vector<uint8_t>& m_data;
-        int32_t m_position;
-        int32_t m_lastPosition;
+        uint8_t* m_data;
+        uint32_t m_position;
+        uint32_t m_lastPosition;
 
         int64_t m_prevTimestamp1;
         int64_t m_prevTimestamp2;
@@ -108,7 +108,7 @@ namespace Transport
         bool BitStreamIsEmpty() const;
         void ClearBitStream();
 
-        public:
+    public:
         // Creates a new instance of the compact measurement parser.
         TSSCMeasurementParser();
 
@@ -116,7 +116,7 @@ namespace Transport
         void Reset();
 
         // Sets the internal buffer to read data from.
-        void SetBuffer(const std::vector<uint8_t>& data, int32_t offset);
+        void SetBuffer(uint8_t* data, uint32_t offset, uint32_t length);
 
         // Reads the next measurement from the stream. If the end of the stream has been encountered, return false.
         bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value);

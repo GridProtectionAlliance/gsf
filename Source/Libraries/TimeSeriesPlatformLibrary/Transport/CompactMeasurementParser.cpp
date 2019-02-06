@@ -22,50 +22,19 @@
 //******************************************************************************************************
 
 #include "CompactMeasurementParser.h"
+#include "../Common/EndianConverter.h"
+#include "Constants.h"
 
 using namespace std;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 CompactMeasurementParser::CompactMeasurementParser(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets, bool includeTime, bool useMillisecondResolution) :
-    m_parsedMeasurement(nullptr),
     m_signalIndexCache(signalIndexCache),
     m_baseTimeOffsets(baseTimeOffsets),
     m_includeTime(includeTime),
     m_useMillisecondResolution(useMillisecondResolution)
 {
-}
-
-MeasurementPtr CompactMeasurementParser::GetParsedMeasurement() const
-{
-    return m_parsedMeasurement;
-}
-
-// Takes the 8-bit compact measurement flags and maps
-// them to the full 32-bit measurement flags format.
-uint32_t CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags)
-{
-    unsigned int fullFlags = 0;
-
-    if ((compactFlags & CompactMeasurementParser::CompactDataRangeFlag) > 0)
-        fullFlags |= CompactMeasurementParser::DataRangeMask;
-
-    if ((compactFlags & CompactMeasurementParser::CompactDataQualityFlag) > 0)
-        fullFlags |= CompactMeasurementParser::DataQualityMask;
-
-    if ((compactFlags & CompactMeasurementParser::CompactTimeQualityFlag) > 0)
-        fullFlags |= CompactMeasurementParser::TimeQualityMask;
-
-    if ((compactFlags & CompactMeasurementParser::CompactSystemIssueFlag) > 0)
-        fullFlags |= CompactMeasurementParser::SystemIssueMask;
-
-    if ((compactFlags & CompactMeasurementParser::CompactCalculatedValueFlag) > 0)
-        fullFlags |= CompactMeasurementParser::CalculatedValueMask;
-
-    if ((compactFlags & CompactMeasurementParser::CompactDiscardedValueFlag) > 0)
-        fullFlags |= CompactMeasurementParser::DiscardedValueMask;
-
-    return fullFlags;
 }
 
 // Gets the byte length of measurements parsed by this parser.
@@ -89,31 +58,29 @@ uint32_t CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOf
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer, uint32_t& offset, uint32_t& length)
+bool CompactMeasurementParser::TryParseMeasurement(uint8_t* data, uint32_t& offset, uint32_t length, MeasurementPtr& parsedMeasurement) const
 {
     // Ensure that we at least have enough
     // data to read the compact state flags
-    if (length < 1)
+    if (length - offset < 1)
         return false;
-
-    const uint32_t end = offset + length;
 
     // Read the compact state flags to determine
     // the size of the measurement being parsed
-    const uint8_t compactFlags = buffer[offset] & 0xFF;
+    const uint8_t compactFlags = data[offset] & 0xFF;
     const bool usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag) != 0;    
-    const int32_t timeIndex = (compactFlags & CompactTimeIndexFlag) ? 1 : 0;
+    const int32_t timeIndex = compactFlags & CompactTimeIndexFlag ? 1 : 0;
 
     // If we are using base time offsets, ensure that it is defined
     if (usingBaseTimeOffset && (m_baseTimeOffsets == nullptr || m_baseTimeOffsets[timeIndex] == 0))
         return false;
 
     // Ensure that we have enough data to read the rest of the measurement
-    if (length < GetMeasurementByteLength(usingBaseTimeOffset))
+    if (length - offset < GetMeasurementByteLength(usingBaseTimeOffset))
         return false;
 
     // Read the signal index from the buffer
-    const uint16_t signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(&buffer[offset + 1]));
+    const uint16_t signalIndex = EndianConverter::ToBigEndian<uint16_t>(data, offset + 1);
 
     // If the signal index is not found in the cache, we cannot parse the measurement
     if (!m_signalIndexCache.Contains(signalIndex))
@@ -129,7 +96,7 @@ bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer
     offset += 3;
 
     // Read the measurement value from the buffer
-    const float32_t measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*reinterpret_cast<const float32_t*>(&buffer[offset]));
+    const float32_t measurementValue = EndianConverter::ToBigEndian<float32_t>(data, offset);
     offset += 4;
 
     if (m_includeTime)
@@ -137,35 +104,33 @@ bool CompactMeasurementParser::TryParseMeasurement(const vector<uint8_t>& buffer
         if (!usingBaseTimeOffset)
         {
             // Read full 8-byte timestamp from the buffer
-            timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*reinterpret_cast<const int64_t*>(&buffer[offset]));
+            timestamp = EndianConverter::ToBigEndian<int64_t>(data, offset);
             offset += 8;
         }
         else if (!m_useMillisecondResolution)
         {
             // Read 4-byte offset from the buffer and apply the appropriate base time offset
-            timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*reinterpret_cast<const uint32_t*>(&buffer[offset]));
+            timestamp = EndianConverter::ToBigEndian<uint32_t>(data, offset);
             timestamp += m_baseTimeOffsets[timeIndex]; //-V522
             offset += 4;
         }
         else
         {
             // Read 2-byte offset from the buffer, convert from milliseconds to ticks, and apply the appropriate base time offset
-            timestamp = m_endianConverter.ConvertBigEndian<uint16_t>(*reinterpret_cast<const uint16_t*>(&buffer[offset]));
+            timestamp = EndianConverter::ToBigEndian<uint16_t>(data, offset);
             timestamp *= 10000;
             timestamp += m_baseTimeOffsets[timeIndex];
             offset += 2;
         }
     }
 
-    length = end - offset;
-
-    m_parsedMeasurement = NewSharedPtr<Measurement>();
-    m_parsedMeasurement->Flags = MapToFullFlags(compactFlags);
-    m_parsedMeasurement->SignalID = signalID;
-    m_parsedMeasurement->Source = measurementSource;
-    m_parsedMeasurement->ID = measurementID;
-    m_parsedMeasurement->Value = measurementValue;
-    m_parsedMeasurement->Timestamp = timestamp;
+    parsedMeasurement = NewSharedPtr<Measurement>();
+    parsedMeasurement->Flags = MapToFullFlags(compactFlags);
+    parsedMeasurement->SignalID = signalID;
+    parsedMeasurement->Source = measurementSource;
+    parsedMeasurement->ID = measurementID;
+    parsedMeasurement->Value = measurementValue;
+    parsedMeasurement->Timestamp = timestamp;
 
     return true;
 }
