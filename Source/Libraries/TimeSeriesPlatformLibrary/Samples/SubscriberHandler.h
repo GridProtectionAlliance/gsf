@@ -50,7 +50,6 @@ protected:
 
 public:
     SubscriberHandler(std::string name);
-    ~SubscriberHandler();
 };
 
 typedef GSF::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;

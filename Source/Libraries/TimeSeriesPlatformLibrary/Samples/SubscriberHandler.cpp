@@ -38,11 +38,6 @@ SubscriberHandler::SubscriberHandler(string name) :
 {
 }
 
-SubscriberHandler::~SubscriberHandler()
-{
-    cout << "Calling " << m_name << " destructor...";
-}
-
 SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
 {
     SubscriptionInfo info = SubscriberInstance::CreateSubscriptionInfo();
@@ -71,6 +66,8 @@ SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
 
 void SubscriberHandler::SetupSubscriberConnector(SubscriberConnector& connector)
 {
+    SubscriberInstance::SetupSubscriberConnector(connector);
+
     // TODO: Modify connector properties as desired...
     //connector.SetMaxRetries(-1);
 }
@@ -196,8 +193,6 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
         for (const auto& measurement : measurements)
             message << '\t' << measurement->ID << '\t' << measurement->Value << endl;
-
-        message << "Total measurements: " << GetTotalMeasurementsReceived() << endl;
 
         StatusMessage(message.str());
     }
