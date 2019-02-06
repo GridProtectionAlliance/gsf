@@ -96,6 +96,16 @@ namespace GSF
         static const uint64_t MinValue = static_cast<uint64_t>(0UL);
     };
 
+    struct Ticks
+    {
+        static const uint64_t PerSecond = 10000000L;
+        static const uint64_t PerMillisecond = Ticks::PerSecond / 1000;
+        static const uint64_t PerMicrosecond = Ticks::PerSecond / 1000000;
+        static const uint64_t PerMinute = 60L * Ticks::PerSecond;
+        static const uint64_t PerHour = 60L * Ticks::PerMinute;
+        static const uint64_t PerDay = 24L * Ticks::PerHour;
+    };
+
     struct Decimal
     {
         static const decimal_t MaxValue;
