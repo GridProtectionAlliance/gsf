@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 #include "SignalIndexCache.h"
+#include "../Common/Convert.h"
+#include "../Common/EndianConverter.h"
 
 using namespace std;
 using namespace GSF;
@@ -144,4 +146,55 @@ uint16_t SignalIndexCache::GetSignalIndex(const Guid& signalID) const
 uint32_t SignalIndexCache::Count() const
 {
     return m_signalIDCache.size();
+}
+
+void SignalIndexCache::Parse(const vector<uint8_t>& buffer, SignalIndexCache& signalIndexCache)
+{
+    stringstream sourceStream;
+
+    // Begin by emptying the cache
+    signalIndexCache.Clear();
+
+    // Skip 4-byte length and 16-byte subscriber ID
+    // We may need to parse these in the future...
+    uint32_t* referenceCountPtr = reinterpret_cast<uint32_t*>(const_cast<uint8_t*>(buffer.data() + 20));
+    const uint32_t referenceCount = EndianConverter::Default.ConvertBigEndian(*referenceCountPtr);
+
+    // Set up signalIndexPtr before entering the loop
+    uint16_t * signalIndexPtr = reinterpret_cast<uint16_t*>(referenceCountPtr + 1);
+
+    for (uint32_t i = 0; i < referenceCount; ++i)
+    {
+        // Begin setting up pointers
+        uint8_t* signalIDPtr = reinterpret_cast<uint8_t*>(signalIndexPtr + 1);
+        uint32_t* sourceSizePtr = reinterpret_cast<uint32_t*>(signalIDPtr + 16);
+
+        // Get the source size now so we can use it to find the ID
+        const uint32_t sourceSize = static_cast<uint32_t>(EndianConverter::Default.ConvertBigEndian(*sourceSizePtr)) / sizeof(char);
+
+        // Continue setting up pointers
+        char* sourcePtr = reinterpret_cast<char*>(sourceSizePtr + 1);
+        uint32_t* idPtr = reinterpret_cast<uint32_t*>(sourcePtr + sourceSize);
+
+        // Build string from binary data
+        for (char* sourceIter = sourcePtr; sourceIter < sourcePtr + sourceSize; ++sourceIter)
+            sourceStream << *sourceIter;
+
+        // Set values for measurement key
+        const uint16_t signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
+        const Guid signalID = ParseGuid(signalIDPtr);
+        const string source = sourceStream.str();
+        const uint32_t id = EndianConverter::Default.ConvertBigEndian(*idPtr);
+
+        // Add measurement key to the cache
+        signalIndexCache.AddMeasurementKey(signalIndex, signalID, source, id);
+
+        // Advance signalIndexPtr to the next signal
+        // index and clear out the string stream
+        signalIndexPtr = reinterpret_cast<uint16_t*>(idPtr + 1);
+        sourceStream.str("");
+    }
+
+    // There is additional data about unauthorized signal
+    // IDs that may need to be parsed in the future...
 }

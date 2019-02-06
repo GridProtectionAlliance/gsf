@@ -358,9 +358,9 @@
     <ClCompile Include="Data\DataSet.cpp" />
     <ClCompile Include="Data\DataTable.cpp" />
     <ClInclude Include="Transport\ActiveMeasurementsSchema.h" />
-    <ClInclude Include="Transport\CompactMeasurementParser.h" />
+    <ClInclude Include="Transport\CompactMeasurement.h" />
     <ClCompile Include="Transport\ActiveMeasurementsSchema.cpp" />
-    <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
+    <ClCompile Include="Transport\CompactMeasurement.cpp" />
     <ClInclude Include="Transport\Constants.h" />
     <ClInclude Include="Transport\DataPublisher.h" />
     <ClInclude Include="Transport\DataSubscriber.h" />

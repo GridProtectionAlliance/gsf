@@ -640,14 +640,11 @@
     <ClCompile Include="Transport\MetadataSchema.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Transport\CompactMeasurementParser.cpp">
+    <ClCompile Include="Transport\CompactMeasurement.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
-    <ClInclude Include="Transport\CompactMeasurementParser.h">
-      <Filter>Transport</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="Transport\Constants.h">
       <Filter>Transport</Filter>
     </ClInclude>
@@ -1131,6 +1128,9 @@
       <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="Transport\MetadataSchema.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\CompactMeasurement.h">
       <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>

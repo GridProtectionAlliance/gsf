@@ -83,6 +83,8 @@ namespace Transport
 
         // Gets the mapped signal count
         uint32_t Count() const;
+
+        static void Parse(const std::vector<uint8_t>& buffer, SignalIndexCache& signalIndexCache);
     };
 
     typedef SharedPtr<SignalIndexCache> SignalIndexCachePtr;

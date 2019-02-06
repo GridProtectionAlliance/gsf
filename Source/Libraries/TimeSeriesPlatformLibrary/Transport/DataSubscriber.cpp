@@ -29,7 +29,7 @@
 #include "DataSubscriber.h"
 #include "Version.h"
 #include "Constants.h"
-#include "CompactMeasurementParser.h"
+#include "CompactMeasurement.h"
 #include "../Common/Convert.h"
 
 using namespace std;
@@ -544,26 +544,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
     if (data == nullptr)
         return;
 
-    const bool swapBytes = EndianConverter::Default.NativeOrder() == EndianConverter::LittleEndian;
-
-    uint32_t* referenceCountPtr;
-    uint32_t referenceCount;
-
-    uint16_t* signalIndexPtr;
-    uint8_t* signalIDPtr;
-    uint32_t* sourceSizePtr;
-    char* sourcePtr;
-    uint32_t* idPtr;
-
-    uint16_t signalIndex;
-    Guid signalID;
-    uint32_t sourceSize;
-    string source;
-    uint32_t id;
-
     vector<uint8_t> uncompressed;
-    stringstream sourceStream;
-    char* sourceIter;
 
     if (m_compressSignalIndexCache)
     {
@@ -583,51 +564,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
             uncompressed.push_back(data[i]);
     }
 
-    // Begin by emptying the cache
-    m_signalIndexCache.Clear();
-
-    // Skip 4-byte length and 16-byte subscriber ID
-    // We may need to parse these in the future...
-    referenceCountPtr = reinterpret_cast<uint32_t*>(uncompressed.data() + 20);
-    referenceCount = EndianConverter::Default.ConvertBigEndian(*referenceCountPtr);
-
-    // Set up signalIndexPtr before entering the loop
-    signalIndexPtr = reinterpret_cast<uint16_t*>(referenceCountPtr + 1);
-
-    for (uint32_t i = 0; i < referenceCount; ++i)
-    {
-        // Begin setting up pointers
-        signalIDPtr = reinterpret_cast<uint8_t*>(signalIndexPtr + 1);
-        sourceSizePtr = reinterpret_cast<uint32_t*>(signalIDPtr + 16);
-
-        // Get the source size now so we can use it to find the ID
-        sourceSize = static_cast<uint32_t>(EndianConverter::Default.ConvertBigEndian(*sourceSizePtr)) / sizeof(char);
-
-        // Continue setting up pointers
-        sourcePtr = reinterpret_cast<char*>(sourceSizePtr + 1);
-        idPtr = reinterpret_cast<uint32_t*>(sourcePtr + sourceSize);
-
-        // Build string from binary data
-        for (sourceIter = sourcePtr; sourceIter < sourcePtr + sourceSize; ++sourceIter)
-            sourceStream << *sourceIter;
-
-        // Set values for measurement key
-        signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
-        signalID = ParseGuid(signalIDPtr, swapBytes);
-        source = sourceStream.str();
-        id = EndianConverter::Default.ConvertBigEndian(*idPtr);
-
-        // Add measurement key to the cache
-        m_signalIndexCache.AddMeasurementKey(signalIndex, signalID, source, id);
-
-        // Advance signalIndexPtr to the next signal
-        // index and clear out the string stream
-        signalIndexPtr = reinterpret_cast<uint16_t*>(idPtr + 1);
-        sourceStream.str("");
-    }
-
-    // There is additional data about unauthorized signal
-    // IDs that may need to be parsed in the future...
+    SignalIndexCache::Parse(uncompressed, m_signalIndexCache);
 }
 
 // Updates base time offsets.
@@ -799,9 +736,9 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
     const MessageCallback errorMessageCallback = m_errorMessageCallback;
 
     // Create measurement parser
-    CompactMeasurementParser measurementParser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
+    CompactMeasurement measurementParser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
 
-    while (length - offset > 0)
+    while (length != offset)
     {
         MeasurementPtr measurement;
 
