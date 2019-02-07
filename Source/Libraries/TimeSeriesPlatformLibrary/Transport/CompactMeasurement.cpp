@@ -1,7 +1,7 @@
 //******************************************************************************************************
-//  CompactMeasurementParser.cpp - Gbtc
+//  CompactMeasurement.cpp - Gbtc
 //
-//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright Â© 2018, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
