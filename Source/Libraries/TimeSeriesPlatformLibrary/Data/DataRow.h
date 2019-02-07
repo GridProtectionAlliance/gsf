@@ -24,8 +24,6 @@
 #ifndef __DATA_ROW_H
 #define __DATA_ROW_H
 
-#include <vector>
-
 #include "../Common/CommonTypes.h"
 #include "../Common/Nullable.h"
 #include "DataColumn.h"

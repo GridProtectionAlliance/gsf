@@ -144,7 +144,7 @@ void DataSet::ReadXml(const uint8_t* buffer, uint32_t length)
 {
     xml_document document;
 
-    const xml_parse_result result = document.load_buffer_inplace(const_cast<uint8_t*>(buffer), length);
+    const xml_parse_result result = document.load_buffer(buffer, length);
 
     if (result.status != xml_parse_status::status_ok)
         throw DataSetException("Failed to load XML from buffer: " + string(result.description()));

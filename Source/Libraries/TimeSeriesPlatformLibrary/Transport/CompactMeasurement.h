@@ -43,8 +43,8 @@ namespace Transport
         bool m_useMillisecondResolution;
         int32_t m_timeIndex;
 
-        // Gets the byte length of measurements parsed by this parser.
-        uint32_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
+        // Gets the calculated byte length of compact measurement
+        uint32_t GetBinaryLength(bool usingBaseTimeOffset) const;
 
     public:
         // Creates a new instance of the compact measurement parser.

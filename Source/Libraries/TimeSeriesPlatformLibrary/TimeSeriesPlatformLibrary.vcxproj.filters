@@ -643,6 +643,9 @@
     <ClCompile Include="Transport\CompactMeasurement.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\SubscriberConnection.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Transport\Constants.h">
@@ -679,6 +682,9 @@
       <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="Transport\Version.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\SubscriberConnection.h">
       <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>

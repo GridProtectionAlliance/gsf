@@ -1,5 +1,5 @@
-// Auto-generated on Sat Feb  2 12:53:21 2019
-// EmbedFile.exe ActiveMeasurementsSchema C:\Projects\gsf\Source\Libraries\TimeSeriesPlatformLibrary\Transport\ActiveMeasurementsSchema.xml GSF::TimeSeries::Transport::
+// Auto-generated on Thu Feb  7 16:57:40 2019
+// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\gsf\Source\Libraries\TimeSeriesPlatformLibrary\Transport\ActiveMeasurementsSchema.xml GSF::TimeSeries::Transport::
 
 #include "ActiveMeasurementsSchema.h"
 
@@ -206,7 +206,7 @@ const uint8_t GSF::TimeSeries::Transport::ActiveMeasurementsSchema[] = {
     0x79, 0x70, 0x65, 0x3E, 0x3C, 0x2F, 0x78, 0x73, 0x3A, 0x65,
     0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x3E, 0x3C, 0x2F, 0x78,
     0x73, 0x3A, 0x73, 0x63, 0x68, 0x65, 0x6D, 0x61, 0x3E, 0x3C,
-    0x2F, 0x49, 0x61, 0x6F, 0x6E, 0x3E
+    0x2F, 0x49, 0x61, 0x6F, 0x6E, 0x3E, 0x00
 };
 
 const uint32_t GSF::TimeSeries::Transport::ActiveMeasurementsSchemaLength = sizeof(GSF::TimeSeries::Transport::ActiveMeasurementsSchema);

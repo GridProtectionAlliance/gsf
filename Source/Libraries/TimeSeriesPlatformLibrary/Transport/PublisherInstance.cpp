@@ -21,10 +21,9 @@
 //
 //******************************************************************************************************
 
-#include <iostream>
-
 #include "PublisherInstance.h"
 #include "../Common/Convert.h"
+#include <iostream>
 
 using namespace std;
 using namespace pugi;

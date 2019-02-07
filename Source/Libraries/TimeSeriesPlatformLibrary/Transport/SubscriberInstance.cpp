@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-#include <iostream>
-
 #include "SubscriberInstance.h"
 #include "Constants.h"
 #include "../Common/Convert.h"
+#include "../Common/EndianConverter.h"
 #include "../Common/pugixml.hpp"
+#include <iostream>
 
 using namespace std;
 using namespace pugi;
@@ -60,6 +60,11 @@ void SubscriberInstance::Initialize(const string& hostname, uint16_t port, uint1
     m_hostname = hostname;
     m_port = port;
     m_udpPort = udpPort;
+}
+
+const Guid& SubscriberInstance::GetSubscriberID() const
+{
+    return m_subscriber.GetSubscriberID();
 }
 
 bool SubscriberInstance::GetAutoReconnect() const

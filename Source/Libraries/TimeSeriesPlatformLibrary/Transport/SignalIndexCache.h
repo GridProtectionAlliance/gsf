@@ -18,14 +18,13 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/08/2012 - Stephen C. Wills
 //       Generated original version of source code.
+//  02/07/2019 - J. Ritchie Carroll
+//       Moved parse functionality into class, added generate functionality.
 //
 //******************************************************************************************************
 
 #ifndef __SIGNAL_INDEX_CACHE_H
 #define __SIGNAL_INDEX_CACHE_H
-
-#include <vector>
-#include <string>
 
 #include "../Common/CommonTypes.h"
 
@@ -33,6 +32,9 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
+    class SubscriberConnection;
+    typedef SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
+
     // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
     // Additionally provides reverse lookup and an extra mapping
     // to human-readable measurement keys.
@@ -44,14 +46,13 @@ namespace Transport
         std::vector<std::string> m_sourceList;
         std::vector<uint32_t> m_idList;
         std::unordered_map<GSF::Guid, uint16_t> m_signalIDCache;
+        uint32_t m_binaryLength;
 
     public:
+        SignalIndexCache();
+
         // Adds a measurement key to the cache.
-        void AddMeasurementKey(
-            uint16_t signalIndex,
-            const GSF::Guid& signalID,
-            const std::string& source,
-            uint32_t id);
+        void AddMeasurementKey(uint16_t signalIndex, const GSF::Guid& signalID, const std::string& source, uint32_t id, uint32_t charSizeEstimate = 1U);
 
         // Empties the cache.
         void Clear();
@@ -72,11 +73,7 @@ namespace Transport
 
         // Gets the globally unique signal ID as well as the human-readable
         // measurement key associated with the given 16-bit runtime ID.
-        bool GetMeasurementKey(
-            uint16_t signalIndex,
-            GSF::Guid& signalID,
-            std::string& source,
-            uint32_t& id) const;
+        bool GetMeasurementKey(uint16_t signalIndex, GSF::Guid& signalID, std::string& source, uint32_t& id) const;
 
         // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
         uint16_t GetSignalIndex(const GSF::Guid& signalID) const;
@@ -84,7 +81,15 @@ namespace Transport
         // Gets the mapped signal count
         uint32_t Count() const;
 
-        static void Parse(const std::vector<uint8_t>& buffer, SignalIndexCache& signalIndexCache);
+        // Gets an estimated binary size of a serialized signal index cache useful for pre-allocating
+        // a vector size, for an exact size call RecalculateBinaryLength first
+        uint32_t GetBinaryLength() const;
+
+        void RecalculateBinaryLength(const SubscriberConnectionPtr& connection);
+
+        void Parse(const std::vector<uint8_t>& buffer, Guid& subscriberID);
+
+        void Serialize(const SubscriberConnectionPtr& connection, std::vector<uint8_t>& buffer);
     };
 
     typedef SharedPtr<SignalIndexCache> SignalIndexCachePtr;

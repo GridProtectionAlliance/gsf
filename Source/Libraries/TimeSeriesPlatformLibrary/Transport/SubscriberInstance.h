@@ -113,6 +113,8 @@ namespace Transport
         // calling the Connect method.
         void Initialize(const std::string& hostname, uint16_t port, uint16_t udpPort = 0);
 
+        const Guid& GetSubscriberID() const;
+
         // Gets or sets flag that determines if auto-reconnect is enabled
         bool GetAutoReconnect() const;
         void SetAutoReconnect(bool autoReconnect);

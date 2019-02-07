@@ -23,14 +23,14 @@
 //
 //******************************************************************************************************
 
-#include <sstream>
-#include <boost/bind.hpp>
-
 #include "DataSubscriber.h"
 #include "Version.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
 #include "../Common/Convert.h"
+#include "../Common/EndianConverter.h"
+#include <sstream>
+#include <boost/bind.hpp>
 
 using namespace std;
 using namespace boost;
@@ -223,7 +223,7 @@ bool SubscriberConnector::GetAutoReconnect() const
 
 // --- DataSubscriber ---
 
-DataSubscriber::DataSubscriber() :  // NOLINT
+DataSubscriber::DataSubscriber() :
     m_compressPayloadData(true),
     m_compressMetadata(true),
     m_compressSignalIndexCache(true),
@@ -234,7 +234,9 @@ DataSubscriber::DataSubscriber() :  // NOLINT
     m_totalMeasurementsReceived(0UL),
     m_connected(false),
     m_subscribed(false),
+    m_signalIndexCache(nullptr),
     m_timeIndex(0),
+    m_baseTimeOffsets { 0, 0 },
     m_tsscResetRequested(false),
     m_tsscSequenceNumber(0),
     m_commandChannelSocket(m_commandChannelService),
@@ -242,8 +244,6 @@ DataSubscriber::DataSubscriber() :  // NOLINT
     m_writeBuffer(Common::MaxPacketSize),
     m_dataChannelSocket(m_dataChannelService)
 {
-    m_baseTimeOffsets[0] = 0;
-    m_baseTimeOffsets[1] = 0;
 }
 
 // Destructor calls disconnect to clean up after itself.
@@ -564,7 +564,9 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
             uncompressed.push_back(data[i]);
     }
 
-    SignalIndexCache::Parse(uncompressed, m_signalIndexCache);
+    SignalIndexCachePtr signalIndexCache = NewSharedPtr<SignalIndexCache>();
+    signalIndexCache->Parse(uncompressed, m_subscriberID);
+    m_signalIndexCache.swap(signalIndexCache);
 }
 
 // Updates base time offsets.
@@ -692,7 +694,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
 
         while (m_tsscMeasurementParser.TryGetMeasurement(id, time, quality, value))
         {
-            if (m_signalIndexCache.GetMeasurementKey(id, signalID, measurementSource, measurementID))
+            if (m_signalIndexCache->GetMeasurementKey(id, signalID, measurementSource, measurementID))
             {
                 measurement = NewSharedPtr<Measurement>();
 
@@ -735,8 +737,11 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
 {
     const MessageCallback errorMessageCallback = m_errorMessageCallback;
 
+    if (m_signalIndexCache == nullptr)
+        return;
+
     // Create measurement parser
-    CompactMeasurement measurementParser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
+    CompactMeasurement measurementParser(*m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
 
     while (length != offset)
     {
@@ -941,6 +946,11 @@ void DataSubscriber::RegisterConnectionTerminatedCallback(const ConnectionTermin
 void DataSubscriber::RegisterAutoReconnectCallback(const ConnectionTerminatedCallback& autoReconnectCallback)
 {
     m_autoReconnectCallback = autoReconnectCallback;
+}
+
+const Guid& DataSubscriber::GetSubscriberID() const
+{
+    return m_subscriberID;
 }
 
 // Returns true if payload data is compressed (TSSC only).

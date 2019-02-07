@@ -16,6 +16,24 @@ FILE* open_or_exit(const char* fname, const char* mode)
     return f;
 }
 
+void write_byte(FILE* out, int32_t& chars, bool& first, unsigned char value)
+{
+    if (chars++ % 10 == 0)
+    {
+        if (!first)
+            fprintf(out, ",");
+
+        fprintf(out, "\n    ");
+    }
+    else
+    {
+        fprintf(out, ", ");
+    }
+
+    fprintf(out, "0x%02X", value);
+    first = false;
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 3) {
@@ -114,25 +132,13 @@ int main(int argc, char** argv)
         size_t i;
         
         for (i = 0; i < nread; i++)
-        {
-            if (chars++ % 10 == 0)
-            {
-                if (!first)
-                    fprintf(out, ",");
-
-                fprintf(out, "\n    ");
-            }
-            else
-            {
-                fprintf(out, ", ");
-            }
-
-            fprintf(out, "0x%02X", buf[i]);
-            first = false;
-        }
+            write_byte(out, chars, first, buf[i]);
     }
     while (nread > 0);
-    
+
+    // Write NULL as last character
+    write_byte(out, chars, first, '\0');
+
     fprintf(out, "\n};\n\n");
     fprintf(out, "const uint32_t %s%sLength = sizeof(%s%s);\n", prefix, sym, prefix, sym);
 

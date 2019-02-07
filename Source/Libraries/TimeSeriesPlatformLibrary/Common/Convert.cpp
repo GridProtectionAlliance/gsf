@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+#include "Convert.h"
 #include <iomanip>
 #include <sstream>
 #include <locale>
@@ -31,7 +32,6 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
 #include <boost/algorithm/string.hpp>
-#include "Convert.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -323,36 +323,38 @@ std::string GSF::RegExEncode(const char value)
     return "\\u" + PadLeft(stream.str(), 4, '0');
 }
 
-Guid GSF::ParseGuid(const uint8_t* data, bool swapBytes)
+Guid GSF::ParseGuid(const uint8_t* data, bool swapEndianness, bool useGEPEncoding)
 {
     Guid id;
     uint8_t swappedBytes[16];
     uint8_t* encodedBytes;
 
-    // Check if bytes need to be decoded in reverse order
-    if (swapBytes)
+    if (swapEndianness || useGEPEncoding)
     {
         uint8_t copy[8];
 
         for (uint32_t i = 0; i < 16; i++)
         {
-            swappedBytes[i] = data[15 - i];
+            swappedBytes[i] = useGEPEncoding ? data[15 - i] : data[i];
 
             if (i < 8)
                 copy[i] = swappedBytes[i];
         }
 
-        // Convert Microsoft encoding to RFC
-        swappedBytes[3] = copy[0];
-        swappedBytes[2] = copy[1];
-        swappedBytes[1] = copy[2];
-        swappedBytes[0] = copy[3];
+        if (swapEndianness)
+        {
+            // Convert Microsoft encoding to RFC
+            swappedBytes[3] = copy[0];
+            swappedBytes[2] = copy[1];
+            swappedBytes[1] = copy[2];
+            swappedBytes[0] = copy[3];
 
-        swappedBytes[4] = copy[5];
-        swappedBytes[5] = copy[4];
+            swappedBytes[4] = copy[5];
+            swappedBytes[5] = copy[4];
 
-        swappedBytes[6] = copy[7];
-        swappedBytes[7] = copy[6];
+            swappedBytes[6] = copy[7];
+            swappedBytes[7] = copy[6];
+        }
 
         encodedBytes = swappedBytes;
     }
@@ -371,6 +373,42 @@ Guid GSF::ParseGuid(const char* data)
 {
     const string_generator generator;
     return generator(data);
+}
+
+void GSF::SwapGuidEndianness(Guid& value, bool useGEPEncoding)
+{
+    // Convert RFC encoding to Microsoft or vice versa
+    uint8_t* data = value.data;
+    uint8_t copy[8];
+
+    for (uint32_t i = 0; i < 8; i++)
+        copy[i] = data[i];
+
+    // The following uint32 and two uint16 values are little-endian encoded in Microsoft implementations,
+    // boost follows RFC encoding rules and encodes the bytes as big-endian. For proper Guid interpretation
+    // by .NET applications the following bytes must be swapped before wire-serialization:
+    data[3] = copy[0];
+    data[2] = copy[1];
+    data[1] = copy[2];
+    data[0] = copy[3];
+
+    data[4] = copy[5];
+    data[5] = copy[4];
+
+    data[6] = copy[7];
+    data[7] = copy[6];
+
+    // GEP encodes Guid bytes in reverse order
+    if (useGEPEncoding)
+    {
+        uint8_t swappedBytes[16];
+
+        for (uint32_t i = 0; i < 16; i++)
+            swappedBytes[i] = data[15 - i];
+
+        for (uint32_t i = 0; i < 16; i++)
+            data[i] = swappedBytes[i];
+    }
 }
 
 const char* GSF::Coalesce(const char* data, const char* nonEmptyValue)

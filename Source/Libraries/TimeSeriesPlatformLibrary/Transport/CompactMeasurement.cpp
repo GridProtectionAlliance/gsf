@@ -110,7 +110,7 @@ CompactMeasurement::CompactMeasurement(SignalIndexCache& signalIndexCache, int64
 }
 
 // Gets the byte length of measurements parsed by this parser.
-uint32_t CompactMeasurement::GetMeasurementByteLength(const bool usingBaseTimeOffset) const
+uint32_t CompactMeasurement::GetBinaryLength(const bool usingBaseTimeOffset) const
 {
     uint32_t byteLength = 7;
 
@@ -153,7 +153,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
         return false;
 
     // Ensure that we have enough data to read the rest of the measurement
-    if (length - offset < GetMeasurementByteLength(usingBaseTimeOffset))
+    if (length - offset < GetBinaryLength(usingBaseTimeOffset))
         return false;
 
     // Read the signal index from the buffer

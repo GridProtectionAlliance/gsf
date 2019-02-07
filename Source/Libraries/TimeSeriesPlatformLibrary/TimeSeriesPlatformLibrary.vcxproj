@@ -372,7 +372,9 @@
     <ClCompile Include="Transport\MetadataSchema.cpp" />
     <ClCompile Include="Transport\PublisherInstance.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
+    <ClInclude Include="Transport\SubscriberConnection.h" />
     <ClInclude Include="Transport\SubscriberInstance.h" />
+    <ClCompile Include="Transport\SubscriberConnection.cpp" />
     <ClCompile Include="Transport\SubscriberInstance.cpp" />
     <ClInclude Include="Transport\TSSCMeasurementParser.h" />
     <ClCompile Include="Transport\TSSCMeasurementParser.cpp" />

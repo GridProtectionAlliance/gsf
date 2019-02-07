@@ -32,7 +32,6 @@
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "TSSCMeasurementParser.h"
-#include "../Common/EndianConverter.h"
 #include "../Common/ThreadSafeQueue.h"
 
 namespace GSF {
@@ -136,7 +135,7 @@ namespace Transport
         bool GetAutoReconnect() const;
     };
 
-    class DataSubscriber
+    class DataSubscriber // NOLINT
     {
     private:
         // Function pointer types
@@ -162,6 +161,7 @@ namespace Transport
         SubscriberConnector m_connector;
         SubscriptionInfo m_subscriptionInfo;
         IPAddress m_hostAddress;
+        Guid m_subscriberID;
         bool m_compressPayloadData;
         bool m_compressMetadata;
         bool m_compressSignalIndexCache;
@@ -176,7 +176,7 @@ namespace Transport
         bool m_subscribed;
 
         // Measurement parsing
-        SignalIndexCache m_signalIndexCache;
+        SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         TSSCMeasurementParser m_tsscMeasurementParser;
@@ -286,6 +286,8 @@ namespace Transport
         void RegisterConfigurationChangedCallback(const ConfigurationChangedCallback& configurationChangedCallback);
         void RegisterConnectionTerminatedCallback(const ConnectionTerminatedCallback& connectionTerminatedCallback);
         void RegisterAutoReconnectCallback(const ConnectionTerminatedCallback& autoReconnectCallback);
+
+        const Guid& GetSubscriberID() const;
 
         // Gets or sets value that determines whether
         // payload data is compressed using TSSC.
