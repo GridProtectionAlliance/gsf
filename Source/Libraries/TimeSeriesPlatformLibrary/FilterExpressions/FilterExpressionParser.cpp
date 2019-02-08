@@ -95,7 +95,7 @@ const char* FilterExpressionParserException::what() const noexcept
     return m_message.c_str();
 }
 
-FilterExpressionParser::FilterExpressionParser(const string& filterExpression, bool suppressConsoleErrorOutput) :
+FilterExpressionParser::FilterExpressionParser(const string& filterExpression, const bool suppressConsoleErrorOutput) :
     m_inputStream(filterExpression),
     m_callbackErrorListener(nullptr),
     m_dataSet(nullptr),
@@ -119,9 +119,9 @@ FilterExpressionParser::~FilterExpressionParser()
     delete m_callbackErrorListener;
 }
 
-FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, const ParsingExceptionCallback& parsingExceptionCallback) :
+FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback) :
     m_filterExpressionParser(std::move(filterExpressionParser)),
-    m_parsingExceptionCallback(parsingExceptionCallback)
+    m_parsingExceptionCallback(std::move(parsingExceptionCallback))
 {        
 }
 
@@ -162,7 +162,7 @@ void FilterExpressionParser::InitializeSetOperations()
     }
 }
 
-void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, int32_t signalIDColumnIndex)
+void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, const int32_t signalIDColumnIndex)
 {
     if (m_filterExpressionStatementCount > 1)
     {
@@ -344,7 +344,7 @@ bool FilterExpressionParser::GetTrackFilteredRows() const
     return m_trackFilteredRows;
 }
 
-void FilterExpressionParser::SetTrackFilteredRows(bool trackFilteredRows)
+void FilterExpressionParser::SetTrackFilteredRows(const bool trackFilteredRows)
 {
     m_trackFilteredRows = trackFilteredRows;
 }
@@ -365,7 +365,7 @@ bool FilterExpressionParser::GetTrackFilteredSignalIDs() const
     return m_trackFilteredSignalIDs;
 }
 
-void FilterExpressionParser::SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs)
+void FilterExpressionParser::SetTrackFilteredSignalIDs(const bool trackFilteredSignalIDs)
 {
     m_trackFilteredSignalIDs = trackFilteredSignalIDs;
 }
@@ -1169,7 +1169,7 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     AddExpr(context, NewSharedPtr<FunctionExpression>(functionType, arguments));
 }
 
-vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataSetPtr& dataSet, const string& primaryTableName, const string& filterExpression, bool suppressConsoleErrorOutput)
+vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataSetPtr& dataSet, const string& primaryTableName, const string& filterExpression, const bool suppressConsoleErrorOutput)
 {
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
@@ -1180,12 +1180,12 @@ vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const 
     return parser->GetExpressionTrees();
 }
 
-vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataTablePtr& dataTable, const string& filterExpression, const bool suppressConsoleErrorOutput)
 {
     return GenerateExpressionTrees(dataTable->Parent(), dataTable->Name(), filterExpression, suppressConsoleErrorOutput);
 }
 
-ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression, const bool suppressConsoleErrorOutput)
 {
     vector<ExpressionTreePtr> expressionTrees = GenerateExpressionTrees(dataTable, filterExpression, suppressConsoleErrorOutput);
 
@@ -1195,20 +1195,31 @@ ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTable
     throw FilterExpressionParserException("No expression trees generated with filter expression \"" + filterExpression + "\" for table \"" + dataTable->Name() + "\"");
 }
 
-ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, const string& filterExpression, bool suppressConsoleErrorOutput)
+ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, const string& filterExpression, const bool suppressConsoleErrorOutput)
 {
     return GenerateExpressionTree(dataRow->Parent(), filterExpression, suppressConsoleErrorOutput)->Evaluate(dataRow);
 }
 
-vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, bool suppressConsoleErrorOutput)
+vector<DataRowPtr> FilterExpressionParser::Select(const DataSetPtr& dataSet, const string& filterExpression, const string& primaryTableName, const TableIDFieldsPtr& tableIDFields, const bool suppressConsoleErrorOutput)
 {
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
-    parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryTableName(dataTable->Name());
+    parser->SetDataSet(dataSet);
+
+    if (!primaryTableName.empty())
+    {
+        parser->SetPrimaryTableName(primaryTableName);
+        parser->SetTableIDFields(primaryTableName, tableIDFields == nullptr ? DefaultTableIDFields : tableIDFields);
+    }
+
     parser->Evaluate();
 
     return parser->m_filteredRows;
+}
+
+vector<DataRowPtr> FilterExpressionParser::Select(const DataTablePtr& dataTable, const string& filterExpression, const TableIDFieldsPtr& tableIDFields, const bool suppressConsoleErrorOutput)
+{
+    return Select(dataTable->Parent(), filterExpression, dataTable->Name(), tableIDFields, suppressConsoleErrorOutput);
 }
 
 vector<DataRowPtr> FilterExpressionParser::Select(const ExpressionTreePtr& expressionTree)
@@ -1329,3 +1340,14 @@ vector<DataRowPtr> FilterExpressionParser::Select(const ExpressionTreePtr& expre
 
     return matchedRows;
 }
+
+const TableIDFieldsPtr FilterExpressionParser::DefaultTableIDFields = []
+{ 
+    TableIDFieldsPtr defaultTableIDFIelds = NewSharedPtr<TableIDFields>();
+
+    defaultTableIDFIelds->SignalIDFieldName = "SignalID";
+    defaultTableIDFIelds->MeasurementKeyFieldName = "ID";
+    defaultTableIDFIelds->PointTagFieldName = "PointTag";
+
+    return defaultTableIDFIelds;
+}();

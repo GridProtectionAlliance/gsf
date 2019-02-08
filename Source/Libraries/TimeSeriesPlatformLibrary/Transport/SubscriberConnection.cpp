@@ -51,7 +51,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_baseTimeOffsets{0L, 0L}
 {
     // Setup ping timer
-    m_pingTimer.SetInteval(5000);
+    m_pingTimer.SetInterval(5000);
     m_pingTimer.SetAutoReset(true);
     m_pingTimer.SetCallback(&SubscriberConnection::PingTimerElapsed);
     m_pingTimer.SetUserData(this);

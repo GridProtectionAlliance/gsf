@@ -24,10 +24,6 @@
 #ifndef __SUBSCRIBERINSTANCE_H
 #define __SUBSCRIBERINSTANCE_H
 
-#include <string>
-#include <vector>
-#include <ctime>
-
 #include "DataSubscriber.h"
 
 namespace GSF {

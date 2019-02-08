@@ -55,8 +55,6 @@ const Object Empty::Object(nullptr);
 
 const IPAddress Empty::IPAddress {};
 
-const uint8_t* Empty::ZeroLengthBytes = new uint8_t[4] { 0, 0, 0, 0 };
-
 size_t StringHash::operator()(const string& value) const
 {
     size_t seed = 0;

@@ -36,6 +36,9 @@ namespace GSF
 
     // Converts a timestamp, in Ticks, to DateTime
     DateTime FromTicks(int64_t ticks);
+
+    // Converts a DateTime to Ticks
+    int64_t ToTicks(const DateTime& time);
     
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);

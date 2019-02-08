@@ -44,8 +44,8 @@
 namespace GSF
 {
     // Floating-point types
-    typedef float float32_t;
-    typedef double float64_t;
+    typedef float_t float32_t;
+    typedef double_t float64_t;
     typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
 
     struct Int8
@@ -98,12 +98,13 @@ namespace GSF
 
     struct Ticks
     {
-        static const uint64_t PerSecond = 10000000L;
-        static const uint64_t PerMillisecond = Ticks::PerSecond / 1000;
-        static const uint64_t PerMicrosecond = Ticks::PerSecond / 1000000;
-        static const uint64_t PerMinute = 60L * Ticks::PerSecond;
-        static const uint64_t PerHour = 60L * Ticks::PerMinute;
-        static const uint64_t PerDay = 24L * Ticks::PerHour;
+        static const int64_t PerSecond = 10000000L;
+        static const int64_t PerMillisecond = Ticks::PerSecond / 1000;
+        static const int64_t PerMicrosecond = Ticks::PerSecond / 1000000;
+        static const int64_t PerMinute = 60L * Ticks::PerSecond;
+        static const int64_t PerHour = 60L * Ticks::PerMinute;
+        static const int64_t PerDay = 24L * Ticks::PerHour;
+        static const int64_t UnixBaseTime = 621355968000000000L;
     };
 
     struct Decimal
@@ -194,7 +195,6 @@ namespace GSF
         static const GSF::Guid Guid;
         static const GSF::Object Object;
         static const GSF::IPAddress IPAddress;
-        static const uint8_t* ZeroLengthBytes;
     };
 
     // std::unordered_map string hasher

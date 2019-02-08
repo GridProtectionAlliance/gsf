@@ -29,8 +29,11 @@ using namespace GSF;
 using namespace GSF::Data;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
+using namespace GSF::FilterExpressions;
 
 DataPublisherPtr Publisher;
+TimerPtr PublishTimer;
+vector<tuple<MeasurementMetadataPtr, string, uint32_t>> MeasurementsToPublish;
 
 bool RunPublisher(uint16_t port);
 void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
@@ -68,6 +71,9 @@ int main(int argc, char* argv[])
         // Wait until the user presses enter before quitting.
         string line;
         getline(cin, line);
+
+        // Stop data publication
+        PublishTimer->Stop();
     }
 
     // Disconnect the subscriber to stop background threads.
@@ -85,12 +91,12 @@ int main(int argc, char* argv[])
 bool RunPublisher(uint16_t port)
 {
     string errorMessage;
-    bool connected = false;
+    bool running = false;
 
     try
     {
         Publisher = NewSharedPtr<DataPublisher>(port);
-        connected = true;
+        running = true;
     }
     catch (PublisherException& ex)
     {
@@ -105,7 +111,7 @@ bool RunPublisher(uint16_t port)
         errorMessage = boost::current_exception_diagnostic_information(true);
     }
 
-    if (connected)
+    if (running)
     {
         cout << endl << "Listening on port: " << port << "..." << endl << endl;
 
@@ -117,13 +123,62 @@ bool RunPublisher(uint16_t port)
 
         // Define metadata
         Publisher->DefineMetadata(DataSet::FromXml("Metadata.xml"));
+
+        // Filter metadata for measurements to publish, in this case, all non statistics
+        vector<MeasurementMetadataPtr> metadata = Publisher->FilterMetadata("SignalAcronym <> 'STAT'");
+        string source;
+        uint32_t id;
+
+        // Track publication metadata
+        for (size_t i = 0; i < metadata.size(); i++)
+        {
+            MeasurementMetadataPtr record = metadata[i];
+            ParseMeasurementKey(record->ID, source, id);
+            MeasurementsToPublish.emplace_back(record, source, id);
+        }
+
+        cout << "Loaded " << MeasurementsToPublish.size() << " measurement metadata records for publication." << endl << endl;
+
+        // Setup data publication timer - for this simple publishing sample we just
+        // send random values every 33 milliseconds
+        PublishTimer = NewSharedPtr<Timer>(33, [](Timer*, void*)
+        {
+            static uint32_t count = MeasurementsToPublish.size();
+            const int64_t timestamp = ToTicks(UtcNow());
+            vector<Measurement> measurements;
+
+            measurements.reserve(count);
+
+            // Create new measurement values for publication
+            for (size_t i = 0; i < count; i++)
+            {
+                auto record = MeasurementsToPublish[i];
+                Measurement measurement;
+
+                const MeasurementMetadataPtr& metadata = get<0>(record);
+                measurement.ID = get<2>(record);
+                measurement.Source = get<1>(record);
+                measurement.SignalID = metadata->SignalID;
+                measurement.Timestamp = timestamp;
+                measurement.Value = float64_t(rand());
+
+                measurements.push_back(measurement);
+            }
+
+            // Publish measurements
+            Publisher->PublishMeasurements(measurements);
+        },
+        true);
+
+        // Start data publication
+        PublishTimer->Start();
     }
     else
     {
         cerr << "Failed to listen on port: " << port << ": " << errorMessage;
     }
 
-    return connected;
+    return running;
 }
 
 void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)

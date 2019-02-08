@@ -35,9 +35,6 @@
 namespace GSF {
 namespace FilterExpressions
 {
-    struct TableIDFields;
-    typedef GSF::SharedPtr<TableIDFields> TableIDFieldsPtr;
-
     class ExpressionTree;
     typedef GSF::SharedPtr<ExpressionTree> ExpressionTreePtr;
 }}
@@ -66,9 +63,8 @@ namespace Transport
         };
 
         GSF::Guid m_nodeID;
-        GSF::Data::DataSetPtr m_allMetadata;
-        GSF::Data::DataSetPtr m_activeMetadata;
-        GSF::FilterExpressions::TableIDFieldsPtr m_tableIDFields;
+        GSF::Data::DataSetPtr m_metadata;
+        GSF::Data::DataSetPtr m_filteringMetadata;
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
         GSF::Mutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
@@ -158,6 +154,10 @@ namespace Transport
 
         // Define metadata from an existing dataset
         void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
+
+        const GSF::Data::DataSetPtr& GetMetadata() const;
+        const GSF::Data::DataSetPtr& GetFilteringMetadata() const;
+        std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);

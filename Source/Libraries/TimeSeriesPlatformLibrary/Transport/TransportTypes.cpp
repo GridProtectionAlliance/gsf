@@ -216,6 +216,22 @@ std::string GSF::TimeSeries::GetProtocolType(const std::string& protocolName)
     return "Frame";
 }
 
+void TimeSeries::ParseMeasurementKey(const std::string& key, std::string& source, uint32_t& id)
+{
+    const vector<string> parts = Split(key, ":");
+
+    if (parts.size() == 2)
+    {
+        source = parts[0];
+        id = uint32_t(stoul(parts[1]));
+    }
+    else
+    {
+        source = parts[0];
+        id = UInt32::MaxValue;
+    }
+}
+
 // Gets the "SignalKind" enum for the specified "acronym".
 //  params:
 //	   acronym: Acronym of the desired "SignalKind"

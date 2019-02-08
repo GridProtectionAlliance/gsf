@@ -39,131 +39,132 @@
 namespace GSF {
 namespace FilterExpressions
 {
-
-// Simple exception type thrown by the filter expression parser
-class FilterExpressionParserException : public Exception
-{
-private:
-    std::string m_message;
-
-public:
-    FilterExpressionParserException(std::string message) noexcept;
-    const char* what() const noexcept;
-};
-
-struct TableIDFields
-{
-    std::string SignalIDFieldName;
-    std::string MeasurementKeyFieldName;
-    std::string PointTagFieldName;
-};
-
-typedef GSF::SharedPtr<TableIDFields> TableIDFieldsPtr;
-
-class FilterExpressionParser;
-typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
-
-typedef std::function<void(FilterExpressionParserPtr, const std::string&)> ParsingExceptionCallback;
-
-class FilterExpressionParser : // NOLINT
-    public FilterExpressionSyntaxBaseListener,
-    public GSF::EnableSharedThisPtr<FilterExpressionParser>
-{
-private:
-    class CallbackErrorListener : public antlr4::BaseErrorListener
+    // Simple exception type thrown by the filter expression parser
+    class FilterExpressionParserException : public Exception
     {
     private:
-        const FilterExpressionParserPtr m_filterExpressionParser;
-        const ParsingExceptionCallback m_parsingExceptionCallback;
+        std::string m_message;
 
     public:
-        CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, const ParsingExceptionCallback& parsingExceptionCallback);
-        void syntaxError(antlr4::Recognizer* recognizer, antlr4::Token* offendingSymbol, size_t line, size_t charPositionInLine, const std::string& msg, std::exception_ptr e) override;
+        FilterExpressionParserException(std::string message) noexcept;
+        const char* what() const noexcept;
     };
 
-    antlr4::ANTLRInputStream m_inputStream;
-    FilterExpressionSyntaxLexer* m_lexer;
-    antlr4::CommonTokenStream* m_tokens;
-    FilterExpressionSyntaxParser* m_parser;
-    CallbackErrorListener* m_callbackErrorListener;
-    GSF::Data::DataSetPtr m_dataSet;
-    std::string m_primaryTableName;
-    GSF::StringMap<TableIDFieldsPtr> m_tableIDFields;
+    struct TableIDFields
+    {
+        std::string SignalIDFieldName;
+        std::string MeasurementKeyFieldName;
+        std::string PointTagFieldName;
+    };
 
-    bool m_trackFilteredRows;
-    std::vector<GSF::Data::DataRowPtr> m_filteredRows;
-    std::unordered_set<GSF::Data::DataRowPtr> m_filteredRowSet;
+    typedef GSF::SharedPtr<TableIDFields> TableIDFieldsPtr;
 
-    bool m_trackFilteredSignalIDs;
-    std::vector<GSF::Guid> m_filteredSignalIDs;
-    std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
+    class FilterExpressionParser;
+    typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 
-    int32_t m_filterExpressionStatementCount;
+    typedef std::function<void(FilterExpressionParserPtr, const std::string&)> ParsingExceptionCallback;
 
-    ExpressionTreePtr m_activeExpressionTree;
-    std::vector<ExpressionTreePtr> m_expressionTrees;
-    std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
+    class FilterExpressionParser : // NOLINT
+        public FilterExpressionSyntaxBaseListener,
+        public GSF::EnableSharedThisPtr<FilterExpressionParser>
+    {
+    private:
+        class CallbackErrorListener : public antlr4::BaseErrorListener
+        {
+        private:
+            const FilterExpressionParserPtr m_filterExpressionParser;
+            const ParsingExceptionCallback m_parsingExceptionCallback;
 
-    void VisitParseTreeNodes();
-    void InitializeSetOperations();
-    inline void AddMatchedRow(const GSF::Data::DataRowPtr& row, int32_t signalIDColumnIndex);
-    inline void MapMatchedFieldRow(const GSF::Data::DataTablePtr& primaryTable, const std::string& columnName, const std::string& matchValue, int32_t signalIDColumnIndex);
-    inline bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
-    inline void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
-public:
-    FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
-    ~FilterExpressionParser();
+        public:
+            CallbackErrorListener(FilterExpressionParserPtr filterExpressionParser, ParsingExceptionCallback parsingExceptionCallback);
+            void syntaxError(antlr4::Recognizer* recognizer, antlr4::Token* offendingSymbol, size_t line, size_t charPositionInLine, const std::string& msg, std::exception_ptr e) override;
+        };
 
-    const GSF::Data::DataSetPtr& GetDataSet() const;
-    void SetDataSet(const GSF::Data::DataSetPtr& dataSet);
+        antlr4::ANTLRInputStream m_inputStream;
+        FilterExpressionSyntaxLexer* m_lexer;
+        antlr4::CommonTokenStream* m_tokens;
+        FilterExpressionSyntaxParser* m_parser;
+        CallbackErrorListener* m_callbackErrorListener;
+        GSF::Data::DataSetPtr m_dataSet;
+        std::string m_primaryTableName;
+        GSF::StringMap<TableIDFieldsPtr> m_tableIDFields;
 
-    TableIDFieldsPtr GetTableIDFields(const std::string& tableName) const;
-    void SetTableIDFields(const std::string& tableName, const TableIDFieldsPtr& tableIDFields);
+        bool m_trackFilteredRows;
+        std::vector<GSF::Data::DataRowPtr> m_filteredRows;
+        std::unordered_set<GSF::Data::DataRowPtr> m_filteredRowSet;
 
-    const std::string& GetPrimaryTableName() const;
-    void SetPrimaryTableName(const std::string& tableName);
+        bool m_trackFilteredSignalIDs;
+        std::vector<GSF::Guid> m_filteredSignalIDs;
+        std::unordered_set<GSF::Guid> m_filteredSignalIDSet;
 
-    // ParsingExceptionCallback function is defined with the following signature:
-    //   void HandleParsingException(FilterExpressionParserPtr, const string& message)
-    void RegisterParsingExceptionCallback(const ParsingExceptionCallback& parsingExceptionCallback);
+        int32_t m_filterExpressionStatementCount;
 
-    void Evaluate();
+        ExpressionTreePtr m_activeExpressionTree;
+        std::vector<ExpressionTreePtr> m_expressionTrees;
+        std::map<const antlr4::ParserRuleContext*, ExpressionPtr> m_expressions;
 
-    bool GetTrackFilteredRows() const;
-    void SetTrackFilteredRows(bool trackFilteredRows);
-    const std::vector<GSF::Data::DataRowPtr>& FilteredRows() const;
-    const std::unordered_set<GSF::Data::DataRowPtr>& FilteredRowSet();
+        void VisitParseTreeNodes();
+        void InitializeSetOperations();
+        inline void AddMatchedRow(const GSF::Data::DataRowPtr& row, int32_t signalIDColumnIndex);
+        inline void MapMatchedFieldRow(const GSF::Data::DataTablePtr& primaryTable, const std::string& columnName, const std::string& matchValue, int32_t signalIDColumnIndex);
+        inline bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
+        inline void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
+    public:
+        FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        ~FilterExpressionParser();
 
-    bool GetTrackFilteredSignalIDs() const;
-    void SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs);
-    const std::vector<GSF::Guid>& FilteredSignalIDs() const;
-    const std::unordered_set<GSF::Guid>& FilteredSignalIDSet();
+        const GSF::Data::DataSetPtr& GetDataSet() const;
+        void SetDataSet(const GSF::Data::DataSetPtr& dataSet);
 
-    const std::vector<ExpressionTreePtr>& GetExpressionTrees();
+        TableIDFieldsPtr GetTableIDFields(const std::string& tableName) const;
+        void SetTableIDFields(const std::string& tableName, const TableIDFieldsPtr& tableIDFields);
 
-    void enterFilterExpressionStatement(FilterExpressionSyntaxParser::FilterExpressionStatementContext*) override;
-    void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
-    void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
-    void enterExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
-    void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
-    void exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext*) override;
-    void exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext*) override;
-    void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
-    void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
-    void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
+        const std::string& GetPrimaryTableName() const;
+        void SetPrimaryTableName(const std::string& tableName);
 
-    static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataSetPtr& dataSet, const std::string& primaryTableName, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
-    static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
-    static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        // ParsingExceptionCallback function is defined with the following signature:
+        //   void HandleParsingException(FilterExpressionParserPtr, const string& message)
+        void RegisterParsingExceptionCallback(const ParsingExceptionCallback& parsingExceptionCallback);
+
+        void Evaluate();
+
+        bool GetTrackFilteredRows() const;
+        void SetTrackFilteredRows(bool trackFilteredRows);
+        const std::vector<GSF::Data::DataRowPtr>& FilteredRows() const;
+        const std::unordered_set<GSF::Data::DataRowPtr>& FilteredRowSet();
+
+        bool GetTrackFilteredSignalIDs() const;
+        void SetTrackFilteredSignalIDs(bool trackFilteredSignalIDs);
+        const std::vector<GSF::Guid>& FilteredSignalIDs() const;
+        const std::unordered_set<GSF::Guid>& FilteredSignalIDSet();
+
+        const std::vector<ExpressionTreePtr>& GetExpressionTrees();
+
+        void enterFilterExpressionStatement(FilterExpressionSyntaxParser::FilterExpressionStatementContext*) override;
+        void enterFilterStatement(FilterExpressionSyntaxParser::FilterStatementContext*) override;
+        void exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext*) override;
+        void enterExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
+        void exitExpression(FilterExpressionSyntaxParser::ExpressionContext*) override;
+        void exitPredicateExpression(FilterExpressionSyntaxParser::PredicateExpressionContext*) override;
+        void exitValueExpression(FilterExpressionSyntaxParser::ValueExpressionContext*) override;
+        void exitLiteralValue(FilterExpressionSyntaxParser::LiteralValueContext*) override;
+        void exitColumnName(FilterExpressionSyntaxParser::ColumnNameContext*) override;
+        void exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext*) override;
+
+        static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataSetPtr& dataSet, const std::string& primaryTableName, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        static std::vector<ExpressionTreePtr> GenerateExpressionTrees(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        static ExpressionTreePtr GenerateExpressionTree(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     
-    static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        static ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& dataRow, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
     
-    static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
-    static std::vector<GSF::Data::DataRowPtr> Select(const ExpressionTreePtr& expressionTree);
-};
+        static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataSetPtr& dataSet, const std::string& filterExpression, const std::string& primaryTableName = {}, const TableIDFieldsPtr& tableIDFields = nullptr, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        static std::vector<GSF::Data::DataRowPtr> Select(const GSF::Data::DataTablePtr& dataTable, const std::string& filterExpression, const TableIDFieldsPtr& tableIDFields = nullptr, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        static std::vector<GSF::Data::DataRowPtr> Select(const ExpressionTreePtr& expressionTree);
 
-typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
+        static const TableIDFieldsPtr DefaultTableIDFields;
+    };
 
+    typedef GSF::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 }}
 
 #endif

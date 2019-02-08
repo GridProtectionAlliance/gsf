@@ -29,7 +29,7 @@
 namespace GSF
 {
     class Timer;
-    typedef void(*TimerElapsedCallback)(Timer* timer, void* userData);
+    typedef std::function<void(Timer* timer, void* userData)> TimerElapsedCallback;
 
     class Timer // NOLINT
     {
@@ -82,7 +82,7 @@ namespace GSF
         {
         }
 
-        Timer(const int32_t interval, const TimerElapsedCallback callback, const bool autoReset = false) :
+        Timer(const int32_t interval, const TimerElapsedCallback& callback, const bool autoReset = false) :
             m_timerThread(nullptr),
             m_timer(m_timerContext),
             m_interval(interval),
@@ -106,7 +106,7 @@ namespace GSF
             return m_interval;
         }
 
-        void SetInteval(const int32_t value)
+        void SetInterval(const int32_t value)
         {
             m_interval = value;
         }

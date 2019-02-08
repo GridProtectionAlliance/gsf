@@ -149,9 +149,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
 void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
-    const int64_t BaseTimeOffset = 621355968000000000L;
-
-    unixSOC = (ticks - BaseTimeOffset) / 10000000;
+    unixSOC = (ticks - Ticks::UnixBaseTime) / Ticks::PerSecond;
 
     if (unixSOC < 0)
         unixSOC = 0;
@@ -171,6 +169,11 @@ DateTime GSF::FromTicks(const int64_t ticks)
 
     ToUnixTime(ticks, unixSOC, milliseconds);
     return FromUnixTime(unixSOC, milliseconds);
+}
+
+int64_t GSF::ToTicks(const DateTime& time)
+{
+    return time.time_of_day().ticks();
 }
 
 uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)

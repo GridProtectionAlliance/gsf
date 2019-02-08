@@ -44,7 +44,7 @@ const char* GSF::FilterExpressions::ExpressionValueTypeAcronym[] =
     "Undefined"
 };
 
-const char* GSF::FilterExpressions::EnumName(ExpressionValueType valueType)
+const char* GSF::FilterExpressions::EnumName(const ExpressionValueType valueType)
 {
     return ExpressionValueTypeAcronym[static_cast<int32_t>(valueType)];
 }
@@ -56,7 +56,7 @@ const char* GSF::FilterExpressions::ExpressionUnaryTypeAcronym[] =
     "~"
 };
 
-const char* GSF::FilterExpressions::EnumName(ExpressionUnaryType unaryType)
+const char* GSF::FilterExpressions::EnumName(const ExpressionUnaryType unaryType)
 {
     return ExpressionUnaryTypeAcronym[static_cast<int32_t>(unaryType)];
 }
@@ -91,12 +91,12 @@ const char* GSF::FilterExpressions::ExpressionOperatorTypeAcronym[] =
     "OR"
 };
 
-const char* GSF::FilterExpressions::EnumName(ExpressionOperatorType operatorType)
+const char* GSF::FilterExpressions::EnumName(const ExpressionOperatorType operatorType)
 {
     return ExpressionOperatorTypeAcronym[static_cast<int32_t>(operatorType)];
 }
 
-bool GSF::FilterExpressions::IsIntegerType(ExpressionValueType valueType)
+bool GSF::FilterExpressions::IsIntegerType(const ExpressionValueType valueType)
 {
     switch (valueType)
     {
@@ -109,7 +109,7 @@ bool GSF::FilterExpressions::IsIntegerType(ExpressionValueType valueType)
     }
 }
 
-bool GSF::FilterExpressions::IsNumericType(ExpressionValueType valueType)
+bool GSF::FilterExpressions::IsNumericType(const ExpressionValueType valueType)
 {
     switch (valueType)
     {
@@ -169,14 +169,14 @@ const char* ExpressionTreeException::what() const noexcept
     return &m_message[0];
 }
 
-Expression::Expression(ExpressionType type) :
+Expression::Expression(const ExpressionType type) :
     Type(type)
 {
 }
 
 Expression::~Expression() = default;
 
-ValueExpression::ValueExpression(ExpressionValueType valueType, Object value, bool valueIsNullable) :  // NOLINT(modernize-pass-by-value)
+ValueExpression::ValueExpression(const ExpressionValueType valueType, Object value, bool const valueIsNullable) :  // NOLINT(modernize-pass-by-value)
     Expression(ExpressionType::Value),
     Value(std::move(value)),
     ValueType(valueType),
@@ -184,7 +184,7 @@ ValueExpression::ValueExpression(ExpressionValueType valueType, Object value, bo
 {
 }
 
-void ValueExpression::ValidateValueType(ExpressionValueType valueType) const
+void ValueExpression::ValidateValueType(const ExpressionValueType valueType) const
 {
     if (ValueType != valueType)
         throw ExpressionTreeException("Cannot read expression value as \"" + string(EnumName(valueType)) + "\", type is \"" + string(EnumName(ValueType)) + "\"");
@@ -407,7 +407,7 @@ Nullable<DateTime> ValueExpression::ValueAsNullableDateTime() const
     return Cast<DateTime>(Value);
 }
 
-UnaryExpression::UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr value) :
+UnaryExpression::UnaryExpression(const ExpressionUnaryType unaryType, ExpressionPtr value) :
     Expression(ExpressionType::Unary),
     UnaryType(unaryType),
     Value(std::move(value))
@@ -420,7 +420,7 @@ ColumnExpression::ColumnExpression(DataColumnPtr dataColumn) :
 {
 }
 
-OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, ExpressionPtr leftValue, ExpressionPtr rightValue) :
+OperatorExpression::OperatorExpression(const ExpressionOperatorType operatorType, ExpressionPtr leftValue, ExpressionPtr rightValue) :
     Expression(ExpressionType::Operator),
     OperatorType(operatorType),
     LeftValue(std::move(leftValue)),
@@ -428,7 +428,7 @@ OperatorExpression::OperatorExpression(ExpressionOperatorType operatorType, Expr
 {
 }
 
-InListExpression::InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword, bool exactMatch) :
+InListExpression::InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, const bool hasNotKeyword, const bool exactMatch) :
     Expression(ExpressionType::InList),
     Value(std::move(value)),
     Arguments(std::move(arguments)),
@@ -437,14 +437,14 @@ InListExpression::InListExpression(ExpressionPtr value, ExpressionCollectionPtr 
 {
 }
 
-FunctionExpression::FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments) :
+FunctionExpression::FunctionExpression(const ExpressionFunctionType functionType, ExpressionCollectionPtr arguments) :
     Expression(ExpressionType::Function),
     FunctionType(functionType),
     Arguments(std::move(arguments))
 {
 }
 
-ValueExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType) const
+ValueExpressionPtr ExpressionTree::Evaluate(const ExpressionPtr& expression, const ExpressionValueType targetValueType) const
 {
     if (expression == nullptr)
         return NullValue(targetValueType);
@@ -957,7 +957,7 @@ ValueExpressionPtr ExpressionTree::EvaluateOperator(const ExpressionPtr& express
     }
 }
 
-ExpressionValueType ExpressionTree::DeriveOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const
+ExpressionValueType ExpressionTree::DeriveOperationValueType(const ExpressionOperatorType operationType, const ExpressionValueType leftValueType, const ExpressionValueType rightValueType) const
 {
     switch (operationType)
     {
@@ -997,7 +997,7 @@ ExpressionValueType ExpressionTree::DeriveOperationValueType(ExpressionOperatorT
     }
 }
 
-ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const
+ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const ExpressionOperatorType operationType, const ExpressionValueType leftValueType, const ExpressionValueType rightValueType) const
 {
     switch (leftValueType)
     {
@@ -1112,7 +1112,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(Expressio
     }
 }
 
-ExpressionValueType ExpressionTree::DeriveIntegerOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const
+ExpressionValueType ExpressionTree::DeriveIntegerOperationValueType(const ExpressionOperatorType operationType, const ExpressionValueType leftValueType, const ExpressionValueType rightValueType) const
 {
     switch (leftValueType)
     {
@@ -1178,7 +1178,7 @@ ExpressionValueType ExpressionTree::DeriveIntegerOperationValueType(ExpressionOp
     }
 }
 
-ExpressionValueType ExpressionTree::DeriveComparisonOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const
+ExpressionValueType ExpressionTree::DeriveComparisonOperationValueType(const ExpressionOperatorType operationType, const ExpressionValueType leftValueType, const ExpressionValueType rightValueType) const
 {
     switch (leftValueType)
     {
@@ -1311,7 +1311,7 @@ ExpressionValueType ExpressionTree::DeriveComparisonOperationValueType(Expressio
     }
 }
 
-ExpressionValueType ExpressionTree::DeriveBooleanOperationValueType(ExpressionOperatorType operationType, ExpressionValueType leftValueType, ExpressionValueType rightValueType) const
+ExpressionValueType ExpressionTree::DeriveBooleanOperationValueType(const ExpressionOperatorType operationType, const ExpressionValueType leftValueType, const ExpressionValueType rightValueType) const
 {
     if (leftValueType == ExpressionValueType::Boolean && rightValueType == ExpressionValueType::Boolean)
         return ExpressionValueType::Boolean;
@@ -2194,7 +2194,7 @@ ValueExpressionPtr ExpressionTree::UtcNow() const
     return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, GSF::UtcNow());
 }
 
-ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2225,7 +2225,7 @@ ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue,
     }
 }
 
-ValueExpressionPtr ExpressionTree::Divide(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::Divide(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2267,7 +2267,7 @@ ValueExpressionPtr ExpressionTree::Divide(const ValueExpressionPtr& leftValue, c
     }
 }
 
-ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2294,7 +2294,7 @@ ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, 
     }
 }
 
-ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2326,7 +2326,7 @@ ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, cons
     }
 }
 
-ValueExpressionPtr ExpressionTree::Subtract(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::Subtract(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2455,7 +2455,7 @@ ValueExpressionPtr ExpressionTree::BitShiftRight(const ValueExpressionPtr& leftV
     }
 }
 
-ValueExpressionPtr ExpressionTree::BitwiseAnd(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::BitwiseAnd(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2484,7 +2484,7 @@ ValueExpressionPtr ExpressionTree::BitwiseAnd(const ValueExpressionPtr& leftValu
     }
 }
 
-ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2513,7 +2513,7 @@ ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue
     }
 }
 
-ValueExpressionPtr ExpressionTree::BitwiseXor(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::BitwiseXor(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2542,7 +2542,7 @@ ValueExpressionPtr ExpressionTree::BitwiseXor(const ValueExpressionPtr& leftValu
     }
 }
 
-ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2576,7 +2576,7 @@ ValueExpressionPtr ExpressionTree::LessThan(const ValueExpressionPtr& leftValue,
     }
 }
 
-ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2610,7 +2610,7 @@ ValueExpressionPtr ExpressionTree::LessThanOrEqual(const ValueExpressionPtr& lef
     }
 }
 
-ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2644,7 +2644,7 @@ ValueExpressionPtr ExpressionTree::GreaterThan(const ValueExpressionPtr& leftVal
     }
 }
 
-ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType) const
+ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2678,7 +2678,7 @@ ValueExpressionPtr ExpressionTree::GreaterThanOrEqual(const ValueExpressionPtr& 
     }
 }
 
-ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType, bool exactMatch) const
+ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType, const bool exactMatch) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2712,7 +2712,7 @@ ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, co
     }
 }
 
-ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, ExpressionValueType valueType, bool exactMatch) const
+ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const ExpressionValueType valueType, const bool exactMatch) const
 {
     // If left or right value is Null, result is Null
     if (leftValue->IsNull() || rightValue->IsNull())
@@ -2756,7 +2756,7 @@ ValueExpressionPtr ExpressionTree::IsNotNull(const ValueExpressionPtr& leftValue
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !leftValue->IsNull());
 }
 
-ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, bool exactMatch) const
+ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const bool exactMatch) const
 {
     // If left value is Null, result is Null
     if (leftValue->IsNull())
@@ -2802,7 +2802,7 @@ ValueExpressionPtr ExpressionTree::Like(const ValueExpressionPtr& leftValue, con
     return ExpressionTree::False;
 }
 
-ValueExpressionPtr ExpressionTree::NotLike(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, bool exactMatch) const
+ValueExpressionPtr ExpressionTree::NotLike(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue, const bool exactMatch) const
 {
     // If left value is Null, result is Null
     if (leftValue->IsNull())
@@ -2844,7 +2844,7 @@ ValueExpressionPtr ExpressionTree::Or(const ValueExpressionPtr& leftValue, const
 }
 
 template<class T>
-T ExpressionTree::Unary(const T& unaryValue, ExpressionUnaryType unaryOperation)
+T ExpressionTree::Unary(const T& unaryValue, const ExpressionUnaryType unaryOperation)
 {
     switch (unaryOperation)
     {
@@ -2860,7 +2860,7 @@ T ExpressionTree::Unary(const T& unaryValue, ExpressionUnaryType unaryOperation)
 }
 
 template<class T>
-T ExpressionTree::UnaryFloat(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType)
+T ExpressionTree::UnaryFloat(const T& unaryValue, const ExpressionUnaryType unaryOperation, const ExpressionValueType unaryValueType)
 {
     switch (unaryOperation)
     {
@@ -2875,7 +2875,7 @@ T ExpressionTree::UnaryFloat(const T& unaryValue, ExpressionUnaryType unaryOpera
     }
 }
 
-bool ExpressionTree::UnaryBool(bool unaryValue, ExpressionUnaryType unaryOperation)
+bool ExpressionTree::UnaryBool(bool unaryValue, const ExpressionUnaryType unaryOperation)
 {
     switch (unaryOperation)
     {
@@ -2889,7 +2889,7 @@ bool ExpressionTree::UnaryBool(bool unaryValue, ExpressionUnaryType unaryOperati
     }
 }
 
-ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const
+ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue, const ExpressionValueType targetValueType) const
 {
     // If source value is Null, result is Null, regardless of target type
     if (sourceValue->IsNull())
@@ -3162,7 +3162,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
     return NewSharedPtr<ValueExpression>(targetValueType, targetValue);
 }
 
-ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const
+ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, const bool returnMatchedValue) const
 {
     if (regexValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"" + functionName + "\" function expression value, first argument, must be a string");
@@ -3216,7 +3216,7 @@ const ValueExpressionPtr ExpressionTree::False = NewSharedPtr<ValueExpression>(E
 
 const ValueExpressionPtr ExpressionTree::EmptyString = NewSharedPtr<ValueExpression>(ExpressionValueType::String, string());
 
-ValueExpressionPtr ExpressionTree::NullValue(ExpressionValueType targetValueType)
+ValueExpressionPtr ExpressionTree::NullValue(const ExpressionValueType targetValueType)
 {
     // Change Undefined values to Nullable of target type
     switch (targetValueType)

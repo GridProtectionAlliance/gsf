@@ -24,11 +24,8 @@
 #ifndef __TRANSPORT_TYPES_H
 #define __TRANSPORT_TYPES_H
 
-#include <string>
-#include <ctime>
-#include <unordered_set>
-
 #include "../Common/CommonTypes.h"
+#include <unordered_set>
 
 namespace GSF {
 namespace TimeSeries
@@ -137,6 +134,9 @@ namespace TimeSeries
     // Map protocol name to type
     std::string GetProtocolType(const std::string& protocolName);
 
+    // Parses a measurement key in the format of "Source:ID" into its parts
+    void ParseMeasurementKey(const std::string& key, std::string& source, uint32_t& id);
+
     // Helper function to parse signal kind
     SignalKind ParseSignalKind(const std::string& acronym);
 
@@ -156,7 +156,7 @@ namespace TimeSeries
     struct MeasurementMetadata
     {
         std::string DeviceAcronym;	// Associated (parent) device for measurement (key to DeviceMetadata.Acronym)
-        std::string ID;				// Measurement key string, format: "source:index" (if useful)
+        std::string ID;				// Measurement key string, format: "Source:ID" (if useful)
         Guid SignalID;				// Unique UUID of this individual measurement (lookup key!)
         std::string PointTag;		// Well formatted tag name for historians, e.g., OSI-PI, etc.
         SignalReference Reference;	// Parsed signal reference structure

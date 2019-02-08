@@ -78,11 +78,6 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_connected(false),
     m_clientAcceptor(m_commandChannelService, endpoint)
 {
-    m_tableIDFields = NewSharedPtr<TableIDFields>();
-    m_tableIDFields->SignalIDFieldName = "SignalID";
-    m_tableIDFields->MeasurementKeyFieldName = "ID";
-    m_tableIDFields->PointTagFieldName = "PointTag";
-
     m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
     m_commandChannelAcceptThread = Thread(bind(&DataPublisher::RunCommandChannelAcceptThread, this));
 }
@@ -165,14 +160,14 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
 
     // Define an empty schema if none has been defined
-    if (m_activeMetadata == nullptr)
-        m_activeMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
+    if (m_filteringMetadata == nullptr)
+        m_filteringMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
 
-    // Set filtering dataset for active metadata, this schema contains a more flattened view of available metadata for easier filtering
-    parser->SetDataSet(m_activeMetadata);
+    // Set filtering dataset, this schema contains a more flattened, denormalized view of available metadata for easier filtering
+    parser->SetDataSet(m_filteringMetadata);
 
     // Manually specified signal ID and measurement key fields are expected to be searched against ActiveMeasurements table
-    parser->SetTableIDFields("ActiveMeasurements", m_tableIDFields);
+    parser->SetTableIDFields("ActiveMeasurements", FilterExpressionParser::DefaultTableIDFields);
     parser->SetPrimaryTableName("ActiveMeasurements");
 
     // Register call-back for ANLTR parsing exceptions -- these will be appended to any primary exception message
@@ -219,7 +214,7 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
             break;
     }
 
-    const DataTablePtr& activeMeasurements = m_activeMetadata->Table("ActiveMeasurements");
+    const DataTablePtr& activeMeasurements = m_filteringMetadata->Table("ActiveMeasurements");
     const vector<DataRowPtr>& rows = parser->FilteredRows();
     const int32_t idColumn = GetColumnIndex(activeMeasurements, "ID");
     const int32_t signalIDColumn = GetColumnIndex(activeMeasurements, "SignalID");
@@ -230,22 +225,12 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
     for (size_t i = 0; i < rows.size(); i++)
     {
         const DataRowPtr& row = rows[i];
-        const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
-        const vector<string> parts = Split(row->ValueAsString(idColumn).GetValueOrDefault(), ":");
+        const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();        
         uint16_t signalIndex = 0;
         string source;
-        int32_t id = 0;
+        uint32_t id;
 
-        if (parts.size() == 2)
-        {
-            source = parts[0];
-            id = stoi(parts[1]);
-        }
-        else
-        {
-            source = parts[0];
-        }
-
+        ParseMeasurementKey(row->ValueAsString(idColumn).GetValueOrDefault(), source, id);
         signalIndexCache->AddMeasurementKey(signalIndex++, signalID, source, id, charSizeEstimate);
     }
     
@@ -428,7 +413,7 @@ void DataPublisher::HandleMetadataRefresh(const SubscriberConnectionPtr& connect
             if (length >= responseLength + 4)
             {
                 const string metadataFilters = DecodeClientString(connection, data, index, responseLength);
-                const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_allMetadata, "MeasurementDetail", metadataFilters);
+                const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_metadata, "MeasurementDetail", metadataFilters);
 
                 // Go through each subscriber specified filter expressions and add it to dictionary
                 for (const auto& expression : expressions)
@@ -619,10 +604,10 @@ void DataPublisher::SerializeSignalIndexCache(const SubscriberConnectionPtr& con
 DataSetPtr DataPublisher::FilterClientMetadata(const SubscriberConnectionPtr& connection, const StringMap<ExpressionTreePtr>& filterExpressions) const
 {
     if (filterExpressions.empty())
-        return m_allMetadata;
+        return m_metadata;
 
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
-    vector<DataTablePtr> tables = m_allMetadata->Tables();
+    vector<DataTablePtr> tables = m_metadata->Tables();
 
     for (size_t i = 0; i < tables.size(); i++)
     {
@@ -990,7 +975,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
 void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
 {
-    m_allMetadata = metadata;
+    m_metadata = metadata;
 
     // Create device data map used to build a flatter meta-data view used for easier client filtering
     struct DeviceData
@@ -1092,11 +1077,11 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
     }
 
     // Load active meta-data measurements schema
-    m_activeMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
+    m_filteringMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
 
     // Build active meta-data measurements from all meta-data
     const DataTablePtr& measurementDetail = metadata->Table("MeasurementDetail");
-    const DataTablePtr& activeMeasurements = m_activeMetadata->Table("ActiveMeasurements");
+    const DataTablePtr& activeMeasurements = m_filteringMetadata->Table("ActiveMeasurements");
 
     if (measurementDetail != nullptr && activeMeasurements != nullptr)
     {
@@ -1213,6 +1198,58 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
             activeMeasurements->AddRow(am_row);
         }
     }
+}
+
+const DataSetPtr& DataPublisher::GetMetadata() const
+{
+    return m_metadata;
+}
+
+const DataSetPtr& DataPublisher::GetFilteringMetadata() const
+{
+    return m_filteringMetadata;
+}
+
+vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filterExpression) const
+{
+    if (m_metadata == nullptr)
+        throw PublisherException("Cannot filter metadata, no metadata has been defined.");
+
+    vector<DataRowPtr> rows = FilterExpressionParser::Select(m_metadata, filterExpression, "MeasurementDetail");
+    vector<MeasurementMetadataPtr> measurementMetadata;
+    const DataTablePtr& measurementDetail = m_metadata->Table("MeasurementDetail");
+    
+    const int32_t deviceAcronym = GetColumnIndex(measurementDetail, "DeviceAcronym");
+    const int32_t id = GetColumnIndex(measurementDetail, "ID");
+    const int32_t signalID = GetColumnIndex(measurementDetail, "SignalID");
+    const int32_t pointTag = GetColumnIndex(measurementDetail, "PointTag");
+    const int32_t signalReference = GetColumnIndex(measurementDetail, "SignalReference");
+    const int32_t phasorSourceIndex = GetColumnIndex(measurementDetail, "PhasorSourceIndex");
+    const int32_t description = GetColumnIndex(measurementDetail, "Description");
+    const int32_t enabled = GetColumnIndex(measurementDetail, "Enabled");
+    const int32_t updatedOn = GetColumnIndex(measurementDetail, "UpdatedOn");
+
+    for (size_t i = 0; i < rows.size(); i++)
+    {
+        DataRowPtr row = rows[i];
+        MeasurementMetadataPtr metadata = NewSharedPtr<MeasurementMetadata>();
+
+        if (!row->ValueAsBoolean(enabled).GetValueOrDefault())
+            continue;
+
+        metadata->DeviceAcronym = row->ValueAsString(deviceAcronym).GetValueOrDefault();
+        metadata->ID = row->ValueAsString(id).GetValueOrDefault();
+        metadata->SignalID = row->ValueAsGuid(signalID).GetValueOrDefault();
+        metadata->PointTag = row->ValueAsString(pointTag).GetValueOrDefault();
+        metadata->Reference = SignalReference(row->ValueAsString(signalReference).GetValueOrDefault());
+        metadata->PhasorSourceIndex = uint16_t(row->ValueAsInt32(phasorSourceIndex).GetValueOrDefault());
+        metadata->Description = row->ValueAsString(description).GetValueOrDefault();
+        metadata->UpdatedOn = row->ValueAsDateTime(updatedOn).GetValueOrDefault();
+
+        measurementMetadata.push_back(metadata);
+    }
+
+    return measurementMetadata;
 }
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
