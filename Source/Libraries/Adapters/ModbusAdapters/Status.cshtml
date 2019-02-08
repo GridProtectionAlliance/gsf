@@ -150,7 +150,7 @@
                 if (!hubIsConnected)
                     return;
 
-                return dataHub.queryEnabledDevices(self.itemLimit(), self.filterText).done(function(devices) {
+                return dataHub.queryEnabledDevices("@ViewBag.NodeID", self.itemLimit(), self.filterText).done(function(devices) {
                     self.items.removeAll();
                     self.items(devices);
 
