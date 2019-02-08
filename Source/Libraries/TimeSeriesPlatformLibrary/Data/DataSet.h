@@ -35,67 +35,65 @@ namespace pugi
 namespace GSF {
 namespace Data
 {
+    // Simple exception type thrown by data set operations
+    class DataSetException : public GSF::Exception
+    {
+    private:
+        std::string m_message;
 
-// Simple exception type thrown by data set operations
-class DataSetException : public GSF::Exception
-{
-private:
-    std::string m_message;
+    public:
+        DataSetException(std::string message) noexcept;
+        const char* what() const noexcept;
+    };
 
-public:
-    DataSetException(std::string message) noexcept;
-    const char* what() const noexcept;
-};
+    class DataSet;
+    typedef GSF::SharedPtr<DataSet> DataSetPtr;
 
-class DataSet;
-typedef GSF::SharedPtr<DataSet> DataSetPtr;
+    class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
+    {
+    private:
+        GSF::StringMap<DataTablePtr> m_tables;
 
-class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
-{
-private:
-    GSF::StringMap<DataTablePtr> m_tables;
+        void ParseXml(const pugi::xml_document& document);
+        void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;
 
-    void ParseXml(const pugi::xml_document& document);
-    void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;
+    public:
+         DataSet();
+        ~DataSet();
 
-public:
-     DataSet();
-    ~DataSet();
+        const DataTablePtr& Table(const std::string& tableName) const;
 
-    const DataTablePtr& Table(const std::string& tableName) const;
+        const DataTablePtr& operator[](const std::string& tableName) const;
 
-    const DataTablePtr& operator[](const std::string& tableName) const;
+        DataTablePtr CreateTable(const std::string& name);
 
-    DataTablePtr CreateTable(const std::string& name);
+        int32_t TableCount() const;
 
-    int32_t TableCount() const;
+        std::vector<std::string> TableNames() const;
 
-    std::vector<std::string> TableNames() const;
+        std::vector<DataTablePtr> Tables() const;
 
-    std::vector<DataTablePtr> Tables() const;
+        bool AddOrUpdateTable(DataTablePtr table);
 
-    bool AddOrUpdateTable(DataTablePtr table);
+        bool RemoveTable(const std::string& tableName);
 
-    bool RemoveTable(const std::string& tableName);
+        void ReadXml(const std::string& fileName);
+        void ReadXml(const std::vector<uint8_t>& buffer);
+        void ReadXml(const uint8_t* buffer, uint32_t length);
+        void ReadXml(const pugi::xml_document& document);
 
-    void ReadXml(const std::string& fileName);
-    void ReadXml(const std::vector<uint8_t>& buffer);
-    void ReadXml(const uint8_t* buffer, uint32_t length);
-    void ReadXml(const pugi::xml_document& document);
+        void WriteXml(const std::string& fileName, const std::string& dataSetName = "DataSet") const;
+        void WriteXml(std::vector<uint8_t>& buffer, const std::string& dataSetName = "DataSet") const;
+        void WriteXml(pugi::xml_document& document, const std::string& dataSetName = "DataSet") const;
 
-    void WriteXml(const std::string& fileName, const std::string& dataSetName = "DataSet") const;
-    void WriteXml(std::vector<uint8_t>& buffer, const std::string& dataSetName = "DataSet") const;
-    void WriteXml(pugi::xml_document& document, const std::string& dataSetName = "DataSet") const;
+        static DataSetPtr FromXml(const std::string& fileName);
+        static DataSetPtr FromXml(const std::vector<uint8_t>& buffer);
+        static DataSetPtr FromXml(const uint8_t* buffer, uint32_t length);
+        static DataSetPtr FromXml(const pugi::xml_document& document);
 
-    static DataSetPtr FromXml(const std::string& fileName);
-    static DataSetPtr FromXml(const std::vector<uint8_t>& buffer);
-    static DataSetPtr FromXml(const uint8_t* buffer, uint32_t length);
-    static DataSetPtr FromXml(const pugi::xml_document& document);
-
-    static const std::string XmlSchemaNamespace;
-    static const std::string ExtXmlSchemaDataNamespace;
-};
-
+        static const std::string XmlSchemaNamespace;
+        static const std::string ExtXmlSchemaDataNamespace;
+    };
 }}
 
 #endif

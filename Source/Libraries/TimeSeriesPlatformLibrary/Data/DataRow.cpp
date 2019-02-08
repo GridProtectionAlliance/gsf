@@ -49,7 +49,14 @@ DataRow::DataRow(DataTablePtr parent) :
 DataRow::~DataRow()
 {
     for (uint32_t i = 0; i < m_values.size(); i++)
-        free(m_values[i]);
+    {
+        const DataColumnPtr column = m_parent->Column(i);
+
+        if (column != nullptr && column->Computed())
+            delete static_cast<FilterExpressionParser*>(m_values[i]);
+        else
+            free(m_values[i]);
+    }
 }
 
 int32_t DataRow::GetColumnIndex(const string& columnName) const
@@ -88,30 +95,30 @@ ExpressionTreePtr DataRow::GetExpressionTree(const DataColumnPtr& column)
 {
     const int columnIndex = column->Index();
 
-    FilterExpressionParser* parser = static_cast<FilterExpressionParser*>(m_values[columnIndex]);
-
-    if (parser)
-        return parser->GetExpressionTrees()[0];
-
-    const DataTablePtr& dataTable = column->Parent();
-    parser = new FilterExpressionParser(column->Expression());
-
-    parser->SetDataSet(dataTable->Parent());
-    parser->SetPrimaryTableName(dataTable->Name());
-    parser->SetTrackFilteredSignalIDs(false);
-    parser->SetTrackFilteredRows(false);
-
-    const auto expressionTrees = parser->GetExpressionTrees();
-
-    if (expressionTrees.empty())
+    if (m_values[columnIndex] == nullptr)
     {
-        delete parser;
-        throw DataSetException("Expression defined for computed DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\" cannot produce a value");
+        const DataTablePtr& dataTable = column->Parent();
+        FilterExpressionParser* parser = new FilterExpressionParser(column->Expression());
+
+        parser->SetDataSet(dataTable->Parent());
+        parser->SetPrimaryTableName(dataTable->Name());
+        parser->SetTrackFilteredSignalIDs(false);
+        parser->SetTrackFilteredRows(false);
+
+        const auto expressionTrees = parser->GetExpressionTrees();
+
+        if (expressionTrees.empty())
+        {
+            delete parser;
+            throw DataSetException("Expression defined for computed DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\" cannot produce a value");
+        }
+
+        m_values[columnIndex] = parser;
+
+        return expressionTrees[0];
     }
 
-    m_values[columnIndex] = parser;
-    
-    return expressionTrees[0];
+   return static_cast<FilterExpressionParser*>(m_values[columnIndex])->GetExpressionTrees()[0];
 }
 
 Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetType)
@@ -334,7 +341,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
                     case DataType::Single:
                         return static_cast<float32_t>(stod(value));
                     case DataType::Double:
-                        return stod(value);
+                        return static_cast<float64_t>(stod(value));
                     case DataType::Decimal:
                         return decimal_t(value);
                     case DataType::Guid:
@@ -436,7 +443,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
     }
 }
 
-template<typename T>
+template<class T>
 Nullable<T> DataRow::GetValue(const int32_t columnIndex, DataType targetType)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, targetType, true);
@@ -452,7 +459,7 @@ Nullable<T> DataRow::GetValue(const int32_t columnIndex, DataType targetType)
     return nullptr;
 }
 
-template<typename T>
+template<class T>
 void DataRow::SetValue(const int32_t columnIndex, const Nullable<T>& value, DataType targetType)
 {
     ValidateColumnType(columnIndex, targetType);
@@ -519,6 +526,11 @@ bool DataRow::IsNull(const int32_t columnIndex)
         default:
             throw DataSetException("Unexpected column data type encountered");
     }
+}
+
+bool DataRow::IsNull(const std::string& columnName)
+{
+    return IsNull(GetColumnIndex(columnName));
 }
 
 void DataRow::SetNullValue(const int32_t columnIndex)

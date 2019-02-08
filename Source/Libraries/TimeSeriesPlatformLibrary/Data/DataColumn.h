@@ -29,66 +29,64 @@
 namespace GSF {
 namespace Data
 {
+    enum class DataType
+    {
+        String,
+        Boolean,
+        DateTime,
+        Single,
+        Double,
+        Decimal,
+        Guid,
+        Int8,
+        Int16,
+        Int32,
+        Int64,
+        UInt8,
+        UInt16,
+        UInt32,
+        UInt64
+    };
 
-enum class DataType
-{
-    String,
-    Boolean,
-    DateTime,
-    Single,
-    Double,
-    Decimal,
-    Guid,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64
-};
+    const char* DataTypeAcronym[];
+    const char* EnumName(DataType type);
 
-const char* DataTypeAcronym[];
-const char* EnumName(DataType type);
+    class DataTable;
+    typedef GSF::SharedPtr<DataTable> DataTablePtr;
 
-class DataTable;
-typedef GSF::SharedPtr<DataTable> DataTablePtr;
+    class DataColumn;
+    typedef GSF::SharedPtr<DataColumn> DataColumnPtr;
 
-class DataColumn;
-typedef GSF::SharedPtr<DataColumn> DataColumnPtr;
+    class DataColumn // NOLINT
+    {
+    private:
+        DataTablePtr m_parent;
+        std::string m_name;
+        DataType m_type;
+        std::string m_expression;
+        bool m_computed;
+        int32_t m_index;
 
-class DataColumn // NOLINT
-{
-private:
-    DataTablePtr m_parent;
-    std::string m_name;
-    DataType m_type;
-    std::string m_expression;
-    bool m_computed;
-    int32_t m_index;
+    public:
+        DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string{});
+        ~DataColumn();
 
-public:
-    DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string{});
-    ~DataColumn();
+        const DataTablePtr& Parent() const;
 
-    const DataTablePtr& Parent() const;
+        const std::string& Name() const;
 
-    const std::string& Name() const;
+        DataType Type() const;
 
-    DataType Type() const;
+        const std::string& Expression() const;
 
-    const std::string& Expression() const;
+        bool Computed() const;
 
-    bool Computed() const;
+        int32_t Index() const;
 
-    int32_t Index() const;
+        static const DataColumnPtr NullPtr;
 
-    static const DataColumnPtr NullPtr;
-
-    friend class DataTable;
-};
-
+        friend class DataTable;
+    };
 }}
 
 #endif

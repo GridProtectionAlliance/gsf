@@ -31,63 +31,61 @@
 namespace GSF {
 namespace Data
 {
+    class DataSet;
+    typedef GSF::SharedPtr<DataSet> DataSetPtr;
 
-class DataSet;
-typedef GSF::SharedPtr<DataSet> DataSetPtr;
+    class DataTable;
+    typedef GSF::SharedPtr<DataTable> DataTablePtr;
 
-class DataTable;
-typedef GSF::SharedPtr<DataTable> DataTablePtr;
+    enum class DataType;
 
-enum class DataType;
+    class DataTable : public GSF::EnableSharedThisPtr<DataTable> // NOLINT
+    {
+    private:
+        DataSetPtr m_parent;
+        std::string m_name;
+        GSF::StringMap<int32_t> m_columnIndexes;
+        std::vector<DataColumnPtr> m_columns;
+        std::vector<DataRowPtr> m_rows;
 
-class DataTable : public GSF::EnableSharedThisPtr<DataTable> // NOLINT
-{
-private:
-    DataSetPtr m_parent;
-    std::string m_name;
-    GSF::StringMap<int32_t> m_columnIndexes;
-    std::vector<DataColumnPtr> m_columns;
-    std::vector<DataRowPtr> m_rows;
+    public:
+        DataTable(DataSetPtr parent, std::string name);
+        ~DataTable();
 
-public:
-    DataTable(DataSetPtr parent, std::string name);
-    ~DataTable();
+        const DataSetPtr& Parent() const;
 
-    const DataSetPtr& Parent() const;
+        const std::string& Name() const;
 
-    const std::string& Name() const;
+        void AddColumn(DataColumnPtr column);
 
-    void AddColumn(DataColumnPtr column);
+        const DataColumnPtr& Column(const std::string& columnName) const;
 
-    const DataColumnPtr& Column(const std::string& columnName) const;
+        const DataColumnPtr& Column(int32_t index) const;
 
-    const DataColumnPtr& Column(int32_t index) const;
+        const DataColumnPtr& operator[](const std::string& columnName) const;
 
-    const DataColumnPtr& operator[](const std::string& columnName) const;
+        const DataColumnPtr& operator[](int32_t index) const;
 
-    const DataColumnPtr& operator[](int32_t index) const;
+        DataColumnPtr CreateColumn(const std::string& name, DataType type, std::string expression = std::string{});
 
-    DataColumnPtr CreateColumn(const std::string& name, DataType type, std::string expression = std::string{});
+        DataColumnPtr CloneColumn(const DataColumnPtr& source);
 
-    DataColumnPtr CloneColumn(const DataColumnPtr& source);
+        int32_t ColumnCount() const;
 
-    int32_t ColumnCount() const;
+        const DataRowPtr& Row(int32_t index);
 
-    const DataRowPtr& Row(int32_t index);
+        void AddRow(DataRowPtr row);
 
-    void AddRow(DataRowPtr row);
+        DataRowPtr CreateRow();
 
-    DataRowPtr CreateRow();
+        DataRowPtr CloneRow(const DataRowPtr& source);
 
-    DataRowPtr CloneRow(const DataRowPtr& source);
+        int32_t RowCount() const;
 
-    int32_t RowCount() const;
+        static const DataTablePtr NullPtr;
+    };
 
-    static const DataTablePtr NullPtr;
-};
-
-typedef GSF::SharedPtr<DataTable> DataTablePtr;
-
+    typedef GSF::SharedPtr<DataTable> DataTablePtr;
 }}
 
 #endif
