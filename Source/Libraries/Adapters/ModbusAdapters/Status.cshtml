@@ -184,10 +184,10 @@
             Fail: 4
         };
 
-        $(function() {
-            var deviceProgress = { };
+        $(window).on("beforeHubConnected", function (event) {
+            var deviceProgress = {};
 
-            dataHubClient.deviceProgressUpdate = function(deviceName, updates) {
+            dataHubClient.deviceProgressUpdate = function (deviceName, updates) {
                 var fixedDeviceName = viewModel.fixAcronym(deviceName);
                 const messageWell = $("#" + fixedDeviceName + "Message");
                 const heading = $("#" + fixedDeviceName + "Heading");
@@ -346,7 +346,9 @@
                     }
                 });
             }
+        });
 
+        $(function() {
             $("#pageHeader").append("@Raw(SearchFilter().ToString().RemoveDuplicateWhiteSpace().Replace("\r\n", ""))");
 
             $("#titleText").html("Records: <span data-bind='text: recordCount'>calculating...</span>");
