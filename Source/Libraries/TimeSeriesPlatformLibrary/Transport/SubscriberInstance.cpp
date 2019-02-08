@@ -780,11 +780,8 @@ void SubscriberInstance::SendMetadataRefreshCommand()
     const uint32_t bufferSize = 4 + metadataFiltersSize;
 
     buffer.reserve(bufferSize);
-
     EndianConverter::WriteBigEndianBytes(buffer, metadataFiltersSize);
-
-    for (uint32_t i = 0; i < metadataFiltersSize; ++i)
-        buffer.push_back(metadataFiltersPtr[i]);
+    WriteBytes(buffer, metadataFiltersPtr, 0, metadataFiltersSize);
 
     m_subscriber.SendServerCommand(ServerCommand::MetadataRefresh, &buffer[0], 0, bufferSize);
 }

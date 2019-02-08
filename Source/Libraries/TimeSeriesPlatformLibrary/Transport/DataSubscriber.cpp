@@ -545,28 +545,27 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
     if (data == nullptr)
         return;
 
-    vector<uint8_t> uncompressed;
+    vector<uint8_t> uncompressedBuffer;
 
     if (m_compressSignalIndexCache)
     {
-        const MemoryStream payloadStream(data, offset, length);
+        const MemoryStream memoryStream(data, offset, length);
 
         // Perform zlib decompression on buffer
         StreamBuffer streamBuffer;
 
         streamBuffer.push(GZipDecompressor());
-        streamBuffer.push(payloadStream);
+        streamBuffer.push(memoryStream);
 
-        CopyStream(&streamBuffer, uncompressed);
+        CopyStream(&streamBuffer, uncompressedBuffer);
     }
     else
     {
-        for (uint32_t i = offset; i < length; i++)
-            uncompressed.push_back(data[i]);
+        WriteBytes(uncompressedBuffer, data, offset, length);
     }
 
     SignalIndexCachePtr signalIndexCache = NewSharedPtr<SignalIndexCache>();
-    signalIndexCache->Parse(uncompressed, m_subscriberID);
+    signalIndexCache->Parse(uncompressedBuffer, m_subscriberID);
     m_signalIndexCache.swap(signalIndexCache);
 }
 

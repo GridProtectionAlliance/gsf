@@ -161,7 +161,6 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
     if (connection == nullptr)
         return false;
 
-    signalIndexCache = NewSharedPtr<SignalIndexCache>();
     string exceptionMessage, parsingException;
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
 
@@ -169,8 +168,14 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
     if (m_activeMetadata == nullptr)
         m_activeMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
 
+    // Set filtering dataset for active metadata, this schema contains a more flattened view of available metadata for easier filtering
     parser->SetDataSet(m_activeMetadata);
+
+    // Manually specified signal ID and measurement key fields are expected to be searched against ActiveMeasurements table
     parser->SetTableIDFields("ActiveMeasurements", m_tableIDFields);
+    parser->SetPrimaryTableName("ActiveMeasurements");
+
+    // Register call-back for ANLTR parsing exceptions -- these will be appended to any primary exception message
     parser->RegisterParsingExceptionCallback([&parsingException](FilterExpressionParserPtr, const string& exception) { parsingException = exception; });
 
     try
@@ -218,6 +223,9 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
     const vector<DataRowPtr>& rows = parser->FilteredRows();
     const int32_t idColumn = GetColumnIndex(activeMeasurements, "ID");
     const int32_t signalIDColumn = GetColumnIndex(activeMeasurements, "SignalID");
+
+    // Create a new signal index cache for filtered measurements
+    signalIndexCache = NewSharedPtr<SignalIndexCache>();
 
     for (size_t i = 0; i < rows.size(); i++)
     {
@@ -792,8 +800,7 @@ bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection
                 EndianConverter::WriteBigEndianBytes(buffer, static_cast<int32_t>(data.size()));
 
                 // Write data buffer
-                for (size_t i = 0; i < data.size(); i++)
-                    buffer.push_back(data[i]);
+                WriteBytes(buffer, data);
             }
 
             // TODO: Publish packet on UDP

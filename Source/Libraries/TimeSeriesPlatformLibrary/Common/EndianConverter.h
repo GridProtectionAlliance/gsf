@@ -101,8 +101,7 @@ namespace GSF
             value = Default.ConvertBigEndian(value);
             uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
-            for (uint32_t i = 0; i < length; i++)
-                buffer.push_back(bytes[i]);
+            WriteBytes(buffer, bytes, 0, length);
 
             return length;
         }
@@ -114,8 +113,7 @@ namespace GSF
             value = Default.ConvertLittleEndian(value);
             uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
-            for (uint32_t i = 0; i < length; i++)
-                buffer.push_back(bytes[i]);
+            WriteBytes(buffer, bytes, 0, length);
 
             return length;
         }

@@ -320,6 +320,24 @@ namespace GSF
         return length;
     }
 
+    static uint32_t WriteBytes(std::vector<uint8_t>& buffer, const uint8_t* source, const uint32_t offset, const uint32_t length)
+    {
+        for (uint32_t i = 0; i < length; i++)
+            buffer.push_back(source[offset + i]);
+
+        return length;
+    }
+
+    static uint32_t WriteBytes(std::vector<uint8_t>& buffer, const std::vector<uint8_t>& source)
+    {
+        const uint32_t length = source.size();
+
+        for (uint32_t i = 0; i < length; i++)
+            buffer.push_back(source[i]);
+
+        return length;
+    }
+
     static uint32_t WriteBytes(std::vector<uint8_t>& buffer, const Guid& value)
     {
         const uint8_t* bytes = value.data;

@@ -586,6 +586,11 @@ int main(int argc, char* argv[])
 
     const string MetadataSampleFileName[2] = { "MetadataSample1.xml", "MetadataSample2.xml" };
 
+    TableIDFieldsPtr measurementDetailIDFields = NewSharedPtr<TableIDFields>();
+    measurementDetailIDFields->SignalIDFieldName = "SignalID";
+    measurementDetailIDFields->MeasurementKeyFieldName = "ID";
+    measurementDetailIDFields->PointTagFieldName = "PointTag";
+
     for (int32_t i = 0; i < 2; i++)
     {
         // Prep new dataset
@@ -646,11 +651,6 @@ int main(int argc, char* argv[])
         assert(dataRow->ValueAsString("ParentAcronym").HasValue());
         assert(static_cast<string>(dataRow->ValueAsString("ParentAcronym").Value).empty());
         cout << "Test " << ++test << " succeeded..." << endl;
-
-        TableIDFieldsPtr measurementDetailIDFields = NewSharedPtr<TableIDFields>();
-        measurementDetailIDFields->SignalIDFieldName = "SignalID";
-        measurementDetailIDFields->MeasurementKeyFieldName = "ID";
-        measurementDetailIDFields->PointTagFieldName = "PointTag";
 
         // Test 37
         parser = NewSharedPtr<FilterExpressionParser>("FILTER MeasurementDetail WHERE SignalAcronym = 'FREQ'");
@@ -1420,6 +1420,16 @@ int main(int argc, char* argv[])
     assert(settings.size() == 3);
     assert(IsEqual(settings["B"], "2", false));
     assert(IsEqual(settings["c"], "a=3; b=4"));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 149
+    parser = NewSharedPtr<FilterExpressionParser>("PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14");
+    parser->SetDataSet(dataSet);
+    parser->SetTableIDFields("MeasurementDetail", measurementDetailIDFields);
+    parser->SetPrimaryTableName("MeasurementDetail");
+    Evaluate(parser);
+
+    assert(parser->FilteredRows().size() == 14);
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Wait until the user presses enter before quitting.

@@ -246,9 +246,7 @@ void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vect
         // Encode source
         vector<uint8_t> sourceBytes = DataPublisher::EncodeClientString(connection, m_sourceList[i]);
         EndianConverter::WriteBigEndianBytes(buffer, int32_t(sourceBytes.size()));
-
-        for (size_t j = 0; j < sourceBytes.size(); j++)
-            buffer.push_back(sourceBytes[i]);
+        WriteBytes(buffer, sourceBytes);
 
         // Encode ID
         EndianConverter::WriteBigEndianBytes(buffer, m_idList[i]);
