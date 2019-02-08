@@ -24,9 +24,8 @@
 #ifndef __THREAD_SAFE_QUEUE_H
 #define __THREAD_SAFE_QUEUE_H
 
-#include <queue>
-
 #include "CommonTypes.h"
+#include <queue>
 
 namespace GSF
 {
@@ -37,8 +36,8 @@ namespace GSF
     // single thread and process in FIFO order.
     //
     // The use of multiple consumers may cause undesired effects.
-    template <class T>
-    class ThreadSafeQueue
+    template<class T>
+    class ThreadSafeQueue // NOLINT
     {
     private:
         Mutex m_mutex;
@@ -89,14 +88,14 @@ namespace GSF
     };
 
     // Releases all threads waiting for data.
-    template <class T>
+    template<class T>
     ThreadSafeQueue<T>::~ThreadSafeQueue()
     {
         Release();
     }
 
     // Inserts an item into the queue.
-    template <class T>
+    template<class T>
     void ThreadSafeQueue<T>::Enqueue(T item)
     {
         ScopeLock lock(m_mutex);
@@ -106,7 +105,7 @@ namespace GSF
 
     // Removes an item from the
     // queue and returns that item.
-    template <class T>
+    template<class T>
     T ThreadSafeQueue<T>::Dequeue()
     {
         ScopeLock lock(m_mutex);
@@ -116,7 +115,7 @@ namespace GSF
     }
 
     // Empties the queue.
-    template <class T>
+    template<class T>
     void ThreadSafeQueue<T>::Clear()
     {
         ScopeLock lock(m_mutex);
@@ -127,7 +126,7 @@ namespace GSF
 
     // Returns the number of
     // items left in the queue.
-    template <class T>
+    template<class T>
     uint32_t ThreadSafeQueue<T>::Size()
     {
         ScopeLock lock(m_mutex);
@@ -137,7 +136,7 @@ namespace GSF
     // Waits for data to be inserted into the queue.
     // If there is already data in the queue,
     // this method will not wait.
-    template <class T>
+    template<class T>
     void ThreadSafeQueue<T>::WaitForData()
     {
         UniqueLock lock(m_mutex);
@@ -147,7 +146,7 @@ namespace GSF
     }
 
     // Releases all threads waiting for data.
-    template <class T>
+    template<class T>
     void ThreadSafeQueue<T>::Release()
     {
         ScopeLock lock(m_mutex);
@@ -159,7 +158,7 @@ namespace GSF
     // Resets the "release valve" for threads calling WaitForData.
     // This can be called after Release so that the queue can be
     // used again.
-    template <class T>
+    template<class T>
     void ThreadSafeQueue<T>::Reset()
     {
         ScopeLock lock(m_mutex);

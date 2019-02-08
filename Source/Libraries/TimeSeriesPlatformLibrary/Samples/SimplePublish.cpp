@@ -21,13 +21,12 @@
 //
 //******************************************************************************************************
 
-#include <iostream>
-#include <string>
-
 #include "../Transport/DataPublisher.h"
+#include <iostream>
 
 using namespace std;
 using namespace GSF;
+using namespace GSF::Data;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
@@ -115,6 +114,9 @@ bool RunPublisher(uint16_t port)
         Publisher->RegisterClientDisconnectedCallback(&DisplayClientDisconnected);
         Publisher->RegisterStatusMessageCallback(&DisplayStatusMessage);
         Publisher->RegisterErrorMessageCallback(&DisplayErrorMessage);
+
+        // Define metadata
+        Publisher->DefineMetadata(DataSet::FromXml("Metadata.xml"));
     }
     else
     {

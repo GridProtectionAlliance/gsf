@@ -577,35 +577,35 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         return;
     }
 
-    vector<uint8_t>* uncompressed;
+    vector<uint8_t>* uncompressesBuffer;
 
     // Step 1: Decompress meta-data if needed
     if (IsMetadataCompressed())
     {
         // Perform zlib decompression on buffer
-        const MemoryStream payloadStream(payload);
+        const MemoryStream memoryStream(payload);
         StreamBuffer streamBuffer;
 
         streamBuffer.push(GZipDecompressor());
-        streamBuffer.push(payloadStream);
+        streamBuffer.push(memoryStream);
 
-        uncompressed = new vector<uint8_t>();
-        CopyStream(&streamBuffer, *uncompressed);
+        uncompressesBuffer = new vector<uint8_t>();
+        CopyStream(&streamBuffer, *uncompressesBuffer);
     }
     else
     {
-        uncompressed = const_cast<vector<uint8_t>*>(&payload);
+        uncompressesBuffer = const_cast<vector<uint8_t>*>(&payload);
     }
 
     // Step 2: Load string into an XML parser
     xml_document document;
 
-    const xml_parse_result result = document.load_buffer_inplace(static_cast<void*>(uncompressed->data()), uncompressed->size());
+    const xml_parse_result result = document.load_buffer_inplace(static_cast<void*>(uncompressesBuffer->data()), uncompressesBuffer->size());
 
     if (result.status != xml_parse_status::status_ok)
     {
         if (IsMetadataCompressed())
-            delete uncompressed;
+            delete uncompressesBuffer;
 
         stringstream errorMessageStream;
         errorMessageStream << "Failed to parse meta data XML, status code = " << ToHex(result.status);
@@ -758,7 +758,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 
     // Release uncompressed buffer
     if (IsMetadataCompressed())
-        delete uncompressed;
+        delete uncompressesBuffer;
 
     // Notify derived class that meta-data has been parsed and is now available
     ParsedMetadata();

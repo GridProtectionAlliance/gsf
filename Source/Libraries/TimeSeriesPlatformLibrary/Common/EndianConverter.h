@@ -47,7 +47,7 @@ namespace GSF
 
         // Converts between big endian and
         // the system's native byte order.
-        template <class T>
+        template<class T>
         T ConvertBigEndian(T value) const
         {
             if (m_nativeOrder != EndianConverter::BigEndian)
@@ -58,7 +58,7 @@ namespace GSF
 
         // Converts between little endian and
         // the system's native byte order.
-        template <class T>
+        template<class T>
         T ConvertLittleEndian(T value) const
         {
             if (m_nativeOrder != EndianConverter::LittleEndian)
@@ -82,39 +82,39 @@ namespace GSF
         static bool IsLittleEndian();
         static bool IsBigEndian();
 
-        template <class T>
+        template<class T>
         static T ToBigEndian(const uint8_t* buffer, const uint32_t startIndex)
         {
             return Default.ConvertBigEndian(*reinterpret_cast<T*>(const_cast<uint8_t*>(buffer + startIndex)));
         }
 
-        template <class T>
+        template<class T>
         static T ToLittleEndian(const uint8_t* buffer, const uint32_t startIndex)
         {
             return Default.ConvertLittleEndian(*reinterpret_cast<T*>(const_cast<uint8_t*>(buffer + startIndex)));
         }
 
-        template <class T>
-        static int32_t WriteBigEndianBytes(std::vector<uint8_t>& buffer, T value)
+        template<class T>
+        static uint32_t WriteBigEndianBytes(std::vector<uint8_t>& buffer, T value)
         {
-            int32_t length = sizeof(T);
+            static const uint32_t length = sizeof(T);
             value = Default.ConvertBigEndian(value);
             uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
-            for (int32_t i = 0; i < length; i++)
+            for (uint32_t i = 0; i < length; i++)
                 buffer.push_back(bytes[i]);
 
             return length;
         }
 
-        template <class T>
-        static int32_t WriteLittleEndianBytes(std::vector<uint8_t>& buffer, T value)
+        template<class T>
+        static uint32_t WriteLittleEndianBytes(std::vector<uint8_t>& buffer, T value)
         {
-            int32_t length = sizeof(T);
+            static const uint32_t length = sizeof(T);
             value = Default.ConvertLittleEndian(value);
             uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
-            for (int32_t i = 0; i < length; i++)
+            for (uint32_t i = 0; i < length; i++)
                 buffer.push_back(bytes[i]);
 
             return length;

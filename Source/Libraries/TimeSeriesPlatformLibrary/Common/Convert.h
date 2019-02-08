@@ -43,7 +43,7 @@ namespace GSF
     DateTime LocalFromUtc(const DateTime& timestamp);
 
     // Converts an object to a string
-    template <class T>
+    template<class T>
     std::string ToString(const T& obj)
     {
         std::stringstream stream;
@@ -61,11 +61,11 @@ namespace GSF
     std::string ToUTF8(const std::wstring& value);
 
     // Converts an integer value to a hex representation
-    template <class T>
+    template<class T>
     std::string ToHex(const T& value)
     {
         std::stringstream stream;
-        stream << "0x" << std::hex << static_cast<int>(value);
+        stream << "0x" << std::hex << static_cast<int32_t>(value);
         return stream.str();
     }
 

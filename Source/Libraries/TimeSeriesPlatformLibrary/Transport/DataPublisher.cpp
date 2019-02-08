@@ -646,68 +646,70 @@ DataSetPtr DataPublisher::FilterClientMetadata(const SubscriberConnectionPtr& co
 
 vector<uint8_t> DataPublisher::SerializeSignalIndexCache(const SubscriberConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache) const
 {
-    if (connection == nullptr)
-        return vector<uint8_t>{};
-
-    const uint32_t operationalModes = connection->GetOperationalModes();
-    const uint32_t compressionModes = operationalModes & OperationalModes::CompressionModeMask;
-    const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
-    const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
-
-    if (!useCommonSerializationFormat)
-        throw PublisherException("DataPublisher only supports common serialization format");
-
-    vector<uint8_t> serializedCache(uint32_t(signalIndexCache->GetBinaryLength() * 0.02));
-    signalIndexCache->Serialize(connection, serializedCache);
-
-    if (compressSignalIndexCache && (compressionModes & CompressionModes::GZip) > 0)
-    {
-        const MemoryStream metadataStream(serializedCache);
-        StreamBuffer streamBuffer;
-
-        streamBuffer.push(GZipCompressor());
-        streamBuffer.push(metadataStream);
-
-        vector<uint8_t> compressed;
-        CopyStream(&streamBuffer, compressed);
-        return compressed;
-    }
-
-    return serializedCache;
-}
-
-vector<uint8_t> DataPublisher::SerializeMetadata(const SubscriberConnectionPtr& connection, const DataSetPtr& metadata) const
-{
-    vector<uint8_t> serializedMetadata;
+    vector<uint8_t> serializationBuffer;
 
     if (connection != nullptr)
     {
         const uint32_t operationalModes = connection->GetOperationalModes();
-        const uint32_t compressionModes = operationalModes & OperationalModes::CompressionModeMask;
         const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
-        const bool compressMetadata = (operationalModes & OperationalModes::CompressMetadata) > 0;
+        const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
+        const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
 
         if (!useCommonSerializationFormat)
             throw PublisherException("DataPublisher only supports common serialization format");
 
-        metadata->WriteXml(serializedMetadata);
+        serializationBuffer.reserve(uint32_t(signalIndexCache->GetBinaryLength() * 0.02));
+        signalIndexCache->Serialize(connection, serializationBuffer);
 
-        if (compressMetadata && (compressionModes & CompressionModes::GZip) > 0)
+        if (compressSignalIndexCache && useGZipCompression)
         {
-            const MemoryStream metadataStream(serializedMetadata);
+            const MemoryStream memoryStream(serializationBuffer);
             StreamBuffer streamBuffer;
 
             streamBuffer.push(GZipCompressor());
-            streamBuffer.push(metadataStream);
+            streamBuffer.push(memoryStream);
 
-            vector<uint8_t> compressed;
-            CopyStream(&streamBuffer, compressed);
-
-            return compressed;
+            vector<uint8_t> compressedBuffer;
+            CopyStream(&streamBuffer, compressedBuffer);
+            return compressedBuffer;
         }
     }
 
-    return serializedMetadata;
+    return serializationBuffer;
+}
+
+vector<uint8_t> DataPublisher::SerializeMetadata(const SubscriberConnectionPtr& connection, const DataSetPtr& metadata) const
+{
+    vector<uint8_t> serializationBuffer;
+
+    if (connection != nullptr)
+    {
+        const uint32_t operationalModes = connection->GetOperationalModes();
+        const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
+        const bool compressMetadata = (operationalModes & OperationalModes::CompressMetadata) > 0;
+        const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
+
+        if (!useCommonSerializationFormat)
+            throw PublisherException("DataPublisher only supports common serialization format");
+
+        metadata->WriteXml(serializationBuffer);
+
+        if (compressMetadata && useGZipCompression)
+        {
+            const MemoryStream memoryStream(serializationBuffer);
+            StreamBuffer streamBuffer;
+
+            streamBuffer.push(GZipCompressor());
+            streamBuffer.push(memoryStream);
+
+            vector<uint8_t> compressionBuffer;
+            CopyStream(&streamBuffer, compressionBuffer);
+
+            return compressionBuffer;
+        }
+    }
+
+    return serializationBuffer;
 }
 
 bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message)
@@ -745,10 +747,7 @@ bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection
         if (data.empty())
         {
             // Add zero sized data buffer to response packet
-            buffer.push_back(0);
-            buffer.push_back(0);
-            buffer.push_back(0);
-            buffer.push_back(0);
+            WriteBytes(buffer, uint32_t(0));
         }
         else
         {
@@ -1081,7 +1080,7 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
                 phasorData[deviceName] = phasorMap;
             }
 
-            phasorMap->at(row->ValueAsInt32(sourceIndex).GetValueOrDefault()) = phasor;
+            phasorMap->insert_or_assign(row->ValueAsInt32(sourceIndex).GetValueOrDefault(), phasor);
         }
     }
 
@@ -1147,8 +1146,8 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
             am_row->SetGuidValue(am_signalID, md_row->ValueAsGuid(md_signalID));
             am_row->SetStringValue(am_pointTag, md_row->ValueAsString(md_pointTag));
             am_row->SetStringValue(am_signalReference, md_row->ValueAsString(md_signalReference));
-            am_row->SetInt32Value(am_internal, md_row->ValueAsInt32(md_internal));
-            am_row->SetBooleanValue(am_subscribed, false);
+            am_row->SetInt32Value(am_internal, md_row->ValueAsBoolean(md_internal).GetValueOrDefault() ? 1 : 0);
+            am_row->SetInt32Value(am_subscribed, 0);
             am_row->SetStringValue(am_description, md_row->ValueAsString(md_description));
             am_row->SetDoubleValue(am_adder, 0.0);
             am_row->SetDoubleValue(am_multiplier, 1.0);

@@ -178,7 +178,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
     const uint32_t referenceCount = EndianConverter::Default.ConvertBigEndian(*referenceCountPtr);
 
     // Set up signalIndexPtr before entering the loop
-    const uint16_t * signalIndexPtr = reinterpret_cast<const uint16_t*>(referenceCountPtr + 1);
+    const uint16_t* signalIndexPtr = reinterpret_cast<const uint16_t*>(referenceCountPtr + 1);
 
     for (uint32_t i = 0; i < referenceCount; ++i)
     {
@@ -222,19 +222,12 @@ void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vect
     uint32_t binaryLength = 28;
 
     // Reserve space for binary byte length of cache
-    buffer.push_back(0);
-    buffer.push_back(0);
-    buffer.push_back(0);
-    buffer.push_back(0);    
+    WriteBytes(buffer, uint32_t(0));
 
     // Encode subscriber ID
     Guid subscriberID = connection->GetSubscriberID();
-
     SwapGuidEndianness(subscriberID, true);
-    uint8_t* bytes = subscriberID.data;
-
-    for (int32_t i = 0; i < 16; i++)
-        buffer.push_back(bytes[i]);
+    WriteBytes(buffer, subscriberID);
 
     // Encode number of references
     EndianConverter::WriteBigEndianBytes(buffer, int32_t(m_reference.size()));
@@ -248,10 +241,7 @@ void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vect
 
         // Encode signal ID
         SwapGuidEndianness(signalID, true);
-        bytes = signalID.data;
-
-        for (int32_t j = 0; j < 16; j++)
-            buffer.push_back(bytes[j]);
+        WriteBytes(buffer, signalID);
 
         // Encode source
         vector<uint8_t> sourceBytes = DataPublisher::EncodeClientString(connection, m_sourceList[i]);

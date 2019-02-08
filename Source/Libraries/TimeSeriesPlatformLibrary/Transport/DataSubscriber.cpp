@@ -224,6 +224,7 @@ bool SubscriberConnector::GetAutoReconnect() const
 // --- DataSubscriber ---
 
 DataSubscriber::DataSubscriber() :
+    m_subscriberID(Empty::Guid),
     m_compressPayloadData(true),
     m_compressMetadata(true),
     m_compressSignalIndexCache(true),

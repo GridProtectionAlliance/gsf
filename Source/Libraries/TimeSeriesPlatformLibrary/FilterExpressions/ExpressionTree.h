@@ -366,10 +366,10 @@ private:
     ValueExpressionPtr And(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
     ValueExpressionPtr Or(const ValueExpressionPtr& leftValue, const ValueExpressionPtr& rightValue) const;
 
-    template<typename T>
+    template<class T>
     static T Unary(const T& unaryValue, ExpressionUnaryType unaryOperation);
 
-    template<typename T>
+    template<class T>
     static T UnaryFloat(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType);
 
     static bool UnaryBool(bool unaryValue, ExpressionUnaryType unaryOperation);

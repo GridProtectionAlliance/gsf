@@ -127,31 +127,31 @@ namespace GSF
         return boost::make_shared<T>();
     }
 
-    template<class T, typename P1>
+    template<class T, class P1>
     SharedPtr<T> NewSharedPtr(P1 p1)
     {
         return boost::make_shared<T>(p1);
     }
 
-    template<class T, typename P1, typename P2>
+    template<class T, class P1, class P2>
     SharedPtr<T> NewSharedPtr(P1 p1, P2 p2)
     {
         return boost::make_shared<T>(p1, p2);
     }
 
-    template<class T, typename P1, typename P2, typename P3>
+    template<class T, class P1, class P2, class P3>
     SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3)
     {
         return boost::make_shared<T>(p1, p2, p3);
     }
 
-    template<class T, typename P1, typename P2, typename P3, typename P4>
+    template<class T, class P1, class P2, class P3, class P4>
     SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3, P4 p4)
     {
         return boost::make_shared<T>(p1, p2, p3, p4);
     }
 
-    template<class T, typename P1, typename P2, typename P3, typename P4, typename P5>
+    template<class T, class P1, class P2, class P3, class P4, class P5>
     SharedPtr<T> NewSharedPtr(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5)
     {
         return boost::make_shared<T>(p1, p2, p3, p4, p5);
@@ -221,7 +221,7 @@ namespace GSF
     template<class T>
     using SortedStringMap = std::map<std::string, T, GSF::StringComparer>;
 
-    template<typename TKey, typename TValue>
+    template<class TKey, class TValue>
     bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
     {
         auto iterator = dictionary.find(key);
@@ -236,7 +236,7 @@ namespace GSF
         return false;
     }
 
-    template<typename TKey, typename TValue>
+    template<class TKey, class TValue>
     bool TryGetValue(const std::unordered_map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
     {
         auto iterator = dictionary.find(key);
@@ -251,7 +251,7 @@ namespace GSF
         return false;
     }
 
-    template<typename TValue>
+    template<class TValue>
     bool TryGetValue(const StringMap<TValue>& dictionary, const std::string& key, TValue& value, const TValue& defaultValue)
     {
         auto iterator = dictionary.find(key);
@@ -306,6 +306,28 @@ namespace GSF
 
         for (; it != eos; ++it)
             sink.push_back(static_cast<uint8_t>(*it));
+    }
+
+    template<class T>
+    static uint32_t WriteBytes(std::vector<uint8_t>& buffer, const T& value)
+    {
+        static const int32_t length = sizeof(T);
+        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&value);
+
+        for (int32_t i = 0; i < length; i++)
+            buffer.push_back(bytes[i]);
+
+        return length;
+    }
+
+    static uint32_t WriteBytes(std::vector<uint8_t>& buffer, const Guid& value)
+    {
+        const uint8_t* bytes = value.data;
+
+        for (uint32_t i = 0; i < 16; i++)
+            buffer.push_back(bytes[i]);
+
+        return 16;
     }
 
     Guid NewGuid();

@@ -1,4 +1,4 @@
-// Auto-generated on Thu Feb  7 17:00:15 2019
+// Auto-generated on Fri Feb  8 13:02:18 2019
 // EmbedFile.exe MetadataSchema D:\Projects\gsf\Source\Libraries\TimeSeriesPlatformLibrary\Transport\MetadataSchema.xml GSF::TimeSeries::Transport::
 
 #ifndef _METADATA_SCHEMA

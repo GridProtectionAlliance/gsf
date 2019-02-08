@@ -36,7 +36,7 @@ namespace Transport
     typedef GSF::SharedPtr<DataPublisher> DataPublisherPtr;
 
     // Represents a subscriber connection to a data publisher
-    class SubscriberConnection : public GSF::EnableSharedThisPtr<SubscriberConnection> //NOLINT
+    class SubscriberConnection : public GSF::EnableSharedThisPtr<SubscriberConnection> // NOLINT
     {
     private:
         const DataPublisherPtr m_parent;

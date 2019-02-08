@@ -1,4 +1,4 @@
-// Auto-generated on Thu Feb  7 16:57:40 2019
+// Auto-generated on Fri Feb  8 13:02:59 2019
 // EmbedFile.exe ActiveMeasurementsSchema D:\Projects\gsf\Source\Libraries\TimeSeriesPlatformLibrary\Transport\ActiveMeasurementsSchema.xml GSF::TimeSeries::Transport::
 
 #ifndef _ACTIVE_MEASUREMENTS_SCHEMA

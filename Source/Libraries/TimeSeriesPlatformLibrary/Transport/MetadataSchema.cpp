@@ -1,4 +1,4 @@
-// Auto-generated on Thu Feb  7 17:00:15 2019
+// Auto-generated on Fri Feb  8 13:02:18 2019
 // EmbedFile.exe MetadataSchema D:\Projects\gsf\Source\Libraries\TimeSeriesPlatformLibrary\Transport\MetadataSchema.xml GSF::TimeSeries::Transport::
 
 #include "MetadataSchema.h"
@@ -331,7 +331,7 @@ const uint8_t GSF::TimeSeries::Transport::MetadataSchema[] = {
     0x65, 0x78, 0x54, 0x79, 0x70, 0x65, 0x3E, 0x3C, 0x2F, 0x78,
     0x73, 0x3A, 0x65, 0x6C, 0x65, 0x6D, 0x65, 0x6E, 0x74, 0x3E,
     0x3C, 0x2F, 0x78, 0x73, 0x3A, 0x73, 0x63, 0x68, 0x65, 0x6D,
-    0x61, 0x3E, 0x00
+    0x61, 0x3E
 };
 
 const uint32_t GSF::TimeSeries::Transport::MetadataSchemaLength = sizeof(GSF::TimeSeries::Transport::MetadataSchema);

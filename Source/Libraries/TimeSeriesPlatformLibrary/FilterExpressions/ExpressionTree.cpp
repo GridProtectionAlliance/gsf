@@ -2843,7 +2843,7 @@ ValueExpressionPtr ExpressionTree::Or(const ValueExpressionPtr& leftValue, const
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left || right);
 }
 
-template<typename T>
+template<class T>
 T ExpressionTree::Unary(const T& unaryValue, ExpressionUnaryType unaryOperation)
 {
     switch (unaryOperation)
@@ -2859,7 +2859,7 @@ T ExpressionTree::Unary(const T& unaryValue, ExpressionUnaryType unaryOperation)
     }
 }
 
-template<typename T>
+template<class T>
 T ExpressionTree::UnaryFloat(const T& unaryValue, ExpressionUnaryType unaryOperation, ExpressionValueType unaryValueType)
 {
     switch (unaryOperation)
