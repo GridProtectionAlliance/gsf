@@ -37,7 +37,7 @@ void write_byte(FILE* out, int32_t& chars, bool& first, unsigned char value)
 int main(int argc, char** argv)
 {
     if (argc < 3) {
-        fprintf(stderr, "USAGE: %s {sym} {rsrc} [(namespace}]\n\n"
+        fprintf(stderr, "USAGE: %s {sym} {rsrc} [{namespace}] [addnull]\n\n"
             "  Creates {sym}.cpp from the contents of {rsrc}\n",
             argv[0]);
         return EXIT_FAILURE;
@@ -47,9 +47,13 @@ int main(int argc, char** argv)
     FILE* in = open_or_exit(argv[2], "r");
     char empty[1] = "";
     const char* prefix = "";
+    bool addNullByte = false;
 
     if (argc > 3)
         prefix = argv[3];
+
+    if (argc > 4)
+        addNullByte = _strcmpi(argv[4], "addnull") == 0;
 
     char symfile[256];
     snprintf(symfile, sizeof(symfile), "%s.h", sym);
@@ -75,7 +79,7 @@ int main(int argc, char** argv)
     asctime_s(now, 256, &timeinfo);
 
     fprintf(out, "// Auto-generated on %s", now);
-    fprintf(out, "// EmbedFile.exe %s %s %s\n\n", sym, argv[2], prefix);
+    fprintf(out, "// EmbedFile.exe %s %s %s%s\n\n", sym, argv[2], prefix, addNullByte ? " addnull" : "");
     fprintf(out, "#ifndef %s\n", symdirective);
     fprintf(out, "#define %s\n\n", symdirective);
     fprintf(out, "#include <cstdint>\n\n");
@@ -117,7 +121,7 @@ int main(int argc, char** argv)
     out = open_or_exit(symfile,"w");
 
     fprintf(out, "// Auto-generated on %s", now);
-    fprintf(out, "// EmbedFile.exe %s %s %s\n\n", sym, argv[2], prefix);
+    fprintf(out, "// EmbedFile.exe %s %s %s%s\n\n", sym, argv[2], prefix, addNullByte ? " addnull" : "");
     fprintf(out, "#include \"%s.h\"\n\n", sym);
     fprintf(out, "const uint8_t %s%s[] = {", prefix, sym);
 
@@ -136,9 +140,10 @@ int main(int argc, char** argv)
     }
     while (nread > 0);
 
-    // Write NULL as last character
-    write_byte(out, chars, first, '\0');
-
+    // Write NULL as last character, if requested
+    if (addNullByte)
+        write_byte(out, chars, first, '\0');
+    
     fprintf(out, "\n};\n\n");
     fprintf(out, "const uint32_t %s%sLength = sizeof(%s%s);\n", prefix, sym, prefix, sym);
 
