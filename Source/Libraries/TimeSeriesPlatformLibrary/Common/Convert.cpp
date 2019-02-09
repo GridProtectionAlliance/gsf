@@ -173,7 +173,14 @@ DateTime GSF::FromTicks(const int64_t ticks)
 
 int64_t GSF::ToTicks(const DateTime& time)
 {
-    return time.time_of_day().ticks();
+    static float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
+
+    time_duration timeOfDay = time.time_of_day();
+
+    return
+        /* time.date().day_count() * Ticks::PerDay + */
+        timeOfDay.total_seconds() * Ticks::PerSecond +
+        timeOfDay.fractional_seconds() / baseFraction * Ticks::PerSecond;
 }
 
 uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)

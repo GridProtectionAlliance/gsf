@@ -27,6 +27,7 @@
 #include "../Common/CommonTypes.h"
 #include "../Common/Timer.h"
 #include "SignalIndexCache.h"
+#include "TransportTypes.h"
 
 namespace GSF {
 namespace TimeSeries {
@@ -49,7 +50,11 @@ namespace Transport
         uint32_t m_encoding;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
+        bool m_includeTime;
+        bool m_useMillisecondResolution;
+        bool m_isNaNFiltered;
         bool m_isSubscribed;
+        bool m_startTimeSent;
         bool m_stopped;
 
         // Command channel
@@ -68,10 +73,13 @@ namespace Transport
         SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
+        DateTime m_lastPublishTime;
         //TSSCMeasurementParser m_tsscMeasurementParser;
         //bool m_tsscResetRequested;
         //uint16_t m_tsscSequenceNumber;
 
+        void PublishDataPacket(const std::vector<uint8_t>& packet, int32_t count);
+        bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
         void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
@@ -103,6 +111,15 @@ namespace Transport
         bool GetUseCompactMeasurementFormat() const;
         void SetUseCompactMeasurementFormat(bool value);
 
+        bool GetIncludeTime() const;
+        void SetIncludeTime(bool value);
+
+        bool GetUseMillisecondResolution() const;
+        void SetUseMillisecondResolution(bool value);
+
+        bool GetIsNaNFiltered() const;
+        void SetIsNaNFiltered(bool value);
+
         bool GetIsSubscribed() const;
         void SetIsSubscribed(bool value);
 
@@ -118,6 +135,9 @@ namespace Transport
 
         void Start();
         void Stop();
+
+        void PublishMeasurements(const std::vector<Measurement>& measurements);
+        void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
 
         void CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
         void DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);

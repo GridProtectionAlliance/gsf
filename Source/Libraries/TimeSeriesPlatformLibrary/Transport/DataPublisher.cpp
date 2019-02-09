@@ -226,12 +226,11 @@ bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& conn
     {
         const DataRowPtr& row = rows[i];
         const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();        
-        uint16_t signalIndex = 0;
         string source;
         uint32_t id;
 
         ParseMeasurementKey(row->ValueAsString(idColumn).GetValueOrDefault(), source, id);
-        signalIndexCache->AddMeasurementKey(signalIndex++, signalID, source, id, charSizeEstimate);
+        signalIndexCache->AddMeasurementKey(uint16_t(i), signalID, source, id, charSizeEstimate);
     }
     
     return true;
@@ -266,22 +265,19 @@ void DataPublisher::HandleSubscribe(const SubscriberConnectionPtr& connection, u
                     const string connectionString = DecodeClientString(connection, data, index, byteLength);
                     const StringMap<string> settings = ParseKeyValuePairs(connectionString);
                     string setting;
-                    bool includeTime = true;
-                    bool useMillisecondResolution = false; // Default to tick resolution
-                    bool isNaNFiltered = false;
 
                     if (TryGetValue(settings, "includeTime", setting))
-                        includeTime = ParseBoolean(setting);
+                        connection->SetIncludeTime(ParseBoolean(setting));
 
                     if (TryGetValue(settings, "useMillisecondResolution", setting))
-                        useMillisecondResolution = ParseBoolean(setting);
+                        connection->SetUseMillisecondResolution(ParseBoolean(setting));
 
                     if (TryGetValue(settings, "requestNaNValueFilter", setting))
-                        isNaNFiltered = ParseBoolean(setting);
+                        connection->SetIsNaNFiltered(ParseBoolean(setting));
 
                     connection->SetUsePayloadCompression(usePayloadCompression);
                     connection->SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
-
+                    
                     SignalIndexCachePtr signalIndexCache = nullptr;
 
                     // Apply subscriber filter expression and build signal index cache
@@ -1254,11 +1250,14 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
 {
-    // TODO: Publish measurements to subscribed connections - routing?
+    for (const auto& connection : m_subscriberConnections)
+        connection->PublishMeasurements(measurements);
 }
 
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
+    for (const auto& connection : m_subscriberConnections)
+        connection->PublishMeasurements(measurements);
 }
 
 const GSF::Guid& DataPublisher::GetNodeID() const

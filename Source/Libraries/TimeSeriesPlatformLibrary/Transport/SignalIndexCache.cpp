@@ -41,13 +41,11 @@ SignalIndexCache::SignalIndexCache() :
 // Adds a measurement key to the cache.
 void SignalIndexCache::AddMeasurementKey(const uint16_t signalIndex, const Guid& signalID, const string& source, const uint32_t id, const uint32_t charSizeEstimate)
 {
-    const uint32_t vectorIndex = m_signalIDList.size();
-
-    m_reference[signalIndex] = vectorIndex;
+    m_reference.insert_or_assign(signalIndex, m_signalIDList.size());
     m_signalIDList.push_back(signalID);
     m_sourceList.push_back(source);
     m_idList.push_back(id);
-    m_signalIDCache[signalID] = signalIndex;
+    m_signalIDCache.insert_or_assign(signalID, signalIndex);
 
     // Char size here helps provide a rough-estimate on binary length used to reserve
     // bytes for a vector, if exact size is needed call RecalculateBinaryLength first

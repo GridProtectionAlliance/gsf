@@ -100,8 +100,8 @@ inline uint32_t MapToCompactFlags(uint32_t fullFlags)
     return compactFlags;
 }
 
-CompactMeasurement::CompactMeasurement(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets, bool includeTime, bool useMillisecondResolution, int32_t timeIndex) :
-    m_signalIndexCache(signalIndexCache),
+CompactMeasurement::CompactMeasurement(SignalIndexCachePtr signalIndexCache, int64_t* baseTimeOffsets, bool includeTime, bool useMillisecondResolution, int32_t timeIndex) :
+    m_signalIndexCache(std::move(signalIndexCache)),
     m_baseTimeOffsets(baseTimeOffsets),
     m_includeTime(includeTime),
     m_useMillisecondResolution(useMillisecondResolution),
@@ -160,7 +160,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
     const uint16_t signalIndex = EndianConverter::ToBigEndian<uint16_t>(data, offset + 1);
 
     // If the signal index is not found in the cache, we cannot parse the measurement
-    if (!m_signalIndexCache.Contains(signalIndex))
+    if (!m_signalIndexCache->Contains(signalIndex))
         return false;
 
     Guid signalID;
@@ -169,7 +169,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
     int64_t timestamp = 0;
 
     // Now that we've validated our failure conditions we can safely start advancing the offset
-    m_signalIndexCache.GetMeasurementKey(signalIndex, signalID, measurementSource, measurementID);
+    m_signalIndexCache->GetMeasurementKey(signalIndex, signalID, measurementSource, measurementID);
     offset += 3;
 
     // Read the measurement value from the buffer
@@ -212,10 +212,10 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
     return true;
 }
 
-void CompactMeasurement::SerializeMeasurement(const MeasurementPtr& measurement, vector<uint8_t>& buffer) const
+uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement, vector<uint8_t>& buffer) const
 {
     // Define the compact state flags
-    uint8_t compactFlags = MapToCompactFlags(measurement->Flags);
+    uint8_t compactFlags = MapToCompactFlags(measurement.Flags);
 
     int64_t difference = 0L;
     bool usingBaseTimeOffset = false;
@@ -224,11 +224,13 @@ void CompactMeasurement::SerializeMeasurement(const MeasurementPtr& measurement,
     {
         // See if timestamp will fit within space allowed for active base offset. We cache result so that post call
         // to binary length, result will speed other subsequent parsing operations by not having to reevaluate.
-        difference = measurement->Timestamp - m_baseTimeOffsets[m_timeIndex];
+        difference = measurement.Timestamp - m_baseTimeOffsets[m_timeIndex];
         
         usingBaseTimeOffset = difference > 0 ? 
             (m_useMillisecondResolution ? difference / Ticks::PerMillisecond < UInt16::MaxValue : difference < UInt16::MaxValue) : false;
     }
+
+    const uint32_t length = GetBinaryLength(usingBaseTimeOffset);
 
     if (usingBaseTimeOffset)
         compactFlags |= CompactBaseTimeOffsetFlag;
@@ -240,13 +242,13 @@ void CompactMeasurement::SerializeMeasurement(const MeasurementPtr& measurement,
     buffer.push_back(compactFlags);
 
     // Encode runtime ID
-    EndianConverter::WriteBigEndianBytes(buffer, m_signalIndexCache.GetSignalIndex(measurement->SignalID));
+    EndianConverter::WriteBigEndianBytes(buffer, m_signalIndexCache->GetSignalIndex(measurement.SignalID));
 
     // Encode adjusted value (accounts for adder and multiplier)
-    EndianConverter::WriteBigEndianBytes(buffer, static_cast<float32_t>(measurement->AdjustedValue()));
+    EndianConverter::WriteBigEndianBytes(buffer, static_cast<float32_t>(measurement.AdjustedValue()));
 
     if (!m_includeTime)
-        return;
+        return length;
 
     if (usingBaseTimeOffset)
     {
@@ -264,6 +266,8 @@ void CompactMeasurement::SerializeMeasurement(const MeasurementPtr& measurement,
     else
     {
         // Encode 8-byte full fidelity timestamp
-        EndianConverter::WriteBigEndianBytes(buffer, measurement->Timestamp);
+        EndianConverter::WriteBigEndianBytes(buffer, measurement.Timestamp);
     }
+
+    return length;
 }

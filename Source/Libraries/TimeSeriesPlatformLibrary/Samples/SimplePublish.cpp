@@ -33,7 +33,7 @@ using namespace GSF::FilterExpressions;
 
 DataPublisherPtr Publisher;
 TimerPtr PublishTimer;
-vector<tuple<MeasurementMetadataPtr, string, uint32_t>> MeasurementsToPublish;
+vector<MeasurementMetadataPtr> MeasurementsToPublish;
 
 bool RunPublisher(uint16_t port);
 void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
@@ -125,17 +125,7 @@ bool RunPublisher(uint16_t port)
         Publisher->DefineMetadata(DataSet::FromXml("Metadata.xml"));
 
         // Filter metadata for measurements to publish, in this case, all non statistics
-        vector<MeasurementMetadataPtr> metadata = Publisher->FilterMetadata("SignalAcronym <> 'STAT'");
-        string source;
-        uint32_t id;
-
-        // Track publication metadata
-        for (size_t i = 0; i < metadata.size(); i++)
-        {
-            MeasurementMetadataPtr record = metadata[i];
-            ParseMeasurementKey(record->ID, source, id);
-            MeasurementsToPublish.emplace_back(record, source, id);
-        }
+        MeasurementsToPublish = Publisher->FilterMetadata("SignalAcronym <> 'STAT'");
 
         cout << "Loaded " << MeasurementsToPublish.size() << " measurement metadata records for publication." << endl << endl;
 
@@ -152,12 +142,9 @@ bool RunPublisher(uint16_t port)
             // Create new measurement values for publication
             for (size_t i = 0; i < count; i++)
             {
-                auto record = MeasurementsToPublish[i];
+                const MeasurementMetadataPtr metadata = MeasurementsToPublish[i];
                 Measurement measurement;
 
-                const MeasurementMetadataPtr& metadata = get<0>(record);
-                measurement.ID = get<2>(record);
-                measurement.Source = get<1>(record);
                 measurement.SignalID = metadata->SignalID;
                 measurement.Timestamp = timestamp;
                 measurement.Value = float64_t(rand());

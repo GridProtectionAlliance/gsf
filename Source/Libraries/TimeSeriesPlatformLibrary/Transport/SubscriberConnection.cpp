@@ -23,6 +23,7 @@
 
 #include "SubscriberConnection.h"
 #include "DataPublisher.h"
+#include "CompactMeasurement.h"
 #include "../Common/Convert.h"
 #include "../Common/EndianConverter.h"
 
@@ -41,7 +42,11 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_encoding(OperationalEncoding::UTF8),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
+    m_includeTime(true),
+    m_useMillisecondResolution(false), // Defaults to microsecond resolution
+    m_isNaNFiltered(false),
     m_isSubscribed(false),
+    m_startTimeSent(false),
     m_stopped(true),
     m_commandChannelSocket(m_commandChannelService),
     m_readBuffer(Common::MaxPacketSize),
@@ -128,6 +133,36 @@ bool SubscriberConnection::GetUseCompactMeasurementFormat() const
 void SubscriberConnection::SetUseCompactMeasurementFormat(bool value)
 {
     m_useCompactMeasurementFormat = value;
+}
+
+bool SubscriberConnection::GetIncludeTime() const
+{
+    return m_includeTime;
+}
+
+void SubscriberConnection::SetIncludeTime(bool value)
+{
+    m_includeTime = value;
+}
+
+bool SubscriberConnection::GetUseMillisecondResolution() const
+{
+    return m_useMillisecondResolution;
+}
+
+void SubscriberConnection::SetUseMillisecondResolution(bool value)
+{
+    m_useMillisecondResolution = value;
+}
+
+bool SubscriberConnection::GetIsNaNFiltered() const
+{
+    return m_isNaNFiltered;
+}
+
+void SubscriberConnection::SetIsNaNFiltered(bool value)
+{
+    m_isNaNFiltered = value;
 }
 
 bool SubscriberConnection::GetIsSubscribed() const
@@ -255,6 +290,86 @@ void SubscriberConnection::Stop()
     m_parent->RemoveConnection(shared_from_this());
 }
 
+void SubscriberConnection::PublishMeasurements(const vector<Measurement>& measurements)
+{
+    static const uint32_t MaxPacketSize = 32768U;
+
+    if (measurements.empty() || !m_isSubscribed)
+        return;
+
+    if (!m_startTimeSent)
+        m_startTimeSent = SendDataStartTime(measurements[0].Timestamp);
+
+    // TODO: Consider queuing measurements for processing
+
+    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
+    vector<uint8_t> packet, buffer;
+    int32_t count = 0;
+
+    packet.reserve(MaxPacketSize);
+    buffer.reserve(16);
+
+    for (size_t i = 0; i < measurements.size(); i++)
+    {
+        const uint32_t length = serializer.SerializeMeasurement(measurements[i], buffer);
+
+        if (packet.size() + length > MaxPacketSize)
+        {
+            PublishDataPacket(packet, count);
+            packet.clear();
+            count = 0;
+        }
+
+        WriteBytes(packet, buffer);
+        buffer.clear();
+        count++;
+    }
+
+    if (count > 0)
+        PublishDataPacket(packet, count);
+}
+
+void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
+{
+    if (measurements.empty() || !m_isSubscribed)
+        return;
+
+    if (!m_startTimeSent)
+        m_startTimeSent = SendDataStartTime(measurements[0]->Timestamp);
+}
+
+void SubscriberConnection::PublishDataPacket(const std::vector<uint8_t>& packet, const int32_t count)
+{
+    vector<uint8_t> buffer;
+    buffer.reserve(packet.size() + 5);
+
+    // Serialize data packet flags into response
+    buffer.push_back(DataPacketFlags::Compact);
+
+    // Serialize total number of measurement values to follow
+    EndianConverter::WriteBigEndianBytes(buffer, count);
+
+    // Serialize measurements to data buffer
+    WriteBytes(buffer, packet);
+
+    // Publish data packet to client
+    m_parent->SendClientResponse(shared_from_this(), ServerResponse::DataPacket, ServerCommand::Subscribe, buffer);
+
+    // Track last publication time
+    m_lastPublishTime = UtcNow();
+}
+
+bool SubscriberConnection::SendDataStartTime(uint64_t timestamp)
+{
+    vector<uint8_t> buffer;
+    EndianConverter::WriteBigEndianBytes(buffer, timestamp);
+    const bool result = m_parent->SendClientResponse(shared_from_this(), ServerResponse::DataStartTime, ServerCommand::Subscribe, buffer);
+
+    if (result)
+        m_parent->DispatchStatusMessage("Start time sent to " + m_connectionID + ".");
+
+    return result;
+}
 // All commands received from the client are handled by this thread.
 void SubscriberConnection::ReadCommandChannel()
 {

@@ -741,13 +741,13 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
         return;
 
     // Create measurement parser
-    CompactMeasurement measurementParser(*m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
+    CompactMeasurement parser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
 
     while (length != offset)
     {
         MeasurementPtr measurement;
 
-        if (!measurementParser.TryParseMeasurement(data, offset, length, measurement))
+        if (!parser.TryParseMeasurement(data, offset, length, measurement))
         {
             if (errorMessageCallback != nullptr)
                 errorMessageCallback(this, "Error parsing measurement");

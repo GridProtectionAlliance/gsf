@@ -37,7 +37,7 @@ namespace Transport
     class CompactMeasurement
     {
     private:
-        SignalIndexCache& m_signalIndexCache;
+        SignalIndexCachePtr m_signalIndexCache;
         int64_t* m_baseTimeOffsets;
         bool m_includeTime;
         bool m_useMillisecondResolution;
@@ -48,7 +48,7 @@ namespace Transport
 
     public:
         // Creates a new instance of the compact measurement parser.
-        CompactMeasurement(SignalIndexCache& signalIndexCache, int64_t* baseTimeOffsets = nullptr, bool includeTime = true, bool useMillisecondResolution = false, int32_t timeIndex = 0);
+        CompactMeasurement(SignalIndexCachePtr signalIndexCache, int64_t* baseTimeOffsets = nullptr, bool includeTime = true, bool useMillisecondResolution = false, int32_t timeIndex = 0);
 
         // Attempts to parse a measurement from the buffer. Return value of false indicates
         // that there is not enough data to parse the measurement. Offset and length will be
@@ -56,7 +56,7 @@ namespace Transport
         bool TryParseMeasurement(uint8_t* data, uint32_t& offset, uint32_t length, MeasurementPtr& measurement) const;
 
         // Serializes a measurement into a buffer
-        void SerializeMeasurement(const MeasurementPtr& measurement, std::vector<uint8_t>& buffer) const;
+        uint32_t SerializeMeasurement(const Measurement& measurement, std::vector<uint8_t>& buffer) const;
     };
 }}}
 
