@@ -37,7 +37,11 @@ using namespace std;
 using namespace std::chrono;
 using namespace boost::uuids;
 using namespace boost::posix_time;
+using namespace boost::gregorian;
 using namespace GSF;
+
+const DateTime DateTimeEpoch(date(1400, 1, 1), time_duration(0, 0, 0));
+const auto DateTimeTicksPerSecond = time_duration::ticks_per_second();
 
 string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
 {
@@ -149,7 +153,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
 void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
-    unixSOC = (ticks - Ticks::UnixBaseTime) / Ticks::PerSecond;
+    unixSOC = (ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond;
 
     if (unixSOC < 0)
         unixSOC = 0;
@@ -164,23 +168,18 @@ DateTime GSF::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
 
 DateTime GSF::FromTicks(const int64_t ticks)
 {
-    time_t unixSOC;
-    uint16_t milliseconds;
-
-    ToUnixTime(ticks, unixSOC, milliseconds);
-    return FromUnixTime(unixSOC, milliseconds);
+    static float64_t tickInterval = float64_t(Ticks::PerSecond);
+    const DateTime time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
+    const int64_t pticks = int64_t(ticks % Ticks::PerSecond / tickInterval * DateTimeTicksPerSecond);
+    return time + time_duration(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
 int64_t GSF::ToTicks(const DateTime& time)
 {
-    static float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
-
-    time_duration timeOfDay = time.time_of_day();
-
-    return
-        /* time.date().day_count() * Ticks::PerDay + */
-        timeOfDay.total_seconds() * Ticks::PerSecond +
-        timeOfDay.fractional_seconds() / baseFraction * Ticks::PerSecond;
+    static float64_t tickInterval = pow(10.0, time_duration::num_fractional_digits());
+    const time_duration offset = time - DateTimeEpoch;
+    return Ticks::PtimeBaseOffset + offset.total_seconds() * Ticks::PerSecond +
+        int64_t(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
 }
 
 uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
@@ -253,13 +252,10 @@ std::string GSF::ToString(const Guid& value)
 
 std::string GSF::ToString(const DateTime& value, const char* format)
 {
-    using namespace boost::gregorian;
-
     stringstream stream;
-
-    time_facet* facet = new time_facet();
-    facet->format(format);
-    stream.imbue(locale(locale::classic(), facet));
+    time_facet* facet = new time_facet(format);
+    
+    stream.imbue(locale(stream.getloc(), facet));
     stream << value;
 
     return stream.str();

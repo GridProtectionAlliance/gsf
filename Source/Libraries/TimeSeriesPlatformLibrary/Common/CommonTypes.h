@@ -96,6 +96,15 @@ namespace GSF
         static const uint64_t MinValue = static_cast<uint64_t>(0UL);
     };
 
+    struct Decimal
+    {
+        static const decimal_t MaxValue;
+        static const decimal_t MinValue;
+
+        static const decimal_t DotNetMaxValue;
+        static const decimal_t DotNetMinValue;
+    };
+
     struct Ticks
     {
         static const int64_t PerSecond = 10000000L;
@@ -104,16 +113,8 @@ namespace GSF
         static const int64_t PerMinute = 60L * Ticks::PerSecond;
         static const int64_t PerHour = 60L * Ticks::PerMinute;
         static const int64_t PerDay = 24L * Ticks::PerHour;
-        static const int64_t UnixBaseTime = 621355968000000000L;
-    };
-
-    struct Decimal
-    {
-        static const decimal_t MaxValue;
-        static const decimal_t MinValue;
-
-        static const decimal_t DotNetMaxValue;
-        static const decimal_t DotNetMinValue;
+        static const int64_t UnixBaseOffset = 621355968000000000L;  // 01/01/1970 00:00:00
+        static const int64_t PtimeBaseOffset = 441481536000000000L; // 01/01/1400 00:00:00
     };
 
     template<class T>

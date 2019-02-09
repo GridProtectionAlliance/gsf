@@ -26,9 +26,6 @@
 #ifndef __DATA_SUBSCRIBER_H
 #define __DATA_SUBSCRIBER_H
 
-#include <string>
-#include <vector>
-
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "TSSCMeasurementParser.h"

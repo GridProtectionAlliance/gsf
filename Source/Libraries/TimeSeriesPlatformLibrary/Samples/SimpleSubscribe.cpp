@@ -21,13 +21,10 @@
 //
 //******************************************************************************************************
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "../Common/CommonTypes.h"
 #include "../Common/Convert.h"
 #include "../Transport/DataSubscriber.h"
+#include <iostream>
 
 using namespace std;
 using namespace GSF;
@@ -145,11 +142,7 @@ bool RunSubscriber(const string& hostname, uint16_t port)
 // received a new packet of measurements from the publisher.
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
-    const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const uint32_t MaxTimestampSize = 80;
-
     static long processCount = 0;
-    static char timestamp[MaxTimestampSize];
     static const long interval = 5 * 60;
     const long measurementCount = measurements.size();
     const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
@@ -162,10 +155,7 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
         stringstream message;
 
         message << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
-
-        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-            message << "Timestamp: " << string(timestamp) << endl;
-
+        message << "Timestamp: " << ToString(measurements[0]->GetDateTime()) << endl;
         message << "Point\tValue" << endl;
 
         for (const auto& measurement : measurements)

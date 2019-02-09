@@ -347,7 +347,7 @@ int32_t GSF::DateDiff(const DateTime& startTime, const DateTime& endTime, TimeIn
 
 int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
 {
-    static float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
+    static float64_t tickInterval = pow(10.0, time_duration::num_fractional_digits());
 
     switch (interval)
     {
@@ -370,7 +370,7 @@ int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
         case TimeInterval::Second:
             return static_cast<int32_t>(value.time_of_day().seconds());
         case TimeInterval::Millisecond:
-            return static_cast<int32_t>(value.time_of_day().fractional_seconds() / baseFraction * 1000.0);
+            return static_cast<int32_t>(value.time_of_day().fractional_seconds() / tickInterval * 1000.0);
         default:
             throw runtime_error("Unexpected time interval encountered");
     }
