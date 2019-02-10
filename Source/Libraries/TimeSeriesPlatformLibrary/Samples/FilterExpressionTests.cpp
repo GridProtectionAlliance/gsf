@@ -1432,6 +1432,14 @@ int main(int argc, char* argv[])
     assert(parser->FilteredRows().size() == 14);
     cout << "Test " << ++test << " succeeded..." << endl;
 
+    // Test 150
+    const DateTime time = ParseTimestamp("2019-02-10T15:55:25.090477Z");
+    const int64_t ticks = ToTicks(time);
+
+    assert(ticks == 636854109250904770L);
+    assert(time == FromTicks(ticks));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
     string line;
