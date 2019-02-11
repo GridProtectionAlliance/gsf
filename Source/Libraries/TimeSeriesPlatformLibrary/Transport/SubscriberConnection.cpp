@@ -34,6 +34,8 @@ using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
+static const uint32_t MaxPacketSize = 32768U;
+
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
     m_parent(std::move(parent)),
     m_commandChannelService(commandChannelService),
@@ -292,8 +294,6 @@ void SubscriberConnection::Stop()
 
 void SubscriberConnection::PublishMeasurements(const vector<Measurement>& measurements)
 {
-    static const uint32_t MaxPacketSize = 32768U;
-
     if (measurements.empty() || !m_isSubscribed)
         return;
 
@@ -342,6 +342,40 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
 
     if (!m_startTimeSent)
         m_startTimeSent = SendDataStartTime(measurements[0]->Timestamp);
+
+    // TODO: Consider queuing measurements for processing
+
+    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
+    vector<uint8_t> packet, buffer;
+    int32_t count = 0;
+
+    packet.reserve(MaxPacketSize);
+    buffer.reserve(16);
+
+    for (size_t i = 0; i < measurements.size(); i++)
+    {
+        const Measurement& measurement = *measurements[i];
+        const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
+
+        if (runtimeID == UInt16::MaxValue)
+            continue;
+
+        const uint32_t length = serializer.SerializeMeasurement(measurement, buffer, runtimeID);
+
+        if (packet.size() + length > MaxPacketSize)
+        {
+            PublishDataPacket(packet, count);
+            packet.clear();
+            count = 0;
+        }
+
+        WriteBytes(packet, buffer);
+        buffer.clear();
+        count++;
+    }
+
+    if (count > 0)
+        PublishDataPacket(packet, count);
 }
 
 void SubscriberConnection::PublishDataPacket(const std::vector<uint8_t>& packet, const int32_t count)
