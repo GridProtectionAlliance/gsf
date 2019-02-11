@@ -212,7 +212,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
     return true;
 }
 
-uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement, vector<uint8_t>& buffer) const
+uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement, vector<uint8_t>& buffer, const uint16_t runtimeID) const
 {
     // Define the compact state flags
     uint8_t compactFlags = MapToCompactFlags(measurement.Flags);
@@ -242,7 +242,7 @@ uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement
     buffer.push_back(compactFlags);
 
     // Encode runtime ID
-    EndianConverter::WriteBigEndianBytes(buffer, m_signalIndexCache->GetSignalIndex(measurement.SignalID));
+    EndianConverter::WriteBigEndianBytes(buffer, runtimeID);
 
     // Encode adjusted value (accounts for adder and multiplier)
     EndianConverter::WriteBigEndianBytes(buffer, static_cast<float32_t>(measurement.AdjustedValue()));

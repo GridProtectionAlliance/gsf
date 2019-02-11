@@ -311,7 +311,13 @@ void SubscriberConnection::PublishMeasurements(const vector<Measurement>& measur
 
     for (size_t i = 0; i < measurements.size(); i++)
     {
-        const uint32_t length = serializer.SerializeMeasurement(measurements[i], buffer);
+        const Measurement& measurement = measurements[i];
+        const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
+
+        if (runtimeID == UInt16::MaxValue)
+            continue;
+
+        const uint32_t length = serializer.SerializeMeasurement(measurement, buffer, runtimeID);
 
         if (packet.size() + length > MaxPacketSize)
         {

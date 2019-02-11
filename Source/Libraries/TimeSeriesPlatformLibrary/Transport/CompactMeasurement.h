@@ -56,7 +56,7 @@ namespace Transport
         bool TryParseMeasurement(uint8_t* data, uint32_t& offset, uint32_t length, MeasurementPtr& measurement) const;
 
         // Serializes a measurement into a buffer
-        uint32_t SerializeMeasurement(const Measurement& measurement, std::vector<uint8_t>& buffer) const;
+        uint32_t SerializeMeasurement(const Measurement& measurement, std::vector<uint8_t>& buffer, uint16_t runtimeID) const;
     };
 }}}
 
