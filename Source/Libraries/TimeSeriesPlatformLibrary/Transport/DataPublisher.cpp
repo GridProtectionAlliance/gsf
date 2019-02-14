@@ -703,6 +703,7 @@ vector<uint8_t> DataPublisher::SerializeMetadata(const SubscriberConnectionPtr& 
 
 bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message)
 {
+    // TODO: Move this code into SubscriberConnection::SendResponse - consider removing local reference function
     return SendClientResponse(connection, responseCode, commandCode, EncodeClientString(connection, message));
 }
 
@@ -710,6 +711,7 @@ bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection
 {
     bool success = false;
 
+    // TODO: Move this code into SubscriberConnection::SendResponse - consider removing local reference function
     try
     {
         const bool dataPacketResponse = responseCode == ServerResponse::DataPacket;
@@ -1373,6 +1375,7 @@ void DataPublisher::RegisterClientDisconnectedCallback(const SubscriberConnectio
     m_clientDisconnectedCallback = clientDisconnectedCallback;
 }
 
+// TODO: Move this code into SubscriberConnection::DecodeString
 string DataPublisher::DecodeClientString(const SubscriberConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length)
 {
     uint32_t encoding = OperationalEncoding::UTF8;
@@ -1408,6 +1411,7 @@ string DataPublisher::DecodeClientString(const SubscriberConnectionPtr& connecti
     }
 }
 
+// TODO: Move this code into SubscriberConnection::EncodeString
 vector<uint8_t> DataPublisher::EncodeClientString(const SubscriberConnectionPtr& connection, const std::string& value)
 {
     uint32_t encoding = OperationalEncoding::UTF8;
