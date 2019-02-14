@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     // Get hostname and port.
     stringstream(argv[1]) >> port;
 
-    // Run the subscriber.
+    // Run the publisher.
     if (RunPublisher(port))
     {
         // Wait until the user presses enter before quitting.
