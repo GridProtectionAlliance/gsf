@@ -240,6 +240,18 @@ namespace PIAdapters
         }
 
         /// <summary>
+        /// Gets or sets value paging factor to read more data per page from PI.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define a paging factor to read more data per page from PI."),
+        DefaultValue(1)]
+        public int PageFactor
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets value that determines if the input data should be replayed repeatedly.
         /// </summary>
         [ConnectionStringParameter,
@@ -296,6 +308,13 @@ namespace PIAdapters
 
                 // Set read timer interval to the requested processing interval
                 m_readTimer.Interval = value <= 0 ? 1 : value;
+
+                if (value == 0)
+                {
+                    // Set reasonable factors for historical data query
+                    PublicationInterval = TimeSpan.FromMinutes(10).Ticks;
+                    PageFactor = 1000;
+                }
             }
         }
 
@@ -318,6 +337,7 @@ namespace PIAdapters
                 status.AppendFormat("       Connected to server: {0}\r\n", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
                 status.AppendFormat("             Instance name: {0}\r\n", m_instanceName);
                 status.AppendFormat("      Publication interval: {0:#,##0}\r\n", m_publicationInterval);
+                status.AppendFormat("             Paging factor: {0:#,##0}\r\n", PageFactor);
                 status.AppendFormat("               Auto-repeat: {0}\r\n", m_autoRepeat);
                 status.AppendFormat("            Start time-tag: {0}\r\n", m_startTime);
                 status.AppendFormat("             Stop time-tag: {0}\r\n", m_stopTime);
@@ -403,6 +423,9 @@ namespace PIAdapters
 
             if (!(settings.TryGetValue("publicationInterval", out setting) && Ticks.TryParse(setting, out m_publicationInterval)))
                 m_publicationInterval = DefaultPublicationInterval;
+
+            if (settings.TryGetValue(nameof(PageFactor), out setting) && int.TryParse(setting, out int pageFactor) && pageFactor > 0)
+                PageFactor = pageFactor;
 
             if (settings.TryGetValue("simulateTimestamp", out setting))
                 m_simulateTimestamp = setting.ParseBoolean();
@@ -492,7 +515,7 @@ namespace PIAdapters
                 EndTime = endTime,
                 DataReadExceptionHandler = ex => OnProcessException(MessageLevel.Warning, ex)
             }
-            .Read();
+            .Read(PageFactor);
         }
 
         // Kick start read process for historian
@@ -542,6 +565,14 @@ namespace PIAdapters
                         }
                     }
 
+                    if (m_points.Count == 0)
+                    {
+                        m_readTimer.Enabled = false;
+                        OnStatusMessage(MessageLevel.Info, "No matching PI points found for configured input measurement keys, historian read canceled.");
+                        OnProcessingComplete();
+                        return;
+                    }
+
                     m_publicationTime = 0;
 
                     // Start data read from historian
@@ -568,7 +599,7 @@ namespace PIAdapters
                 else
                 {
                     m_readTimer.Enabled = false;
-                    OnStatusMessage(MessageLevel.Info, "No measurement keys have been requested for reading, historian reader is idle.");
+                    OnStatusMessage(MessageLevel.Info, "No measurement keys have been requested for reading, historian read canceled.");
                     OnProcessingComplete();
                 }
             }

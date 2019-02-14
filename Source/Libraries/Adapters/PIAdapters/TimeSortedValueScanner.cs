@@ -80,10 +80,11 @@ namespace PIAdapters
         /// <summary>
         /// Reads all <see cref="AFValue"/> instances in time sorted order as a yielding enumerable.
         /// </summary>
+        /// <param name="pageFactor">Defines a paging factor used to load more data into a page.</param>
         /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
-        public IEnumerable<AFValue> Read()
+        public IEnumerable<AFValue> Read(int pageFactor = 1)
         {
-            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, Points.Count);
+            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, Points.Count * pageFactor);
             List<IEnumerator<AFValue>> enumerators = new List<IEnumerator<AFValue>>();
 
             try
