@@ -21,12 +21,9 @@
 //
 //******************************************************************************************************
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "../Common/Convert.h"
 #include "../Transport/DataSubscriber.h"
+#include <iostream>
 
 using namespace std;
 using namespace GSF;
@@ -192,13 +189,9 @@ void SetupSubscriberConnector(SubscriberConnector& connector, const string& host
 // received a new packet of measurements from the publisher.
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
-    const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const uint32_t MaxTimestampSize = 80;
-
-    static long processCount = 0;
-    static char timestamp[MaxTimestampSize];
-    static const long interval = 5 * 60;
-    const long measurementCount = measurements.size();
+    static uint64_t processCount = 0;
+    static const uint64_t interval = 5 * 60;
+    const uint64_t measurementCount = measurements.size();
     const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
     processCount += measurementCount;
@@ -209,14 +202,11 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
         stringstream message;
 
         message << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
-
-        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-            message << "Timestamp: " << string(timestamp) << endl;
-
-        message << "Point\tValue" << endl;
+        message << "Timestamp: " << ToString(measurements[0]->GetDateTime()) << endl;
+        message << "\tPoint\tValue" << endl;
 
         for (const auto& measurement : measurements)
-            message << measurement->ID << '\t' << measurement->Value << endl;
+            message << '\t' << measurement->ID << '\t' << measurement->Value << endl;
 
         message << endl;
 

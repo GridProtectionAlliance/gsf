@@ -142,9 +142,9 @@ bool RunSubscriber(const string& hostname, uint16_t port)
 // received a new packet of measurements from the publisher.
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
-    static long processCount = 0;
-    static const long interval = 5 * 60;
-    const long measurementCount = measurements.size();
+    static uint64_t processCount = 0;
+    static const uint64_t interval = 5 * 60;
+    const uint64_t measurementCount = measurements.size();
     const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
     processCount += measurementCount;
@@ -156,10 +156,10 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
 
         message << source->GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
         message << "Timestamp: " << ToString(measurements[0]->GetDateTime()) << endl;
-        message << "Point\tValue" << endl;
+        message << "\tPoint\tValue" << endl;
 
         for (const auto& measurement : measurements)
-            message << measurement->ID << '\t' << measurement->Value << endl;
+            message  << '\t' << measurement->ID << '\t' << measurement->Value << endl;
 
         message << endl;
 

@@ -22,18 +22,18 @@
 //******************************************************************************************************
 
 #include "SubscriberHandler.h"
-
-// TODO: These includes are just for temporary testing code
 #include "../Common/Convert.h"
-#include <boost/uuid/uuid_io.hpp>
 
 using namespace std;
 using namespace GSF;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
+Mutex SubscriberHandler::s_coutLock {};
+
 SubscriberHandler::SubscriberHandler(string name) :
-    m_name(std::move(name))
+    m_name(std::move(name)),
+    m_processCount(0L)
 {
 }
 
@@ -79,9 +79,10 @@ void SubscriberHandler::StatusMessage(const string& message)
 
     status << "[" << m_name << "] " << message;
 
-    m_coutLock.lock();
+    // Calls can come from multiple threads, so we impose a simple lock before write to console
+    s_coutLock.lock();
     SubscriberInstance::StatusMessage(status.str());
-    m_coutLock.unlock();
+    s_coutLock.unlock();
 }
 
 void SubscriberHandler::ErrorMessage(const string& message)
@@ -92,9 +93,10 @@ void SubscriberHandler::ErrorMessage(const string& message)
 
     status << "[" << m_name << "] " << message;
 
-    m_coutLock.lock();
+    // Calls can come from multiple threads, so we impose a simple lock before write to console
+    s_coutLock.lock();
     SubscriberInstance::ErrorMessage(status.str());
-    m_coutLock.unlock();
+    s_coutLock.unlock();
 }
 
 void SubscriberHandler::DataStartTime(time_t unixSOC, uint16_t milliseconds)
@@ -124,17 +126,15 @@ void SubscriberHandler::ParsedMetadata()
 // ReSharper disable CppDeclaratorNeverUsed
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {
+    // TODO: The following code could be used to generate frame based output, e.g., for IEEE C37.118
     // Start processing measurements
     //for (auto &measurement : measurements)
     //{
-    //    time_t soc;
-    //    uint16_t milliseconds;
-
     //    // Get adjusted value
     //    const float64_t value = measurement->AdjustedValue();
 
-    //    // Get time converted to UNIX second of century plus milliseconds
-    //    measurement->GetUnixTime(soc, milliseconds);
+    //    // Get timestamp
+    //    DateTime timestamp = measurement->GetDateTime();
 
     //    // Handle per measurement quality flags
     //    int32_t qualityFlags = measurement->Flags;
@@ -152,7 +152,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
     //            // reference.Acronym	<< target device acronym 
     //            // reference.Kind		<< kind of signal (see SignalKind in "Types.h"), like Frequency, Angle, etc
-    //            // reference.Index      << for Phasors, Analogs and Digitals - this is the ordered "index"
+    //            // reference.Index    << for Phasors, Analogs and Digitals - this is the ordered "index"
 
     //            // TODO: Handle measurement processing here...
     //        }
@@ -165,16 +165,11 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
     //}
 
     // TODO: *** Temporary Testing Code Below *** -- REMOVE BEFORE USE
-    const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const uint32_t MaxTimestampSize = 80;
+    static const uint64_t interval = 10 * 60;
+    const uint64_t measurementCount = measurements.size();
+    const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
 
-    static long processCount = 0;
-    static char timestamp[MaxTimestampSize];
-    static const long interval = 10 * 60;
-    const long measurementCount = measurements.size();
-    const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
-
-    processCount += measurementCount;
+    m_processCount += measurementCount;
 
     // Only display messages every few seconds
     if (showMessage)
@@ -182,12 +177,8 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
         stringstream message;
 
         message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
-
-        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-            message << string(timestamp)  << endl;
-        
-        message << "Signal ID: " << boost::lexical_cast<string>(measurements[0]->SignalID) << endl;
-
+        message << ToString(measurements[0]->GetDateTime())  << endl;        
+        message << "Signal ID: " << ToString(measurements[0]->SignalID) << endl;
         message << "\tPoint\tValue" << endl;
 
         for (const auto& measurement : measurements)

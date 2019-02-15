@@ -31,7 +31,9 @@ class SubscriberHandler : public GSF::TimeSeries::Transport::SubscriberInstance
 {
 private:
     std::string m_name;
-    GSF::Mutex m_coutLock;
+    uint64_t m_processCount;
+
+    static GSF::Mutex s_coutLock;
 
 protected:
     GSF::TimeSeries::Transport::SubscriptionInfo CreateSubscriptionInfo() override;

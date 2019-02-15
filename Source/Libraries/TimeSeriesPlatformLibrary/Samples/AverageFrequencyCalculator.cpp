@@ -21,13 +21,9 @@
 //
 //******************************************************************************************************
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
-
-#include "../Common/Convert.h"
 #include "../Transport/DataSubscriber.h"
+#include "../Common/Convert.h"
+#include <iostream>
 
 using namespace std;
 using namespace GSF;
@@ -165,12 +161,7 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
     const float64_t HiFrequency = 62.0F;
     const float64_t HzResolution = 1000.0; // three decimal places
 
-    const string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
-    const uint32_t MaxTimestampSize = 80;
-
-    static map<Guid, int> m_lastValues;
-
-    map<Guid, int>::iterator lastValueIter;
+    static unordered_map<Guid, int> m_lastValues;
     MeasurementPtr currentMeasurement;
     Guid signalID;
 
@@ -182,8 +173,6 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
     int32_t lastValue;
     int32_t total;
 
-    char timestamp[MaxTimestampSize];
-
     frequencyTotal = 0.0;
     total = 0;
 
@@ -191,13 +180,11 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
 
     if (!measurements.empty())
     {
-        if (TicksToString(timestamp, MaxTimestampSize, TimestampFormat, measurements[0]->Timestamp))
-            cout << "Timestamp: " << string(timestamp) << endl;
-
-        cout << "Point\tValue" << endl;
+        cout << "Timestamp: " << ToString(measurements[0]->GetDateTime()) << endl;
+        cout << "\tPoint\tValue" << endl;
 
         for (uint32_t i = 0; i < measurements.size(); ++i)
-            cout << measurements[i]->ID << '\t' << measurements[i]->Value << endl;
+            cout  << '\t' << measurements[i]->ID << '\t' << measurements[i]->Value << endl;
 
         cout << endl;
 
@@ -209,14 +196,10 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
             adjustedFrequency = static_cast<int32_t>(frequency * HzResolution);
 
             // Do some simple flat line avoidance...
-            lastValueIter = m_lastValues.find(signalID);
-
-            if (lastValueIter != m_lastValues.end())
+            if (TryGetValue(m_lastValues, signalID, lastValue, 0))
             {
-                lastValue = lastValueIter->second;
-
                 if (lastValue == adjustedFrequency)
-                    frequency = 0.0;
+                    frequency = 0.0; // Don't contribute duplicates to the average
                 else
                     m_lastValues[signalID] = adjustedFrequency;
             }
