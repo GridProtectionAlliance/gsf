@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppAssignedValueIsNeverUsed
 #include "../Transport/DataPublisher.h"
 #include <iostream>
 
@@ -33,10 +34,9 @@ using namespace GSF::FilterExpressions;
 
 DataPublisherPtr Publisher;
 TimerPtr PublishTimer;
+vector<DeviceMetadataPtr> DevicesToPublish;
 vector<MeasurementMetadataPtr> MeasurementsToPublish;
-vector<DeviceMetadataPtr> DeviceMetadataSample;
-vector<MeasurementMetadataPtr> MeasurementMetadataSample;
-vector<PhasorMetadataPtr> PhasorMetadataSample;
+vector<PhasorMetadataPtr> PhasorsToPublish;
 
 bool RunPublisher(uint16_t port);
 void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
@@ -44,7 +44,7 @@ void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, 
 void DisplayStatusMessage(DataPublisher* source, const string& message);
 void DisplayErrorMessage(DataPublisher* source, const string& message);
 
-void CreateSampleMetadata(vector<DeviceMetadataPtr>& deviceMetadata, vector<MeasurementMetadataPtr>& measurementMetadata, vector<PhasorMetadataPtr>& phasorMetadata)
+void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<MeasurementMetadataPtr>& measurementMetadata, vector<PhasorMetadataPtr>& phasorMetadata)
 {
     DeviceMetadataPtr device1Metadata = NewSharedPtr<DeviceMetadata>();
     const DateTime timestamp = UtcNow();
@@ -130,7 +130,7 @@ void CreateSampleMetadata(vector<DeviceMetadataPtr>& deviceMetadata, vector<Meas
     phasorMetadata.emplace_back(phasor1Metadata);
 }
 
-// Sample application to demonstrate the most simple use of the publisher API.
+// Sample application to demonstrate the more advanced use of the publisher API.
 //
 // This application accepts the port of the publisher via command line argument,
 // starts listening for subscriber connections, the displays summary information
@@ -179,6 +179,7 @@ int main(int argc, char* argv[])
 //   - Publish
 bool RunPublisher(uint16_t port)
 {
+    static float64_t randMax = float64_t(RAND_MAX);
     string errorMessage;
     bool running = false;
 
@@ -210,12 +211,9 @@ bool RunPublisher(uint16_t port)
         Publisher->RegisterStatusMessageCallback(&DisplayStatusMessage);
         Publisher->RegisterErrorMessageCallback(&DisplayErrorMessage);
 
-        // Define sample metadata
-        CreateSampleMetadata(DeviceMetadataSample, MeasurementMetadataSample, PhasorMetadataSample);
-        Publisher->DefineMetadata(DeviceMetadataSample, MeasurementMetadataSample, PhasorMetadataSample);
-
-        // Define metadata for measurements to publish, in this case, all measurements
-        MeasurementsToPublish = Publisher->FilterMetadata("SignalAcronym IS NOT NULL");
+        // Load metadata to be used for publication
+        LoadMetadataToPublish(DevicesToPublish, MeasurementsToPublish, PhasorsToPublish);
+        Publisher->DefineMetadata(DevicesToPublish, MeasurementsToPublish, PhasorsToPublish);
 
         cout << "Loaded " << MeasurementsToPublish.size() << " measurement metadata records for publication:" << endl;
 
@@ -224,8 +222,8 @@ bool RunPublisher(uint16_t port)
 
         cout << endl;
 
-        // Setup data publication timer - for this simple publishing sample we just
-        // send random values every 33 milliseconds
+        // Setup data publication timer - for this publishing sample we send
+        // data type reasonable random values every 33 milliseconds
         PublishTimer = NewSharedPtr<Timer>(33, [](Timer*, void*)
         {
             static uint32_t count = MeasurementsToPublish.size();
@@ -242,7 +240,31 @@ bool RunPublisher(uint16_t port)
 
                 measurement.SignalID = metadata->SignalID;
                 measurement.Timestamp = timestamp;
-                measurement.Value = float64_t(rand());
+
+                const float64_t randFraction = rand() / randMax;
+                const float64_t sign = randFraction > 0.5 ? 1.0 : -1.0;
+                float64_t value;
+
+                switch (metadata->Reference.Kind)
+                {
+                    case Frequency:
+                        value = 60.0 + sign * randFraction * 0.1;
+                        break;
+                    case DfDt:
+                        value = sign * randFraction * 2;
+                        break;
+                    case Magnitude:
+                        value = 500 + sign * randFraction * 50;
+                        break;
+                    case Angle:
+                        value = sign * randFraction * 180;
+                        break;
+                    default:
+                        value = sign * randFraction * UInt32::MaxValue;
+                        break;
+                }
+
+                measurement.Value = value;
 
                 measurements.push_back(measurement);
             }
