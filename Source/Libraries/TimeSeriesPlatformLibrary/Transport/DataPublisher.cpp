@@ -845,7 +845,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
         const int32_t framesPerSecond = GetColumnIndex(deviceDetail, "FramesPerSecond");
         const int32_t companyAcronym = GetColumnIndex(deviceDetail, "CompanyAcronym");
         const int32_t vendorAcronym = GetColumnIndex(deviceDetail, "VendorAcronym");
-        const int32_t vendorDeviceName = GetColumnIndex(deviceDetail, "VendorDeviceAcronym");
+        const int32_t vendorDeviceName = GetColumnIndex(deviceDetail, "VendorDeviceName");
         const int32_t longitude = GetColumnIndex(deviceDetail, "Longitude");
         const int32_t latitude = GetColumnIndex(deviceDetail, "Latitude");
         const int32_t enabled = GetColumnIndex(deviceDetail, "Enabled");
@@ -917,7 +917,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
                 phasorTypes[phasor->DeviceAcronym] = phasors;
             }
 
-            phasors->at(phasor->SourceIndex) = phasor->Type.empty() ? 'I' : phasor->Type[0];
+            phasors->insert_or_assign(phasor->SourceIndex, phasor->Type.empty() ? 'I' : phasor->Type[0]);
         }
     }
 
@@ -995,7 +995,7 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
 
     if (deviceDetail != nullptr)
     {
-        const int32_t name = GetColumnIndex(deviceDetail, "Name");
+        const int32_t acronym = GetColumnIndex(deviceDetail, "Acronym");
         const int32_t protocolName = GetColumnIndex(deviceDetail, "ProtocolName");
         const int32_t framesPerSecond = GetColumnIndex(deviceDetail, "FramesPerSecond");
         const int32_t companyAcronym = GetColumnIndex(deviceDetail, "CompanyAcronym");
@@ -1015,10 +1015,10 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
             device->Longitude = row->ValueAsDecimal(longitude).GetValueOrDefault();
             device->Latitude = row->ValueAsDecimal(latitude).GetValueOrDefault();
 
-            string deviceName = row->ValueAsString(name).GetValueOrDefault();
+            string deviceAcronymRef = row->ValueAsString(acronym).GetValueOrDefault();
 
-            if (!deviceName.empty())
-                deviceData[deviceName] = device;
+            if (!deviceAcronymRef.empty())
+                deviceData[deviceAcronymRef] = device;
         }
     }
 
@@ -1052,9 +1052,9 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
         {
             const DataRowPtr& row = phasorDetail->Row(i);
             
-            string deviceName = row->ValueAsString(deviceAcronym).GetValueOrDefault();
+            string deviceAcronymRef = row->ValueAsString(deviceAcronym).GetValueOrDefault();
 
-            if (deviceName.empty())
+            if (deviceAcronymRef.empty())
                 continue;
 
             PhasorDataMapPtr phasorMap;
@@ -1064,10 +1064,10 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
             phasor->PhasorType = row->ValueAsString(type).GetValueOrDefault();
             phasor->Phase = row->ValueAsString(phase).GetValueOrDefault();
 
-            if (!TryGetValue(phasorData, deviceName, phasorMap, nullPhasorDataMap))
+            if (!TryGetValue(phasorData, deviceAcronymRef, phasorMap, nullPhasorDataMap))
             {
                 phasorMap = NewSharedPtr<PhasorDataMap>();
-                phasorData[deviceName] = phasorMap;
+                phasorData[deviceAcronymRef] = phasorMap;
             }
 
             phasorMap->insert_or_assign(row->ValueAsInt32(sourceIndex).GetValueOrDefault(), phasor);
@@ -1151,21 +1151,21 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
             am_row->SetStringValue(am_signalType, signalType);
             am_row->SetStringValue(am_engineeringUnits, GetEngineeringUnits(signalType));
 
-            string deviceName = md_row->ValueAsString(md_deviceAcronym).GetValueOrDefault();
+            string deviceAcronymRef = md_row->ValueAsString(md_deviceAcronym).GetValueOrDefault();
 
-            if (deviceName.empty())
+            if (deviceAcronymRef.empty())
             {
                 // Set any default values when measurement is not associated with a device
                 am_row->SetInt32Value(am_framesPerSecond, 30);
             }
             else
             {
-                am_row->SetStringValue(am_device, deviceName);
+                am_row->SetStringValue(am_device, deviceAcronymRef);
 
                 DeviceDataPtr device;
 
                 // Lookup associated device record
-                if (TryGetValue(deviceData, deviceName, device, nullDeviceData))
+                if (TryGetValue(deviceData, deviceAcronymRef, device, nullDeviceData))
                 {
                     am_row->SetInt32Value(am_deviceID, device->DeviceID);
                     am_row->SetInt32Value(am_framesPerSecond, device->FramesPerSecond);
@@ -1179,7 +1179,7 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
                 PhasorDataMapPtr phasorMap;
 
                 // Lookup associated phasor records
-                if (TryGetValue(phasorData, deviceName, phasorMap, nullPhasorDataMap))
+                if (TryGetValue(phasorData, deviceAcronymRef, phasorMap, nullPhasorDataMap))
                 {
                     PhasorDataPtr phasor;
                     int32_t sourceIndex = md_row->ValueAsInt32(md_phasorSourceIndex).GetValueOrDefault();
