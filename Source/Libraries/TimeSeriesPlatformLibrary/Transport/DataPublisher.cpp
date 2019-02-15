@@ -1075,11 +1075,11 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
     }
 
     // Load active meta-data measurements schema
-    m_filteringMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
+    DataSetPtr filteringMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
 
     // Build active meta-data measurements from all meta-data
     const DataTablePtr& measurementDetail = metadata->Table("MeasurementDetail");
-    const DataTablePtr& activeMeasurements = m_filteringMetadata->Table("ActiveMeasurements");
+    const DataTablePtr& activeMeasurements = filteringMetadata->Table("ActiveMeasurements");
 
     if (measurementDetail != nullptr && activeMeasurements != nullptr)
     {
@@ -1196,6 +1196,8 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
             activeMeasurements->AddRow(am_row);
         }
     }
+
+    m_filteringMetadata.swap(filteringMetadata);
 }
 
 const DataSetPtr& DataPublisher::GetMetadata() const
