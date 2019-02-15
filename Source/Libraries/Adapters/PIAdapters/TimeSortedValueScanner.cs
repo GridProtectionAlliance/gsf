@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
 using OSIsoft.AF.PI;
 using OSIsoft.AF.Time;
+using System;
+using System.Collections.Generic;
 
 namespace PIAdapters
 {
@@ -84,7 +84,7 @@ namespace PIAdapters
         /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
         public IEnumerable<AFValue> Read(int pageFactor = 1)
         {
-            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, Points.Count * pageFactor);
+            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, Points.Count * pageFactor < 1 ? 1 : pageFactor);
             List<IEnumerator<AFValue>> enumerators = new List<IEnumerator<AFValue>>();
 
             try

@@ -54,24 +54,18 @@ namespace PIAdapters
 
         // Constants
         private const long DefaultPublicationInterval = 333333;
+        private const int DefaultPageFactor = 1;
 
         // Fields
         private Timer m_readTimer;                                          // Archive data read timer
-        private string m_serverName;                                        // Server name where PI connection should be established for connection string
-        private string m_userName;                                          // Username for PI connection string
-        private string m_password;                                          // Password for PI connection string
-        private int m_connectTimeout;                                       // PI connection timeout
         private PIConnection m_connection;                                  // PI server connection
         private IEnumerator<AFValue> m_dataReader;                          // Data reader
         private PIPointList m_points;                                       // List of points this adapter queries from PI
         private readonly Dictionary<int, MeasurementKey> m_tagKeyMap;
         private string m_instanceName;
-        private Ticks m_publicationInterval;
         private long m_publicationTime;
-        private bool m_simulateTimestamp;
         private AFTime m_startTime;
         private AFTime m_stopTime;
-        private bool m_autoRepeat;
         private bool m_disposed;
 
         #endregion
@@ -108,75 +102,32 @@ namespace PIAdapters
 
                 return m_instanceName;
             }
-            set
-            {
-                m_instanceName = value;
-            }
+            set => m_instanceName = value;
         }
 
         /// <summary>
         /// Gets or sets the name of the PI server for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the name of the PI server for the adapter's PI connection.")]
-        public string ServerName
-        {
-            get
-            {
-                return m_serverName;
-            }
-            set
-            {
-                m_serverName = value;
-            }
-        }
+        public string ServerName { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection."), DefaultValue("")]
-        public string UserName
-        {
-            get
-            {
-                return m_userName;
-            }
-            set
-            {
-                m_userName = value;
-            }
-        }
+        public string UserName { get; set; }
 
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection."), DefaultValue("")]
-        public string Password
-        {
-            get
-            {
-                return m_password;
-            }
-            set
-            {
-                m_password = value;
-            }
-        }
+        public string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
         /// </summary>
         [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(PIConnection.DefaultConnectTimeout)]
-        public int ConnectTimeout
-        {
-            get
-            {
-                return m_connectTimeout;
-            }
-            set
-            {
-                m_connectTimeout = value;
-            }
-        }
+        public int ConnectTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the publication interval for this <see cref="PIAdapters.PIPBInputAdapter"/>.
@@ -184,17 +135,7 @@ namespace PIAdapters
         [ConnectionStringParameter,
         Description("Define the publication time interval in 100-nanosecond tick intervals for reading historical data."),
         DefaultValue(DefaultPublicationInterval)]
-        public long PublicationInterval
-        {
-            get
-            {
-                return m_publicationInterval;
-            }
-            set
-            {
-                m_publicationInterval = value;
-            }
-        }
+        public long PublicationInterval { get; set; } = DefaultPublicationInterval;
 
         /// <summary>
         /// Gets the start time for reading data.
@@ -202,11 +143,7 @@ namespace PIAdapters
         [ConnectionStringParameter,
         Description("Define the start time for reading data into real-time session, or do not define to start reading from the beginning of the available data. Either StartTimeConstraint or StopTimeConstraint must be defined in order to start reading data into real-time session. Value should not be defined when using adapter for subscription based temporal session support."),
         DefaultValue("")]
-        public new string StartTimeConstraint
-        {
-            get;
-            set;
-        }
+        public new string StartTimeConstraint { get; set; }
 
         /// <summary>
         /// Gets the stop time for reading data.
@@ -214,11 +151,7 @@ namespace PIAdapters
         [ConnectionStringParameter,
         Description("Define the stop time for reading data into real-time session, or do not define to keep reading until the end of the available data. Either StartTimeConstraint or StopTimeConstraint must be defined in order to start reading data into real-time session. Value should not be defined when using adapter for subscription based temporal session support."),
         DefaultValue("")]
-        public new string StopTimeConstraint
-        {
-            get;
-            set;
-        }
+        public new string StopTimeConstraint { get; set; }
 
         /// <summary>
         /// Gets or sets a value that determines whether timestamps are
@@ -227,29 +160,15 @@ namespace PIAdapters
         [ConnectionStringParameter,
         Description("Indicate whether timestamps are simulated for real-time concentration."),
         DefaultValue(false)]
-        public bool SimulateTimestamp
-        {
-            get
-            {
-                return m_simulateTimestamp;
-            }
-            set
-            {
-                m_simulateTimestamp = value;
-            }
-        }
+        public bool SimulateTimestamp { get; set; }
 
         /// <summary>
         /// Gets or sets value paging factor to read more data per page from PI.
         /// </summary>
         [ConnectionStringParameter,
         Description("Define a paging factor to read more data per page from PI."),
-        DefaultValue(1)]
-        public int PageFactor
-        {
-            get;
-            set;
-        }
+        DefaultValue(DefaultPageFactor)]
+        public int PageFactor { get; set; } = DefaultPageFactor;
 
         /// <summary>
         /// Gets or sets value that determines if the input data should be replayed repeatedly.
@@ -257,27 +176,13 @@ namespace PIAdapters
         [ConnectionStringParameter,
         Description("Define if the input data should be replayed repeatedly."),
         DefaultValue(false)]
-        public bool AutoRepeat
-        {
-            get
-            {
-                return m_autoRepeat;
-            }
-            set
-            {
-                m_autoRepeat = value;
-            }
-        }
+        public bool AutoRepeat { get; set; }
 
         /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True."), DefaultValue(0)]
-        public int TagNamePrefixRemoveCount
-        {
-            get;
-            set;
-        }
+        public int TagNamePrefixRemoveCount { get; set; }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -308,10 +213,7 @@ namespace PIAdapters
         /// </remarks>
         public override int ProcessingInterval
         {
-            get
-            {
-                return base.ProcessingInterval;
-            }
+            get => base.ProcessingInterval;
             set
             {
                 base.ProcessingInterval = value;
@@ -321,9 +223,12 @@ namespace PIAdapters
 
                 if (value == 0)
                 {
-                    // Set reasonable factors for historical data query
-                    PublicationInterval = TimeSpan.FromMinutes(10).Ticks;
-                    PageFactor = 1000;
+                    // Set reasonable factors for fast-as-possible historical data query
+                    if (PublicationInterval == DefaultPublicationInterval)
+                        PublicationInterval = TimeSpan.FromMinutes(10).Ticks;
+
+                    if (PageFactor == DefaultPageFactor)
+                        PageFactor = 1000;
                 }
             }
         }
@@ -343,12 +248,12 @@ namespace PIAdapters
                 StringBuilder status = new StringBuilder();
                 status.Append(base.Status);
 
-                status.AppendFormat("        OSI-PI server name: {0}\r\n", m_serverName);
+                status.AppendFormat("        OSI-PI server name: {0}\r\n", ServerName);
                 status.AppendFormat("       Connected to server: {0}\r\n", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
-                status.AppendFormat("             Instance name: {0}\r\n", m_instanceName);
-                status.AppendFormat("      Publication interval: {0:#,##0}\r\n", m_publicationInterval);
+                status.AppendFormat("             Instance name: {0}\r\n", InstanceName);
+                status.AppendFormat("      Publication interval: {0:#,##0}\r\n", PublicationInterval);
                 status.AppendFormat("             Paging factor: {0:#,##0}\r\n", PageFactor);
-                status.AppendFormat("               Auto-repeat: {0}\r\n", m_autoRepeat);
+                status.AppendFormat("               Auto-repeat: {0}\r\n", AutoRepeat);
                 status.AppendFormat("            Start time-tag: {0}\r\n", m_startTime);
                 status.AppendFormat("             Stop time-tag: {0}\r\n", m_stopTime);
                 status.AppendFormat("    Tag prefixes to remove: {0}\r\n", TagNamePrefixRemoveCount);
@@ -405,43 +310,48 @@ namespace PIAdapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Validate settings.
-            settings.TryGetValue("instanceName", out m_instanceName);
+            settings.TryGetValue(nameof(InstanceName), out m_instanceName);
 
             if (((object)OutputSourceIDs == null || OutputSourceIDs.Length == 0) && string.IsNullOrEmpty(m_instanceName))
                 throw new ArgumentException(string.Format(errorMessage, "instanceName"));
 
-            if (!settings.TryGetValue("ServerName", out m_serverName))
+            if (!settings.TryGetValue(nameof(ServerName), out string setting))
                 throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format serverName=myServerName to the connection string.");
 
-            if (settings.TryGetValue("UserName", out setting))
-                m_userName = setting;
-            else
-                m_userName = null;
+            ServerName = setting;
 
-            if (settings.TryGetValue("Password", out setting))
-                m_password = setting;
+            if (settings.TryGetValue(nameof(UserName), out setting))
+                UserName = setting;
             else
-                m_password = null;
+                UserName = null;
 
-            if (settings.TryGetValue("ConnectTimeout", out setting))
-                m_connectTimeout = Convert.ToInt32(setting);
+            if (settings.TryGetValue(nameof(Password), out setting))
+                Password = setting;
             else
-                m_connectTimeout = PIConnection.DefaultConnectTimeout;
+                Password = null;
 
-            if (!(settings.TryGetValue("publicationInterval", out setting) && Ticks.TryParse(setting, out m_publicationInterval)))
-                m_publicationInterval = DefaultPublicationInterval;
+            if (settings.TryGetValue(nameof(ConnectTimeout), out setting))
+                ConnectTimeout = Convert.ToInt32(setting);
+            else
+                ConnectTimeout = PIConnection.DefaultConnectTimeout;
+
+            if (settings.TryGetValue(nameof(PublicationInterval), out setting) && Ticks.TryParse(setting, out Ticks publicationInterval))
+                PublicationInterval = publicationInterval;
+            else
+                PublicationInterval = DefaultPublicationInterval;
 
             if (settings.TryGetValue(nameof(PageFactor), out setting) && int.TryParse(setting, out int pageFactor) && pageFactor > 0)
                 PageFactor = pageFactor;
+            else
+                PageFactor = DefaultPageFactor;
 
-            if (settings.TryGetValue("simulateTimestamp", out setting))
-                m_simulateTimestamp = setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(SimulateTimestamp), out setting))
+                SimulateTimestamp = setting.ParseBoolean();
 
-            if (settings.TryGetValue("autoRepeat", out setting))
-                m_autoRepeat = setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(AutoRepeat), out setting))
+                AutoRepeat = setting.ParseBoolean();
 
             // Define output measurements this input adapter can support based on the instance name (if not already defined)
             if (string.IsNullOrEmpty(m_instanceName))
@@ -468,7 +378,7 @@ namespace PIAdapters
         public override string GetShortStatus(int maxLength)
         {
             if (Enabled && m_publicationTime > 0)
-                return $"Publishing data for {(new DateTime(m_publicationTime)).ToString("yyyy-MM-dd HH:mm:ss.fff")}...".CenterText(maxLength);
+                return $"Publishing data for {new DateTime(m_publicationTime):yyyy-MM-dd HH:mm:ss.fff}...".CenterText(maxLength);
 
             return "Not currently publishing data".CenterText(maxLength);
         }
@@ -486,10 +396,10 @@ namespace PIAdapters
 
                 m_connection = new PIConnection
                 {
-                    ServerName = m_serverName,
-                    UserName = m_userName,
-                    Password = m_password,
-                    ConnectTimeout = m_connectTimeout
+                    ServerName = ServerName,
+                    UserName = UserName,
+                    Password = Password,
+                    ConnectTimeout = ConnectTimeout
                 };
 
                 m_connection.Open();
@@ -564,7 +474,6 @@ namespace PIAdapters
 
                     string tagName;
                     m_points = new PIPointList();
-                    PIPoint point;
 
                     foreach (var result in query)
                     {
@@ -573,7 +482,7 @@ namespace PIAdapters
                         if (!string.IsNullOrWhiteSpace(result.AlternateTag))
                             tagName = result.AlternateTag;
 
-                        if (tagList.Add(tagName) && PIPoint.TryFindPIPoint(m_connection.Server, GetPITagName(tagName), out point))
+                        if (tagList.Add(tagName) && PIPoint.TryFindPIPoint(m_connection.Server, GetPITagName(tagName), out PIPoint point))
                         {
                             m_tagKeyMap[point.ID] = result.Key;
                             m_points.Add(point);
@@ -634,6 +543,10 @@ namespace PIAdapters
                 try
                 {
                     AFValue currentPoint = m_dataReader.Current;
+
+                    if ((object)currentPoint == null)
+                        throw new NullReferenceException("PI data read returned a null value.");
+
                     long timestamp = currentPoint.Timestamp.UtcTime.Ticks;
 
                     if (m_publicationTime == 0)
@@ -641,7 +554,7 @@ namespace PIAdapters
 
                     // Set next reasonable publication time
                     while (m_publicationTime < timestamp)
-                        m_publicationTime += m_publicationInterval;
+                        m_publicationTime += PublicationInterval;
 
                     do
                     {
@@ -651,7 +564,7 @@ namespace PIAdapters
                             measurements.Add(new Measurement
                             {
                                 Metadata = m_tagKeyMap[currentPoint.PIPoint.ID].Metadata,
-                                Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
+                                Timestamp = SimulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
                                 Value = Convert.ToDouble(currentPoint.Value),
                                 StateFlags = ConvertStatusFlags(currentPoint.Status)
                             });
@@ -666,6 +579,10 @@ namespace PIAdapters
                         {
                             // Read record value
                             currentPoint = m_dataReader.Current;
+
+                            if ((object)currentPoint == null)
+                                throw new NullReferenceException("PI data read returned a null value.");
+
                             timestamp = currentPoint.Timestamp.UtcTime.Ticks;
                         }
                         else
@@ -682,7 +599,7 @@ namespace PIAdapters
                                     // Finished reading all available data
                                     m_readTimer.Enabled = false;
 
-                                    if (m_autoRepeat)
+                                    if (AutoRepeat)
                                         ThreadPool.QueueUserWorkItem(StartDataReader);
                                     else
                                         OnProcessingComplete();
@@ -693,7 +610,7 @@ namespace PIAdapters
                                 // Finished reading all available data
                                 m_readTimer.Enabled = false;
 
-                                if (m_autoRepeat)
+                                if (AutoRepeat)
                                     ThreadPool.QueueUserWorkItem(StartDataReader);
                                 else
                                     OnProcessingComplete();
