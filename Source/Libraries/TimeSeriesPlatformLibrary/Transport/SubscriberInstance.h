@@ -34,6 +34,8 @@ namespace Transport
     {
     private:
         // Subscription members
+        DataSubscriber m_subscriber;
+        SubscriptionInfo m_subscriptionInfo;
         std::string m_hostname;
         uint16_t m_port;
         uint16_t m_udpPort;
@@ -43,17 +45,16 @@ namespace Transport
         int16_t m_retryInterval;
         std::string m_filterExpression;
         std::string m_metadataFilters;
-        DataSubscriber m_subscriber;
-        SubscriptionInfo m_subscriptionInfo;
         std::string m_startTime;
         std::string m_stopTime;
-        void* m_userData;
 
-        GSF::StringMap<DeviceMetadataPtr> m_devices;
         std::unordered_map<Guid, MeasurementMetadataPtr> m_measurements;
+        GSF::StringMap<DeviceMetadataPtr> m_devices;
         GSF::StringMap<ConfigurationFramePtr> m_configurationFrames;
 
         Mutex m_configurationUpdateLock;
+        void* m_userData;
+
         void SendMetadataRefreshCommand();
 
         static void ConstructConfigurationFrames(const GSF::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, GSF::StringMap<ConfigurationFramePtr>& configurationFrames);

@@ -199,9 +199,9 @@ namespace GSF
     };
 
     // std::unordered_map string hasher
-    struct StringHash : std::unary_function<std::string, std::size_t>
+    struct StringHash : std::unary_function<std::string, size_t>
     {
-        std::size_t operator()(const std::string& value) const;
+        size_t operator()(const std::string& value) const;
     };
 
     // std::unordered_map string equality tester

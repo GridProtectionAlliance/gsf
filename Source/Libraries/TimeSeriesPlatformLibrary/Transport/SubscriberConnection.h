@@ -26,6 +26,7 @@
 
 #include "../Common/CommonTypes.h"
 #include "../Common/Timer.h"
+#include "../Data/DataSet.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
 
@@ -69,6 +70,11 @@ namespace Transport
         std::vector<uint8_t> m_keys[2];
         std::vector<uint8_t> m_ivs[2];
 
+        // Statistics counters
+        uint64_t m_totalCommandChannelBytesSent;
+        uint64_t m_totalDataChannelBytesSent;
+        uint64_t m_totalMeasurementsSent;
+
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
@@ -78,11 +84,28 @@ namespace Transport
         //bool m_tsscResetRequested;
         //uint16_t m_tsscSequenceNumber;
 
+        // Server request handlers
+        void HandleSubscribe(uint8_t* data, uint32_t length);
+        void HandleUnsubscribe();
+        void HandleMetadataRefresh(uint8_t* data, uint32_t length);
+        void HandleRotateCipherKeys();
+        void HandleUpdateProcessingInterval(uint8_t* data, uint32_t length);
+        void HandleDefineOperationalModes(uint8_t* data, uint32_t length);
+        void HandleConfirmNotification(uint8_t* data, uint32_t length);
+        void HandleConfirmBufferBlock(uint8_t* data, uint32_t length);
+        void HandlePublishCommandMeasurements(uint8_t* data, uint32_t length);
+        void HandleUserCommand(uint8_t command, uint8_t* data, uint32_t length);
+
+        bool ParseSubscriptionRequest(const std::string& filterExpression, SignalIndexCachePtr& signalIndexCache);
         void PublishDataPacket(const std::vector<uint8_t>& packet, int32_t count);
         bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
         void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
+        std::vector<uint8_t> SerializeSignalIndexCache(const SignalIndexCachePtr& signalIndexCache);
+        std::vector<uint8_t> SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const;
+        GSF::Data::DataSetPtr FilterClientMetadata(const StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
+
         static void PingTimerElapsed(Timer* timer, void* userData);
     public:
         SubscriberConnection(DataPublisherPtr parent, GSF::IOContext& commandChannelService, GSF::IOContext& dataChannelService);
@@ -129,6 +152,11 @@ namespace Transport
         const SignalIndexCachePtr& GetSignalIndexCache() const;
         void SetSignalIndexCache(SignalIndexCachePtr signalIndexCache);
 
+        // Statistical functions
+        uint64_t GetTotalCommandChannelBytesSent() const;
+        uint64_t GetTotalDataChannelBytesSent() const;
+        uint64_t GetTotalMeasurementsSent() const;
+
         bool CipherKeysDefined() const;
         std::vector<uint8_t> Keys(int32_t cipherIndex);
         std::vector<uint8_t> IVs(int32_t cipherIndex);
@@ -142,6 +170,12 @@ namespace Transport
         void CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
         void DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
         void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+
+        bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::string& message);
+        bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data = {});
+
+        std::string DecodeString(const uint8_t* data, uint32_t offset, uint32_t length) const;
+        std::vector<uint8_t> EncodeString(const std::string& value) const;
     };
 
     typedef GSF::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;

@@ -158,7 +158,7 @@ int32_t GSF::IndexOf(const string& value, const string& findValue, bool ignoreCa
     if (it.empty())
         return -1;
 
-    return distance(value.begin(), it.begin());
+    return std::distance(value.begin(), it.begin());
 }
 
 int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
@@ -168,7 +168,7 @@ int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index
     if (it.empty())
         return -1;
 
-    return distance(value.begin(), it.begin());
+    return std::distance(value.begin(), it.begin());
 }
 
 int32_t GSF::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
@@ -178,7 +178,7 @@ int32_t GSF::LastIndexOf(const string& value, const string& findValue, bool igno
     if (it.empty())
         return -1;
 
-    return distance(value.begin(), it.begin());
+    return std::distance(value.begin(), it.begin());
 }
 
 vector<string> GSF::Split(const string& value, const string& delimiterValue, bool ignoreCase)

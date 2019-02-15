@@ -51,8 +51,6 @@ SubscriberInstance::SubscriberInstance() :
     m_subscriber.SetUserData(this);
 }
 
-SubscriberInstance::~SubscriberInstance() = default;
-
 // public functions
 
 void SubscriberInstance::Initialize(const string& hostname, uint16_t port, uint16_t udpPort)
@@ -321,7 +319,7 @@ bool SubscriberInstance::TryGetDeviceAcronyms(vector<string>& deviceAcronyms)
 void IterateDeviceMetadataForCopy(const DeviceMetadataPtr& device, void* userData)
 {
     map<string, DeviceMetadataPtr>* devices = static_cast<map<string, DeviceMetadataPtr>*>(userData);
-    devices->insert(pair<string, DeviceMetadataPtr>(device->Acronym, device));
+    devices->insert_or_assign(device->Acronym, device);
 }
 
 void SubscriberInstance::GetParsedDeviceMetadata(map<string, DeviceMetadataPtr>& devices)
@@ -333,7 +331,7 @@ void SubscriberInstance::GetParsedDeviceMetadata(map<string, DeviceMetadataPtr>&
 void IterateMeasurementMetadataForCopy(const MeasurementMetadataPtr& measurement, void* userData)
 {
     map<Guid, MeasurementMetadataPtr>* measurements = static_cast<map<Guid, MeasurementMetadataPtr>*>(userData);
-    measurements->insert(pair<Guid, MeasurementMetadataPtr>(measurement->SignalID, measurement));
+    measurements->insert_or_assign(measurement->SignalID, measurement);
 }
 
 void SubscriberInstance::GetParsedMeasurementMetadata(map<Guid, MeasurementMetadataPtr>& measurements)
@@ -548,6 +546,8 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     return info;
 }
 
+SubscriberInstance::~SubscriberInstance() = default;
+
 void SubscriberInstance::StatusMessage(const string& message)
 {
     cout << message << endl << endl;
@@ -637,7 +637,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         deviceMetadata->Latitude = stod(Coalesce(device.child_value("Latitude"), "0.0"));
         deviceMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
 
-        devices.insert(pair<string, DeviceMetadataPtr>(deviceMetadata->Acronym, deviceMetadata));
+        devices.insert_or_assign(deviceMetadata->Acronym, deviceMetadata);
     }
 
     // Query MeasurementDetail records from metadata
@@ -656,7 +656,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         measurementMetadata->Description = device.child_value("Description");
         measurementMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
 
-        measurements.insert(pair<Guid, MeasurementMetadataPtr>(measurementMetadata->SignalID, measurementMetadata));
+        measurements.insert_or_assign(measurementMetadata->SignalID, measurementMetadata);
 
         // Lookup associated device
         auto iterator = devices.find(measurementMetadata->DeviceAcronym);
@@ -952,7 +952,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
             }
         }
 
-        configurationFrames.insert(pair<string, ConfigurationFramePtr>(configurationFrame->DeviceAcronym, configurationFrame));
+        configurationFrames.insert_or_assign(configurationFrame->DeviceAcronym, configurationFrame);
     }
 }
 

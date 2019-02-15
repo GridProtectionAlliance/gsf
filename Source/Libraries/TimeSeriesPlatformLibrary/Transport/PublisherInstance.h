@@ -90,10 +90,10 @@ namespace Transport
         void SetUserData(void* userData);
 
         // Statistical functions
-        uint64_t GetTotalCommandChannelBytesSent() const;
-        uint64_t GetTotalDataChannelBytesSent() const;
-        uint64_t GetTotalMeasurementsSent() const;
-        bool IsConnected() const;
+        uint64_t GetTotalCommandChannelBytesSent();
+        uint64_t GetTotalDataChannelBytesSent();
+        uint64_t GetTotalMeasurementsSent();
+
         bool IsInitialized() const;
     };
 }}}

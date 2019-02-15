@@ -24,12 +24,11 @@
 #ifndef __DATA_PUBLISHER_H
 #define __DATA_PUBLISHER_H
 
+#include "SubscriberConnection.h"
 #include "../Common/CommonTypes.h"
 #include "../Common/ThreadSafeQueue.h"
 #include "../Data/DataSet.h"
-#include "SubscriberConnection.h"
 #include "TransportTypes.h"
-#include "SignalIndexCache.h"
 #include "Constants.h"
 
 namespace GSF {
@@ -75,12 +74,6 @@ namespace Transport
         void* m_userData;
         bool m_disposing;
 
-        // Statistics counters
-        uint64_t m_totalCommandChannelBytesSent;
-        uint64_t m_totalDataChannelBytesSent;
-        uint64_t m_totalMeasurementsSent;
-        bool m_connected;
-
         // Callback thread members
         Thread m_callbackThread;
         ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
@@ -101,25 +94,12 @@ namespace Transport
         void StartAccept();
         void AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error);
         void RemoveConnection(const SubscriberConnectionPtr& connection);
-        bool ParseSubscriptionRequest(const SubscriberConnectionPtr& connection, const std::string& filterExpression, SignalIndexCachePtr& signalIndexCache);
 
         // Callbacks
         MessageCallback m_statusMessageCallback;
         MessageCallback m_errorMessageCallback;
         SubscriberConnectionCallback m_clientConnectedCallback;
         SubscriberConnectionCallback m_clientDisconnectedCallback;
-
-        // Server request handlers
-        void HandleSubscribe(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandleUnsubscribe(const SubscriberConnectionPtr& connection);
-        void HandleMetadataRefresh(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandleRotateCipherKeys(const SubscriberConnectionPtr& connection);
-        void HandleUpdateProcessingInterval(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandleDefineOperationalModes(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandleConfirmNotification(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandleConfirmBufferBlock(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandlePublishCommandMeasurements(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length);
-        void HandleUserCommand(const SubscriberConnectionPtr& connection, uint8_t command, uint8_t* data, uint32_t length);
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
@@ -133,13 +113,7 @@ namespace Transport
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void SerializeSignalIndexCache(const SubscriberConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache, std::vector<uint8_t>& buffer);
-
-        GSF::Data::DataSetPtr FilterClientMetadata(const SubscriberConnectionPtr& connection, const GSF::StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
-        std::vector<uint8_t> SerializeSignalIndexCache(const SubscriberConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache) const;
-        std::vector<uint8_t> SerializeMetadata(const SubscriberConnectionPtr& connection, const GSF::Data::DataSetPtr& metadata) const;
-        bool SendClientResponse(const SubscriberConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message);
-        bool SendClientResponse(const SubscriberConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data = {});
+        static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
         DataPublisher(const GSF::TcpEndPoint& endpoint);
@@ -188,10 +162,9 @@ namespace Transport
         void SetUserData(void* userData);
 
         // Statistical functions
-        uint64_t GetTotalCommandChannelBytesSent() const;
-        uint64_t GetTotalDataChannelBytesSent() const;
-        uint64_t GetTotalMeasurementsSent() const;
-        bool IsConnected() const;
+        uint64_t GetTotalCommandChannelBytesSent();
+        uint64_t GetTotalDataChannelBytesSent();
+        uint64_t GetTotalMeasurementsSent();
 
         // Callback registration
         //
@@ -205,8 +178,8 @@ namespace Transport
         void RegisterClientConnectedCallback(const SubscriberConnectionCallback& clientConnectedCallback);
         void RegisterClientDisconnectedCallback(const SubscriberConnectionCallback& clientDisconnectedCallback);
 
-        static std::string DecodeClientString(const SubscriberConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length);
-        static std::vector<uint8_t> EncodeClientString(const SubscriberConnectionPtr& connection, const std::string& value);
+        //static std::string DecodeClientString(const SubscriberConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length);
+        //static std::vector<uint8_t> EncodeClientString(const SubscriberConnectionPtr& connection, const std::string& value);
 
         friend class SubscriberConnection;
     };

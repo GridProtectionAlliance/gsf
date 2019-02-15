@@ -24,32 +24,17 @@
 // ReSharper disable once CppUnusedIncludeDirective
 #include "../FilterExpressions/FilterExpressions.h"
 #include "DataPublisher.h"
-#include "Constants.h"
 #include "MetadataSchema.h"
 #include "ActiveMeasurementsSchema.h"
-#include "../Common/Convert.h"
-#include "../Common/EndianConverter.h"
 #include "../FilterExpressions/FilterExpressionParser.h"
 
 using namespace std;
-using namespace boost;
-using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace GSF;
 using namespace GSF::Data;
 using namespace GSF::FilterExpressions;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
-
-inline int32_t GetColumnIndex(const DataTablePtr& table, const string& columnName)
-{
-    const DataColumnPtr& column = table->Column(columnName);
-
-    if (column == nullptr)
-        throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
-
-    return column->Index();
-}
 
 struct SubscriberConnectionInfo
 {
@@ -72,10 +57,6 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_cipherKeyRotationPeriod(60000),
     m_userData(nullptr),
     m_disposing(false),
-    m_totalCommandChannelBytesSent(0L),
-    m_totalDataChannelBytesSent(0L),
-    m_totalMeasurementsSent(0L),
-    m_connected(false),
     m_clientAcceptor(m_commandChannelService, endpoint)
 {
     m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
@@ -122,7 +103,7 @@ void DataPublisher::RunCommandChannelAcceptThread()
 void DataPublisher::StartAccept()
 {
     const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
-    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, asio::placeholders::error));
+    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
 }
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
@@ -149,344 +130,6 @@ void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
         DispatchClientDisconnected(connection->GetSubscriberID(), connection->GetConnectionID());
 
     m_subscriberConnectionsLock.unlock();
-}
-
-bool DataPublisher::ParseSubscriptionRequest(const SubscriberConnectionPtr& connection, const string& filterExpression, SignalIndexCachePtr& signalIndexCache)
-{
-    if (connection == nullptr)
-        return false;
-
-    string exceptionMessage, parsingException;
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
-
-    // Define an empty schema if none has been defined
-    if (m_filteringMetadata == nullptr)
-        m_filteringMetadata = DataSet::FromXml(ActiveMeasurementsSchema, ActiveMeasurementsSchemaLength);
-
-    // Set filtering dataset, this schema contains a more flattened, denormalized view of available metadata for easier filtering
-    parser->SetDataSet(m_filteringMetadata);
-
-    // Manually specified signal ID and measurement key fields are expected to be searched against ActiveMeasurements table
-    parser->SetTableIDFields("ActiveMeasurements", FilterExpressionParser::DefaultTableIDFields);
-    parser->SetPrimaryTableName("ActiveMeasurements");
-
-    // Register call-back for ANLTR parsing exceptions -- these will be appended to any primary exception message
-    parser->RegisterParsingExceptionCallback([&parsingException](FilterExpressionParserPtr, const string& exception) { parsingException = exception; });
-
-    try
-    {
-        parser->Evaluate();
-    }
-    catch (const FilterExpressionParserException& ex)
-    {
-        exceptionMessage = "FilterExpressionParser exception: " + string(ex.what());
-    }
-    catch (const ExpressionTreeException& ex)
-    {
-        exceptionMessage = "ExpressionTree exception: " + string(ex.what());
-    }
-    catch (...)
-    {
-        exceptionMessage = current_exception_diagnostic_information(true);
-    }
-
-    if (!exceptionMessage.empty())
-    {
-        if (!parsingException.empty())
-            exceptionMessage += "\n" + parsingException;
-
-        SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, exceptionMessage);
-        DispatchErrorMessage(exceptionMessage);
-        return false;
-    }
-
-    uint32_t charSizeEstimate;
-
-    switch (connection->GetEncoding())
-    {
-        case OperationalEncoding::ANSI:
-        case OperationalEncoding::Unicode:
-        case OperationalEncoding::BigEndianUnicode:
-            charSizeEstimate = 2U;
-            break;
-        default:
-            charSizeEstimate = 1U;
-            break;
-    }
-
-    const DataTablePtr& activeMeasurements = m_filteringMetadata->Table("ActiveMeasurements");
-    const vector<DataRowPtr>& rows = parser->FilteredRows();
-    const int32_t idColumn = GetColumnIndex(activeMeasurements, "ID");
-    const int32_t signalIDColumn = GetColumnIndex(activeMeasurements, "SignalID");
-
-    // Create a new signal index cache for filtered measurements
-    signalIndexCache = NewSharedPtr<SignalIndexCache>();
-
-    for (size_t i = 0; i < rows.size(); i++)
-    {
-        const DataRowPtr& row = rows[i];
-        const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();        
-        string source;
-        uint32_t id;
-
-        ParseMeasurementKey(row->ValueAsString(idColumn).GetValueOrDefault(), source, id);
-        signalIndexCache->AddMeasurementKey(uint16_t(i), signalID, source, id, charSizeEstimate);
-    }
-    
-    return true;
-}
-
-void DataPublisher::HandleSubscribe(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-    try
-    {
-        if (length >= 6)
-        {
-            const uint8_t flags = data[0];
-            int32_t index = 1;
-
-            if ((flags & DataPacketFlags::Synchronized) > 0)
-            {
-                // Remotely synchronized subscriptions are currently disallowed by data publisher
-                const string message = "Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.";
-                SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
-                DispatchErrorMessage(message);
-            }
-            else
-            {
-                // Next 4 bytes are an integer representing the length of the connection string that follows
-                const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
-                index += 4;
-
-                if (byteLength > 0 && length >= byteLength + 6U)
-                {
-                    const bool usePayloadCompression = (connection->GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
-                    const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
-                    const string connectionString = DecodeClientString(connection, data, index, byteLength);
-                    const StringMap<string> settings = ParseKeyValuePairs(connectionString);
-                    string setting;
-
-                    if (TryGetValue(settings, "includeTime", setting))
-                        connection->SetIncludeTime(ParseBoolean(setting));
-
-                    if (TryGetValue(settings, "useMillisecondResolution", setting))
-                        connection->SetUseMillisecondResolution(ParseBoolean(setting));
-
-                    if (TryGetValue(settings, "requestNaNValueFilter", setting))
-                        connection->SetIsNaNFiltered(ParseBoolean(setting));
-
-                    connection->SetUsePayloadCompression(usePayloadCompression);
-                    connection->SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
-                    
-                    SignalIndexCachePtr signalIndexCache = nullptr;
-
-                    // Apply subscriber filter expression and build signal index cache
-                    if (TryGetValue(settings, "inputMeasurementKeys", setting))
-                    {
-                        if (!ParseSubscriptionRequest(connection, setting, signalIndexCache))
-                            return;
-                    }
-
-                    // Pass subscriber assembly information to connection, if defined
-                    if (TryGetValue(settings, "assemblyInfo", setting))
-                    {
-                        connection->SetSubscriptionInfo(setting);
-                        DispatchStatusMessage("Reported client subscription info: " + connection->GetSubscriptionInfo());
-                    }
-
-                    // TODO: Set up UDP data channel if client has requested this
-                    if (TryGetValue(settings, "dataChannel", setting))
-                    {
-                    /*
-                        Socket clientSocket = connection.GetCommandChannelSocket();
-                        Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                        IPEndPoint localEndPoint = null;
-                        string networkInterface = "::0";
-
-                        // Make sure return interface matches incoming client connection
-                        if ((object)clientSocket != null)
-                            localEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
-
-                        if ((object)localEndPoint != null)
-                        {
-                            networkInterface = localEndPoint.Address.ToString();
-
-                            // Remove dual-stack prefix
-                            if (networkInterface.StartsWith("::ffff:", true, CultureInfo.InvariantCulture))
-                                networkInterface = networkInterface.Substring(7);
-                        }
-
-                        if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
-                        {
-                            if ((compressionModes & CompressionModes.TSSC) > 0)
-                            {
-                                // TSSC is a stateful compression algorithm which will not reliably support UDP
-                                OnStatusMessage(MessageLevel.Warning, "Cannot use TSSC compression mode with UDP - special compression mode disabled");
-
-                                // Disable TSSC compression processing
-                                compressionModes &= ~CompressionModes.TSSC;
-                                connection.OperationalModes &= ~OperationalModes.CompressionModeMask;
-                                connection.OperationalModes |= (OperationalModes)compressionModes;
-                            }
-
-                            connection.DataChannel = new UdpServer($"Port=-1; Clients={connection.IPAddress}:{int.Parse(setting)}; interface={networkInterface}");
-                            connection.DataChannel.Start();
-                        }
-                    */
-                    }
-
-                    int32_t signalCount = 0;
-
-                    if (signalIndexCache != nullptr)
-                    {
-                        signalCount = signalIndexCache->Count();
-
-                        // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
-                        SendClientResponse(connection, ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(connection, signalIndexCache));
-                    }
-
-                    connection->SetSignalIndexCache(signalIndexCache);
-
-                    const string message = "Client subscribed as " + string(useCompactMeasurementFormat ? "" : "non-") + "compact unsynchronized with " + ToString(signalCount) + " signals.";
-
-                    connection->SetIsSubscribed(true);
-                    SendClientResponse(connection, ServerResponse::Succeeded, ServerCommand::Subscribe, message);
-                    DispatchStatusMessage(message);
-                }
-                else
-                {
-                    const string message = byteLength > 0 ?
-                        "Not enough buffer was provided to parse client data subscription." :
-                        "Cannot initialize client data subscription without a connection string.";
-
-                    SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
-                    DispatchErrorMessage(message);
-                }            
-            }            
-        }
-        else
-        {
-            const string message = "Not enough buffer was provided to parse client data subscription.";
-            SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
-            DispatchErrorMessage(message);
-        }
-    }
-    catch (const std::exception& ex)
-    {
-        const string message = "Failed to process client data subscription due to exception: " + string(ex.what());
-        SendClientResponse(connection, ServerResponse::Failed, ServerCommand::Subscribe, message);
-        DispatchErrorMessage(message);
-    }
-}
-
-void DataPublisher::HandleUnsubscribe(const SubscriberConnectionPtr& connection)
-{
-    connection->SetIsSubscribed(false);
-}
-
-void DataPublisher::HandleMetadataRefresh(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-    // Ensure that the subscriber is allowed to request meta-data
-    if (!m_allowMetadataRefresh)
-        throw PublisherException("Meta-data refresh has been disallowed by the DataPublisher.");
-
-    DispatchStatusMessage("Received meta-data refresh request from " + connection->GetConnectionID() + ", preparing response...");
-
-    StringMap<ExpressionTreePtr> filterExpressions;
-    const DateTime startTime = UtcNow(); //-V821
-
-    try
-    {
-        uint32_t index = 0;
-
-        // Note that these client provided meta-data filter expressions are applied only to the
-        // in-memory DataSet and therefore are not subject to SQL injection attacks
-        if (length > 4)
-        {
-            const uint32_t responseLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
-            index += 4;
-
-            if (length >= responseLength + 4)
-            {
-                const string metadataFilters = DecodeClientString(connection, data, index, responseLength);
-                const vector<ExpressionTreePtr> expressions = FilterExpressionParser::GenerateExpressionTrees(m_metadata, "MeasurementDetail", metadataFilters);
-
-                // Go through each subscriber specified filter expressions and add it to dictionary
-                for (const auto& expression : expressions)
-                    filterExpressions[expression->Table()->Name()] = expression;
-            }
-        }
-    }
-    catch (const std::exception& ex)
-    {
-        DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: " + string(ex.what()));
-    }
-
-    try
-    {
-        const DataSetPtr metadata = FilterClientMetadata(connection, filterExpressions);
-        const vector<uint8_t> serializedMetadata = SerializeMetadata(connection, metadata);
-        vector<DataTablePtr> tables = metadata->Tables();
-        uint64_t rowCount = 0;
-
-        for (size_t i = 0; i < tables.size(); i++)
-            rowCount += tables[i]->RowCount();
-
-        if (rowCount > 0)
-        {
-            const TimeSpan elapsedTime = UtcNow() - startTime;
-            DispatchStatusMessage(ToString(rowCount) + " records spanning " + ToString(tables.size()) + " tables of meta-data prepared in " + ToString(elapsedTime) + ", sending response to " + connection->GetConnectionID() + "...");
-        }
-        else
-        {
-            DispatchStatusMessage("No meta-data is available" + string(filterExpressions.empty() ? "" : " due to user applied meta-data filters") + ", sending an empty response to " + connection->GetConnectionID() + "...");
-        }
-
-        SendClientResponse(connection, ServerResponse::Succeeded, ServerCommand::MetadataRefresh, serializedMetadata);
-    }
-    catch (const std::exception& ex)
-    {
-        const string message = "Failed to transfer meta-data due to exception: " + string(ex.what());
-        SendClientResponse(connection, ServerResponse::Failed, ServerCommand::MetadataRefresh, message);
-        DispatchErrorMessage(message);
-    }
-}
-
-void DataPublisher::HandleRotateCipherKeys(const SubscriberConnectionPtr& connection)
-{
-}
-
-void DataPublisher::HandleUpdateProcessingInterval(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-}
-
-void DataPublisher::HandleDefineOperationalModes(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-    if (length < 4)
-        return;
-
-    const uint32_t operationalModes = EndianConverter::Default.ToBigEndian<uint32_t>(data, 0);
-
-    if ((operationalModes & OperationalModes::VersionMask) != 0U)
-        DispatchStatusMessage("Protocol version not supported. Operational modes may not be set correctly for client \"" + connection->GetConnectionID() + "\".");
-
-    connection->SetOperationalModes(operationalModes);
-}
-
-void DataPublisher::HandleConfirmNotification(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-}
-
-void DataPublisher::HandleConfirmBufferBlock(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-}
-
-void DataPublisher::HandlePublishCommandMeasurements(const SubscriberConnectionPtr& connection, uint8_t* data, uint32_t length)
-{
-}
-
-void DataPublisher::HandleUserCommand(const SubscriberConnectionPtr& connection, uint8_t command, uint8_t* data, uint32_t length)
-{
 }
 
 void DataPublisher::Dispatch(const DispatcherFunction& function)
@@ -592,228 +235,14 @@ void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const st
     delete data;
 }
 
-void DataPublisher::SerializeSignalIndexCache(const SubscriberConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache, vector<uint8_t>& buffer)
+int32_t DataPublisher::GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName)
 {
+        const DataColumnPtr& column = table->Column(columnName);
     
-}
-
-DataSetPtr DataPublisher::FilterClientMetadata(const SubscriberConnectionPtr& connection, const StringMap<ExpressionTreePtr>& filterExpressions) const
-{
-    if (filterExpressions.empty())
-        return m_metadata;
-
-    DataSetPtr dataSet = NewSharedPtr<DataSet>();
-    vector<DataTablePtr> tables = m_metadata->Tables();
-
-    for (size_t i = 0; i < tables.size(); i++)
-    {
-        const DataTablePtr table = tables[i];
-        DataTablePtr filteredTable = dataSet->CreateTable(table->Name());
-        ExpressionTreePtr expression;
-
-        for (int32_t j = 0; j < table->ColumnCount(); j++)
-            filteredTable->AddColumn(filteredTable->CloneColumn(table->Column(j)));
-
-        if (TryGetValue<ExpressionTreePtr>(filterExpressions, table->Name(), expression, nullptr))
-        {
-            vector<DataRowPtr> matchedRows = FilterExpressionParser::Select(expression);
-
-            for (size_t j = 0; j < matchedRows.size(); j++)
-                filteredTable->AddRow(filteredTable->CloneRow(matchedRows[j]));
-        }
-        else
-        {
-            for (int32_t j = 0; j < table->RowCount(); j++)
-                filteredTable->AddRow(filteredTable->CloneRow(table->Row(j)));
-        }
-
-        dataSet->AddOrUpdateTable(filteredTable);
-    }
-
-    return dataSet;
-}
-
-vector<uint8_t> DataPublisher::SerializeSignalIndexCache(const SubscriberConnectionPtr& connection, const SignalIndexCachePtr& signalIndexCache) const
-{
-    vector<uint8_t> serializationBuffer;
-
-    if (connection != nullptr)
-    {
-        const uint32_t operationalModes = connection->GetOperationalModes();
-        const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
-        const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
-        const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
-
-        if (!useCommonSerializationFormat)
-            throw PublisherException("DataPublisher only supports common serialization format");
-
-        serializationBuffer.reserve(uint32_t(signalIndexCache->GetBinaryLength() * 0.02));
-        signalIndexCache->Serialize(connection, serializationBuffer);
-
-        if (compressSignalIndexCache && useGZipCompression)
-        {
-            const MemoryStream memoryStream(serializationBuffer);
-            StreamBuffer streamBuffer;
-
-            streamBuffer.push(GZipCompressor());
-            streamBuffer.push(memoryStream);
-
-            vector<uint8_t> compressedBuffer;
-            CopyStream(&streamBuffer, compressedBuffer);
-            return compressedBuffer;
-        }
-    }
-
-    return serializationBuffer;
-}
-
-vector<uint8_t> DataPublisher::SerializeMetadata(const SubscriberConnectionPtr& connection, const DataSetPtr& metadata) const
-{
-    vector<uint8_t> serializationBuffer;
-
-    if (connection != nullptr)
-    {
-        const uint32_t operationalModes = connection->GetOperationalModes();
-        const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
-        const bool compressMetadata = (operationalModes & OperationalModes::CompressMetadata) > 0;
-        const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
-
-        if (!useCommonSerializationFormat)
-            throw PublisherException("DataPublisher only supports common serialization format");
-
-        metadata->WriteXml(serializationBuffer);
-
-        if (compressMetadata && useGZipCompression)
-        {
-            const MemoryStream memoryStream(serializationBuffer);
-            StreamBuffer streamBuffer;
-
-            streamBuffer.push(GZipCompressor());
-            streamBuffer.push(memoryStream);
-
-            vector<uint8_t> compressionBuffer;
-            CopyStream(&streamBuffer, compressionBuffer);
-
-            return compressionBuffer;
-        }
-    }
-
-    return serializationBuffer;
-}
-
-bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::string& message)
-{
-    // TODO: Move this code into SubscriberConnection::SendResponse - consider removing local reference function
-    return SendClientResponse(connection, responseCode, commandCode, EncodeClientString(connection, message));
-}
-
-bool DataPublisher::SendClientResponse(const SubscriberConnectionPtr& connection, uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data)
-{
-    bool success = false;
-
-    // TODO: Move this code into SubscriberConnection::SendResponse - consider removing local reference function
-    try
-    {
-        const bool dataPacketResponse = responseCode == ServerResponse::DataPacket;
-        const bool useDataChannel = dataPacketResponse || responseCode == ServerResponse::BufferBlock;
-        const uint32_t packetSize = data.size() + 6;
-        vector<uint8_t> buffer {};
-
-        buffer.reserve(Common::PayloadHeaderSize + packetSize);
-
-        // Add command payload alignment header (deprecated)
-        buffer.push_back(0xAA);
-        buffer.push_back(0xBB);
-        buffer.push_back(0xCC);
-        buffer.push_back(0xDD);
-
-        EndianConverter::WriteLittleEndianBytes(buffer, packetSize);
-
-        // Add response code
-        buffer.push_back(responseCode);
-
-        // Add original in response to command code
-        buffer.push_back(commandCode);
-
-        if (data.empty())
-        {
-            // Add zero sized data buffer to response packet
-            WriteBytes(buffer, uint32_t(0));
-        }
-        else
-        {
-            if (dataPacketResponse && connection->CipherKeysDefined())
-            {
-                // TODO: Implement UDP AES data packet encryption
-                //// Get a local copy of volatile keyIVs and cipher index since these can change at any time
-                //byte[][][] keyIVs = connection.KeyIVs;
-                //int cipherIndex = connection.CipherIndex;
-
-                //// Reserve space for size of data buffer to go into response packet
-                //workingBuffer.Write(ZeroLengthBytes, 0, 4);
-
-                //// Get data packet flags
-                //DataPacketFlags flags = (DataPacketFlags)data[0];
-
-                //// Encode current cipher index into data packet flags
-                //if (cipherIndex > 0)
-                //    flags |= DataPacketFlags.CipherIndex;
-
-                //// Write data packet flags into response packet
-                //workingBuffer.WriteByte((byte)flags);
-
-                //// Copy source data payload into a memory stream
-                //MemoryStream sourceData = new MemoryStream(data, 1, data.Length - 1);
-
-                //// Encrypt payload portion of data packet and copy into the response packet
-                //Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
-
-                //// Calculate length of encrypted data payload
-                //int payloadLength = (int)workingBuffer.Length - 6;
-
-                //// Move the response packet position back to the packet size reservation
-                //workingBuffer.Seek(2, SeekOrigin.Begin);
-
-                //// Add the actual size of payload length to response packet
-                //workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
-            }
-            else
-            {
-                // Add size of data buffer to response packet
-                EndianConverter::WriteBigEndianBytes(buffer, static_cast<int32_t>(data.size()));
-
-                // Write data buffer
-                WriteBytes(buffer, data);
-            }
-
-            // TODO: Publish packet on UDP
-            //// Data packets and buffer blocks can be published on a UDP data channel, so check for this...
-            //if (useDataChannel)
-            //    publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
-            //else
-            //    publishChannel = m_commandChannel;
-
-            //// Send response packet
-            //if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
-            //{
-            //    if (publishChannel is UdpServer)
-            //        publishChannel.MulticastAsync(buffer, 0, buffer.size());
-            //    else
-            //        publishChannel.SendToAsync(connection, buffer, 0, buffer.size());
-
-            //}
-
-            connection->CommandChannelSendAsync(buffer.data(), 0, buffer.size());
-            m_totalCommandChannelBytesSent += buffer.size();
-            success = true;
-        }
-    }
-    catch (const std::exception& ex)
-    {
-        DispatchErrorMessage(ex.what());
-    }
-
-    return success;
+        if (column == nullptr)
+            throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
+    
+        return column->Index();
 }
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber)
@@ -1281,9 +710,6 @@ SecurityMode DataPublisher::GetSecurityMode() const
 
 void DataPublisher::SetSecurityMode(SecurityMode securityMode)
 {
-    if (IsConnected())
-        throw PublisherException("Cannot change security mode once publisher has been connected");
-
     m_securityMode = securityMode;
 }
 
@@ -1337,24 +763,46 @@ void DataPublisher::SetUserData(void* userData)
     m_userData = userData;
 }
 
-uint64_t DataPublisher::GetTotalCommandChannelBytesSent() const
+uint64_t DataPublisher::GetTotalCommandChannelBytesSent()
 {
-    return m_totalCommandChannelBytesSent;
+    uint64_t totalCommandChannelBytesSent = 0L;
+
+    m_subscriberConnectionsLock.lock();
+
+    for (const auto& connection : m_subscriberConnections)
+        totalCommandChannelBytesSent += connection->GetTotalCommandChannelBytesSent();
+
+    m_subscriberConnectionsLock.unlock();
+
+    return totalCommandChannelBytesSent;
 }
 
-uint64_t DataPublisher::GetTotalDataChannelBytesSent() const
+uint64_t DataPublisher::GetTotalDataChannelBytesSent()
 {
-    return m_totalDataChannelBytesSent;
+    uint64_t totalDataChannelBytesSent = 0L;
+
+    m_subscriberConnectionsLock.lock();
+
+    for (const auto& connection : m_subscriberConnections)
+        totalDataChannelBytesSent += connection->GetTotalDataChannelBytesSent();
+
+    m_subscriberConnectionsLock.unlock();
+
+    return totalDataChannelBytesSent;
 }
 
-uint64_t DataPublisher::GetTotalMeasurementsSent() const
+uint64_t DataPublisher::GetTotalMeasurementsSent()
 {
-    return m_totalMeasurementsSent;
-}
+    uint64_t totalMeasurementsSent = 0L;
 
-bool DataPublisher::IsConnected() const
-{
-    return m_connected;
+    m_subscriberConnectionsLock.lock();
+
+    for (const auto& connection : m_subscriberConnections)
+        totalMeasurementsSent += connection->GetTotalMeasurementsSent();
+
+    m_subscriberConnectionsLock.unlock();
+
+    return totalMeasurementsSent;
 }
 
 void DataPublisher::RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback)
@@ -1375,91 +823,4 @@ void DataPublisher::RegisterClientConnectedCallback(const SubscriberConnectionCa
 void DataPublisher::RegisterClientDisconnectedCallback(const SubscriberConnectionCallback& clientDisconnectedCallback)
 {
     m_clientDisconnectedCallback = clientDisconnectedCallback;
-}
-
-// TODO: Move this code into SubscriberConnection::DecodeString
-string DataPublisher::DecodeClientString(const SubscriberConnectionPtr& connection, const uint8_t* data, uint32_t offset, uint32_t length)
-{
-    uint32_t encoding = OperationalEncoding::UTF8;
-    bool swapBytes = EndianConverter::IsLittleEndian();
-
-    if (connection != nullptr)
-        encoding = connection->GetEncoding();
-
-    switch (encoding)
-    {
-        case OperationalEncoding::UTF8:
-            return string(reinterpret_cast<const char*>(data + offset), length / sizeof(char));
-        case OperationalEncoding::Unicode:
-        case OperationalEncoding::ANSI:
-            swapBytes = !swapBytes;
-        case OperationalEncoding::BigEndianUnicode:
-        {
-            wstring value{};
-            value.reserve(length / sizeof(wchar_t));
-
-            for (size_t i = 0; i < length; i += sizeof(wchar_t))
-            {
-                if (swapBytes)
-                    value.append(1, EndianConverter::ToLittleEndian<wchar_t>(data, offset + i));
-                else
-                    value.append(1, *reinterpret_cast<const wchar_t*>(data + offset + i));
-            }
-
-            return ToUTF8(value);
-        }
-        default:
-            throw PublisherException("Encountered unexpected operational encoding " + ToHex(encoding));
-    }
-}
-
-// TODO: Move this code into SubscriberConnection::EncodeString
-vector<uint8_t> DataPublisher::EncodeClientString(const SubscriberConnectionPtr& connection, const std::string& value)
-{
-    uint32_t encoding = OperationalEncoding::UTF8;
-    bool swapBytes = EndianConverter::IsLittleEndian();
-
-    if (connection != nullptr)
-        encoding = connection->GetEncoding();
-
-    vector<uint8_t> result{};
-
-    switch (encoding)
-    {
-        case OperationalEncoding::UTF8:
-            result.reserve(value.size() * sizeof(char));
-            result.assign(value.begin(), value.end());
-            break;
-        case OperationalEncoding::Unicode:
-        case OperationalEncoding::ANSI:
-            swapBytes = !swapBytes;
-        case OperationalEncoding::BigEndianUnicode:
-        {
-            wstring utf16 = ToUTF16(value);            
-            const int32_t size = utf16.size() * sizeof(wchar_t);
-            const uint8_t* data = reinterpret_cast<const uint8_t*>(&utf16[0]);
-
-            result.reserve(size);
-
-            for (int32_t i = 0; i < size; i += sizeof(wchar_t))
-            {
-                if (swapBytes)
-                {
-                    result.push_back(data[i + 1]);
-                    result.push_back(data[i]);
-                }
-                else
-                {
-                    result.push_back(data[i]);
-                    result.push_back(data[i + 1]);
-                }
-            }
-
-            break;
-        }
-        default:
-            throw PublisherException("Encountered unexpected operational encoding " + ToHex(encoding));
-    }
-
-    return result;
 }

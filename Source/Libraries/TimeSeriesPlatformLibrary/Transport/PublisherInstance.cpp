@@ -186,24 +186,19 @@ void PublisherInstance::SetUserData(void* userData)
     m_userData = userData;
 }
 
-uint64_t PublisherInstance::GetTotalCommandChannelBytesSent() const
+uint64_t PublisherInstance::GetTotalCommandChannelBytesSent()
 {
     return m_publisher.GetTotalCommandChannelBytesSent();
 }
 
-uint64_t PublisherInstance::GetTotalDataChannelBytesSent() const
+uint64_t PublisherInstance::GetTotalDataChannelBytesSent()
 {
     return m_publisher.GetTotalDataChannelBytesSent();
 }
 
-uint64_t PublisherInstance::GetTotalMeasurementsSent() const
+uint64_t PublisherInstance::GetTotalMeasurementsSent()
 {
     return m_publisher.GetTotalMeasurementsSent();
-}
-
-bool PublisherInstance::IsConnected() const
-{
-    return m_publisher.IsConnected();
 }
 
 bool PublisherInstance::IsInitialized() const

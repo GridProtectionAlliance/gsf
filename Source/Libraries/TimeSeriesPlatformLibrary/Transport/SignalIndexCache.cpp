@@ -159,7 +159,7 @@ void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnectionPtr& co
     uint32_t binaryLength = 28;
 
     for (size_t i = 0; i < m_signalIDList.size(); i++)
-        binaryLength += 26 + DataPublisher::EncodeClientString(connection, m_sourceList[i]).size();
+        binaryLength += 26 + connection->EncodeString(m_sourceList[i]).size();
 
     m_binaryLength = binaryLength;
 }
@@ -242,7 +242,7 @@ void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vect
         WriteBytes(buffer, signalID);
 
         // Encode source
-        vector<uint8_t> sourceBytes = DataPublisher::EncodeClientString(connection, m_sourceList[i]);
+        vector<uint8_t> sourceBytes = connection->EncodeString(m_sourceList[i]);
         EndianConverter::WriteBigEndianBytes(buffer, int32_t(sourceBytes.size()));
         WriteBytes(buffer, sourceBytes);
 
