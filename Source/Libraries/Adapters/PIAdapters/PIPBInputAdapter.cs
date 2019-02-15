@@ -25,6 +25,13 @@
 //
 //******************************************************************************************************
 
+using GSF;
+using GSF.Diagnostics;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using OSIsoft.AF.Asset;
+using OSIsoft.AF.PI;
+using OSIsoft.AF.Time;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,13 +40,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
-using GSF;
-using GSF.Diagnostics;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using OSIsoft.AF.Asset;
-using OSIsoft.AF.PI;
-using OSIsoft.AF.Time;
 using Timer = System.Timers.Timer;
 
 namespace PIAdapters
@@ -270,6 +270,16 @@ namespace PIAdapters
         }
 
         /// <summary>
+        /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True."), DefaultValue(0)]
+        public int TagNamePrefixRemoveCount
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing
@@ -341,7 +351,7 @@ namespace PIAdapters
                 status.AppendFormat("               Auto-repeat: {0}\r\n", m_autoRepeat);
                 status.AppendFormat("            Start time-tag: {0}\r\n", m_startTime);
                 status.AppendFormat("             Stop time-tag: {0}\r\n", m_stopTime);
-
+                status.AppendFormat("    Tag prefixes to remove: {0}\r\n", TagNamePrefixRemoveCount);
                 return status.ToString();
             }
         }
@@ -443,6 +453,11 @@ namespace PIAdapters
             {
                 OutputSourceIDs = new[] { m_instanceName };
             }
+
+            if (!settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) || !int.TryParse(setting, out int intVal))
+                intVal = 0;
+
+            TagNamePrefixRemoveCount = intVal;
         }
 
         /// <summary>
@@ -558,7 +573,7 @@ namespace PIAdapters
                         if (!string.IsNullOrWhiteSpace(result.AlternateTag))
                             tagName = result.AlternateTag;
 
-                        if (tagList.Add(tagName) && PIPoint.TryFindPIPoint(m_connection.Server, tagName, out point))
+                        if (tagList.Add(tagName) && PIPoint.TryFindPIPoint(m_connection.Server, GetPITagName(tagName), out point))
                         {
                             m_tagKeyMap[point.ID] = result.Key;
                             m_points.Add(point);
@@ -703,6 +718,24 @@ namespace PIAdapters
             // Publish all measurements for this time interval
             if (measurements.Count > 0)
                 OnNewMeasurements(measurements);
+        }
+
+        private string GetPITagName(string tagName)
+        {
+            if (TagNamePrefixRemoveCount < 1)
+                return tagName;
+
+            for (int i = 0; i < TagNamePrefixRemoveCount; i++)
+            {
+                int prefixIndex = tagName.IndexOf('!');
+
+                if (prefixIndex > -1 && prefixIndex + 1 < tagName.Length)
+                    tagName = tagName.Substring(prefixIndex + 1);
+                else
+                    break;
+            }
+
+            return tagName;
         }
 
         private MeasurementStateFlags ConvertStatusFlags(AFValueStatus status)
