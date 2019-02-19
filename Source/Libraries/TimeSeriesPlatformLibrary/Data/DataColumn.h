@@ -48,7 +48,7 @@ namespace Data
         UInt64
     };
 
-    const char* DataTypeAcronym[];
+    const extern char* DataTypeAcronym[];
     const char* EnumName(DataType type);
 
     class DataTable;

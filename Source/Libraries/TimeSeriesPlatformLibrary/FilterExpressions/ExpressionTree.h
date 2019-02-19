@@ -84,7 +84,7 @@ namespace FilterExpressions
     };
 
     const extern int32_t ExpressionValueTypeLength;
-    const char* ExpressionValueTypeAcronym[];
+    const extern char* ExpressionValueTypeAcronym[];
     const char* EnumName(ExpressionValueType valueType);
 
     bool IsIntegerType(ExpressionValueType valueType);
@@ -140,7 +140,7 @@ namespace FilterExpressions
         Not
     };
 
-    const char* ExpressionUnaryTypeAcronym[];
+    const extern char* ExpressionUnaryTypeAcronym[];
     const char* EnumName(ExpressionUnaryType unaryType);
 
     class UnaryExpression : public Expression
@@ -263,7 +263,7 @@ namespace FilterExpressions
         Or
     };
 
-    const char* ExpressionOperatorTypeAcronym[];
+    const extern char* ExpressionOperatorTypeAcronym[];
     const char* EnumName(ExpressionOperatorType operatorType);
 
     class OperatorExpression : public Expression

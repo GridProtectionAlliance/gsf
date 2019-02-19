@@ -116,7 +116,7 @@ namespace GSF
     void Nullable<T>::NullableValue::checkHasValue() const
     {
         if (!m_hasValue)
-            throw std::exception("Nullable object must have a value");
+            throw std::runtime_error("Nullable object must have a value");
     }
 
     template<class T>

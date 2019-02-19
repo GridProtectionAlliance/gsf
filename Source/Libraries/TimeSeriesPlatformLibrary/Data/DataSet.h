@@ -52,7 +52,7 @@ namespace Data
     class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
     {
     private:
-        GSF::StringMap<DataTablePtr> m_tables;
+        GSF::SortedStringMap<DataTablePtr> m_tables;
 
         void ParseXml(const pugi::xml_document& document);
         void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;
