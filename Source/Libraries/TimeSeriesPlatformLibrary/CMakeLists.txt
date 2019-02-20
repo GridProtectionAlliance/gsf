@@ -200,6 +200,7 @@ set (GSF_HEADER_FILES
     "FilterExpressions/antlr4-runtime/tree/xpath/XPathWildcardElement.h"
     "Transport/ActiveMeasurementsSchema.h"
     "Transport/CompactMeasurement.h"
+    "Transport/Constants.h"
     "Transport/DataPublisher.h"
     "Transport/DataSubscriber.h"
     "Transport/MetadataSchema.h"
@@ -207,8 +208,8 @@ set (GSF_HEADER_FILES
     "Transport/SignalIndexCache.h"
     "Transport/SubscriberConnection.h"
     "Transport/SubscriberInstance.h"
-    "Transport/TSSCMeasurementParser.h"
     "Transport/TransportTypes.h"
+    "Transport/TSSCMeasurementParser.h"
     "Transport/Version.h"
 )
 
@@ -377,6 +378,7 @@ set (GSF_SOURCE_FILES
     "FilterExpressions/antlr4-runtime/tree/xpath/XPathWildcardElement.cpp"
     "Transport/ActiveMeasurementsSchema.cpp"
     "Transport/CompactMeasurement.cpp"
+    "Transport/Constants.cpp"
     "Transport/DataPublisher.cpp"
     "Transport/DataSubscriber.cpp"
     "Transport/MetadataSchema.cpp"
@@ -384,8 +386,8 @@ set (GSF_SOURCE_FILES
     "Transport/SignalIndexCache.cpp"
     "Transport/SubscriberConnection.cpp"
     "Transport/SubscriberInstance.cpp"
-    "Transport/TSSCMeasurementParser.cpp"
     "Transport/TransportTypes.cpp"
+    "Transport/TSSCMeasurementParser.cpp"
 )
 
 # Option to choose whether to build static or shared libraries
@@ -417,7 +419,7 @@ endif()
 
 # Build gsf library
 add_library (gsf STATIC ${GSF_SOURCE_FILES})
-target_link_libraries (gsf boost_system boost_thread boost_date_time boost_iostreams pthread m z bz2)
+target_link_libraries (gsf pthread m z bz2 boost_system boost_thread boost_date_time boost_iostreams)
 
 # Install headers and library
 install (DIRECTORY ${PROJECT_BINARY_DIR}/${HEADER_OUTPUT_DIRECTORY} DESTINATION include)
@@ -428,6 +430,11 @@ install (TARGETS gsf DESTINATION lib)
 ######################
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY Samples)
+
+# Copy sample content files
+file (COPY "Samples/Metadata.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+file (COPY "Samples/MetadataSample1.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+file (COPY "Samples/MetadataSample2.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # SimpleSubscribe sample
 add_executable (SimpleSubscribe EXCLUDE_FROM_ALL Samples/SimpleSubscribe.cpp)

@@ -1,6 +1,6 @@
 This is the C++ implementation of the Gateway Exchange Protocol.
 
-This code includes functionality for both a "subscriber" and "publisher" in GEP.
+This code includes functionality for both "subscriber" and "publisher" in GEP.
 
 ------------------------------------------------------------------------------
 Compiling in Visual Studio
@@ -66,11 +66,10 @@ to build. Earlier versions of the libraries listed may not work properly.
 CMake v2.8 (http://www.cmake.org/)
 
 GNU Make (http://www.gnu.org/software/make/)
-	- Not required on a Windows platform
 
-zlib Library, e.g.: sudo apt-get install zlib1g-dev
+zlib Library, e.g.: sudo apt install zlib1g-dev
 
-bzip2 library, e.g.: sudo apt-get install libbz2-dev
+bzip2 library, e.g.: sudo apt install libbz2-dev
 
 Boost C++ Libraries v1.66.0 (http://www.boost.org/)
 	- Boost.Asio

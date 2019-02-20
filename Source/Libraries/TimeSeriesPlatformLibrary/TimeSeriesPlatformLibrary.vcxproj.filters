@@ -646,6 +646,9 @@
     <ClCompile Include="Transport\SubscriberConnection.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\Constants.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Transport\Constants.h">

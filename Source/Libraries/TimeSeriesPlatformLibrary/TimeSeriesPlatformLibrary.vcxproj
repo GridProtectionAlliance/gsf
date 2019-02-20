@@ -364,6 +364,7 @@
     <ClInclude Include="Transport\Constants.h" />
     <ClInclude Include="Transport\DataPublisher.h" />
     <ClInclude Include="Transport\DataSubscriber.h" />
+    <ClCompile Include="Transport\Constants.cpp" />
     <ClCompile Include="Transport\DataPublisher.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
     <ClInclude Include="Transport\MetadataSchema.h" />

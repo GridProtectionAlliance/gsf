@@ -24,6 +24,8 @@
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
 
+#include "../Common/CommonTypes.h"
+
 namespace GSF {
 namespace TimeSeries {
 namespace Transport
