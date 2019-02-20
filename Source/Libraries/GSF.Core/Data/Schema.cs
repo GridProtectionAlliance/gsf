@@ -34,6 +34,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -50,6 +51,7 @@ namespace GSF.Data
     /// </summary>
     [Flags]
     [Serializable]
+    [SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames")]
     public enum TableType
     {
         /// <summary>
@@ -124,6 +126,7 @@ namespace GSF.Data
     /// Represents a database field.
     /// </summary>
     [Serializable]
+    [SuppressMessage("Microsoft.Design", "CA1036:OverrideMethodsOnComparableTypes")]
     public class Field : IComparable
     {
         #region [ Members ]
@@ -209,6 +212,7 @@ namespace GSF.Data
         /// <summary>
         /// Get <see cref="OleDbType"/> Type
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1721:PropertyNamesShouldNotMatchGetMethods")]
         public OleDbType Type
         {
             get
@@ -585,13 +589,13 @@ namespace GSF.Data
         /// <summary>
         /// Compare <paramref name="obj"/> ordinal to current field <see cref="Ordinal"/>
         /// </summary>
-        /// <param name="obj">Check <paramref name="obj"/> type <see cref="Object"/>, if it is type of <see cref="Field"/> then compare to <see cref="Ordinal"/> of <paramref name="obj"/> else throw <see cref="ArgumentException"/></param>
+        /// <param name="obj">Check <paramref name="obj"/> type <see cref="object"/>, if it is type of <see cref="Field"/> then compare to <see cref="Ordinal"/> of <paramref name="obj"/> else throw <see cref="ArgumentException"/></param>
         /// <returns></returns>
         public int CompareTo(object obj)
         {
             // Fields are sorted in ordinal position order
-            if (obj is Field)
-                return m_ordinal.CompareTo(((Field)obj).m_ordinal);
+            if (obj is Field field)
+                return m_ordinal.CompareTo(field.m_ordinal);
 
             throw new ArgumentException("Field can only be compared to other Fields");
         }
@@ -599,6 +603,7 @@ namespace GSF.Data
         /// <summary>
         /// Change <see cref="Field"/> value to encoded string. It will check <see cref="Type"/>  and <see cref="Parent"/> value before convert to <see cref="OleDbType"/> compatible value
         /// </summary>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public string SQLEncodedValue
         {
             get
@@ -1165,6 +1170,7 @@ namespace GSF.Data
     /// Represents a collection of <see cref="ForeignKeyField"/> values.
     /// </summary>
     [Serializable]
+    [SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface")]
     public class ForeignKeyFields : IEnumerable
     {
         #region [ Members ]
@@ -1522,6 +1528,7 @@ namespace GSF.Data
     /// Get data table information for data processing
     /// </summary>
     [Serializable]
+    [SuppressMessage("Microsoft.Design", "CA1036:OverrideMethodsOnComparableTypes")]
     public class Table : IComparable, IComparable<Table>
     {
         #region [ Members ]
@@ -1787,6 +1794,7 @@ namespace GSF.Data
         /// <summary>
         /// Get <see cref="TableType"/>
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1721:PropertyNamesShouldNotMatchGetMethods")]
         public TableType Type
         {
             get
@@ -2007,8 +2015,8 @@ namespace GSF.Data
         public int CompareTo(object obj)
         {
             // Tables are sorted in priority order
-            if (obj is Table)
-                return CompareTo(obj as Table);
+            if (obj is Table table)
+                return CompareTo(table);
 
             throw new ArgumentException("Table can only be compared to other Tables");
         }
@@ -2207,6 +2215,7 @@ namespace GSF.Data
         /// <summary>
         /// Calculates row count.
         /// </summary>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public void CalculateRowCount()
         {
             if (m_tableType == TableType.Table)
@@ -2445,6 +2454,7 @@ namespace GSF.Data
         /// <summary>
         /// Check for referential order of <see cref="Table"/>
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public class ReferentialOrderComparer : IComparer<Table>
         {
 
@@ -2453,6 +2463,7 @@ namespace GSF.Data
             /// <summary>
             /// Default property of object
             /// </summary>
+            [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public readonly static ReferentialOrderComparer Default = new ReferentialOrderComparer();
 
             #endregion
@@ -2721,7 +2732,7 @@ namespace GSF.Data
         /// <returns>Escaped <paramref name="name"/>.</returns>
         public string SQLEscapeName(string name)
         {
-            switch (m_databaseType)
+            switch (m_databaseType) //-V3002
             {
                 case DatabaseType.Access:
                 case DatabaseType.SQLServer:
@@ -2828,6 +2839,8 @@ namespace GSF.Data
             AnalyzeOleDbSchema();
         }
 
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         private void AnalyzeOleDbSchema()
         {
             DataRow row;

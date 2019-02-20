@@ -22,6 +22,7 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Ionic.Zlib;
 using GSF.IO;
@@ -31,6 +32,7 @@ namespace GSF.Diagnostics
     /// <summary>
     /// A log subscriber that will log messages to a file.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class LogFileWriterInMemory
     {
         private readonly MemoryStream m_tmpStream;

@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Data
 {
@@ -345,12 +346,12 @@ namespace GSF.Data
         protected virtual void Dispose(bool disposing)
         {
             Close();
-
         }
 
         /// <summary>
         /// Close source and destination schema
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA1816:CallGCSuppressFinalizeCorrectly")]
         public virtual void Close()
         {
             if ((object)m_fromSchema != null)
@@ -368,6 +369,8 @@ namespace GSF.Data
         /// <summary>
         /// Dispose
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA1816:CallGCSuppressFinalizeCorrectly")]
+        [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         void IDisposable.Dispose()
         {
             Close();
@@ -429,7 +432,7 @@ namespace GSF.Data
         protected virtual void OnTableProgress(string TableName, bool Executed, int CurrentTable, int TotalTables)
         {
             if ((object)TableProgress != null)
-                TableProgress(this, new EventArgs<string, bool, int, int>(TableName, Executed, CurrentTable, TotalTables));
+                TableProgress(this, new EventArgs<string, bool, int, int>(TableName, Executed, CurrentTable, TotalTables)); //-V3083
         }
 
         /// <summary>
@@ -441,7 +444,7 @@ namespace GSF.Data
         protected virtual void OnRowProgress(string TableName, int CurrentRow, int TotalRows)
         {
             if ((object)RowProgress != null)
-                RowProgress(this, new EventArgs<string, int, int>(TableName, CurrentRow, TotalRows));
+                RowProgress(this, new EventArgs<string, int, int>(TableName, CurrentRow, TotalRows)); //-V3083
         }
 
         /// <summary>
@@ -452,7 +455,7 @@ namespace GSF.Data
         protected virtual void OnOverallProgress(int Current, int Total)
         {
             if ((object)OverallProgress != null)
-                OverallProgress(this, new EventArgs<int, int>(Current, Total));
+                OverallProgress(this, new EventArgs<int, int>(Current, Total)); //-V3083
         }
 
         /// <summary>
@@ -463,7 +466,7 @@ namespace GSF.Data
         protected virtual void OnSQLFailure(string SQL, Exception ex)
         {
             if ((object)SQLFailure != null)
-                SQLFailure(this, new EventArgs<string, Exception>(SQL, ex));
+                SQLFailure(this, new EventArgs<string, Exception>(SQL, ex)); //-V3083
         }
 
         #endregion

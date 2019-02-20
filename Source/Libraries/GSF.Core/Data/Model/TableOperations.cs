@@ -48,6 +48,7 @@ namespace GSF.Data.Model
     /// Defines database operations for a modeled table.
     /// </summary>
     /// <typeparam name="T">Modeled table.</typeparam>
+    [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     public class TableOperations<T> : ITableOperations where T : class, new()
     {
         #region [ Members ]
@@ -841,6 +842,7 @@ namespace GSF.Data.Model
         /// be downloaded locally and decrypted so the proper sort order can be determined.
         /// </para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction = null)
         {
             if (string.IsNullOrWhiteSpace(sortField))
@@ -2213,8 +2215,9 @@ namespace GSF.Data.Model
         private static TypeRegistry s_typeRegistry;
 
         // Static Constructor
-        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         static TableOperations()
         {
             StringBuilder addNewFields = new StringBuilder();
@@ -2631,7 +2634,7 @@ namespace GSF.Data.Model
             expressionAmendments = new List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>>(typedExpressionAmendments);
             expressionAmendments.AddRange(untypedExpressionAmendments);
 
-            return expressionAmendments.Count > 0 ? expressionAmendments : null;
+            return expressionAmendments.Count > 0 ? expressionAmendments : null; //-V3022
         }
 
         private static string ValueList(IReadOnlyList<object> values)

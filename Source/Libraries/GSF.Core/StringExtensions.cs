@@ -26,6 +26,7 @@
 using System;
 #else
 using System.Data.Entity.Design.PluralizationServices;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 #endif
 
@@ -42,6 +43,7 @@ namespace GSF
 #if !MONO
         private static readonly PluralizationService s_pluralizationService;
 
+        [SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison", MessageId = "System.Collections.Generic.Dictionary`2<System.StringComparison,System.StringComparer>.set_Item(System.StringComparison,System.StringComparer)")]
         static StringExtensions()
         {
             // Pluralization service currently only supports English, if other languages are supported in the

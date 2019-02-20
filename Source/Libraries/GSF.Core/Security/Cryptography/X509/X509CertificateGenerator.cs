@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -101,6 +102,7 @@ namespace GSF.Security.Cryptography.X509
                 m_parameters = m_rsa.ExportParameters(true);
             }
 
+            [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed")]
             public override void Dispose()
             {
                 m_csp?.Dispose();
@@ -226,6 +228,7 @@ namespace GSF.Security.Cryptography.X509
                 PublicKeyData = blob2;
             }
 
+            [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed")]
             public override void Dispose()
             {
                 m_cng?.Dispose();
@@ -348,7 +351,11 @@ namespace GSF.Security.Cryptography.X509
 
             KeySize = 2048;
             SignatureBits = 256;
+
+            #pragma warning disable SCS0005 // Weak random generator
             SerialNumber = ((long)r.Next() << 31) ^ r.Next();
+            #pragma warning restore SCS0005 // Weak random generator
+
             Issuer = Guid.NewGuid().ToString("N");
             Subject = Issuer;
             NotBefore = new DateTime(DateTime.UtcNow.Date.AddDays(-7).Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);

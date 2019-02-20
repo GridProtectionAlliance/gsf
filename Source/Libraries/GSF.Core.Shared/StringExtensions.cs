@@ -105,6 +105,7 @@ namespace GSF
     /// </summary>
     public static partial class StringExtensions
     {
+        [SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison")]
         private static readonly Dictionary<StringComparison, StringComparer> s_comparisonComparers = new Dictionary<StringComparison, StringComparer>
         {
             [StringComparison.CurrentCulture] = StringComparer.CurrentCulture,

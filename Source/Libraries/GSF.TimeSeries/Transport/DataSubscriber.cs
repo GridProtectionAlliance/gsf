@@ -372,27 +372,27 @@ namespace GSF.TimeSeries.Transport
             /// <summary>
             /// Gets the code for the user command.
             /// </summary>
-            public ServerCommand Command { get; private set; }
+            public ServerCommand Command { get; }
 
             /// <summary>
             /// Gets the code for the server's response.
             /// </summary>
-            public ServerResponse Response { get; private set; }
+            public ServerResponse Response { get; }
 
             /// <summary>
             /// Gets the buffer containing the message from the server.
             /// </summary>
-            public byte[] Buffer { get; private set; }
+            public byte[] Buffer { get; }
 
             /// <summary>
             /// Gets the index into the buffer used to skip the header.
             /// </summary>
-            public int StartIndex { get; private set; }
+            public int StartIndex { get; }
 
             /// <summary>
             /// Gets the length of the message in the buffer, including the header.
             /// </summary>
-            public int Length { get; private set; }
+            public int Length { get; }
         }
 
         // Constants
@@ -562,8 +562,6 @@ namespace GSF.TimeSeries.Transport
         private Ticks m_parsingExceptionWindow;
         private bool m_supportsRealTimeProcessing;
         private bool m_supportsTemporalProcessing;
-        private DateTime m_startTimeConstraint;
-        private DateTime m_stopTimeConstraint;
         //private Ticks m_lastMeasurementCheck;
         //private Ticks m_minimumMissingMeasurementThreshold = 5;
         //private double m_transmissionDelayTimeAdjustment = 5.0;
@@ -1314,7 +1312,7 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
 
                 if (DataLossInterval > 0.0D)
-                    status.AppendFormat("No data reconnect interval: {0} seconds", DataLossInterval.ToString("0.000"));
+                    status.AppendFormat("No data reconnect interval: {0:0.000} seconds", DataLossInterval);
                 else
                     status.Append("No data reconnect interval: disabled");
 

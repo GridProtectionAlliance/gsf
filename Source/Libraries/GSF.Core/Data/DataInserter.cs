@@ -34,6 +34,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -299,7 +300,7 @@ namespace GSF.Data
             base.Close();
 
             if ((object)Disposed != null)
-                Disposed(this, EventArgs.Empty);
+                Disposed(this, EventArgs.Empty); //-V3083
         }
 
         /// <summary>
@@ -422,7 +423,7 @@ namespace GSF.Data
                 table.Connection.ExecuteNonQuery(deleteSql, Timeout);
 
                 if ((object)TableCleared != null)
-                    TableCleared(this, new EventArgs<string>(table.Name));
+                    TableCleared(this, new EventArgs<string>(table.Name)); //-V3083
 
                 return true;
             }
@@ -448,7 +449,7 @@ namespace GSF.Data
 
             try
             {
-                switch (table.Parent.Parent.DataSourceType)
+                switch (table.Parent.Parent.DataSourceType) //-V3002
                 {
                     case DatabaseType.SQLServer:
                         resetAutoIncValueSQL = "DBCC CHECKIDENT('" + table.SQLEscapedName + "', RESEED)";
@@ -482,6 +483,7 @@ namespace GSF.Data
         /// </summary>
         /// <param name="fromTable">Source table</param>
         /// <param name="toTable">Destination table</param>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private void ExecuteInserts(Table fromTable, Table toTable)
         {
             Table sourceTable = (m_useFromSchemaRI ? fromTable : toTable);
@@ -574,7 +576,7 @@ namespace GSF.Data
             bool skipKeyValuePreservation = false;
 
             // Handle special case of self-referencing table
-            if (sourceTable.IsReferencedBy(sourceTable))
+            if (sourceTable.IsReferencedBy(sourceTable)) //-V3062
             {
                 // We need a special order-by for this scenario to make sure referenced rows are inserted before other rows - this also
                 // means no auto-inc preservation is possible on this table
@@ -693,6 +695,7 @@ namespace GSF.Data
             OnOverallProgress((int)m_overallProgress, (int)m_overallTotal);
         }
 
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private void InsertDestinationRecord(Table toTable, Fields fieldCollection, string insertSQLStub, string updateSQLStub, string countSQLStub, bool usingIdentityInsert, Table sourceTable, Field autoIncField, bool skipKeyValuePreservation, IDataReader fromReader)
         {
             StringBuilder insertSQL;
@@ -1088,7 +1091,7 @@ namespace GSF.Data
             bulkInsertFileStream.Close();
 
             if ((object)BulkInsertExecuting != null)
-                BulkInsertExecuting(this, new EventArgs<string>(toTable.Name));
+                BulkInsertExecuting(this, new EventArgs<string>(toTable.Name)); //-V3083
 
             try
             {
@@ -1103,7 +1106,7 @@ namespace GSF.Data
             catch (Exception ex)
             {
                 if ((object)BulkInsertException != null)
-                    BulkInsertException(this, new EventArgs<string, string, Exception>(toTable.Name, bulkInsertSql, ex));
+                    BulkInsertException(this, new EventArgs<string, string, Exception>(toTable.Name, bulkInsertSql, ex)); //-V3083
             }
             finally
             {
@@ -1126,7 +1129,7 @@ namespace GSF.Data
             }
 
             if ((object)BulkInsertCompleted != null)
-                BulkInsertCompleted(this, new EventArgs<string, int, int>(toTable.Name, progressIndex, Convert.ToInt32(stopTime - startTime)));
+                BulkInsertCompleted(this, new EventArgs<string, int, int>(toTable.Name, progressIndex, Convert.ToInt32(stopTime - startTime))); //-V3083
         }
 
         /// <summary>

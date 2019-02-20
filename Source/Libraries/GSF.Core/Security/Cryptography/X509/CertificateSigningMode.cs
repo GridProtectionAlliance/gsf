@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace GSF.Security.Cryptography.X509
 {
     //https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r4.pdf
@@ -63,46 +65,57 @@ namespace GSF.Security.Cryptography.X509
         /// <summary>
         /// 80-bit security. Before 2016.
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_1024_SHA_1,
         /// <summary>
         /// 112-bit security. Until 2030.
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_2048_SHA2_256,
         /// <summary>
         /// 128-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_3072_SHA2_256,
         /// <summary>
         /// 128-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_3072_SHA2_384,
         /// <summary>
         /// 128-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_4096_SHA2_256,
         /// <summary>
         /// 142-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_4096_SHA2_384,
         /// <summary>
         /// 192-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_7680_SHA2_384,
         /// <summary>
         /// 256-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         RSA_15360_SHA2_512,
         /// <summary>
         /// 128-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         ECDSA_256_SHA2_256,
         /// <summary>
         /// 192-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         ECDSA_384_SHA2_384,
         /// <summary>
         /// 256-bit security
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         ECDSA_521_SHA2_512,
     }
 }

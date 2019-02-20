@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace GSF.Data
@@ -170,6 +171,7 @@ namespace GSF.Data
         /// </summary>
         /// <param name="fromTable">Source table</param>
         /// <param name="toTable">Destination table</param>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private void ExecuteUpdates(Table fromTable, Table toTable)
         {
             Table sourceTable = m_useFromSchemaRI ? fromTable : toTable;
