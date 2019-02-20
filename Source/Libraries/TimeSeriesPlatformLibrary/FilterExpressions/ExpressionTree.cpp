@@ -84,9 +84,9 @@ const char* GSF::FilterExpressions::ExpressionOperatorTypeAcronym[] =
     "IS NULL",
     "IS NOT NULL",
     "LIKE",
-    "LIKE BINARY"
+    "LIKE BINARY",
     "NOT LIKE",
-    "NOT LIKE BINARY"
+    "NOT LIKE BINARY",
     "AND",
     "OR"
 };
