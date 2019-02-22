@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using GSF;
-using GSF.Collections;
 using GSF.ComponentModel;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -493,7 +492,7 @@ namespace DataExtractor
 
         private void PreFilter()
         {
-            const int MaxPoints = 50;
+            //const int MaxPoints = 50;
 
             try
             {
@@ -506,7 +505,7 @@ namespace DataExtractor
                 long receivedPoints = 0L;
                 Ticks operationTime;
                 Ticks operationStartTime;
-                double pointInterval = timeRange / MaxPoints;
+                //double pointInterval = timeRange / MaxPoints;
 
                 void handleNewMeasurements(ICollection<IMeasurement> measurements)
                 {
@@ -757,26 +756,21 @@ namespace DataExtractor
                     measurementRow.Append("\"Timestamp\"");
                     signalIDIndex.Clear();
 
-                    foreach (DeviceDetail device in m_metadata.Devices)
+                    foreach (DeviceDetail device in m_metadata.Devices.Where(d => d.Selected))
                     {
-                        if (!device.Selected)
-                            continue;
+                        MeasurementDetail[] deviceMeasurements = m_metadata.Measurements.Where(m => string.Equals(m.DeviceName, device.Name, StringComparison.OrdinalIgnoreCase) && signalTypes.Contains(m.SignalAcronym)).ToArray();
 
-                        if (!m_metadata.Measurements.Any(m => string.Equals(m.DeviceName, device.Name, StringComparison.OrdinalIgnoreCase) && signalTypes.Contains(m.SignalAcronym)))
+                        if (deviceMeasurements.Length == 0)
                             continue;
 
                         deviceRow.Append($",{device.Name}");
                         deviceCount++;
-                        bool first = true;
 
-                        foreach (MeasurementDetail measurement in m_metadata.Measurements.Where(m => string.Equals(m.DeviceName, device.Name, StringComparison.OrdinalIgnoreCase)))
+                        for (int i = 0; i < deviceMeasurements.Length; i++)
                         {
-                            if (!signalTypes.Contains(measurement.SignalAcronym))
-                                continue;
+                            MeasurementDetail measurement = deviceMeasurements[i];
 
-                            if (first)
-                                first = false;
-                            else
+                            if (i > 0)
                                 deviceRow.Append(",");
 
                             measurementRow.Append($",{measurement.PointTag} [{measurement.SignalAcronym}]");

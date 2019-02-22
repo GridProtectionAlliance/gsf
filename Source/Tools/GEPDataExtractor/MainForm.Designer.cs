@@ -632,9 +632,9 @@
             this.checkBoxAlignTimestamps.Location = new System.Drawing.Point(11, 126);
             this.checkBoxAlignTimestamps.Margin = new System.Windows.Forms.Padding(2);
             this.checkBoxAlignTimestamps.Name = "checkBoxAlignTimestamps";
-            this.checkBoxAlignTimestamps.Size = new System.Drawing.Size(108, 17);
+            this.checkBoxAlignTimestamps.Size = new System.Drawing.Size(180, 17);
             this.checkBoxAlignTimestamps.TabIndex = 9;
-            this.checkBoxAlignTimestamps.Text = "Align Timestamps";
+            this.checkBoxAlignTimestamps.Text = "Align Timestamps by Frame Rate";
             this.checkBoxAlignTimestamps.UseVisualStyleBackColor = true;
             this.checkBoxAlignTimestamps.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
