@@ -115,10 +115,10 @@ namespace FilterExpressions
         int64_t ValueAsInt64() const;
         Nullable<int64_t> ValueAsNullableInt64() const;
 
-        decimal_t ValueAsDecimal() const;
+        GSF::decimal_t ValueAsDecimal() const;
         Nullable<GSF::decimal_t> ValueAsNullableDecimal() const;
 
-        float64_t ValueAsDouble() const;
+        GSF::float64_t ValueAsDouble() const;
         Nullable<GSF::float64_t> ValueAsNullableDouble() const;
 
         std::string ValueAsString() const;
