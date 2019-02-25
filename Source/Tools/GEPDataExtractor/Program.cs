@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DataExtractor
+namespace GEPDataExtractor
 {
     static class Program
     {

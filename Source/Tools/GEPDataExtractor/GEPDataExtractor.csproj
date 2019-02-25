@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F4B99314-2DF9-421D-8293-D8EDA1E30E2D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>DataExtractor</RootNamespace>
-    <AssemblyName>DataExtractor</AssemblyName>
+    <RootNamespace>GEPDataExtractor</RootNamespace>
+    <AssemblyName>GEPDataExtractor</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

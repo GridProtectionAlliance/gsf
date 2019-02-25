@@ -1,4 +1,4 @@
-﻿namespace DataExtractor
+﻿namespace GEPDataExtractor
 {
     partial class MainForm
     {

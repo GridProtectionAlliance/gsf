@@ -21,13 +21,13 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
-using System;
-using System.Collections.Generic;
 
-namespace DataExtractor
+namespace GEPDataExtractor
 {
     /// <summary>
     /// Retrieves data from openHistorian using GEP

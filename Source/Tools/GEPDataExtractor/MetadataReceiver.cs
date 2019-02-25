@@ -21,13 +21,13 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.Transport;
 using System;
 using System.Data;
 using System.Threading;
+using GSF.TimeSeries.Transport;
 using ServerCommand = GSF.TimeSeries.Transport.ServerCommand;
 
-namespace DataExtractor
+namespace GEPDataExtractor
 {
     /// <summary>
     /// Retrieves current meta-data from openHistorian using GEP

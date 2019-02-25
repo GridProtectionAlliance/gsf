@@ -21,16 +21,16 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using System.Windows.Forms;
+using GSF;
+using GSF.TimeSeries;
 
-namespace DataExtractor
+namespace GEPDataExtractor
 {
     public class MeasurementDetail
     {

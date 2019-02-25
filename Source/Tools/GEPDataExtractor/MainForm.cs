@@ -21,12 +21,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.ComponentModel;
-using GSF.Diagnostics;
-using GSF.IO;
-using GSF.TimeSeries;
-using GSF.Windows.Forms;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,10 +28,16 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using GSF;
+using GSF.ComponentModel;
+using GSF.Diagnostics;
+using GSF.IO;
+using GSF.TimeSeries;
+using GSF.Windows.Forms;
 
 // ReSharper disable AccessToModifiedClosure
 // ReSharper disable PossibleMultipleEnumeration
-namespace DataExtractor
+namespace GEPDataExtractor
 {
     public partial class MainForm : Form
     {
@@ -349,8 +349,6 @@ namespace DataExtractor
                 selectedCount = SelectedDeviceCount;
 
             textBoxFilterExpression.Text = GenerateFilterExpression(checkedListBoxDataTypes.CheckedItems.Cast<string>(), selectedCount);
-
-            m_settings.Load();
         }
 
         private string GenerateFilterExpression(IEnumerable<string> signalTypes, int selectedDeviceCount)
@@ -453,6 +451,22 @@ namespace DataExtractor
                 buttonCancelExport.Visible = !enabled && m_exporting;
                 buttonShowGraph.Visible = false; // m_graphData.HasData;
                 buttonSelectFile.Enabled = enabled;
+                textBoxHistorianHostAddress.Enabled = enabled;
+                maskedTextBoxHistorianPort.Enabled = enabled;
+                textBoxHistorianInstanceName.Enabled = enabled;
+
+                if (enabled)
+                {
+                    tabControlOptions.TabPages[1].Show();
+                    tabControlOptions.TabPages[2].Show();
+                }
+                else
+                {
+                    tabControlOptions.TabPages[1].Hide();
+                    tabControlOptions.TabPages[2].Hide();
+                }
+
+                tabControlOptions.TabPages[0].Select();
             }
         }
 

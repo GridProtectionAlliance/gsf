@@ -21,14 +21,14 @@
 //
 //******************************************************************************************************
 
-using ExpressionEvaluator;
-using GSF.ComponentModel;
-using GSF.Configuration;
 using System;
 using System.ComponentModel;
 using System.Configuration;
+using ExpressionEvaluator;
+using GSF.ComponentModel;
+using GSF.Configuration;
 
-namespace DataExtractor
+namespace GEPDataExtractor
 {
     /// <summary>
     /// Defines settings for the DataExtractor application.
