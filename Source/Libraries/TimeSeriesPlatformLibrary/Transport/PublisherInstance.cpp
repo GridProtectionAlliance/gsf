@@ -57,16 +57,28 @@ void PublisherInstance::HandleErrorMessage(DataPublisher* source, const string& 
     instance->ErrorMessage(message);
 }
 
-void PublisherInstance::HandleClientConnected(DataPublisher* source, const GSF::Guid& subscriberID, const std::string& connectionID)
+void PublisherInstance::HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
-    instance->ClientConnected(subscriberID, connectionID);
+    instance->ClientConnected(connection);
 }
 
-void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const GSF::Guid& subscriberID, const std::string& connectionID)
+void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
-    instance->ClientDisconnected(subscriberID, connectionID);
+    instance->ClientDisconnected(connection);
+}
+
+void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+    instance->TemporalSubscriptionRequested(connection);
+}
+
+void PublisherInstance::HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+    instance->TemporalProcessingIntervalChangeRequested(connection);
 }
 
 void PublisherInstance::StatusMessage(const string& message)
@@ -79,14 +91,24 @@ void PublisherInstance::ErrorMessage(const string& message)
     cerr << message << endl << endl;
 }
 
-void PublisherInstance::ClientConnected(const GSF::Guid& subscriberID, const string& connectionID)
+void PublisherInstance::ClientConnected(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connectionID << "\" with subscriber ID " << ToString(subscriberID) << " connected..." << endl << endl;
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " connected..." << endl << endl;
 }
 
-void PublisherInstance::ClientDisconnected(const GSF::Guid& subscriberID, const std::string& connectionID)
+void PublisherInstance::ClientDisconnected(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connectionID << "\" with subscriber ID " << ToString(subscriberID) << " disconnected..." << endl << endl;
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " disconnected..." << endl << endl;
+}
+
+void PublisherInstance::TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
+}
+
+void PublisherInstance::TemporalProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
 }
 
 void PublisherInstance::Initialize()
@@ -96,6 +118,8 @@ void PublisherInstance::Initialize()
     m_publisher.RegisterErrorMessageCallback(&HandleErrorMessage);
     m_publisher.RegisterClientConnectedCallback(&HandleClientConnected);
     m_publisher.RegisterClientDisconnectedCallback(&HandleClientDisconnected);
+    m_publisher.RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
+    m_publisher.RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
 
     m_initialized = true;
 }

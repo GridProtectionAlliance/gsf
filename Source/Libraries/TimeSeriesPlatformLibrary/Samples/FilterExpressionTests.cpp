@@ -1177,42 +1177,42 @@ int main(int argc, char* argv[])
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd('2019-02-04', 2, 'Month')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 4, 4)));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 4, 4)));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 119
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd(#1/31/2019#, 1, 'Day')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 2, 1)));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 2, 1)));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 120
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd(#2019-01-31#, 2, 'Week')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 2, 14)));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 2, 14)));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 121
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd(#2019-01-31#, 25, 'Hour')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 2, 1), time_duration(1, 0, 0)));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 2, 1), time_duration(1, 0, 0)));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 122
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd(#2018-12-31 23:58#, 3, 'Minute')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 1, 1), time_duration(0, 1, 0)));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 1, 1), time_duration(0, 1, 0)));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 123
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd('2019-01-1 00:59', 61, 'Second')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 1, 1), time_duration(1, 0, 1)));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 1, 1), time_duration(1, 0, 1)));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     const float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
@@ -1222,14 +1222,14 @@ int main(int argc, char* argv[])
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd('2019-01-1 00:00:59.999', 2, 'Millisecond')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 1, 1), time_duration(0, 1, 0, fracSecond(1))));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 1, 1), time_duration(0, 1, 0, fracSecond(1))));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 125
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd(#1/1/2019 0:0:1.029#, -FramesPerSecond, 'Millisecond')");
 
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
-    assert(valueExpression->ValueAsDateTime() == DateTime(date(2019, 1, 1), time_duration(0, 0, 0, fracSecond(999))));
+    assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 1, 1), time_duration(0, 0, 0, fracSecond(999))));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 126
@@ -1429,7 +1429,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 150
-    const DateTime time = ParseTimestamp("2019-02-10T15:55:25.090477Z");
+    const datetime_t time = ParseTimestamp("2019-02-10T15:55:25.090477Z");
     const int64_t ticks = ToTicks(time);
 
     assert(ticks == 636854109250904770L);

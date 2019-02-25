@@ -79,7 +79,7 @@ namespace Transport
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
         virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
         virtual void DataStartTime(time_t unixSOC, uint16_t milliseconds);
-        virtual void DataStartTime(DateTime startTime);
+        virtual void DataStartTime(datetime_t startTime);
         virtual void ReceivedMetadata(const std::vector<uint8_t>& payload);
         virtual void ParsedMetadata();
         virtual void ReceivedNewMeasurements(const std::vector<MeasurementPtr>& measurements);

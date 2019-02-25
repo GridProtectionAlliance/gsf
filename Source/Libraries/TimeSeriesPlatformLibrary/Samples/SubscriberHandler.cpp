@@ -104,7 +104,7 @@ void SubscriberHandler::DataStartTime(time_t unixSOC, uint16_t milliseconds)
     // TODO: This reports timestamp, time_t format, of very first received measurement (if useful)
 }
 
-void SubscriberHandler::DataStartTime(DateTime startTime)
+void SubscriberHandler::DataStartTime(datetime_t startTime)
 {
     // TODO: This reports timestamp, ptime format, of very first received measurement (if useful)
 }

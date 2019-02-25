@@ -48,6 +48,9 @@ namespace GSF
     typedef double_t float64_t;
     typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
 
+    // DateTime type
+    typedef boost::posix_time::ptime datetime_t;
+
     struct Int8
     {
         static const int8_t MaxValue = static_cast<int8_t>(127);
@@ -105,16 +108,26 @@ namespace GSF
         static const decimal_t DotNetMinValue;
     };
 
+    struct DateTime
+    {
+        static const datetime_t MaxValue;
+        static const datetime_t MinValue;
+    };
+
     struct Ticks
     {
+        static const int64_t MaxValue = 3155378975999999999L;       // 12/31/1999 11:59:59.999
+        static const int64_t MinValue = 0L;                         // 01/01/0001 00:00:00.000
+
+        static const int64_t UnixBaseOffset = 621355968000000000L;  // 01/01/1970 00:00:00.000
+        static const int64_t PTimeBaseOffset = 441481536000000000L; // 01/01/1400 00:00:00.000
+
         static const int64_t PerSecond = 10000000L;
         static const int64_t PerMillisecond = Ticks::PerSecond / 1000;
         static const int64_t PerMicrosecond = Ticks::PerSecond / 1000000;
         static const int64_t PerMinute = 60L * Ticks::PerSecond;
         static const int64_t PerHour = 60L * Ticks::PerMinute;
         static const int64_t PerDay = 24L * Ticks::PerHour;
-        static const int64_t UnixBaseOffset = 621355968000000000L;  // 01/01/1970 00:00:00
-        static const int64_t PtimeBaseOffset = 441481536000000000L; // 01/01/1400 00:00:00
     };
 
     template<class T>
@@ -167,7 +180,6 @@ namespace GSF
 
     typedef boost::any Object;
     typedef boost::uuids::uuid Guid;
-    typedef boost::posix_time::ptime DateTime;
     typedef boost::posix_time::time_duration TimeSpan;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;
@@ -192,7 +204,7 @@ namespace GSF
     struct Empty
     {
         static const std::string String;
-        static const GSF::DateTime DateTime;
+        static const GSF::datetime_t DateTime;
         static const GSF::Guid Guid;
         static const GSF::Object Object;
         static const GSF::IPAddress IPAddress;
@@ -394,11 +406,11 @@ namespace GSF
         Millisecond
     };
 
-    DateTime DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval);
-    int32_t DateDiff(const DateTime& startTime, const DateTime& endTime, TimeInterval interval);
-    int32_t DatePart(const DateTime& value, TimeInterval interval);
-    DateTime Now();
-    DateTime UtcNow();
+    datetime_t DateAdd(const datetime_t& value, int32_t addValue, TimeInterval interval);
+    int32_t DateDiff(const datetime_t& startTime, const datetime_t& endTime, TimeInterval interval);
+    int32_t DatePart(const datetime_t& value, TimeInterval interval);
+    datetime_t Now();
+    datetime_t UtcNow();
 }
 
 // Setup standard hash code for Guid

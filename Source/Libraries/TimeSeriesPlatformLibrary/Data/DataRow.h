@@ -87,10 +87,10 @@ namespace Data
         void SetBooleanValue(int32_t columnIndex, const GSF::Nullable<bool>& value);
         void SetBooleanValue(const std::string& columnName, const GSF::Nullable<bool>& value);
 
-        GSF::Nullable<GSF::DateTime> ValueAsDateTime(int32_t columnIndex);
-        GSF::Nullable<GSF::DateTime> ValueAsDateTime(const std::string& columnName);
-        void SetDateTimeValue(int32_t columnIndex, const GSF::Nullable<GSF::DateTime>& value);
-        void SetDateTimeValue(const std::string& columnName, const GSF::Nullable<GSF::DateTime>& value);
+        GSF::Nullable<GSF::datetime_t> ValueAsDateTime(int32_t columnIndex);
+        GSF::Nullable<GSF::datetime_t> ValueAsDateTime(const std::string& columnName);
+        void SetDateTimeValue(int32_t columnIndex, const GSF::Nullable<GSF::datetime_t>& value);
+        void SetDateTimeValue(const std::string& columnName, const GSF::Nullable<GSF::datetime_t>& value);
 
         GSF::Nullable<GSF::float32_t> ValueAsSingle(int32_t columnIndex);
         GSF::Nullable<GSF::float32_t> ValueAsSingle(const std::string& columnName);

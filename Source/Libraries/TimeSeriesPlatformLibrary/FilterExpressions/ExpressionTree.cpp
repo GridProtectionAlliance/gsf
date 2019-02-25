@@ -387,24 +387,24 @@ Nullable<Guid> ValueExpression::ValueAsNullableGuid() const
     return Cast<Guid>(Value);
 }
 
-DateTime ValueExpression::ValueAsDateTime() const
+datetime_t ValueExpression::ValueAsDateTime() const
 {
     ValidateValueType(ExpressionValueType::DateTime);
 
     if (ValueIsNullable)
-        return Cast<Nullable<DateTime>>(Value).GetValueOrDefault();
+        return Cast<Nullable<datetime_t>>(Value).GetValueOrDefault();
 
-    return Cast<DateTime>(Value);
+    return Cast<datetime_t>(Value);
 }
 
-Nullable<DateTime> ValueExpression::ValueAsNullableDateTime() const
+Nullable<datetime_t> ValueExpression::ValueAsNullableDateTime() const
 {
     ValidateValueType(ExpressionValueType::DateTime);
 
     if (ValueIsNullable)
-        return Cast<Nullable<DateTime>>(Value);
+        return Cast<Nullable<datetime_t>>(Value);
 
-    return Cast<DateTime>(Value);
+    return Cast<datetime_t>(Value);
 }
 
 UnaryExpression::UnaryExpression(const ExpressionUnaryType unaryType, ExpressionPtr value) :
@@ -1626,7 +1626,7 @@ ValueExpressionPtr ExpressionTree::IsDate(const ValueExpressionPtr& testValue) c
     if (testValue->ValueType == ExpressionValueType::DateTime)
         return ExpressionTree::True;
 
-    DateTime timestamp;
+    datetime_t timestamp;
 
     if (testValue->ValueType == ExpressionValueType::String && TryParseTimestamp(testValue->ValueAsString().c_str(), timestamp))
         return ExpressionTree::True;
@@ -3119,7 +3119,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         }
         case ExpressionValueType::DateTime:
         {
-            const DateTime result = sourceValue->ValueAsDateTime();
+            const datetime_t result = sourceValue->ValueAsDateTime();
             const time_t value = to_time_t(result);
 
             switch (targetValueType)
@@ -3236,7 +3236,7 @@ ValueExpressionPtr ExpressionTree::NullValue(const ExpressionValueType targetVal
         case ExpressionValueType::Guid:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Guid, Nullable<Guid>(nullptr), true);
         case ExpressionValueType::DateTime:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, Nullable<DateTime>(nullptr), true);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::DateTime, Nullable<datetime_t>(nullptr), true);
         default:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Undefined, nullptr);
     }

@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/02/2019 - J. Ritchie Carrikk
+//  02/02/2019 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     // Create .H resource file
     char symfile[256];
     snprintf(symfile, sizeof(symfile), "%s.h", sym);
-    FILE* out = open_or_exit(symfile,"w");
+    FILE* out = open_or_exit(symfile, "w");
 
     // Define #ifdef directive symbol used to include header file only once
     char symdirective[256];
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
 
     // Create .CPP resource file
     snprintf(symfile, sizeof(symfile), "%s.cpp", sym);
-    out = open_or_exit(symfile,"w");
+    out = open_or_exit(symfile, "w");
 
     // Write header for .CPP resource file
     fprintf(out, "// Auto-generated on %s", now);

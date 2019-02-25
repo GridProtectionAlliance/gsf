@@ -32,18 +32,18 @@ namespace GSF
     void ToUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds);
 
     // Convert Unix second of century and milliseconds to DateTime
-    DateTime FromUnixTime(time_t unixSOC, uint16_t milliseconds);
+    datetime_t FromUnixTime(time_t unixSOC, uint16_t milliseconds);
 
     // Converts a timestamp, in Ticks, to DateTime
-    DateTime FromTicks(int64_t ticks);
+    datetime_t FromTicks(int64_t ticks);
 
     // Converts a DateTime to Ticks
-    int64_t ToTicks(const DateTime& time);
+    int64_t ToTicks(const datetime_t& time);
     
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);
 
-    DateTime LocalFromUtc(const DateTime& timestamp);
+    datetime_t LocalFromUtc(const datetime_t& timestamp);
 
     // Converts an object to a string
     template<class T>
@@ -56,7 +56,7 @@ namespace GSF
 
     std::string ToString(const Guid& value);
 
-    std::string ToString(const DateTime& value, const char* format = "%Y-%m-%d %H:%M:%S%F");
+    std::string ToString(const datetime_t& value, const char* format = "%Y-%m-%d %H:%M:%S%F");
 
     std::string ToString(const TimeSpan& value);
 
@@ -74,7 +74,11 @@ namespace GSF
 
     bool ParseBoolean(const std::string& value);
 
-    bool TryParseDouble(const std::string& value, float64_t& result);
+    bool TryParseInt32(const std::string& value, int32_t& result, int32_t defaultValue = 0);
+
+    bool TryParseInt64(const std::string& value, int64_t& result, int64_t defaultValue = 0L);
+
+    bool TryParseDouble(const std::string& value, float64_t& result, float64_t defaultValue = 0.0);
 
     // Encodes a character value into an escaped RegEx value
     std::string RegExEncode(char value);
@@ -88,10 +92,10 @@ namespace GSF
     const char* Coalesce(const char* data, const char* nonEmptyValue);
 
     // Attempts to parse an time string in several common formats
-    bool TryParseTimestamp(const char* time, DateTime& timestamp, bool parseAsUTC = true);
+    bool TryParseTimestamp(const char* time, datetime_t& timestamp, const datetime_t& defaultValue = DateTime::MinValue, bool parseAsUTC = true);
 
     // Converts a string to a date-time that may be in several common formats
-    DateTime ParseTimestamp(const char* time, bool parseAsUTC = true);
+    datetime_t ParseTimestamp(const char* time, bool parseAsUTC = true);
 
     // Parses a string of key/value pairs into a case-insensitive string dictionary
     StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');

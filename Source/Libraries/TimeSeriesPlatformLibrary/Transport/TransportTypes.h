@@ -97,13 +97,14 @@ namespace TimeSeries
         float64_t AdjustedValue() const;
 
         // Gets Timestamp as DateTime
-        DateTime GetDateTime() const;
+        datetime_t GetDateTime() const;
 
         // Gets Timestamp in Unix second of century and milliseconds
         void GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const;
     };
 
     typedef SharedPtr<Measurement> MeasurementPtr;
+    MeasurementPtr ToPtr(const Measurement& source);
 
     enum SignalKind : int16_t
     {
@@ -162,7 +163,7 @@ namespace TimeSeries
         SignalReference Reference;	// Parsed signal reference structure
         uint16_t PhasorSourceIndex; // Measurement phasor index, if measurement represents a "Phasor"
         std::string Description;    // Detailed measurement description (free-form)
-        DateTime UpdatedOn;			// Time of last meta-data update
+        datetime_t UpdatedOn;			// Time of last meta-data update
     };
 
     typedef SharedPtr<MeasurementMetadata> MeasurementMetadataPtr;
@@ -174,7 +175,7 @@ namespace TimeSeries
         std::string Type;			// Phasor type, i.e., "V" for voltage or "I" for current
         std::string Phase;			// Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
         uint16_t SourceIndex;	    // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
-        DateTime UpdatedOn;		    // Time of last meta-data update
+        datetime_t UpdatedOn;		    // Time of last meta-data update
     };
 
     typedef SharedPtr<PhasorMetadata> PhasorMetadataPtr;
@@ -202,7 +203,7 @@ namespace TimeSeries
         std::string VendorDeviceName;   // Original vendor device name, e.g., PMU brand (if useful / provided)
         float64_t Longitude;	        // Device longitude (if reported)
         float64_t Latitude;		        // Device latitude (if reported)
-        DateTime UpdatedOn;			    // Time of last meta-data update
+        datetime_t UpdatedOn;			    // Time of last meta-data update
 
         // Associated measurement and phasor meta-data
         std::vector<MeasurementMetadataPtr> Measurements;   // DataPublisher does not need to assign

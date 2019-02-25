@@ -45,9 +45,13 @@ const decimal_t Decimal::DotNetMaxValue = decimal_t("792281625142643375935439503
 
 const decimal_t Decimal::DotNetMinValue = decimal_t("-79228162514264337593543950335");
 
+const datetime_t DateTime::MaxValue(max_date_time);
+
+const datetime_t DateTime::MinValue(min_date_time);
+
 const string Empty::String {};
 
-const DateTime Empty::DateTime {};
+const datetime_t Empty::DateTime {};
 
 const Guid Empty::Guid = NilGuidGen();
 
@@ -280,7 +284,7 @@ string GSF::PadRight(const string& value, uint32_t count, char padChar)
     return value;
 }
 
-DateTime GSF::DateAdd(const DateTime& value, int32_t addValue, TimeInterval interval)
+datetime_t GSF::DateAdd(const datetime_t& value, int32_t addValue, TimeInterval interval)
 {
     switch (interval)
     {
@@ -307,7 +311,7 @@ DateTime GSF::DateAdd(const DateTime& value, int32_t addValue, TimeInterval inte
     }
 }
 
-int32_t GSF::DateDiff(const DateTime& startTime, const DateTime& endTime, TimeInterval interval)
+int32_t GSF::DateDiff(const datetime_t& startTime, const datetime_t& endTime, TimeInterval interval)
 {
     if (interval < TimeInterval::Hour)
     {
@@ -345,7 +349,7 @@ int32_t GSF::DateDiff(const DateTime& startTime, const DateTime& endTime, TimeIn
     }
 }
 
-int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
+int32_t GSF::DatePart(const datetime_t& value, TimeInterval interval)
 {
     static float64_t tickInterval = pow(10.0, time_duration::num_fractional_digits());
 
@@ -376,12 +380,12 @@ int32_t GSF::DatePart(const DateTime& value, TimeInterval interval)
     }
 }
 
-DateTime GSF::Now()
+datetime_t GSF::Now()
 {
-    return DateTime { microsec_clock::local_time() };
+    return datetime_t { microsec_clock::local_time() };
 }
 
-DateTime GSF::UtcNow()
+datetime_t GSF::UtcNow()
 {
-    return DateTime { microsec_clock::universal_time() };
+    return datetime_t { microsec_clock::universal_time() };
 }

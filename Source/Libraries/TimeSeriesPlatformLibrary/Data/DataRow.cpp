@@ -394,7 +394,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
             }
             case ExpressionValueType::DateTime:
             {
-                const DateTime result = sourceValue->ValueAsDateTime();
+                const datetime_t result = sourceValue->ValueAsDateTime();
                 const time_t value = to_time_t(result);
 
                 switch (targetType)
@@ -690,22 +690,22 @@ void DataRow::SetBooleanValue(const string& columnName, const Nullable<bool>& va
     SetBooleanValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<DateTime> DataRow::ValueAsDateTime(const int32_t columnIndex)
+Nullable<datetime_t> DataRow::ValueAsDateTime(const int32_t columnIndex)
 {
-    return GetValue<DateTime>(columnIndex, DataType::DateTime);
+    return GetValue<datetime_t>(columnIndex, DataType::DateTime);
 }
 
-Nullable<DateTime> DataRow::ValueAsDateTime(const string& columnName)
+Nullable<datetime_t> DataRow::ValueAsDateTime(const string& columnName)
 {
     return ValueAsDateTime(GetColumnIndex(columnName));
 }
 
-void DataRow::SetDateTimeValue(const int32_t columnIndex, const Nullable<DateTime>& value)
+void DataRow::SetDateTimeValue(const int32_t columnIndex, const Nullable<datetime_t>& value)
 {
-    SetValue<DateTime>(columnIndex, value, DataType::DateTime);
+    SetValue<datetime_t>(columnIndex, value, DataType::DateTime);
 }
 
-void DataRow::SetDateTimeValue(const string& columnName, const Nullable<DateTime>& value)
+void DataRow::SetDateTimeValue(const string& columnName, const Nullable<datetime_t>& value)
 {
     SetDateTimeValue(GetColumnIndex(columnName), value);
 }

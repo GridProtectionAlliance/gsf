@@ -41,7 +41,7 @@ protected:
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
     void DataStartTime(time_t unixSOC, uint16_t milliseconds) override;
-    void DataStartTime(GSF::DateTime startTime) override;
+    void DataStartTime(GSF::datetime_t startTime) override;
     void ReceivedMetadata(const std::vector<uint8_t>& payload) override;
     void ReceivedNewMeasurements(const std::vector<GSF::TimeSeries::MeasurementPtr>& measurements) override;
     void ParsedMetadata() override;

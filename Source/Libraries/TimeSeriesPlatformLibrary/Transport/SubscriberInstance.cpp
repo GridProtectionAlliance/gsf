@@ -562,7 +562,7 @@ void SubscriberInstance::DataStartTime(time_t unixSOC, uint16_t milliseconds)
 {
 }
 
-void SubscriberInstance::DataStartTime(DateTime startTime)
+void SubscriberInstance::DataStartTime(datetime_t startTime)
 {
 }
 
@@ -876,7 +876,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
                 phasorReference->Phasor->Type = "?";
                 phasorReference->Phasor->Phase = "+";
                 phasorReference->Phasor->SourceIndex = i;
-                phasorReference->Phasor->UpdatedOn = DateTime();
+                phasorReference->Phasor->UpdatedOn = datetime_t();
                 
                 phasorReference->Angle = nullptr;
                 phasorReference->Magnitude = nullptr;
@@ -912,7 +912,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
                 measurement->Reference.Kind = SignalKind::Analog;
                 measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
-                measurement->UpdatedOn = DateTime();
+                measurement->UpdatedOn = datetime_t();
 
                 configurationFrame->Analogs.push_back(measurement);
             }
@@ -946,7 +946,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
                 measurement->Reference.Kind = SignalKind::Digital;
                 measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
-                measurement->UpdatedOn = DateTime();
+                measurement->UpdatedOn = datetime_t();
 
                 configurationFrame->Digitals.push_back(measurement);
             }

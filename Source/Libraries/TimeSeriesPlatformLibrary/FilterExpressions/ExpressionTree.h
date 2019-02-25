@@ -127,8 +127,8 @@ namespace FilterExpressions
         GSF::Guid ValueAsGuid() const;
         Nullable<GSF::Guid> ValueAsNullableGuid() const;
 
-        GSF::DateTime ValueAsDateTime() const;
-        Nullable<GSF::DateTime> ValueAsNullableDateTime() const;
+        GSF::datetime_t ValueAsDateTime() const;
+        Nullable<GSF::datetime_t> ValueAsNullableDateTime() const;
     };
 
     typedef GSF::SharedPtr<ValueExpression> ValueExpressionPtr;

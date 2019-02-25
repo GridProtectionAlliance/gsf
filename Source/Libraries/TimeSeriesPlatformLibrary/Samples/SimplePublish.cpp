@@ -36,8 +36,8 @@ TimerPtr PublishTimer;
 vector<MeasurementMetadataPtr> MeasurementsToPublish;
 
 bool RunPublisher(uint16_t port);
-void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
-void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
+void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
+void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
 void DisplayStatusMessage(DataPublisher* source, const string& message);
 void DisplayErrorMessage(DataPublisher* source, const string& message);
 
@@ -168,18 +168,18 @@ bool RunPublisher(uint16_t port)
     return running;
 }
 
-void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)
+void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     cout << ">> New Client Connected:" << endl;
-    cout << "   Subscriber ID: " << ToString(subscriberID) << endl;
-    cout << "   Connection ID: " << connectionID << endl << endl;
+    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
 }
 
-void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)
+void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     cout << ">> Client Disconnected:" << endl;
-    cout << "   Subscriber ID: " << ToString(subscriberID) << endl;
-    cout << "   Connection ID: " << connectionID << endl << endl;
+    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
 }
 
 // Callback which is called to display status messages from the subscriber.

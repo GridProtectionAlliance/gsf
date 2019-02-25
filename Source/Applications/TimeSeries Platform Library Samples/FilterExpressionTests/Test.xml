@@ -30,20 +30,6 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
-          <xs:element name="PhasorDetail">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="ID" type="xs:int" minOccurs="0" />
-                <xs:element name="DeviceAcronym" type="xs:string" minOccurs="0" />
-                <xs:element name="Label" type="xs:string" minOccurs="0" />
-                <xs:element name="Type" type="xs:string" minOccurs="0" />
-                <xs:element name="Phase" type="xs:string" minOccurs="0" />
-                <xs:element name="DestinationPhasorID" type="xs:int" minOccurs="0" />
-                <xs:element name="SourceIndex" type="xs:int" minOccurs="0" />
-                <xs:element name="UpdatedOn" type="xs:dateTime" minOccurs="0" />
-              </xs:sequence>
-            </xs:complexType>
-          </xs:element>
           <xs:element name="MeasurementDetail">
             <xs:complexType>
               <xs:sequence>
@@ -57,6 +43,20 @@
                 <xs:element name="Description" type="xs:string" minOccurs="0" />
                 <xs:element name="Internal" type="xs:boolean" minOccurs="0" />
                 <xs:element name="Enabled" type="xs:boolean" minOccurs="0" />
+                <xs:element name="UpdatedOn" type="xs:dateTime" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="PhasorDetail">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="ID" type="xs:int" minOccurs="0" />
+                <xs:element name="DeviceAcronym" type="xs:string" minOccurs="0" />
+                <xs:element name="Label" type="xs:string" minOccurs="0" />
+                <xs:element name="Type" type="xs:string" minOccurs="0" />
+                <xs:element name="Phase" type="xs:string" minOccurs="0" />
+                <xs:element name="DestinationPhasorID" type="xs:int" minOccurs="0" />
+                <xs:element name="SourceIndex" type="xs:int" minOccurs="0" />
                 <xs:element name="UpdatedOn" type="xs:dateTime" minOccurs="0" />
               </xs:sequence>
             </xs:complexType>
@@ -92,51 +92,6 @@
     <Enabled>true</Enabled>
     <UpdatedOn>2019-01-04T08:00:52.73Z</UpdatedOn>
   </DeviceDetail>
-  <PhasorDetail>
-    <ID>1</ID>
-    <DeviceAcronym>SHELBY</DeviceAcronym>
-    <Label>500 kV Bus 1</Label>
-    <Type>V</Type>
-    <Phase>+</Phase>
-    <SourceIndex>1</SourceIndex>
-    <UpdatedOn>2019-01-04T08:00:52.757Z</UpdatedOn>
-  </PhasorDetail>
-  <PhasorDetail>
-    <ID>2</ID>
-    <DeviceAcronym>SHELBY</DeviceAcronym>
-    <Label>500 kV Bus 2</Label>
-    <Type>V</Type>
-    <Phase>+</Phase>
-    <SourceIndex>2</SourceIndex>
-    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
-  </PhasorDetail>
-  <PhasorDetail>
-    <ID>3</ID>
-    <DeviceAcronym>SHELBY</DeviceAcronym>
-    <Label>Cordova</Label>
-    <Type>I</Type>
-    <Phase>+</Phase>
-    <SourceIndex>3</SourceIndex>
-    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
-  </PhasorDetail>
-  <PhasorDetail>
-    <ID>4</ID>
-    <DeviceAcronym>SHELBY</DeviceAcronym>
-    <Label>Dell</Label>
-    <Type>I</Type>
-    <Phase>+</Phase>
-    <SourceIndex>4</SourceIndex>
-    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
-  </PhasorDetail>
-  <PhasorDetail>
-    <ID>5</ID>
-    <DeviceAcronym>SHELBY</DeviceAcronym>
-    <Label>Lagoon Creek</Label>
-    <Type>I</Type>
-    <Phase>+</Phase>
-    <SourceIndex>5</SourceIndex>
-    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
-  </PhasorDetail>
   <MeasurementDetail>
     <DeviceAcronym>SHELBY</DeviceAcronym>
     <ID>STAT:31</ID>
@@ -1626,6 +1581,51 @@
     <Enabled>true</Enabled>
     <UpdatedOn>2019-01-04T08:01:18.8Z</UpdatedOn>
   </MeasurementDetail>
+  <PhasorDetail>
+    <ID>1</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>500 kV Bus 1</Label>
+    <Type>V</Type>
+    <Phase>+</Phase>
+    <SourceIndex>1</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.757Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>2</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>500 kV Bus 2</Label>
+    <Type>V</Type>
+    <Phase>+</Phase>
+    <SourceIndex>2</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>3</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>Cordova</Label>
+    <Type>I</Type>
+    <Phase>+</Phase>
+    <SourceIndex>3</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>4</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>Dell</Label>
+    <Type>I</Type>
+    <Phase>+</Phase>
+    <SourceIndex>4</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
+  <PhasorDetail>
+    <ID>5</ID>
+    <DeviceAcronym>SHELBY</DeviceAcronym>
+    <Label>Lagoon Creek</Label>
+    <Type>I</Type>
+    <Phase>+</Phase>
+    <SourceIndex>5</SourceIndex>
+    <UpdatedOn>2019-01-04T08:00:52.76Z</UpdatedOn>
+  </PhasorDetail>
   <SchemaVersion>
     <VersionNumber>9</VersionNumber>
   </SchemaVersion>

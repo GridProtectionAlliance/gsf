@@ -48,6 +48,9 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
+    m_startTimeConstraint(DateTime::MaxValue),
+    m_stopTimeConstraint(DateTime::MaxValue),
+    m_processingInterval(-1),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
     m_includeTime(true),
@@ -78,6 +81,11 @@ SubscriberConnection::~SubscriberConnection() = default;
 const DataPublisherPtr& SubscriberConnection::GetParent() const
 {
     return m_parent;
+}
+
+SubscriberConnectionPtr SubscriberConnection::GetReference()
+{
+    return shared_from_this();
 }
 
 TcpSocket& SubscriberConnection::CommandChannelSocket()
@@ -124,6 +132,43 @@ void SubscriberConnection::SetOperationalModes(uint32_t value)
 uint32_t SubscriberConnection::GetEncoding() const
 {
     return m_encoding;
+}
+
+bool SubscriberConnection::GetIsTemporalSubscription() const
+{
+    return m_startTimeConstraint < DateTime::MaxValue;
+}
+
+const GSF::datetime_t& SubscriberConnection::GetStartTimeConstraint() const
+{
+    return m_startTimeConstraint;
+}
+
+void SubscriberConnection::SetStartTimeConstraint(const GSF::datetime_t& value)
+{
+    m_startTimeConstraint = value;
+}
+
+const GSF::datetime_t& SubscriberConnection::GetStopTimeConstraint() const
+{
+    return m_stopTimeConstraint;
+}
+
+void SubscriberConnection::SetStopTimeConstraint(const GSF::datetime_t& value)
+{
+    m_stopTimeConstraint = value;
+}
+
+int32_t SubscriberConnection::GetProcessingInterval() const
+{
+    return m_processingInterval;
+}
+
+void SubscriberConnection::SetProcessingInterval(int32_t value)
+{
+    m_processingInterval = value;
+    m_parent->DispatchTemporalProcessingIntervalChangeRequested(shared_from_this());
+    m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + ".");
 }
 
 bool SubscriberConnection::GetUsePayloadCompression() const
@@ -313,50 +358,7 @@ void SubscriberConnection::Stop()
     m_pingTimer.Stop();
     m_commandChannelSocket.shutdown(socket_base::shutdown_both);
     m_commandChannelSocket.cancel();
-    m_parent->RemoveConnection(shared_from_this());
-}
-
-void SubscriberConnection::PublishMeasurements(const vector<Measurement>& measurements)
-{
-    if (measurements.empty() || !m_isSubscribed)
-        return;
-
-    if (!m_startTimeSent)
-        m_startTimeSent = SendDataStartTime(measurements[0].Timestamp);
-
-    // TODO: Consider queuing measurements for processing
-
-    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
-    vector<uint8_t> packet, buffer;
-    int32_t count = 0;
-
-    packet.reserve(MaxPacketSize);
-    buffer.reserve(16);
-
-    for (size_t i = 0; i < measurements.size(); i++)
-    {
-        const Measurement& measurement = measurements[i];
-        const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
-
-        if (runtimeID == UInt16::MaxValue)
-            continue;
-
-        const uint32_t length = serializer.SerializeMeasurement(measurement, buffer, runtimeID);
-
-        if (packet.size() + length > MaxPacketSize)
-        {
-            PublishDataPacket(packet, count);
-            packet.clear();
-            count = 0;
-        }
-
-        WriteBytes(packet, buffer);
-        buffer.clear();
-        count++;
-    }
-
-    if (count > 0)
-        PublishDataPacket(packet, count);
+    m_parent->ConnectionTerminated(shared_from_this());
 }
 
 void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
@@ -402,6 +404,11 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
         PublishDataPacket(packet, count);
 }
 
+void SubscriberConnection::CompleteTemporalSubscription()
+{
+    SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
+}
+
 void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 {
     try
@@ -440,6 +447,24 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                     if (TryGetValue(settings, "requestNaNValueFilter", setting))
                         SetIsNaNFiltered(ParseBoolean(setting));
+
+                    if (TryGetValue(settings, "startTimeConstraint", setting))
+                        TryParseTimestamp(setting.c_str(), m_startTimeConstraint, DateTime::MaxValue);
+
+                    if (TryGetValue(settings, "startTimeConstraint", setting))
+                        TryParseTimestamp(setting.c_str(), m_startTimeConstraint, DateTime::MaxValue);
+
+                    if (TryGetValue(settings, "processingInterval", setting) && !setting.empty())
+                        TryParseInt32(setting, m_processingInterval, -1);
+
+                    if (GetIsTemporalSubscription())
+                    {
+                        if (!m_parent->GetSupportsTemporalSubscriptions())
+                            throw PublisherException("Publisher does not temporal subscriptions");
+
+                        if (m_startTimeConstraint > m_stopTimeConstraint)
+                            throw PublisherException("Specified stop time of requested temporal subscription precedes start time");
+                    }
 
                     SetUsePayloadCompression(usePayloadCompression);
                     SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
@@ -518,36 +543,48 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     SetIsSubscribed(true);
                     SendResponse(ServerResponse::Succeeded, ServerCommand::Subscribe, message);
                     m_parent->DispatchStatusMessage(message);
+
+                    if (GetIsTemporalSubscription())
+                        m_parent->DispatchTemporalSubscriptionRequested(shared_from_this());
                 }
                 else
                 {
-                    const string message = byteLength > 0 ?
+                    HandleSubscribeFailure(byteLength > 0 ?
                         "Not enough buffer was provided to parse client data subscription." :
-                        "Cannot initialize client data subscription without a connection string.";
-
-                    SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, message);
-                    m_parent->DispatchErrorMessage(message);
+                        "Cannot initialize client data subscription without a connection string.");
                 }            
             }            
         }
         else
         {
-            const string message = "Not enough buffer was provided to parse client data subscription.";
-            SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, message);
-            m_parent->DispatchErrorMessage(message);
+            HandleSubscribeFailure("Not enough buffer was provided to parse client data subscription.");
         }
     }
-    catch (const std::exception& ex)
+    catch (const PublisherException& ex)
     {
-        const string message = "Failed to process client data subscription due to exception: " + string(ex.what());
-        SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, message);
-        m_parent->DispatchErrorMessage(message);
+        HandleSubscribeFailure("Failed to process client data subscription due to exception: " + string(ex.what()));
     }
+    catch (...)
+    {
+        HandleSubscribeFailure("Failed to process client data subscription due to exception: " + boost::current_exception_diagnostic_information(true));
+    }
+}
+
+void SubscriberConnection::HandleSubscribeFailure(const std::string& message)
+{
+    SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, message);
+    m_parent->DispatchErrorMessage(message);
+
+    if (GetIsTemporalSubscription())
+        CompleteTemporalSubscription();
 }
 
 void SubscriberConnection::HandleUnsubscribe()
 {
     SetIsSubscribed(false);
+
+    if (GetIsTemporalSubscription())
+        CompleteTemporalSubscription();
 }
 
 void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
@@ -559,7 +596,7 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
     m_parent->DispatchStatusMessage("Received meta-data refresh request from " + GetConnectionID() + ", preparing response...");
 
     StringMap<ExpressionTreePtr> filterExpressions;
-    const DateTime startTime = UtcNow(); //-V821
+    const datetime_t startTime = UtcNow(); //-V821
 
     try
     {
@@ -622,8 +659,22 @@ void SubscriberConnection::HandleRotateCipherKeys()
 {
 }
 
-void SubscriberConnection::HandleUpdateProcessingInterval(uint8_t* data, uint32_t length)
+void SubscriberConnection::HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length)
 {
+    // Make sure there is enough buffer for new processing interval value
+    if (length >= 4)
+    {
+        // Next 4 bytes are an integer representing the new processing interval
+        const int32_t processingInterval = EndianConverter::Default.ConvertBigEndian(*reinterpret_cast<const int32_t*>(data));
+        SetProcessingInterval(processingInterval);
+        SendResponse(ServerResponse::Succeeded, ServerCommand::UpdateProcessingInterval, "New processing interval of " + ToString(processingInterval) + " assigned.");
+    }
+    else
+    {
+        const string message = "Not enough buffer was provided to update client processing interval.";
+        SendResponse(ServerResponse::Failed, ServerCommand::UpdateProcessingInterval, message);
+        m_parent->DispatchErrorMessage(message);
+    }
 }
 
 void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, uint32_t length)
@@ -1054,6 +1105,11 @@ void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTr
 
         Stop();
     }
+}
+
+bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode)
+{
+    return SendResponse(responseCode, commandCode, vector<uint8_t>(0));
 }
 
 bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode, const string& message)

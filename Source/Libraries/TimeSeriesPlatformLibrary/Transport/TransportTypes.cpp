@@ -64,7 +64,7 @@ float64_t Measurement::AdjustedValue() const
     return Value * Multiplier + Adder;
 }
 
-DateTime Measurement::GetDateTime() const
+datetime_t Measurement::GetDateTime() const
 {
     return FromTicks(Timestamp);
 }
@@ -72,6 +72,23 @@ DateTime Measurement::GetDateTime() const
 void Measurement::GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const
 {
     ToUnixTime(Timestamp, unixSOC, milliseconds);
+}
+
+MeasurementPtr TimeSeries::ToPtr(const Measurement& source)
+{
+    MeasurementPtr destination = NewSharedPtr<Measurement>();
+
+    destination->ID = source.ID;
+    destination->Source = source.Source;
+    destination->SignalID = source.SignalID;
+    destination->Tag = source.Tag;
+    destination->Value = source.Value;
+    destination->Adder = source.Adder;
+    destination->Multiplier = source.Multiplier;
+    destination->Timestamp = source.Timestamp;
+    destination->Flags = source.Flags;
+
+    return destination;
 }
 
 SignalReference::SignalReference() :

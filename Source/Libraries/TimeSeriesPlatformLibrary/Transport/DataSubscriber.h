@@ -134,7 +134,7 @@ namespace Transport
 
     class DataSubscriber // NOLINT
     {
-    private:
+    public:
         // Function pointer types
         typedef std::function<void(DataSubscriber*, const std::vector<uint8_t>&)> DispatcherFunction;
         typedef std::function<void(DataSubscriber*, const std::string&)> MessageCallback;
@@ -144,6 +144,7 @@ namespace Transport
         typedef std::function<void(DataSubscriber*)> ConfigurationChangedCallback;
         typedef std::function<void(DataSubscriber*)> ConnectionTerminatedCallback;
 
+    private:
         // Structure used to dispatch
         // callbacks on the callback thread.
         struct CallbackDispatcher
@@ -263,14 +264,14 @@ namespace Transport
         // Callback registration
         //
         // Callback functions are defined with the following signatures:
-        //   void ProcessStatusMessage(DataSubscriber*, const string& message)
-        //   void ProcessErrorMessage(DataSubscriber*, const string& message)
-        //   void ProcessDataStartTime(DataSubscriber*, int64_t startTime)
-        //   void ProcessMetadata(DataSubscriber*, const vector<uint8_t>& metadata)
-        //   void ProcessNewMeasurements(DataSubscriber*, const vector<MeasurementPtr>& newMeasurements)
-        //   void ProcessProcessingComplete(DataSubscriber*, const string& message)
-        //   void ProcessConfigurationChanged(DataSubscriber*)
-        //   void ProcessConnectionTerminated(DataSubscriber*)
+        //   void ProcessStatusMessage(DataSubscriber* source, const string& message)
+        //   void ProcessErrorMessage(DataSubscriber* source, const string& message)
+        //   void ProcessDataStartTime(DataSubscriber* source, int64_t startTime)
+        //   void ProcessMetadata(DataSubscriber* source, const vector<uint8_t>& metadata)
+        //   void ProcessNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
+        //   void ProcessProcessingComplete(DataSubscriber* source, const string& message)
+        //   void ProcessConfigurationChanged(DataSubscriber* source)
+        //   void ProcessConnectionTerminated(DataSubscriber* source)
         //
         // Metadata is provided to the user as zlib-compressed XML,
         // and must be decompressed and interpreted before it can be used.

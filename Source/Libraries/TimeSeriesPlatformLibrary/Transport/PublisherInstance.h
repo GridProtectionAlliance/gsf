@@ -43,14 +43,18 @@ namespace Transport
         // Internal subscription event handlers
         static void HandleStatusMessage(DataPublisher* source, const std::string& message);
         static void HandleErrorMessage(DataPublisher* source, const std::string& message);
-        static void HandleClientConnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID);
-        static void HandleClientDisconnected(DataPublisher* source, const Guid& subscriberID, const std::string& connectionID);
+        static void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
 
     protected:
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
         virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
-        virtual void ClientConnected(const Guid& subscriberID, const std::string& connectionID);
-        virtual void ClientDisconnected(const Guid& subscriberID, const std::string& connectionID);
+        virtual void ClientConnected(const SubscriberConnectionPtr& connection);
+        virtual void ClientDisconnected(const SubscriberConnectionPtr& connection);
+        virtual void TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
+        virtual void TemporalProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
 
     public:
         PublisherInstance(uint16_t port, bool ipV6);

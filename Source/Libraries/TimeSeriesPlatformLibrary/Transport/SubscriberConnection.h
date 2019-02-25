@@ -37,6 +37,9 @@ namespace Transport
     class DataPublisher;
     typedef GSF::SharedPtr<DataPublisher> DataPublisherPtr;
 
+    class SubscriberConnection;
+    typedef GSF::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
+
     // Represents a subscriber connection to a data publisher
     class SubscriberConnection : public GSF::EnableSharedThisPtr<SubscriberConnection> // NOLINT
     {
@@ -49,6 +52,9 @@ namespace Transport
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
         uint32_t m_encoding;
+        GSF::datetime_t m_startTimeConstraint;
+        GSF::datetime_t m_stopTimeConstraint;
+        int32_t m_processingInterval;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
         bool m_includeTime;
@@ -79,17 +85,18 @@ namespace Transport
         SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
-        DateTime m_lastPublishTime;
+        datetime_t m_lastPublishTime;
         //TSSCMeasurementParser m_tsscMeasurementParser;
         //bool m_tsscResetRequested;
         //uint16_t m_tsscSequenceNumber;
 
         // Server request handlers
         void HandleSubscribe(uint8_t* data, uint32_t length);
+        void HandleSubscribeFailure(const std::string& message);
         void HandleUnsubscribe();
         void HandleMetadataRefresh(uint8_t* data, uint32_t length);
         void HandleRotateCipherKeys();
-        void HandleUpdateProcessingInterval(uint8_t* data, uint32_t length);
+        void HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length);
         void HandleDefineOperationalModes(uint8_t* data, uint32_t length);
         void HandleConfirmNotification(uint8_t* data, uint32_t length);
         void HandleConfirmBufferBlock(uint8_t* data, uint32_t length);
@@ -112,43 +119,78 @@ namespace Transport
         ~SubscriberConnection();
 
         const DataPublisherPtr& GetParent() const;
+        SubscriberConnectionPtr GetReference();
 
         GSF::TcpSocket& CommandChannelSocket();
 
-        // Gets or sets subscriber identification used when subscriber is known and pre-established
+        // Gets or sets subscriber UUID used when subscriber is known and pre-established
         const GSF::Guid& GetSubscriberID() const;
         void SetSubscriberID(const GSF::Guid& id);
 
+        // Gets subscriber connection identification, e.g., remote IP/port, for display and logging references
         const std::string& GetConnectionID() const;
+
+        // Gets subscriber remote IP address
         const GSF::IPAddress& GetIPAddress() const;
+
+        // Gets subscriber communications port
         const std::string& GetHostName() const;
 
+        // Gets or sets established subscriber operational modes
         uint32_t GetOperationalModes() const;
         void SetOperationalModes(uint32_t value);
 
+        // Gets established subscriber string encoding
         uint32_t GetEncoding() const;
 
+        // Gets flags that determines if this subscription is temporal based
+        bool GetIsTemporalSubscription() const;
+
+        // Gets or sets the start time temporal processing constraint
+        const GSF::datetime_t& GetStartTimeConstraint() const;
+        void SetStartTimeConstraint(const GSF::datetime_t& value);
+
+        // Gets or sets the stop time temporal processing constraint
+        const GSF::datetime_t& GetStopTimeConstraint() const;
+        void SetStopTimeConstraint(const GSF::datetime_t& value);
+
+        // Gets or sets the desired temporal processing interval, in milliseconds
+        // With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        // basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
+        // interval while a value of 0 means to process data as fast as possible.
+        int32_t GetProcessingInterval() const;
+        void SetProcessingInterval(int32_t value);
+
+        // Gets or sets flag that determines if payload compression should be enabled in data packets
         bool GetUsePayloadCompression() const;
         void SetUsePayloadCompression(bool value);
 
+        // Gets or sets flag that determines if the compact measurement format should be used in data packets
         bool GetUseCompactMeasurementFormat() const;
         void SetUseCompactMeasurementFormat(bool value);
 
+        // Gets or sets flag that determines if time should be included in data packets when the compact measurement format used
         bool GetIncludeTime() const;
         void SetIncludeTime(bool value);
 
+        // Gets or sets flag that determines if time should be restricted to millisecond resolution in data packets when the
+        // compact measurement format used; otherwise, full resolution time will be used
         bool GetUseMillisecondResolution() const;
         void SetUseMillisecondResolution(bool value);
 
+        // Gets or sets flag that determines if NaN values should be excluded from data packets
         bool GetIsNaNFiltered() const;
         void SetIsNaNFiltered(bool value);
 
+        // Gets or sets flag that determines if subscriber connection is currently subscribed
         bool GetIsSubscribed() const;
         void SetIsSubscribed(bool value);
 
+        // Gets or sets subscription details about subscriber
         const std::string& GetSubscriptionInfo() const;
         void SetSubscriptionInfo(const std::string& value);
 
+        // Gets or sets signal index cache for subscriber representing run-time mappings for subscribed points
         const SignalIndexCachePtr& GetSignalIndexCache() const;
         void SetSignalIndexCache(SignalIndexCachePtr signalIndexCache);
 
@@ -164,15 +206,16 @@ namespace Transport
         void Start();
         void Stop();
 
-        void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
+        void CompleteTemporalSubscription();
 
         void CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
         void DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
         void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
+        bool SendResponse(uint8_t responseCode, uint8_t commandCode);
         bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::string& message);
-        bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data = {});
+        bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::vector<uint8_t>& data);
 
         std::string DecodeString(const uint8_t* data, uint32_t offset, uint32_t length) const;
         std::vector<uint8_t> EncodeString(const std::string& value) const;

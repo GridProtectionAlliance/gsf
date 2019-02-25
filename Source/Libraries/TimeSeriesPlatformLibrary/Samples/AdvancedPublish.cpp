@@ -33,21 +33,23 @@ using namespace GSF::TimeSeries::Transport;
 using namespace GSF::FilterExpressions;
 
 DataPublisherPtr Publisher;
-TimerPtr PublishTimer;
+TimerPtr PublishTimer, CompletionTimer;
 vector<DeviceMetadataPtr> DevicesToPublish;
 vector<MeasurementMetadataPtr> MeasurementsToPublish;
 vector<PhasorMetadataPtr> PhasorsToPublish;
 
 bool RunPublisher(uint16_t port);
-void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
-void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID);
+void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
+void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
 void DisplayStatusMessage(DataPublisher* source, const string& message);
 void DisplayErrorMessage(DataPublisher* source, const string& message);
+void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
 
 void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<MeasurementMetadataPtr>& measurementMetadata, vector<PhasorMetadataPtr>& phasorMetadata)
 {
     DeviceMetadataPtr device1Metadata = NewSharedPtr<DeviceMetadata>();
-    const DateTime timestamp = UtcNow();
+    const datetime_t timestamp = UtcNow();
 
     // Add a device
     device1Metadata->Name = "Test PMU";
@@ -210,6 +212,11 @@ bool RunPublisher(uint16_t port)
         Publisher->RegisterClientDisconnectedCallback(&DisplayClientDisconnected);
         Publisher->RegisterStatusMessageCallback(&DisplayStatusMessage);
         Publisher->RegisterErrorMessageCallback(&DisplayErrorMessage);
+        Publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
+        Publisher->RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
+
+        // Enable temporal subscription support
+        Publisher->SetSupportsTemporalSubscriptions(true);
 
         // Load metadata to be used for publication
         LoadMetadataToPublish(DevicesToPublish, MeasurementsToPublish, PhasorsToPublish);
@@ -285,18 +292,18 @@ bool RunPublisher(uint16_t port)
     return running;
 }
 
-void DisplayClientConnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)
+void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     cout << ">> New Client Connected:" << endl;
-    cout << "   Subscriber ID: " << ToString(subscriberID) << endl;
-    cout << "   Connection ID: " << connectionID << endl << endl;
+    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
 }
 
-void DisplayClientDisconnected(DataPublisher* source, const Guid& subscriberID, const string& connectionID)
+void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     cout << ">> Client Disconnected:" << endl;
-    cout << "   Subscriber ID: " << ToString(subscriberID) << endl;
-    cout << "   Connection ID: " << connectionID << endl << endl;
+    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
 }
 
 // Callback which is called to display status messages from the subscriber.
@@ -309,4 +316,21 @@ void DisplayStatusMessage(DataPublisher* source, const string& message)
 void DisplayErrorMessage(DataPublisher* source, const string& message)
 {
     cerr << message << endl << endl;
+}
+
+void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
+
+    CompletionTimer = NewSharedPtr<Timer>(1000, [connection](Timer*, void*)
+    {
+        connection->CompleteTemporalSubscription();
+    });
+
+    CompletionTimer->Start();
+}
+
+void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
 }
