@@ -80,6 +80,34 @@ bool StringComparer::operator()(const std::string& left, const std::string& righ
     return Compare(left, right) < 0;
 }
 
+uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const uint8_t* source, const uint32_t offset, const uint32_t length)
+{
+    for (uint32_t i = 0; i < length; i++)
+        buffer.push_back(source[offset + i]);
+
+    return length;
+}
+
+uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const vector<uint8_t>& source)
+{
+    const uint32_t length = source.size();
+
+    for (uint32_t i = 0; i < length; i++)
+        buffer.push_back(source[i]);
+
+    return length;
+}
+
+uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const Guid& value)
+{
+    const uint8_t* bytes = value.data;
+
+    for (uint32_t i = 0; i < 16; i++)
+        buffer.push_back(bytes[i]);
+
+    return 16;
+}
+
 Guid GSF::NewGuid()
 {
     return RandomGuidGen();

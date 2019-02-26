@@ -30,7 +30,7 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
-    class PublisherInstance
+    class PublisherInstance // NOLINT
     {
     private:
         // Publication members
@@ -46,7 +46,7 @@ namespace Transport
         static void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
 
     protected:
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
@@ -54,7 +54,7 @@ namespace Transport
         virtual void ClientConnected(const SubscriberConnectionPtr& connection);
         virtual void ClientDisconnected(const SubscriberConnectionPtr& connection);
         virtual void TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
-        virtual void TemporalProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
+        virtual void ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
 
     public:
         PublisherInstance(uint16_t port, bool ipV6);
@@ -71,8 +71,29 @@ namespace Transport
         // Define metadata from existing dataset
         void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
 
+        // Gets primary metadata. This dataset contains all the normalized metadata tables that define
+        // the available detail about the data points that can be subscribed to by clients.
+        const GSF::Data::DataSetPtr& GetMetadata() const;
+
+        // Gets filtering metadata. This dataset, derived from primary metadata, contains a flattened
+        // table used to subscribe to a filtered set of points with an expression, e.g.:
+        // FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA'
+        const GSF::Data::DataSetPtr& GetFilteringMetadata() const;
+
+        // Filters primary MeasurementDetail metadata returning values as measurement metadata records
+        std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
+
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
+
+        // Node ID defines a unique identification for the DataPublisher
+        // instance that gets included in published metadata so that clients
+        // can easily distinguish the source of the measurements
+        const GSF::Guid& GetNodeID() const;
+        void SetNodeID(const GSF::Guid& nodeID);
+
+        SecurityMode GetSecurityMode() const;
+        void SetSecurityMode(SecurityMode securityMode);
 
         bool IsMetadataRefreshAllowed() const;
         void SetMetadataRefreshAllowed(bool allowed);

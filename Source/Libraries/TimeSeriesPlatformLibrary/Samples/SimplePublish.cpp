@@ -135,7 +135,7 @@ bool RunPublisher(uint16_t port)
         {
             static uint32_t count = MeasurementsToPublish.size();
             const int64_t timestamp = ToTicks(UtcNow());
-            vector<Measurement> measurements;
+            vector<MeasurementPtr> measurements;
 
             measurements.reserve(count);
 
@@ -143,11 +143,11 @@ bool RunPublisher(uint16_t port)
             for (size_t i = 0; i < count; i++)
             {
                 const MeasurementMetadataPtr metadata = MeasurementsToPublish[i];
-                Measurement measurement;
+                MeasurementPtr measurement = NewSharedPtr<Measurement>();
 
-                measurement.SignalID = metadata->SignalID;
-                measurement.Timestamp = timestamp;
-                measurement.Value = float64_t(rand());
+                measurement->SignalID = metadata->SignalID;
+                measurement->Timestamp = timestamp;
+                measurement->Value = float64_t(rand());
 
                 measurements.push_back(measurement);
             }

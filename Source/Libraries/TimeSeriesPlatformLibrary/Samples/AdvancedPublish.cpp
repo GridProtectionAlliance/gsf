@@ -44,7 +44,7 @@ void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnection
 void DisplayStatusMessage(DataPublisher* source, const string& message);
 void DisplayErrorMessage(DataPublisher* source, const string& message);
 void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
 
 void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<MeasurementMetadataPtr>& measurementMetadata, vector<PhasorMetadataPtr>& phasorMetadata)
 {
@@ -57,7 +57,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     device1Metadata->UniqueID = NewGuid();
     device1Metadata->Longitude = 300;
     device1Metadata->Latitude = 200;
-    device1Metadata->FramesPerSecond = 1;
+    device1Metadata->FramesPerSecond = 30;
     device1Metadata->ProtocolName = "GEP";
     device1Metadata->UpdatedOn = timestamp;
 
@@ -136,8 +136,8 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
 //
 // This application accepts the port of the publisher via command line argument,
 // starts listening for subscriber connections, the displays summary information
-// about the measurements it publishes. It provides fourteen measurements, i.e.,
-// PPA:1 through PPA:14
+// about the measurements it publishes. It provides four manually defined
+// measurements, i.e., PPA:1 through PPA:4
 //
 // Measurements are transmitted via the TCP command channel.
 int main(int argc, char* argv[])
@@ -213,9 +213,9 @@ bool RunPublisher(uint16_t port)
         Publisher->RegisterStatusMessageCallback(&DisplayStatusMessage);
         Publisher->RegisterErrorMessageCallback(&DisplayErrorMessage);
         Publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
-        Publisher->RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
+        Publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
 
-        // Enable temporal subscription support
+        // Enable temporal subscription support - this allows historical data requests as well as real-time
         Publisher->SetSupportsTemporalSubscriptions(true);
 
         // Load metadata to be used for publication
@@ -235,7 +235,7 @@ bool RunPublisher(uint16_t port)
         {
             static uint32_t count = MeasurementsToPublish.size();
             const int64_t timestamp = ToTicks(UtcNow());
-            vector<Measurement> measurements;
+            vector<MeasurementPtr> measurements;
 
             measurements.reserve(count);
 
@@ -243,10 +243,10 @@ bool RunPublisher(uint16_t port)
             for (size_t i = 0; i < count; i++)
             {
                 const MeasurementMetadataPtr metadata = MeasurementsToPublish[i];
-                Measurement measurement;
+                MeasurementPtr measurement = NewSharedPtr<Measurement>();
 
-                measurement.SignalID = metadata->SignalID;
-                measurement.Timestamp = timestamp;
+                measurement->SignalID = metadata->SignalID;
+                measurement->Timestamp = timestamp;
 
                 const float64_t randFraction = rand() / randMax;
                 const float64_t sign = randFraction > 0.5 ? 1.0 : -1.0;
@@ -271,7 +271,7 @@ bool RunPublisher(uint16_t port)
                         break;
                 }
 
-                measurement.Value = value;
+                measurement->Value = value;
 
                 measurements.push_back(measurement);
             }
@@ -330,7 +330,7 @@ void HandleTemporalSubscriptionRequested(DataPublisher* source, const Subscriber
     CompletionTimer->Start();
 }
 
-void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
 }

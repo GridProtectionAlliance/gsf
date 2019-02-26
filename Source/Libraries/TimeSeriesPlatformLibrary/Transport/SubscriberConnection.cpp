@@ -167,7 +167,7 @@ int32_t SubscriberConnection::GetProcessingInterval() const
 void SubscriberConnection::SetProcessingInterval(int32_t value)
 {
     m_processingInterval = value;
-    m_parent->DispatchTemporalProcessingIntervalChangeRequested(shared_from_this());
+    m_parent->DispatchProcessingIntervalChangeRequested(shared_from_this());
     m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + ".");
 }
 
@@ -363,7 +363,7 @@ void SubscriberConnection::Stop()
 
 void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
-    if (measurements.empty() || !m_isSubscribed)
+    if (measurements.empty() || !m_isSubscribed || m_signalIndexCache == nullptr)
         return;
 
     if (!m_startTimeSent)
@@ -435,7 +435,13 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                 {
                     const bool usePayloadCompression = (GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
                     const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
+
+                    m_parent->DispatchStatusMessage("About to decode connection string with " + ToString(byteLength) + " bytes...");
+
                     const string connectionString = DecodeString(data, index, byteLength);
+
+                    m_parent->DispatchStatusMessage("Successfully decoded connection string: " + connectionString);
+
                     const StringMap<string> settings = ParseKeyValuePairs(connectionString);
                     string setting;
 
@@ -474,7 +480,11 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     // Apply subscriber filter expression and build signal index cache
                     if (TryGetValue(settings, "inputMeasurementKeys", setting))
                     {
-                        if (!ParseSubscriptionRequest(setting, signalIndexCache))
+                        bool success;
+                        
+                        signalIndexCache = ParseSubscriptionRequest(setting, success);
+
+                        if (!success)
                             return;
                     }
 
@@ -533,7 +543,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         signalCount = signalIndexCache->Count();
 
                         // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
-                        SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(signalIndexCache));
+                        SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
                     }
 
                     SetSignalIndexCache(signalIndexCache);
@@ -706,7 +716,7 @@ void SubscriberConnection::HandleUserCommand(uint8_t command, uint8_t* data, uin
 {
 }
 
-bool SubscriberConnection::ParseSubscriptionRequest(const std::string& filterExpression, SignalIndexCachePtr& signalIndexCache)
+SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string& filterExpression, bool& success)
 {
     string exceptionMessage, parsingException;
     FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
@@ -749,7 +759,9 @@ bool SubscriberConnection::ParseSubscriptionRequest(const std::string& filterExp
 
         SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, exceptionMessage);
         m_parent->DispatchErrorMessage(exceptionMessage);
-        return false;
+
+        success = false;
+        return nullptr;
     }
 
     uint32_t charSizeEstimate;
@@ -772,7 +784,7 @@ bool SubscriberConnection::ParseSubscriptionRequest(const std::string& filterExp
     const int32_t signalIDColumn = DataPublisher::GetColumnIndex(activeMeasurements, "SignalID");
 
     // Create a new signal index cache for filtered measurements
-    signalIndexCache = NewSharedPtr<SignalIndexCache>();
+    SignalIndexCachePtr signalIndexCache = NewSharedPtr<SignalIndexCache>();
 
     for (size_t i = 0; i < rows.size(); i++)
     {
@@ -785,7 +797,8 @@ bool SubscriberConnection::ParseSubscriptionRequest(const std::string& filterExp
         signalIndexCache->AddMeasurementKey(uint16_t(i), signalID, source, id, charSizeEstimate);
     }
 
-    return true;
+    success = true;
+    return signalIndexCache;
 }
 
 void SubscriberConnection::PublishDataPacket(const vector<uint8_t>& packet, const int32_t count)
@@ -970,7 +983,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
     ReadCommandChannel();
 }
 
-std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(const SignalIndexCachePtr& signalIndexCache)
+std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const
 {
     vector<uint8_t> serializationBuffer;
 
@@ -982,8 +995,8 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(const Signa
     if (!useCommonSerializationFormat)
         throw PublisherException("DataPublisher only supports common serialization format");
 
-    serializationBuffer.reserve(uint32_t(signalIndexCache->GetBinaryLength() * 0.02));
-    signalIndexCache->Serialize(shared_from_this(), serializationBuffer);
+    serializationBuffer.reserve(uint32_t(signalIndexCache.GetBinaryLength() * 0.02));
+    signalIndexCache.Serialize(*this, serializationBuffer);
 
     if (compressSignalIndexCache && useGZipCompression)
     {
@@ -1232,7 +1245,15 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
     switch (m_encoding)
     {
         case OperationalEncoding::UTF8:
-            return string(reinterpret_cast<const char*>(data + offset), length / sizeof(char));
+        {
+            string value {};
+            value.reserve(length / sizeof(char));
+
+            for (size_t i = 0; i < length; i += sizeof(char))
+                value.append(1, static_cast<char>(data[offset + i]));
+
+            return value;
+        }            
         case OperationalEncoding::Unicode:
         case OperationalEncoding::ANSI:
             swapBytes = !swapBytes;
@@ -1246,7 +1267,7 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
                 if (swapBytes)
                     value.append(1, EndianConverter::ToLittleEndian<wchar_t>(data, offset + i));
                 else
-                    value.append(1, *reinterpret_cast<const wchar_t*>(data + offset + i));
+                    value.append(1, static_cast<wchar_t>(data[offset + i]));
             }
 
             return ToUTF8(value);

@@ -61,6 +61,7 @@ namespace GSF
     std::string ToString(const TimeSpan& value);
 
     std::wstring ToUTF16(const std::string& value);
+
     std::string ToUTF8(const std::wstring& value);
 
     // Converts an integer value to a hex representation

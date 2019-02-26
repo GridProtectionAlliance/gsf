@@ -24,6 +24,7 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
+#include <utility>
 #include "CommonTypes.h"
 
 namespace GSF
@@ -34,7 +35,7 @@ namespace GSF
     class Timer // NOLINT
     {
     private:
-        GSF::Thread* m_timerThread;
+        SharedPtr<GSF::Thread> m_timerThread;
         GSF::IOContext m_timerContext;
         boost::asio::deadline_timer m_timer;
         int32_t m_interval;
@@ -59,7 +60,7 @@ namespace GSF
                 return;
 
             // Reset timer thread when context has nothing left to run
-            delete m_timerThread;
+            m_timerThread.reset();
             m_timerThread = nullptr;
 
             // Restart context in preparation for next run
@@ -82,11 +83,11 @@ namespace GSF
         {
         }
 
-        Timer(const int32_t interval, const TimerElapsedCallback& callback, const bool autoReset = false) :
+        Timer(const int32_t interval, TimerElapsedCallback callback, const bool autoReset = false) :
             m_timerThread(nullptr),
             m_timer(m_timerContext),
             m_interval(interval),
-            m_callback(callback),
+            m_callback(std::move(callback)),
             m_userData(nullptr),
             m_autoReset(autoReset),
             m_disposing(false)
@@ -96,8 +97,6 @@ namespace GSF
         ~Timer()
         {
             m_disposing = true;
-            delete m_timerThread;
-            m_timerThread = nullptr;
             Stop();
         }
 
@@ -150,7 +149,7 @@ namespace GSF
             m_timer.async_wait(boost::bind(&Timer::TimerElaspsed, this, boost::asio::placeholders::error));
 
             if (m_timerThread == nullptr)
-                m_timerThread = new GSF::Thread(boost::bind(&Timer::TimerThread, this));
+                m_timerThread = NewSharedPtr<GSF::Thread>(boost::bind(&Timer::TimerThread, this));
         }
 
         void Stop()

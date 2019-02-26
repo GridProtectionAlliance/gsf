@@ -104,7 +104,7 @@ namespace Transport
         SubscriberConnectionCallback m_clientConnectedCallback;
         SubscriberConnectionCallback m_clientDisconnectedCallback;
         SubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
-        SubscriberConnectionCallback m_temporalProcessingIntervalChangeRequestedCallback;
+        SubscriberConnectionCallback m_processingIntervalChangeRequestedCallback;
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
@@ -114,14 +114,14 @@ namespace Transport
         void DispatchClientConnected(const SubscriberConnectionPtr& connection);
         void DispatchClientDisconnected(const SubscriberConnectionPtr& connection);
         void DispatchTemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
-        void DispatchTemporalProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
+        void DispatchProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void TemporalProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
@@ -189,18 +189,18 @@ namespace Transport
         // Callback registration
         //
         // Callback functions are defined with the following signatures:
-        //   void ProcessStatusMessage(DataPublisher* source, const string& message)
-        //   void ProcessErrorMessage(DataPublisher* source, const string& message)
-        //   void ProcessClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        //   void ProcessClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        //   void ProcessTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        //   void ProcessTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleStatusMessage(DataPublisher* source, const string& message)
+        //   void HandleErrorMessage(DataPublisher* source, const string& message)
+        //   void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
         void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
         void RegisterClientConnectedCallback(const SubscriberConnectionCallback& clientConnectedCallback);
         void RegisterClientDisconnectedCallback(const SubscriberConnectionCallback& clientDisconnectedCallback);
         void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
-        void RegisterTemporalProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& temporalProcessingIntervalChangeRequestedCallback);
+        void RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback);
 
         friend class SubscriberConnection;
     };

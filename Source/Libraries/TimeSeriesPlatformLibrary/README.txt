@@ -22,9 +22,9 @@ GSF Library files:
 
 Boost Library files:
 	C:\Projects\boost
-					 \boost
-					 \libs
-					 etc...
+				     \boost
+				     \libs
+				     etc...
 
 If you have an existing Boost installation you can simply create a symbolic
 link to the folder, e.g., mklink /D C:\Projects\boost C:\boost_1_66_0
@@ -69,7 +69,7 @@ GNU Make (http://www.gnu.org/software/make/)
 
 zlib Library, e.g.: sudo apt install zlib1g-dev
 
-bzip2 library, e.g.: sudo apt install libbz2-dev
+bzip2 Library, e.g.: sudo apt install libbz2-dev
 
 Boost C++ Libraries v1.66.0 (http://www.boost.org/)
 	- Boost.Asio
@@ -98,6 +98,9 @@ and type the following command.
 Using the CMake GUI, you can modify configuration options, such as
 building as a shared library or changing the installation directory.
 
+To make a debug build, use the following:
+
+    cmake -DCMAKE_BUILD_TYPE=Debug
 
 3. Build
 --------

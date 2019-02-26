@@ -154,12 +154,12 @@ uint32_t SignalIndexCache::GetBinaryLength() const
     return m_binaryLength;
 }
 
-void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnectionPtr& connection)
+void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnection& connection)
 {
     uint32_t binaryLength = 28;
 
     for (size_t i = 0; i < m_signalIDList.size(); i++)
-        binaryLength += 26 + connection->EncodeString(m_sourceList[i]).size();
+        binaryLength += 26 + connection.EncodeString(m_sourceList[i]).size();
 
     m_binaryLength = binaryLength;
 }
@@ -214,7 +214,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
     // IDs that may need to be parsed in the future...
 }
 
-void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vector<uint8_t>& buffer)
+void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<uint8_t>& buffer)
 {
     const uint32_t binaryLengthLocation = buffer.size();
     uint32_t binaryLength = 28;
@@ -223,7 +223,7 @@ void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vect
     WriteBytes(buffer, uint32_t(0));
 
     // Encode subscriber ID
-    Guid subscriberID = connection->GetSubscriberID();
+    Guid subscriberID = connection.GetSubscriberID();
     SwapGuidEndianness(subscriberID, true);
     WriteBytes(buffer, subscriberID);
 
@@ -242,7 +242,7 @@ void SignalIndexCache::Serialize(const SubscriberConnectionPtr& connection, vect
         WriteBytes(buffer, signalID);
 
         // Encode source
-        vector<uint8_t> sourceBytes = connection->EncodeString(m_sourceList[i]);
+        vector<uint8_t> sourceBytes = connection.EncodeString(m_sourceList[i]);
         EndianConverter::WriteBigEndianBytes(buffer, int32_t(sourceBytes.size()));
         WriteBytes(buffer, sourceBytes);
 

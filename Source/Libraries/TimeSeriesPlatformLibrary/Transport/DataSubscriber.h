@@ -264,14 +264,14 @@ namespace Transport
         // Callback registration
         //
         // Callback functions are defined with the following signatures:
-        //   void ProcessStatusMessage(DataSubscriber* source, const string& message)
-        //   void ProcessErrorMessage(DataSubscriber* source, const string& message)
-        //   void ProcessDataStartTime(DataSubscriber* source, int64_t startTime)
-        //   void ProcessMetadata(DataSubscriber* source, const vector<uint8_t>& metadata)
-        //   void ProcessNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
-        //   void ProcessProcessingComplete(DataSubscriber* source, const string& message)
-        //   void ProcessConfigurationChanged(DataSubscriber* source)
-        //   void ProcessConnectionTerminated(DataSubscriber* source)
+        //   void HandleStatusMessage(DataSubscriber* source, const string& message)
+        //   void HandleErrorMessage(DataSubscriber* source, const string& message)
+        //   void HandleDataStartTime(DataSubscriber* source, int64_t startTime)
+        //   void HandleMetadata(DataSubscriber* source, const vector<uint8_t>& metadata)
+        //   void HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
+        //   void HandleProcessingComplete(DataSubscriber* source, const string& message)
+        //   void HandleConfigurationChanged(DataSubscriber* source)
+        //   void HandleConnectionTerminated(DataSubscriber* source)
         //
         // Metadata is provided to the user as zlib-compressed XML,
         // and must be decompressed and interpreted before it can be used.

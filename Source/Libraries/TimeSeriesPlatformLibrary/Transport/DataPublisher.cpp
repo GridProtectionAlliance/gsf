@@ -178,10 +178,10 @@ void DataPublisher::DispatchTemporalSubscriptionRequested(const SubscriberConnec
     Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchTemporalProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
+void DataPublisher::DispatchProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
 {
     SubscriberConnection* connectionReference = &*connection;
-    Dispatch(&TemporalProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
+    Dispatch(&ProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
@@ -249,13 +249,13 @@ void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* sourc
     }
 }
 
-void DataPublisher::TemporalProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
     SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
 
     if (source != nullptr)
     {
-        const SubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_temporalProcessingIntervalChangeRequestedCallback;
+        const SubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_processingIntervalChangeRequestedCallback;
 
         if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
             temporalProcessingIntervalChangeRequestedCallback(source, connection->GetReference());
@@ -880,7 +880,7 @@ void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const Subscrib
     m_temporalSubscriptionRequestedCallback = temporalSubscriptionRequestedCallback;
 }
 
-void DataPublisher::RegisterTemporalProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& temporalProcessingIntervalChangeRequestedCallback)
+void DataPublisher::RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback)
 {
-    m_temporalProcessingIntervalChangeRequestedCallback = temporalProcessingIntervalChangeRequestedCallback;
+    m_processingIntervalChangeRequestedCallback = processingIntervalChangeRequestedCallback;
 }

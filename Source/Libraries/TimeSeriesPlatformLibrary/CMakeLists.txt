@@ -417,8 +417,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+
 # Build gsf library
-add_library (gsf STATIC ${GSF_SOURCE_FILES})
+add_library (gsf ${GSF_SOURCE_FILES})
 target_link_libraries (gsf pthread m z bz2 boost_system boost_thread boost_date_time boost_iostreams)
 
 # Install headers and library

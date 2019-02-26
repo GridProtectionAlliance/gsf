@@ -85,11 +85,11 @@ namespace Transport
         // a vector size, for an exact size call RecalculateBinaryLength first
         uint32_t GetBinaryLength() const;
 
-        void RecalculateBinaryLength(const SubscriberConnectionPtr& connection);
+        void RecalculateBinaryLength(const SubscriberConnection& connection);
 
         void Parse(const std::vector<uint8_t>& buffer, Guid& subscriberID);
 
-        void Serialize(const SubscriberConnectionPtr& connection, std::vector<uint8_t>& buffer);
+        void Serialize(const SubscriberConnection& connection, std::vector<uint8_t>& buffer);
     };
 
     typedef SharedPtr<SignalIndexCache> SignalIndexCachePtr;

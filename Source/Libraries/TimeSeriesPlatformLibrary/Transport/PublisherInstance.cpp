@@ -75,10 +75,10 @@ void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* sourc
     instance->TemporalSubscriptionRequested(connection);
 }
 
-void PublisherInstance::HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
-    instance->TemporalProcessingIntervalChangeRequested(connection);
+    instance->ProcessingIntervalChangeRequested(connection);
 }
 
 void PublisherInstance::StatusMessage(const string& message)
@@ -106,7 +106,7 @@ void PublisherInstance::TemporalSubscriptionRequested(const SubscriberConnection
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
 
-void PublisherInstance::TemporalProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
+void PublisherInstance::ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
 }
@@ -119,7 +119,7 @@ void PublisherInstance::Initialize()
     m_publisher.RegisterClientConnectedCallback(&HandleClientConnected);
     m_publisher.RegisterClientDisconnectedCallback(&HandleClientDisconnected);
     m_publisher.RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
-    m_publisher.RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
+    m_publisher.RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
 
     m_initialized = true;
 }
@@ -132,6 +132,21 @@ void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMe
 void PublisherInstance::DefineMetadata(const DataSetPtr& metadata)
 {
     m_publisher.DefineMetadata(metadata);
+}
+
+const DataSetPtr& PublisherInstance::GetMetadata() const
+{
+    return m_publisher.GetMetadata();
+}
+
+const DataSetPtr& PublisherInstance::GetFilteringMetadata() const
+{
+    return m_publisher.GetFilteringMetadata();
+}
+
+vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& filterExpression) const
+{
+    return m_publisher.FilterMetadata(filterExpression);
 }
 
 void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements)
@@ -148,6 +163,26 @@ void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measur
         throw PublisherException("Operation failed, publisher is not initialized.");
 
     m_publisher.PublishMeasurements(measurements);
+}
+
+const GSF::Guid& PublisherInstance::GetNodeID() const
+{
+    return m_publisher.GetNodeID();
+}
+
+void PublisherInstance::SetNodeID(const GSF::Guid& nodeID)
+{
+    m_publisher.SetNodeID(nodeID);
+}
+
+SecurityMode PublisherInstance::GetSecurityMode() const
+{
+    return m_publisher.GetSecurityMode();
+}
+
+void PublisherInstance::SetSecurityMode(SecurityMode securityMode)
+{
+    m_publisher.SetSecurityMode(securityMode);
 }
 
 bool PublisherInstance::IsMetadataRefreshAllowed() const

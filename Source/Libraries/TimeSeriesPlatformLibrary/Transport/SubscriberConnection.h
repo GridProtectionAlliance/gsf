@@ -103,13 +103,13 @@ namespace Transport
         void HandlePublishCommandMeasurements(uint8_t* data, uint32_t length);
         void HandleUserCommand(uint8_t command, uint8_t* data, uint32_t length);
 
-        bool ParseSubscriptionRequest(const std::string& filterExpression, SignalIndexCachePtr& signalIndexCache);
+        SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
         void PublishDataPacket(const std::vector<uint8_t>& packet, int32_t count);
         bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
         void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
-        std::vector<uint8_t> SerializeSignalIndexCache(const SignalIndexCachePtr& signalIndexCache);
+        std::vector<uint8_t> SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const;
         std::vector<uint8_t> SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const;
         GSF::Data::DataSetPtr FilterClientMetadata(const StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
 
