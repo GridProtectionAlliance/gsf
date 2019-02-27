@@ -190,6 +190,7 @@ namespace GSF
     typedef boost::lock_guard<Mutex> ScopeLock;
     typedef boost::unique_lock<Mutex> UniqueLock;
     typedef boost::asio::io_context IOContext;
+    typedef boost::asio::io_context::strand Strand;
     typedef boost::asio::ip::address IPAddress;
     typedef boost::asio::ip::tcp::socket TcpSocket;
     typedef boost::asio::ip::udp::socket UdpSocket;

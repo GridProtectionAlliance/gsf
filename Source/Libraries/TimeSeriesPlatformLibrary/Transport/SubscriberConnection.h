@@ -29,6 +29,7 @@
 #include "../Data/DataSet.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
+#include <deque>
 
 namespace GSF {
 namespace TimeSeries {
@@ -46,6 +47,7 @@ namespace Transport
     private:
         const DataPublisherPtr m_parent;
         GSF::IOContext& m_commandChannelService;
+        GSF::Strand m_writeStrand;
         GSF::Timer m_pingTimer;
         GSF::Guid m_subscriberID;
         std::string m_connectionID;
@@ -60,13 +62,14 @@ namespace Transport
         bool m_includeTime;
         bool m_useMillisecondResolution;
         bool m_isNaNFiltered;
-        bool m_isSubscribed;
-        bool m_startTimeSent;
-        bool m_stopped;
+        volatile bool m_isSubscribed;
+        volatile bool m_startTimeSent;
+        volatile bool m_stopped;
 
         // Command channel
         GSF::TcpSocket m_commandChannelSocket;
         std::vector<uint8_t> m_readBuffer;
+        std::deque<SharedPtr<std::vector<uint8_t>>> m_writeBuffers;
         GSF::IPAddress m_ipAddress;
         std::string m_hostName;
 
@@ -112,6 +115,8 @@ namespace Transport
         std::vector<uint8_t> SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const;
         std::vector<uint8_t> SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const;
         GSF::Data::DataSetPtr FilterClientMetadata(const StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
+        void CommandChannelSendAsync();
+        void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
         static void PingTimerElapsed(Timer* timer, void* userData);
     public:
@@ -204,14 +209,10 @@ namespace Transport
         std::vector<uint8_t> IVs(int32_t cipherIndex);
 
         void Start();
-        void Stop();
+        void Stop(bool shutdownSocket = true);
 
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
         void CompleteTemporalSubscription();
-
-        void CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
-        void DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length);
-        void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
         bool SendResponse(uint8_t responseCode, uint8_t commandCode);
         bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::string& message);

@@ -45,6 +45,7 @@ static const uint32_t MaxPacketSize = 32768U;
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
     m_parent(std::move(parent)),
     m_commandChannelService(commandChannelService),
+    m_writeStrand(commandChannelService),
     m_subscriberID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
@@ -126,7 +127,7 @@ uint32_t SubscriberConnection::GetOperationalModes() const
 void SubscriberConnection::SetOperationalModes(uint32_t value)
 {
     m_operationalModes = value;
-    m_encoding = m_operationalModes & OperationalModes::EncodingMask;
+    m_encoding = value & OperationalModes::EncodingMask;
 }
 
 uint32_t SubscriberConnection::GetEncoding() const
@@ -352,12 +353,23 @@ void SubscriberConnection::Start()
     ReadCommandChannel();
 }
 
-void SubscriberConnection::Stop()
+void SubscriberConnection::Stop(const bool shutdownSocket)
 {
-    m_stopped = true;
-    m_pingTimer.Stop();
-    m_commandChannelSocket.shutdown(socket_base::shutdown_both);
-    m_commandChannelSocket.cancel();
+    try
+    {
+        m_stopped = true;
+        m_pingTimer.Stop();
+
+        if (shutdownSocket)
+            m_commandChannelSocket.shutdown(socket_base::shutdown_both);
+
+        m_commandChannelSocket.cancel();
+    }
+    catch (...)
+    {
+        m_parent->DispatchErrorMessage("Exception during subscriber connection termination: " + boost::current_exception_diagnostic_information(true));
+    }
+
     m_parent->ConnectionTerminated(shared_from_this());
 }
 
@@ -368,8 +380,6 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
 
     if (!m_startTimeSent)
         m_startTimeSent = SendDataStartTime(measurements[0]->Timestamp);
-
-    // TODO: Consider queuing measurements for processing
 
     CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
     vector<uint8_t> packet, buffer;
@@ -421,9 +431,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             if ((flags & DataPacketFlags::Synchronized) > 0)
             {
                 // Remotely synchronized subscriptions are currently disallowed by data publisher
-                const string message = "Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.";
-                SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, message);
-                m_parent->DispatchErrorMessage(message);
+                HandleSubscribeFailure("Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.");
             }
             else
             {
@@ -850,7 +858,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t by
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop();
+        Stop(false);
         return;
     }
 
@@ -865,7 +873,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t by
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop();
+        Stop(false);
         return;
     }
 
@@ -888,7 +896,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop();
+        Stop(false);
         return;
     }
 
@@ -903,7 +911,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop();
+        Stop(false);
         return;
     }
 
@@ -1081,16 +1089,13 @@ DataSetPtr SubscriberConnection::FilterClientMetadata(const StringMap<Expression
     return dataSet;
 }
 
-void SubscriberConnection::CommandChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
+void SubscriberConnection::CommandChannelSendAsync()
 {
-    if (!m_stopped)
-        async_write(m_commandChannelSocket, buffer(&data[offset], length), bind(&SubscriberConnection::WriteHandler, this, _1, _2));
-}
+    if (m_stopped)
+        return;
 
-void SubscriberConnection::DataChannelSendAsync(uint8_t* data, uint32_t offset, uint32_t length)
-{
-    // TODO: Implement UDP send
-    CommandChannelSendAsync(data, offset, length);
+    vector<uint8_t>& data = *m_writeBuffers[0];
+    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), m_writeStrand.wrap(bind(&SubscriberConnection::WriteHandler, this, _1, _2)));
 }
 
 void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
@@ -1098,10 +1103,12 @@ void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTr
     if (m_stopped)
         return;
 
+    m_writeBuffers.pop_front();
+
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop();
+        Stop(false);
         return;
     }
 
@@ -1116,8 +1123,11 @@ void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTr
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop();
+        Stop(false);
     }
+
+    if (!m_writeBuffers.empty())
+        CommandChannelSendAsync();
 }
 
 bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode)
@@ -1127,7 +1137,8 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
 
 bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode, const string& message)
 {
-    return SendResponse(responseCode, commandCode, EncodeString(message));
+    const vector<uint8_t> data = EncodeString(message);
+    return SendResponse(responseCode, commandCode, data);
 }
 
 bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode, const vector<uint8_t>& data)
@@ -1139,8 +1150,9 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
         const bool dataPacketResponse = responseCode == ServerResponse::DataPacket;
         const bool useDataChannel = dataPacketResponse || responseCode == ServerResponse::BufferBlock;
         const uint32_t packetSize = data.size() + 6;
-        vector<uint8_t> buffer {};
-
+        SharedPtr<vector<uint8_t>> bufferPtr = NewSharedPtr<vector<uint8_t>>();
+        vector<uint8_t>& buffer = *bufferPtr;
+        
         buffer.reserve(Common::PayloadHeaderSize + packetSize);
 
         // Add command payload alignment header (deprecated)
@@ -1225,14 +1237,21 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
 
             //}
 
-            CommandChannelSendAsync(buffer.data(), 0, buffer.size());
             m_totalCommandChannelBytesSent += buffer.size();
+
+            m_writeStrand.post([this, bufferPtr]{
+                m_writeBuffers.push_back(bufferPtr);
+
+                if (m_writeBuffers.size() == 1)
+                    CommandChannelSendAsync();
+            });
+            
             success = true;
         }
     }
-    catch (const std::exception& ex)
+    catch (...)
     {
-        m_parent->DispatchErrorMessage(ex.what());
+        m_parent->DispatchErrorMessage("Failed to send subscriber response: " + boost::current_exception_diagnostic_information(true));
     }
 
     return success;
@@ -1245,32 +1264,24 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
     switch (m_encoding)
     {
         case OperationalEncoding::UTF8:
-        {
-            string value {};
-            value.reserve(length / sizeof(char));
-
-            for (size_t i = 0; i < length; i += sizeof(char))
-                value.append(1, static_cast<char>(data[offset + i]));
-
-            return value;
-        }            
+            return string(reinterpret_cast<char*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(char));
         case OperationalEncoding::Unicode:
         case OperationalEncoding::ANSI:
             swapBytes = !swapBytes;
         case OperationalEncoding::BigEndianUnicode:
         {
-            wstring value{};
-            value.reserve(length / sizeof(wchar_t));
-
-            for (size_t i = 0; i < length; i += sizeof(wchar_t))
+            if (swapBytes)
             {
-                if (swapBytes)
+                wstring value {};
+                value.reserve(length / sizeof(wchar_t));
+
+                for (size_t i = 0; i < length; i += sizeof(wchar_t))
                     value.append(1, EndianConverter::ToLittleEndian<wchar_t>(data, offset + i));
-                else
-                    value.append(1, static_cast<wchar_t>(data[offset + i]));
+
+                return ToUTF8(value);
             }
 
-            return ToUTF8(value);
+            return ToUTF8(wstring(reinterpret_cast<wchar_t*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(wchar_t)));
         }
         default:
             throw PublisherException("Encountered unexpected operational encoding " + ToHex(m_encoding));

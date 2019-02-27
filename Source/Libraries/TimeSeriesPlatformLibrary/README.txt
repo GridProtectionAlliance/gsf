@@ -110,10 +110,19 @@ At the top level of the build directory, type the following command.
 
 In addition to the library itself, there are sample applications which
 demonstrate the proper use of the Time Series Platform Library API.
-To build these samples, type the following command.
+To build all samples, type the following command.
 
 	make samples
 
+Individual sample applications can be built as follows:
+
+    make SimpleSubscribe
+    make AdvancedSubscribe
+    make AverageFrequencyCalculator
+    make InstanceSubscribe
+    make FilterExpressionTests
+    make SimplePublish
+    make AdvancedPublish
 
 4. Installation
 ---------------
