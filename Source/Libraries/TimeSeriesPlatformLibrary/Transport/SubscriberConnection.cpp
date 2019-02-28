@@ -1263,13 +1263,13 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
 
     switch (m_encoding)
     {
+        case OperationalEncoding::ANSI:
         case OperationalEncoding::UTF8:
             return string(reinterpret_cast<char*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(char));
         case OperationalEncoding::BigEndianUnicode:
             // UTF16 in C++ is encoded as big-endian
             swapBytes = !swapBytes;
         case OperationalEncoding::Unicode:
-        case OperationalEncoding::ANSI:
         {
             wstring value(length / enc_sizeof_wchar, L'\0');
 
@@ -1302,6 +1302,7 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
 
     switch (m_encoding)
     {
+        case OperationalEncoding::ANSI:
         case OperationalEncoding::UTF8:
             result.reserve(value.size() * sizeof(char));
             result.assign(value.begin(), value.end());
@@ -1310,7 +1311,6 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
             // UTF16 in C++ is encoded as big-endian
             swapBytes = !swapBytes;
         case OperationalEncoding::Unicode:
-        case OperationalEncoding::ANSI:
         {
             const wstring utf16 = ToUTF16(value);            
             result.reserve(utf16.size() * enc_sizeof_wchar);
