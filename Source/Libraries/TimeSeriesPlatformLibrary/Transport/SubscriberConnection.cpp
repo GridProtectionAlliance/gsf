@@ -1092,7 +1092,7 @@ void SubscriberConnection::CommandChannelSendAsync()
         return;
 
     vector<uint8_t>& data = *m_writeBuffers[0];
-    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), m_writeStrand.wrap(bind(&SubscriberConnection::WriteHandler, this, _1, _2)));
+    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_writeStrand, bind(&SubscriberConnection::WriteHandler, this, _1, _2)));
 }
 
 void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
@@ -1236,7 +1236,7 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
 
             m_totalCommandChannelBytesSent += buffer.size();
 
-            m_writeStrand.post([this, bufferPtr]{
+            post(m_writeStrand, [this, bufferPtr]{
                 m_writeBuffers.push_back(bufferPtr);
 
                 if (m_writeBuffers.size() == 1)
