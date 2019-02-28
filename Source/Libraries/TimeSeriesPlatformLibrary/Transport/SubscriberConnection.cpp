@@ -443,12 +443,9 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                 {
                     const bool usePayloadCompression = (GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
                     const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
-
-                    m_parent->DispatchStatusMessage("About to decode connection string with " + ToString(byteLength) + " bytes...");
-
                     const string connectionString = DecodeString(data, index, byteLength);
 
-                    m_parent->DispatchStatusMessage("Successfully decoded connection string: " + connectionString);
+                    m_parent->DispatchStatusMessage("Successfully decoded " + ToString(connectionString.size()) + " character connection string from " + ToString(byteLength) + " bytes...");
 
                     const StringMap<string> settings = ParseKeyValuePairs(connectionString);
                     string setting;
@@ -1259,29 +1256,36 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
 
 string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, uint32_t length) const
 {
-    static bool swapBytes = EndianConverter::IsLittleEndian();
+    // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
+    // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
+    static const uint32_t enc_sizeof_wchar = 2;
+    bool swapBytes = EndianConverter::IsBigEndian();
 
     switch (m_encoding)
     {
         case OperationalEncoding::UTF8:
             return string(reinterpret_cast<char*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(char));
+        case OperationalEncoding::BigEndianUnicode:
+            // UTF16 in C++ is encoded as big-endian
+            swapBytes = !swapBytes;
         case OperationalEncoding::Unicode:
         case OperationalEncoding::ANSI:
-            swapBytes = !swapBytes;
-        case OperationalEncoding::BigEndianUnicode:
         {
-            if (swapBytes)
+            wstring value(length / enc_sizeof_wchar, L'\0');
+
+            for (size_t i = 0, j = 0; i < length; i += enc_sizeof_wchar, j++)
             {
-                wstring value {};
-                value.reserve(length / sizeof(wchar_t));
+                uint16_t utf16char;
 
-                for (size_t i = 0; i < length; i += sizeof(wchar_t))
-                    value.append(1, EndianConverter::ToLittleEndian<wchar_t>(data, offset + i));
+                if (swapBytes)
+                    utf16char = EndianConverter::ToBigEndian<uint16_t>(data, offset + i);
+                else
+                    utf16char = *reinterpret_cast<const uint16_t*>(&data[offset + i]);
 
-                return ToUTF8(value);
+                value[j] = static_cast<wchar_t>(utf16char);
             }
 
-            return ToUTF8(wstring(reinterpret_cast<wchar_t*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(wchar_t)));
+            return ToUTF8(value);
         }
         default:
             throw PublisherException("Encountered unexpected operational encoding " + ToHex(m_encoding));
@@ -1290,8 +1294,11 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
 
 vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
 {
-    static bool swapBytes = EndianConverter::IsLittleEndian();
-    vector<uint8_t> result{};
+    // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
+    // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
+    static const uint32_t enc_sizeof_wchar = 2;
+    bool swapBytes = EndianConverter::IsBigEndian();
+    vector<uint8_t> result {};
 
     switch (m_encoding)
     {
@@ -1299,28 +1306,30 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
             result.reserve(value.size() * sizeof(char));
             result.assign(value.begin(), value.end());
             break;
+        case OperationalEncoding::BigEndianUnicode:
+            // UTF16 in C++ is encoded as big-endian
+            swapBytes = !swapBytes;
         case OperationalEncoding::Unicode:
         case OperationalEncoding::ANSI:
-            swapBytes = !swapBytes;
-        case OperationalEncoding::BigEndianUnicode:
         {
-            wstring utf16 = ToUTF16(value);            
-            const int32_t size = utf16.size() * sizeof(wchar_t);
-            const uint8_t* data = reinterpret_cast<const uint8_t*>(&utf16[0]);
+            const wstring utf16 = ToUTF16(value);            
+            result.reserve(utf16.size() * enc_sizeof_wchar);
 
-            result.reserve(size);
-
-            for (int32_t i = 0; i < size; i += sizeof(wchar_t))
+            for (size_t i = 0; i < utf16.size(); i++)
             {
+                // Convert wchar_t, which can be 4 bytes, to a 2 byte uint16_t
+                const uint16_t utf16char = static_cast<uint16_t>(utf16[i]);
+                const uint8_t* data = reinterpret_cast<const uint8_t*>(&utf16char);
+
                 if (swapBytes)
                 {
-                    result.push_back(data[i + 1]);
-                    result.push_back(data[i]);
+                    result.push_back(data[1]);
+                    result.push_back(data[0]);
                 }
                 else
                 {
-                    result.push_back(data[i]);
-                    result.push_back(data[i + 1]);
+                    result.push_back(data[0]);
+                    result.push_back(data[1]);
                 }
             }
 

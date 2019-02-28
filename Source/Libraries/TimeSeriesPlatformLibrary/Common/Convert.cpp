@@ -24,8 +24,7 @@
 #include "Convert.h"
 #include <iomanip>
 #include <sstream>
-#include <locale>
-#include <boost/locale.hpp>
+#include <codecvt>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -36,7 +35,6 @@
 using namespace std;
 using namespace std::chrono;
 using namespace boost::uuids;
-using namespace boost::locale::conv;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 using namespace GSF;
@@ -271,12 +269,14 @@ std::string GSF::ToString(const TimeSpan& value)
 
 wstring GSF::ToUTF16(const string& value)
 {
-    return utf_to_utf<wchar_t>(value);
+    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.from_bytes(value);
 }
 
 string GSF::ToUTF8(const wstring& value)
 {
-    return utf_to_utf<char>(value);
+    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.to_bytes(value);
 }
 
 bool GSF::ParseBoolean(const string& value)
