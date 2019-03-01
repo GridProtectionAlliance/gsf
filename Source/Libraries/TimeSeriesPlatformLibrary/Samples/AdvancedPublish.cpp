@@ -23,6 +23,8 @@
 
 // ReSharper disable CppAssignedValueIsNeverUsed
 #include "../Transport/DataPublisher.h"
+#include "GenHistory.h"
+#include "TemporalSubscriber.h"
 #include <iostream>
 
 using namespace std;
@@ -33,12 +35,15 @@ using namespace GSF::TimeSeries::Transport;
 using namespace GSF::FilterExpressions;
 
 DataPublisherPtr Publisher;
-TimerPtr PublishTimer, CompletionTimer;
+GenHistoryPtr HistoryGenerator;
+TimerPtr PublishTimer;
 vector<DeviceMetadataPtr> DevicesToPublish;
 vector<MeasurementMetadataPtr> MeasurementsToPublish;
 vector<PhasorMetadataPtr> PhasorsToPublish;
+unordered_map<GSF::Guid, TemporalSubscriberPtr> TemporalSubscriptions;
+Mutex TemporalSubscriptionsLock;
 
-bool RunPublisher(uint16_t port);
+bool RunPublisher(uint16_t port, bool genHistory);
 void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
 void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
 void DisplayStatusMessage(DataPublisher* source, const string& message);
@@ -54,7 +59,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     // Add a device
     device1Metadata->Name = "Test PMU";
     device1Metadata->Acronym = ToUpper(Replace(device1Metadata->Name, " ", "", false));
-    device1Metadata->UniqueID = NewGuid();
+    device1Metadata->UniqueID = ParseGuid("933690ab-71e1-4c56-ab54-097f5ed8db34");
     device1Metadata->Longitude = 300;
     device1Metadata->Latitude = 200;
     device1Metadata->FramesPerSecond = 30;
@@ -71,7 +76,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     MeasurementMetadataPtr measurement1Metadata = NewSharedPtr<MeasurementMetadata>();
     measurement1Metadata->ID = measurementSource + ToString(runtimeIndex++);
     measurement1Metadata->PointTag = pointTagPrefix + "FREQ";
-    measurement1Metadata->SignalID = NewGuid();
+    measurement1Metadata->SignalID = ParseGuid("6586f230-8e7f-4f0f-9e18-1eefee4b9edd");
     measurement1Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement1Metadata->Reference.Acronym = device1Metadata->Acronym;
     measurement1Metadata->Reference.Kind = Frequency;
@@ -83,7 +88,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     MeasurementMetadataPtr measurement2Metadata = NewSharedPtr<MeasurementMetadata>();
     measurement2Metadata->ID = measurementSource + ToString(runtimeIndex++);
     measurement2Metadata->PointTag = pointTagPrefix + "DFDT";
-    measurement2Metadata->SignalID = NewGuid();
+    measurement2Metadata->SignalID = ParseGuid("60c97530-2ed2-4abb-a7a2-99e2170479a4");
     measurement2Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement2Metadata->Reference.Acronym = device1Metadata->Acronym;
     measurement2Metadata->Reference.Kind = DfDt;
@@ -95,7 +100,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     MeasurementMetadataPtr measurement3Metadata = NewSharedPtr<MeasurementMetadata>();
     measurement3Metadata->ID = measurementSource + ToString(runtimeIndex++);
     measurement3Metadata->PointTag = pointTagPrefix + "VPHA";
-    measurement3Metadata->SignalID = NewGuid();
+    measurement3Metadata->SignalID = ParseGuid("aa47a61c-8596-46af-8c28-f9ee774bcf26");
     measurement3Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement3Metadata->Reference.Acronym = device1Metadata->Acronym;
     measurement3Metadata->Reference.Kind = Angle;
@@ -107,7 +112,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     MeasurementMetadataPtr measurement4Metadata = NewSharedPtr<MeasurementMetadata>();
     measurement4Metadata->ID = measurementSource + ToString(runtimeIndex++);
     measurement4Metadata->PointTag = pointTagPrefix + "VPHM";
-    measurement4Metadata->SignalID = NewGuid();
+    measurement4Metadata->SignalID = ParseGuid("4ab24720-3763-407c-afa0-15f0d69ac897");
     measurement4Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement4Metadata->Reference.Acronym = device1Metadata->Acronym;
     measurement4Metadata->Reference.Kind = Magnitude;
@@ -155,9 +160,10 @@ int main(int argc, char* argv[])
 
     // Get hostname and port.
     stringstream(argv[1]) >> port;
+    const bool genHistory = argc > 2 && IsEqual(argv[2], "GenHistory");
 
     // Run the publisher.
-    if (RunPublisher(port))
+    if (RunPublisher(port, genHistory))
     {
         // Wait until the user presses enter before quitting.
         string line;
@@ -166,6 +172,9 @@ int main(int argc, char* argv[])
         // Stop data publication
         PublishTimer->Stop();
     }
+
+    if (genHistory)
+        HistoryGenerator->StopArchive();
 
     // Disconnect the subscriber to stop background threads.
     //Subscriber.Disconnect();
@@ -179,7 +188,7 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Start publisher to listen for subscribers
 //   - Publish
-bool RunPublisher(uint16_t port)
+bool RunPublisher(uint16_t port, bool genHistory)
 {
     static float64_t randMax = float64_t(RAND_MAX);
     string errorMessage;
@@ -283,6 +292,12 @@ bool RunPublisher(uint16_t port)
 
         // Start data publication
         PublishTimer->Start();
+
+        if (genHistory)
+        {
+            HistoryGenerator = NewSharedPtr<GenHistory>(port);
+            HistoryGenerator->StartArchive();
+        }            
     }
     else
     {
@@ -322,12 +337,16 @@ void HandleTemporalSubscriptionRequested(DataPublisher* source, const Subscriber
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 
-    CompletionTimer = NewSharedPtr<Timer>(1000, [connection](Timer*, void*)
+    TemporalSubscriberPtr temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection, [](const GSF::Guid& subscriberID)
     {
-        connection->CompleteTemporalSubscription();
+        TemporalSubscriptionsLock.lock();
+        TemporalSubscriptions.erase(subscriberID);
+        TemporalSubscriptionsLock.unlock();
     });
 
-    CompletionTimer->Start();
+    TemporalSubscriptionsLock.lock();
+    TemporalSubscriptions.insert_or_assign(connection->GetSubscriberID(), temporalSubscription);
+    TemporalSubscriptionsLock.unlock();
 }
 
 void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)

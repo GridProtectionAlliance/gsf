@@ -434,6 +434,7 @@ install (TARGETS gsf DESTINATION lib)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY Samples)
 
 # Copy sample content files
+file (COPY "Samples/History.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 file (COPY "Samples/Metadata.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 file (COPY "Samples/MetadataSample1.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 file (COPY "Samples/MetadataSample2.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -463,7 +464,7 @@ add_executable (SimplePublish EXCLUDE_FROM_ALL Samples/SimplePublish.cpp)
 target_link_libraries (SimplePublish gsf)
 
 # AdvancedPublish sample
-add_executable (AdvancedPublish EXCLUDE_FROM_ALL Samples/AdvancedPublish.cpp)
+add_executable (AdvancedPublish EXCLUDE_FROM_ALL Samples/AdvancedPublish.cpp Samples/GenHistory.cpp Samples/TemporalSubscriber.cpp)
 target_link_libraries (AdvancedPublish gsf)
 
 # Build with 'make samples'

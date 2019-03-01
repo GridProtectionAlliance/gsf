@@ -36,7 +36,7 @@ namespace Transport
         // Publication members
         uint16_t m_port;
         bool m_isIPV6;
-        DataPublisher m_publisher;
+        DataPublisherPtr m_publisher;
         bool m_initialized;
         void* m_userData;
 

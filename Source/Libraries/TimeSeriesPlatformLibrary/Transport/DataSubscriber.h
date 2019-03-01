@@ -359,6 +359,8 @@ namespace Transport
         bool IsConnected() const;
         bool IsSubscribed() const;
     };
+
+    typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
 }}}
 
 #endif

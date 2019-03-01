@@ -93,9 +93,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\Samples\AdvancedPublish.cpp" />
+    <ClCompile Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\Samples\GenHistory.cpp" />
+    <ClCompile Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\Samples\TemporalSubscriber.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\README.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\Samples\GenHistory.h" />
+    <ClInclude Include="..\..\..\Libraries\TimeSeriesPlatformLibrary\Samples\TemporalSubscriber.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="History.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

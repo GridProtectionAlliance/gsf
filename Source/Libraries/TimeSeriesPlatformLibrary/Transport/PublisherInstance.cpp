@@ -35,12 +35,12 @@ using namespace GSF::TimeSeries::Transport;
 PublisherInstance::PublisherInstance(uint16_t port, bool ipV6) :
     m_port(port),
     m_isIPV6(ipV6),
-    m_publisher(port, ipV6),
     m_initialized(false),
     m_userData(nullptr)
 {
     // Reference this PublisherInstance in DataPublisher user data
-    m_publisher.SetUserData(this);
+    m_publisher = NewSharedPtr<DataPublisher>(port, ipV6);
+    m_publisher->SetUserData(this);
 }
 
 PublisherInstance::~PublisherInstance() = default;
@@ -114,39 +114,39 @@ void PublisherInstance::ProcessingIntervalChangeRequested(const SubscriberConnec
 void PublisherInstance::Initialize()
 {
     // Register callbacks
-    m_publisher.RegisterStatusMessageCallback(&HandleStatusMessage);
-    m_publisher.RegisterErrorMessageCallback(&HandleErrorMessage);
-    m_publisher.RegisterClientConnectedCallback(&HandleClientConnected);
-    m_publisher.RegisterClientDisconnectedCallback(&HandleClientDisconnected);
-    m_publisher.RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
-    m_publisher.RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
+    m_publisher->RegisterStatusMessageCallback(&HandleStatusMessage);
+    m_publisher->RegisterErrorMessageCallback(&HandleErrorMessage);
+    m_publisher->RegisterClientConnectedCallback(&HandleClientConnected);
+    m_publisher->RegisterClientDisconnectedCallback(&HandleClientDisconnected);
+    m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
+    m_publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
 
     m_initialized = true;
 }
 
 void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber)
 {
-    m_publisher.DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata, versionNumber);
+    m_publisher->DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata, versionNumber);
 }
 
 void PublisherInstance::DefineMetadata(const DataSetPtr& metadata)
 {
-    m_publisher.DefineMetadata(metadata);
+    m_publisher->DefineMetadata(metadata);
 }
 
 const DataSetPtr& PublisherInstance::GetMetadata() const
 {
-    return m_publisher.GetMetadata();
+    return m_publisher->GetMetadata();
 }
 
 const DataSetPtr& PublisherInstance::GetFilteringMetadata() const
 {
-    return m_publisher.GetFilteringMetadata();
+    return m_publisher->GetFilteringMetadata();
 }
 
 vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& filterExpression) const
 {
-    return m_publisher.FilterMetadata(filterExpression);
+    return m_publisher->FilterMetadata(filterExpression);
 }
 
 void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements)
@@ -154,7 +154,7 @@ void PublisherInstance::PublishMeasurements(const vector<Measurement>& measureme
     if (!m_initialized)
         throw PublisherException("Operation failed, publisher is not initialized.");
 
-    m_publisher.PublishMeasurements(measurements);
+    m_publisher->PublishMeasurements(measurements);
 }
 
 void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measurements)
@@ -162,67 +162,67 @@ void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measur
     if (!m_initialized)
         throw PublisherException("Operation failed, publisher is not initialized.");
 
-    m_publisher.PublishMeasurements(measurements);
+    m_publisher->PublishMeasurements(measurements);
 }
 
 const GSF::Guid& PublisherInstance::GetNodeID() const
 {
-    return m_publisher.GetNodeID();
+    return m_publisher->GetNodeID();
 }
 
 void PublisherInstance::SetNodeID(const GSF::Guid& nodeID)
 {
-    m_publisher.SetNodeID(nodeID);
+    m_publisher->SetNodeID(nodeID);
 }
 
 SecurityMode PublisherInstance::GetSecurityMode() const
 {
-    return m_publisher.GetSecurityMode();
+    return m_publisher->GetSecurityMode();
 }
 
 void PublisherInstance::SetSecurityMode(SecurityMode securityMode)
 {
-    m_publisher.SetSecurityMode(securityMode);
+    m_publisher->SetSecurityMode(securityMode);
 }
 
 bool PublisherInstance::IsMetadataRefreshAllowed() const
 {
-    return m_publisher.IsMetadataRefreshAllowed();
+    return m_publisher->IsMetadataRefreshAllowed();
 }
 
 void PublisherInstance::SetMetadataRefreshAllowed(bool allowed)
 {
-    m_publisher.SetMetadataRefreshAllowed(allowed);
+    m_publisher->SetMetadataRefreshAllowed(allowed);
 }
 
 bool PublisherInstance::IsNaNValueFilterAllowed() const
 {
-    return m_publisher.IsNaNValueFilterAllowed();
+    return m_publisher->IsNaNValueFilterAllowed();
 }
 
 void PublisherInstance::SetNaNValueFilterAllowed(bool allowed)
 {
-    m_publisher.SetNaNValueFilterAllowed(allowed);
+    m_publisher->SetNaNValueFilterAllowed(allowed);
 }
 
 bool PublisherInstance::IsNaNValueFilterForced() const
 {
-    return m_publisher.IsNaNValueFilterForced();
+    return m_publisher->IsNaNValueFilterForced();
 }
 
 void PublisherInstance::SetNaNValueFilterForced(bool forced)
 {
-    m_publisher.SetNaNValueFilterForced(forced);
+    m_publisher->SetNaNValueFilterForced(forced);
 }
 
 uint32_t PublisherInstance::GetCipherKeyRotationPeriod() const
 {
-    return m_publisher.GetCipherKeyRotationPeriod();
+    return m_publisher->GetCipherKeyRotationPeriod();
 }
 
 void PublisherInstance::SetCipherKeyRotationPeriod(uint32_t period)
 {
-    m_publisher.SetCipherKeyRotationPeriod(period);
+    m_publisher->SetCipherKeyRotationPeriod(period);
 }
 
 uint16_t PublisherInstance::GetPort() const
@@ -247,17 +247,17 @@ void PublisherInstance::SetUserData(void* userData)
 
 uint64_t PublisherInstance::GetTotalCommandChannelBytesSent()
 {
-    return m_publisher.GetTotalCommandChannelBytesSent();
+    return m_publisher->GetTotalCommandChannelBytesSent();
 }
 
 uint64_t PublisherInstance::GetTotalDataChannelBytesSent()
 {
-    return m_publisher.GetTotalDataChannelBytesSent();
+    return m_publisher->GetTotalDataChannelBytesSent();
 }
 
 uint64_t PublisherInstance::GetTotalMeasurementsSent()
 {
-    return m_publisher.GetTotalMeasurementsSent();
+    return m_publisher->GetTotalMeasurementsSent();
 }
 
 bool PublisherInstance::IsInitialized() const
