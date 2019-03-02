@@ -168,8 +168,12 @@ int32_t SubscriberConnection::GetProcessingInterval() const
 void SubscriberConnection::SetProcessingInterval(int32_t value)
 {
     m_processingInterval = value;
-    m_parent->DispatchProcessingIntervalChangeRequested(shared_from_this());
-    m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + ".");
+
+    if (GetIsTemporalSubscription())
+    {
+        m_parent->DispatchProcessingIntervalChangeRequested(this);
+        m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + ".");
+    }
 }
 
 bool SubscriberConnection::GetUsePayloadCompression() const
@@ -460,10 +464,14 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         SetIsNaNFiltered(ParseBoolean(setting));
 
                     if (TryGetValue(settings, "startTimeConstraint", setting))
-                        TryParseTimestamp(setting.c_str(), m_startTimeConstraint, DateTime::MaxValue);
+                        m_startTimeConstraint = ParseRelativeTimestamp(setting.c_str());
+                    else
+                        m_startTimeConstraint = DateTime::MaxValue;
 
-                    if (TryGetValue(settings, "startTimeConstraint", setting))
-                        TryParseTimestamp(setting.c_str(), m_startTimeConstraint, DateTime::MaxValue);
+                    if (TryGetValue(settings, "stopTimeConstraint", setting))
+                        m_stopTimeConstraint = ParseRelativeTimestamp(setting.c_str());
+                    else
+                        m_stopTimeConstraint = DateTime::MaxValue;
 
                     if (TryGetValue(settings, "processingInterval", setting) && !setting.empty())
                         TryParseInt32(setting, m_processingInterval, -1);
@@ -560,7 +568,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     m_parent->DispatchStatusMessage(message);
 
                     if (GetIsTemporalSubscription())
-                        m_parent->DispatchTemporalSubscriptionRequested(shared_from_this());
+                        m_parent->DispatchTemporalSubscriptionRequested(this);
                 }
                 else
                 {

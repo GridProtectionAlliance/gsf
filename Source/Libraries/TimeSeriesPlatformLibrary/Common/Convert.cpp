@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <sstream>
 #include <codecvt>
+#include <regex>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -497,6 +498,53 @@ datetime_t GSF::ParseTimestamp(const char* time, bool parseAsUTC)
         return timestamp;
 
     throw runtime_error("Failed to parse timestamp \"" + string(time) + "\"");
+}
+
+datetime_t GSF::ParseRelativeTimestamp(const char* time, const datetime_t& defaultValue)
+{
+    static const regex expression("\\*\\s*([+-]?\\d+)\\s*(\\w+)");
+    datetime_t timestamp;
+
+    if (TryParseTimestamp(time, timestamp, defaultValue, true))
+        return timestamp;
+
+    const datetime_t now = UtcNow();
+    const string timetag = Trim(time);
+    smatch match;
+
+    if (IsEqual(timetag, "*", false))
+        return now;
+
+    if (regex_search(timetag, match, expression) && match.size() == 3)
+    {
+        const int32_t offset = stoi(match.str(1));
+        const char unit = ToLower(Trim(match.str(2)))[0];
+
+        switch (unit)
+        {
+            case 's':
+                timestamp = DateAdd(now, offset, TimeInterval::Second);
+                break;
+            case 'm':
+                timestamp = DateAdd(now, offset, TimeInterval::Minute);
+                break;
+            case 'h':
+                timestamp = DateAdd(now, offset, TimeInterval::Hour);
+                break;
+            case 'd':
+                timestamp = DateAdd(now, offset, TimeInterval::Day);
+                break;
+            default:
+                timestamp = defaultValue;
+                break;
+        }
+    }
+    else
+    {
+        timestamp = defaultValue;
+    }
+
+    return timestamp;
 }
 
 StringMap<string> GSF::ParseKeyValuePairs(const string& value, const char parameterDelimiter, const char keyValueDelimiter, const char startValueDelimiter, const char endValueDelimiter)

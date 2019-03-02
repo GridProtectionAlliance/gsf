@@ -105,7 +105,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
         m_subscriberConnectionsLock.unlock();
 
         connection->Start();
-        DispatchClientConnected(connection);
+        DispatchClientConnected(connection.get());
     }
 
     StartAccept();
@@ -113,7 +113,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
 
 void DataPublisher::ConnectionTerminated(const SubscriberConnectionPtr& connection)
 {
-    DispatchClientDisconnected(connection);
+    DispatchClientDisconnected(connection.get());
 }
 
 void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
@@ -160,28 +160,24 @@ void DataPublisher::DispatchErrorMessage(const string& message)
     Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
-void DataPublisher::DispatchClientConnected(const SubscriberConnectionPtr& connection)
+void DataPublisher::DispatchClientConnected(SubscriberConnection* connection)
 {
-    SubscriberConnection* connectionReference = &*connection;
-    Dispatch(&ClientConnectedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
+    Dispatch(&ClientConnectedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchClientDisconnected(const SubscriberConnectionPtr& connection)
+void DataPublisher::DispatchClientDisconnected(SubscriberConnection* connection)
 {
-    SubscriberConnection* connectionReference = &*connection;
-    Dispatch(&ClientDisconnectedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
+    Dispatch(&ClientDisconnectedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchTemporalSubscriptionRequested(const SubscriberConnectionPtr& connection)
+void DataPublisher::DispatchTemporalSubscriptionRequested(SubscriberConnection* connection)
 {
-    SubscriberConnection* connectionReference = &*connection;
-    Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
+    Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
+void DataPublisher::DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection)
 {
-    SubscriberConnection* connectionReference = &*connection;
-    Dispatch(&ProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connectionReference), 0, sizeof(SubscriberConnection**));
+    Dispatch(&ProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.

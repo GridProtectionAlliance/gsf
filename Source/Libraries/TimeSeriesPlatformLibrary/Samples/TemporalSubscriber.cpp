@@ -18,7 +18,7 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/01/2019 - J. Ritchie Carroll
 //       Generated original version of source code.
-//
+//.
 //******************************************************************************************************
 
 #include "TemporalSubscriber.h"
@@ -31,7 +31,7 @@ using namespace GSF::TimeSeries;
 GSF::Data::DataSetPtr TemporalSubscriber::s_historyDataSet = nullptr;
 GSF::Data::DataTablePtr TemporalSubscriber::s_history = nullptr;
 
-TemporalSubscriber::TemporalSubscriber(const SubscriberConnectionPtr& connection, std::function<void(const GSF::Guid&)> removeHandler) :
+TemporalSubscriber::TemporalSubscriber(const SubscriberConnectionPtr& connection, const std::function<void(const GSF::Guid&)>& removeHandler) :
     m_connection(connection),
     m_removeHandler(removeHandler),
     m_startTimestamp(ToTicks(m_connection->GetStartTimeConstraint())),
@@ -43,7 +43,7 @@ TemporalSubscriber::TemporalSubscriber(const SubscriberConnectionPtr& connection
     if (s_historyDataSet == nullptr)
     {
         s_historyDataSet = DataSet::FromXml("History.xml");
-        s_history = s_historyDataSet->Table("History");
+        s_history = DataSet::FromXml("History.xml")->Table("History");
     }
 
     m_lastRow = s_history->RowCount() - 1;
@@ -52,12 +52,23 @@ TemporalSubscriber::TemporalSubscriber(const SubscriberConnectionPtr& connection
         throw runtime_error("No history available - run with \"GenHistory\" argument.");
 
     m_processTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*) { SendTemporalData(); }, true);
+    SetProcessingInterval(m_connection->GetProcessingInterval());
     m_processTimer->Start();
 }
 
 TemporalSubscriber::~TemporalSubscriber()
 {
     CompleteTemporalSubscription();
+}
+
+void TemporalSubscriber::SetProcessingInterval(int32_t processingInterval) const
+{
+    if (processingInterval == -1)
+        processingInterval = 33;
+    else if (processingInterval == 0)
+        processingInterval = 1;
+
+    m_processTimer->SetInterval(processingInterval);
 }
 
 void TemporalSubscriber::SendTemporalData()
@@ -82,10 +93,8 @@ void TemporalSubscriber::SendTemporalData()
 
         measurements.push_back(measurement);
 
-        if (m_currentRow > m_lastRow)
+        if (++m_currentRow > m_lastRow)
             m_currentRow = 0;
-        else
-            m_currentRow++;
 
         row = *history.Row(m_currentRow);
         historyTimestamp = row.ValueAsInt64(timestampColumn).GetValueOrDefault();

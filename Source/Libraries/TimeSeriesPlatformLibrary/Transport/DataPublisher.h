@@ -111,10 +111,10 @@ namespace Transport
         void Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length);
         void DispatchStatusMessage(const std::string& message);
         void DispatchErrorMessage(const std::string& message);
-        void DispatchClientConnected(const SubscriberConnectionPtr& connection);
-        void DispatchClientDisconnected(const SubscriberConnectionPtr& connection);
-        void DispatchTemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
-        void DispatchProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
+        void DispatchClientConnected(SubscriberConnection* connection);
+        void DispatchClientDisconnected(SubscriberConnection* connection);
+        void DispatchTemporalSubscriptionRequested(SubscriberConnection* connection);
+        void DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);

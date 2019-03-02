@@ -1436,6 +1436,80 @@ int main(int argc, char* argv[])
     assert(time == FromTicks(ticks));
     cout << "Test " << ++test << " succeeded..." << endl;
 
+    // Test 151
+    datetime_t timetag = ParseRelativeTimestamp("01/01/2019 00:00:00");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(DatePart(timetag, TimeInterval::Month) == 1);
+    assert(DatePart(timetag, TimeInterval::Day) == 1);
+    assert(DatePart(timetag, TimeInterval::Year) == 2019);
+    assert(DatePart(timetag, TimeInterval::Hour) == 0);
+    assert(DatePart(timetag, TimeInterval::Minute) == 0);
+    assert(DatePart(timetag, TimeInterval::Second) == 0);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 152
+    timetag = ParseRelativeTimestamp("*-1S");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag < UtcNow());
+    assert(timetag > DateAdd(UtcNow(), -5, TimeInterval::Second));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 153
+    timetag = ParseRelativeTimestamp("*-3m");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag < UtcNow());
+    assert(timetag > DateAdd(UtcNow(), -5, TimeInterval::Minute));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 154
+    timetag = ParseRelativeTimestamp("*-2H");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag < UtcNow());
+    assert(timetag > DateAdd(UtcNow(), -5, TimeInterval::Hour));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 155
+    timetag = ParseRelativeTimestamp("*-4d");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag < UtcNow());
+    assert(timetag > DateAdd(UtcNow(), -5, TimeInterval::Day));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 156
+    timetag = ParseRelativeTimestamp("*-4.3s");
+
+    assert(timetag == DateTime::MaxValue);
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 157
+    timetag = ParseRelativeTimestamp("*+5s");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag > UtcNow());
+    assert(timetag < DateAdd(UtcNow(), 10, TimeInterval::Second));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 158
+    timetag = ParseRelativeTimestamp(" * 21 s ");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag > UtcNow());
+    assert(timetag < DateAdd(UtcNow(), 30, TimeInterval::Second));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
+    // Test 159
+    timetag = ParseRelativeTimestamp("*");
+
+    assert(timetag < DateTime::MaxValue);
+    assert(timetag <= UtcNow());
+    assert(timetag > DateAdd(UtcNow(), -5, TimeInterval::Second));
+    cout << "Test " << ++test << " succeeded..." << endl;
+
     // Wait until the user presses enter before quitting.
     cout << endl << "Tests complete. Press enter to exit." << endl;
     string line;

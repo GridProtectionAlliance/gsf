@@ -98,6 +98,24 @@ namespace GSF
     // Converts a string to a date-time that may be in several common formats
     datetime_t ParseTimestamp(const char* time, bool parseAsUTC = true);
 
+    // Parses a string formatted as an absolute or relative timestamp where relative
+    // times are parsed based on an offset to current time (UTC) specified by an "*"
+    // and an offset interval with a time unit suffix of "s" for seconds, "m" for
+    // minutes, "h" for hours or "d" for days, see examples:
+    //
+    //  Time Format Example      Description
+    //  -----------------------  ---------------------------------------
+    //  12-30-2000 23:59:59.033  Absolute date and time
+    //  *                        Evaluates to UtcNow()
+    //  *-20s                    Evaluates to 20 seconds before UtcNow()
+    //  *-10m                    Evaluates to 10 minutes before UtcNow()
+    //  *-1h                     Evaluates to 1 hour before UtcNow()
+    //  *-1d                     Evaluates to 1 date before UtcNow()
+    //  *+2d                     Evaluates to 2 days after UtcNow()
+    //
+    // If function fails to parse a valid timestamp, returns defaultValue
+    datetime_t ParseRelativeTimestamp(const char* time, const datetime_t& defaultValue = DateTime::MaxValue);
+
     // Parses a string of key/value pairs into a case-insensitive string dictionary
     StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');
 }

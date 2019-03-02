@@ -3177,14 +3177,14 @@ ValueExpressionPtr ExpressionTree::EvaluateRegEx(const string& functionName, con
     const string testText = testValue->ValueAsString();
     const regex expression(expressionText);
 
-    cmatch match;
-    const bool result = regex_search(testText.c_str(), match, expression);
+    smatch match;
+    const bool result = regex_search(testText, match, expression);
 
     if (returnMatchedValue)
     {
         // RegExVal returns any matched value, otherwise empty string
         if (result)
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::String, string(match[0]));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::String, match.str(0));
 
         return ExpressionTree::EmptyString;
     }
