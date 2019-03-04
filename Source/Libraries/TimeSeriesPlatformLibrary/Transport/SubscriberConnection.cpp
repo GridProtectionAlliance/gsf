@@ -47,6 +47,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_commandChannelService(commandChannelService),
     m_writeStrand(commandChannelService),
     m_subscriberID(NewGuid()),
+    m_instanceID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
     m_startTimeConstraint(DateTime::MaxValue),
@@ -102,6 +103,11 @@ const GSF::Guid& SubscriberConnection::GetSubscriberID() const
 void SubscriberConnection::SetSubscriberID(const GSF::Guid& id)
 {
     m_subscriberID = id;
+}
+
+const GSF::Guid& SubscriberConnection::GetInstanceID() const
+{
+    return m_instanceID;
 }
 
 const string& SubscriberConnection::GetConnectionID() const

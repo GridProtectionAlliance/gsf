@@ -117,5 +117,5 @@ void TemporalSubscriber::CompleteTemporalSubscription()
     m_stopped = true;
     m_processTimer->Stop();
     m_connection->CompleteTemporalSubscription();
-    m_removeHandler(m_connection->GetSubscriberID());
+    m_removeHandler(m_connection->GetInstanceID());
 }

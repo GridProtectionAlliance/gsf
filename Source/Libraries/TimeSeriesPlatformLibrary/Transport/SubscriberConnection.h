@@ -50,6 +50,7 @@ namespace Transport
         GSF::Strand m_writeStrand;
         GSF::Timer m_pingTimer;
         GSF::Guid m_subscriberID;
+        const GSF::Guid m_instanceID{};
         std::string m_connectionID;
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
@@ -131,6 +132,10 @@ namespace Transport
         // Gets or sets subscriber UUID used when subscriber is known and pre-established
         const GSF::Guid& GetSubscriberID() const;
         void SetSubscriberID(const GSF::Guid& id);
+
+        // Gets a UUID representing a unique run-time identifier for the current subscriber connection,
+        // this can be used to disambiguate when the same subscriber makes multiple connections
+        const GSF::Guid& GetInstanceID() const;
 
         // Gets subscriber connection identification, e.g., remote IP/port, for display and logging references
         const std::string& GetConnectionID() const;

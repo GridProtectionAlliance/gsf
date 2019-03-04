@@ -337,37 +337,37 @@ void HandleTemporalSubscriptionRequested(DataPublisher* source, const Subscriber
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 
-    TemporalSubscriberPtr temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection, [](const GSF::Guid& subscriberID)
+    TemporalSubscriberPtr temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection, [](const GSF::Guid& instanceID)
     {
-        Thread([subscriberID]{
+        Thread([instanceID]{
             TemporalSubscriptionsLock.lock();
 
-            if (TemporalSubscriptions.find(subscriberID) != TemporalSubscriptions.end())
-                TemporalSubscriptions.erase(subscriberID);
+            if (TemporalSubscriptions.find(instanceID) != TemporalSubscriptions.end())
+                TemporalSubscriptions.erase(instanceID);
 
             TemporalSubscriptionsLock.unlock();
         });
     });
 
     TemporalSubscriptionsLock.lock();
-    TemporalSubscriptions.insert_or_assign(connection->GetSubscriberID(), temporalSubscription);
+    TemporalSubscriptions.insert_or_assign(connection->GetInstanceID(), temporalSubscription);
     TemporalSubscriptionsLock.unlock();
 }
 
 void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     static const TemporalSubscriberPtr nullTemporalSubscription = nullptr;
-    const GSF::Guid& subscriberID = connection->GetSubscriberID();
+    const GSF::Guid& instanceID = connection->GetInstanceID();
     const int32_t processingInterval = connection->GetProcessingInterval();
     TemporalSubscriberPtr temporalSubscription;
 
     TemporalSubscriptionsLock.lock();
 
-    if (TryGetValue(TemporalSubscriptions, subscriberID, temporalSubscription, nullTemporalSubscription))
+    if (TryGetValue(TemporalSubscriptions, instanceID, temporalSubscription, nullTemporalSubscription))
         temporalSubscription->SetProcessingInterval(processingInterval);
 
     TemporalSubscriptionsLock.unlock();
 
     if (temporalSubscription != nullTemporalSubscription)
-        cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(subscriberID) << " has requested to change its temporal processing interval to " << ToString(processingInterval) << "ms" << endl << endl;
+        cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(processingInterval) << "ms" << endl << endl;
 }
