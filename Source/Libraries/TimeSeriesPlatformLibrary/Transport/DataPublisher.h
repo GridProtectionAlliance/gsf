@@ -49,6 +49,7 @@ namespace Transport
         typedef std::function<void(DataPublisher*, const std::vector<uint8_t>&)> DispatcherFunction;
         typedef std::function<void(DataPublisher*, const std::string&)> MessageCallback;
         typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&)> SubscriberConnectionCallback;
+        typedef std::function<void(DataPublisher*, const TemporalSubscriberConnectionPtr&)> TemporalSubscriberConnectionCallback;
 
     private:
         // Structure used to dispatch
@@ -68,9 +69,9 @@ namespace Transport
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
         GSF::Mutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
-        bool m_allowMetadataRefresh;
-        bool m_allowNaNValueFilter;
-        bool m_forceNaNValueFilter;
+        bool m_isMetadataRefreshAllowed;
+        bool m_isNaNValueFilterAllowed;
+        bool m_isNaNValueFilterForced;
         bool m_supportsTemporalSubscriptions;
         uint32_t m_cipherKeyRotationPeriod;
         void* m_userData;
@@ -103,8 +104,10 @@ namespace Transport
         MessageCallback m_errorMessageCallback;
         SubscriberConnectionCallback m_clientConnectedCallback;
         SubscriberConnectionCallback m_clientDisconnectedCallback;
-        SubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
         SubscriberConnectionCallback m_processingIntervalChangeRequestedCallback;
+        TemporalSubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
+        TemporalSubscriberConnectionCallback m_temporalProcessingIntervalChangeRequestedCallback;
+        TemporalSubscriberConnectionCallback m_temporalSubscriptionCanceledCallback;
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
@@ -113,15 +116,19 @@ namespace Transport
         void DispatchErrorMessage(const std::string& message);
         void DispatchClientConnected(SubscriberConnection* connection);
         void DispatchClientDisconnected(SubscriberConnection* connection);
-        void DispatchTemporalSubscriptionRequested(SubscriberConnection* connection);
         void DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection);
+        void DispatchTemporalSubscriptionRequested(TemporalSubscriberConnection* connection);
+        void DispatchTemporalProcessingIntervalChangeRequested(TemporalSubscriberConnection* connection);
+        void DispatchTemporalSubscriptionCanceled(TemporalSubscriberConnection* connection);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientConnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void TemporalProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
@@ -157,19 +164,21 @@ namespace Transport
         // instance that gets included in published metadata so that clients
         // can easily distinguish the source of the measurements
         const GSF::Guid& GetNodeID() const;
-        void SetNodeID(const GSF::Guid& nodeID);
+        void SetNodeID(const GSF::Guid& value);
 
         SecurityMode GetSecurityMode() const;
-        void SetSecurityMode(SecurityMode securityMode);
+        void SetSecurityMode(SecurityMode value);
 
-        bool IsMetadataRefreshAllowed() const;
-        void SetMetadataRefreshAllowed(bool allowed);
+        bool GetIsMetadataRefreshAllowed() const;
+        void SetIsMetadataRefreshAllowed(bool value);
 
-        bool IsNaNValueFilterAllowed() const;
-        void SetNaNValueFilterAllowed(bool allowed);
+        // Gets or sets flag that determines if NaN value filter is allowed by subscribers
+        bool GetIsNaNValueFilterAllowed() const;
+        void SetNaNValueFilterAllowed(bool value);
 
-        bool IsNaNValueFilterForced() const;
-        void SetNaNValueFilterForced(bool forced);
+        // Gets or sets flag that determines if NaN value filter is forced by publisher, regardless of subscriber request
+        bool GetIsNaNValueFilterForced() const;
+        void SetIsNaNValueFilterForced(bool value);
 
         bool GetSupportsTemporalSubscriptions() const;
         void SetSupportsTemporalSubscriptions(bool value);
@@ -193,14 +202,18 @@ namespace Transport
         //   void HandleErrorMessage(DataPublisher* source, const string& message)
         //   void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+        //   void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+        //   void HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
         void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
         void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
         void RegisterClientConnectedCallback(const SubscriberConnectionCallback& clientConnectedCallback);
         void RegisterClientDisconnectedCallback(const SubscriberConnectionCallback& clientDisconnectedCallback);
-        void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
         void RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback);
+        void RegisterTemporalSubscriptionRequestedCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
+        void RegisterTemporalProcessingIntervalChangeRequestedCallback(const TemporalSubscriberConnectionCallback& temporalProcessingIntervalChangeRequestedCallback);
+        void RegisterTemporalSubscriptionCanceledCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
 
         friend class SubscriberConnection;
     };

@@ -44,6 +44,7 @@ static const uint32_t MaxPacketSize = 32768U;
 
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
     m_parent(std::move(parent)),
+    m_temporalConnection(nullptr),
     m_commandChannelService(commandChannelService),
     m_writeStrand(commandChannelService),
     m_subscriberID(NewGuid()),
@@ -57,7 +58,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_useCompactMeasurementFormat(true),
     m_includeTime(true),
     m_useMillisecondResolution(false), // Defaults to microsecond resolution
-    m_isNaNFiltered(false),
+    m_isNaNFiltered(m_parent->GetIsNaNValueFilterAllowed() && m_parent->GetIsNaNValueFilterForced()),
     m_isSubscribed(false),
     m_startTimeSent(false),
     m_stopped(true),
@@ -176,10 +177,11 @@ void SubscriberConnection::SetProcessingInterval(int32_t value)
     m_processingInterval = value;
 
     if (GetIsTemporalSubscription())
-    {
+        m_parent->DispatchTemporalProcessingIntervalChangeRequested(m_temporalConnection.get());
+    else
         m_parent->DispatchProcessingIntervalChangeRequested(this);
-        m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + ".");
-    }
+        
+    m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + "ms.");
 }
 
 bool SubscriberConnection::GetUsePayloadCompression() const
@@ -229,7 +231,20 @@ bool SubscriberConnection::GetIsNaNFiltered() const
 
 void SubscriberConnection::SetIsNaNFiltered(bool value)
 {
-    m_isNaNFiltered = value;
+    if (value)
+    {
+        if (m_parent->GetIsNaNValueFilterAllowed() || m_parent->GetIsNaNValueFilterForced())
+            m_isNaNFiltered = true;
+        else
+            m_isNaNFiltered = false;
+    }
+    else
+    {
+        if (m_parent->GetIsNaNValueFilterForced())
+            m_isNaNFiltered = true;
+        else
+            m_isNaNFiltered = false;
+    }    
 }
 
 bool SubscriberConnection::GetIsSubscribed() const
@@ -365,6 +380,9 @@ void SubscriberConnection::Start()
 
 void SubscriberConnection::Stop(const bool shutdownSocket)
 {
+    if (m_isSubscribed)
+        HandleUnsubscribe();
+
     try
     {
         m_stopped = true;
@@ -406,6 +424,9 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
         if (runtimeID == UInt16::MaxValue)
             continue;
 
+        if (m_isNaNFiltered && isnan(measurement.Value))
+            continue;
+
         const uint32_t length = serializer.SerializeMeasurement(measurement, buffer, runtimeID);
 
         if (packet.size() + length > MaxPacketSize)
@@ -445,6 +466,12 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
+                if (GetIsTemporalSubscription() && m_temporalConnection != nullptr)
+                {
+                    m_parent->DispatchTemporalSubscriptionCanceled(m_temporalConnection.get());
+                    m_temporalConnection.reset();
+                }
+
                 // Next 4 bytes are an integer representing the length of the connection string that follows
                 const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
                 index += 4;
@@ -467,7 +494,24 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         SetUseMillisecondResolution(ParseBoolean(setting));
 
                     if (TryGetValue(settings, "requestNaNValueFilter", setting))
-                        SetIsNaNFiltered(ParseBoolean(setting));
+                    {
+                        const bool nanFilterRequested = ParseBoolean(setting);
+                        SetIsNaNFiltered(nanFilterRequested);
+
+                        if (m_isNaNFiltered != nanFilterRequested)
+                        {
+                            string message;
+
+                            if (nanFilterRequested && !m_parent->GetIsNaNValueFilterAllowed() && !m_parent->GetIsNaNValueFilterForced())
+                                message = "WARNING: NaN filter is disallowed by publisher, requestNaNValueFilter setting was set to false";
+                            else if (!nanFilterRequested && m_parent->GetIsNaNValueFilterForced())
+                                message = "WARNING: NaN filter is required by publisher, requestNaNValueFilter setting was set to true";
+                            else
+                                message = "WARNING: NaN filter mismatch, requestNaNValueFilter setting was set to " + ToString(m_isNaNFiltered);
+
+                            m_parent->DispatchErrorMessage(message);
+                        }
+                    }
 
                     if (TryGetValue(settings, "startTimeConstraint", setting))
                         m_startTimeConstraint = ParseRelativeTimestamp(setting.c_str());
@@ -574,7 +618,10 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     m_parent->DispatchStatusMessage(message);
 
                     if (GetIsTemporalSubscription())
-                        m_parent->DispatchTemporalSubscriptionRequested(this);
+                    {
+                        m_temporalConnection = NewSharedPtr<TemporalSubscriberConnection>(shared_from_this());
+                        m_parent->DispatchTemporalSubscriptionRequested(m_temporalConnection.get());
+                    }
                 }
                 else
                 {
@@ -619,7 +666,7 @@ void SubscriberConnection::HandleUnsubscribe()
 void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
 {
     // Ensure that the subscriber is allowed to request meta-data
-    if (!m_parent->m_allowMetadataRefresh)
+    if (!m_parent->GetIsMetadataRefreshAllowed())
         throw PublisherException("Meta-data refresh has been disallowed by the DataPublisher.");
 
     m_parent->DispatchStatusMessage("Received meta-data refresh request from " + GetConnectionID() + ", preparing response...");

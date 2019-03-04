@@ -27,6 +27,7 @@
 #include "../Common/CommonTypes.h"
 #include "../Common/Timer.h"
 #include "../Data/DataSet.h"
+#include "TemporalSubscriberConnection.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
 #include <deque>
@@ -46,11 +47,12 @@ namespace Transport
     {
     private:
         const DataPublisherPtr m_parent;
+        TemporalSubscriberConnectionPtr m_temporalConnection;
         GSF::IOContext& m_commandChannelService;
         GSF::Strand m_writeStrand;
         GSF::Timer m_pingTimer;
         GSF::Guid m_subscriberID;
-        const GSF::Guid m_instanceID{};
+        const GSF::Guid m_instanceID;
         std::string m_connectionID;
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
@@ -164,7 +166,7 @@ namespace Transport
         const GSF::datetime_t& GetStopTimeConstraint() const;
         void SetStopTimeConstraint(const GSF::datetime_t& value);
 
-        // Gets or sets the desired temporal processing interval, in milliseconds
+        // Gets or sets the desired processing interval, in milliseconds
         // With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
         // basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         // interval while a value of 0 means to process data as fast as possible.

@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 #include "TemporalSubscriber.h"
+ #include <utility>
 
 using namespace std;
 using namespace GSF;
@@ -31,12 +32,9 @@ using namespace GSF::TimeSeries;
 GSF::Data::DataSetPtr TemporalSubscriber::s_historyDataSet = nullptr;
 GSF::Data::DataTablePtr TemporalSubscriber::s_history = nullptr;
 
-TemporalSubscriber::TemporalSubscriber(const SubscriberConnectionPtr& connection, const std::function<void(const GSF::Guid&)>& removeHandler) :
-    m_connection(connection),
-    m_removeHandler(removeHandler),
-    m_startTimestamp(ToTicks(m_connection->GetStartTimeConstraint())),
-    m_stopTimestamp(ToTicks(m_connection->GetStopTimeConstraint())),
-    m_currentTimestamp(m_startTimestamp),
+TemporalSubscriber::TemporalSubscriber(TemporalSubscriberConnectionPtr connection) :
+    m_connection(std::move(connection)),
+    m_currentTimestamp(m_connection->GetStartTicks()),
     m_currentRow(0),
     m_stopped(false)
 {
@@ -105,7 +103,7 @@ void TemporalSubscriber::SendTemporalData()
     // Setup next publication timestamp
     m_currentTimestamp += HistoryInterval;
 
-    if (m_currentTimestamp > m_stopTimestamp)
+    if (m_currentTimestamp > m_connection->GetStopTicks())
         CompleteTemporalSubscription();
 }
 
@@ -117,5 +115,4 @@ void TemporalSubscriber::CompleteTemporalSubscription()
     m_stopped = true;
     m_processTimer->Stop();
     m_connection->CompleteTemporalSubscription();
-    m_removeHandler(m_connection->GetInstanceID());
 }

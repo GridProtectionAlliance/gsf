@@ -48,8 +48,9 @@ void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr
 void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
 void DisplayStatusMessage(DataPublisher* source, const string& message);
 void DisplayErrorMessage(DataPublisher* source, const string& message);
-void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+void HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+void HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
 
 void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<MeasurementMetadataPtr>& measurementMetadata, vector<PhasorMetadataPtr>& phasorMetadata)
 {
@@ -222,7 +223,8 @@ bool RunPublisher(uint16_t port, bool genHistory)
         Publisher->RegisterStatusMessageCallback(&DisplayStatusMessage);
         Publisher->RegisterErrorMessageCallback(&DisplayErrorMessage);
         Publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
-        Publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
+        Publisher->RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
+        Publisher->RegisterTemporalSubscriptionCanceledCallback(&HandleTemporalSubscriptionCanceled);
 
         // Enable temporal subscription support - this allows historical data requests as well as real-time
         Publisher->SetSupportsTemporalSubscriptions(true);
@@ -333,28 +335,18 @@ void DisplayErrorMessage(DataPublisher* source, const string& message)
     cerr << message << endl << endl;
 }
 
-void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 
-    TemporalSubscriberPtr temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection, [](const GSF::Guid& instanceID)
-    {
-        Thread([instanceID]{
-            TemporalSubscriptionsLock.lock();
-
-            if (TemporalSubscriptions.find(instanceID) != TemporalSubscriptions.end())
-                TemporalSubscriptions.erase(instanceID);
-
-            TemporalSubscriptionsLock.unlock();
-        });
-    });
+    TemporalSubscriberPtr temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection);
 
     TemporalSubscriptionsLock.lock();
     TemporalSubscriptions.insert_or_assign(connection->GetInstanceID(), temporalSubscription);
     TemporalSubscriptionsLock.unlock();
 }
 
-void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
 {
     static const TemporalSubscriberPtr nullTemporalSubscription = nullptr;
     const GSF::Guid& instanceID = connection->GetInstanceID();
@@ -370,4 +362,18 @@ void HandleProcessingIntervalChangeRequested(DataPublisher* source, const Subscr
 
     if (temporalSubscription != nullTemporalSubscription)
         cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(processingInterval) << "ms" << endl << endl;
+}
+
+void HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
+{
+    const GSF::Guid& instanceID = connection->GetInstanceID();
+
+    Thread([instanceID]{
+        TemporalSubscriptionsLock.lock();
+
+        if (TemporalSubscriptions.find(instanceID) != TemporalSubscriptions.end())
+            TemporalSubscriptions.erase(instanceID);
+
+        TemporalSubscriptionsLock.unlock();
+    });
 }

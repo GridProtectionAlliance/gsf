@@ -45,16 +45,20 @@ namespace Transport
         static void HandleErrorMessage(DataPublisher* source, const std::string& message);
         static void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+        static void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+        static void HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
 
     protected:
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
         virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
         virtual void ClientConnected(const SubscriberConnectionPtr& connection);
         virtual void ClientDisconnected(const SubscriberConnectionPtr& connection);
-        virtual void TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
         virtual void ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
+        virtual void TemporalSubscriptionRequested(const TemporalSubscriberConnectionPtr& connection);
+        virtual void TemporalProcessingIntervalChangeRequested(const TemporalSubscriberConnectionPtr& connection);
+        virtual void TemporalSubscriptionCanceled(const TemporalSubscriberConnectionPtr& connection);
 
     public:
         PublisherInstance(uint16_t port, bool ipV6);
@@ -66,10 +70,10 @@ namespace Transport
         void Initialize();
 
         // Define metadata from existing metadata tables
-        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
+        void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0) const;
 
         // Define metadata from existing dataset
-        void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
+        void DefineMetadata(const GSF::Data::DataSetPtr& metadata) const;
 
         // Gets primary metadata. This dataset contains all the normalized metadata tables that define
         // the available detail about the data points that can be subscribed to by clients.
@@ -83,29 +87,29 @@ namespace Transport
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
-        void PublishMeasurements(const std::vector<Measurement>& measurements);
-        void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
+        void PublishMeasurements(const std::vector<Measurement>& measurements) const;
+        void PublishMeasurements(const std::vector<MeasurementPtr>& measurements) const;
 
         // Node ID defines a unique identification for the DataPublisher
         // instance that gets included in published metadata so that clients
         // can easily distinguish the source of the measurements
         const GSF::Guid& GetNodeID() const;
-        void SetNodeID(const GSF::Guid& nodeID);
+        void SetNodeID(const GSF::Guid& nodeID) const;
 
         SecurityMode GetSecurityMode() const;
-        void SetSecurityMode(SecurityMode securityMode);
+        void SetSecurityMode(SecurityMode securityMode) const;
 
         bool IsMetadataRefreshAllowed() const;
-        void SetMetadataRefreshAllowed(bool allowed);
+        void SetMetadataRefreshAllowed(bool allowed) const;
 
         bool IsNaNValueFilterAllowed() const;
-        void SetNaNValueFilterAllowed(bool allowed);
+        void SetNaNValueFilterAllowed(bool allowed) const;
 
         bool IsNaNValueFilterForced() const;
-        void SetNaNValueFilterForced(bool forced);
+        void SetNaNValueFilterForced(bool forced) const;
 
         uint32_t GetCipherKeyRotationPeriod() const;
-        void SetCipherKeyRotationPeriod(uint32_t period);
+        void SetCipherKeyRotationPeriod(uint32_t period) const;
 
         uint16_t GetPort() const;
         bool IsIPv6() const;
@@ -115,9 +119,9 @@ namespace Transport
         void SetUserData(void* userData);
 
         // Statistical functions
-        uint64_t GetTotalCommandChannelBytesSent();
-        uint64_t GetTotalDataChannelBytesSent();
-        uint64_t GetTotalMeasurementsSent();
+        uint64_t GetTotalCommandChannelBytesSent() const;
+        uint64_t GetTotalDataChannelBytesSent() const;
+        uint64_t GetTotalMeasurementsSent() const;
 
         bool IsInitialized() const;
     };

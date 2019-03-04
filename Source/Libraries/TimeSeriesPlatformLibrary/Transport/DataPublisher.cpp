@@ -39,9 +39,9 @@ using namespace GSF::TimeSeries::Transport;
 DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_nodeID(NewGuid()),
     m_securityMode(SecurityMode::None),
-    m_allowMetadataRefresh(true),
-    m_allowNaNValueFilter(true),
-    m_forceNaNValueFilter(false),
+    m_isMetadataRefreshAllowed(true),
+    m_isNaNValueFilterAllowed(true),
+    m_isNaNValueFilterForced(false),
     m_supportsTemporalSubscriptions(false),
     m_cipherKeyRotationPeriod(60000),
     m_userData(nullptr),
@@ -170,14 +170,24 @@ void DataPublisher::DispatchClientDisconnected(SubscriberConnection* connection)
     Dispatch(&ClientDisconnectedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchTemporalSubscriptionRequested(SubscriberConnection* connection)
-{
-    Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
-}
-
 void DataPublisher::DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection)
 {
     Dispatch(&ProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
+}
+
+void DataPublisher::DispatchTemporalSubscriptionRequested(TemporalSubscriberConnection* connection)
+{
+    Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(TemporalSubscriberConnection**));
+}
+
+void DataPublisher::DispatchTemporalProcessingIntervalChangeRequested(TemporalSubscriberConnection* connection)
+{
+    Dispatch(&TemporalProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(TemporalSubscriberConnection**));
+}
+
+void DataPublisher::DispatchTemporalSubscriptionCanceled(TemporalSubscriberConnection* connection)
+{
+    Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(TemporalSubscriberConnection**));
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
@@ -232,19 +242,6 @@ void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const st
     }
 }
 
-void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
-{
-    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
-
-    if (source != nullptr)
-    {
-        const SubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
-
-        if (temporalSubscriptionRequestedCallback != nullptr)
-            temporalSubscriptionRequestedCallback(source, connection->GetReference());
-    }
-}
-
 void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
     SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
@@ -255,6 +252,45 @@ void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* s
 
         if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
             temporalProcessingIntervalChangeRequestedCallback(source, connection->GetReference());
+    }
+}
+
+void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+{
+    TemporalSubscriberConnection* connection = *reinterpret_cast<TemporalSubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (source != nullptr)
+    {
+        const TemporalSubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
+
+        if (temporalSubscriptionRequestedCallback != nullptr)
+            temporalSubscriptionRequestedCallback(source, connection->GetReference());
+    }
+}
+
+void DataPublisher::TemporalProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+{
+    TemporalSubscriberConnection* connection = *reinterpret_cast<TemporalSubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (source != nullptr)
+    {
+        const TemporalSubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_temporalProcessingIntervalChangeRequestedCallback;
+
+        if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
+            temporalProcessingIntervalChangeRequestedCallback(source, connection->GetReference());
+    }
+}
+
+void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+{
+    TemporalSubscriberConnection* connection = *reinterpret_cast<TemporalSubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (source != nullptr)
+    {
+        const TemporalSubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
+
+        if (temporalSubscriptionCanceledCallback != nullptr)
+            temporalSubscriptionCanceledCallback(source, connection->GetReference());
     }
 }
 
@@ -734,9 +770,9 @@ const GSF::Guid& DataPublisher::GetNodeID() const
     return m_nodeID;
 }
 
-void DataPublisher::SetNodeID(const GSF::Guid& nodeID)
+void DataPublisher::SetNodeID(const GSF::Guid& value)
 {
-    m_nodeID = nodeID;
+    m_nodeID = value;
 }
 
 SecurityMode DataPublisher::GetSecurityMode() const
@@ -744,39 +780,39 @@ SecurityMode DataPublisher::GetSecurityMode() const
     return m_securityMode;
 }
 
-void DataPublisher::SetSecurityMode(SecurityMode securityMode)
+void DataPublisher::SetSecurityMode(SecurityMode value)
 {
-    m_securityMode = securityMode;
+    m_securityMode = value;
 }
 
-bool DataPublisher::IsMetadataRefreshAllowed() const
+bool DataPublisher::GetIsMetadataRefreshAllowed() const
 {
-    return m_allowMetadataRefresh;
+    return m_isMetadataRefreshAllowed;
 }
 
-void DataPublisher::SetMetadataRefreshAllowed(bool allowed)
+void DataPublisher::SetIsMetadataRefreshAllowed(bool value)
 {
-    m_allowMetadataRefresh = allowed;
+    m_isMetadataRefreshAllowed = value;
 }
 
-bool DataPublisher::IsNaNValueFilterAllowed() const
+bool DataPublisher::GetIsNaNValueFilterAllowed() const
 {
-    return m_allowNaNValueFilter;
+    return m_isNaNValueFilterAllowed;
 }
 
-void DataPublisher::SetNaNValueFilterAllowed(bool allowed)
+void DataPublisher::SetNaNValueFilterAllowed(bool value)
 {
-    m_allowNaNValueFilter = allowed;
+    m_isNaNValueFilterAllowed = value;
 }
 
-bool DataPublisher::IsNaNValueFilterForced() const
+bool DataPublisher::GetIsNaNValueFilterForced() const
 {
-    return m_forceNaNValueFilter;
+    return m_isNaNValueFilterForced;
 }
 
-void DataPublisher::SetNaNValueFilterForced(bool forced)
+void DataPublisher::SetIsNaNValueFilterForced(bool value)
 {
-    m_forceNaNValueFilter = forced;
+    m_isNaNValueFilterForced = value;
 }
 
 bool DataPublisher::GetSupportsTemporalSubscriptions() const
@@ -794,9 +830,9 @@ uint32_t DataPublisher::GetCipherKeyRotationPeriod() const
     return m_cipherKeyRotationPeriod;
 }
 
-void DataPublisher::SetCipherKeyRotationPeriod(uint32_t period)
+void DataPublisher::SetCipherKeyRotationPeriod(uint32_t value)
 {
-    m_cipherKeyRotationPeriod = period;
+    m_cipherKeyRotationPeriod = value;
 }
 
 void* DataPublisher::GetUserData() const
@@ -871,12 +907,22 @@ void DataPublisher::RegisterClientDisconnectedCallback(const SubscriberConnectio
     m_clientDisconnectedCallback = clientDisconnectedCallback;
 }
 
-void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback)
+void DataPublisher::RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback)
+{
+    m_processingIntervalChangeRequestedCallback = processingIntervalChangeRequestedCallback;
+}
+
+void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionRequestedCallback)
 {
     m_temporalSubscriptionRequestedCallback = temporalSubscriptionRequestedCallback;
 }
 
-void DataPublisher::RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback)
+void DataPublisher::RegisterTemporalProcessingIntervalChangeRequestedCallback(const TemporalSubscriberConnectionCallback& temporalProcessingIntervalChangeRequestedCallback)
 {
-    m_processingIntervalChangeRequestedCallback = processingIntervalChangeRequestedCallback;
+    m_temporalProcessingIntervalChangeRequestedCallback = temporalProcessingIntervalChangeRequestedCallback;
+}
+
+void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionCanceledCallback)
+{
+    m_temporalSubscriptionCanceledCallback = temporalSubscriptionCanceledCallback;
 }

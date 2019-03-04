@@ -31,10 +31,7 @@ using namespace GSF::TimeSeries::Transport;
 class TemporalSubscriber // NOLINT
 {
 private:
-    const SubscriberConnectionPtr m_connection;
-    const std::function<void(const GSF::Guid&)> m_removeHandler;
-    const int64_t m_startTimestamp;
-    const int64_t m_stopTimestamp;
+    const TemporalSubscriberConnectionPtr m_connection;
     int64_t m_currentTimestamp;
     int32_t m_currentRow;
     int32_t m_lastRow;
@@ -48,7 +45,7 @@ private:
     static GSF::Data::DataTablePtr s_history;
 
 public:
-    TemporalSubscriber(const SubscriberConnectionPtr& connection, const std::function<void(const GSF::Guid&)>& removeHandler);
+    TemporalSubscriber(TemporalSubscriberConnectionPtr connection);
     ~TemporalSubscriber();
 
     void SetProcessingInterval(int32_t processingInterval) const;

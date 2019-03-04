@@ -69,16 +69,28 @@ void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const Su
     instance->ClientDisconnected(connection);
 }
 
-void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+    instance->ProcessingIntervalChangeRequested(connection);
+}
+
+void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
     instance->TemporalSubscriptionRequested(connection);
 }
 
-void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
-    instance->ProcessingIntervalChangeRequested(connection);
+    instance->TemporalProcessingIntervalChangeRequested(connection);
+}
+
+void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+    instance->TemporalSubscriptionCanceled(connection);
 }
 
 void PublisherInstance::StatusMessage(const string& message)
@@ -101,14 +113,24 @@ void PublisherInstance::ClientDisconnected(const SubscriberConnectionPtr& connec
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " disconnected..." << endl << endl;
 }
 
-void PublisherInstance::TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection)
+void PublisherInstance::ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
+}
+
+void PublisherInstance::TemporalSubscriptionRequested(const TemporalSubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
 
-void PublisherInstance::ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
+void PublisherInstance::TemporalProcessingIntervalChangeRequested(const TemporalSubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
+}
+
+void PublisherInstance::TemporalSubscriptionCanceled(const TemporalSubscriberConnectionPtr& connection)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has canceled the temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
 
 void PublisherInstance::Initialize()
@@ -118,18 +140,20 @@ void PublisherInstance::Initialize()
     m_publisher->RegisterErrorMessageCallback(&HandleErrorMessage);
     m_publisher->RegisterClientConnectedCallback(&HandleClientConnected);
     m_publisher->RegisterClientDisconnectedCallback(&HandleClientDisconnected);
-    m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
     m_publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
+    m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
+    m_publisher->RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
+    m_publisher->RegisterTemporalSubscriptionCanceledCallback(&HandleTemporalSubscriptionCanceled);
 
     m_initialized = true;
 }
 
-void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber)
+void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber) const
 {
     m_publisher->DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata, versionNumber);
 }
 
-void PublisherInstance::DefineMetadata(const DataSetPtr& metadata)
+void PublisherInstance::DefineMetadata(const DataSetPtr& metadata) const
 {
     m_publisher->DefineMetadata(metadata);
 }
@@ -149,7 +173,7 @@ vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& f
     return m_publisher->FilterMetadata(filterExpression);
 }
 
-void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements)
+void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements) const
 {
     if (!m_initialized)
         throw PublisherException("Operation failed, publisher is not initialized.");
@@ -157,7 +181,7 @@ void PublisherInstance::PublishMeasurements(const vector<Measurement>& measureme
     m_publisher->PublishMeasurements(measurements);
 }
 
-void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measurements)
+void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measurements) const
 {
     if (!m_initialized)
         throw PublisherException("Operation failed, publisher is not initialized.");
@@ -170,7 +194,7 @@ const GSF::Guid& PublisherInstance::GetNodeID() const
     return m_publisher->GetNodeID();
 }
 
-void PublisherInstance::SetNodeID(const GSF::Guid& nodeID)
+void PublisherInstance::SetNodeID(const GSF::Guid& nodeID) const
 {
     m_publisher->SetNodeID(nodeID);
 }
@@ -180,39 +204,39 @@ SecurityMode PublisherInstance::GetSecurityMode() const
     return m_publisher->GetSecurityMode();
 }
 
-void PublisherInstance::SetSecurityMode(SecurityMode securityMode)
+void PublisherInstance::SetSecurityMode(SecurityMode securityMode) const
 {
     m_publisher->SetSecurityMode(securityMode);
 }
 
 bool PublisherInstance::IsMetadataRefreshAllowed() const
 {
-    return m_publisher->IsMetadataRefreshAllowed();
+    return m_publisher->GetIsMetadataRefreshAllowed();
 }
 
-void PublisherInstance::SetMetadataRefreshAllowed(bool allowed)
+void PublisherInstance::SetMetadataRefreshAllowed(bool allowed) const
 {
-    m_publisher->SetMetadataRefreshAllowed(allowed);
+    m_publisher->SetIsMetadataRefreshAllowed(allowed);
 }
 
 bool PublisherInstance::IsNaNValueFilterAllowed() const
 {
-    return m_publisher->IsNaNValueFilterAllowed();
+    return m_publisher->GetIsNaNValueFilterAllowed();
 }
 
-void PublisherInstance::SetNaNValueFilterAllowed(bool allowed)
+void PublisherInstance::SetNaNValueFilterAllowed(bool allowed) const
 {
     m_publisher->SetNaNValueFilterAllowed(allowed);
 }
 
 bool PublisherInstance::IsNaNValueFilterForced() const
 {
-    return m_publisher->IsNaNValueFilterForced();
+    return m_publisher->GetIsNaNValueFilterForced();
 }
 
-void PublisherInstance::SetNaNValueFilterForced(bool forced)
+void PublisherInstance::SetNaNValueFilterForced(bool forced) const
 {
-    m_publisher->SetNaNValueFilterForced(forced);
+    m_publisher->SetIsNaNValueFilterForced(forced);
 }
 
 uint32_t PublisherInstance::GetCipherKeyRotationPeriod() const
@@ -220,7 +244,7 @@ uint32_t PublisherInstance::GetCipherKeyRotationPeriod() const
     return m_publisher->GetCipherKeyRotationPeriod();
 }
 
-void PublisherInstance::SetCipherKeyRotationPeriod(uint32_t period)
+void PublisherInstance::SetCipherKeyRotationPeriod(uint32_t period) const
 {
     m_publisher->SetCipherKeyRotationPeriod(period);
 }
@@ -245,17 +269,17 @@ void PublisherInstance::SetUserData(void* userData)
     m_userData = userData;
 }
 
-uint64_t PublisherInstance::GetTotalCommandChannelBytesSent()
+uint64_t PublisherInstance::GetTotalCommandChannelBytesSent() const
 {
     return m_publisher->GetTotalCommandChannelBytesSent();
 }
 
-uint64_t PublisherInstance::GetTotalDataChannelBytesSent()
+uint64_t PublisherInstance::GetTotalDataChannelBytesSent() const
 {
     return m_publisher->GetTotalDataChannelBytesSent();
 }
 
-uint64_t PublisherInstance::GetTotalMeasurementsSent()
+uint64_t PublisherInstance::GetTotalMeasurementsSent() const
 {
     return m_publisher->GetTotalMeasurementsSent();
 }
