@@ -181,6 +181,8 @@ namespace GSF
     typedef boost::any Object;
     typedef boost::uuids::uuid Guid;
     typedef boost::posix_time::time_duration TimeSpan;
+    typedef boost::posix_time::milliseconds Milliseconds;
+    typedef boost::posix_time::microseconds Microseconds;
     typedef boost::system::error_code ErrorCode;
     typedef boost::system::system_error SystemError;
     typedef boost::exception Exception;
@@ -191,6 +193,7 @@ namespace GSF
     typedef boost::unique_lock<Mutex> UniqueLock;
     typedef boost::asio::io_context IOContext;
     typedef boost::asio::io_context::strand Strand;
+    typedef boost::asio::deadline_timer DeadlineTimer;
     typedef boost::asio::ip::address IPAddress;
     typedef boost::asio::ip::tcp::socket TcpSocket;
     typedef boost::asio::ip::udp::socket UdpSocket;

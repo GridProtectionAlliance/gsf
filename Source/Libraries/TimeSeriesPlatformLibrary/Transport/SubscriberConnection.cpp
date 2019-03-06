@@ -1401,7 +1401,7 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
     return result;
 }
 
-void SubscriberConnection::PingTimerElapsed(Timer* timer, void* userData)
+void SubscriberConnection::PingTimerElapsed(Timer*, void* userData)
 {
     SubscriberConnection* connection = static_cast<SubscriberConnection*>(userData);
 

@@ -360,7 +360,7 @@ int32_t GSF::DateDiff(const datetime_t& startTime, const datetime_t& endTime, Ti
         }
     }
 
-    time_duration duration = endTime - startTime;
+    TimeSpan duration = endTime - startTime;
 
     switch (interval)
     {
@@ -379,7 +379,7 @@ int32_t GSF::DateDiff(const datetime_t& startTime, const datetime_t& endTime, Ti
 
 int32_t GSF::DatePart(const datetime_t& value, TimeInterval interval)
 {
-    static float64_t tickInterval = pow(10.0, time_duration::num_fractional_digits());
+    static float64_t tickInterval = pow(10.0, TimeSpan::num_fractional_digits());
 
     switch (interval)
     {

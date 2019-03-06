@@ -120,7 +120,7 @@ namespace Transport
         void CommandChannelSendAsync();
         void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
-        static void PingTimerElapsed(Timer* timer, void* userData);
+        static void PingTimerElapsed(Timer*, void* userData);
     public:
         SubscriberConnection(DataPublisherPtr parent, GSF::IOContext& commandChannelService, GSF::IOContext& dataChannelService);
         ~SubscriberConnection();

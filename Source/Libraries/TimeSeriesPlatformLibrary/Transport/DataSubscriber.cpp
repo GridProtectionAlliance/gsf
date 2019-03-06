@@ -143,8 +143,8 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
                 Thread(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
             }
 
-            io_context io;
-            deadline_timer timer(io, posix_time::milliseconds(m_retryInterval));
+            IOContext io;
+            DeadlineTimer timer(io, Milliseconds(m_retryInterval));
             timer.wait();
         }
     }

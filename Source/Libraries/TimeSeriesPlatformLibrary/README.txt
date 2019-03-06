@@ -90,10 +90,11 @@ $ sudo apt install cmake
 
 $ sudo apt install zlib1g-dev
 $ sudo apt install libbz2-dev
+
 $ sudo mkdir /usr/local/boost_1_66_0
 $ cd /usr/local/boost_1_66_0
 $ wget https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
-$ sudo tar --bzip2 -xf boost_1_66_0.tar.bz2
+$ sudo tar -xvjf boost_1_66_0.tar.bz2
 
 Start a new terminal session before building Boost:
 

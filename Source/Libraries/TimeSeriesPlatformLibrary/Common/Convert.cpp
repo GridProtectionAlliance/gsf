@@ -40,10 +40,10 @@ using namespace boost::posix_time;
 using namespace boost::gregorian;
 using namespace GSF;
 
-const datetime_t DateTimeEpoch(date(1400, 1, 1), time_duration(0, 0, 0));
-const auto DateTimeTicksPerSecond = time_duration::ticks_per_second();
+const datetime_t DateTimeEpoch(date(1400, 1, 1), TimeSpan(0, 0, 0));
+const auto DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
 
-string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
+string PreparseTimestamp(const string& timestamp, TimeSpan& utcOffset)
 {
     // 2018-03-14T19:23:11.665-04:00
     vector<string> dateTimeParts = Split(Replace(timestamp, "T", " "), " ", false);
@@ -145,7 +145,7 @@ string PreparseTimestamp(const string& timestamp, time_duration& utcOffset)
     }
 
     if (timeZoneOffset.size() == 5)
-        utcOffset = time_duration(stoi(timeZoneOffset.substr(0, 3)), stoi(timeZoneOffset.substr(3)), 0);
+        utcOffset = TimeSpan(stoi(timeZoneOffset.substr(0, 3)), stoi(timeZoneOffset.substr(3)), 0);
 
     return updatedTimestamp;
 }
@@ -163,7 +163,7 @@ void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& millisecond
 
 datetime_t GSF::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
 {
-    return from_time_t(unixSOC) + boost::posix_time::milliseconds(milliseconds);
+    return from_time_t(unixSOC) + Milliseconds(milliseconds);
 }
 
 datetime_t GSF::FromTicks(const int64_t ticks)
@@ -171,13 +171,13 @@ datetime_t GSF::FromTicks(const int64_t ticks)
     static float64_t tickInterval = float64_t(Ticks::PerSecond);
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
     const int64_t pticks = int64_t(ticks % Ticks::PerSecond / tickInterval * DateTimeTicksPerSecond);
-    return time + time_duration(0, 0, 0, pticks % DateTimeTicksPerSecond);
+    return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
 int64_t GSF::ToTicks(const datetime_t& time)
 {
-    static float64_t tickInterval = pow(10.0, time_duration::num_fractional_digits());
-    const time_duration offset = time - DateTimeEpoch;
+    static float64_t tickInterval = pow(10.0, TimeSpan::num_fractional_digits());
+    const TimeSpan offset = time - DateTimeEpoch;
     return Ticks::PTimeBaseOffset + offset.total_seconds() * Ticks::PerSecond +
         int64_t(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
 }
@@ -467,7 +467,7 @@ bool GSF::TryParseTimestamp(const char* time, datetime_t& timestamp, const datet
 
     static const int32_t formatsCount = sizeof(formats) / sizeof(formats[0]);
 
-    time_duration utcOffset{};
+    TimeSpan utcOffset{};
     const string cleanTimestamp = PreparseTimestamp(time, utcOffset);
 
     for (int32_t i = 0; i < formatsCount; i++)
