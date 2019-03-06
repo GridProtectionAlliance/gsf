@@ -649,9 +649,6 @@
     <ClCompile Include="Transport\Constants.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="Transport\TemporalSubscriberConnection.cpp">
-      <Filter>Transport</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Transport\Constants.h">
@@ -691,9 +688,6 @@
       <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="Transport\SubscriberConnection.h">
-      <Filter>Transport</Filter>
-    </ClInclude>
-    <ClInclude Include="Transport\TemporalSubscriberConnection.h">
       <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>

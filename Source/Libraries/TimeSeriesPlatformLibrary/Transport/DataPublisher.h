@@ -49,7 +49,6 @@ namespace Transport
         typedef std::function<void(DataPublisher*, const std::vector<uint8_t>&)> DispatcherFunction;
         typedef std::function<void(DataPublisher*, const std::string&)> MessageCallback;
         typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&)> SubscriberConnectionCallback;
-        typedef std::function<void(DataPublisher*, const TemporalSubscriberConnectionPtr&)> TemporalSubscriberConnectionCallback;
 
     private:
         // Structure used to dispatch
@@ -105,9 +104,8 @@ namespace Transport
         SubscriberConnectionCallback m_clientConnectedCallback;
         SubscriberConnectionCallback m_clientDisconnectedCallback;
         SubscriberConnectionCallback m_processingIntervalChangeRequestedCallback;
-        TemporalSubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
-        TemporalSubscriberConnectionCallback m_temporalProcessingIntervalChangeRequestedCallback;
-        TemporalSubscriberConnectionCallback m_temporalSubscriptionCanceledCallback;
+        SubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
+        SubscriberConnectionCallback m_temporalSubscriptionCanceledCallback;
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
@@ -117,9 +115,8 @@ namespace Transport
         void DispatchClientConnected(SubscriberConnection* connection);
         void DispatchClientDisconnected(SubscriberConnection* connection);
         void DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection);
-        void DispatchTemporalSubscriptionRequested(TemporalSubscriberConnection* connection);
-        void DispatchTemporalProcessingIntervalChangeRequested(TemporalSubscriberConnection* connection);
-        void DispatchTemporalSubscriptionCanceled(TemporalSubscriberConnection* connection);
+        void DispatchTemporalSubscriptionRequested(SubscriberConnection* connection);
+        void DispatchTemporalSubscriptionCanceled(SubscriberConnection* connection);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
@@ -127,7 +124,6 @@ namespace Transport
         static void ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static void TemporalProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
     public:
@@ -203,17 +199,15 @@ namespace Transport
         //   void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
-        //   void HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
-        //   void HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection);
+        //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
         void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
         void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
         void RegisterClientConnectedCallback(const SubscriberConnectionCallback& clientConnectedCallback);
         void RegisterClientDisconnectedCallback(const SubscriberConnectionCallback& clientDisconnectedCallback);
         void RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback);
-        void RegisterTemporalSubscriptionRequestedCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
-        void RegisterTemporalProcessingIntervalChangeRequestedCallback(const TemporalSubscriberConnectionCallback& temporalProcessingIntervalChangeRequestedCallback);
-        void RegisterTemporalSubscriptionCanceledCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
+        void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
+        void RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
 
         friend class SubscriberConnection;
     };

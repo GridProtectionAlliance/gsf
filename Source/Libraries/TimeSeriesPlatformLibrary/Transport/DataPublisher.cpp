@@ -175,19 +175,14 @@ void DataPublisher::DispatchProcessingIntervalChangeRequested(SubscriberConnecti
     Dispatch(&ProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchTemporalSubscriptionRequested(TemporalSubscriberConnection* connection)
+void DataPublisher::DispatchTemporalSubscriptionRequested(SubscriberConnection* connection)
 {
-    Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(TemporalSubscriberConnection**));
+    Dispatch(&TemporalSubscriptionRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchTemporalProcessingIntervalChangeRequested(TemporalSubscriberConnection* connection)
+void DataPublisher::DispatchTemporalSubscriptionCanceled(SubscriberConnection* connection)
 {
-    Dispatch(&TemporalProcessingIntervalChangeRequestedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(TemporalSubscriberConnection**));
-}
-
-void DataPublisher::DispatchTemporalSubscriptionCanceled(TemporalSubscriberConnection* connection)
-{
-    Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(TemporalSubscriberConnection**));
+    Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
@@ -257,40 +252,31 @@ void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* s
 
 void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
-    TemporalSubscriberConnection* connection = *reinterpret_cast<TemporalSubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
 
     if (source != nullptr)
     {
-        const TemporalSubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
+        const SubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
 
         if (temporalSubscriptionRequestedCallback != nullptr)
             temporalSubscriptionRequestedCallback(source, connection->GetReference());
     }
 }
 
-void DataPublisher::TemporalProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
-{
-    TemporalSubscriberConnection* connection = *reinterpret_cast<TemporalSubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
-
-    if (source != nullptr)
-    {
-        const TemporalSubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_temporalProcessingIntervalChangeRequestedCallback;
-
-        if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
-            temporalProcessingIntervalChangeRequestedCallback(source, connection->GetReference());
-    }
-}
-
 void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
-    TemporalSubscriberConnection* connection = *reinterpret_cast<TemporalSubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
 
     if (source != nullptr)
     {
-        const TemporalSubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
+        const SubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
 
         if (temporalSubscriptionCanceledCallback != nullptr)
-            temporalSubscriptionCanceledCallback(source, connection->GetReference());
+        {
+            SubscriberConnectionPtr reference = connection->GetReference();
+            temporalSubscriptionCanceledCallback(source, reference);
+            reference.reset();
+        }
     }
 }
 
@@ -912,17 +898,12 @@ void DataPublisher::RegisterProcessingIntervalChangeRequestedCallback(const Subs
     m_processingIntervalChangeRequestedCallback = processingIntervalChangeRequestedCallback;
 }
 
-void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionRequestedCallback)
+void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback)
 {
     m_temporalSubscriptionRequestedCallback = temporalSubscriptionRequestedCallback;
 }
 
-void DataPublisher::RegisterTemporalProcessingIntervalChangeRequestedCallback(const TemporalSubscriberConnectionCallback& temporalProcessingIntervalChangeRequestedCallback)
-{
-    m_temporalProcessingIntervalChangeRequestedCallback = temporalProcessingIntervalChangeRequestedCallback;
-}
-
-void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const TemporalSubscriberConnectionCallback& temporalSubscriptionCanceledCallback)
+void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback)
 {
     m_temporalSubscriptionCanceledCallback = temporalSubscriptionCanceledCallback;
 }

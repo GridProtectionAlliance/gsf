@@ -32,9 +32,11 @@ using namespace GSF::TimeSeries;
 GSF::Data::DataSetPtr TemporalSubscriber::s_historyDataSet = nullptr;
 GSF::Data::DataTablePtr TemporalSubscriber::s_history = nullptr;
 
-TemporalSubscriber::TemporalSubscriber(TemporalSubscriberConnectionPtr connection) :
+TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
     m_connection(std::move(connection)),
-    m_currentTimestamp(m_connection->GetStartTicks()),
+    m_startTimestamp(ToTicks(m_connection->GetStartTimeConstraint())),
+    m_stopTimestamp(ToTicks(m_connection->GetStopTimeConstraint())),
+    m_currentTimestamp(m_startTimestamp),
     m_currentRow(0),
     m_stopped(false)
 {
@@ -57,20 +59,22 @@ TemporalSubscriber::TemporalSubscriber(TemporalSubscriberConnectionPtr connectio
 TemporalSubscriber::~TemporalSubscriber()
 {
     CompleteTemporalSubscription();
+    m_processTimer.reset();
 }
 
 void TemporalSubscriber::SetProcessingInterval(int32_t processingInterval) const
 {
     if (processingInterval == -1)
         processingInterval = 33;
-    else if (processingInterval == 0)
-        processingInterval = 1;
 
     m_processTimer->SetInterval(processingInterval);
 }
 
 void TemporalSubscriber::SendTemporalData()
 {
+    if (m_stopped)
+        return;
+
     static DataTable& history = *s_history;
     static const int32_t signalIDColumn = history["SignalID"]->Index();
     static const int32_t timestampColumn = history["Timestamp"]->Index();
@@ -103,7 +107,7 @@ void TemporalSubscriber::SendTemporalData()
     // Setup next publication timestamp
     m_currentTimestamp += HistoryInterval;
 
-    if (m_currentTimestamp > m_connection->GetStopTicks())
+    if (m_currentTimestamp > m_stopTimestamp)
         CompleteTemporalSubscription();
 }
 
@@ -112,7 +116,7 @@ void TemporalSubscriber::CompleteTemporalSubscription()
     if (m_stopped)
         return;
 
-    m_stopped = true;
     m_processTimer->Stop();
     m_connection->CompleteTemporalSubscription();
+    m_stopped = true;
 }

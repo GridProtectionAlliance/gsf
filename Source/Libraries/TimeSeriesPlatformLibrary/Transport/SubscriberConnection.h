@@ -27,7 +27,6 @@
 #include "../Common/CommonTypes.h"
 #include "../Common/Timer.h"
 #include "../Data/DataSet.h"
-#include "TemporalSubscriberConnection.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
 #include <deque>
@@ -47,7 +46,6 @@ namespace Transport
     {
     private:
         const DataPublisherPtr m_parent;
-        TemporalSubscriberConnectionPtr m_temporalConnection;
         GSF::IOContext& m_commandChannelService;
         GSF::Strand m_writeStrand;
         GSF::Timer m_pingTimer;
@@ -60,6 +58,7 @@ namespace Transport
         GSF::datetime_t m_startTimeConstraint;
         GSF::datetime_t m_stopTimeConstraint;
         int32_t m_processingInterval;
+        bool m_temporalSubscriptionComplete;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
         bool m_includeTime;

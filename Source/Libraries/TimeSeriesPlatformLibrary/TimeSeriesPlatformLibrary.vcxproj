@@ -377,9 +377,7 @@
     <ClInclude Include="Transport\SubscriberInstance.h" />
     <ClCompile Include="Transport\SubscriberConnection.cpp" />
     <ClCompile Include="Transport\SubscriberInstance.cpp" />
-    <ClInclude Include="Transport\TemporalSubscriberConnection.h" />
     <ClInclude Include="Transport\TSSCMeasurementParser.h" />
-    <ClCompile Include="Transport\TemporalSubscriberConnection.cpp" />
     <ClCompile Include="Transport\TSSCMeasurementParser.cpp" />
     <ClInclude Include="Transport\TransportTypes.h" />
     <ClCompile Include="Transport\TransportTypes.cpp" />

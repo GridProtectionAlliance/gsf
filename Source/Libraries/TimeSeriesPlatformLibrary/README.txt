@@ -82,6 +82,25 @@ Boost C++ Libraries v1.66.0 (http://www.boost.org/)
 Boost will need to be compiled:
 https://www.boost.org/doc/libs/1_66_0/more/getting_started/unix-variants.html
 
+For Ubuntu, here are some common steps (don't type $; that represents the shell's prompt):
+
+$ sudo apt update
+$ sudo apt install build-essential
+$ sudo apt install cmake
+
+$ sudo apt install zlib1g-dev
+$ sudo apt install libbz2-dev
+$ sudo mkdir /usr/local/boost_1_66_0
+$ cd /usr/local/boost_1_66_0
+$ wget https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
+$ sudo tar --bzip2 -xf boost_1_66_0.tar.bz2
+
+Start a new terminal session before building Boost:
+
+$ cd /usr/local/boost_1_66_0
+$ sudo ./bootstrap.sh
+$ sudo ./b2 install
+
 2. Configuration
 ----------------
 From the command terminal, enter the source directory containing this

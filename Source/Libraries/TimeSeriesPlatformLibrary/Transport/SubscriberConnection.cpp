@@ -44,7 +44,6 @@ static const uint32_t MaxPacketSize = 32768U;
 
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
     m_parent(std::move(parent)),
-    m_temporalConnection(nullptr),
     m_commandChannelService(commandChannelService),
     m_writeStrand(commandChannelService),
     m_subscriberID(NewGuid()),
@@ -54,6 +53,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_startTimeConstraint(DateTime::MaxValue),
     m_stopTimeConstraint(DateTime::MaxValue),
     m_processingInterval(-1),
+    m_temporalSubscriptionComplete(false),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
     m_includeTime(true),
@@ -175,12 +175,7 @@ int32_t SubscriberConnection::GetProcessingInterval() const
 void SubscriberConnection::SetProcessingInterval(int32_t value)
 {
     m_processingInterval = value;
-
-    if (GetIsTemporalSubscription())
-        m_parent->DispatchTemporalProcessingIntervalChangeRequested(m_temporalConnection.get());
-    else
-        m_parent->DispatchProcessingIntervalChangeRequested(this);
-        
+    m_parent->DispatchProcessingIntervalChangeRequested(this);        
     m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + "ms.");
 }
 
@@ -403,7 +398,7 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
 
 void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
-    if (measurements.empty() || !m_isSubscribed || m_signalIndexCache == nullptr)
+    if (measurements.empty() || !m_isSubscribed)
         return;
 
     if (!m_startTimeSent)
@@ -447,11 +442,18 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
 
 void SubscriberConnection::CompleteTemporalSubscription()
 {
-    SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
+    if (!m_temporalSubscriptionComplete)
+    {
+        m_temporalSubscriptionComplete = true;
+        SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
+    }
 }
 
 void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 {
+    if (m_isSubscribed)
+        HandleUnsubscribe();
+
     try
     {
         if (length >= 6)
@@ -466,11 +468,8 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
-                if (GetIsTemporalSubscription() && m_temporalConnection != nullptr)
-                {
-                    m_parent->DispatchTemporalSubscriptionCanceled(m_temporalConnection.get());
-                    m_temporalConnection.reset();
-                }
+                if (GetIsTemporalSubscription())
+                    m_parent->DispatchTemporalSubscriptionCanceled(this);
 
                 // Next 4 bytes are an integer representing the length of the connection string that follows
                 const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
@@ -533,6 +532,8 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                         if (m_startTimeConstraint > m_stopTimeConstraint)
                             throw PublisherException("Specified stop time of requested temporal subscription precedes start time");
+
+                        m_temporalSubscriptionComplete = false;
                     }
 
                     SetUsePayloadCompression(usePayloadCompression);
@@ -618,10 +619,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     m_parent->DispatchStatusMessage(message);
 
                     if (GetIsTemporalSubscription())
-                    {
-                        m_temporalConnection = NewSharedPtr<TemporalSubscriberConnection>(shared_from_this());
-                        m_parent->DispatchTemporalSubscriptionRequested(m_temporalConnection.get());
-                    }
+                        m_parent->DispatchTemporalSubscriptionRequested(this);
                 }
                 else
                 {

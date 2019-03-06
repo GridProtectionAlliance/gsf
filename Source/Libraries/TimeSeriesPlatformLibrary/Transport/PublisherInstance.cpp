@@ -75,19 +75,13 @@ void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* s
     instance->ProcessingIntervalChangeRequested(connection);
 }
 
-void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
+void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
     instance->TemporalSubscriptionRequested(connection);
 }
 
-void PublisherInstance::HandleTemporalProcessingIntervalChangeRequested(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
-{
-    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
-    instance->TemporalProcessingIntervalChangeRequested(connection);
-}
-
-void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source, const TemporalSubscriberConnectionPtr& connection)
+void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
     instance->TemporalSubscriptionCanceled(connection);
@@ -118,17 +112,12 @@ void PublisherInstance::ProcessingIntervalChangeRequested(const SubscriberConnec
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
 }
 
-void PublisherInstance::TemporalSubscriptionRequested(const TemporalSubscriberConnectionPtr& connection)
+void PublisherInstance::TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
 
-void PublisherInstance::TemporalProcessingIntervalChangeRequested(const TemporalSubscriberConnectionPtr& connection)
-{
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
-}
-
-void PublisherInstance::TemporalSubscriptionCanceled(const TemporalSubscriberConnectionPtr& connection)
+void PublisherInstance::TemporalSubscriptionCanceled(const SubscriberConnectionPtr& connection)
 {
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has canceled the temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
@@ -142,7 +131,6 @@ void PublisherInstance::Initialize()
     m_publisher->RegisterClientDisconnectedCallback(&HandleClientDisconnected);
     m_publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
     m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
-    m_publisher->RegisterTemporalProcessingIntervalChangeRequestedCallback(&HandleTemporalProcessingIntervalChangeRequested);
     m_publisher->RegisterTemporalSubscriptionCanceledCallback(&HandleTemporalSubscriptionCanceled);
 
     m_initialized = true;
