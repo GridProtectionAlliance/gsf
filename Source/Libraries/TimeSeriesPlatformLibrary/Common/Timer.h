@@ -140,6 +140,10 @@ namespace GSF
         void Stop()
         {
             m_running = false;
+
+            if (m_timerThread != nullptr)
+                m_timerThread->interrupt();
+
             m_timerThread.reset();
         }
     };
