@@ -41,7 +41,7 @@ namespace GSF
         TimerElapsedCallback m_callback;
         void* m_userData;
         bool m_autoReset;
-        bool m_running;
+        volatile bool m_running;
 
         void TimerThread()
         {
@@ -50,7 +50,9 @@ namespace GSF
             do
             {
                 boost::this_thread::sleep(boost::posix_time::milliseconds(m_interval));
-                m_callback(this, m_userData);
+
+                if (m_running)
+                    m_callback(this, m_userData);
             }
             while (m_autoReset && m_running);
 

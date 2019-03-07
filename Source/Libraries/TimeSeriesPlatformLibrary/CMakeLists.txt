@@ -395,8 +395,8 @@ option (BUILD_SHARED_LIBS "Build gsf using shared libraries" OFF)
 
 # Copy header files
 foreach (headerFile ${GSF_HEADER_FILES})
-	string (REGEX MATCH "(.*)[/\\]" DIR ${headerFile})
-	file (COPY ${headerFile} DESTINATION ${HEADER_OUTPUT_DIRECTORY}/${DIR})
+    string (REGEX MATCH "(.*)[/\\]" DIR ${headerFile})
+    file (COPY ${headerFile} DESTINATION ${HEADER_OUTPUT_DIRECTORY}/${DIR})
 endforeach (headerFile)
 
 # Define include directories
