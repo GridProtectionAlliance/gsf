@@ -376,7 +376,12 @@ void SubscriberConnection::Start()
 void SubscriberConnection::Stop(const bool shutdownSocket)
 {
     if (m_isSubscribed)
-        HandleUnsubscribe();
+    {
+		HandleUnsubscribe();
+
+		if (GetIsTemporalSubscription() && !m_temporalSubscriptionComplete)
+			m_parent->DispatchTemporalSubscriptionCanceled(this);
+	}
 
     try
     {
@@ -446,14 +451,12 @@ void SubscriberConnection::CompleteTemporalSubscription()
     {
         m_temporalSubscriptionComplete = true;
         SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
+		m_parent->DispatchTemporalSubscriptionCompleted(this);
     }
 }
 
 void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 {
-    if (m_isSubscribed)
-        HandleUnsubscribe();
-
     try
     {
         if (length >= 6)
@@ -468,7 +471,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
-                if (GetIsTemporalSubscription())
+                if (m_isSubscribed && GetIsTemporalSubscription() && !m_temporalSubscriptionComplete)
                     m_parent->DispatchTemporalSubscriptionCanceled(this);
 
                 // Next 4 bytes are an integer representing the length of the connection string that follows

@@ -32,8 +32,9 @@ using namespace GSF::TimeSeries;
 GSF::Data::DataSetPtr TemporalSubscriber::s_historyDataSet = nullptr;
 GSF::Data::DataTablePtr TemporalSubscriber::s_history = nullptr;
 
-TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
+TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection, RemoveSubscriberFunction removeSubscriber) :
     m_connection(std::move(connection)),
+	m_removeSubscriber(std::move(removeSubscriber)),
     m_startTimestamp(ToTicks(m_connection->GetStartTimeConstraint())),
     m_stopTimestamp(ToTicks(m_connection->GetStopTimeConstraint())),
     m_currentTimestamp(m_startTimestamp),
@@ -118,5 +119,5 @@ void TemporalSubscriber::CompleteTemporalSubscription()
 
     m_processTimer->Stop();
     m_connection->CompleteTemporalSubscription();
-    m_stopped = true;
+	m_stopped = true;
 }

@@ -185,6 +185,11 @@ void DataPublisher::DispatchTemporalSubscriptionCanceled(SubscriberConnection* c
     Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
+void DataPublisher::DispatchTemporalSubscriptionCompleted(SubscriberConnection* connection)
+{
+	Dispatch(&TemporalSubscriptionCompletedDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
+}
+
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
 void DataPublisher::StatusMessageDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
 {
@@ -272,12 +277,21 @@ void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source
         const SubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
 
         if (temporalSubscriptionCanceledCallback != nullptr)
-        {
-            SubscriberConnectionPtr reference = connection->GetReference();
-            temporalSubscriptionCanceledCallback(source, reference);
-            reference.reset();
-        }
+            temporalSubscriptionCanceledCallback(source, connection->GetReference());
     }
+}
+
+void DataPublisher::TemporalSubscriptionCompletedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+{
+	SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+	if (source != nullptr)
+	{
+		const SubscriberConnectionCallback temporalSubscriptionCompletedCallback = source->m_temporalSubscriptionCompletedCallback;
+
+		if (temporalSubscriptionCompletedCallback != nullptr)
+			temporalSubscriptionCompletedCallback(source, connection->GetReference());
+	}
 }
 
 int32_t DataPublisher::GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName)
@@ -906,4 +920,9 @@ void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const Subscrib
 void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback)
 {
     m_temporalSubscriptionCanceledCallback = temporalSubscriptionCanceledCallback;
+}
+
+void DataPublisher::RegisterTemporalSubscriptionCompletedCallback(const SubscriberConnectionCallback& temporalSubscriptionCompletedCallback)
+{
+	m_temporalSubscriptionCompletedCallback = temporalSubscriptionCompletedCallback;
 }
