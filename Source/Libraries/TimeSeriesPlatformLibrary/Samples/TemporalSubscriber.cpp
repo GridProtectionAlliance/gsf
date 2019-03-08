@@ -22,8 +22,7 @@
 //******************************************************************************************************
 
 #include "TemporalSubscriber.h"
- #include <utility>
-
+ 
 using namespace std;
 using namespace GSF;
 using namespace GSF::Data;
@@ -32,9 +31,8 @@ using namespace GSF::TimeSeries;
 GSF::Data::DataSetPtr TemporalSubscriber::s_historyDataSet = nullptr;
 GSF::Data::DataTablePtr TemporalSubscriber::s_history = nullptr;
 
-TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection, RemoveSubscriberFunction removeSubscriber) :
+TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
     m_connection(std::move(connection)),
-	m_removeSubscriber(std::move(removeSubscriber)),
     m_startTimestamp(ToTicks(m_connection->GetStartTimeConstraint())),
     m_stopTimestamp(ToTicks(m_connection->GetStopTimeConstraint())),
     m_currentTimestamp(m_startTimestamp),
@@ -117,7 +115,12 @@ void TemporalSubscriber::CompleteTemporalSubscription()
     if (m_stopped)
         return;
 
-    m_processTimer->Stop();
-    m_connection->CompleteTemporalSubscription();
 	m_stopped = true;
+	m_processTimer->Stop();
+    m_connection->CancelTemporalSubscription();
+}
+
+bool TemporalSubscriber::GetIsStopped() const
+{
+	return m_stopped;
 }

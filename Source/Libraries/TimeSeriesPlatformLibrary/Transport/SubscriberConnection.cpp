@@ -53,7 +53,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_startTimeConstraint(DateTime::MaxValue),
     m_stopTimeConstraint(DateTime::MaxValue),
     m_processingInterval(-1),
-    m_temporalSubscriptionComplete(false),
+	m_temporalSubscriptionCanceled(false),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
     m_includeTime(true),
@@ -376,12 +376,7 @@ void SubscriberConnection::Start()
 void SubscriberConnection::Stop(const bool shutdownSocket)
 {
     if (m_isSubscribed)
-    {
 		HandleUnsubscribe();
-
-		if (GetIsTemporalSubscription() && !m_temporalSubscriptionComplete)
-			m_parent->DispatchTemporalSubscriptionCanceled(this);
-	}
 
     try
     {
@@ -445,14 +440,14 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
         PublishDataPacket(packet, count);
 }
 
-void SubscriberConnection::CompleteTemporalSubscription()
+void SubscriberConnection::CancelTemporalSubscription()
 {
-    if (!m_temporalSubscriptionComplete)
-    {
-        m_temporalSubscriptionComplete = true;
-        SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
-		m_parent->DispatchTemporalSubscriptionCompleted(this);
-    }
+	if (GetIsTemporalSubscription() && !m_temporalSubscriptionCanceled)
+	{
+		m_temporalSubscriptionCanceled = true;
+		SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
+		m_parent->DispatchTemporalSubscriptionCanceled(this);
+	}
 }
 
 void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
@@ -471,8 +466,9 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
-                if (m_isSubscribed && GetIsTemporalSubscription() && !m_temporalSubscriptionComplete)
-                    m_parent->DispatchTemporalSubscriptionCanceled(this);
+				// Cancel any existing temporal subscription
+                if (m_isSubscribed)
+					CancelTemporalSubscription();
 
                 // Next 4 bytes are an integer representing the length of the connection string that follows
                 const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
@@ -536,7 +532,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         if (m_startTimeConstraint > m_stopTimeConstraint)
                             throw PublisherException("Specified stop time of requested temporal subscription precedes start time");
 
-                        m_temporalSubscriptionComplete = false;
+						m_temporalSubscriptionCanceled = false;
                     }
 
                     SetUsePayloadCompression(usePayloadCompression);
@@ -653,7 +649,7 @@ void SubscriberConnection::HandleSubscribeFailure(const std::string& message)
     m_parent->DispatchErrorMessage(message);
 
     if (GetIsTemporalSubscription())
-        CompleteTemporalSubscription();
+		CancelTemporalSubscription();
 }
 
 void SubscriberConnection::HandleUnsubscribe()
@@ -661,7 +657,7 @@ void SubscriberConnection::HandleUnsubscribe()
     SetIsSubscribed(false);
 
     if (GetIsTemporalSubscription())
-        CompleteTemporalSubscription();
+		CancelTemporalSubscription();
 }
 
 void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)

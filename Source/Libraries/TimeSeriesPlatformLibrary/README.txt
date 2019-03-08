@@ -102,6 +102,11 @@ $ cd /usr/local/boost_1_66_0
 $ sudo ./bootstrap.sh
 $ sudo ./b2 install
 
+It may be necessary to add /usr/local/lib, the default path for boost libraries,
+to the system library path before running any samples:
+
+$ sudo ldconfig /usr/local/lib
+
 2. Configuration
 ----------------
 From the command terminal, enter the source directory containing this

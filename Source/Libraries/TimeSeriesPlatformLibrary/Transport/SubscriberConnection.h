@@ -58,7 +58,7 @@ namespace Transport
         GSF::datetime_t m_startTimeConstraint;
         GSF::datetime_t m_stopTimeConstraint;
         int32_t m_processingInterval;
-        bool m_temporalSubscriptionComplete;
+		bool m_temporalSubscriptionCanceled;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
         bool m_includeTime;
@@ -218,7 +218,7 @@ namespace Transport
         void Stop(bool shutdownSocket = true);
 
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
-        void CompleteTemporalSubscription();
+		void CancelTemporalSubscription();
 
         bool SendResponse(uint8_t responseCode, uint8_t commandCode);
         bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::string& message);
