@@ -42,8 +42,7 @@ private:
 
     void SendTemporalData();
 
-    static GSF::Data::DataSetPtr s_historyDataSet;
-    static GSF::Data::DataTablePtr s_history;
+    static GSF::Data::DataSetPtr s_history;
 
 public:
     TemporalSubscriber(SubscriberConnectionPtr connection);

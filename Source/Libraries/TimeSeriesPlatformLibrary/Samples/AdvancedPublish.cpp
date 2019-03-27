@@ -357,7 +357,7 @@ void HandleTemporalSubscriptionRequested(DataPublisher* source, const Subscriber
 	
 	if (CreateNewTemporalSubscription(connection))
 	{
-		size_t count = TemporalSubscriptions.size();
+		const size_t count = TemporalSubscriptions.size();
 		cout << "Created new temporal subscription - " <<  count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
 	}
 }
@@ -368,7 +368,7 @@ void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberC
 
 	if (RemoveTemporalSubscription(connection, completed))
 	{
-		size_t count = TemporalSubscriptions.size();
+		const size_t count = TemporalSubscriptions.size();
 		cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << (completed ? " completed" : " canceled") << " temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
 		cout << "Temporal subscription removed - " << count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
 	}

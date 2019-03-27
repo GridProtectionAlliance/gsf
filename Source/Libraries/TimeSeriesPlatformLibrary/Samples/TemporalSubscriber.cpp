@@ -28,8 +28,7 @@ using namespace GSF;
 using namespace GSF::Data;
 using namespace GSF::TimeSeries;
 
-GSF::Data::DataSetPtr TemporalSubscriber::s_historyDataSet = nullptr;
-GSF::Data::DataTablePtr TemporalSubscriber::s_history = nullptr;
+GSF::Data::DataSetPtr TemporalSubscriber::s_history = nullptr;
 
 TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
     m_connection(std::move(connection)),
@@ -39,13 +38,10 @@ TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
     m_currentRow(0),
     m_stopped(false)
 {
-    if (s_historyDataSet == nullptr)
-    {
-        s_historyDataSet = DataSet::FromXml("History.xml");
-        s_history = DataSet::FromXml("History.xml")->Table("History");
-    }
+    if (s_history == nullptr)
+        s_history = DataSet::FromXml("History.xml");
 
-    m_lastRow = s_history->RowCount() - 1;
+    m_lastRow = s_history->Table("History")->RowCount() - 1;
 
     if (m_lastRow < 0)
         throw runtime_error("No history available - run with \"GenHistory\" argument.");
@@ -73,8 +69,8 @@ void TemporalSubscriber::SendTemporalData()
 {
     if (m_stopped)
         return;
-
-    static DataTable& history = *s_history;
+	
+	static DataTable& history = *s_history->Table("History");
     static const int32_t signalIDColumn = history["SignalID"]->Index();
     static const int32_t timestampColumn = history["Timestamp"]->Index();
     static const int32_t valueColumn = history["Value"]->Index();
