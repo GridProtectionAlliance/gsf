@@ -106,6 +106,9 @@ namespace Transport
         bool IsNaNValueFilterForced() const;
         void SetNaNValueFilterForced(bool forced) const;
 
+		bool GetSupportsTemporalSubscriptions() const;
+		void SetSupportsTemporalSubscriptions(bool value) const;
+
         uint32_t GetCipherKeyRotationPeriod() const;
         void SetCipherKeyRotationPeriod(uint32_t period) const;
 

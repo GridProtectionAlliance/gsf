@@ -145,6 +145,7 @@ Individual sample applications can be built as follows:
     make AdvancedSubscribe
     make AverageFrequencyCalculator
     make InstanceSubscribe
+    make InstancePublish
     make FilterExpressionTests
     make SimplePublish
     make AdvancedPublish

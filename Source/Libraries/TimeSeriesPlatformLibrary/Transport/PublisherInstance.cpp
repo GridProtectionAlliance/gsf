@@ -227,6 +227,16 @@ void PublisherInstance::SetNaNValueFilterForced(bool forced) const
     m_publisher->SetIsNaNValueFilterForced(forced);
 }
 
+bool PublisherInstance::GetSupportsTemporalSubscriptions() const
+{
+	return m_publisher->GetSupportsTemporalSubscriptions();
+}
+
+void PublisherInstance::SetSupportsTemporalSubscriptions(bool value) const
+{
+	m_publisher->SetSupportsTemporalSubscriptions(value);
+}
+
 uint32_t PublisherInstance::GetCipherKeyRotationPeriod() const
 {
     return m_publisher->GetCipherKeyRotationPeriod();

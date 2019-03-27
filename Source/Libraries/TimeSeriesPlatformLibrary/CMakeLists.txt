@@ -455,6 +455,10 @@ target_link_libraries (AverageFrequencyCalculator gsf)
 add_executable (InstanceSubscribe EXCLUDE_FROM_ALL Samples/InstanceSubscribe.cpp Samples/SubscriberHandler.cpp)
 target_link_libraries (InstanceSubscribe gsf)
 
+# InstancePublish sample
+add_executable (InstancePublish EXCLUDE_FROM_ALL Samples/InstancePublish.cpp Samples/PublisherHandler.cpp)
+target_link_libraries (InstancePublish gsf)
+
 # FilterExpressionTests sample
 add_executable (FilterExpressionTests EXCLUDE_FROM_ALL Samples/FilterExpressionTests.cpp)
 target_link_libraries (FilterExpressionTests gsf boost_filesystem)

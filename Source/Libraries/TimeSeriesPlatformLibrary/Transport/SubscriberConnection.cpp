@@ -437,7 +437,7 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
     }
 
     if (count > 0)
-        PublishDataPacket(packet, count);
+	    PublishDataPacket(packet, count);
 }
 
 void SubscriberConnection::CancelTemporalSubscription()
@@ -883,6 +883,9 @@ void SubscriberConnection::PublishDataPacket(const vector<uint8_t>& packet, cons
 
     // Track last publication time
     m_lastPublishTime = UtcNow();
+
+	// Track total number of published measurements
+	m_totalMeasurementsSent += count;
 }
 
 bool SubscriberConnection::SendDataStartTime(uint64_t timestamp)
