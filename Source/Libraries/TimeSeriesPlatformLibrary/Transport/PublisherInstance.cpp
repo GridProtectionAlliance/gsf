@@ -197,6 +197,16 @@ void PublisherInstance::SetSecurityMode(SecurityMode securityMode) const
     m_publisher->SetSecurityMode(securityMode);
 }
 
+int32_t PublisherInstance::GetMaximumAllowedConnections() const
+{
+	return m_publisher->GetMaximumAllowedConnections();
+}
+
+void PublisherInstance::SetMaximumAllowedConnections(int32_t value) const
+{
+	m_publisher->SetMaximumAllowedConnections(value);
+}
+
 bool PublisherInstance::IsMetadataRefreshAllowed() const
 {
     return m_publisher->GetIsMetadataRefreshAllowed();

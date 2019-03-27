@@ -68,6 +68,7 @@ namespace Transport
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
         GSF::Mutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
+		int32_t m_maximumAllowedConnections;
         bool m_isMetadataRefreshAllowed;
         bool m_isNaNValueFilterAllowed;
         bool m_isNaNValueFilterForced;
@@ -165,6 +166,11 @@ namespace Transport
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode value);
 
+		// Gets or sets value that defines the maximum number of allowed connections, -1 = no limit
+		int32_t GetMaximumAllowedConnections() const;
+		void SetMaximumAllowedConnections(int32_t value);
+
+		// Gets or sets flag that determines if metadata refresh is allowed by subscribers
         bool GetIsMetadataRefreshAllowed() const;
         void SetIsMetadataRefreshAllowed(bool value);
 

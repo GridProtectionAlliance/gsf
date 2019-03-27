@@ -97,6 +97,9 @@ namespace Transport
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode securityMode) const;
 
+    	int32_t GetMaximumAllowedConnections() const;
+		void SetMaximumAllowedConnections(int32_t value) const;
+
         bool IsMetadataRefreshAllowed() const;
         void SetMetadataRefreshAllowed(bool allowed) const;
 

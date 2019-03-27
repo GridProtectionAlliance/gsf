@@ -55,7 +55,12 @@ int main(int argc, char* argv[])
     {
         // Maintain the life-time of PublisherHandler instances within main
         PublisherHandler* publisher = new PublisherHandler("Publisher " + ToString(i + 1), port + i, false);
-		publisher->Start();
+
+		// Set second publisher to only allow one connection
+		if (i == 1)
+			publisher->SetMaximumAllowedConnections(1);
+
+    	publisher->Start();
 		Publisher[i] = publisher;
     }
 

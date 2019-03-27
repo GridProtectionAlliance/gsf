@@ -79,8 +79,8 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     connector.Connect(*subscriber);
 
     // Notify the user that reconnect attempt was completed.
-    if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
-        connector.m_reconnectCallback(subscriber);
+	if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
+		connector.m_reconnectCallback(subscriber);
 }
 
 // Registers a callback to provide error messages each time
@@ -1101,7 +1101,8 @@ void DataSubscriber::Disconnect(bool autoReconnect)
     else
     {
         m_connector.Cancel();
-    }
+		m_commandChannelService.stop();
+	}
 
     // Disconnect completed
     m_disconnecting = false;

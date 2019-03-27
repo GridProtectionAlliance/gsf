@@ -375,6 +375,9 @@ void SubscriberConnection::Start()
 
 void SubscriberConnection::Stop(const bool shutdownSocket)
 {
+	if (m_stopped)
+		return;
+
     if (m_isSubscribed)
 		HandleUnsubscribe();
 

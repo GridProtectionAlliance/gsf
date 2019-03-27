@@ -177,7 +177,8 @@ void PublisherHandler::Start()
 	static float64_t randMax = float64_t(RAND_MAX);
 	static const uint64_t interval = 1000;
 
-	StatusMessage("\nListening on port: " + ToString(GetPort()) + "...\n\n");
+	const int32_t maxConnections = GetMaximumAllowedConnections();
+	StatusMessage("\nListening on port: " + ToString(GetPort()) + ", max connections = " + (maxConnections == -1 ? "unlimited" : ToString(maxConnections)) + "...\n");
 
 	// Setup meta-data
 	DefineMetadata();

@@ -39,6 +39,7 @@ using namespace GSF::TimeSeries::Transport;
 DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_nodeID(NewGuid()),
     m_securityMode(SecurityMode::None),
+	m_maximumAllowedConnections(-1),
     m_isMetadataRefreshAllowed(true),
     m_isNaNValueFilterAllowed(true),
     m_isNaNValueFilterForced(false),
@@ -91,21 +92,36 @@ void DataPublisher::RunCommandChannelAcceptThread()
 
 void DataPublisher::StartAccept()
 {
-    const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
-    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
+	const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
+	m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
 }
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
 {
-    if (!error)
+	if (!error)
     {
-        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
         m_subscriberConnectionsLock.lock();
-        m_subscriberConnections.insert(connection);
+		const bool accepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
+		m_subscriberConnections.insert(connection);
         m_subscriberConnectionsLock.unlock();
 
-        connection->Start();
-        DispatchClientConnected(connection.get());
+		if (accepted)
+		{
+			// TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+			connection->Start();
+			DispatchClientConnected(connection.get());
+		}
+		else
+		{
+			DispatchErrorMessage("Subscriber connection refused: connection would exceed " + ToString(m_maximumAllowedConnections) + " maximum allowed connections.");
+			
+			Thread([connection, this]
+			{
+				connection->SendResponse(ServerResponse::Failed, ServerCommand::DefineOperationalModes, "Connection refused.");
+				boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+				DispatchClientDisconnected(connection.get());
+			});			
+		}
     }
 
     StartAccept();
@@ -118,7 +134,7 @@ void DataPublisher::ConnectionTerminated(const SubscriberConnectionPtr& connecti
 
 void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 {
-    m_subscriberConnectionsLock.lock();
+	m_subscriberConnectionsLock.lock();
     m_subscriberConnections.erase(connection);
     m_subscriberConnectionsLock.unlock();
 }
@@ -765,6 +781,16 @@ SecurityMode DataPublisher::GetSecurityMode() const
 void DataPublisher::SetSecurityMode(SecurityMode value)
 {
     m_securityMode = value;
+}
+
+int32_t DataPublisher::GetMaximumAllowedConnections() const
+{
+	return m_maximumAllowedConnections;
+}
+
+void DataPublisher::SetMaximumAllowedConnections(int32_t value)
+{
+	m_maximumAllowedConnections = value;
 }
 
 bool DataPublisher::GetIsMetadataRefreshAllowed() const

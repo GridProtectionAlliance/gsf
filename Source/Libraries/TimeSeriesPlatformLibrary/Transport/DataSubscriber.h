@@ -163,7 +163,7 @@ namespace Transport
         bool m_compressPayloadData;
         bool m_compressMetadata;
         bool m_compressSignalIndexCache;
-        bool m_disconnecting;
+        volatile bool m_disconnecting;
         void* m_userData;
 
         // Statistics counters
