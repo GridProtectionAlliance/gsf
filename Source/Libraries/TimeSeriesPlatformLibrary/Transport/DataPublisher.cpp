@@ -686,7 +686,14 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
     }
 
     m_filteringMetadata.swap(filteringMetadata);
-}
+
+	// Notify all subscribers that the configuration metadata has changed
+	m_subscriberConnectionsLock.lock();
+
+	for (const auto& connection : m_subscriberConnections)
+		connection->SendResponse(ServerResponse::ConfigurationChanged, ServerCommand::Subscribe);
+
+	m_subscriberConnectionsLock.unlock(); }
 
 const DataSetPtr& DataPublisher::GetMetadata() const
 {
