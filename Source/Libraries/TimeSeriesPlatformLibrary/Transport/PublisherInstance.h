@@ -128,6 +128,10 @@ namespace Transport
         uint64_t GetTotalMeasurementsSent() const;
 
         bool IsInitialized() const;
+
+		// Safely get list of subscriber connections. Vector will be cleared then appended to,
+    	// returns true if any connections were added
+		bool TryGetSubscriberConnections(std::vector<SubscriberConnectionPtr>& subscriberConnections) const;
     };
 }}}
 

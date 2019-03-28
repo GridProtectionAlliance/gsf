@@ -296,3 +296,17 @@ bool PublisherInstance::IsInitialized() const
 {
     return m_initialized;
 }
+
+bool PublisherInstance::TryGetSubscriberConnections(vector<SubscriberConnectionPtr>& subscriberConnections) const
+{
+	subscriberConnections.clear();
+
+	m_publisher->IterateSubscriberConnections([](const SubscriberConnectionPtr& connection, void* userData)
+	{
+		auto connections = static_cast<vector<SubscriberConnectionPtr>*>(userData);
+		connections->push_back(connection);
+	},
+	&subscriberConnections);
+
+	return !subscriberConnections.empty();
+}

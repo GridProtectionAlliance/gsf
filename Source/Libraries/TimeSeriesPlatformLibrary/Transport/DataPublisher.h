@@ -136,6 +136,9 @@ namespace Transport
         // tied up by the publisher.
         ~DataPublisher();
 
+		// Iterator handler delegates
+		typedef std::function<void(const SubscriberConnectionPtr&, void* userData)> SubscriberConnectionIteratorHandlerFunction;
+
         // Defines metadata from existing metadata records
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
 
@@ -214,6 +217,10 @@ namespace Transport
         void RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback);
         void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
         void RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
+
+    	// SubscriberConnection iteration function - note that full lock will be maintained on source collection
+		// for the entire call, so keep work time minimized or clone collection before work
+		void IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData);
 
         friend class SubscriberConnection;
     };

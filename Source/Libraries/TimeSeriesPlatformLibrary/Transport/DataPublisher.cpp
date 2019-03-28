@@ -693,7 +693,8 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
 	for (const auto& connection : m_subscriberConnections)
 		connection->SendResponse(ServerResponse::ConfigurationChanged, ServerCommand::Subscribe);
 
-	m_subscriberConnectionsLock.unlock(); }
+	m_subscriberConnectionsLock.unlock();
+}
 
 const DataSetPtr& DataPublisher::GetMetadata() const
 {
@@ -937,4 +938,14 @@ void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const Subscrib
 void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback)
 {
     m_temporalSubscriptionCanceledCallback = temporalSubscriptionCanceledCallback;
+}
+
+void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
+{
+	m_subscriberConnectionsLock.lock();
+
+	for (const auto& connection : m_subscriberConnections)
+		iteratorHandler(connection, userData);
+
+	m_subscriberConnectionsLock.unlock();
 }
