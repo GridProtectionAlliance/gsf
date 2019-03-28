@@ -59,6 +59,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_includeTime(true),
     m_useMillisecondResolution(false), // Defaults to microsecond resolution
     m_isNaNFiltered(m_parent->GetIsNaNValueFilterAllowed() && m_parent->GetIsNaNValueFilterForced()),
+	m_connectionAccepted(false),
     m_isSubscribed(false),
     m_startTimeSent(false),
     m_stopped(true),
@@ -330,8 +331,10 @@ vector<uint8_t> SubscriberConnection::IVs(int32_t cipherIndex)
     return m_ivs[cipherIndex];
 }
 
-void SubscriberConnection::Start()
+void SubscriberConnection::Start(bool connectionAccepted)
 {
+	m_connectionAccepted = connectionAccepted;
+
     // Attempt to lookup remote connection identification for logging purposes
     auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
     m_ipAddress = remoteEndPoint.address();
@@ -368,7 +371,9 @@ void SubscriberConnection::Start()
     if (m_hostName.empty())
         m_hostName = m_ipAddress.to_string();
 
-    m_pingTimer.Start();
+	if (m_connectionAccepted)
+		m_pingTimer.Start();
+
     m_stopped = false;
     ReadCommandChannel();
 }
@@ -951,7 +956,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t by
 
 void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTransferred)
 {
-    if (m_stopped)
+    if (m_stopped || !m_connectionAccepted)
         return;
 
     // Stop cleanly, i.e., don't report, on these errors

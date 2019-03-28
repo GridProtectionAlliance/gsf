@@ -101,26 +101,28 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
 	if (!error)
     {
         m_subscriberConnectionsLock.lock();
-		const bool accepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
+		const bool connectionAccepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
 		m_subscriberConnections.insert(connection);
         m_subscriberConnectionsLock.unlock();
 
-		if (accepted)
+		// TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+		connection->Start(connectionAccepted);
+
+		if (connectionAccepted)
 		{
-			// TODO: For secured connections, validate certificate and IP information here to assign subscriberID
-			connection->Start();
 			DispatchClientConnected(connection.get());
 		}
 		else
 		{
 			DispatchErrorMessage("Subscriber connection refused: connection would exceed " + ToString(m_maximumAllowedConnections) + " maximum allowed connections.");
 			
-			Thread([connection, this]
+			Thread([connection]
 			{
-				connection->SendResponse(ServerResponse::Failed, ServerCommand::DefineOperationalModes, "Connection refused.");
-				boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
-				DispatchClientDisconnected(connection.get());
-			});			
+				boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+				connection->SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: too many active connections.");
+				boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+				connection->Stop();
+			});
 		}
     }
 

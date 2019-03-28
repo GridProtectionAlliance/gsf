@@ -64,6 +64,7 @@ namespace Transport
         bool m_includeTime;
         bool m_useMillisecondResolution;
         bool m_isNaNFiltered;
+		volatile bool m_connectionAccepted;
         volatile bool m_isSubscribed;
         volatile bool m_startTimeSent;
         volatile bool m_stopped;
@@ -214,7 +215,7 @@ namespace Transport
         std::vector<uint8_t> Keys(int32_t cipherIndex);
         std::vector<uint8_t> IVs(int32_t cipherIndex);
 
-        void Start();
+        void Start(bool connectionAccepted = true);
         void Stop(bool shutdownSocket = true);
 
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
