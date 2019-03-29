@@ -158,9 +158,9 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     // Publish routed measurements
     for (auto& pair : routedMeasurementMap)
     {
-        auto& destination = pair.first;
+        auto& destination = *pair.first;
 
-        if (destination->GetIsSubscribed() && !destination->GetIsTemporalSubscription())
-            destination->PublishMeasurements(*pair.second);
+        if (destination.GetIsSubscribed() && !destination.GetIsTemporalSubscription())
+            destination.PublishMeasurements(*pair.second);
     }
 }
