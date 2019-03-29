@@ -44,7 +44,7 @@ namespace Transport
         typedef std::pair<RoutingTableOperationHandler, DestinationRoutes> RoutingTableOperation;
         GSF::ThreadSafeQueue<RoutingTableOperation> m_routingTableOperations;
         RoutingTablePtr m_activeRoutes;
-        GSF::Mutex m_activeRoutesLock;
+        GSF::SharedMutex m_activeRoutesLock;
         GSF::Thread m_routingTableOperationsThread;
         volatile bool m_enabled;
 

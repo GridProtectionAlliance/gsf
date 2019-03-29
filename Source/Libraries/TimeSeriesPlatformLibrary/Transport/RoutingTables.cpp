@@ -52,18 +52,15 @@ RoutingTables::~RoutingTables()
 
 RoutingTables::RoutingTablePtr RoutingTables::CloneActiveRoutes()
 {
-    m_activeRoutesLock.lock();
+    ReaderLock readLock(m_activeRoutesLock);
     RoutingTablePtr clonedRoutes = NewSharedPtr<RoutingTable>(*m_activeRoutes);
-    m_activeRoutesLock.unlock();
-
     return clonedRoutes;
 }
 
 void RoutingTables::SetActiveRoutes(RoutingTablePtr activeRoutes)
 {
-    m_activeRoutesLock.lock();
+    WriterLock writeLock(m_activeRoutesLock);
     m_activeRoutes = std::move(activeRoutes);
-    m_activeRoutesLock.unlock();
 }
 
 void RoutingTables::UpdateRoutesOperation(RoutingTables& routingTables, const DestinationRoutes& destinationRoutes)
@@ -126,30 +123,34 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     typedef SharedPtr<Measurements> MeasurementsPtr;
     unordered_map<SubscriberConnectionPtr, MeasurementsPtr> routedMeasurementMap;
 
-    m_activeRoutesLock.lock();
-
-    for (auto& measurement : measurements)
+    // Constrain read lock to this block
     {
-        DestinationsPtr destinations;
+        ReaderLock readLock(m_activeRoutesLock);
+        const RoutingTable activeRoutes = *m_activeRoutes;
 
-        if (TryGetValue(*m_activeRoutes, measurement->SignalID, destinations, destinations))
+        for (auto& measurement : measurements)
         {
-            for (auto& destination : *destinations)
+            DestinationsPtr destinationsPtr;
+
+            if (TryGetValue(activeRoutes, measurement->SignalID, destinationsPtr, destinationsPtr))
             {
-                MeasurementsPtr routedMeasurements;
+                const Destinations destinations = *destinationsPtr;
 
-                if (!TryGetValue(routedMeasurementMap, destination, routedMeasurements, routedMeasurements))
+                for (auto& destination : destinations)
                 {
-                    routedMeasurements = NewSharedPtr<Measurements>();
-                    routedMeasurementMap[destination] = routedMeasurements;
-                }
+                    MeasurementsPtr routedMeasurements;
 
-                routedMeasurements->push_back(measurement);
+                    if (!TryGetValue(routedMeasurementMap, destination, routedMeasurements, routedMeasurements))
+                    {
+                        routedMeasurements = NewSharedPtr<Measurements>();
+                        routedMeasurementMap[destination] = routedMeasurements;
+                    }
+
+                    routedMeasurements->push_back(measurement);
+                }
             }
         }
     }
-
-    m_activeRoutesLock.unlock();
 
     // Publish routed measurements
     for (auto& pair : routedMeasurementMap)

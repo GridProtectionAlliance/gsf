@@ -188,9 +188,12 @@ namespace GSF
     typedef boost::exception Exception;
     typedef boost::thread Thread;
     typedef boost::mutex Mutex;
+    typedef boost::shared_mutex SharedMutex;
     typedef boost::condition_variable WaitHandle;
     typedef boost::lock_guard<Mutex> ScopeLock;
     typedef boost::unique_lock<Mutex> UniqueLock;
+    typedef boost::unique_lock<SharedMutex> WriterLock;
+    typedef boost::shared_lock<SharedMutex> ReaderLock;
     typedef boost::asio::io_context IOContext;
     typedef boost::asio::io_context::strand Strand;
     typedef boost::asio::deadline_timer DeadlineTimer;
