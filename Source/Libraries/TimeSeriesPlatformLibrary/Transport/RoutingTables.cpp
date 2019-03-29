@@ -29,11 +29,10 @@ using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 RoutingTables::RoutingTables() :
+    m_activeRoutes(NewSharedPtr<RoutingTable>()),
     m_enabled(true)
 {
-    m_activeRoutes = NewSharedPtr<RoutingTable>();
-
-    m_routingTableOperationsThread = Thread([this]()
+    Thread([this]()
     {
         while (m_enabled)
         {
@@ -122,6 +121,7 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     typedef vector<MeasurementPtr> Measurements;
     typedef SharedPtr<Measurements> MeasurementsPtr;
     unordered_map<SubscriberConnectionPtr, MeasurementsPtr> routedMeasurementMap;
+    const size_t size = measurements.size();
 
     // Constrain read lock to this block
     {
@@ -143,7 +143,8 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
                     if (!TryGetValue(routedMeasurementMap, destination, routedMeasurements, routedMeasurements))
                     {
                         routedMeasurements = NewSharedPtr<Measurements>();
-                        routedMeasurementMap[destination] = routedMeasurements;
+                        routedMeasurements->reserve(size);
+                        routedMeasurementMap.emplace(destination, routedMeasurements);
                     }
 
                     routedMeasurements->push_back(measurement);

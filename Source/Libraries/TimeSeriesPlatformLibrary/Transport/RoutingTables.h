@@ -36,16 +36,16 @@ namespace Transport
     {
     private:
         typedef std::unordered_set<SubscriberConnectionPtr> Destinations;
-        typedef SharedPtr<Destinations> DestinationsPtr;
+        typedef GSF::SharedPtr<Destinations> DestinationsPtr;
         typedef std::unordered_map<GSF::Guid, DestinationsPtr> RoutingTable;
-        typedef SharedPtr<RoutingTable> RoutingTablePtr;
+        typedef GSF::SharedPtr<RoutingTable> RoutingTablePtr;
         typedef std::pair<SubscriberConnectionPtr, std::unordered_set<GSF::Guid>> DestinationRoutes;
         typedef std::function<void(RoutingTables&, const DestinationRoutes&)> RoutingTableOperationHandler;
         typedef std::pair<RoutingTableOperationHandler, DestinationRoutes> RoutingTableOperation;
+
         GSF::ThreadSafeQueue<RoutingTableOperation> m_routingTableOperations;
         RoutingTablePtr m_activeRoutes;
         GSF::SharedMutex m_activeRoutesLock;
-        GSF::Thread m_routingTableOperationsThread;
         volatile bool m_enabled;
 
         RoutingTablePtr CloneActiveRoutes();
