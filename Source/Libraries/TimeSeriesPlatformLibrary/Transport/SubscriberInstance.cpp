@@ -1025,26 +1025,26 @@ void SubscriberInstance::ConnectionTerminated()
 
 void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 {
-	SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
-	if (source->IsConnected())
-	{
-		instance->StatusMessage("Reconnected. Subscribing to data...");
-		instance->ConnectionEstablished();
+    if (source->IsConnected())
+    {
+        instance->StatusMessage("Reconnected. Subscribing to data...");
+        instance->ConnectionEstablished();
 
-		// If automatically parsing metadata, request metadata upon successful connection,
-		// after metadata is handled the SubscriberInstance will then initiate subscribe;
-		// otherwise, initiate subscribe immediately
-		if (instance->m_autoParseMetadata)
-			instance->SendMetadataRefreshCommand();
-		else
-			source->Subscribe();
-	}
-	else
-	{
-		source->Disconnect();
-		instance->StatusMessage("Connection retry attempts exceeded.");
-	}
+        // If automatically parsing metadata, request metadata upon successful connection,
+        // after metadata is handled the SubscriberInstance will then initiate subscribe;
+        // otherwise, initiate subscribe immediately
+        if (instance->m_autoParseMetadata)
+            instance->SendMetadataRefreshCommand();
+        else
+            source->Subscribe();
+    }
+    else
+    {
+        source->Disconnect();
+        instance->StatusMessage("Connection retry attempts exceeded.");
+    }
 }
 
 void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, const string& message)

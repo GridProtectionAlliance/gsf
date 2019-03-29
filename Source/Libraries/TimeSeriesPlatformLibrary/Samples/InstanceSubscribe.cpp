@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 {
     string hostname;
     uint16_t port;
-	bool usePortOffset = false;
+    bool usePortOffset = false;
 
     // Ensure that the necessary
     // command line arguments are given.
@@ -52,8 +52,8 @@ int main(int argc, char* argv[])
     hostname = argv[1];
     stringstream(argv[2]) >> port;
 
-	if (argc > 3)
-		usePortOffset = ParseBoolean(argv[3]);
+    if (argc > 3)
+        usePortOffset = ParseBoolean(argv[3]);
 
     // Initialize the subscribers.
     for (uint32_t i = 0; i < TotalInstances; i++)
