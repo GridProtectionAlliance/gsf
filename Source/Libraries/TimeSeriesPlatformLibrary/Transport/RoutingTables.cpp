@@ -64,12 +64,13 @@ void RoutingTables::SetActiveRoutes(RoutingTablePtr activeRoutes)
 
 void RoutingTables::UpdateRoutesOperation(RoutingTables& routingTables, const DestinationRoutes& destinationRoutes)
 {
-    RoutingTablePtr activeRoutes = routingTables.CloneActiveRoutes();
+    const RoutingTablePtr activeRoutesPtr = routingTables.CloneActiveRoutes();
+    RoutingTable& activeRoutes = *activeRoutesPtr;
     const SubscriberConnectionPtr& destination = destinationRoutes.first;
     const unordered_set<GSF::Guid>& routes = destinationRoutes.second;
 
     // Remove subscriber connection from undesired measurement route destinations
-    for (auto& pair : *activeRoutes)
+    for (auto& pair : activeRoutes)
     {
         if (routes.find(pair.first) != routes.end())
             pair.second->erase(destination);
@@ -80,28 +81,29 @@ void RoutingTables::UpdateRoutesOperation(RoutingTables& routingTables, const De
     {
         DestinationsPtr destinations;
 
-        if (!TryGetValue(*activeRoutes, signalID, destinations, destinations))
+        if (!TryGetValue(activeRoutes, signalID, destinations, destinations))
         {
             destinations = NewSharedPtr<Destinations>();
-            activeRoutes->emplace(signalID, destinations);
+            activeRoutes.emplace(signalID, destinations);
         }
 
         destinations->insert(destination);
     }
 
-    routingTables.SetActiveRoutes(activeRoutes);
+    routingTables.SetActiveRoutes(activeRoutesPtr);
 }
 
 void RoutingTables::RemoveRoutesOperation(RoutingTables& routingTables, const DestinationRoutes& destinationRoutes)
 {
-    const RoutingTablePtr activeRoutes = routingTables.CloneActiveRoutes();
+    const RoutingTablePtr activeRoutesPtr = routingTables.CloneActiveRoutes();
+    const RoutingTable& activeRoutes = *activeRoutesPtr;
     const SubscriberConnectionPtr& destination = destinationRoutes.first;
 
     // Remove subscriber connection from existing measurement route destinations
-    for (auto& pair : *activeRoutes)
+    for (auto& pair : activeRoutes)
         pair.second->erase(destination);
 
-    routingTables.SetActiveRoutes(activeRoutes);
+    routingTables.SetActiveRoutes(activeRoutesPtr);
 }
 
 void RoutingTables::UpdateRoutes(const SubscriberConnectionPtr& destination, const unordered_set<Guid>& routes)
@@ -126,7 +128,7 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     // Constrain read lock to this block
     {
         ReaderLock readLock(m_activeRoutesLock);
-        const RoutingTable activeRoutes = *m_activeRoutes;
+        const RoutingTable& activeRoutes = *m_activeRoutes;
 
         for (auto& measurement : measurements)
         {
@@ -134,7 +136,7 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
 
             if (TryGetValue(activeRoutes, measurement->SignalID, destinationsPtr, destinationsPtr))
             {
-                const Destinations destinations = *destinationsPtr;
+                const Destinations& destinations = *destinationsPtr;
 
                 for (auto& destination : destinations)
                 {
