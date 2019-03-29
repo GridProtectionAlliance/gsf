@@ -58,13 +58,13 @@ namespace Transport
         GSF::datetime_t m_startTimeConstraint;
         GSF::datetime_t m_stopTimeConstraint;
         int32_t m_processingInterval;
-		bool m_temporalSubscriptionCanceled;
+        bool m_temporalSubscriptionCanceled;
         bool m_usePayloadCompression;
         bool m_useCompactMeasurementFormat;
         bool m_includeTime;
         bool m_useMillisecondResolution;
         bool m_isNaNFiltered;
-		volatile bool m_connectionAccepted;
+        volatile bool m_connectionAccepted;
         volatile bool m_isSubscribed;
         volatile bool m_startTimeSent;
         volatile bool m_stopped;
@@ -219,7 +219,7 @@ namespace Transport
         void Stop(bool shutdownSocket = true);
 
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
-		void CancelTemporalSubscription();
+        void CancelTemporalSubscription();
 
         bool SendResponse(uint8_t responseCode, uint8_t commandCode);
         bool SendResponse(uint8_t responseCode, uint8_t commandCode, const std::string& message);

@@ -39,7 +39,7 @@ using namespace GSF::TimeSeries::Transport;
 DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_nodeID(NewGuid()),
     m_securityMode(SecurityMode::None),
-	m_maximumAllowedConnections(-1),
+    m_maximumAllowedConnections(-1),
     m_isMetadataRefreshAllowed(true),
     m_isNaNValueFilterAllowed(true),
     m_isNaNValueFilterForced(false),
@@ -92,38 +92,38 @@ void DataPublisher::RunCommandChannelAcceptThread()
 
 void DataPublisher::StartAccept()
 {
-	const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
-	m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
+    const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
+    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
 }
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
 {
-	if (!error)
+    if (!error)
     {
         m_subscriberConnectionsLock.lock();
-		const bool connectionAccepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
-		m_subscriberConnections.insert(connection);
+        const bool connectionAccepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
+        m_subscriberConnections.insert(connection);
         m_subscriberConnectionsLock.unlock();
 
-		// TODO: For secured connections, validate certificate and IP information here to assign subscriberID
-		connection->Start(connectionAccepted);
+        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+        connection->Start(connectionAccepted);
 
-		if (connectionAccepted)
-		{
-			DispatchClientConnected(connection.get());
-		}
-		else
-		{
-			DispatchErrorMessage("Subscriber connection refused: connection would exceed " + ToString(m_maximumAllowedConnections) + " maximum allowed connections.");
-			
-			Thread([connection]
-			{
-				boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
-				connection->SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: too many active connections.");
-				boost::this_thread::sleep(boost::posix_time::milliseconds(500));
-				connection->Stop();
-			});
-		}
+        if (connectionAccepted)
+        {
+            DispatchClientConnected(connection.get());
+        }
+        else
+        {
+            DispatchErrorMessage("Subscriber connection refused: connection would exceed " + ToString(m_maximumAllowedConnections) + " maximum allowed connections.");
+            
+            Thread([connection]
+            {
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+                connection->SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: too many active connections.");
+                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+                connection->Stop();
+            });
+        }
     }
 
     StartAccept();
@@ -136,7 +136,9 @@ void DataPublisher::ConnectionTerminated(const SubscriberConnectionPtr& connecti
 
 void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 {
-	m_subscriberConnectionsLock.lock();
+    m_routingTables.RemoveRoutes(connection);
+
+    m_subscriberConnectionsLock.lock();
     m_subscriberConnections.erase(connection);
     m_subscriberConnectionsLock.unlock();
 }
@@ -687,13 +689,13 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
 
     m_filteringMetadata.swap(filteringMetadata);
 
-	// Notify all subscribers that the configuration metadata has changed
-	m_subscriberConnectionsLock.lock();
+    // Notify all subscribers that the configuration metadata has changed
+    m_subscriberConnectionsLock.lock();
 
-	for (const auto& connection : m_subscriberConnections)
-		connection->SendResponse(ServerResponse::ConfigurationChanged, ServerCommand::Subscribe);
+    for (const auto& connection : m_subscriberConnections)
+        connection->SendResponse(ServerResponse::ConfigurationChanged, ServerCommand::Subscribe);
 
-	m_subscriberConnectionsLock.unlock();
+    m_subscriberConnectionsLock.unlock();
 }
 
 const DataSetPtr& DataPublisher::GetMetadata() const
@@ -762,15 +764,7 @@ void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
 
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
-    m_subscriberConnectionsLock.lock();
-
-    for (const auto& connection : m_subscriberConnections)
-    {
-        if (connection->GetIsSubscribed() && !connection->GetIsTemporalSubscription())
-            connection->PublishMeasurements(measurements);
-    }
-
-    m_subscriberConnectionsLock.unlock();
+    m_routingTables.PublishMeasurements(measurements);
 }
 
 const GSF::Guid& DataPublisher::GetNodeID() const
@@ -795,12 +789,12 @@ void DataPublisher::SetSecurityMode(SecurityMode value)
 
 int32_t DataPublisher::GetMaximumAllowedConnections() const
 {
-	return m_maximumAllowedConnections;
+    return m_maximumAllowedConnections;
 }
 
 void DataPublisher::SetMaximumAllowedConnections(int32_t value)
 {
-	m_maximumAllowedConnections = value;
+    m_maximumAllowedConnections = value;
 }
 
 bool DataPublisher::GetIsMetadataRefreshAllowed() const
@@ -942,10 +936,10 @@ void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const Subscribe
 
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
 {
-	m_subscriberConnectionsLock.lock();
+    m_subscriberConnectionsLock.lock();
 
-	for (const auto& connection : m_subscriberConnections)
-		iteratorHandler(connection, userData);
+    for (const auto& connection : m_subscriberConnections)
+        iteratorHandler(connection, userData);
 
-	m_subscriberConnectionsLock.unlock();
+    m_subscriberConnectionsLock.unlock();
 }

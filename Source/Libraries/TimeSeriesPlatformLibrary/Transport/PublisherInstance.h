@@ -97,8 +97,8 @@ namespace Transport
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode securityMode) const;
 
-    	int32_t GetMaximumAllowedConnections() const;
-		void SetMaximumAllowedConnections(int32_t value) const;
+        int32_t GetMaximumAllowedConnections() const;
+        void SetMaximumAllowedConnections(int32_t value) const;
 
         bool IsMetadataRefreshAllowed() const;
         void SetMetadataRefreshAllowed(bool allowed) const;
@@ -109,8 +109,8 @@ namespace Transport
         bool IsNaNValueFilterForced() const;
         void SetNaNValueFilterForced(bool forced) const;
 
-		bool GetSupportsTemporalSubscriptions() const;
-		void SetSupportsTemporalSubscriptions(bool value) const;
+        bool GetSupportsTemporalSubscriptions() const;
+        void SetSupportsTemporalSubscriptions(bool value) const;
 
         uint32_t GetCipherKeyRotationPeriod() const;
         void SetCipherKeyRotationPeriod(uint32_t period) const;
@@ -129,9 +129,9 @@ namespace Transport
 
         bool IsInitialized() const;
 
-		// Safely get list of subscriber connections. Vector will be cleared then appended to,
-    	// returns true if any connections were added
-		bool TryGetSubscriberConnections(std::vector<SubscriberConnectionPtr>& subscriberConnections) const;
+        // Safely get list of subscriber connections. Vector will be cleared then appended to,
+        // returns true if any connections were added
+        bool TryGetSubscriberConnections(std::vector<SubscriberConnectionPtr>& subscriberConnections) const;
     };
 }}}
 

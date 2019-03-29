@@ -24,10 +24,11 @@
 #ifndef __DATA_PUBLISHER_H
 #define __DATA_PUBLISHER_H
 
-#include "SubscriberConnection.h"
 #include "../Common/CommonTypes.h"
 #include "../Common/ThreadSafeQueue.h"
 #include "../Data/DataSet.h"
+#include "SubscriberConnection.h"
+#include "RoutingTables.h"
 #include "TransportTypes.h"
 #include "Constants.h"
 
@@ -66,9 +67,10 @@ namespace Transport
         GSF::Data::DataSetPtr m_metadata;
         GSF::Data::DataSetPtr m_filteringMetadata;
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
+        RoutingTables m_routingTables;
         GSF::Mutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
-		int32_t m_maximumAllowedConnections;
+        int32_t m_maximumAllowedConnections;
         bool m_isMetadataRefreshAllowed;
         bool m_isNaNValueFilterAllowed;
         bool m_isNaNValueFilterForced;
@@ -126,7 +128,7 @@ namespace Transport
         static void ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-		static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
+        static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
         DataPublisher(const GSF::TcpEndPoint& endpoint);
@@ -136,8 +138,8 @@ namespace Transport
         // tied up by the publisher.
         ~DataPublisher();
 
-		// Iterator handler delegates
-		typedef std::function<void(const SubscriberConnectionPtr&, void* userData)> SubscriberConnectionIteratorHandlerFunction;
+        // Iterator handler delegates
+        typedef std::function<void(const SubscriberConnectionPtr&, void* userData)> SubscriberConnectionIteratorHandlerFunction;
 
         // Defines metadata from existing metadata records
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
@@ -169,11 +171,11 @@ namespace Transport
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode value);
 
-		// Gets or sets value that defines the maximum number of allowed connections, -1 = no limit
-		int32_t GetMaximumAllowedConnections() const;
-		void SetMaximumAllowedConnections(int32_t value);
+        // Gets or sets value that defines the maximum number of allowed connections, -1 = no limit
+        int32_t GetMaximumAllowedConnections() const;
+        void SetMaximumAllowedConnections(int32_t value);
 
-		// Gets or sets flag that determines if metadata refresh is allowed by subscribers
+        // Gets or sets flag that determines if metadata refresh is allowed by subscribers
         bool GetIsMetadataRefreshAllowed() const;
         void SetIsMetadataRefreshAllowed(bool value);
 
@@ -218,9 +220,9 @@ namespace Transport
         void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
         void RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
 
-    	// SubscriberConnection iteration function - note that full lock will be maintained on source collection
-		// for the entire call, so keep work time minimized or clone collection before work
-		void IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData);
+        // SubscriberConnection iteration function - note that full lock will be maintained on source collection
+        // for the entire call, so keep work time minimized or clone collection before work
+        void IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData);
 
         friend class SubscriberConnection;
     };

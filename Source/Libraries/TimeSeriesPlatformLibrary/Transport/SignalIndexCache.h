@@ -27,6 +27,7 @@
 #define __SIGNAL_INDEX_CACHE_H
 
 #include "../Common/CommonTypes.h"
+#include <unordered_set>
 
 namespace GSF {
 namespace TimeSeries {
@@ -62,6 +63,9 @@ namespace Transport
 
         // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
         GSF::Guid GetSignalID(uint16_t signalIndex) const;
+
+        //Gets the full list of signal IDs as an unordered set
+        std::unordered_set<GSF::Guid> GetSignalIDs() const;
 
         // Gets the first half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.

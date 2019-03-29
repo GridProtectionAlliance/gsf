@@ -53,13 +53,13 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_startTimeConstraint(DateTime::MaxValue),
     m_stopTimeConstraint(DateTime::MaxValue),
     m_processingInterval(-1),
-	m_temporalSubscriptionCanceled(false),
+    m_temporalSubscriptionCanceled(false),
     m_usePayloadCompression(false),
     m_useCompactMeasurementFormat(true),
     m_includeTime(true),
     m_useMillisecondResolution(false), // Defaults to microsecond resolution
     m_isNaNFiltered(m_parent->GetIsNaNValueFilterAllowed() && m_parent->GetIsNaNValueFilterForced()),
-	m_connectionAccepted(false),
+    m_connectionAccepted(false),
     m_isSubscribed(false),
     m_startTimeSent(false),
     m_stopped(true),
@@ -293,6 +293,9 @@ const SignalIndexCachePtr& SubscriberConnection::GetSignalIndexCache() const
 void SubscriberConnection::SetSignalIndexCache(SignalIndexCachePtr signalIndexCache)
 {
     m_signalIndexCache = std::move(signalIndexCache);
+
+    // Update measurement routes for newly subscribed measurement signal IDs
+    m_parent->m_routingTables.UpdateRoutes(shared_from_this(), m_signalIndexCache->GetSignalIDs());
 }
 
 uint64_t SubscriberConnection::GetTotalCommandChannelBytesSent() const
@@ -333,7 +336,7 @@ vector<uint8_t> SubscriberConnection::IVs(int32_t cipherIndex)
 
 void SubscriberConnection::Start(bool connectionAccepted)
 {
-	m_connectionAccepted = connectionAccepted;
+    m_connectionAccepted = connectionAccepted;
 
     // Attempt to lookup remote connection identification for logging purposes
     auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
@@ -371,8 +374,8 @@ void SubscriberConnection::Start(bool connectionAccepted)
     if (m_hostName.empty())
         m_hostName = m_ipAddress.to_string();
 
-	if (m_connectionAccepted)
-		m_pingTimer.Start();
+    if (m_connectionAccepted)
+        m_pingTimer.Start();
 
     m_stopped = false;
     ReadCommandChannel();
@@ -380,11 +383,11 @@ void SubscriberConnection::Start(bool connectionAccepted)
 
 void SubscriberConnection::Stop(const bool shutdownSocket)
 {
-	if (m_stopped)
-		return;
+    if (m_stopped)
+        return;
 
     if (m_isSubscribed)
-		HandleUnsubscribe();
+        HandleUnsubscribe();
 
     try
     {
@@ -445,17 +448,17 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
     }
 
     if (count > 0)
-	    PublishDataPacket(packet, count);
+        PublishDataPacket(packet, count);
 }
 
 void SubscriberConnection::CancelTemporalSubscription()
 {
-	if (GetIsTemporalSubscription() && !m_temporalSubscriptionCanceled)
-	{
-		m_temporalSubscriptionCanceled = true;
-		SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
-		m_parent->DispatchTemporalSubscriptionCanceled(this);
-	}
+    if (GetIsTemporalSubscription() && !m_temporalSubscriptionCanceled)
+    {
+        m_temporalSubscriptionCanceled = true;
+        SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
+        m_parent->DispatchTemporalSubscriptionCanceled(this);
+    }
 }
 
 void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
@@ -474,9 +477,9 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
-				// Cancel any existing temporal subscription
+                // Cancel any existing temporal subscription
                 if (m_isSubscribed)
-					CancelTemporalSubscription();
+                    CancelTemporalSubscription();
 
                 // Next 4 bytes are an integer representing the length of the connection string that follows
                 const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
@@ -540,7 +543,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         if (m_startTimeConstraint > m_stopTimeConstraint)
                             throw PublisherException("Specified stop time of requested temporal subscription precedes start time");
 
-						m_temporalSubscriptionCanceled = false;
+                        m_temporalSubscriptionCanceled = false;
                     }
 
                     SetUsePayloadCompression(usePayloadCompression);
@@ -657,7 +660,7 @@ void SubscriberConnection::HandleSubscribeFailure(const std::string& message)
     m_parent->DispatchErrorMessage(message);
 
     if (GetIsTemporalSubscription())
-		CancelTemporalSubscription();
+        CancelTemporalSubscription();
 }
 
 void SubscriberConnection::HandleUnsubscribe()
@@ -665,7 +668,7 @@ void SubscriberConnection::HandleUnsubscribe()
     SetIsSubscribed(false);
 
     if (GetIsTemporalSubscription())
-		CancelTemporalSubscription();
+        CancelTemporalSubscription();
 }
 
 void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
@@ -892,8 +895,8 @@ void SubscriberConnection::PublishDataPacket(const vector<uint8_t>& packet, cons
     // Track last publication time
     m_lastPublishTime = UtcNow();
 
-	// Track total number of published measurements
-	m_totalMeasurementsSent += count;
+    // Track total number of published measurements
+    m_totalMeasurementsSent += count;
 }
 
 bool SubscriberConnection::SendDataStartTime(uint64_t timestamp)

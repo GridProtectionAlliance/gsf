@@ -82,6 +82,11 @@ Guid SignalIndexCache::GetSignalID(uint16_t signalIndex) const
     return Empty::Guid;
 }
 
+unordered_set<Guid> SignalIndexCache::GetSignalIDs() const
+{
+    return unordered_set<Guid>(m_signalIDList.begin(), m_signalIDList.end());
+}
+
 // Gets the first half of the human-readable measurement
 // key associated with the given 16-bit runtime ID.
 const string& SignalIndexCache::GetSource(const uint16_t signalIndex) const

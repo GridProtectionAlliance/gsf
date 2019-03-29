@@ -199,12 +199,12 @@ void PublisherInstance::SetSecurityMode(SecurityMode securityMode) const
 
 int32_t PublisherInstance::GetMaximumAllowedConnections() const
 {
-	return m_publisher->GetMaximumAllowedConnections();
+    return m_publisher->GetMaximumAllowedConnections();
 }
 
 void PublisherInstance::SetMaximumAllowedConnections(int32_t value) const
 {
-	m_publisher->SetMaximumAllowedConnections(value);
+    m_publisher->SetMaximumAllowedConnections(value);
 }
 
 bool PublisherInstance::IsMetadataRefreshAllowed() const
@@ -239,12 +239,12 @@ void PublisherInstance::SetNaNValueFilterForced(bool forced) const
 
 bool PublisherInstance::GetSupportsTemporalSubscriptions() const
 {
-	return m_publisher->GetSupportsTemporalSubscriptions();
+    return m_publisher->GetSupportsTemporalSubscriptions();
 }
 
 void PublisherInstance::SetSupportsTemporalSubscriptions(bool value) const
 {
-	m_publisher->SetSupportsTemporalSubscriptions(value);
+    m_publisher->SetSupportsTemporalSubscriptions(value);
 }
 
 uint32_t PublisherInstance::GetCipherKeyRotationPeriod() const
@@ -299,14 +299,14 @@ bool PublisherInstance::IsInitialized() const
 
 bool PublisherInstance::TryGetSubscriberConnections(vector<SubscriberConnectionPtr>& subscriberConnections) const
 {
-	subscriberConnections.clear();
+    subscriberConnections.clear();
 
-	m_publisher->IterateSubscriberConnections([](const SubscriberConnectionPtr& connection, void* userData)
-	{
-		auto connections = static_cast<vector<SubscriberConnectionPtr>*>(userData);
-		connections->push_back(connection);
-	},
-	&subscriberConnections);
+    m_publisher->IterateSubscriberConnections([](const SubscriberConnectionPtr& connection, void* userData)
+    {
+        auto connections = static_cast<vector<SubscriberConnectionPtr>*>(userData);
+        connections->push_back(connection);
+    },
+    &subscriberConnections);
 
-	return !subscriberConnections.empty();
+    return !subscriberConnections.empty();
 }

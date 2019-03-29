@@ -369,9 +369,11 @@
     <ClCompile Include="Transport\DataSubscriber.cpp" />
     <ClInclude Include="Transport\MetadataSchema.h" />
     <ClInclude Include="Transport\PublisherInstance.h" />
+    <ClInclude Include="Transport\RoutingTables.h" />
     <ClInclude Include="Transport\SignalIndexCache.h" />
     <ClCompile Include="Transport\MetadataSchema.cpp" />
     <ClCompile Include="Transport\PublisherInstance.cpp" />
+    <ClCompile Include="Transport\RoutingTables.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
     <ClInclude Include="Transport\SubscriberConnection.h" />
     <ClInclude Include="Transport\SubscriberInstance.h" />
