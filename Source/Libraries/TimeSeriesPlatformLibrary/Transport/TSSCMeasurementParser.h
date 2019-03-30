@@ -30,52 +30,6 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
-    class TSSCMeasurementParser;
-
-    // The metadata kept for each pointID.
-    class TSSCPointMetadata
-    {
-    private:
-        static const uint8_t CommandStatsLength = 32;
-
-        TSSCMeasurementParser* m_parent;
-        uint8_t m_commandStats[CommandStatsLength];
-        int32_t m_commandsSentSinceLastChange;
-
-        //Bit codes for the 4 modes of encoding. 
-        uint8_t m_mode;
-
-        //(Mode 1 means no prefix.)
-        uint8_t m_mode21;
-
-        uint8_t m_mode31;
-        uint8_t m_mode301;
-
-        uint8_t m_mode41;
-        uint8_t m_mode401;
-        uint8_t m_mode4001;
-
-        int32_t m_startupMode;
-
-        void UpdatedCodeStatistics(int32_t code);
-        void AdaptCommands();
-
-    public:
-        TSSCPointMetadata(TSSCMeasurementParser* parent);
-
-        uint16_t PrevNextPointId1;
-
-        uint32_t PrevQuality1;
-        uint32_t PrevQuality2;
-        uint32_t PrevValue1;
-        uint32_t PrevValue2;
-        uint32_t PrevValue3;
-
-        int32_t ReadCode();
-    };
-
-    typedef SharedPtr<TSSCPointMetadata> TSSCPointMetadataPtr;
-
     // Parser for the compact measurement format of the Gateway Exchange Protocol.
     class TSSCMeasurementParser
     {
@@ -107,6 +61,8 @@ namespace Transport
 
         bool BitStreamIsEmpty() const;
         void ClearBitStream();
+
+        TSSCPointMetadataPtr NewTSSCPointMetadata();
 
     public:
         // Creates a new instance of the compact measurement parser.

@@ -289,4 +289,71 @@ namespace TimeSeries
     //};
 }}
 
+namespace GSF {
+namespace TimeSeries {
+namespace Transport
+{
+    // The metadata kept for each pointID.
+    class TSSCPointMetadata
+    {
+    private:
+        static const uint8_t CommandStatsLength = 32;
+
+        uint8_t m_commandStats[CommandStatsLength];
+        int32_t m_commandsSentSinceLastChange;
+
+        //Bit codes for the 4 modes of encoding. 
+        uint8_t m_mode;
+
+        //(Mode 1 means no prefix.)
+        uint8_t m_mode21;
+
+        uint8_t m_mode31;
+        uint8_t m_mode301;
+
+        uint8_t m_mode41;
+        uint8_t m_mode401;
+        uint8_t m_mode4001;
+
+        int32_t m_startupMode;
+
+        std::function<void(int32_t, int32_t)> m_writeBits;
+        std::function<int32_t()> m_readBit;
+        std::function<int32_t()> m_readBits5;
+
+        void UpdatedCodeStatistics(int32_t code);
+        void AdaptCommands();
+
+        TSSCPointMetadata(
+            std::function<void(int32_t, int32_t)> writeBits,
+            std::function<int32_t()> readBit,
+            std::function<int32_t()> readBits5
+        );
+
+    public:
+        TSSCPointMetadata(
+            std::function<void(int32_t, int32_t)> writeBits
+        );
+
+        TSSCPointMetadata(
+            std::function<int32_t()> readBit,
+            std::function<int32_t()> readBits5
+        );
+
+        uint16_t PrevNextPointId1;
+
+        uint32_t PrevQuality1;
+        uint32_t PrevQuality2;
+        uint32_t PrevValue1;
+        uint32_t PrevValue2;
+        uint32_t PrevValue3;
+
+        void WriteCode(int32_t code);
+
+        int32_t ReadCode();
+    };
+
+    typedef SharedPtr<TSSCPointMetadata> TSSCPointMetadataPtr;
+}}}
+
 #endif
