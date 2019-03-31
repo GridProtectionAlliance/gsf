@@ -25,6 +25,7 @@
 #define __COMMON_TYPES_H
 
 #include <cstddef>
+#include <cstring>
 #include <map>
 #include <unordered_map>
 #include <boost/any.hpp>
@@ -370,7 +371,7 @@ namespace GSF
     std::string PadLeft(const std::string& value, uint32_t count, char padChar);
     std::string PadRight(const std::string& value, uint32_t count, char padChar);
 
-    #ifndef strcpy_s
+    #ifndef __STDC_WANT_SECURE_LIB__
     #define strcpy_s(dest, size, src) strncpy(dest, src, size)
     #endif
 

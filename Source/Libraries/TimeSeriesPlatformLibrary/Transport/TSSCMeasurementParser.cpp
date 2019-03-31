@@ -41,11 +41,11 @@ TSSCMeasurementParser::TSSCMeasurementParser() :
     m_prevTimeDelta1(Int64::MaxValue),
     m_prevTimeDelta2(Int64::MaxValue),
     m_prevTimeDelta3(Int64::MaxValue),
-    m_prevTimeDelta4(Int64::MaxValue),
-    m_lastPoint(NewTSSCPointMetadata()),
+    m_prevTimeDelta4(Int64::MaxValue),    
     m_bitStreamCount(0),
     m_bitStreamCache(0)
 {
+    m_lastPoint = NewTSSCPointMetadata();
 }
 
 void TSSCMeasurementParser::Reset()

@@ -25,6 +25,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#define BOOST_ALLOW_DEPRECATED_HEADERS
 #include <boost/uuid/uuid_generators.hpp>
 
 using namespace std;
