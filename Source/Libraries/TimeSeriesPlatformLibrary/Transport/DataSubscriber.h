@@ -28,7 +28,7 @@
 
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
-#include "TSSCMeasurementParser.h"
+#include "TSSCDecoder.h"
 #include "../Common/ThreadSafeQueue.h"
 
 namespace GSF {
@@ -177,7 +177,7 @@ namespace Transport
         SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
-        TSSCMeasurementParser m_tsscMeasurementParser;
+        TSSCDecoder m_tsscDecoder;
         bool m_tsscResetRequested;
         uint16_t m_tsscSequenceNumber;
 

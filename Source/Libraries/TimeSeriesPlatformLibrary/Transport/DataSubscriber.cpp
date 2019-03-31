@@ -659,7 +659,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
             DispatchStatusMessage(statusMessageStream.str());
         }
 
-        m_tsscMeasurementParser.Reset();
+        m_tsscDecoder.Reset();
         m_tsscSequenceNumber = 0;
         m_tsscResetRequested = false;
     }
@@ -682,7 +682,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
 
     try
     {
-        m_tsscMeasurementParser.SetBuffer(data, offset, length);
+        m_tsscDecoder.SetBuffer(data, offset, length);
 
         Guid signalID;
         string measurementSource;
@@ -692,7 +692,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
         uint32_t quality;
         float32_t value;
 
-        while (m_tsscMeasurementParser.TryGetMeasurement(id, time, quality, value))
+        while (m_tsscDecoder.TryGetMeasurement(id, time, quality, value))
         {
             if (m_signalIndexCache->GetMeasurementKey(id, signalID, measurementSource, measurementID))
             {

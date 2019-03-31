@@ -349,84 +349,84 @@ void HandleProcessingIntervalChangeRequested(DataPublisher* source, const Subscr
 
 void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-	bool completed;
-	
-	cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
+    bool completed;
+    
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
 
-	RemoveTemporalSubscription(connection, completed);
-	
-	if (CreateNewTemporalSubscription(connection))
-	{
-		const size_t count = TemporalSubscriptions.size();
-		cout << "Created new temporal subscription - " <<  count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
-	}
+    RemoveTemporalSubscription(connection, completed);
+    
+    if (CreateNewTemporalSubscription(connection))
+    {
+        const size_t count = TemporalSubscriptions.size();
+        cout << "Created new temporal subscription - " <<  count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
+    }
 }
 
 void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-	bool completed;
+    bool completed;
 
-	if (RemoveTemporalSubscription(connection, completed))
-	{
-		const size_t count = TemporalSubscriptions.size();
-		cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << (completed ? " completed" : " canceled") << " temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
-		cout << "Temporal subscription removed - " << count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
-	}
+    if (RemoveTemporalSubscription(connection, completed))
+    {
+        const size_t count = TemporalSubscriptions.size();
+        cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << (completed ? " completed" : " canceled") << " temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
+        cout << "Temporal subscription removed - " << count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
+    }
 }
 
 bool UpdateTemporalSubscriptionProcessingInterval(const SubscriberConnectionPtr& connection)
 {
-	const GSF::Guid& instanceID = connection->GetInstanceID();
-	TemporalSubscriberPtr temporalSubscription;
-	const int32_t processingInterval = connection->GetProcessingInterval();
-	bool updated = false;
+    const GSF::Guid& instanceID = connection->GetInstanceID();
+    TemporalSubscriberPtr temporalSubscription;
+    const int32_t processingInterval = connection->GetProcessingInterval();
+    bool updated = false;
 
-	TemporalSubscriptionsLock.lock();
+    TemporalSubscriptionsLock.lock();
 
-	if (TryGetValue(TemporalSubscriptions, instanceID, temporalSubscription, NullTemporalSubscription))
-	{
-		temporalSubscription->SetProcessingInterval(processingInterval);
-		updated = true;
-	}
+    if (TryGetValue(TemporalSubscriptions, instanceID, temporalSubscription, NullTemporalSubscription))
+    {
+        temporalSubscription->SetProcessingInterval(processingInterval);
+        updated = true;
+    }
 
-	TemporalSubscriptionsLock.unlock();
+    TemporalSubscriptionsLock.unlock();
 
-	return updated;
+    return updated;
 }
 
 TemporalSubscriberPtr CreateNewTemporalSubscription(const SubscriberConnectionPtr& connection)
 {
-	const GSF::Guid& instanceID = connection->GetInstanceID();
-	TemporalSubscriberPtr temporalSubscription;
+    const GSF::Guid& instanceID = connection->GetInstanceID();
+    TemporalSubscriberPtr temporalSubscription;
 
-	TemporalSubscriptionsLock.lock();
+    TemporalSubscriptionsLock.lock();
 
-	temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection);
-	TemporalSubscriptions.insert(pair<GSF::Guid, TemporalSubscriberPtr>(instanceID, temporalSubscription));
+    temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection);
+    TemporalSubscriptions.insert(pair<GSF::Guid, TemporalSubscriberPtr>(instanceID, temporalSubscription));
 
-	TemporalSubscriptionsLock.unlock();
+    TemporalSubscriptionsLock.unlock();
 
-	return temporalSubscription;
+    return temporalSubscription;
 }
 
 bool RemoveTemporalSubscription(const SubscriberConnectionPtr& connection, bool& completed)
 {
-	const GSF::Guid& instanceID = connection->GetInstanceID();
-	TemporalSubscriberPtr temporalSubscription;
-	bool removed = false;
+    const GSF::Guid& instanceID = connection->GetInstanceID();
+    TemporalSubscriberPtr temporalSubscription;
+    bool removed = false;
 
-	TemporalSubscriptionsLock.lock();
+    TemporalSubscriptionsLock.lock();
 
-	if (TryGetValue(TemporalSubscriptions, instanceID, temporalSubscription, NullTemporalSubscription))
-	{
-		completed = temporalSubscription->GetIsStopped();
-		temporalSubscription->CompleteTemporalSubscription();
-		TemporalSubscriptions.erase(instanceID);
-		temporalSubscription.reset();
-		removed = true;
-	}
+    if (TryGetValue(TemporalSubscriptions, instanceID, temporalSubscription, NullTemporalSubscription))
+    {
+        completed = temporalSubscription->GetIsStopped();
+        temporalSubscription->CompleteTemporalSubscription();
+        TemporalSubscriptions.erase(instanceID);
+        temporalSubscription.reset();
+        removed = true;
+    }
 
-	TemporalSubscriptionsLock.unlock();
+    TemporalSubscriptionsLock.unlock();
 
-	return removed;
+    return removed;
 }

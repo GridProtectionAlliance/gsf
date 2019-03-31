@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  TSSCMeasurementParser.cpp - Gbtc
+//  TSSCDecoder.cpp - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-#include "TSSCMeasurementParser.h"
+#include "TSSCDecoder.h"
 #include "Constants.h"
 
 using namespace std;
@@ -32,7 +32,7 @@ using namespace GSF::TimeSeries::Transport;
 uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position);
 uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position);
 
-TSSCMeasurementParser::TSSCMeasurementParser() :
+TSSCDecoder::TSSCDecoder() :
     m_data(nullptr),
     m_position(0),
     m_lastPosition(0),
@@ -48,7 +48,7 @@ TSSCMeasurementParser::TSSCMeasurementParser() :
     m_lastPoint = NewTSSCPointMetadata();
 }
 
-void TSSCMeasurementParser::Reset()
+void TSSCDecoder::Reset()
 {
     m_data = nullptr;
     m_points.clear();
@@ -64,12 +64,12 @@ void TSSCMeasurementParser::Reset()
     m_prevTimestamp2 = 0L;
 }
 
-TSSCPointMetadataPtr TSSCMeasurementParser::NewTSSCPointMetadata()
+TSSCPointMetadataPtr TSSCDecoder::NewTSSCPointMetadata()
 {
     return NewSharedPtr<TSSCPointMetadata>([this]() { return ReadBit(); }, [this]() { return ReadBits5(); });
 }
 
-void TSSCMeasurementParser::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
+void TSSCDecoder::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
 {
     ClearBitStream();
     m_data = data;
@@ -77,7 +77,7 @@ void TSSCMeasurementParser::SetBuffer(uint8_t* data, uint32_t offset, uint32_t l
     m_lastPosition = length;
 }
 
-bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value)
+bool TSSCDecoder::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value)
 {
     if (m_position == m_lastPosition && BitStreamIsEmpty())
     {
@@ -283,7 +283,7 @@ bool TSSCMeasurementParser::TryGetMeasurement(uint16_t& id, int64_t& timestamp, 
     return true;
 }
 
-void TSSCMeasurementParser::DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPoint)
+void TSSCDecoder::DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPoint)
 {
     if (code == TSSCCodeWords::PointIDXOR4)
     {
@@ -305,7 +305,7 @@ void TSSCMeasurementParser::DecodePointID(uint8_t code, const TSSCPointMetadataP
     }
 }
 
-int64_t TSSCMeasurementParser::DecodeTimestamp(uint8_t code)
+int64_t TSSCDecoder::DecodeTimestamp(uint8_t code)
 {
     int64_t timestamp;
 
@@ -385,7 +385,7 @@ int64_t TSSCMeasurementParser::DecodeTimestamp(uint8_t code)
     return timestamp;
 }
 
-uint32_t TSSCMeasurementParser::DecodeQuality(uint8_t code, const TSSCPointMetadataPtr& nextPoint)
+uint32_t TSSCDecoder::DecodeQuality(uint8_t code, const TSSCPointMetadataPtr& nextPoint)
 {
     uint32_t quality;
 
@@ -404,18 +404,18 @@ uint32_t TSSCMeasurementParser::DecodeQuality(uint8_t code, const TSSCPointMetad
     return quality;
 }
 
-bool TSSCMeasurementParser::BitStreamIsEmpty() const
+bool TSSCDecoder::BitStreamIsEmpty() const
 {
     return m_bitStreamCount == 0;
 }
 
-void TSSCMeasurementParser::ClearBitStream()
+void TSSCDecoder::ClearBitStream()
 {
     m_bitStreamCount = 0;
     m_bitStreamCache = 0;
 }
 
-int32_t TSSCMeasurementParser::ReadBit()
+int32_t TSSCDecoder::ReadBit()
 {
     if (m_bitStreamCount == 0)
     {
@@ -428,12 +428,12 @@ int32_t TSSCMeasurementParser::ReadBit()
     return (m_bitStreamCache >> m_bitStreamCount) & 1;
 }
 
-int32_t TSSCMeasurementParser::ReadBits4()
+int32_t TSSCDecoder::ReadBits4()
 {
     return ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
 }
 
-int32_t TSSCMeasurementParser::ReadBits5()
+int32_t TSSCDecoder::ReadBits5()
 {
     return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
 }

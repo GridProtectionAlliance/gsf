@@ -210,7 +210,7 @@ set (GSF_HEADER_FILES
     "Transport/SubscriberConnection.h"
     "Transport/SubscriberInstance.h"
     "Transport/TransportTypes.h"
-    "Transport/TSSCMeasurementParser.h"
+    "Transport/TSSCDecoder.h"
     "Transport/Version.h"
 )
 
@@ -389,7 +389,7 @@ set (GSF_SOURCE_FILES
     "Transport/SubscriberConnection.cpp"
     "Transport/SubscriberInstance.cpp"
     "Transport/TransportTypes.cpp"
-    "Transport/TSSCMeasurementParser.cpp"
+    "Transport/TSSCDecoder.cpp"
 )
 
 # Option to choose whether to build static or shared libraries

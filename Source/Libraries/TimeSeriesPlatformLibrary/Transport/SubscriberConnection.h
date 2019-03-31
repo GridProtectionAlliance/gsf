@@ -92,7 +92,7 @@ namespace Transport
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         datetime_t m_lastPublishTime;
-        //TSSCMeasurementParser m_tsscMeasurementParser;
+        //TSSCEncoder m_tsscEncoder;
         //bool m_tsscResetRequested;
         //uint16_t m_tsscSequenceNumber;
 

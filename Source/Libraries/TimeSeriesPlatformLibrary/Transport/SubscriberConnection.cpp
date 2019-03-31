@@ -622,7 +622,10 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                     SetSignalIndexCache(signalIndexCache);
 
-                    const string message = "Client subscribed as " + string(useCompactMeasurementFormat ? "" : "non-") + "compact unsynchronized with " + ToString(signalCount) + " signals.";
+                    const string message = "Client subscribed using " + 
+                        (usePayloadCompression ? "TSSC compression with " :
+                        (string(useCompactMeasurementFormat ? "" : "non-") + "compact format with ")) + 
+                        ToString(signalCount) + " signals.";
 
                     SetIsSubscribed(true);
                     SendResponse(ServerResponse::Succeeded, ServerCommand::Subscribe, message);

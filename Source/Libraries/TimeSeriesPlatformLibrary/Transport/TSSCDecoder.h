@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  TSSCMeasurementParser.h - Gbtc
+//  TSSCDecoder.h - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-#ifndef __TSSC_MEASUREMENT_PARSER_H
-#define __TSSC_MEASUREMENT_PARSER_H
+#ifndef __TSSC_ENCODER_H
+#define __TSSC_ENCODER_H
 
 #include "TransportTypes.h"
 
@@ -31,7 +31,7 @@ namespace TimeSeries {
 namespace Transport
 {
     // Parser for the compact measurement format of the Gateway Exchange Protocol.
-    class TSSCMeasurementParser
+    class TSSCDecoder
     {
     private:
         uint8_t* m_data;
@@ -66,7 +66,7 @@ namespace Transport
 
     public:
         // Creates a new instance of the compact measurement parser.
-        TSSCMeasurementParser();
+        TSSCDecoder();
 
         // Resets the TSSC Decoder to the initial state.
         void Reset();

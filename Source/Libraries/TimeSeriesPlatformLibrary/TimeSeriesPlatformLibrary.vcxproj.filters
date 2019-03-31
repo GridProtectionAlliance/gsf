@@ -652,6 +652,9 @@
     <ClCompile Include="Transport\RoutingTables.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\TSSCDecoder.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Transport\Constants.h">
@@ -675,12 +678,6 @@
     <ClInclude Include="Transport\SubscriberInstance.h">
       <Filter>Transport</Filter>
     </ClInclude>
-    <ClCompile Include="Transport\TSSCMeasurementParser.cpp">
-      <Filter>Transport</Filter>
-    </ClCompile>
-    <ClInclude Include="Transport\TSSCMeasurementParser.h">
-      <Filter>Transport</Filter>
-    </ClInclude>
     <ClCompile Include="Transport\TransportTypes.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
@@ -694,6 +691,9 @@
       <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="Transport\RoutingTables.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\TSSCDecoder.h">
       <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>
