@@ -29,6 +29,7 @@
 #include "../Data/DataSet.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
+#include "TSSCEncoder.h"
 #include <deque>
 
 namespace GSF {
@@ -45,6 +46,8 @@ namespace Transport
     class SubscriberConnection : public GSF::EnableSharedThisPtr<SubscriberConnection> // NOLINT
     {
     private:
+        static constexpr const uint32_t TSSCBufferSize = 32768U;
+
         const DataPublisherPtr m_parent;
         GSF::IOContext& m_commandChannelService;
         GSF::Strand m_writeStrand;
@@ -92,9 +95,11 @@ namespace Transport
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         datetime_t m_lastPublishTime;
-        //TSSCEncoder m_tsscEncoder;
-        //bool m_tsscResetRequested;
-        //uint16_t m_tsscSequenceNumber;
+        TSSCEncoder m_tsscEncoder;
+        GSF::Mutex m_tsscEncoderLock;
+        uint8_t m_tsscWorkingBuffer[TSSCBufferSize];
+        bool m_tsscResetRequested;
+        uint16_t m_tsscSequenceNumber;
 
         // Server request handlers
         void HandleSubscribe(uint8_t* data, uint32_t length);
@@ -110,7 +115,10 @@ namespace Transport
         void HandleUserCommand(uint8_t command, uint8_t* data, uint32_t length);
 
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
-        void PublishDataPacket(const std::vector<uint8_t>& packet, int32_t count);
+        void PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements);
+        void PublishCompactDataPacket(const std::vector<uint8_t>& packet, int32_t count);
+        void PublishTSSCMeasurements(const std::vector<MeasurementPtr>& measurements);
+        void PublishTSSCDataPacket(int32_t count);
         bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);

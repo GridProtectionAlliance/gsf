@@ -71,8 +71,13 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_totalDataChannelBytesSent(0L),
     m_totalMeasurementsSent(0L),
     m_timeIndex(0),
-    m_baseTimeOffsets{0L, 0L}
+    m_baseTimeOffsets{0L, 0L},
+    m_tsscResetRequested(false),
+    m_tsscSequenceNumber(0)
 {
+    for (size_t i = 0; i < TSSCBufferSize; i++)
+        m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
+
     // Setup ping timer
     m_pingTimer.SetInterval(5000);
     m_pingTimer.SetAutoReset(true);
@@ -415,40 +420,10 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
     if (!m_startTimeSent)
         m_startTimeSent = SendDataStartTime(measurements[0]->Timestamp);
 
-    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
-    vector<uint8_t> packet, buffer;
-    int32_t count = 0;
-
-    packet.reserve(MaxPacketSize);
-    buffer.reserve(16);
-
-    for (size_t i = 0; i < measurements.size(); i++)
-    {
-        const Measurement& measurement = *measurements[i];
-        const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
-
-        if (runtimeID == UInt16::MaxValue)
-            continue;
-
-        if (m_isNaNFiltered && isnan(measurement.Value))
-            continue;
-
-        const uint32_t length = serializer.SerializeMeasurement(measurement, buffer, runtimeID);
-
-        if (packet.size() + length > MaxPacketSize)
-        {
-            PublishDataPacket(packet, count);
-            packet.clear();
-            count = 0;
-        }
-
-        WriteBytes(packet, buffer);
-        buffer.clear();
-        count++;
-    }
-
-    if (count > 0)
-        PublishDataPacket(packet, count);
+    if (m_usePayloadCompression)
+        PublishTSSCMeasurements(measurements);
+    else
+        PublishCompactMeasurements(measurements);
 }
 
 void SubscriberConnection::CancelTemporalSubscription()
@@ -487,7 +462,8 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                 if (byteLength > 0 && length >= byteLength + 6U)
                 {
-                    const bool usePayloadCompression = (GetOperationalModes() & OperationalModes::CompressPayloadData) > 0;
+                    const uint32_t operationalModes = GetOperationalModes();
+                    const bool usePayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
                     const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
                     const string connectionString = DecodeString(data, index, byteLength);
 
@@ -619,8 +595,14 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
                         SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
                     }
+                   
+                    m_tsscEncoderLock.lock();
 
+                    // Reset TSSC encoder on successful (re)subscription
+                    m_tsscResetRequested = true;
                     SetSignalIndexCache(signalIndexCache);
+
+                    m_tsscEncoderLock.unlock();
 
                     const string message = "Client subscribed using " + 
                         (usePayloadCompression ? "TSSC compression with " :
@@ -878,7 +860,45 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
     return signalIndexCache;
 }
 
-void SubscriberConnection::PublishDataPacket(const vector<uint8_t>& packet, const int32_t count)
+void SubscriberConnection::PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements)
+{
+    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
+    vector<uint8_t> packet, buffer;
+    int32_t count = 0;
+
+    packet.reserve(MaxPacketSize);
+    buffer.reserve(16);
+
+    for (size_t i = 0; i < measurements.size(); i++)
+    {
+        const Measurement& measurement = *measurements[i];
+        const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
+
+        if (runtimeID == UInt16::MaxValue)
+            continue;
+
+        if (m_isNaNFiltered && isnan(measurement.Value))
+            continue;
+
+        const uint32_t length = serializer.SerializeMeasurement(measurement, buffer, runtimeID);
+
+        if (packet.size() + length > MaxPacketSize)
+        {
+            PublishCompactDataPacket(packet, count);
+            packet.clear();
+            count = 0;
+        }
+
+        WriteBytes(packet, buffer);
+        buffer.clear();
+        count++;
+    }
+
+    if (count > 0)
+        PublishCompactDataPacket(packet, count);
+}
+
+void SubscriberConnection::PublishCompactDataPacket(const vector<uint8_t>& packet, const int32_t count)
 {
     vector<uint8_t> buffer;
     buffer.reserve(packet.size() + 5);
@@ -891,6 +911,82 @@ void SubscriberConnection::PublishDataPacket(const vector<uint8_t>& packet, cons
 
     // Serialize measurements to data buffer
     WriteBytes(buffer, packet);
+
+    // Publish data packet to client
+    SendResponse(ServerResponse::DataPacket, ServerCommand::Subscribe, buffer);
+
+    // Track last publication time
+    m_lastPublishTime = UtcNow();
+
+    // Track total number of published measurements
+    m_totalMeasurementsSent += count;
+}
+
+void SubscriberConnection::PublishTSSCMeasurements(const std::vector<MeasurementPtr>& measurements)
+{
+    m_tsscEncoderLock.lock();
+
+    if (m_tsscResetRequested)
+    {
+        m_tsscResetRequested = false;
+        m_tsscEncoder.Reset();
+
+        for (size_t i = 0; i < TSSCBufferSize; i++)
+            m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
+        
+        m_parent->DispatchStatusMessage("TSSC algorithm reset before sequence number: " + ToString(m_tsscSequenceNumber));
+        m_tsscSequenceNumber = 0;
+    }
+
+    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);
+
+    int32_t count = 0;
+
+    for (const auto& measurement : measurements)
+    {
+        const uint16_t index = m_signalIndexCache->GetSignalIndex(measurement->SignalID);
+
+        if (!m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, measurement->Flags, static_cast<float32_t>(measurement->AdjustedValue())))
+        {
+            PublishTSSCDataPacket(count);
+            count = 0;
+            m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);
+            m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, measurement->Flags, static_cast<float32_t>(measurement->AdjustedValue()));
+        }
+
+        count++;
+    }
+
+    if (count > 0)
+        PublishTSSCDataPacket(count);
+
+    m_tsscEncoderLock.unlock();
+}
+
+void SubscriberConnection::PublishTSSCDataPacket(int32_t count)
+{
+    const uint32_t length = m_tsscEncoder.FinishBlock();
+    vector<uint8_t> buffer;
+    buffer.reserve(length + 8);
+
+    // Serialize data packet flags into response
+    buffer.push_back(DataPacketFlags::Compressed);
+
+    // Serialize total number of measurement values to follow
+    EndianConverter::WriteBigEndianBytes(buffer, count);
+
+    // Add a version number
+    buffer.push_back(85);
+
+    EndianConverter::WriteBigEndianBytes(buffer, m_tsscSequenceNumber);
+    m_tsscSequenceNumber++;
+
+    // Do not increment sequence number to 0
+    if (m_tsscSequenceNumber == 0)
+        m_tsscSequenceNumber = 1;
+
+    for (size_t i = 0; i < length; i++)
+        buffer.push_back(m_tsscWorkingBuffer[i]);
 
     // Publish data packet to client
     SendResponse(ServerResponse::DataPacket, ServerCommand::Subscribe, buffer);

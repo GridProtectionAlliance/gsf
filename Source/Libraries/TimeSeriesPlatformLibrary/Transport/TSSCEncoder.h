@@ -80,7 +80,7 @@ namespace Transport
         TSSCPointMetadataPtr NewTSSCPointMetadata();
 
     public:
-        // Creates a new instance of the TSSC enoder.
+        // Creates a new instance of the TSSC encoder.
         TSSCEncoder();
 
         // Resets the TSSC Encoder to the initial state. 
@@ -90,7 +90,7 @@ namespace Transport
         void SetBuffer(uint8_t* data, uint32_t offset, uint32_t length);
 
         // Finishes the current block and returns position after the last byte written.
-        int32_t FinishBlock();
+        uint32_t FinishBlock();
 
         // Adds the supplied measurement to the stream. If the stream is full, this method returns false.
         bool TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t quality, float32_t value);

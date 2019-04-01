@@ -73,7 +73,7 @@ void TSSCEncoder::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
     m_lastPosition = offset + length;
 }
 
-int32_t TSSCEncoder::FinishBlock()
+uint32_t TSSCEncoder::FinishBlock()
 {
     BitStreamFlush();
     return m_position;
@@ -86,12 +86,17 @@ bool TSSCEncoder::TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t qua
     if (m_lastPosition - m_position < 100)
         return false;
 
-    TSSCPointMetadataPtr point = m_points[id];
+    TSSCPointMetadataPtr point = id >= m_points.size() ? nullptr : m_points[id];
     
     if (point == nullptr)
     {
         point = NewTSSCPointMetadata();
+
+        if (id >= m_points.size())
+            m_points.resize(id + 1, nullptr);
+
         point->PrevNextPointId1 = static_cast<uint16_t>(id + 1);
+        
         m_points[id] = point;
     }
 
@@ -110,7 +115,7 @@ bool TSSCEncoder::TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t qua
     if (point->PrevQuality1 != quality)
         WriteQualityChange(quality, point);
 
-    uint32_t valueRaw = *reinterpret_cast<uint32_t*>(&value);
+    const uint32_t valueRaw = *reinterpret_cast<uint32_t*>(&value);
 
     if (point->PrevValue1 == valueRaw)
     {
@@ -138,7 +143,7 @@ bool TSSCEncoder::TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t qua
     }
     else
     {
-        uint32_t bitsChanged = valueRaw ^ point->PrevValue1;
+        const uint32_t bitsChanged = valueRaw ^ point->PrevValue1;
 
         if (bitsChanged <= Bits4)
         {
@@ -223,7 +228,7 @@ TSSCPointMetadataPtr TSSCEncoder::NewTSSCPointMetadata()
 
 void TSSCEncoder::WritePointIdChange(uint16_t id)
 {
-    uint32_t bitsChanged = static_cast<uint32_t>(id ^ m_lastPoint->PrevNextPointId1);
+    const uint32_t bitsChanged = static_cast<uint32_t>(id ^ m_lastPoint->PrevNextPointId1);
 
     if (bitsChanged <= Bits4)
     {
@@ -311,7 +316,7 @@ void TSSCEncoder::WriteTimestampChange(int64_t timestamp)
     }
 
     //Save the smallest delta time
-    int64_t minDelta = abs(m_prevTimestamp1 - timestamp);
+    const int64_t minDelta = abs(m_prevTimestamp1 - timestamp);
 
     if (minDelta < m_prevTimeDelta4
         && minDelta != m_prevTimeDelta1

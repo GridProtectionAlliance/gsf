@@ -295,7 +295,7 @@ SignalKind GSF::TimeSeries::ParseSignalKind(const string& acronym)
 
 TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)> writeBits) :
     TSSCPointMetadata::TSSCPointMetadata(
-        writeBits,
+        std::move(writeBits),
         function<int32_t()>(nullptr),
         function<int32_t()>(nullptr))
 {
@@ -304,8 +304,8 @@ TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)> writeBits)
 TSSCPointMetadata::TSSCPointMetadata(function<int32_t()> readBit, function<int32_t()> readBits5) :
     TSSCPointMetadata::TSSCPointMetadata(
         function<void(int32_t, int32_t)>(nullptr),
-        readBit,
-        readBits5)
+        std::move(readBit),
+        std::move(readBits5))
 {
 }
 
@@ -313,9 +313,6 @@ TSSCPointMetadata::TSSCPointMetadata(
     function<void(int32_t, int32_t)> writeBits,
     function<int32_t()> readBit,
     function<int32_t()> readBits5) :
-    m_writeBits(writeBits),
-    m_readBit(readBit),
-    m_readBits5(readBits5),
     m_commandsSentSinceLastChange(0),
     m_mode(4),
     m_mode21(0),
@@ -325,6 +322,9 @@ TSSCPointMetadata::TSSCPointMetadata(
     m_mode401(TSSCCodeWords::Value2),
     m_mode4001(TSSCCodeWords::Value3),
     m_startupMode(0),
+    m_writeBits(std::move(writeBits)),
+    m_readBit(std::move(readBit)),
+    m_readBits5(std::move(readBits5)),
     PrevNextPointId1(0),
     PrevQuality1(0),
     PrevQuality2(0),
