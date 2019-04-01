@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  TSSCDecoder.h - Gbtc
+//  TSSCEncoder.h - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-#ifndef __TSSC_DECODER_H
-#define __TSSC_DECODER_H
+#ifndef __TSSC_ENCODER_H
+#define __TSSC_ENCODER_H
 
 #include "TransportTypes.h"
 
@@ -30,10 +30,19 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
-    // Decoder for the compact measurement format of the Gateway Exchange Protocol.
-    class TSSCDecoder
+    // Encoder for the compact measurement format of the Gateway Exchange Protocol.
+    class TSSCEncoder
     {
     private:
+        static constexpr const uint32_t Bits28 = 0xFFFFFFFU;
+        static constexpr const uint32_t Bits24 = 0xFFFFFFU;
+        static constexpr const uint32_t Bits20 = 0xFFFFFU;
+        static constexpr const uint32_t Bits16 = 0xFFFFU;
+        static constexpr const uint32_t Bits12 = 0xFFFU;
+        static constexpr const uint32_t Bits8 = 0xFFU;
+        static constexpr const uint32_t Bits4 = 0xFU;
+        static constexpr const uint32_t Bits0 = 0x0U;
+
         uint8_t* m_data;
         uint32_t m_position;
         uint32_t m_lastPosition;
@@ -49,37 +58,42 @@ namespace Transport
         TSSCPointMetadataPtr m_lastPoint;
         std::vector<TSSCPointMetadataPtr> m_points;
 
+        // The position in m_buffer where the bit stream should be flushed, -1 means no bit stream position has been assigned.
+        int32_t m_bitStreamBufferIndex;
+
         // The number of bits in m_bitStreamCache that are valid. 0 Means the bitstream is empty.
-        int32_t m_bitStreamCount;
+        int32_t m_bitStreamCacheBitCount;
 
         // A cache of bits that need to be flushed to m_buffer when full. Bits filled starting from the right moving left.
         int32_t m_bitStreamCache;
 
-        void DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPoint);
-        int64_t DecodeTimestamp(uint8_t code);
-        uint32_t DecodeQuality(uint8_t code, const TSSCPointMetadataPtr& nextPoint);
+        void WritePointIdChange(uint16_t id);
+        void WriteTimestampChange(int64_t timestamp);
+        void WriteQualityChange(uint32_t quality, const TSSCPointMetadataPtr& point);
 
-        bool BitStreamIsEmpty() const;
+        // Resets the stream so it can be reused. All measurements must be registered again.
         void ClearBitStream();
+        void WriteBits(int32_t code, int32_t length);
+        void BitStreamFlush();
+        void BitStreamEnd();
 
         TSSCPointMetadataPtr NewTSSCPointMetadata();
 
     public:
-        // Creates a new instance of the TSSC decoder.
-        TSSCDecoder();
+        // Creates a new instance of the TSSC enoder.
+        TSSCEncoder();
 
-        // Resets the TSSC Decoder to the initial state.
+        // Resets the TSSC Encoder to the initial state. 
         void Reset();
 
-        // Sets the internal buffer to read data from.
+        // Sets the internal buffer to write data to.
         void SetBuffer(uint8_t* data, uint32_t offset, uint32_t length);
 
-        // Reads the next measurement from the stream. If the end of the stream has been encountered, return false.
-        bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value);
+        // Finishes the current block and returns position after the last byte written.
+        int32_t FinishBlock();
 
-        int32_t ReadBit();
-        int32_t ReadBits4();
-        int32_t ReadBits5();
+        // Adds the supplied measurement to the stream. If the stream is full, this method returns false.
+        bool TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t quality, float32_t value);
     };
 }}}
 

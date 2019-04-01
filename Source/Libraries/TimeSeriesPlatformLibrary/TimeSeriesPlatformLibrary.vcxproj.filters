@@ -655,6 +655,9 @@
     <ClCompile Include="Transport\TSSCDecoder.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
+    <ClCompile Include="Transport\TSSCEncoder.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Transport\Constants.h">
@@ -694,6 +697,9 @@
       <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="Transport\TSSCDecoder.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\TSSCEncoder.h">
       <Filter>Transport</Filter>
     </ClInclude>
   </ItemGroup>

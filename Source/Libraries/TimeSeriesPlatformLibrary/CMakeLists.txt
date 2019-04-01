@@ -210,6 +210,7 @@ set (GSF_HEADER_FILES
     "Transport/SubscriberConnection.h"
     "Transport/SubscriberInstance.h"
     "Transport/TransportTypes.h"
+    "Transport/TSSCEncoder.h"
     "Transport/TSSCDecoder.h"
     "Transport/Version.h"
 )
@@ -389,6 +390,7 @@ set (GSF_SOURCE_FILES
     "Transport/SubscriberConnection.cpp"
     "Transport/SubscriberInstance.cpp"
     "Transport/TransportTypes.cpp"
+    "Transport/TSSCEncoder.cpp"
     "Transport/TSSCDecoder.cpp"
 )
 

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Transport\TSSCEncoder.cpp" />
     <ClInclude Include="Common\CommonTypes.h" />
     <ClCompile Include="Common\CommonTypes.cpp" />
     <ClInclude Include="Common\Convert.h" />
@@ -383,6 +384,7 @@
     <ClCompile Include="Transport\TSSCDecoder.cpp" />
     <ClInclude Include="Transport\TransportTypes.h" />
     <ClCompile Include="Transport\TransportTypes.cpp" />
+    <ClInclude Include="Transport\TSSCEncoder.h" />
     <ClInclude Include="Transport\Version.h" />
   </ItemGroup>
   <ItemGroup>

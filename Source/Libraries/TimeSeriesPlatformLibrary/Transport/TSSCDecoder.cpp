@@ -486,7 +486,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
 
     if (value < 128UL)
     {
-        position++;
+        ++position;
         return value;
     }
     
