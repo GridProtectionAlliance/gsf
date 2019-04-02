@@ -54,8 +54,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_stopTimeConstraint(DateTime::MaxValue),
     m_processingInterval(-1),
     m_temporalSubscriptionCanceled(false),
-    m_usePayloadCompression(false),
-    m_useCompactMeasurementFormat(true),
+    m_usingPayloadCompression(false),
     m_includeTime(true),
     m_useMillisecondResolution(false), // Defaults to microsecond resolution
     m_isNaNFiltered(m_parent->GetIsNaNValueFilterAllowed() && m_parent->GetIsNaNValueFilterForced()),
@@ -79,7 +78,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
 {
     for (size_t i = 0; i < TSSCBufferSize; i++)
         m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
-  
+ 
     // Setup ping timer
     m_pingTimer.SetInterval(5000);
     m_pingTimer.SetAutoReset(true);
@@ -187,24 +186,14 @@ void SubscriberConnection::SetProcessingInterval(int32_t value)
     m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + "ms.");
 }
 
-bool SubscriberConnection::GetUsePayloadCompression() const
+bool SubscriberConnection::GetUsingPayloadCompression() const
 {
-    return m_usePayloadCompression;
+    return m_usingPayloadCompression;
 }
 
-void SubscriberConnection::SetUsePayloadCompression(bool value)
+bool SubscriberConnection::GetUsingCompactMeasurementFormat() const
 {
-    m_usePayloadCompression = value;
-}
-
-bool SubscriberConnection::GetUseCompactMeasurementFormat() const
-{
-    return m_useCompactMeasurementFormat;
-}
-
-void SubscriberConnection::SetUseCompactMeasurementFormat(bool value)
-{
-    m_useCompactMeasurementFormat = value;
+    return !m_usingPayloadCompression;
 }
 
 bool SubscriberConnection::GetIncludeTime() const
@@ -431,7 +420,8 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
     if (!m_startTimeSent)
         m_startTimeSent = SendDataStartTime(measurements[0]->Timestamp);
 
-    if (m_usePayloadCompression)
+
+    if (m_usingPayloadCompression)
         PublishTSSCMeasurements(measurements);
     else
         PublishCompactMeasurements(measurements);
@@ -474,9 +464,11 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                 if (byteLength > 0 && length >= byteLength + 6U)
                 {
                     uint32_t operationalModes = GetOperationalModes();
-                    const bool usePayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
-                    const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
+                    m_usingPayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
                     const string connectionString = DecodeString(data, index, byteLength);
+
+                    if (!m_usingPayloadCompression && ((flags & DataPacketFlags::Compact) == 0 || (operationalModes & OperationalModes::CompressPayloadData) > 0))
+                        m_parent->DispatchStatusMessage("WARNING: Data packets will be published in compact measurement format only when not compressing payload using TSSC.");
 
                     m_parent->DispatchStatusMessage("Successfully decoded " + ToString(connectionString.size()) + " character connection string from " + ToString(byteLength) + " bytes...");
 
@@ -533,9 +525,6 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         m_temporalSubscriptionCanceled = false;
                     }
 
-                    SetUsePayloadCompression(usePayloadCompression);
-                    SetUseCompactMeasurementFormat(useCompactMeasurementFormat);
-
                     SignalIndexCachePtr signalIndexCache = nullptr;
 
                     // Apply subscriber filter expression and build signal index cache
@@ -569,12 +558,13 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                         if (TryGetValue(settings, "port", setting) || TryGetValue(settings, "localport", setting))
                         {
-                            if (usePayloadCompression)
+                            if (m_usingPayloadCompression)
                             {
                                 // TSSC is a stateful compression algorithm which will not reliably support UDP
                                 m_parent->DispatchStatusMessage("WARNING: Cannot use TSSC compression mode with UDP - special compression mode disabled");
 
                                 // Disable TSSC compression processing
+                                m_usingPayloadCompression = false;
                                 operationalModes &= ~CompressionModes::TSSC;
                                 operationalModes &= ~OperationalModes::CompressPayloadData;
                                 SetOperationalModes(operationalModes);
@@ -632,9 +622,8 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                     m_tsscEncoderLock.unlock();
 
-                    const string message = "Client subscribed using " + 
-                        (usePayloadCompression ? "TSSC compression over " :
-                        (string(useCompactMeasurementFormat ? "" : "non-") + "compact format over ")) +
+                    const string message = string("Client subscribed using ") + 
+                        (m_usingPayloadCompression ? "TSSC compression over " : "compact format over ") +
                         (m_dataChannelActive ? "UDP" : "TCP") + " with " + ToString(signalCount) + " signals.";
 
                     SetIsSubscribed(true);
@@ -890,7 +879,7 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
 
 void SubscriberConnection::PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
-    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useCompactMeasurementFormat);
+    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useMillisecondResolution, m_timeIndex);
     vector<uint8_t> packet, buffer;
     int32_t count = 0;
 
@@ -961,9 +950,12 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 
         for (size_t i = 0; i < TSSCBufferSize; i++)
             m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
-        
-        m_parent->DispatchStatusMessage("TSSC algorithm reset before sequence number: " + ToString(m_tsscSequenceNumber));
-        m_tsscSequenceNumber = 0;
+
+        if (m_tsscSequenceNumber != 0)
+        {
+            m_parent->DispatchStatusMessage("TSSC algorithm reset before sequence number: " + ToString(m_tsscSequenceNumber));
+            m_tsscSequenceNumber = 0;
+        }
     }
 
     m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);

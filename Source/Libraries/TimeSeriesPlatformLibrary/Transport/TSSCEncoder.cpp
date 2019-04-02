@@ -424,7 +424,7 @@ void TSSCEncoder::BitStreamEnd()
     }
 }
 
-void Encode7BitUInt32(uint8_t * stream, uint32_t & position, uint32_t value)
+void Encode7BitUInt32(uint8_t* stream, uint32_t & position, uint32_t value)
 {
     if (value < 128UL)
     {

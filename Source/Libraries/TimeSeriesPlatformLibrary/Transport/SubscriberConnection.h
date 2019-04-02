@@ -62,8 +62,7 @@ namespace Transport
         GSF::datetime_t m_stopTimeConstraint;
         int32_t m_processingInterval;
         bool m_temporalSubscriptionCanceled;
-        bool m_usePayloadCompression;
-        bool m_useCompactMeasurementFormat;
+        bool m_usingPayloadCompression;
         bool m_includeTime;
         bool m_useMillisecondResolution;
         bool m_isNaNFiltered;
@@ -190,12 +189,10 @@ namespace Transport
         void SetProcessingInterval(int32_t value);
 
         // Gets or sets flag that determines if payload compression should be enabled in data packets
-        bool GetUsePayloadCompression() const;
-        void SetUsePayloadCompression(bool value);
+        bool GetUsingPayloadCompression() const;
 
         // Gets or sets flag that determines if the compact measurement format should be used in data packets
-        bool GetUseCompactMeasurementFormat() const;
-        void SetUseCompactMeasurementFormat(bool value);
+        bool GetUsingCompactMeasurementFormat() const;
 
         // Gets or sets flag that determines if time should be included in data packets when the compact measurement format used
         bool GetIncludeTime() const;
