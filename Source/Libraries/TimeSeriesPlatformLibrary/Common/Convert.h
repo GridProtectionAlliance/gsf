@@ -75,6 +75,8 @@ namespace GSF
 
     bool ParseBoolean(const std::string& value);
 
+    bool TryParseUInt16(const std::string& value, uint16_t& result, uint16_t defaultValue = 0U);
+
     bool TryParseInt32(const std::string& value, int32_t& result, int32_t defaultValue = 0);
 
     bool TryParseInt64(const std::string& value, int64_t& result, int64_t defaultValue = 0L);

@@ -50,7 +50,7 @@ namespace Transport
 
         const DataPublisherPtr m_parent;
         GSF::IOContext& m_commandChannelService;
-        GSF::Strand m_writeStrand;
+        GSF::Strand m_tcpWriteStrand;
         GSF::Timer m_pingTimer;
         GSF::Guid m_subscriberID;
         const GSF::Guid m_instanceID;
@@ -70,18 +70,24 @@ namespace Transport
         volatile bool m_connectionAccepted;
         volatile bool m_isSubscribed;
         volatile bool m_startTimeSent;
+        volatile bool m_dataChannelActive;
         volatile bool m_stopped;
 
         // Command channel
         GSF::TcpSocket m_commandChannelSocket;
         std::vector<uint8_t> m_readBuffer;
-        std::deque<SharedPtr<std::vector<uint8_t>>> m_writeBuffers;
+        std::deque<SharedPtr<std::vector<uint8_t>>> m_tcpWriteBuffers;
         GSF::IPAddress m_ipAddress;
         std::string m_hostName;
 
         // Data channel
-        int16_t m_udpPort;
-        GSF::UdpSocket m_dataChannelSocket;        
+        uint16_t m_udpPort;
+        GSF::Mutex m_dataChannelMutex;
+        GSF::WaitHandle m_dataChannelWaitHandle;
+        GSF::IOContext m_dataChannelService;
+        GSF::UdpSocket m_dataChannelSocket;
+        GSF::Strand m_udpWriteStrand;
+        std::deque<SharedPtr<std::vector<uint8_t>>> m_udpWriteBuffers;
         std::vector<uint8_t> m_keys[2];
         std::vector<uint8_t> m_ivs[2];
 
@@ -127,11 +133,13 @@ namespace Transport
         std::vector<uint8_t> SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const;
         GSF::Data::DataSetPtr FilterClientMetadata(const StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
         void CommandChannelSendAsync();
-        void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+        void CommandChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+        void DataChannelSendAsync();
+        void DataChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
 
         static void PingTimerElapsed(Timer*, void* userData);
     public:
-        SubscriberConnection(DataPublisherPtr parent, GSF::IOContext& commandChannelService, GSF::IOContext& dataChannelService);
+        SubscriberConnection(DataPublisherPtr parent, GSF::IOContext& commandChannelService);
         ~SubscriberConnection();
 
         const DataPublisherPtr& GetParent() const;

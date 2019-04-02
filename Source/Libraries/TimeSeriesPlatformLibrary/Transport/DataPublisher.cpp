@@ -58,6 +58,11 @@ DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
 {
 }
 
+DataPublisher::DataPublisher(const string& networkInterface, uint16_t port) :
+    DataPublisher(TcpEndPoint(address::from_string(networkInterface), port))
+{
+}
+
 DataPublisher::~DataPublisher()
 {
     m_disposing = true;
@@ -92,7 +97,7 @@ void DataPublisher::RunCommandChannelAcceptThread()
 
 void DataPublisher::StartAccept()
 {
-    const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&, IOContext&>(shared_from_this(), m_commandChannelService, m_dataChannelService);
+    const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&>(shared_from_this(), m_commandChannelService);
     m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
 }
 

@@ -88,9 +88,6 @@ namespace Transport
         GSF::IOContext m_commandChannelService;
         GSF::TcpAcceptor m_clientAcceptor;
 
-        // Data channel
-        GSF::IOContext m_dataChannelService;
-
         // Threads
         void RunCallbackThread();
         void RunCommandChannelAcceptThread();
@@ -132,7 +129,8 @@ namespace Transport
     public:
         // Creates a new instance of the data publisher.
         DataPublisher(const GSF::TcpEndPoint& endpoint);
-        DataPublisher(uint16_t port, bool ipV6 = false);
+        DataPublisher(uint16_t port, bool ipV6 = false);                    // Bind to default NIC
+        DataPublisher(const std::string& networkInterface, uint16_t port);  // Bind to specified NIC IP, format determines IP version
 
         // Releases all threads and sockets
         // tied up by the publisher.

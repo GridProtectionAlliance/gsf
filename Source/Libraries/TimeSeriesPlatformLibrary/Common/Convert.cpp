@@ -245,12 +245,12 @@ datetime_t GSF::LocalFromUtc(const datetime_t& timestamp)
     return boost::date_time::c_local_adjustor<datetime_t>::utc_to_local(timestamp);
 }
 
-std::string GSF::ToString(const Guid& value)
+string GSF::ToString(const Guid& value)
 {
     return boost::uuids::to_string(value);
 }
 
-std::string GSF::ToString(const datetime_t& value, const char* format)
+string GSF::ToString(const datetime_t& value, const char* format)
 {
     stringstream stream;
     time_facet* facet = new time_facet(format);
@@ -261,7 +261,7 @@ std::string GSF::ToString(const datetime_t& value, const char* format)
     return stream.str();
 }
 
-std::string GSF::ToString(const TimeSpan& value)
+string GSF::ToString(const TimeSpan& value)
 {
     // TODO: Consider improving elapsed time string with hours, minutes, etc.
     const float64_t seconds = value.total_milliseconds() / 1000.0;
@@ -309,7 +309,21 @@ bool GSF::ParseBoolean(const string& value)
     return false;
 }
 
-bool GSF::TryParseInt32(const std::string& value, int32_t& result, const int32_t defaultValue)
+bool GSF::TryParseUInt16(const string& value, uint16_t& result, const uint16_t defaultValue)
+{
+    try
+    {
+        result = static_cast<uint16_t>(stoul(value));
+        return true;
+    }
+    catch (...)
+    {
+        result = defaultValue;
+        return false;
+    }
+}
+
+bool GSF::TryParseInt32(const string& value, int32_t& result, const int32_t defaultValue)
 {
     try
     {
@@ -323,7 +337,7 @@ bool GSF::TryParseInt32(const std::string& value, int32_t& result, const int32_t
     }
 }
 
-bool GSF::TryParseInt64(const std::string& value, int64_t& result, const int64_t defaultValue)
+bool GSF::TryParseInt64(const string& value, int64_t& result, const int64_t defaultValue)
 {
     try
     {
@@ -351,9 +365,9 @@ bool GSF::TryParseDouble(const string& value, float64_t& result, const float64_t
     }
 }
 
-std::string GSF::RegExEncode(const char value)
+string GSF::RegExEncode(const char value)
 {
-    std::stringstream stream;
+    stringstream stream;
     stream << std::hex << static_cast<int>(value);
     return "\\u" + PadLeft(stream.str(), 4, '0');
 }

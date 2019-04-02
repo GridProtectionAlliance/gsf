@@ -42,10 +42,10 @@ using namespace GSF::TimeSeries::Transport;
 
 static const uint32_t MaxPacketSize = 32768U;
 
-SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService, IOContext& dataChannelService) :
+SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService) :
     m_parent(std::move(parent)),
     m_commandChannelService(commandChannelService),
-    m_writeStrand(commandChannelService),
+    m_tcpWriteStrand(commandChannelService),
     m_subscriberID(NewGuid()),
     m_instanceID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
@@ -62,11 +62,13 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_connectionAccepted(false),
     m_isSubscribed(false),
     m_startTimeSent(false),
+    m_dataChannelActive(false),
     m_stopped(true),
     m_commandChannelSocket(m_commandChannelService),
     m_readBuffer(Common::MaxPacketSize),
     m_udpPort(0),
-    m_dataChannelSocket(dataChannelService),
+    m_dataChannelSocket(m_dataChannelService),
+    m_udpWriteStrand(m_dataChannelService),
     m_totalCommandChannelBytesSent(0L),
     m_totalDataChannelBytesSent(0L),
     m_totalMeasurementsSent(0L),
@@ -77,7 +79,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
 {
     for (size_t i = 0; i < TSSCBufferSize; i++)
         m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
-
+  
     // Setup ping timer
     m_pingTimer.SetInterval(5000);
     m_pingTimer.SetAutoReset(true);
@@ -403,6 +405,15 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
             m_commandChannelSocket.shutdown(socket_base::shutdown_both);
 
         m_commandChannelSocket.cancel();
+
+        if (m_dataChannelActive)
+        {
+            m_dataChannelActive = false;
+            m_dataChannelWaitHandle.notify_all();
+            m_dataChannelService.stop();
+            m_dataChannelSocket.shutdown(socket_base::shutdown_type::shutdown_both);
+            m_dataChannelSocket.close();
+        }
     }
     catch (...)
     {
@@ -462,14 +473,14 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                 if (byteLength > 0 && length >= byteLength + 6U)
                 {
-                    const uint32_t operationalModes = GetOperationalModes();
+                    uint32_t operationalModes = GetOperationalModes();
                     const bool usePayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
                     const bool useCompactMeasurementFormat = (flags & DataPacketFlags::Compact) > 0;
                     const string connectionString = DecodeString(data, index, byteLength);
 
                     m_parent->DispatchStatusMessage("Successfully decoded " + ToString(connectionString.size()) + " character connection string from " + ToString(byteLength) + " bytes...");
 
-                    const StringMap<string> settings = ParseKeyValuePairs(connectionString);
+                    StringMap<string> settings = ParseKeyValuePairs(connectionString);
                     string setting;
 
                     if (TryGetValue(settings, "includeTime", setting))
@@ -545,45 +556,62 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         m_parent->DispatchStatusMessage("Reported client subscription info: " + GetSubscriptionInfo());
                     }
 
-                    // TODO: Set up UDP data channel if client has requested this
                     if (TryGetValue(settings, "dataChannel", setting))
                     {
-                        /*
-                        Socket clientSocket = connection.GetCommandChannelSocket();
-                        Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                        IPEndPoint localEndPoint = null;
-                        string networkInterface = "::0";
+                        auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
+                        auto localEndPoint = m_commandChannelSocket.local_endpoint();
+                        string networkInterface = localEndPoint.address().to_string();
+                        settings = ParseKeyValuePairs(setting);
 
-                        // Make sure return interface matches incoming client connection
-                        if ((object)clientSocket != null)
-                        localEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
+                        // Remove any dual-stack prefix
+                        if (StartsWith(networkInterface, "::ffff:"))
+                            networkInterface = networkInterface.substr(7);
 
-                        if ((object)localEndPoint != null)
+                        if (TryGetValue(settings, "port", setting) || TryGetValue(settings, "localport", setting))
                         {
-                        networkInterface = localEndPoint.Address.ToString();
+                            if (usePayloadCompression)
+                            {
+                                // TSSC is a stateful compression algorithm which will not reliably support UDP
+                                m_parent->DispatchStatusMessage("WARNING: Cannot use TSSC compression mode with UDP - special compression mode disabled");
 
-                        // Remove dual-stack prefix
-                        if (networkInterface.StartsWith("::ffff:", true, CultureInfo.InvariantCulture))
-                        networkInterface = networkInterface.Substring(7);
+                                // Disable TSSC compression processing
+                                operationalModes &= ~CompressionModes::TSSC;
+                                operationalModes &= ~OperationalModes::CompressPayloadData;
+                                SetOperationalModes(operationalModes);
+                            }
+
+                            if (TryParseUInt16(setting, m_udpPort))
+                            {
+                                const udp protocol = remoteEndPoint.protocol() == tcp::v6() ? udp::v6() : udp::v4();
+
+                                // Reset UDP socket on resubscribe
+                                if (m_dataChannelActive)
+                                {
+                                    m_dataChannelActive = false;
+                                    m_dataChannelWaitHandle.notify_all();
+                                    m_dataChannelSocket.shutdown(socket_base::shutdown_type::shutdown_both);
+                                    m_dataChannelSocket.close();
+                                    m_dataChannelService.stop();
+                                }
+
+                                m_dataChannelSocket.open(protocol);
+                                m_dataChannelSocket.bind(udp::endpoint(ip::address::from_string(networkInterface), 0));
+                                m_dataChannelSocket.connect(udp::endpoint(remoteEndPoint.address(), m_udpPort));
+                                m_dataChannelActive = true;
+                                
+                                Thread([this]
+                                {
+                                    UniqueLock lock(m_dataChannelMutex);
+
+                                    while (m_dataChannelActive)
+                                    {
+                                        m_dataChannelService.restart();
+                                        m_dataChannelService.run();                                        
+                                        m_dataChannelWaitHandle.wait(lock);
+                                    }
+                                });
+                            }
                         }
-
-                        if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
-                        {
-                        if ((compressionModes & CompressionModes.TSSC) > 0)
-                        {
-                        // TSSC is a stateful compression algorithm which will not reliably support UDP
-                        OnStatusMessage(MessageLevel.Warning, "Cannot use TSSC compression mode with UDP - special compression mode disabled");
-
-                        // Disable TSSC compression processing
-                        compressionModes &= ~CompressionModes.TSSC;
-                        connection.OperationalModes &= ~OperationalModes.CompressionModeMask;
-                        connection.OperationalModes |= (OperationalModes)compressionModes;
-                        }
-
-                        connection.DataChannel = new UdpServer($"Port=-1; Clients={connection.IPAddress}:{int.Parse(setting)}; interface={networkInterface}");
-                        connection.DataChannel.Start();
-                        }
-                        */
                     }
 
                     int32_t signalCount = 0;
@@ -605,9 +633,9 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     m_tsscEncoderLock.unlock();
 
                     const string message = "Client subscribed using " + 
-                        (usePayloadCompression ? "TSSC compression with " :
-                        (string(useCompactMeasurementFormat ? "" : "non-") + "compact format with ")) + 
-                        ToString(signalCount) + " signals.";
+                        (usePayloadCompression ? "TSSC compression over " :
+                        (string(useCompactMeasurementFormat ? "" : "non-") + "compact format over ")) +
+                        (m_dataChannelActive ? "UDP" : "TCP") + " with " + ToString(signalCount) + " signals.";
 
                     SetIsSubscribed(true);
                     SendResponse(ServerResponse::Succeeded, ServerCommand::Subscribe, message);
@@ -1262,16 +1290,16 @@ void SubscriberConnection::CommandChannelSendAsync()
     if (m_stopped)
         return;
 
-    vector<uint8_t>& data = *m_writeBuffers[0];
-    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_writeStrand, bind(&SubscriberConnection::WriteHandler, this, _1, _2)));
+    vector<uint8_t>& data = *m_tcpWriteBuffers[0];
+    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, bind(&SubscriberConnection::CommandChannelWriteHandler, this, _1, _2)));
 }
 
-void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
 {
     if (m_stopped)
         return;
 
-    m_writeBuffers.pop_front();
+    m_tcpWriteBuffers.pop_front();
 
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
@@ -1294,8 +1322,49 @@ void SubscriberConnection::WriteHandler(const ErrorCode& error, uint32_t bytesTr
         Stop(false);
     }
 
-    if (!m_writeBuffers.empty())
+    if (!m_tcpWriteBuffers.empty())
         CommandChannelSendAsync();
+}
+
+void SubscriberConnection::DataChannelSendAsync()
+{
+    if (m_stopped)
+        return;
+
+    vector<uint8_t>& data = *m_udpWriteBuffers[0];
+    m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, bind(&SubscriberConnection::DataChannelWriteHandler, this, _1, _2)));
+}
+
+void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+{
+    if (m_stopped)
+        return;
+
+    m_udpWriteBuffers.pop_front();
+
+    // Stop cleanly, i.e., don't report, on these errors
+    if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
+    {
+        Stop(false);
+        return;
+    }
+
+    if (error)
+    {
+        stringstream messageStream;
+
+        messageStream << "Error writing data to client \"";
+        messageStream << m_connectionID;
+        messageStream << "\" command channel: ";
+        messageStream << SystemError(error).what();
+
+        m_parent->DispatchErrorMessage(messageStream.str());
+
+        Stop(false);
+    }
+
+    if (!m_udpWriteBuffers.empty())
+        DataChannelSendAsync();
 }
 
 bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode)
@@ -1315,21 +1384,27 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
 
     try
     {
-        const bool dataPacketResponse = responseCode == ServerResponse::DataPacket;
-        const bool useDataChannel = dataPacketResponse || responseCode == ServerResponse::BufferBlock;
+        const bool useDataChannel = m_dataChannelActive && (responseCode == ServerResponse::DataPacket || responseCode == ServerResponse::BufferBlock);
         const uint32_t packetSize = data.size() + 6;
         SharedPtr<vector<uint8_t>> bufferPtr = NewSharedPtr<vector<uint8_t>>();
         vector<uint8_t>& buffer = *bufferPtr;
         
-        buffer.reserve(Common::PayloadHeaderSize + packetSize);
+        if (useDataChannel)
+        {
+            buffer.reserve(packetSize + 4);
+        }
+        else
+        {
+            // Add command payload alignment header (deprecated)
+            buffer.reserve(packetSize + Common::PayloadHeaderSize);
 
-        // Add command payload alignment header (deprecated)
-        buffer.push_back(0xAA);
-        buffer.push_back(0xBB);
-        buffer.push_back(0xCC);
-        buffer.push_back(0xDD);
+            buffer.push_back(0xAA);
+            buffer.push_back(0xBB);
+            buffer.push_back(0xCC);
+            buffer.push_back(0xDD);
 
-        EndianConverter::WriteLittleEndianBytes(buffer, packetSize);
+            EndianConverter::WriteLittleEndianBytes(buffer, packetSize);
+        }
 
         // Add response code
         buffer.push_back(responseCode);
@@ -1344,7 +1419,7 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
         }
         else
         {
-            if (dataPacketResponse && CipherKeysDefined())
+            if (useDataChannel && CipherKeysDefined())
             {
                 // TODO: Implement UDP AES data packet encryption
                 //// Get a local copy of volatile keyIVs and cipher index since these can change at any time
@@ -1388,32 +1463,32 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
                 WriteBytes(buffer, data);
             }
 
-            // TODO: Publish packet on UDP
-            //// Data packets and buffer blocks can be published on a UDP data channel, so check for this...
-            //if (useDataChannel)
-            //    publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
-            //else
-            //    publishChannel = m_commandChannel;
+            // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+            if (useDataChannel)
+            {
+                m_totalDataChannelBytesSent += buffer.size();
 
-            //// Send response packet
-            //if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
-            //{
-            //    if (publishChannel is UdpServer)
-            //        publishChannel.MulticastAsync(buffer, 0, buffer.size());
-            //    else
-            //        publishChannel.SendToAsync(connection, buffer, 0, buffer.size());
+                post(m_udpWriteStrand, [this, bufferPtr] {
+                    m_udpWriteBuffers.push_back(bufferPtr);
 
-            //}
+                    if (m_udpWriteBuffers.size() == 1)
+                        DataChannelSendAsync();
+                });
 
-            m_totalCommandChannelBytesSent += buffer.size();
+                m_dataChannelWaitHandle.notify_all();
+            }
+            else
+            {
+                m_totalCommandChannelBytesSent += buffer.size();
 
-            post(m_writeStrand, [this, bufferPtr]{
-                m_writeBuffers.push_back(bufferPtr);
+                post(m_tcpWriteStrand, [this, bufferPtr] {
+                    m_tcpWriteBuffers.push_back(bufferPtr);
 
-                if (m_writeBuffers.size() == 1)
-                    CommandChannelSendAsync();
-            });
-            
+                    if (m_tcpWriteBuffers.size() == 1)
+                        CommandChannelSendAsync();
+                });
+            }
+
             success = true;
         }
     }
