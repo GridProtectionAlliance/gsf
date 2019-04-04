@@ -51,7 +51,7 @@ public:
     void SetProcessingInterval(int32_t processingInterval) const;
     void CompleteTemporalSubscription();
 
-	bool GetIsStopped() const;
+    bool GetIsStopped() const;
 
     static constexpr const int64_t HistoryInterval = GSF::Ticks::PerMillisecond * 33L;
 };

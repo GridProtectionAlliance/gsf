@@ -183,9 +183,7 @@ int main(int argc, char* argv[])
     if (genHistory)
         HistoryGenerator->StopArchive();
 
-    // Disconnect the subscriber to stop background threads.
-    //Subscriber.Disconnect();
-    cout << "Disconnected." << endl;
+    cout << "Publisher stopped." << endl;
 
     return 0;
 }

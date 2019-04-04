@@ -32,27 +32,27 @@ class PublisherHandler : public GSF::TimeSeries::Transport::PublisherInstance
 private:
     std::string m_name;
     uint64_t m_processCount;
-	GSF::TimerPtr m_publishTimer;
-	int32_t m_metadataVersion;
-	std::vector<GSF::TimeSeries::DeviceMetadataPtr> m_deviceMetadata;
-	std::vector<GSF::TimeSeries::MeasurementMetadataPtr> m_measurementMetadata;
-	std::vector<GSF::TimeSeries::PhasorMetadataPtr> m_phasorMetadata;
+    GSF::TimerPtr m_publishTimer;
+    int32_t m_metadataVersion;
+    std::vector<GSF::TimeSeries::DeviceMetadataPtr> m_deviceMetadata;
+    std::vector<GSF::TimeSeries::MeasurementMetadataPtr> m_measurementMetadata;
+    std::vector<GSF::TimeSeries::PhasorMetadataPtr> m_phasorMetadata;
 
     static GSF::Mutex s_coutLock;
 
-	void DefineMetadata();
+    void DefineMetadata();
 
 protected:
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
-	void ClientConnected(const GSF::TimeSeries::Transport::SubscriberConnectionPtr& connection) override;
-	void ClientDisconnected(const GSF::TimeSeries::Transport::SubscriberConnectionPtr& connection) override;
+    void ClientConnected(const GSF::TimeSeries::Transport::SubscriberConnectionPtr& connection) override;
+    void ClientDisconnected(const GSF::TimeSeries::Transport::SubscriberConnectionPtr& connection) override;
 
 public:
-	PublisherHandler(std::string name, uint16_t port, bool ipV6);
+    PublisherHandler(std::string name, uint16_t port, bool ipV6);
 
-	void Start();
-	void Stop() const;
+    void Start();
+    void Stop() const;
 };
 
 typedef GSF::SharedPtr<PublisherHandler> PublisherHandlerPtr;

@@ -76,9 +76,7 @@ int main(int argc, char* argv[])
         PublishTimer->Stop();
     }
 
-    // Disconnect the subscriber to stop background threads.
-    //Subscriber.Disconnect();
-    cout << "Disconnected." << endl;
+    cout << "Publisher stopped." << endl;
 
     return 0;
 }

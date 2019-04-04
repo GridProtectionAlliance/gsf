@@ -69,8 +69,8 @@ void TemporalSubscriber::SendTemporalData()
 {
     if (m_stopped)
         return;
-	
-	static DataTable& history = *s_history->Table("History");
+    
+    static DataTable& history = *s_history->Table("History");
     static const int32_t signalIDColumn = history["SignalID"]->Index();
     static const int32_t timestampColumn = history["Timestamp"]->Index();
     static const int32_t valueColumn = history["Value"]->Index();
@@ -111,12 +111,12 @@ void TemporalSubscriber::CompleteTemporalSubscription()
     if (m_stopped)
         return;
 
-	m_stopped = true;
-	m_processTimer->Stop();
+    m_stopped = true;
+    m_processTimer->Stop();
     m_connection->CancelTemporalSubscription();
 }
 
 bool TemporalSubscriber::GetIsStopped() const
 {
-	return m_stopped;
+    return m_stopped;
 }

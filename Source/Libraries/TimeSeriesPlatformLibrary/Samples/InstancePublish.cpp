@@ -35,7 +35,6 @@ PublisherHandler* Publisher[TotalInstances];
 
 int main(int argc, char* argv[])
 {
-    string hostname;
     uint16_t port;
 
     // Ensure that the necessary
@@ -56,28 +55,27 @@ int main(int argc, char* argv[])
         // Maintain the life-time of PublisherHandler instances within main
         PublisherHandler* publisher = new PublisherHandler("Publisher " + ToString(i + 1), port + i, false);
 
-		// Set second publisher to only allow one connection
-		if (i == 1)
-			publisher->SetMaximumAllowedConnections(1);
+        // Set second publisher to only allow one connection
+        if (i == 1)
+            publisher->SetMaximumAllowedConnections(1);
 
-    	publisher->Start();
-		Publisher[i] = publisher;
+        publisher->Start();
+        Publisher[i] = publisher;
     }
 
     // Wait until the user presses enter before quitting.
     string line;
     getline(cin, line);
 
-    // Shutdown publisher instances
+    // Stop publisher instances - this stops publication
     for (uint32_t i = 0; i < TotalInstances; i++)
         Publisher[i]->Stop();
 
-    // Disconnect the publisher to stop background threads.
-    cout << "Disconnected." << endl;
-
-    // Delete publisher instances
+    // Delete publisher instances - this closes sockets
     for (uint32_t i = 0; i < TotalInstances; i++)
         delete Publisher[i];
+
+    cout << "Publishers stopped." << endl;
 
     return 0;
 }

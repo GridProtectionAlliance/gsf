@@ -79,18 +79,12 @@ namespace Transport
         void* m_userData;
         bool m_disposing;
 
-        // Callback thread members
-        Thread m_callbackThread;
+        // Callback queue
         ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
 
         // Command channel
-        Thread m_commandChannelAcceptThread;
         GSF::IOContext m_commandChannelService;
         GSF::TcpAcceptor m_clientAcceptor;
-
-        // Threads
-        void RunCallbackThread();
-        void RunCommandChannelAcceptThread();
 
         // Command channel handlers
         void StartAccept();

@@ -49,8 +49,27 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_disposing(false),
     m_clientAcceptor(m_commandChannelService, endpoint)
 {
-    m_callbackThread = Thread(bind(&DataPublisher::RunCallbackThread, this));
-    m_commandChannelAcceptThread = Thread(bind(&DataPublisher::RunCommandChannelAcceptThread, this));
+    // Run call-back thread
+    Thread([this]
+    {
+        while (true)
+        {
+            m_callbackQueue.WaitForData();
+
+            if (m_disposing)
+                break;
+
+            const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
+            dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+        }
+    });
+
+    // Run command channel accept thread
+    Thread([this]
+    {
+        StartAccept();
+        m_commandChannelService.run();
+    });
 }
 
 DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
@@ -73,26 +92,6 @@ DataPublisher::CallbackDispatcher::CallbackDispatcher() :
     Data(nullptr),
     Function(nullptr)
 {
-}
-
-void DataPublisher::RunCallbackThread()
-{
-    while (true)
-    {
-        m_callbackQueue.WaitForData();
-
-        if (m_disposing)
-            break;
-
-        const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
-        dispatcher.Function(dispatcher.Source, *dispatcher.Data);
-    }
-}
-
-void DataPublisher::RunCommandChannelAcceptThread()
-{
-    StartAccept();
-    m_commandChannelService.run();
 }
 
 void DataPublisher::StartAccept()
