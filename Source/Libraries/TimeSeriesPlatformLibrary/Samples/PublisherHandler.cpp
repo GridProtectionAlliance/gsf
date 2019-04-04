@@ -208,21 +208,21 @@ void PublisherHandler::Start()
 
             switch (metadata->Reference.Kind)
             {
-            case Frequency:
-                value = 60.0 + sign * randFraction * 0.1;
-                break;
-            case DfDt:
-                value = sign * randFraction * 2;
-                break;
-            case Magnitude:
-                value = 500 + sign * randFraction * 50;
-                break;
-            case Angle:
-                value = sign * randFraction * 180;
-                break;
-            default:
-                value = sign * randFraction * UInt32::MaxValue;
-                break;
+                case Frequency:
+                    value = 60.0 + sign * randFraction * 0.1;
+                    break;
+                case DfDt:
+                    value = sign * randFraction * 2;
+                    break;
+                case Magnitude:
+                    value = 500 + sign * randFraction * 50;
+                    break;
+                case Angle:
+                    value = sign * randFraction * 180;
+                    break;
+                default:
+                    value = sign * randFraction * UInt32::MaxValue;
+                    break;
             }
 
             measurement->Value = value;

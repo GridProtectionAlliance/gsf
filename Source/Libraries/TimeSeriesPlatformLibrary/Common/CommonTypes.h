@@ -24,6 +24,7 @@
 #ifndef __COMMON_TYPES_H
 #define __COMMON_TYPES_H
 
+#include <climits>
 #include <cstddef>
 #include <cstring>
 #include <map>
@@ -44,9 +45,12 @@
 
 namespace GSF
 {
+    static_assert(sizeof(float) * CHAR_BIT == 32, "float not defined as 32-bits");
+    static_assert(sizeof(double) * CHAR_BIT == 64, "double not defined as 64-bits");
+
     // Floating-point types
-    typedef float_t float32_t;
-    typedef double_t float64_t;
+    typedef float float32_t;
+    typedef double float64_t;
     typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
 
     // DateTime type
