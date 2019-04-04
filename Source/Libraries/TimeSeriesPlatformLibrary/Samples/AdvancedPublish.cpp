@@ -188,11 +188,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-// The proper procedure when creating and running a subscriber is:
-//   - Create publisher
-//   - Register callbacks
-//   - Start publisher to listen for subscribers
-//   - Publish
 bool RunPublisher(uint16_t port, bool genHistory)
 {
     static float64_t randMax = float64_t(RAND_MAX);
