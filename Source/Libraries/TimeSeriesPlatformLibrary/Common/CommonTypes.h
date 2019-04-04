@@ -89,19 +89,19 @@ namespace GSF
     struct UInt32
     {
         static const uint32_t MaxValue = static_cast<uint32_t>(4294967295U);
-        static const uint32_t MinValue = static_cast<uint32_t>(0);
+        static const uint32_t MinValue = static_cast<uint32_t>(0U);
     };
 
     struct Int64
     {
-        static const int64_t MaxValue = static_cast<int64_t>(9223372036854775807L);
-        static const int64_t MinValue = static_cast<int64_t>(-9223372036854775807L) - 1L;
+        static const int64_t MaxValue = static_cast<int64_t>(9223372036854775807LL);
+        static const int64_t MinValue = static_cast<int64_t>(-9223372036854775807LL) - 1LL;
     };
 
     struct UInt64
     {
-        static const uint64_t MaxValue = static_cast<uint64_t>(18446744073709551615UL);
-        static const uint64_t MinValue = static_cast<uint64_t>(0UL);
+        static const uint64_t MaxValue = static_cast<uint64_t>(18446744073709551615ULL);
+        static const uint64_t MinValue = static_cast<uint64_t>(0ULL);
     };
 
     struct Decimal
@@ -121,18 +121,18 @@ namespace GSF
 
     struct Ticks
     {
-        static const int64_t MaxValue = 3155378975999999999L;       // 12/31/1999 11:59:59.999
-        static const int64_t MinValue = 0L;                         // 01/01/0001 00:00:00.000
+        static const int64_t MaxValue = 3155378975999999999LL;       // 12/31/1999 11:59:59.999
+        static const int64_t MinValue = 0LL;                         // 01/01/0001 00:00:00.000
 
-        static const int64_t UnixBaseOffset = 621355968000000000L;  // 01/01/1970 00:00:00.000
-        static const int64_t PTimeBaseOffset = 441481536000000000L; // 01/01/1400 00:00:00.000
+        static const int64_t UnixBaseOffset = 621355968000000000LL;  // 01/01/1970 00:00:00.000
+        static const int64_t PTimeBaseOffset = 441481536000000000LL; // 01/01/1400 00:00:00.000
 
-        static const int64_t PerSecond = 10000000L;
-        static const int64_t PerMillisecond = Ticks::PerSecond / 1000;
-        static const int64_t PerMicrosecond = Ticks::PerSecond / 1000000;
-        static const int64_t PerMinute = 60L * Ticks::PerSecond;
-        static const int64_t PerHour = 60L * Ticks::PerMinute;
-        static const int64_t PerDay = 24L * Ticks::PerHour;
+        static const int64_t PerSecond = 10000000LL;
+        static const int64_t PerMillisecond = Ticks::PerSecond / 1000LL;
+        static const int64_t PerMicrosecond = Ticks::PerSecond / 1000000LL;
+        static const int64_t PerMinute = 60LL * Ticks::PerSecond;
+        static const int64_t PerHour = 60LL * Ticks::PerMinute;
+        static const int64_t PerDay = 24LL * Ticks::PerHour;
     };
 
     template<class T>
