@@ -66,9 +66,9 @@ namespace Transport
         GSF::Guid m_nodeID;
         GSF::Data::DataSetPtr m_metadata;
         GSF::Data::DataSetPtr m_filteringMetadata;
-        std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
         RoutingTables m_routingTables;
-        GSF::Mutex m_subscriberConnectionsLock;
+        std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
+        GSF::SharedMutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
         int32_t m_maximumAllowedConnections;
         bool m_isMetadataRefreshAllowed;

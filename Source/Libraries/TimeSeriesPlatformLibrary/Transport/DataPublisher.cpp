@@ -104,10 +104,9 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
 {
     if (!error)
     {
-        m_subscriberConnectionsLock.lock();
+        WriterLock writeLock(m_subscriberConnectionsLock);
         const bool connectionAccepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
         m_subscriberConnections.insert(connection);
-        m_subscriberConnectionsLock.unlock();
 
         // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
         connection->Start(connectionAccepted);
@@ -142,9 +141,8 @@ void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 {
     m_routingTables.RemoveRoutes(connection);
 
-    m_subscriberConnectionsLock.lock();
+    WriterLock writeLock(m_subscriberConnectionsLock);
     m_subscriberConnections.erase(connection);
-    m_subscriberConnectionsLock.unlock();
 }
 
 void DataPublisher::Dispatch(const DispatcherFunction& function)
@@ -694,12 +692,10 @@ void DataPublisher::DefineMetadata(const DataSetPtr& metadata)
     m_filteringMetadata.swap(filteringMetadata);
 
     // Notify all subscribers that the configuration metadata has changed
-    m_subscriberConnectionsLock.lock();
+    ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)
         connection->SendResponse(ServerResponse::ConfigurationChanged, ServerCommand::Subscribe);
-
-    m_subscriberConnectionsLock.unlock();
 }
 
 const DataSetPtr& DataPublisher::GetMetadata() const
@@ -865,12 +861,10 @@ uint64_t DataPublisher::GetTotalCommandChannelBytesSent()
 {
     uint64_t totalCommandChannelBytesSent = 0L;
 
-    m_subscriberConnectionsLock.lock();
+    ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)
         totalCommandChannelBytesSent += connection->GetTotalCommandChannelBytesSent();
-
-    m_subscriberConnectionsLock.unlock();
 
     return totalCommandChannelBytesSent;
 }
@@ -879,12 +873,10 @@ uint64_t DataPublisher::GetTotalDataChannelBytesSent()
 {
     uint64_t totalDataChannelBytesSent = 0L;
 
-    m_subscriberConnectionsLock.lock();
+    ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)
         totalDataChannelBytesSent += connection->GetTotalDataChannelBytesSent();
-
-    m_subscriberConnectionsLock.unlock();
 
     return totalDataChannelBytesSent;
 }
@@ -893,12 +885,10 @@ uint64_t DataPublisher::GetTotalMeasurementsSent()
 {
     uint64_t totalMeasurementsSent = 0L;
 
-    m_subscriberConnectionsLock.lock();
+    ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)
         totalMeasurementsSent += connection->GetTotalMeasurementsSent();
-
-    m_subscriberConnectionsLock.unlock();
 
     return totalMeasurementsSent;
 }
@@ -940,10 +930,8 @@ void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const Subscribe
 
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
 {
-    m_subscriberConnectionsLock.lock();
+    ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)
         iteratorHandler(connection, userData);
-
-    m_subscriberConnectionsLock.unlock();
 }
