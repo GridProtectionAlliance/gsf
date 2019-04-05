@@ -1068,7 +1068,23 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t by
     const uint32_t packetSize = EndianConverter::ToLittleEndian<uint32_t>(&m_readBuffer[0], PacketSizeOffset);
 
     if (packetSize > static_cast<uint32_t>(m_readBuffer.size()))
+    {
+        // Validate packet size, anything larger than 32K should be considered invalid data
+        if (packetSize > Common::MaxPacketSize)
+        {
+            Thread([this, packetSize]
+            {
+                m_parent->DispatchErrorMessage("Possible invalid protocol detected: client requested " + ToString(packetSize) + " byte packet size. Closing connection.");
+                SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: invalid packet size requested.");
+                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+                Stop();
+            });
+            
+            return;
+        }
+
         m_readBuffer.resize(packetSize);
+    }
 
     // Read packet (payload body)
     // This read method is guaranteed not to return until the

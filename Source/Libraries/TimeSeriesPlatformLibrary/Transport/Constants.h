@@ -33,9 +33,9 @@ namespace Transport
     // Common constants.
     struct Common
     {
-        static const size_t MaxPacketSize = 32768;
-        static const uint32_t PayloadHeaderSize = 8;
-        static const uint32_t ResponseHeaderSize = 6;
+        static const size_t MaxPacketSize = 32768U;
+        static const uint32_t PayloadHeaderSize = 8U;
+        static const uint32_t ResponseHeaderSize = 6U;
     };
 
     // DataPublisher data packet flags.
