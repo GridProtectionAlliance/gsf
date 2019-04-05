@@ -294,6 +294,8 @@
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Shared\Scripts\bootstrap4.js" />
+    <Content Include="Shared\Scripts\popper.js" />
     <EmbeddedResource Include="Shared\Scripts\jquery.subscriber.js" />
     <EmbeddedResource Include="Shared\Scripts\jquery.jspanel.js" />
     <EmbeddedResource Include="Shared\Scripts\jstorage.js" />
@@ -324,6 +326,7 @@
     <EmbeddedResource Include="Model\Scripts\pagedViewModel.js" />
     <Content Include="Readme.txt" />
     <EmbeddedResource Include="Security\Scripts\Login.js" />
+    <Content Include="Shared\Content\bootstrap4.css" />
     <Content Include="Shared\Content\Images\ui-icons_444444_256x240.png" />
     <Content Include="Shared\Content\Images\ui-icons_555555_256x240.png" />
     <Content Include="Shared\Content\Images\ui-icons_777620_256x240.png" />
