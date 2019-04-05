@@ -42,7 +42,7 @@ using namespace GSF::TimeSeries::Transport;
 
 static const uint32_t MaxPacketSize = 32768U;
 
-SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService) :
+SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService) : //NOLINT
     m_parent(std::move(parent)),
     m_commandChannelService(commandChannelService),
     m_tcpWriteStrand(commandChannelService),
@@ -706,9 +706,17 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
             }
         }
     }
-    catch (const std::exception& ex)
+    catch (const FilterExpressionParserException& ex)
     {
-        m_parent->DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: " + string(ex.what()));
+        m_parent->DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: FilterExpressionParser exception: " + string(ex.what()));
+    }
+    catch (const ExpressionTreeException& ex)
+    {
+        m_parent->DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: ExpressionTree exception: " + string(ex.what()));
+    }
+    catch (...)
+    {
+        m_parent->DispatchErrorMessage("Failed to parse subscriber provided meta-data filter expressions: " + boost::current_exception_diagnostic_information(true));
     }
 
     try
@@ -733,9 +741,21 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
 
         SendResponse(ServerResponse::Succeeded, ServerCommand::MetadataRefresh, serializedMetadata);
     }
-    catch (const std::exception& ex)
+    catch (const FilterExpressionParserException& ex)
     {
-        const string message = "Failed to transfer meta-data due to exception: " + string(ex.what());
+        const string message = "Failed to transfer meta-data: FilterExpressionParser exception: " + string(ex.what());
+        SendResponse(ServerResponse::Failed, ServerCommand::MetadataRefresh, message);
+        m_parent->DispatchErrorMessage(message);
+    }
+    catch (const ExpressionTreeException& ex)
+    {
+        const string message = "Failed to transfer meta-data: ExpressionTree exception: " + string(ex.what());
+        SendResponse(ServerResponse::Failed, ServerCommand::MetadataRefresh, message);
+        m_parent->DispatchErrorMessage(message);
+    }
+    catch (...)
+    {
+        const string message = "Failed to transfer meta-data: " + boost::current_exception_diagnostic_information(true);
         SendResponse(ServerResponse::Failed, ServerCommand::MetadataRefresh, message);
         m_parent->DispatchErrorMessage(message);
     }
