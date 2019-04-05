@@ -294,6 +294,10 @@
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Shared\Scripts\react-dom.development.js" />
+    <EmbeddedResource Include="Shared\Scripts\react-dom.production.min.js" />
+    <EmbeddedResource Include="Shared\Scripts\react.development.js" />
+    <EmbeddedResource Include="Shared\Scripts\react.production.min.js" />
     <EmbeddedResource Include="Shared\Scripts\bootstrap4.js" />
     <EmbeddedResource Include="Shared\Scripts\popper.js" />
     <EmbeddedResource Include="Shared\Scripts\jquery.subscriber.js" />
