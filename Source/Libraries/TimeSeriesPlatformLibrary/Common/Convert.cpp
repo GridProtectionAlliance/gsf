@@ -313,7 +313,15 @@ bool GSF::TryParseUInt16(const string& value, uint16_t& result, const uint16_t d
 {
     try
     {
-        result = static_cast<uint16_t>(stoul(value));
+        auto conversion = stoul(value);
+
+        if (conversion > UInt16::MaxValue)
+        {
+            result = defaultValue;
+            return false;
+        }
+
+        result = static_cast<uint16_t>(conversion);
         return true;
     }
     catch (...)
