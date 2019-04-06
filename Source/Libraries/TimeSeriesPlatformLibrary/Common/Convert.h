@@ -39,7 +39,15 @@ namespace GSF
 
     // Converts a DateTime to Ticks
     int64_t ToTicks(const datetime_t& time);
-    
+
+    // Determines if timestamp, in ticks, is reasonable as compared to local clock within specifed tolerances, in seconds
+    // lagTime and leadTime must be greater than zero, but can be less than one.
+    bool TimestampIsReasonable(int64_t value, float64_t lagTime = 5.0, float64_t leadTime = 5.0, bool utc = true);
+
+    // Determines if timestamp is reasonable as compared to local clock within specifed tolerances, in seconds
+    // lagTime and leadTime must be greater than zero, but can be less than one.
+    bool TimestampIsReasonable(const datetime_t& value, float64_t lagTime = 5.0, float64_t leadTime = 5.0, bool utc = true);
+
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);
 

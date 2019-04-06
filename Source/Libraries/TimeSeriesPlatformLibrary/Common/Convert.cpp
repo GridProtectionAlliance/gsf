@@ -168,9 +168,9 @@ datetime_t GSF::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
 
 datetime_t GSF::FromTicks(const int64_t ticks)
 {
-    static float64_t tickInterval = float64_t(Ticks::PerSecond);
+    static float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
-    const int64_t pticks = int64_t(ticks % Ticks::PerSecond / tickInterval * DateTimeTicksPerSecond);
+    const int64_t pticks = int64_t(ticks % Ticks::PerSecond / ticksPerSecondF * DateTimeTicksPerSecond);
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
@@ -180,6 +180,26 @@ int64_t GSF::ToTicks(const datetime_t& time)
     const TimeSpan offset = time - DateTimeEpoch;
     return Ticks::PTimeBaseOffset + offset.total_seconds() * Ticks::PerSecond +
         int64_t(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
+}
+
+bool GSF::TimestampIsReasonable(const int64_t value, const float64_t lagTime, const float64_t leadTime, const bool utc)
+{
+    static const float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
+
+    if (lagTime <= 0)
+        throw runtime_error("lagTime must be greater than zero, but it can be less than one");
+
+    if (leadTime <= 0)
+        throw runtime_error("leadTime must be greater than zero, but it can be less than one");
+
+    // Calculate timestamp distance from local system time in seconds
+    const float64_t distance = (ToTicks(utc ? UtcNow() : Now()) - value) / ticksPerSecondF;
+    return distance >= -leadTime && distance <= lagTime;
+}
+
+bool GSF::TimestampIsReasonable(const datetime_t& value, const float64_t lagTime, const float64_t leadTime, const bool utc)
+{
+    return TimestampIsReasonable(ToTicks(value), lagTime, leadTime);
 }
 
 uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)

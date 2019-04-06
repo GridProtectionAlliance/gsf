@@ -581,6 +581,8 @@ void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint3
     m_timeIndex = EndianConverter::Default.ConvertBigEndian(*timeIndexPtr);
     m_baseTimeOffsets[0] = EndianConverter::Default.ConvertBigEndian(timeOffsetsPtr[0]);
     m_baseTimeOffsets[1] = EndianConverter::Default.ConvertBigEndian(timeOffsetsPtr[1]);
+
+    DispatchStatusMessage("Received new base time offset from publisher: " + ToString(FromTicks(m_baseTimeOffsets[m_timeIndex ^ 1])));
 }
 
 // Handles configuration changed message sent by the server at the end of a temporal session.

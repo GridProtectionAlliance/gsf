@@ -44,6 +44,7 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_isNaNValueFilterAllowed(true),
     m_isNaNValueFilterForced(false),
     m_supportsTemporalSubscriptions(false),
+    m_useBaseTimeOffsets(true),
     m_cipherKeyRotationPeriod(60000),
     m_userData(nullptr),
     m_disposing(false),
@@ -845,6 +846,16 @@ uint32_t DataPublisher::GetCipherKeyRotationPeriod() const
 void DataPublisher::SetCipherKeyRotationPeriod(uint32_t value)
 {
     m_cipherKeyRotationPeriod = value;
+}
+
+bool DataPublisher::GetUseBaseTimeOffsets() const
+{
+    return m_useBaseTimeOffsets;
+}
+
+void DataPublisher::SetUseBaseTimeOffsets(bool value)
+{
+    m_useBaseTimeOffsets = value;
 }
 
 void* DataPublisher::GetUserData() const

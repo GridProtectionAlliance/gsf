@@ -75,6 +75,7 @@ namespace Transport
         bool m_isNaNValueFilterAllowed;
         bool m_isNaNValueFilterForced;
         bool m_supportsTemporalSubscriptions;
+        bool m_useBaseTimeOffsets;
         uint32_t m_cipherKeyRotationPeriod;
         void* m_userData;
         bool m_disposing;
@@ -184,6 +185,10 @@ namespace Transport
 
         uint32_t GetCipherKeyRotationPeriod() const;
         void SetCipherKeyRotationPeriod(uint32_t period);
+
+        // Gets or sets flag that determines if base time offsets should be used in compact format
+        bool GetUseBaseTimeOffsets() const;
+        void SetUseBaseTimeOffsets(bool value);
 
         // Gets or sets user defined data reference
         void* GetUserData() const;

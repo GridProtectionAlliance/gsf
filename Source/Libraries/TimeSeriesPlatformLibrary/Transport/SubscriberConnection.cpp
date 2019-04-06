@@ -41,6 +41,8 @@ using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
 static const uint32_t MaxPacketSize = 32768U;
+static const float64_t DefaultLagTime = 5.0;
+static const float64_t DefaultLeadTime = 5.0;
 
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService) : //NOLINT
     m_parent(std::move(parent)),
@@ -68,11 +70,17 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_udpPort(0),
     m_dataChannelSocket(m_dataChannelService),
     m_udpWriteStrand(m_dataChannelService),
-    m_totalCommandChannelBytesSent(0L),
-    m_totalDataChannelBytesSent(0L),
-    m_totalMeasurementsSent(0L),
+    m_totalCommandChannelBytesSent(0LL),
+    m_totalDataChannelBytesSent(0LL),
+    m_totalMeasurementsSent(0LL),
+    m_baseTimeRotationTimer(nullptr),
     m_timeIndex(0),
-    m_baseTimeOffsets{0L, 0L},
+    m_baseTimeOffsets{ 0LL, 0LL },
+    m_latestTimestamp(0LL),
+    m_lastPublishTime(Empty::DateTime),
+    m_useLocalClockAsRealTime(false),
+    m_lagTime(DefaultLagTime),
+    m_leadTime(DefaultLeadTime),
     m_tsscResetRequested(false),
     m_tsscSequenceNumber(0)
 {
@@ -390,6 +398,9 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
         m_stopped = true;
         m_pingTimer.Stop();
 
+        if (m_baseTimeRotationTimer != nullptr)
+            m_baseTimeRotationTimer->Stop();
+
         if (shutdownSocket)
             m_commandChannelSocket.shutdown(socket_base::shutdown_both);
 
@@ -453,6 +464,10 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
+                // Cancel any existing subscription timers
+                if (m_baseTimeRotationTimer != nullptr)
+                    m_baseTimeRotationTimer->Stop();
+
                 // Cancel any existing temporal subscription
                 if (m_isSubscribed)
                     CancelTemporalSubscription();
@@ -513,6 +528,21 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                     if (TryGetValue(settings, "processingInterval", setting) && !setting.empty())
                         TryParseInt32(setting, m_processingInterval, -1);
+
+                    if (TryGetValue(settings, "useLocalClockAsRealTime", setting))
+                        m_useLocalClockAsRealTime = ParseBoolean(setting);
+                    else
+                        m_useLocalClockAsRealTime = false;
+
+                    if (TryGetValue(settings, "lagTime", setting) && !setting.empty())
+                        TryParseDouble(setting, m_lagTime, DefaultLagTime);
+                    else
+                        m_lagTime = DefaultLagTime;
+
+                    if (TryGetValue(settings, "leadTime", setting) && !setting.empty())
+                        TryParseDouble(setting, m_leadTime, DefaultLeadTime);
+                    else
+                        m_leadTime = DefaultLeadTime;
 
                     if (GetIsTemporalSubscription())
                     {
@@ -621,6 +651,58 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     SetSignalIndexCache(signalIndexCache);
 
                     m_tsscEncoderLock.unlock();
+
+                    // If using compact measurement format with base time offsets, setup base time rotation timer
+                    if (!m_usingPayloadCompression && m_parent->GetUseBaseTimeOffsets() && m_includeTime)
+                    {
+                        // In compact format, clients will attempt to use base time offset
+                        // to reduce timestamp serialization size
+                        m_baseTimeOffsets[0] = 0LL;
+                        m_baseTimeOffsets[1] = 0LL;
+                        m_latestTimestamp = 0LL;
+
+                        m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](Timer* timer, void*)
+                        {
+                            uint64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
+
+                            if (realTime == 0LL)
+                                return;
+
+                            if (m_baseTimeOffsets[0] == 0LL)
+                            {
+                                // Initialize base time offsets
+                                m_baseTimeOffsets[0] = realTime;
+                                m_baseTimeOffsets[1] = realTime + int64_t(timer->GetInterval() * Ticks::PerMillisecond);
+
+                                m_timeIndex = 0;
+                            }
+                            else
+                            {
+                                uint32_t oldIndex = m_timeIndex;
+
+                                // Switch to next time base (client will already have access to this)
+                                m_timeIndex ^= 1;
+
+                                // Setup next time base
+                                m_baseTimeOffsets[oldIndex] = realTime + int64_t(timer->GetInterval() * Ticks::PerMillisecond);
+                            }
+
+                            // Send new base time offsets to client
+                            vector<uint8_t> buffer;
+                            buffer.reserve(20);
+
+                            EndianConverter::WriteBigEndianBytes(buffer, m_timeIndex);
+                            EndianConverter::WriteBigEndianBytes(buffer, m_baseTimeOffsets[0]);
+                            EndianConverter::WriteBigEndianBytes(buffer, m_baseTimeOffsets[1]);
+
+                            SendResponse(ServerResponse::UpdateBaseTimes, ServerCommand::Subscribe, buffer);
+                            
+                            m_parent->DispatchStatusMessage("Sent new base time offset to subscriber: " + ToString(FromTicks(m_baseTimeOffsets[m_timeIndex ^ 1])));
+                        },
+                        true);
+
+                        m_baseTimeRotationTimer->Start();
+                    }
 
                     const string message = string("Client subscribed using ") + 
                         (m_usingPayloadCompression ? "TSSC compression over " : "compact format over ") +
@@ -909,6 +991,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
     for (size_t i = 0; i < measurements.size(); i++)
     {
         const Measurement& measurement = *measurements[i];
+        const int64_t timestamp = measurement.Timestamp;
         const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
 
         if (runtimeID == UInt16::MaxValue)
@@ -929,6 +1012,10 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
         WriteBytes(packet, buffer);
         buffer.clear();
         count++;
+
+        // Track latest timestamp
+        if (!m_useLocalClockAsRealTime && timestamp > m_latestTimestamp && (TimestampIsReasonable(timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription()))
+            m_latestTimestamp = timestamp;
     }
 
     if (count > 0)

@@ -97,9 +97,14 @@ namespace Transport
 
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
+        TimerPtr m_baseTimeRotationTimer;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
+        int64_t m_latestTimestamp;
         datetime_t m_lastPublishTime;
+        bool m_useLocalClockAsRealTime;
+        float64_t m_lagTime;
+        float64_t m_leadTime;
         TSSCEncoder m_tsscEncoder;
         GSF::Mutex m_tsscEncoderLock;
         uint8_t m_tsscWorkingBuffer[TSSCBufferSize];
