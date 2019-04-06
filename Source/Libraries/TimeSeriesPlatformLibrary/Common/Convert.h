@@ -79,7 +79,7 @@ namespace GSF
 
     bool TryParseInt32(const std::string& value, int32_t& result, int32_t defaultValue = 0);
 
-    bool TryParseInt64(const std::string& value, int64_t& result, int64_t defaultValue = 0L);
+    bool TryParseInt64(const std::string& value, int64_t& result, int64_t defaultValue = 0LL);
 
     bool TryParseDouble(const std::string& value, float64_t& result, float64_t defaultValue = 0.0);
 

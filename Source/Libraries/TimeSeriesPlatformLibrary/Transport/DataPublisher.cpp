@@ -859,7 +859,7 @@ void DataPublisher::SetUserData(void* userData)
 
 uint64_t DataPublisher::GetTotalCommandChannelBytesSent()
 {
-    uint64_t totalCommandChannelBytesSent = 0L;
+    uint64_t totalCommandChannelBytesSent = 0LL;
 
     ReaderLock readLock(m_subscriberConnectionsLock);
 
@@ -871,7 +871,7 @@ uint64_t DataPublisher::GetTotalCommandChannelBytesSent()
 
 uint64_t DataPublisher::GetTotalDataChannelBytesSent()
 {
-    uint64_t totalDataChannelBytesSent = 0L;
+    uint64_t totalDataChannelBytesSent = 0LL;
 
     ReaderLock readLock(m_subscriberConnectionsLock);
 
@@ -883,7 +883,7 @@ uint64_t DataPublisher::GetTotalDataChannelBytesSent()
 
 uint64_t DataPublisher::GetTotalMeasurementsSent()
 {
-    uint64_t totalMeasurementsSent = 0L;
+    uint64_t totalMeasurementsSent = 0LL;
 
     ReaderLock readLock(m_subscriberConnectionsLock);
 

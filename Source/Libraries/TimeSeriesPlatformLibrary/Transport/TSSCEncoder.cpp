@@ -36,8 +36,8 @@ TSSCEncoder::TSSCEncoder() :
     m_data(nullptr),
     m_position(0),
     m_lastPosition(0),
-    m_prevTimestamp1(0L),
-    m_prevTimestamp2(0L),
+    m_prevTimestamp1(0LL),
+    m_prevTimestamp2(0LL),
     m_prevTimeDelta1(Int64::MaxValue),
     m_prevTimeDelta2(Int64::MaxValue),
     m_prevTimeDelta3(Int64::MaxValue),
@@ -61,8 +61,8 @@ void TSSCEncoder::Reset()
     m_prevTimeDelta2 = Int64::MaxValue;
     m_prevTimeDelta3 = Int64::MaxValue;
     m_prevTimeDelta4 = Int64::MaxValue;
-    m_prevTimestamp1 = 0L;
-    m_prevTimestamp2 = 0L;
+    m_prevTimestamp1 = 0LL;
+    m_prevTimestamp2 = 0LL;
 }
 
 void TSSCEncoder::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
