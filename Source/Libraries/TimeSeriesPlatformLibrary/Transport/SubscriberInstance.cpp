@@ -535,7 +535,6 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
 
     // Define desired filter expression
     info.FilterExpression = m_filterExpression;
-    info.RemotelySynchronized = false;
     info.Throttled = false;
     info.UdpDataChannel = false;
     info.IncludeTime = true;

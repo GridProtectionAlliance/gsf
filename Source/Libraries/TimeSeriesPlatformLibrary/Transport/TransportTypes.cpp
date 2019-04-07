@@ -57,7 +57,7 @@ Measurement::Measurement() :
     Adder(0),
     Multiplier(1),
     Timestamp(0),
-    Flags(0)
+    Flags(MeasurementStateFlags::Normal)
 {
 }
 

@@ -43,8 +43,8 @@ using namespace GSF::TimeSeries::Transport;
 // --- SubscriptionInfo ---
 
 SubscriptionInfo::SubscriptionInfo() :
-    RemotelySynchronized(false),
     Throttled(false),
+    PublishInterval(0.0),
     UdpDataChannel(false),
     DataChannelLocalPort(9500),
     IncludeTime(true),
@@ -704,7 +704,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
                 measurement->Source = measurementSource;
                 measurement->ID = measurementID;
                 measurement->Timestamp = time;
-                measurement->Flags = quality;
+                measurement->Flags = static_cast<MeasurementStateFlags>(quality);
                 measurement->Value = value;
 
                 measurements.push_back(measurement);
@@ -1146,6 +1146,7 @@ void DataSubscriber::Subscribe()
     m_totalMeasurementsReceived = 0UL;
 
     connectionStream << "trackLatestMeasurements=" << m_subscriptionInfo.Throttled << ";";
+    connectionStream << "publishInterval" << m_subscriptionInfo.PublishInterval << ";";
     connectionStream << "includeTime=" << m_subscriptionInfo.IncludeTime << ";";
     connectionStream << "lagTime=" << m_subscriptionInfo.LagTime << ";";
     connectionStream << "leadTime=" << m_subscriptionInfo.LeadTime << ";";
@@ -1196,8 +1197,7 @@ void DataSubscriber::Subscribe()
     bufferSize = 5 + connectionStringSize;
     buffer.resize(bufferSize, 0);
 
-    buffer[0] = DataPacketFlags::Compact | (m_subscriptionInfo.RemotelySynchronized ? DataPacketFlags::Synchronized : DataPacketFlags::NoFlags);
-
+    buffer[0] = DataPacketFlags::Compact;
     buffer[1] = bigEndianConnectionStringSizePtr[0];
     buffer[2] = bigEndianConnectionStringSizePtr[1];
     buffer[3] = bigEndianConnectionStringSizePtr[2];

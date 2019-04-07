@@ -51,7 +51,7 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_clientAcceptor(m_commandChannelService, endpoint)
 {
     // Run call-back thread
-    Thread([this]
+    Thread([&,this]
     {
         while (true)
         {
@@ -66,7 +66,7 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     });
 
     // Run command channel accept thread
-    Thread([this]
+    Thread([&,this]
     {
         StartAccept();
         m_commandChannelService.run();

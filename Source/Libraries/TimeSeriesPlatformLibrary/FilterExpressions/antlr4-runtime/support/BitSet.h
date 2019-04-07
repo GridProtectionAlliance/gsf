@@ -45,7 +45,7 @@ namespace antlrcpp {
       std::string result;
       std::vector<BitSet>::iterator vectorIterator;
 
-      for (vectorIterator = begin; vectorIterator != end; vectorIterator++) {
+      for (vectorIterator = begin; vectorIterator != end; ++vectorIterator) {
         result += vectorIterator->toString();
       }
       // Grab the end

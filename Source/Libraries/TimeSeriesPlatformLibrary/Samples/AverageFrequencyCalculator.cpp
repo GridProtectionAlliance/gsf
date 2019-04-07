@@ -134,7 +134,7 @@ SubscriptionInfo CreateSubscriptionInfo()
 
     // This controls the down-sampling time, in seconds
     info.Throttled = true;
-    info.LagTime = 1.0;
+    info.PublishInterval = 1.0;
 
     return info;
 }

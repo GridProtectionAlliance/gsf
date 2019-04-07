@@ -42,18 +42,22 @@ namespace Transport
     {
         std::string FilterExpression;
 
-        bool RemotelySynchronized;
+        // Down-sampling properties
         bool Throttled;
+        float64_t PublishInterval;
 
+        // UDP channel properties
         bool UdpDataChannel;
         uint16_t DataChannelLocalPort;
 
+        // Compact measurement properties
         bool IncludeTime;
         float64_t LagTime;
         float64_t LeadTime;
         bool UseLocalClockAsRealTime;
         bool UseMillisecondResolution;
 
+        // Temporal playback properties
         std::string StartTime;
         std::string StopTime;
         std::string ConstraintParameters;

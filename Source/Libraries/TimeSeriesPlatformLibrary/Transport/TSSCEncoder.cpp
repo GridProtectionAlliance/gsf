@@ -223,7 +223,7 @@ bool TSSCEncoder::TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t qua
 
 TSSCPointMetadataPtr TSSCEncoder::NewTSSCPointMetadata()
 {
-    return NewSharedPtr<TSSCPointMetadata>([this](int32_t code, int32_t length) { return WriteBits(code, length); });
+    return NewSharedPtr<TSSCPointMetadata>([&,this](int32_t code, int32_t length) { return WriteBits(code, length); });
 }
 
 void TSSCEncoder::WritePointIdChange(uint16_t id)

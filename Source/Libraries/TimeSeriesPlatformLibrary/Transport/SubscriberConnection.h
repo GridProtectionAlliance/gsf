@@ -64,7 +64,12 @@ namespace Transport
         bool m_temporalSubscriptionCanceled;
         bool m_usingPayloadCompression;
         bool m_includeTime;
+        bool m_useLocalClockAsRealTime;
+        float64_t m_lagTime;
+        float64_t m_leadTime;
+        float64_t m_publishInterval;
         bool m_useMillisecondResolution;
+        bool m_trackLatestMeasurements;
         bool m_isNaNFiltered;
         volatile bool m_connectionAccepted;
         volatile bool m_isSubscribed;
@@ -102,9 +107,9 @@ namespace Transport
         int64_t m_baseTimeOffsets[2];
         int64_t m_latestTimestamp;
         datetime_t m_lastPublishTime;
-        bool m_useLocalClockAsRealTime;
-        float64_t m_lagTime;
-        float64_t m_leadTime;
+        std::unordered_map<GSF::Guid, MeasurementPtr> m_latestMeasurements;
+        GSF::Mutex m_latestMeasurementsLock;
+        TimerPtr m_throttledPublicationTimer;
         TSSCEncoder m_tsscEncoder;
         GSF::Mutex m_tsscEncoderLock;
         uint8_t m_tsscWorkingBuffer[TSSCBufferSize];
@@ -186,7 +191,7 @@ namespace Transport
         const GSF::datetime_t& GetStopTimeConstraint() const;
         void SetStopTimeConstraint(const GSF::datetime_t& value);
 
-        // Gets or sets the desired processing interval, in milliseconds
+        // Gets or sets the desired processing interval, in milliseconds, for temporal history playback.
         // With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
         // basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         // interval while a value of 0 means to process data as fast as possible.
@@ -203,10 +208,35 @@ namespace Transport
         bool GetIncludeTime() const;
         void SetIncludeTime(bool value);
 
+        // Gets or sets flag that determines if local clock should be used for current time instead of latest reasonable timestamp
+        // when using compact format with rotation of base time offsets
+        bool GetUseLocalClockAsRealTime() const;
+        void SetUseLocalClockAsRealTime(bool value);
+
+        // Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second). This value is used to determine
+        // reasonability of timestamps as compared to the local clock when using compact format and base time offsets.
+        float64_t GetLagTime() const;
+        void SetLagTime(float64_t value);
+
+        // Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second). This value is used to determine
+        // reasonability of timestamps as compared to the local clock when using compact format and base time offsets.
+        float64_t GetLeadTime() const;
+        void SetLeadTime(float64_t value);
+        
+        // Gets or sets value used to control throttling speed for real-time subcriptions when tracking latest measurements.
+        float64_t GetPublishInterval() const;
+        void SetPublishInterval(float64_t value);
+
         // Gets or sets flag that determines if time should be restricted to millisecond resolution in data packets when the
         // compact measurement format used; otherwise, full resolution time will be used
         bool GetUseMillisecondResolution() const;
         void SetUseMillisecondResolution(bool value);
+
+        // Gets or sets flag that determines if latest measurements should tracked for subscription throttling. When property is true,
+        // subscription data speed will be reduced by the lag-time property for real-time subscriptions and the processing interval
+        // property for temporal subscriptions.
+        bool GetTrackLatestMeasurements() const;
+        void SetTrackLatestMeasurements(bool value);
 
         // Gets or sets flag that determines if NaN values should be excluded from data packets
         bool GetIsNaNFiltered() const;

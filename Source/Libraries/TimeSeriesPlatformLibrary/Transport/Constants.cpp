@@ -23,7 +23,61 @@
 
 #include "Constants.h"
 
+using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
+
+MeasurementStateFlags GSF::TimeSeries::operator &(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
+{
+    return static_cast<MeasurementStateFlags> (
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) &
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+    );
+}
+
+MeasurementStateFlags GSF::TimeSeries::operator ^(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
+{
+    return static_cast<MeasurementStateFlags> (
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) ^
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+    );
+}
+
+MeasurementStateFlags GSF::TimeSeries::operator ~(MeasurementStateFlags rhs)
+{
+    return static_cast<MeasurementStateFlags> (
+        ~static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+    );
+}
+
+MeasurementStateFlags& GSF::TimeSeries::operator |=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+{
+    lhs = static_cast<MeasurementStateFlags> (
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) |
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+    );
+
+    return lhs;
+}
+
+MeasurementStateFlags& GSF::TimeSeries::operator &=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+{
+    lhs = static_cast<MeasurementStateFlags> (
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) &
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+    );
+
+    return lhs;
+}
+
+MeasurementStateFlags& GSF::TimeSeries::operator ^=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+{
+    lhs = static_cast<MeasurementStateFlags> (
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) ^
+        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+    );
+
+    return lhs;
+}
 
 // Define "instances" of all static constants so values can be passed by reference and found by linker
 

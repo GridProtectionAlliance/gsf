@@ -48,7 +48,7 @@ static const uint32_t DiscardedValueMask = 0x00400000;
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
-inline uint32_t MapToFullFlags(uint8_t compactFlags)
+inline MeasurementStateFlags MapToFullFlags(uint8_t compactFlags)
 {
     uint32_t fullFlags = 0U;
 
@@ -70,7 +70,7 @@ inline uint32_t MapToFullFlags(uint8_t compactFlags)
     if ((compactFlags & CompactDiscardedValueFlag) > 0)
         fullFlags |= DiscardedValueMask;
 
-    return fullFlags;
+    return static_cast<MeasurementStateFlags>(fullFlags);
 }
 
 // Takes the full 32-bit measurement flags format and
@@ -215,7 +215,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
 uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement, vector<uint8_t>& buffer, const uint16_t runtimeID) const
 {
     // Define the compact state flags
-    uint8_t compactFlags = MapToCompactFlags(measurement.Flags);
+    uint8_t compactFlags = MapToCompactFlags(static_cast<uint32_t>(measurement.Flags));
 
     int64_t difference = 0L;
     bool usingBaseTimeOffset = false;

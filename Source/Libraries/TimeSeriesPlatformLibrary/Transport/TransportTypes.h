@@ -25,6 +25,7 @@
 #define __TRANSPORT_TYPES_H
 
 #include "../Common/CommonTypes.h"
+#include "Constants.h"
 #include <unordered_set>
 
 namespace GSF {
@@ -87,7 +88,7 @@ namespace TimeSeries
 
         // Flags indicating the state of the measurement
         // as reported by the device that took it.
-        uint32_t Flags;
+        MeasurementStateFlags Flags;
 
         // Creates a new instance.
         Measurement();

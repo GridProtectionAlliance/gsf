@@ -32,7 +32,7 @@ RoutingTables::RoutingTables() :
     m_activeRoutes(NewSharedPtr<RoutingTable>()),
     m_enabled(true)
 {
-    Thread([this]()
+    Thread([&,this]()
     {
         while (m_enabled)
         {
