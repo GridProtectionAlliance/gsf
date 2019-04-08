@@ -126,8 +126,7 @@ namespace Transport
         void HandleDefineOperationalModes(uint8_t* data, uint32_t length);
         void HandleConfirmNotification(uint8_t* data, uint32_t length);
         void HandleConfirmBufferBlock(uint8_t* data, uint32_t length);
-        void HandlePublishCommandMeasurements(uint8_t* data, uint32_t length);
-        void HandleUserCommand(uint8_t command, uint8_t* data, uint32_t length);
+        void HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length);
 
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
         void PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements);
@@ -223,7 +222,7 @@ namespace Transport
         float64_t GetLeadTime() const;
         void SetLeadTime(float64_t value);
         
-        // Gets or sets value used to control throttling speed for real-time subcriptions when tracking latest measurements.
+        // Gets or sets value used to control throttling speed for real-time subscriptions when tracking latest measurements.
         float64_t GetPublishInterval() const;
         void SetPublishInterval(float64_t value);
 
@@ -242,7 +241,7 @@ namespace Transport
         bool GetIsNaNFiltered() const;
         void SetIsNaNFiltered(bool value);
 
-        // Gets or sets flag that determines if subscriber connection is currently subscribed
+        // Gets or sets flag that determines if connection is currently subscribed
         bool GetIsSubscribed() const;
         void SetIsSubscribed(bool value);
 

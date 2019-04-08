@@ -248,6 +248,16 @@ void SubscriberConnection::SetLeadTime(float64_t value)
     m_leadTime = value;
 }
 
+float64_t SubscriberConnection::GetPublishInterval() const
+{
+    return m_publishInterval;
+}
+
+void SubscriberConnection::SetPublishInterval(float64_t value)
+{
+    m_publishInterval = value;
+}
+
 bool SubscriberConnection::GetUseMillisecondResolution() const
 {
     return m_useMillisecondResolution;
@@ -481,7 +491,6 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
     if (m_trackLatestMeasurements)
     {
         ScopeLock lock(m_latestMeasurementsLock);
-        static MeasurementPtr NullMeasurement = nullptr;
 
         // Track latest measurements
         for (const auto& measurement : measurements)
@@ -756,7 +765,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                         m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [&,this](Timer* timer, void*)
                         {
-                            uint64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
+                            const uint64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
 
                             if (realTime == 0LL)
                                 return;
@@ -771,7 +780,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                             }
                             else
                             {
-                                uint32_t oldIndex = m_timeIndex;
+                                const uint32_t oldIndex = m_timeIndex;
 
                                 // Switch to next time base (client will already have access to this)
                                 m_timeIndex ^= 1;
@@ -1022,12 +1031,9 @@ void SubscriberConnection::HandleConfirmBufferBlock(uint8_t* data, uint32_t leng
 {
 }
 
-void SubscriberConnection::HandlePublishCommandMeasurements(uint8_t* data, uint32_t length)
+void SubscriberConnection::HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length)
 {
-}
-
-void SubscriberConnection::HandleUserCommand(uint8_t command, uint8_t* data, uint32_t length)
-{
+    m_parent->DispatchUserCommand(this, command, data, length);
 }
 
 SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string& filterExpression, bool& success)
@@ -1393,9 +1399,6 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
                 break;
             case ServerCommand::ConfirmBufferBlock:
                 HandleConfirmBufferBlock(data, bytesTransferred);
-                break;
-            case ServerCommand::PublishCommandMeasurements:
-                HandlePublishCommandMeasurements(data, bytesTransferred);
                 break;
             case ServerCommand::UserCommand00:
             case ServerCommand::UserCommand01:
