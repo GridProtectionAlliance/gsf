@@ -124,8 +124,6 @@ namespace Transport
         void HandleRotateCipherKeys();
         void HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length);
         void HandleDefineOperationalModes(uint8_t* data, uint32_t length);
-        void HandleConfirmNotification(uint8_t* data, uint32_t length);
-        void HandleConfirmBufferBlock(uint8_t* data, uint32_t length);
         void HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length);
 
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);

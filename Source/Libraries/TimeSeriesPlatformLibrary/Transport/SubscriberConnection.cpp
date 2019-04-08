@@ -1023,14 +1023,6 @@ void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, uint32_t 
     SetOperationalModes(operationalModes);
 }
 
-void SubscriberConnection::HandleConfirmNotification(uint8_t* data, uint32_t length)
-{
-}
-
-void SubscriberConnection::HandleConfirmBufferBlock(uint8_t* data, uint32_t length)
-{
-}
-
 void SubscriberConnection::HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length)
 {
     m_parent->DispatchUserCommand(this, command, data, length);
@@ -1395,11 +1387,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
                 HandleDefineOperationalModes(data, bytesTransferred);
                 break;
             case ServerCommand::ConfirmNotification:
-                HandleConfirmNotification(data, bytesTransferred);
-                break;
             case ServerCommand::ConfirmBufferBlock:
-                HandleConfirmBufferBlock(data, bytesTransferred);
-                break;
             case ServerCommand::UserCommand00:
             case ServerCommand::UserCommand01:
             case ServerCommand::UserCommand02:
