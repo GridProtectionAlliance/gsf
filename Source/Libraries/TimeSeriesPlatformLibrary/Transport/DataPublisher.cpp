@@ -36,6 +36,13 @@ using namespace GSF::FilterExpressions;
 using namespace GSF::TimeSeries;
 using namespace GSF::TimeSeries::Transport;
 
+struct UserCommandData
+{
+    SubscriberConnection* connection;
+    uint32_t command;
+    vector<uint8_t> data;
+};
+
 DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_nodeID(NewGuid()),
     m_securityMode(SecurityMode::None),
@@ -208,6 +215,19 @@ void DataPublisher::DispatchTemporalSubscriptionCanceled(SubscriberConnection* c
     Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
+void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, uint32_t command, const uint8_t* data, uint32_t length)
+{
+    // ReSharper disable once CppNonReclaimedResourceAcquisition
+    UserCommandData* userCommandData = new UserCommandData();
+    userCommandData->connection = connection;
+    userCommandData->command = command;
+
+    for (size_t i = 0; i < length; i++)
+        userCommandData->data.push_back(data[i]);
+
+    Dispatch(&UserCommandDispatcher, reinterpret_cast<uint8_t*>(&userCommandData), 0, sizeof(UserCommandData**));
+}
+
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
 void DataPublisher::StatusMessageDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
 {
@@ -297,6 +317,21 @@ void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source
         if (temporalSubscriptionCanceledCallback != nullptr)
             temporalSubscriptionCanceledCallback(source, connection->GetReference());
     }
+}
+
+void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
+{
+    UserCommandData* userCommandData = *reinterpret_cast<UserCommandData**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (source != nullptr && userCommandData != nullptr)
+    {
+        const UserCommandCallback userCommandCallback = source->m_userCommandCallback;
+
+        if (userCommandCallback != nullptr)
+            userCommandCallback(source, userCommandData->connection->GetReference(), userCommandData->command, userCommandData->data);
+    }
+
+    delete userCommandData;
 }
 
 int32_t DataPublisher::GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName)
@@ -937,6 +972,11 @@ void DataPublisher::RegisterTemporalSubscriptionRequestedCallback(const Subscrib
 void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback)
 {
     m_temporalSubscriptionCanceledCallback = temporalSubscriptionCanceledCallback;
+}
+
+void DataPublisher::RegisterUserCommandCallback(const UserCommandCallback& handleUserCommandCallback)
+{
+    m_userCommandCallback = handleUserCommandCallback;
 }
 
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)

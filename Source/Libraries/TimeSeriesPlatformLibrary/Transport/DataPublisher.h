@@ -50,6 +50,7 @@ namespace Transport
         typedef std::function<void(DataPublisher*, const std::vector<uint8_t>&)> DispatcherFunction;
         typedef std::function<void(DataPublisher*, const std::string&)> MessageCallback;
         typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&)> SubscriberConnectionCallback;
+        typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&, uint32_t, const std::vector<uint8_t>&)> UserCommandCallback;
 
     private:
         // Structure used to dispatch
@@ -101,6 +102,7 @@ namespace Transport
         SubscriberConnectionCallback m_processingIntervalChangeRequestedCallback;
         SubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
         SubscriberConnectionCallback m_temporalSubscriptionCanceledCallback;
+        UserCommandCallback m_userCommandCallback;
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
@@ -112,6 +114,7 @@ namespace Transport
         void DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection);
         void DispatchTemporalSubscriptionRequested(SubscriberConnection* connection);
         void DispatchTemporalSubscriptionCanceled(SubscriberConnection* connection);
+        void DispatchUserCommand(SubscriberConnection* connection, uint32_t command, const uint8_t* data, uint32_t length);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
@@ -120,6 +123,7 @@ namespace Transport
         static void ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
+        static void UserCommandDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
@@ -209,6 +213,8 @@ namespace Transport
         //   void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        //   void HandleUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
         void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
         void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
         void RegisterClientConnectedCallback(const SubscriberConnectionCallback& clientConnectedCallback);
@@ -216,6 +222,7 @@ namespace Transport
         void RegisterProcessingIntervalChangeRequestedCallback(const SubscriberConnectionCallback& processingIntervalChangeRequestedCallback);
         void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
         void RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
+        void RegisterUserCommandCallback(const UserCommandCallback& userCommandCallback);
 
         // SubscriberConnection iteration function - note that full lock will be maintained on source collection
         // for the entire call, so keep work time minimized or clone collection before work

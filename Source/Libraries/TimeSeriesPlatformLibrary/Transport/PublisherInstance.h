@@ -48,6 +48,7 @@ namespace Transport
         static void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleReceivedUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
 
     protected:
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
@@ -57,6 +58,7 @@ namespace Transport
         virtual void ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
         virtual void TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
         virtual void TemporalSubscriptionCanceled(const SubscriberConnectionPtr& connection);
+        virtual void HandleUserCommand(const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
 
     public:
         PublisherInstance(uint16_t port, bool ipV6);

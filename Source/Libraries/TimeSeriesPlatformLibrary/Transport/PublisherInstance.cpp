@@ -87,6 +87,12 @@ void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source
     instance->TemporalSubscriptionCanceled(connection);
 }
 
+void PublisherInstance::HandleReceivedUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+    instance->HandleUserCommand(connection, command, buffer);
+}
+
 void PublisherInstance::StatusMessage(const string& message)
 {
     cout << message << endl << endl;
@@ -122,6 +128,11 @@ void PublisherInstance::TemporalSubscriptionCanceled(const SubscriberConnectionP
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has canceled the temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
 
+void PublisherInstance::HandleUserCommand(const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
+{
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " sent user-defined command \"" << ToHex(command) << "\" with " << buffer.size() << " bytes of payload" << endl << endl;
+}
+
 void PublisherInstance::Initialize()
 {
     // Register callbacks
@@ -132,6 +143,7 @@ void PublisherInstance::Initialize()
     m_publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
     m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
     m_publisher->RegisterTemporalSubscriptionCanceledCallback(&HandleTemporalSubscriptionCanceled);
+    m_publisher->RegisterUserCommandCallback(&HandleReceivedUserCommand);
 
     m_initialized = true;
 }
