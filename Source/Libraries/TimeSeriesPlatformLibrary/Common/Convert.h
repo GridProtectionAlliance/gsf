@@ -77,7 +77,7 @@ namespace GSF
     std::string ToHex(const T& value)
     {
         std::stringstream stream;
-        stream << "0x" << std::hex << static_cast<int32_t>(value);
+        stream << "0x" << std::hex << std::uppercase << static_cast<int32_t>(value);
         return stream.str();
     }
 
