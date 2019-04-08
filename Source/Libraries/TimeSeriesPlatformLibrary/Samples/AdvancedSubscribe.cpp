@@ -156,7 +156,6 @@ SubscriptionInfo CreateSubscriptionInfo()
     //info.RemotelySynchronized = true;
     //info.ExtraConnectionStringParameters = "framesPerSecond=30;timeResolution=10000;downsamplingMethod=Closest";
 
-    info.RemotelySynchronized = false;
     info.Throttled = false;
 
     info.UdpDataChannel = true;
@@ -193,6 +192,10 @@ void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& m
     static const uint64_t interval = 5 * 60;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
+
+    // Send a custom command to publisher upon receiving first measurement
+    if (processCount == 0)
+        source->SendServerCommand(ServerCommand::UserCommand00, "Hello, world!");
 
     processCount += measurementCount;
 
