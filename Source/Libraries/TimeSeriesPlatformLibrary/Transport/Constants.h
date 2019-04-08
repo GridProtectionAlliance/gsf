@@ -164,8 +164,6 @@ namespace Transport
         static const uint8_t ConfirmNotification = 0x07;
         // Confirm receipt of a buffer block measurement. This message is sent in response to ServerResponse.BufferBlock.
         static const uint8_t ConfirmBufferBlock = 0x08;
-        // Provides measurements to the publisher over the command channel. Allows for unsolicited publication of measurement data to the server so that consumers of data can also provide data to other consumers.
-        static const uint8_t PublishCommandMeasurements = 0x09;
         // Codes for handling user-defined commands.
         static const uint8_t UserCommand00 = 0xD0;
         static const uint8_t UserCommand01 = 0xD1;

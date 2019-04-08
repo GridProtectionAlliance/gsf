@@ -101,7 +101,6 @@ const uint8_t ServerCommand::UpdateProcessingInterval;
 const uint8_t ServerCommand::DefineOperationalModes;
 const uint8_t ServerCommand::ConfirmNotification;
 const uint8_t ServerCommand::ConfirmBufferBlock;
-const uint8_t ServerCommand::PublishCommandMeasurements;
 const uint8_t ServerCommand::UserCommand00;
 const uint8_t ServerCommand::UserCommand01;
 const uint8_t ServerCommand::UserCommand02;
