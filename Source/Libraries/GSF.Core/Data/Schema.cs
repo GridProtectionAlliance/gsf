@@ -1623,11 +1623,7 @@ namespace GSF.Data
                     break;
             }
 
-            if (rows == 0)
-                CalculateRowCount();
-            else
-                m_rows = rows;
-
+            m_rows = rows;
             ReevalulateIdentitySQL();
         }
 
@@ -1846,6 +1842,9 @@ namespace GSF.Data
             {
                 m_parent = value;
                 ReevalulateIdentitySQL();
+
+                if (m_rows == 0)
+                    CalculateRowCount();
             }
         }
 
@@ -2875,6 +2874,8 @@ namespace GSF.Data
                                 row["TABLE_NAME"].ToString(),
                                 row["TABLE_TYPE"].ToString(),
                                 Common.ToNonNullString(row["DESCRIPTION"], ""), 0);
+
+                table.Parent = m_tables;
 
                 if ((table.Type & m_restriction) == m_restriction)
                 {
