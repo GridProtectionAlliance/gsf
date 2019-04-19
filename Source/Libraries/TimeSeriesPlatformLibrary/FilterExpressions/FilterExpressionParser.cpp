@@ -697,12 +697,12 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
 
         ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
         const auto expressionList = context->expressionList();
-        const int32_t argumentCount = expressionList->expression().size();
+        const size_t argumentCount = expressionList->expression().size();
 
         if (argumentCount < 1)
             throw FilterExpressionParserException("Not enough expressions found for \"IN\" operation");
 
-        for (int32_t i = 0; i < argumentCount; i++)
+        for (size_t i = 0; i < argumentCount; i++)
         {
             ExpressionPtr argument;
 

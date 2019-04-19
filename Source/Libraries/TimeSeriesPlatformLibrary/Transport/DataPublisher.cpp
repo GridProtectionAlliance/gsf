@@ -180,13 +180,13 @@ void DataPublisher::Dispatch(const DispatcherFunction& function, const uint8_t* 
 
 void DataPublisher::DispatchStatusMessage(const string& message)
 {
-    const uint32_t messageSize = (message.size() + 1) * sizeof(char);
+    const uint32_t messageSize = ConvertUInt32((message.size() + 1) * sizeof(char));
     Dispatch(&StatusMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
 void DataPublisher::DispatchErrorMessage(const string& message)
 {
-    const uint32_t messageSize = (message.size() + 1) * sizeof(char);
+    const uint32_t messageSize = ConvertUInt32((message.size() + 1) * sizeof(char));
     Dispatch(&ErrorMessageDispatcher, reinterpret_cast<const uint8_t*>(message.c_str()), 0, messageSize);
 }
 
@@ -428,7 +428,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
             DataRowPtr row = phasorDetail->CreateRow();
 
-            row->SetInt32Value(id, static_cast<int32_t>(i));
+            row->SetInt32Value(id, ConvertInt32(i));
             row->SetStringValue(deviceAcronym, phasor->DeviceAcronym);
             row->SetStringValue(label, phasor->Label);
             row->SetStringValue(type, phasor->Type);

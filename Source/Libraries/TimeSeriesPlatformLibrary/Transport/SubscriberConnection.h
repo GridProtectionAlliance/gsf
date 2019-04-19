@@ -133,15 +133,15 @@ namespace Transport
         void PublishTSSCDataPacket(int32_t count);
         bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
-        void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
+        void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
         void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
         std::vector<uint8_t> SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const;
         std::vector<uint8_t> SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const;
         GSF::Data::DataSetPtr FilterClientMetadata(const StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
         void CommandChannelSendAsync();
-        void CommandChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+        void CommandChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred);
         void DataChannelSendAsync();
-        void DataChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+        void DataChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
         static void PingTimerElapsed(Timer*, void* userData);
     public:

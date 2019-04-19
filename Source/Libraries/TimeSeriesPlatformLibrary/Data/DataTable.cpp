@@ -52,7 +52,7 @@ const string& DataTable::Name() const
 
 void DataTable::AddColumn(DataColumnPtr column)
 {
-    column->m_index = m_columns.size();
+    column->m_index = ConvertInt32(m_columns.size());
     m_columnIndexes.insert(pair<string, int32_t>(column->Name(), column->m_index));
     m_columns.push_back(std::move(column));
 }
@@ -69,7 +69,7 @@ const DataColumnPtr& DataTable::Column(const string& columnName) const
 
 const DataColumnPtr& DataTable::Column(int32_t index) const
 {
-    if (index < 0 || index >= static_cast<int32_t>(m_columns.size()))
+    if (index < 0 || index >= ConvertInt32(m_columns.size()))
         return DataColumn::NullPtr;
 
     return m_columns[index];
@@ -97,12 +97,12 @@ DataColumnPtr DataTable::CloneColumn(const DataColumnPtr& source)
 
 int32_t DataTable::ColumnCount() const
 {
-    return m_columns.size();
+    return ConvertInt32(m_columns.size());
 }
 
 const DataRowPtr& DataTable::Row(int32_t index)
 {
-    if (index < 0 || index >= static_cast<int32_t>(m_rows.size()))
+    if (index < 0 || index >= ConvertInt32(m_rows.size()))
         return DataRow::NullPtr;
     
     return m_rows[index];
@@ -121,8 +121,9 @@ DataRowPtr DataTable::CreateRow()
 DataRowPtr DataTable::CloneRow(const DataRowPtr& source)
 {
     DataRowPtr row = CreateRow();
+    const int32_t columnCount = ConvertInt32(m_columns.size());
 
-    for (size_t i = 0; i < m_columns.size(); i++)
+    for (int32_t i = 0; i < columnCount; i++)
     {
         switch (m_columns[i]->m_type)
         {
@@ -181,5 +182,5 @@ DataRowPtr DataTable::CloneRow(const DataRowPtr& source)
 
 int32_t DataTable::RowCount() const
 {
-    return m_rows.size();
+    return ConvertInt32(m_rows.size());
 }

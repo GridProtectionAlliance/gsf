@@ -26,7 +26,6 @@
 
 #include <climits>
 #include <cstddef>
-#include <cstring>
 #include <map>
 #include <unordered_map>
 #include <boost/any.hpp>
@@ -42,6 +41,26 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/array.hpp>
+
+#if _WIN32 || _WIN64
+#if _WIN64
+#define _32BIT 0
+#define _64BIT 1
+#else
+#define _32BIT 1
+#define _64BIT 0
+#endif
+#endif
+
+#if __GNUC__
+#if __x86_64__ || __ppc64__
+#define _32BIT 0
+#define _64BIT 1
+#else
+#define _32BIT 1
+#define _64BIT 0
+#endif
+#endif
 
 namespace GSF
 {
@@ -134,6 +153,26 @@ namespace GSF
         static const int64_t PerHour = 60LL * Ticks::PerMinute;
         static const int64_t PerDay = 24LL * Ticks::PerHour;
     };
+
+    inline int32_t ConvertInt32(size_t value)
+    {
+    #if _64BIT
+        if (value > static_cast<size_t>(Int32::MaxValue))
+            throw std::runtime_error("Cannot cast size_t value to int32_t: value is out of range");
+    #endif
+
+        return static_cast<int32_t>(value);
+    }
+
+    inline uint32_t ConvertUInt32(const size_t value)
+    {
+    #if _64BIT
+        if (value > static_cast<size_t>(UInt32::MaxValue))
+            throw std::runtime_error("Cannot cast size_t value to uint32_t: value is out of range");
+    #endif
+
+        return static_cast<uint32_t>(value);
+    }
 
     template<class T>
     using SharedPtr = boost::shared_ptr<T>;

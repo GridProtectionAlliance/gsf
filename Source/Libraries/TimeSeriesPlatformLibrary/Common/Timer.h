@@ -144,7 +144,12 @@ namespace GSF
             m_running = false;
 
             if (m_timerThread != nullptr)
+            {
                 m_timerThread->interrupt();
+
+                if (boost::this_thread::get_id() != m_timerThread->get_id())
+                    m_timerThread->join();
+            }
 
             m_timerThread.reset();
         }

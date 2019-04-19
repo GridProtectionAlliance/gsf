@@ -42,29 +42,23 @@ PublisherHandler::PublisherHandler(string name, uint16_t port, bool ipV6) :
 void PublisherHandler::StatusMessage(const string& message)
 {
     // TODO: Make sure these messages get logged to an appropriate location
-    // For now, the base class just displays to console:
-    stringstream status;
-
-    status << "[" << m_name << "] " << message;
 
     // Calls can come from multiple threads, so we impose a simple lock before write to console
-    s_coutLock.lock();
-    PublisherInstance::StatusMessage(status.str());
-    s_coutLock.unlock();
+    ScopeLock lock(s_coutLock);
+
+    // For now, we just the base class to display to console:
+    PublisherInstance::StatusMessage("[" + m_name + "] " + message);
 }
 
 void PublisherHandler::ErrorMessage(const string& message)
 {
     // TODO: Make sure these messages get logged to an appropriate location
-    // For now, the base class just displays to console:
-    stringstream status;
-
-    status << "[" << m_name << "] " << message;
 
     // Calls can come from multiple threads, so we impose a simple lock before write to console
-    s_coutLock.lock();
-    PublisherInstance::ErrorMessage(status.str());
-    s_coutLock.unlock();
+    ScopeLock lock(s_coutLock);
+
+    // For now, we just the base class to display to console:
+    PublisherInstance::ErrorMessage("[" + m_name + "] " + message);
 }
 
 void PublisherHandler::ClientConnected(const SubscriberConnectionPtr& connection)
@@ -187,7 +181,8 @@ void PublisherHandler::Start()
     // data type reasonable random values every 33 milliseconds
     m_publishTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*)
     {
-        static uint32_t count = m_measurementMetadata.size();
+        // If metadata can change, the following integer should not be static:
+        static uint32_t count = ConvertUInt32(m_measurementMetadata.size());
         const int64_t timestamp = ToTicks(UtcNow());
         vector<MeasurementPtr> measurements;
 

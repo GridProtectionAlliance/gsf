@@ -97,6 +97,8 @@ namespace GSF
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ParseGuid(const uint8_t* data, bool swapEndianness = false, bool useGEPEncoding = false);
     Guid ParseGuid(const char* data);
+    
+    // Convert RFC encoding to Microsoft or vice versa
     void SwapGuidEndianness(Guid& value, bool useGEPEncoding = false);
 
     // Returns a non-empty nor null value

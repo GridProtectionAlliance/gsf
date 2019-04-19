@@ -776,7 +776,7 @@ void SubscriberInstance::SendMetadataRefreshCommand()
     vector<uint8_t> buffer;
     
     const uint8_t* metadataFiltersPtr = reinterpret_cast<uint8_t*>(&m_metadataFilters[0]);
-    const uint32_t metadataFiltersSize = static_cast<uint32_t>(m_metadataFilters.size() * sizeof(char));
+    const uint32_t metadataFiltersSize = ConvertUInt32(m_metadataFilters.size() * sizeof(char));
     const uint32_t bufferSize = 4 + metadataFiltersSize;
 
     buffer.reserve(bufferSize);

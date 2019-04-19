@@ -630,7 +630,7 @@ void DataRow::SetStringValue(const int32_t columnIndex, const Nullable<string>& 
     if (value.HasValue())
     {
         const string& strval = value.GetValueOrDefault();
-        const int32_t length = strval.size() + 1;
+        const uint32_t length = ConvertUInt32(strval.size() + 1);
         char* copy = static_cast<char*>(malloc(length * sizeof(char)));
         strcpy_s(copy, length, strval.c_str());
         m_values[columnIndex] = copy;
@@ -782,7 +782,7 @@ void DataRow::SetDecimalValue(const int32_t columnIndex, const Nullable<decimal_
         // The boost decimal type has a very complex internal representation,
         // although slower, it's safer just to store this as a string for now
         const string& strval = value.GetValueOrDefault().str();
-        const int32_t length = strval.size() + 1;
+        const uint32_t length = ConvertUInt32(strval.size() + 1);
         char* copy = static_cast<char*>(malloc(length * sizeof(char)));
         strcpy_s(copy, length, strval.c_str());
         m_values[columnIndex] = copy;

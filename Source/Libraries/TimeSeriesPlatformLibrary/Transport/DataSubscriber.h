@@ -56,6 +56,7 @@ namespace Transport
         float64_t LeadTime;
         bool UseLocalClockAsRealTime;
         bool UseMillisecondResolution;
+        bool RequestNaNValueFilter;
 
         // Temporal playback properties
         std::string StartTime;
@@ -218,9 +219,9 @@ namespace Transport
         void RunDataChannelResponseThread();
 
         // Command channel callbacks
-        void ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred);
-        void ReadPacket(const ErrorCode& error, uint32_t bytesTransferred);
-        void WriteHandler(const ErrorCode& error, uint32_t bytesTransferred);
+        void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
+        void ReadPacket(const ErrorCode& error, size_t bytesTransferred);
+        void WriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
         // Server response handlers
         void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);

@@ -89,7 +89,7 @@ DataTablePtr DataSet::CreateTable(const string& name)
 
 int32_t DataSet::TableCount() const
 {
-    return m_tables.size();
+    return ConvertInt32(m_tables.size());
 }
 
 vector<string> DataSet::TableNames() const
@@ -137,7 +137,7 @@ void DataSet::ReadXml(const string& fileName)
 
 void DataSet::ReadXml(const vector<uint8_t>& buffer)
 {
-    ReadXml(buffer.data(), buffer.size());
+    ReadXml(buffer.data(), ConvertUInt32(buffer.size()));
 }
 
 void DataSet::ReadXml(const uint8_t* buffer, uint32_t length)

@@ -155,7 +155,7 @@ int32_t GSF::Count(const string& value, const string& findValue, bool ignoreCase
     const find_iterator<string::const_iterator> end {};
     int32_t count = 0;
 
-    for (; it != end; ++it, ++count)
+    for (; it != end; ++it, ++count) //-V127
     {
     }
 
@@ -191,7 +191,7 @@ int32_t GSF::IndexOf(const string& value, const string& findValue, bool ignoreCa
     if (it.empty())
         return -1;
 
-    return std::distance(value.begin(), it.begin());
+    return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
 int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
@@ -201,7 +201,7 @@ int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index
     if (it.empty())
         return -1;
 
-    return std::distance(value.begin(), it.begin());
+    return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
 int32_t GSF::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
@@ -240,7 +240,7 @@ string GSF::Split(const string& value, const string& delimiterValue, int32_t ind
     const split_iterator<string::const_iterator> end {};
     int32_t count = 0;
 
-    for (; it != end; ++it, ++count)
+    for (; it != end; ++it, ++count) //-V127
     {
         if (count == index)
             return copy_range<string>(*it);

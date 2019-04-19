@@ -33,7 +33,7 @@ namespace GSF {
 namespace TimeSeries {
 namespace Transport
 {
-    // Parser for the compact measurement format of the Gateway Exchange Protocol.
+    // Encoder / decoder for the compact measurement format of the Gateway Exchange Protocol.
     class CompactMeasurement
     {
     private:

@@ -679,7 +679,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                     if (TryGetValue(settings, "dataChannel", setting))
                     {
-                        auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
+                        auto remoteEndPoint = m_commandChannelSocket.remote_endpoint(); //-V821
                         auto localEndPoint = m_commandChannelSocket.local_endpoint();
                         string networkInterface = localEndPoint.address().to_string();
                         settings = ParseKeyValuePairs(setting);
@@ -813,7 +813,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                         // Fall back on lag-time if publish interval is defined as zero
                         if (publishInterval <= 0)
-                            publishInterval = int32_t((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000);
+                            publishInterval = int32_t((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); //-V550
 
                         m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [&,this](Timer*, void*)
                         {
@@ -1145,7 +1145,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
 
         WriteBytes(packet, buffer);
         buffer.clear();
-        count++;
+        count++; //-V127
 
         // Track latest timestamp
         if (!m_useLocalClockAsRealTime && timestamp > m_latestTimestamp && (TimestampIsReasonable(timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription()))
@@ -1215,7 +1215,7 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
             m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue()));
         }
 
-        count++;
+        count++; //-V127
     }
 
     if (count > 0)
@@ -1277,7 +1277,7 @@ void SubscriberConnection::ReadCommandChannel()
         async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&SubscriberConnection::ReadPayloadHeader, this, _1, _2));
 }
 
-void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t bytesTransferred)
+void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
 {
     const uint32_t PacketSizeOffset = 4;
 
@@ -1308,7 +1308,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, uint32_t by
 
     const uint32_t packetSize = EndianConverter::ToLittleEndian<uint32_t>(&m_readBuffer[0], PacketSizeOffset);
 
-    if (packetSize > static_cast<uint32_t>(m_readBuffer.size()))
+    if (packetSize > ConvertUInt32(m_readBuffer.size()))
     {
         // Validate packet size, anything larger than 32K should be considered invalid data
         if (packetSize > Common::MaxPacketSize)
@@ -1536,7 +1536,7 @@ void SubscriberConnection::CommandChannelSendAsync()
     async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, bind(&SubscriberConnection::CommandChannelWriteHandler, this, _1, _2)));
 }
 
-void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred)
 {
     if (m_stopped)
         return;
@@ -1577,7 +1577,7 @@ void SubscriberConnection::DataChannelSendAsync()
     m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, bind(&SubscriberConnection::DataChannelWriteHandler, this, _1, _2)));
 }
 
-void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, uint32_t bytesTransferred)
+void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred)
 {
     if (m_stopped)
         return;
@@ -1627,7 +1627,7 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
     try
     {
         const bool useDataChannel = m_dataChannelActive && (responseCode == ServerResponse::DataPacket || responseCode == ServerResponse::BufferBlock);
-        const uint32_t packetSize = data.size() + 6;
+        const uint32_t packetSize = ConvertUInt32(data.size() + 6);
         SharedPtr<vector<uint8_t>> bufferPtr = NewSharedPtr<vector<uint8_t>>();
         vector<uint8_t>& buffer = *bufferPtr;
         
@@ -1665,39 +1665,39 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
             //if (useDataChannel && CipherKeysDefined())
 
             // Add size of data buffer to response packet
-            EndianConverter::WriteBigEndianBytes(buffer, static_cast<int32_t>(data.size()));
+            EndianConverter::WriteBigEndianBytes(buffer, ConvertInt32(data.size()));
 
             // Write data buffer
             WriteBytes(buffer, data);
-
-            // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
-            if (useDataChannel)
-            {
-                m_totalDataChannelBytesSent += buffer.size();
-
-                post(m_udpWriteStrand, [this, bufferPtr] {
-                    m_udpWriteBuffers.push_back(bufferPtr);
-
-                    if (m_udpWriteBuffers.size() == 1)
-                        DataChannelSendAsync();
-                });
-
-                m_dataChannelWaitHandle.notify_all();
-            }
-            else
-            {
-                m_totalCommandChannelBytesSent += buffer.size();
-
-                post(m_tcpWriteStrand, [this, bufferPtr] {
-                    m_tcpWriteBuffers.push_back(bufferPtr);
-
-                    if (m_tcpWriteBuffers.size() == 1)
-                        CommandChannelSendAsync();
-                });
-            }
-
-            success = true;
         }
+
+        // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+        if (useDataChannel)
+        {
+            m_totalDataChannelBytesSent += buffer.size();
+
+            post(m_udpWriteStrand, [this, bufferPtr] {
+                m_udpWriteBuffers.push_back(bufferPtr);
+
+                if (m_udpWriteBuffers.size() == 1)
+                    DataChannelSendAsync();
+            });
+
+            m_dataChannelWaitHandle.notify_all();
+        }
+        else
+        {
+            m_totalCommandChannelBytesSent += buffer.size();
+
+            post(m_tcpWriteStrand, [this, bufferPtr] {
+                m_tcpWriteBuffers.push_back(bufferPtr);
+
+                if (m_tcpWriteBuffers.size() == 1)
+                    CommandChannelSendAsync();
+            });
+        }
+
+        success = true;
     }
     catch (...)
     {
@@ -1726,7 +1726,7 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
         {
             wstring value(length / enc_sizeof_wchar, L'\0');
 
-            for (size_t i = 0, j = 0; i < length; i += enc_sizeof_wchar, j++)
+            for (uint32_t i = 0, j = 0; i < length; i += enc_sizeof_wchar, j++)
             {
                 uint16_t utf16char;
 

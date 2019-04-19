@@ -257,7 +257,7 @@ uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t 
     gmtime_r(&fromSeconds, &timeinfo);
 #endif
 
-    return strftime(ptr, maxsize, formatStream.str().data(), &timeinfo);
+    return ConvertUInt32(strftime(ptr, maxsize, formatStream.str().data(), &timeinfo));
 }
 
 datetime_t GSF::LocalFromUtc(const datetime_t& timestamp)

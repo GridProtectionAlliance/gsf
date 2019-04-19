@@ -624,9 +624,9 @@ ValueExpressionPtr ExpressionTree::EvaluateInList(const ExpressionPtr& expressio
     if (inListValue->IsNull())
         return NullValue(inListValue->ValueType);
 
-    const int32_t argumentCount = inListExpression->Arguments->size();
+    const size_t argumentCount = inListExpression->Arguments->size();
 
-    for (int32_t i = 0; i < argumentCount; i++)
+    for (size_t i = 0; i < argumentCount; i++)
     {
         const ValueExpressionPtr argumentValue = Evaluate(inListExpression->Arguments->at(i));
         const ExpressionValueType valueType = DeriveComparisonOperationValueType(ExpressionOperatorType::Equal, inListValue->ValueType, argumentValue->ValueType);
