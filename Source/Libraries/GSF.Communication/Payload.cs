@@ -60,20 +60,22 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="buffer">The buffer containing the payload.</param>
         /// <param name="offset">The offset in the <paramref name="buffer"/> at which the payload starts.</param>
-        /// <param name="length">The lenght of the payload in the <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
+        /// <param name="length">The length of the payload in the <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
         /// <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
-        public static void AddHeader(ref byte[] buffer, ref int offset, ref int length, byte[] marker)
+        /// <param name="endianOrder">The endian order to apply to payload size encoding.</param>
+        public static void AddHeader(ref byte[] buffer, ref int offset, ref int length, byte[] marker, EndianOrder endianOrder)
         {
             // Note that the resulting buffer will be at least 4 bytes bigger than the payload
 
             // Resulting buffer = x bytes for payload marker + 4 bytes for the payload size + The payload
             byte[] result = new byte[length + marker.Length + LengthSegment];
 
-            // First, copy the the payload marker to the buffer
-            Buffer.BlockCopy(marker, 0, result, 0, marker.Length);
+            // First, copy the payload marker to the buffer, if any
+            if (marker.Length > 0)
+                Buffer.BlockCopy(marker, 0, result, 0, marker.Length);
 
             // Then, copy the payload's size to the buffer after the payload marker
-            Buffer.BlockCopy(LittleEndian.GetBytes(length), 0, result, marker.Length, LengthSegment);
+            Buffer.BlockCopy(endianOrder.GetBytes(length), 0, result, marker.Length, LengthSegment);
 
             // At last, copy the payload after the payload marker and payload size
             Buffer.BlockCopy(buffer, offset, result, marker.Length + LengthSegment, length);
@@ -103,21 +105,22 @@ namespace GSF.Communication
         /// <summary>
         /// Determines the length of a payload in a "Payload-Aware" transmission from the payload header information.
         /// </summary>
-        /// <param name="buffer">The buffer containg payload header information starting at index zero.</param>
+        /// <param name="buffer">The buffer containing payload header information starting at index zero.</param>
         /// <param name="length">The length of valid data within in <paramref name="buffer"/>.</param>
         /// <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
+        /// <param name="endianOrder">The endian order to apply to payload size decoding.</param>
         /// <returns>Length of the payload.</returns>
-        public static int ExtractLength(byte[] buffer, int length, byte[] marker)
+        public static int ExtractLength(byte[] buffer, int length, byte[] marker, EndianOrder endianOrder)
         {
             // Check to see if buffer is at least as big as the payload header
-            if (length < (marker.Length + LengthSegment))
+            if (length < marker.Length + LengthSegment)
                 return -1;
 
             // Check to see if buffer has the payload marker
             if (!HasHeader(buffer, marker))
                 return 0;
 
-            return BitConverter.ToInt32(buffer, marker.Length);
+            return endianOrder.ToInt32(buffer, marker.Length);
         }
     }
 }

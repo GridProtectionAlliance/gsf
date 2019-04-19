@@ -23,6 +23,10 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Threading;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -37,10 +41,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -218,6 +218,7 @@ namespace GSF.Communication
 
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
+        private EndianOrder m_payloadEndianOrder;
         private bool m_integratedSecurity;
         private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
@@ -268,6 +269,7 @@ namespace GSF.Communication
             m_trustedCertificatesPath = DefaultTrustedCertificatesPath;
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
+            m_payloadEndianOrder = EndianOrder.LittleEndian;
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
@@ -312,9 +314,11 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the byte sequence used to mark the beginning of a payload in a <see cref="PayloadAware"/> transmission.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is null or empty buffer.</exception>
+        /// <remarks>
+        /// Setting property to <c>null</c> will create a zero-length payload marker.
+        /// </remarks>
         [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] PayloadMarker
         {
             get
@@ -323,10 +327,27 @@ namespace GSF.Communication
             }
             set
             {
-                if ((object)value == null || value.Length == 0)
-                    throw new ArgumentNullException(nameof(value));
+                m_payloadMarker = value ?? new byte[0];
+            }
+        }
 
-                m_payloadMarker = value;
+        /// <summary>
+        /// Gets or sets the endian order to apply for encoding and decoding payload size in a <see cref="PayloadAware"/> transmission.
+        /// </summary>
+        /// <remarks>
+        /// Setting property to <c>null</c> will force use of little-endian encoding.
+        /// </remarks>
+        [Browsable(false),
+         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public EndianOrder PayloadEndianOrder
+        {
+            get
+            {
+                return m_payloadEndianOrder;
+            }
+            set
+            {
+                m_payloadEndianOrder = value ?? EndianOrder.LittleEndian;
             }
         }
 
@@ -1365,7 +1386,7 @@ namespace GSF.Communication
                 if (receiveState.PayloadLength < 0)
                 {
                     // If we haven't parsed the length of the payload yet, attempt to parse it
-                    receiveState.PayloadLength = Payload.ExtractLength(receiveState.Buffer, receiveState.Offset, m_payloadMarker);
+                    receiveState.PayloadLength = Payload.ExtractLength(receiveState.Buffer, receiveState.Offset, m_payloadMarker, m_payloadEndianOrder);
 
                     if (receiveState.PayloadLength > 0)
                     {
@@ -1578,7 +1599,7 @@ namespace GSF.Communication
 
                 // Prepare for payload-aware transmission
                 if (m_payloadAware)
-                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
+                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker, m_payloadEndianOrder);
 
                 // Create payload and wait handle.
                 payload = FastObjectFactory<TlsClientPayload>.CreateObjectFunction();
