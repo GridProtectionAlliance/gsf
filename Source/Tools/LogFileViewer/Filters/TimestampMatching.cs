@@ -95,7 +95,7 @@ namespace LogFileViewer.Filters
                 case TimestampMatchingMode.Inside:
                     return m_first <= time && time <= m_second;
                 case TimestampMatchingMode.Outside:
-                    return time < m_first || time > m_second;
+                    return time < m_first || m_second < time;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

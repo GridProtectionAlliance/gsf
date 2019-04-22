@@ -251,6 +251,12 @@ namespace LogFileViewer
                         items.AddRange(new EventMenu(messages).GetMenuButtons());
                         break;
                     case "Time":
+                        var rows = new HashSet<int>();
+                        foreach (DataGridViewCell cell in dgvResults.SelectedCells)
+                        {
+                            if (rows.Add(cell.RowIndex))
+                                messages.Add((LogMessage)dgvResults.Rows[cell.RowIndex].Cells["Object"].Value);
+                        }
                         items.AddRange(new TimestampMenu(messages).GetMenuButtons());
                         break;
                     case "Level":

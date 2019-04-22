@@ -50,6 +50,7 @@ namespace LogFileViewer.Menu
                        Tuple.Create<string, Func<LogMessageFilter>>("5 Minutes Before", Exclude5Before),
                        Tuple.Create<string, Func<LogMessageFilter>>("5 Minutes After", Exclude5After),
                        Tuple.Create<string, Func<LogMessageFilter>>("3 Minutes Before And 1 Minute After", ExcludeBeforeAndAfter),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Exclude Selected Time Range", ExcludeSelectedTimeRange),
                    };
         }
 
@@ -84,7 +85,14 @@ namespace LogFileViewer.Menu
         private LogMessageFilter ExcludeBeforeAndAfter()
         {
             var filter = new LogMessageFilter();
-            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.After, m_minTime.AddMinutes(-3), m_minTime.AddMinutes(1));
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.Outside, m_minTime.AddMinutes(-3), m_maxTime.AddMinutes(1));
+            return filter;
+        }
+
+        private LogMessageFilter ExcludeSelectedTimeRange()
+        {
+            var filter = new LogMessageFilter();
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.Inside, m_minTime, m_maxTime);
             return filter;
         }
 
