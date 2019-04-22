@@ -259,6 +259,9 @@ namespace LogFileViewer
                     case "Exception":
                         items.AddRange(new ExceptionMenu(messages).GetMenuButtons());
                         break;
+                    case "Details":
+                        items.AddRange(new DetailsMenu(messages).GetMenuButtons());
+                        break;
                     case "Message":
                         items.AddRange(new MessageMenu(messages).GetMenuButtons());
                         break;

@@ -87,6 +87,7 @@
     <Compile Include="InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menu\DetailsMenu.cs" />
     <Compile Include="Menu\ExceptionMenu.cs" />
     <Compile Include="Menu\MessageMenu.cs" />
     <Compile Include="Menu\EventMenu.cs" />
