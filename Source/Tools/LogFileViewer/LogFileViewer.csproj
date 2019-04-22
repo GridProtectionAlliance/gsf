@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="Menu\DetailsMenu.cs" />
     <Compile Include="Menu\ExceptionMenu.cs" />
+    <Compile Include="Menu\StackDetailsMenu.cs" />
     <Compile Include="Menu\MessageMenu.cs" />
     <Compile Include="Menu\EventMenu.cs" />
     <Compile Include="Menu\TypeMenu.cs" />

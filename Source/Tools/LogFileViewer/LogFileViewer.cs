@@ -272,7 +272,7 @@ namespace LogFileViewer
                         items.AddRange(new MessageMenu(messages).GetMenuButtons());
                         break;
                     case "Stack Details":
-                        //MakeMenu(e, new MatchStackMessages(item));
+                        items.AddRange(new StackDetailsMenu(messages).GetMenuButtons());
                         break;
                     default:
                         return;

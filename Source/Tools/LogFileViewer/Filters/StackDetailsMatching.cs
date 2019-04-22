@@ -22,52 +22,42 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using GSF.Diagnostics;
 using GSF.IO;
 
 namespace LogFileViewer.Filters
 {
-    public enum StackDetailsMatchingMode
-    {
-        /// <summary>
-        /// All data before this time
-        /// </summary>
-        Before = 0,
-        /// <summary>
-        /// All data after this time
-        /// </summary>
-        After = 1,
-        /// <summary>
-        /// All data between the two timestamps
-        /// </summary>
-        Inside = 2,
-        /// <summary>
-        /// All data outside the two timestamps
-        /// </summary>
-        Outside = 3
-    }
-
     public class StackDetailsMatching
     {
-        private DateTime m_first;
-        private DateTime m_second;
-        private StackDetailsMatchingMode m_mode;
+        private readonly List<KeyValuePair<string, string>> m_items;
+
+        public StackDetailsMatching(List<KeyValuePair<string, string>> items)
+        {
+            m_items = items;
+        }
 
         public StackDetailsMatching()
         {
+            m_items = new List<KeyValuePair<string, string>>();
         }
 
         public StackDetailsMatching(Stream stream)
         {
+            m_items = new List<KeyValuePair<string, string>>();
             byte version = stream.ReadNextByte();
             switch (version)
             {
-                case 1:
-                    m_mode = (StackDetailsMatchingMode)stream.ReadNextByte();
-                    m_first = stream.ReadDateTime();
-                    m_second = stream.ReadDateTime();
+                case 2:
+                    while (stream.ReadBoolean())
+                    {
+                        string key = stream.ReadString();
+                        string value = stream.ReadString();
+                        m_items.Add(new KeyValuePair<string, string>(key, value));
+                    }
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -76,25 +66,40 @@ namespace LogFileViewer.Filters
 
         public void Save(Stream stream)
         {
-            stream.Write((byte)1);
-            stream.Write((byte)m_mode);
-            stream.Write(m_first);
-            stream.Write(m_second);
+            stream.Write((byte)2);
+            foreach (var items in m_items)
+            {
+                stream.Write(true);
+                stream.Write(items.Key);
+                stream.Write(items.Value);
+            }
+            stream.Write(false);
         }
 
         public bool IsMatch(LogMessage log)
         {
+            foreach (var item in m_items)
+            {
+                if (string.Equals(log.CurrentStackMessages[item.Key],item.Value))
+                {
+
+                }
+                else if (string.Equals(log.InitialStackMessages[item.Key], item.Value))
+                {
+
+                }
+                else
+                {
+                    return false;
+                }
+            }
             return true;
         }
 
         public override string ToString()
         {
-            return "Empty";
+            return string.Join(";", m_items.Select(x => $"{x.Key}={x.Value}"));
         }
-
-
-
-
 
     }
 }

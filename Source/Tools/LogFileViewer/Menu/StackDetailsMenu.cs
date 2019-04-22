@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  DetailsMenu.cs - Gbtc
+//  StackDetailsMenu.cs - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -30,11 +30,11 @@ using LogFileViewer.Filters;
 
 namespace LogFileViewer.Menu
 {
-    public class DetailsMenu
+    public class StackDetailsMenu
     {
         private LogMessage m_log;
 
-        public DetailsMenu(List<LogMessage> selectedLogMessages)
+        public StackDetailsMenu(List<LogMessage> selectedLogMessages)
         {
             m_log = selectedLogMessages.First();
         }
@@ -43,21 +43,21 @@ namespace LogFileViewer.Menu
         {
             return new[]
                    {
-                       Tuple.Create<string, Func<LogMessageFilter>>("Details", Message),
-                       Tuple.Create<string, Func<LogMessageFilter>>("Details And Event", MessageAndEvent),
-                       Tuple.Create<string, Func<LogMessageFilter>>("Details And Related Type", MessageAndRelatedType),
-                       Tuple.Create<string, Func<LogMessageFilter>>("Details And Assembly", MessageAndAssembly),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Stack Details", Message),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Stack Details And Event", MessageAndEvent),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Stack Details And Related Type", MessageAndRelatedType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Stack Details And Assembly", MessageAndAssembly),
                    };
         }
 
         private LogMessageFilter Message()
         {
-            using (var frm = new StringMatchingFilterDialog(new StringMatching(StringMatchingMode.Exact, m_log.Details)))
+            using (var frm = new StackDetailsFilter(m_log))
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     var filter = new LogMessageFilter();
-                    filter.DetailsText = frm.ResultFilter;
+                    filter.StackDetails = frm.Matching;
                     return filter;
                 }
                 return null;
@@ -66,12 +66,12 @@ namespace LogFileViewer.Menu
 
         private LogMessageFilter MessageAndEvent()
         {
-            using (var frm = new StringMatchingFilterDialog(new StringMatching(StringMatchingMode.Exact, m_log.Details)))
+            using (var frm = new StackDetailsFilter(m_log))
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     var filter = new LogMessageFilter();
-                    filter.DetailsText = frm.ResultFilter;
+                    filter.StackDetails = frm.Matching;
                     filter.EventName = new StringMatching(StringMatchingMode.Exact, m_log.EventName);
                     return filter;
                 }
@@ -85,13 +85,14 @@ namespace LogFileViewer.Menu
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    using (var frm2 = new StringMatchingFilterDialog(new StringMatching(StringMatchingMode.Exact, m_log.Details)))
+
+                    using (var frm2 = new StackDetailsFilter(m_log))
                     {
                         if (frm2.ShowDialog() == DialogResult.OK)
                         {
                             var filter = new LogMessageFilter();
                             filter.RelatedType = new StringMatching(StringMatchingMode.Exact, frm.SelectedItem);
-                            filter.DetailsText = frm2.ResultFilter;
+                            filter.StackDetails = frm2.Matching;
                             return filter;
                         }
                         return null;
@@ -103,12 +104,12 @@ namespace LogFileViewer.Menu
 
         private LogMessageFilter MessageAndAssembly()
         {
-            using (var frm = new StringMatchingFilterDialog(new StringMatching(StringMatchingMode.Exact, m_log.Details)))
+            using (var frm = new StackDetailsFilter(m_log))
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     var filter = new LogMessageFilter();
-                    filter.DetailsText = frm.ResultFilter;
+                    filter.StackDetails = frm.Matching;
                     filter.Assembly = new StringMatching(StringMatchingMode.Exact, m_log.AssemblyName);
                     return filter;
                 }

@@ -223,6 +223,7 @@
             this.btnStackDetails.TabIndex = 18;
             this.btnStackDetails.Text = "Stack Details";
             this.btnStackDetails.UseVisualStyleBackColor = true;
+            this.btnStackDetails.Click += new System.EventHandler(this.btnStackDetails_Click);
             // 
             // lblStackTrace
             // 

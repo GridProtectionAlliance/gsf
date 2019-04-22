@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using GSF.Diagnostics;
+using LogFileViewer.Filters;
 
 namespace LogFileViewer
 {
@@ -44,15 +45,19 @@ namespace LogFileViewer
             }
         }
 
-        public LogStackMessages SelectedItems;
+        public StackDetailsMatching Matching;
 
-        public StackDetailsFilter(LogStackMessages details)
+        public StackDetailsFilter(LogMessage log)
         {
             InitializeComponent();
 
-            for (int x = 0; x < details.Count; x++)
+            for (int x = 0; x < log.CurrentStackMessages.Count; x++)
             {
-                checkedListBox1.Items.Add(new KVP(details[x]));
+                checkedListBox1.Items.Add(new KVP(log.CurrentStackMessages[x]));
+            }
+            for (int x = 0; x < log.InitialStackMessages.Count; x++)
+            {
+                checkedListBox1.Items.Add(new KVP(log.InitialStackMessages[x]));
             }
         }
 
@@ -64,7 +69,7 @@ namespace LogFileViewer
                 return;
             }
 
-            SelectedItems = new LogStackMessages(checkedListBox1.CheckedItems.Cast<KVP>().Select(x=>x.Values).ToList());
+            Matching = new StackDetailsMatching(checkedListBox1.CheckedItems.Cast<KVP>().Select(x => x.Values).ToList());
             DialogResult = DialogResult.OK;
         }
 

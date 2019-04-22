@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using GSF.Diagnostics;
@@ -211,6 +212,19 @@ namespace LogFileViewer
                     m_filter.RelatedType = win.ResultFilter;
                     chkRelatedType.Checked = true;
                     lblRelatedType.Text = win.ResultFilter.ToString();
+                }
+            }
+        }
+
+        private void btnStackDetails_Click(object sender, EventArgs e)
+        {
+
+            using (var win = new StackDetailsFilter(m_sampleMessage))
+            {
+                if (win.ShowDialog() == DialogResult.OK)
+                {
+                    m_filter.StackDetails = win.Matching;
+                    chkStackDetails.Checked = true;
                 }
             }
         }
