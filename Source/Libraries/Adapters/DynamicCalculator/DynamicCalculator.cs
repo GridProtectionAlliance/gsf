@@ -74,7 +74,7 @@ namespace DynamicCalculator
         /// <summary>
         /// Defines the default value for <see cref="Imports"/> property.
         /// </summary>
-        public const string DefaultImports = "AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math";
+        public const string DefaultImports = "AssemblyName=mscorlib, TypeName=System.Math; AssemblyName=mscorlib, TypeName=System.DateTime";
 
         // Fields
         private string m_expressionText;
@@ -88,6 +88,7 @@ namespace DynamicCalculator
 
         private readonly ImmediateMeasurements m_latestMeasurements;
         private Ticks m_latestTimestamp;
+        private double m_latestValue;
 
         private readonly HashSet<string> m_variableNames;
         private readonly Dictionary<MeasurementKey, string> m_keyMapping;
@@ -373,6 +374,12 @@ namespace DynamicCalculator
                 status.AppendFormat("            Sentinel Value: {0}", SentinelValue);
                 status.AppendLine();
 
+                if (ExpectsOutputMeasurement)
+                {
+                    status.AppendFormat("     Last Calculated Value: {0}", m_latestValue);
+                    status.AppendLine();
+                }
+
                 List<string> imports = new List<string>();
 
                 if (!string.IsNullOrWhiteSpace(Imports))
@@ -451,7 +458,7 @@ namespace DynamicCalculator
             if (settings.TryGetValue("imports", out setting))
                 Imports = setting;
             else
-                Imports = "AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math";
+                Imports = DefaultImports;
 
             if (settings.TryGetValue("supportsTemporalProcessing", out setting))
                 m_supportsTemporalProcessing = setting.ParseBoolean();
@@ -675,6 +682,7 @@ namespace DynamicCalculator
 
             calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], Convert.ToDouble(value), timestamp);
             OnNewMeasurement(calculatedMeasurement);
+            m_latestValue = calculatedMeasurement.AdjustedValue;
         }
 
         // Helper method to raise the NewMeasurements event
