@@ -163,7 +163,7 @@ namespace DynamicCalculator
         /// Gets or sets the list of variables used in the expression.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the app-domain unique list of variables used in the expression. Any defined aliased variables must be unique per defined dynamic calculator or e-mail notifier instance")]
+        Description("Define the unique list of variables used in the expression. Any defined aliased variables must be unique per defined dynamic calculator or e-mail notifier instance. Note that \"TIME\" is reserved, this returns the current timestamp for the calculation in ticks.")]
         public string VariableList
         {
             get
@@ -560,8 +560,6 @@ namespace DynamicCalculator
 
         private void Calculate(IDictionary<MeasurementKey, IMeasurement> measurements)
         {
-            IMeasurement measurement;
-
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
@@ -569,11 +567,14 @@ namespace DynamicCalculator
             {
                 string name = m_keyMapping[key];
 
-                if (measurements.TryGetValue(key, out measurement))
+                if (measurements.TryGetValue(key, out IMeasurement measurement))
                     m_expressionContext.Variables[name] = measurement.AdjustedValue;
                 else
                     m_expressionContext.Variables[name] = m_sentinelValue;
             }
+
+            // Handle special constants
+            m_expressionContext.Variables["TIME"] = RealTime.Value;
 
             // Compile the expression if it has not been compiled already
             if ((object)m_expression == null)
@@ -607,20 +608,18 @@ namespace DynamicCalculator
 
             key = GetKey(splitToken[1].Trim());
             alias = splitToken[0].Trim();
+
             AddMapping(key, alias);
         }
 
         // Adds a variable to the key-variable map which has not been explicitly aliased.
         private void AddNotAliasedVariable(string token)
         {
-            string alias;
-            MeasurementKey key;
-
             token = token.Trim();
             m_nonAliasedTokens.Add(-token.Length, token);
 
-            key = GetKey(token);
-            alias = token.ReplaceCharacters('_', c => !char.IsLetterOrDigit(c));
+            MeasurementKey key = GetKey(token);
+            string alias = token.ReplaceCharacters('_', c => !char.IsLetterOrDigit(c));
 
             // Ensure that the generated alias is unique
             while (m_variableNames.Contains(alias))
@@ -635,6 +634,9 @@ namespace DynamicCalculator
             if (m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 
+            if (alias.Equals("TIME", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Variable name \"TIME\" is reserved.");
+
             m_variableNames.Add(alias);
             m_keyMapping.Add(key, alias);
         }
@@ -643,13 +645,11 @@ namespace DynamicCalculator
         private void PerformAliasReplacement()
         {
             StringBuilder aliasedExpressionTextBuilder = new StringBuilder(m_expressionText);
-            MeasurementKey key;
-            string alias;
 
             foreach (string token in m_nonAliasedTokens.Values)
             {
-                key = GetKey(token);
-                alias = m_keyMapping[key];
+                MeasurementKey key = GetKey(token);
+                string alias = m_keyMapping[key];
                 aliasedExpressionTextBuilder.Replace(token, alias);
             }
 
@@ -660,9 +660,7 @@ namespace DynamicCalculator
         // may be either a signal ID or measurement key.
         private MeasurementKey GetKey(string token)
         {
-            Guid signalID;
-
-            return Guid.TryParse(token, out signalID)
+            return Guid.TryParse(token, out Guid signalID)
                 ? MeasurementKey.LookUpBySignalID(signalID)
                 : MeasurementKey.Parse(token);
         }
