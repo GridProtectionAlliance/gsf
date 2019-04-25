@@ -2062,6 +2062,9 @@ namespace GSF.Data.Model
         {
             object value = property.GetValue(record);
 
+            if (value is char && Connection.DatabaseType == DatabaseType.SQLite)
+                value = value.ToString();
+
             if ((object)s_fieldDataTypeTargets == null && (object)s_encryptDataTargets == null)
                 return value;
 
