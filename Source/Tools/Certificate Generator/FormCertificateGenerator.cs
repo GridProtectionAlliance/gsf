@@ -46,10 +46,21 @@ namespace GSF.Security.CertificateGenerator
                         using (var cert = CertificateMaker.GenerateSelfSignedCertificate(m_opt.KeyType, m_opt.CommonName, m_opt.StartDate, m_opt.EndDate))
                         {
                             File.WriteAllBytes(dlg.FileName, cert.Export(X509ContentType.Pkcs12, txtPassword.Text));
+
+                            using (var dlg2 = new SaveFileDialog())
+                            {
+                                dlg2.Filter = "Certificate File|*.cer";
+                                dlg2.FileName = Path.ChangeExtension(dlg.FileName, ".cer");
+                                if (dlg2.ShowDialog() == DialogResult.OK)
+                                {
+                                    File.WriteAllBytes(dlg2.FileName, cert.Export(X509ContentType.Cert));
+                                }
+                            }
                         }
-                        MessageBox.Show("Done!");
                     }
                 }
+               
+                MessageBox.Show("Done!");
 
                 DialogResult = DialogResult.OK;
                 Close();
