@@ -139,24 +139,24 @@ namespace PowerCalculations.PowerMultiCalculator
                 $"    pc.ActivePowerOutputSignalID, " +
                 $"    pc.ApparentPowerOutputSignalID, " +
                 $"    pc.ReactivePowerOutputSignalID, " +
-                $"    v.Acronym AS vendoracronym, " +
-                $"    d.Acronym AS deviceacronym, " +
-                $"    c.Acronym AS companyacronym, " +
-                $"    d.id AS deviceid, " +
-                $"    d.historianid AS historianid, " +
-                $"    p.Label AS currentLabel " +
+                $"    v.Acronym AS VendorAcronym, " +
+                $"    d.Acronym AS DeviceAcronym, " +
+                $"    c.Acronym AS CompanyAcronym, " +
+                $"    d.id AS DeviceID, " +
+                $"    vm.HistorianID AS HistorianID, " +
+                $"    p.Label AS CurrentLabel " +
                 $"FROM " +
                 $"    PowerCalculation pc JOIN " +
-                $"    Measurement vm ON vm.SignalID = pc.voltageanglesignalid JOIN " +
+                $"    Measurement vm ON vm.SignalID = pc.VoltageAngleSignalID JOIN " +
                 $"    Measurement im ON im.SignalID = pc.CurrentAngleSignalID LEFT OUTER JOIN " +
                 $"    Phasor p ON im.DeviceID = p.DeviceID AND im.PhasorSourceIndex = p.SourceIndex LEFT OUTER JOIN " +
-                $"    Device d ON vm.deviceid = d.id LEFT OUTER JOIN " +
-                $"    VendorDevice vd ON vd.id = d.VendorDeviceID LEFT OUTER JOIN " +
-                $"    Vendor v ON vd.VendorID = v.id LEFT OUTER JOIN " +
-                $"    Company c ON d.CompanyID = c.id " +
+                $"    Device d ON vm.DeviceID = d.ID LEFT OUTER JOIN " +
+                $"    VendorDevice vd ON vd.ID = d.VendorDeviceID LEFT OUTER JOIN " +
+                $"    Vendor v ON vd.VendorID = v.ID LEFT OUTER JOIN " +
+                $"    Company c ON d.CompanyID = c.ID " +
                 $"WHERE " +
-                $"    pc.Enabled = 1 AND " +
-                $"    pc.nodeid = {nodeIDQueryString} AND " +
+                $"    pc.Enabled <> 0 AND " +
+                $"    pc.NodeID = {nodeIDQueryString} AND " +
                 $"    ( " +
                 $"        pc.ActivePowerOutputSignalID IS NULL OR " +
                 $"        pc.ReactivePowerOutputSignalID IS NULL OR " +
