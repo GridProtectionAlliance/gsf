@@ -219,12 +219,14 @@ namespace GSF.TimeSeries
         private static void ValidateDataPublishers(AdoDataConnection database, string nodeIDQueryString, string arguments)
         {
             const string DataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='{0}!DATAPUBLISHER' AND NodeID = {1}";
-            const string DataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'securityMode={2}; allowSynchronizedSubscription=false; useBaseTimeOffsets=true; {3}', {4})";
-            //const string DataPublisherUpdateformat = "UPDATE CustomActionAdapter SET ConnectionString = '{0}' WHERE AdapterName = '{1}!DATAPUBLISHER'";
+            const string GEPDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'securityMode={2}; allowSynchronizedSubscription=false; useBaseTimeOffsets=true; {3}', {4})";
+            const string STTPDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'sttp.gsf.dll', 'sttp.DataPublisher', 'securityMode={2}; {3}', {4})";
 
             bool internalDataPublisherEnabled = true;
             bool externalDataPublisherEnabled = true;
             bool tlsDataPublisherEnabled = true;
+            bool sttpDataPublisherEnabled = true;
+            bool sttpsDataPublisherEnabled = true;
 
             if (!string.IsNullOrEmpty(arguments))
             {
@@ -239,20 +241,34 @@ namespace GSF.TimeSeries
 
                 if (kvps.TryGetValue("tlsDataPublisherEnabled", out value))
                     tlsDataPublisherEnabled = value.ParseBoolean();
+
+                if (kvps.TryGetValue("sttpDataPublisherEnabled", out value))
+                    sttpDataPublisherEnabled = value.ParseBoolean();
+                
+                if (kvps.TryGetValue("sttpsDataPublisherEnabled", out value))
+                    sttpsDataPublisherEnabled = value.ParseBoolean();
             }
 
             int internalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString)));
             int externalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString)));
             int tlsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "TLS", nodeIDQueryString)));
+            int sttpDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "STTP", nodeIDQueryString)));
+            int sttpsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "STTPS", nodeIDQueryString)));
 
             if (internalDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0));
 
             if (externalDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", "", externalDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", "", externalDataPublisherEnabled ? 1 : 0));
 
             if (tlsDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", "", tlsDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", "", tlsDataPublisherEnabled ? 1 : 0));
+
+            if (sttpDataPublisherCount == 0)
+                database.Connection.ExecuteNonQuery(string.Format(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTP", "None", "cachedMeasurementExpression={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", sttpDataPublisherEnabled ? 1 : 0));
+
+            if (sttpsDataPublisherCount == 0)
+                database.Connection.ExecuteNonQuery(string.Format(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTPS", "TLS", "", sttpsDataPublisherEnabled ? 1 : 0));
         }
 
         /// <summary>
