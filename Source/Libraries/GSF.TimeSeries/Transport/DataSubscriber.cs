@@ -2101,7 +2101,7 @@ namespace GSF.TimeSeries.Transport
         public bool SynchronizedSubscribe(SynchronizedSubscriptionInfo info)
         {
             StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+            AssemblyInfo assemblyInfo = new AssemblyInfo(typeof(DataSubscriber).Assembly);
 
             // Dispose of any previously established local concentrator
             DisposeLocalConcentrator();
@@ -2199,7 +2199,7 @@ namespace GSF.TimeSeries.Transport
             DisposeLocalConcentrator();
 
             StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+            AssemblyInfo assemblyInfo = new AssemblyInfo(typeof(DataSubscriber).Assembly);
 
             connectionString.AppendFormat("trackLatestMeasurements={0};", info.Throttled);
             connectionString.AppendFormat("publishInterval={0};", info.PublishInterval);
@@ -2316,7 +2316,7 @@ namespace GSF.TimeSeries.Transport
             DisposeLocalConcentrator();
 
             StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+            AssemblyInfo assemblyInfo = new AssemblyInfo(typeof(DataSubscriber).Assembly);
 
             connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
@@ -2450,7 +2450,7 @@ namespace GSF.TimeSeries.Transport
 
             // Initiate unsynchronized subscribe
             StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+            AssemblyInfo assemblyInfo = new AssemblyInfo(typeof(DataSubscriber).Assembly);
 
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", false);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
@@ -2554,7 +2554,7 @@ namespace GSF.TimeSeries.Transport
             DisposeLocalConcentrator();
 
             StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+            AssemblyInfo assemblyInfo = new AssemblyInfo(typeof(DataSubscriber).Assembly);
 
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
