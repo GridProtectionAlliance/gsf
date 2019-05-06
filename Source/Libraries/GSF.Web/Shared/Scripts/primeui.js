@@ -2975,7 +2975,7 @@ PUI.resolveUserAgent();
             var relativeHeight = this.element.parent().innerHeight() * (parseInt(this.options.scrollHeight) / 100),
             tableHeaderHeight = this.element.children('.ui-datatable-header').outerHeight(true),
             tableFooterHeight = this.element.children('.ui-datatable-footer').outerHeight(true),
-            scrollersHeight = (this.scrollHeader.outerHeight(true) + this.scrollFooter.outerHeight(true)),
+            scrollersHeight = (this.scrollHeader.outerHeight(true) + (this.scrollFooter == undefined ? 0 : this.scrollFooter.outerHeight(true))),
             paginatorsHeight = this.paginator ? this.paginator.getContainerHeight(true) : 0,
             height = (relativeHeight - (scrollersHeight + paginatorsHeight + tableHeaderHeight + tableFooterHeight));
 
@@ -13926,7 +13926,7 @@ PUI.resolveUserAgent();
             var relativeHeight = this.element.parent().parent().innerHeight() * (parseInt(this.options.scrollHeight) / 100),
                 tableHeaderHeight = this.element.children('.ui-datatable-header').outerHeight(true),
                 tableFooterHeight = this.element.children('.ui-datatable-footer').outerHeight(true),
-                scrollersHeight = (this.scrollHeader.outerHeight(true) + this.scrollFooter.outerHeight(true)),
+                scrollersHeight = (this.scrollHeader.outerHeight(true) + (this.scrollFooter == undefined ? 0 : this.scrollFooter.outerHeight(true))),
                 paginatorsHeight = this.paginator ? this.paginator.getContainerHeight(true) : 0,
                 height = (relativeHeight - (scrollersHeight + paginatorsHeight + tableHeaderHeight + tableFooterHeight));
 
