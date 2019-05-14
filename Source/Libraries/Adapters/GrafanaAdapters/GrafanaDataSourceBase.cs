@@ -21,13 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -36,6 +29,13 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using GSF.Web;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable PossibleMultipleEnumeration
 // ReSharper disable AccessToModifiedClosure
@@ -1008,7 +1008,7 @@ namespace GrafanaAdapters
             // Query function expression to get series data
             IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, decimate, cancellationToken);
 
-            // Handle label function as a special edge case - groups operations on label are ignored
+            // Handle label function as a special edge case - group operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)
             {
                 // Derive label
@@ -1094,7 +1094,7 @@ namespace GrafanaAdapters
                             yield return new DataSourceValueGroup
                             {
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
-                                RootTarget = dataValues.Target,
+                                RootTarget = dataValues.RootTarget ?? dataValues.Target,
                                 SourceTarget = sourceTarget,
                                 Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
                             };
