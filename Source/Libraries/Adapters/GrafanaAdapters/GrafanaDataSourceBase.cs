@@ -1157,7 +1157,7 @@ namespace GrafanaAdapters
 
             // RegEx instance to find all series functions
             s_groupOperationNames = Enum.GetNames(typeof(GroupOperation));
-            s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!\s+IN\s+)\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!(\s+IN\s*)|(\s+AND\s*)|(\s+OR\s*))\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
