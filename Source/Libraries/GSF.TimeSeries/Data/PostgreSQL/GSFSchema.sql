@@ -36,7 +36,7 @@
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 9 AS VersionNumber;
+SELECT 10 AS VersionNumber;
 
 CREATE EXTENSION "uuid-ossp";
 
@@ -447,6 +447,7 @@ CREATE TABLE Phasor(
     Phase NCHAR(1) NOT NULL DEFAULT '+',
     DestinationPhasorID INTEGER NULL,
     SourceIndex INTEGER NOT NULL DEFAULT 0,
+    BaseKV INTEGER NOT NULL DEFAULT 0,
     CreatedOn TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CreatedBy VARCHAR(200) NOT NULL DEFAULT '',
     UpdatedOn TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

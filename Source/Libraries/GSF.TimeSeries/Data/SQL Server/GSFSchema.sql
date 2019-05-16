@@ -116,7 +116,7 @@ GO
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW [dbo].[SchemaVersion] AS
-SELECT 9 AS VersionNumber
+SELECT 10 AS VersionNumber
 GO
 
 SET ANSI_NULLS ON
@@ -755,6 +755,7 @@ CREATE TABLE [dbo].[Phasor](
     [Phase] [nchar](1) NOT NULL CONSTRAINT [DF_Phasor_Phase]  DEFAULT (N'+'),
     [DestinationPhasorID] [int] NULL,
     [SourceIndex] [int] NOT NULL CONSTRAINT [DF_Phasor_SourceIndex]  DEFAULT ((0)),
+    [BaseKV] [int] NOT NULL CONSTRAINT [DF_Phasor_BaseKV]  DEFAULT ((0)),
     [CreatedOn] [datetime] NOT NULL CONSTRAINT [DF_Phasor_CreatedOn]  DEFAULT (getutcdate()),
     [CreatedBy] [varchar](200) NOT NULL CONSTRAINT [DF_Phasor_CreatedBy]  DEFAULT (suser_name()),
     [UpdatedOn] [datetime] NOT NULL CONSTRAINT [DF_Phasor_UpdatedOn]  DEFAULT (getutcdate()),
@@ -2690,13 +2691,13 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DELETE FROM [dbo].[PowerCalculation] WHERE 
-		   [ApparentPowerOutputSignalID] IN (SELECT [SignalID] FROM DELETED)
-		OR [CurrentAngleSignalID] IN (SELECT [SignalID] FROM DELETED)
-		OR [CurrentMagSignalID] IN (SELECT [SignalID] FROM DELETED)
-		OR [ReactivePowerOutputSignalID] IN (SELECT [SignalID] FROM DELETED)
-		OR [ActivePowerOutputSignalID] IN (SELECT [SignalID] FROM DELETED)
-		OR [VoltageAngleSignalID] IN (SELECT [SignalID] FROM DELETED)
-		OR [VoltageMagSignalID] IN (SELECT [SignalID] FROM DELETED)
+           [ApparentPowerOutputSignalID] IN (SELECT [SignalID] FROM DELETED)
+        OR [CurrentAngleSignalID] IN (SELECT [SignalID] FROM DELETED)
+        OR [CurrentMagSignalID] IN (SELECT [SignalID] FROM DELETED)
+        OR [ReactivePowerOutputSignalID] IN (SELECT [SignalID] FROM DELETED)
+        OR [ActivePowerOutputSignalID] IN (SELECT [SignalID] FROM DELETED)
+        OR [VoltageAngleSignalID] IN (SELECT [SignalID] FROM DELETED)
+        OR [VoltageMagSignalID] IN (SELECT [SignalID] FROM DELETED)
     DELETE FROM [dbo].[MeasurementGroupMeasurement] WHERE [SignalID] IN (SELECT [SignalID] FROM DELETED)
     DELETE FROM [dbo].[SubscriberMeasurement] WHERE [SignalID] IN (SELECT [SignalID] FROM DELETED)
     DELETE FROM [dbo].[OutputStreamMeasurement] WHERE [PointID] IN (SELECT [PointID] FROM DELETED)

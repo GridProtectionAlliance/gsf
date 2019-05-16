@@ -38,7 +38,7 @@
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 9 AS VersionNumber
+SELECT 10 AS VersionNumber
 FROM dual;
 
 CREATE TABLE ErrorLog(
@@ -615,6 +615,7 @@ CREATE TABLE Phasor(
     Phase VARCHAR2(1) DEFAULT '+' NOT NULL,
     DestinationPhasorID NUMBER NULL,
     SourceIndex NUMBER DEFAULT 0 NOT NULL,
+    BaseKV NUMBER DEFAULT 0 NOT NULL,
     CreatedOn DATE NOT NULL,
     CreatedBy VARCHAR2(200) NOT NULL,
     UpdatedOn DATE NOT NULL,

@@ -38,7 +38,7 @@ USE GSFSchema;
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 9 AS VersionNumber;
+SELECT 10 AS VersionNumber;
 
 CREATE TABLE ErrorLog(
     ID INT AUTO_INCREMENT NOT NULL,
@@ -413,6 +413,7 @@ CREATE TABLE Phasor(
     Phase NCHAR(1) NOT NULL DEFAULT N'+',
     DestinationPhasorID INT NULL,
     SourceIndex INT NOT NULL DEFAULT 0,
+    BaseKV INT NOT NULL DEFAULT 0,
     CreatedOn DATETIME NULL,
     CreatedBy VARCHAR(200) NULL,
     UpdatedOn DATETIME NULL,

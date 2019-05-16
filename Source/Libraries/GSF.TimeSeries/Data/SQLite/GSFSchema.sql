@@ -33,7 +33,7 @@ PRAGMA foreign_keys = ON;
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 9 AS VersionNumber;
+SELECT 10 AS VersionNumber;
 
 CREATE TABLE ErrorLog(
     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -416,6 +416,7 @@ CREATE TABLE Phasor(
     Phase NCHAR(1) NOT NULL DEFAULT '+',
     DestinationPhasorID INTEGER NULL,
     SourceIndex INTEGER NOT NULL DEFAULT 0,
+    BaseKV INTEGER NOT NULL DEFAULT 0,
     CreatedOn DATETIME NOT NULL DEFAULT '',
     CreatedBy VARCHAR(200) NOT NULL DEFAULT '',
     UpdatedOn DATETIME NOT NULL DEFAULT '',

@@ -4188,10 +4188,14 @@ namespace GSF.TimeSeries.Transport
                             // Define SQL statement to update destinationPhasorID field of existing phasor record
                             string updateDestinationPhasorIDSql = database.ParameterizedQueryString("UPDATE Phasor SET DestinationPhasorID = {0} WHERE ID = {1}", "destinationPhasorID", "id");
 
+                            // Define SQL statement to update phasor BaseKV
+                            string updatePhasorBaseKVSql = database.ParameterizedQueryString("UPDATE Phasor SET BaseKV = {0} WHERE DeviceID = {1} AND SourceIndex = {2}", "baseKV", "deviceID", "sourceIndex");
+
                             // Check existence of optional meta-data fields
                             DataColumnCollection phasorDetailColumns = phasorDetail.Columns;
                             bool phasorIDFieldExists = phasorDetailColumns.Contains("ID");
                             bool destinationPhasorIDFieldExists = phasorDetailColumns.Contains("DestinationPhasorID");
+                            bool baseKVFieldExists = phasorDetailColumns.Contains("BaseKV");
 
                             foreach (DataRow row in phasorDetail.Rows)
                             {
@@ -4220,18 +4224,24 @@ namespace GSF.TimeSeries.Transport
                                     deviceID = deviceIDs[deviceAcronym];
 
                                     int sourceIndex = row.ConvertField<int>("SourceIndex");
+                                    bool updateRecord = false;
 
                                     // Determine if phasor record already exists
                                     if (Convert.ToInt32(command.ExecuteScalar(phasorExistsSql, m_metadataSynchronizationTimeout, deviceID, sourceIndex)) == 0)
                                     {
                                         // Insert new phasor record
                                         command.ExecuteNonQuery(insertPhasorSql, m_metadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), sourceIndex);
+                                        updateRecord = true;
                                     }
                                     else if (recordNeedsUpdating)
                                     {
                                         // Update existing phasor record
                                         command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, sourceIndex);
+                                        updateRecord = true;
                                     }
+
+                                    if (updateRecord && baseKVFieldExists)
+                                        command.ExecuteNonQuery(updatePhasorBaseKVSql, m_metadataSynchronizationTimeout, row.ConvertField<int>("BaseKV"), deviceID, sourceIndex);
 
                                     if (phasorIDFieldExists && destinationPhasorIDFieldExists)
                                     {
