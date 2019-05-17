@@ -30,6 +30,10 @@
 //          Added paging and sorting technique. 
 //******************************************************************************************************
 
+using GSF.Data;
+using GSF.TimeSeries.UI;
+using GSF.TimeSeries.UI.DataModels;
+using PhasorProtocolAdapters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -37,10 +41,6 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
-using GSF.Data;
-using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.DataModels;
-using PhasorProtocolAdapters;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.DataModels
@@ -58,6 +58,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_label;
         private string m_type;
         private string m_phase;
+        private int m_baseKV;
         private int? m_destinationPhasorID;
         private int m_sourceIndex;
         //private string m_destinationPhasorLabel;
@@ -160,6 +161,23 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_phase = value;
                 OnPropertyChanged("Phase");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets nominal voltage level of line/bus associated with phasor.
+        /// </summary>
+        [DefaultValue("0")]
+        public int BaseKV
+        {
+            get
+            {
+                return m_baseKV;
+            }
+            set
+            {
+                m_baseKV = value;
+                OnPropertyChanged("BaseKV");
             }
         }
 
@@ -393,6 +411,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             Label = row.Field<string>("Label"),
                             Type = row.Field<string>("Type"),
                             Phase = row.Field<string>("Phase"),
+                            BaseKV = row.Field<int>("BaseKV"),
                             SourceIndex = row.ConvertField<int>("SourceIndex")
                         };
                     }
@@ -492,20 +511,20 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (phasor.ID == 0)
                 {
-                    query = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, SourceIndex, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})", "deviceID", "label", "type", "phase", "sourceIndex", "updatedBy", "updatedOn", "createdBy",
+                    query = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, BaseKV, SourceIndex, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", "deviceID", "label", "type", "phase", "baseKV", "sourceIndex", "updatedBy", "updatedOn", "createdBy",
                         "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase, phasor.SourceIndex,
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase, phasor.BaseKV, phasor.SourceIndex,
                         CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
-                    query = database.ParameterizedQueryString("UPDATE Phasor SET DeviceID = {0}, Label = {1}, Type = {2}, Phase = {3}, SourceIndex = {4}, " +
-                        "UpdatedBy = {5}, UpdatedOn = {6} WHERE ID = {7}", "deviceID", "label", "type", "phase", "sourceIndex", "updatedBy", "updatedOn", "id");
+                    query = database.ParameterizedQueryString("UPDATE Phasor SET DeviceID = {0}, Label = {1}, Type = {2}, Phase = {3}, BaseKV = {4}, SourceIndex = {5}, " +
+                        "UpdatedBy = {6}, UpdatedOn = {7} WHERE ID = {8}", "deviceID", "label", "type", "phase", "baseKV", "sourceIndex", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type,
-                        phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow, phasor.ID);
+                        phasor.Phase, phasor.BaseKV, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow, phasor.ID);
                 }
 
                 // Get reference to the device to which phasor is being added.
@@ -532,7 +551,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         measurement.DeviceID = device.ID;
                         measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
+                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV);
                         measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
@@ -545,7 +564,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     {
                         // Update existing record when needed or when phasor source index has changed
                         measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
+                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV);
                         measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
@@ -633,6 +652,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         Label = row.Field<string>("Label"),
                         Type = row.Field<string>("Type"),
                         Phase = row.Field<string>("Phase"),
+                        BaseKV = row.Field<int>("BaseKV"),
                         SourceIndex = row.ConvertField<int>("SourceIndex")
                     };
 

@@ -27,16 +27,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
 using GSF;
 using GSF.Collections;
 using GSF.Configuration;
@@ -51,6 +41,16 @@ using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using GSF.Units.EE;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading;
 
 namespace PhasorProtocolAdapters
 {
@@ -412,9 +412,10 @@ namespace PhasorProtocolAdapters
         /// <param name="phasorLabel">The label of the phasor associated with the point.</param>
         /// <param name="signalIndex">Signal index of the point, if any.</param>
         /// <param name="phase">Signal phase of the point, if any.</param>
+        /// <param name="baseKV">Nominal kV of line associated with phasor.</param>
         /// <returns>A new point tag created using the configured point tag name expression.</returns>
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string phasorLabel = null, int signalIndex = -1, char phase = '_')
+        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string phasorLabel = null, int signalIndex = -1, char phase = '_', int baseKV = 0)
         {
             // Initialize point tag expression parser
             if ((object)s_pointTagExpressionParser == null)
@@ -455,7 +456,8 @@ namespace PhasorProtocolAdapters
                 { "{VendorAcronym}", vendorAcronym },
                 { "{PhasorLabel}", phasorLabel },
                 { "{SignalIndex}", signalIndex.ToString() },
-                { "{Phase}", phase.ToString() }
+                { "{Phase}", phase.ToString() },
+                { "{BaseKV}", baseKV.ToString() }
             };
 
             // Define signal type field value replacements
@@ -1083,9 +1085,10 @@ namespace PhasorProtocolAdapters
                 string device, vendor, signalAcronym, phasorLabel;
                 char? phase;
                 int? vendorDeviceID;
+                int baseKV;
                 SignalReference signal;
 
-                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
+                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase, BaseKV FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
                 {
                     company = measurement.ConvertField<string>("CompanyAcronym");
 
@@ -1120,8 +1123,9 @@ namespace PhasorProtocolAdapters
 
                         phasorLabel = measurement.ConvertField<string>("PhasorLabel");
                         phase = measurement.ConvertNullableField<char>("Phase");
+                        baseKV = measurement.ConvertField<int>("BaseKV");
 
-                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, phasorLabel, signalIndex, phase ?? '_')}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
+                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, phasorLabel, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
                     }
                 }
             }
