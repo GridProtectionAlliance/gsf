@@ -2114,7 +2114,7 @@ SELECT     dbo.Device.CompanyID, dbo.Company.Acronym AS CompanyAcronym, dbo.Comp
                       dbo.Device.Acronym AS DeviceAcronym, dbo.Device.Name AS DeviceName, COALESCE(dbo.Device.FramesPerSecond, 30) AS FramesPerSecond, dbo.Device.Enabled AS DeviceEnabled, dbo.Device.ContactList, 
                       dbo.Device.VendorDeviceID, dbo.VendorDevice.Name AS VendorDeviceName, dbo.VendorDevice.Description AS VendorDeviceDescription, 
                       dbo.Device.ProtocolID, dbo.Protocol.Acronym AS ProtocolAcronym, dbo.Protocol.Name AS ProtocolName, dbo.Measurement.SignalTypeID, 
-                      dbo.Measurement.PhasorSourceIndex, dbo.Phasor.Label AS PhasorLabel, dbo.Phasor.Type AS PhasorType, dbo.Phasor.Phase, 
+                      dbo.Measurement.PhasorSourceIndex, dbo.Phasor.Label AS PhasorLabel, dbo.Phasor.Type AS PhasorType, dbo.Phasor.Phase, dbo.Phasor.BaseKV,
                       dbo.Measurement.SignalReference, dbo.Measurement.Adder, dbo.Measurement.Multiplier, dbo.Measurement.Description, dbo.Measurement.Subscribed, dbo.Measurement.Internal, dbo.Measurement.Enabled, 
                       COALESCE (dbo.SignalType.EngineeringUnits, N'') AS EngineeringUnits, dbo.SignalType.Source, dbo.SignalType.Acronym AS SignalAcronym, 
                       dbo.SignalType.Name AS SignalName, dbo.SignalType.Suffix AS SignalTypeSuffix, dbo.Device.Longitude, dbo.Device.Latitude,
