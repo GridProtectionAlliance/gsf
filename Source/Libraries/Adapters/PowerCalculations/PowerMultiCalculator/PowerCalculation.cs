@@ -45,22 +45,22 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// <summary>
 		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Angle <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey VoltageAngleSignalID { get; set; }
+		public MeasurementKey VoltageAngleMeasurementKey { get; set; }
 
 		/// <summary>
 		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Magnitude <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey VoltageMagnitudeSignalID { get; set; }
+		public MeasurementKey VoltageMagnitudeMeasurementKey { get; set; }
 
 		/// <summary>
 		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Angle <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey CurrentAngleSignalID { get; set; }
+		public MeasurementKey CurrentAngleMeasurementKey { get; set; }
 
 		/// <summary>
 		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Magnitude <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey CurrentMagnitudeSignalID { get; set; }
+		public MeasurementKey CurrentMagnitudeMeasurementKey { get; set; }
 
 		/// <summary>
 		/// Measurement template to be used for active power output values from the <see cref="PowerCalculation"/>

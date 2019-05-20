@@ -56,6 +56,7 @@ namespace PowerCalculations.PowerMultiCalculator
 
         // Fields
         private List<PowerCalculation> m_configuredCalculations;
+        private Dictionary<MeasurementKey, VoltageAdjustmentStrategy> m_adjustmentStrategies;
         private RunningAverage m_averageCalculationsPerFrame;
         private RunningAverage m_averageCalculationTime;
         private RunningAverage m_averageTotalCalculationTime;
@@ -107,10 +108,10 @@ namespace PowerCalculations.PowerMultiCalculator
         public bool AlwaysProduceResult { get; set; }
 
         /// <summary>
-        /// Gets or sets the strategy used to adjust voltage values for based on the nature of the voltage measurements.
+        /// Gets or sets the default strategy used to adjust voltage values for based on the nature of the voltage measurements.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines strategy used to adjust voltage values for based on the nature of the voltage measurements.")]
+        [Description("Defines default strategy used to adjust voltage values for based on the nature of the voltage measurements.")]
         [DefaultValue(VoltageAdjustmentStrategy.LineToNeutral)]
         public VoltageAdjustmentStrategy AdjustmentStrategy { get; set; }
 
@@ -138,6 +139,7 @@ namespace PowerCalculations.PowerMultiCalculator
 
                 status.Append(base.Status);
 
+                status.AppendLine($"    Per-calculation Adjustments: {m_adjustmentStrategies.Count:N0}");
                 status.AppendLine($"        Last Total Calculations: {m_lastTotalCalculations}");
                 status.AppendLine($"     Average Total Calculations: {Math.Round(m_averageCalculationsPerFrame.Average):N3} per frame");
                 status.AppendLine($"       Average Calculation Time: {m_averageCalculationTime.Average:N3} ms");
@@ -200,6 +202,7 @@ namespace PowerCalculations.PowerMultiCalculator
             HashSet<IMeasurement> outputMeasurements = new HashSet<IMeasurement>();
 
             m_configuredCalculations = new List<PowerCalculation>();
+            m_adjustmentStrategies = new Dictionary<MeasurementKey, VoltageAdjustmentStrategy>();
             m_averageCalculationsPerFrame = new RunningAverage();
             m_averageCalculationTime = new RunningAverage();
             m_averageTotalCalculationTime = new RunningAverage();
@@ -226,10 +229,10 @@ namespace PowerCalculations.PowerMultiCalculator
                     {
                         PowerCalculationID = rdr.GetInt32(0),
                         CircuitDescription = rdr.GetString(1),
-                        VoltageAngleSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[2].ToString())),
-                        VoltageMagnitudeSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[3].ToString())),
-                        CurrentAngleSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[4].ToString())),
-                        CurrentMagnitudeSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[5].ToString())),
+                        VoltageAngleMeasurementKey = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[2].ToString())),
+                        VoltageMagnitudeMeasurementKey = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[3].ToString())),
+                        CurrentAngleMeasurementKey = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[4].ToString())),
+                        CurrentMagnitudeMeasurementKey = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[5].ToString())),
                         ActivePowerOutputMeasurement = AddOutputMeasurement(Guid.Parse(rdr[6].ToString()), outputMeasurements),
                         ReactivePowerOutputMeasurement = AddOutputMeasurement(Guid.Parse(rdr[7].ToString()), outputMeasurements),
                         ApparentPowerOutputMeasurement = AddOutputMeasurement(Guid.Parse(rdr[8].ToString()), outputMeasurements)
@@ -238,7 +241,7 @@ namespace PowerCalculations.PowerMultiCalculator
             }
 
             if (m_configuredCalculations.Any())
-                InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalID, pc.CurrentMagnitudeSignalID, pc.VoltageAngleSignalID, pc.VoltageMagnitudeSignalID }).ToArray();
+                InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleMeasurementKey, pc.CurrentMagnitudeMeasurementKey, pc.VoltageAngleMeasurementKey, pc.VoltageMagnitudeMeasurementKey }).ToArray();
             else
                 throw new InvalidOperationException("Skipped initialization of power calculator: no defined power calculations...");
 
@@ -246,17 +249,34 @@ namespace PowerCalculations.PowerMultiCalculator
                 OutputMeasurements = outputMeasurements.ToArray();
 
             Dictionary<string, string> settings = Settings;
-            VoltageAdjustmentStrategy adjustmentStrategy;
-            string setting;
 
-            if (settings.TryGetValue("AlwaysProduceResult", out setting))
+            if (settings.TryGetValue("AlwaysProduceResult", out string setting))
                 AlwaysProduceResult = setting.ParseBoolean();
 
-            if (settings.TryGetValue("AdjustmentStrategy", out setting) && Enum.TryParse(setting, out adjustmentStrategy))
+            if (settings.TryGetValue("AdjustmentStrategy", out setting) && Enum.TryParse(setting, out VoltageAdjustmentStrategy adjustmentStrategy))
                 AdjustmentStrategy = adjustmentStrategy;
 
             if (settings.TryGetValue("EnableTemporalProcessing", out setting))
                 EnableTemporalProcessing = setting.ParseBoolean();
+
+            // Define per power calculation line adjustment strategies
+            foreach (PowerCalculation powerCalculation in m_configuredCalculations)
+            {
+                if (powerCalculation.VoltageMagnitudeMeasurementKey == null || string.IsNullOrWhiteSpace(powerCalculation.CircuitDescription))
+                    continue;
+
+                try
+                {
+                    Dictionary<string, string> circuitSettings = powerCalculation.CircuitDescription.ParseKeyValuePairs();
+
+                    if (circuitSettings.TryGetValue("AdjustmentStrategy", out setting) && Enum.TryParse(setting, out adjustmentStrategy))
+                        m_adjustmentStrategies[powerCalculation.VoltageMagnitudeMeasurementKey] = adjustmentStrategy;
+                }
+                catch (Exception ex)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Failed to parse settings from circuit description \"{powerCalculation.CircuitDescription}\": {ex.Message}");
+                }
+            }
         }
 
         /// <summary>
@@ -280,15 +300,18 @@ namespace PowerCalculations.PowerMultiCalculator
                 try
                 {
                     double voltageMagnitude = 0.0D, voltageAngle = 0.0D, currentMagnitude = 0.0D, currentAngle = 0.0D;
-                    bool allValuesReceived = false;
+                    bool allValuesReceivedWithGoodQuality = false;
 
                     lastCalculationTime = DateTime.UtcNow.Ticks;
 
-                    if (measurements.TryGetValue(powerCalculation.VoltageMagnitudeSignalID, out measurement) && measurement.ValueQualityIsGood())
+                    if (measurements.TryGetValue(powerCalculation.VoltageMagnitudeMeasurementKey, out measurement) && measurement.ValueQualityIsGood())
                     {
                         voltageMagnitude = measurement.AdjustedValue;
 
-                        switch (AdjustmentStrategy)
+                        if (!m_adjustmentStrategies.TryGetValue(powerCalculation.VoltageMagnitudeMeasurementKey, out VoltageAdjustmentStrategy adjustmentStrategy))
+                            adjustmentStrategy = AdjustmentStrategy;
+
+                        switch (adjustmentStrategy)
                         {
                             case VoltageAdjustmentStrategy.LineToNeutral:
                                 voltageMagnitude *= 3;
@@ -299,24 +322,24 @@ namespace PowerCalculations.PowerMultiCalculator
                                 break;
                         }
 
-                        if (measurements.TryGetValue(powerCalculation.VoltageAngleSignalID, out measurement) && measurement.ValueQualityIsGood())
+                        if (measurements.TryGetValue(powerCalculation.VoltageAngleMeasurementKey, out measurement) && measurement.ValueQualityIsGood())
                         {
                             voltageAngle = measurement.AdjustedValue;
 
-                            if (measurements.TryGetValue(powerCalculation.CurrentMagnitudeSignalID, out measurement) && measurement.ValueQualityIsGood())
+                            if (measurements.TryGetValue(powerCalculation.CurrentMagnitudeMeasurementKey, out measurement) && measurement.ValueQualityIsGood())
                             {
                                 currentMagnitude = measurement.AdjustedValue;
 
-                                if (measurements.TryGetValue(powerCalculation.CurrentAngleSignalID, out measurement) && measurement.ValueQualityIsGood())
+                                if (measurements.TryGetValue(powerCalculation.CurrentAngleMeasurementKey, out measurement) && measurement.ValueQualityIsGood())
                                 {
                                     currentAngle = measurement.AdjustedValue;
-                                    allValuesReceived = true;
+                                    allValuesReceivedWithGoodQuality = true;
                                 }
                             }
                         }
                     }
 
-                    if (allValuesReceived)
+                    if (allValuesReceivedWithGoodQuality)
                     {
                         // Calculate power (P), reactive power (Q) and apparent power (|S|)
                         Phasor voltage = new Phasor(PhasorType.Voltage, Angle.FromDegrees(voltageAngle), voltageMagnitude);
