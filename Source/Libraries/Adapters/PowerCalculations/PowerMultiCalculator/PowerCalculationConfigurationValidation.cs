@@ -182,6 +182,12 @@ namespace PowerCalculations.PowerMultiCalculator
                         int deviceID = rdr.GetInt32(8);
                         int? historianID = rdr.IsDBNull(9) ? null : (int?)rdr.GetInt32(9);
 
+                        // Remove any settings defined in circuit description
+                        int semicolonIndex = circuitDescription.IndexOf(';');
+
+                        if (semicolonIndex > -1)
+                            circuitDescription = circuitDescription.Substring(0, semicolonIndex);
+
                         if (rdr.IsDBNull(2)) // Real - MW
                         {
                             // create active power output measurement
