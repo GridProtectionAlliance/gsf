@@ -390,7 +390,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
             row->SetGuidValue(nodeID, m_nodeID);
             row->SetGuidValue(uniqueID, device->UniqueID);
-            row->SetBooleanValue(isConcentrator, device->ParentAcronym.empty());
+            row->SetBooleanValue(isConcentrator, false);
             row->SetStringValue(acronym, device->Acronym);
             row->SetStringValue(name, device->Name);
             row->SetInt32Value(accessID, device->AccessID);
