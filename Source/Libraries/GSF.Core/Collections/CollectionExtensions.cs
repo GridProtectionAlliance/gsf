@@ -64,6 +64,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Random = GSF.Security.Cryptography.Random;
 
+#pragma warning disable SCS0005 // Weak random generator desired for use cases here
+
 namespace GSF.Collections
 {
     /// <summary>
