@@ -293,9 +293,8 @@ namespace GSF.Web
                 return new PostData();
 
             PostData postData;
-            object cachedPostData;
 
-            if (request.Properties.TryGetValue(PostDataKey, out cachedPostData))
+            if (request.Properties.TryGetValue(PostDataKey, out object cachedPostData))
             {
                 postData = cachedPostData as PostData;
             }
@@ -414,9 +413,7 @@ namespace GSF.Web
             // Copy any new or updated view bag elements back to MVC view data dictionary
             foreach (string memberName in viewBag.GetDynamicMemberNames())
             {
-                object value;
-
-                viewBag.TryGetMember(new MemberBinder(memberName), out value);
+                viewBag.TryGetMember(new MemberBinder(memberName), out object value);
 
                 if (value != null)
                     helper.ViewData[memberName] = value;
@@ -469,7 +466,7 @@ namespace GSF.Web
                 return Assembly.GetCallingAssembly().GetManifestResourceStream(resourceName);
 
             if (s_entryAssemblyResources.Contains(resourceName))
-                return Assembly.GetEntryAssembly().GetManifestResourceStream(resourceName);
+                return Assembly.GetEntryAssembly()?.GetManifestResourceStream(resourceName);
 
             foreach (KeyValuePair<Assembly, HashSet<string>> resources in s_embeddedResourceAssemblies)
             {
