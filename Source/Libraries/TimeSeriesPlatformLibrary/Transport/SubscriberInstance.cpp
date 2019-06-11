@@ -577,7 +577,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         return;
     }
 
-    vector<uint8_t>* uncompressesBuffer;
+    vector<uint8_t> uncompressedBuffer;
 
     // Step 1: Decompress meta-data if needed
     if (IsMetadataCompressed())
@@ -589,24 +589,22 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         streamBuffer.push(GZipDecompressor());
         streamBuffer.push(memoryStream);
 
-        uncompressesBuffer = new vector<uint8_t>();
-        CopyStream(&streamBuffer, *uncompressesBuffer);
+        CopyStream(&streamBuffer, uncompressedBuffer);
     }
     else
     {
-        uncompressesBuffer = const_cast<vector<uint8_t>*>(&payload);
+        // Copy payload to a local non-constant buffer, pugi load_buffer_inplace can modify buffer
+        for (size_t i = 0; i < payload.size(); i++)
+            uncompressedBuffer.push_back(payload[i]);
     }
 
     // Step 2: Load string into an XML parser
     xml_document document;
 
-    const xml_parse_result result = document.load_buffer_inplace(static_cast<void*>(uncompressesBuffer->data()), uncompressesBuffer->size());
+    const xml_parse_result result = document.load_buffer_inplace(static_cast<void*>(uncompressedBuffer.data()), uncompressedBuffer.size());
 
     if (result.status != xml_parse_status::status_ok)
     {
-        if (IsMetadataCompressed())
-            delete uncompressesBuffer;
-
         stringstream errorMessageStream;
         errorMessageStream << "Failed to parse meta data XML, status code = " << ToHex(result.status);
         ErrorMessage(errorMessageStream.str());
@@ -755,10 +753,6 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     stringstream message;
     message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from GEP meta data...";
     StatusMessage(message.str());
-
-    // Release uncompressed buffer
-    if (IsMetadataCompressed())
-        delete uncompressesBuffer;
 
     // Notify derived class that meta-data has been parsed and is now available
     ParsedMetadata();
