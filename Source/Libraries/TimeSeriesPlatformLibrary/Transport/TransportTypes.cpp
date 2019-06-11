@@ -227,7 +227,9 @@ std::string TimeSeries::GetEngineeringUnits(const std::string& signalType)
 
 std::string GSF::TimeSeries::GetProtocolType(const std::string& protocolName)
 {
-    if (StartsWith(protocolName, "Gateway") ||
+    if (IsEqual(protocolName, "Streaming Telemetry Transport Protocol") ||
+        IsEqual(protocolName, "STTP") ||
+        StartsWith(protocolName, "Gateway") ||
         StartsWith(protocolName, "Modbus") ||
         StartsWith(protocolName, "DNP"))
             return "Measurement";
