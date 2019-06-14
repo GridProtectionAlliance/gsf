@@ -190,11 +190,24 @@ namespace GSF.Web.Security
                 // Abort pipeline with appropriate response
                 if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
                 {
+                    byte[] pathBytes;
+                    string base64Path, encodedPath, referrer = null;
+                    
+                    if (Request.Headers.TryGetValue("Referer", out string[] values) && values.Length == 1)
+                    {
+                        pathBytes = Encoding.UTF8.GetBytes(values[0]);
+                        base64Path = Convert.ToBase64String(pathBytes);
+                        encodedPath = WebUtility.UrlEncode(base64Path);
+                        referrer = $"&referrer={encodedPath}";
+                    }
+
                     string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
-                    byte[] pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
-                    string base64Path = Convert.ToBase64String(pathBytes);
-                    string encodedPath = WebUtility.UrlEncode(base64Path);
-                    Response.Redirect($"{Options.LoginPage}?redir={encodedPath}");
+                    
+                    pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
+                    base64Path = Convert.ToBase64String(pathBytes);
+                    encodedPath = WebUtility.UrlEncode(base64Path);
+                    
+                    Response.Redirect($"{Options.LoginPage}?redir={encodedPath}{referrer}");
                 }
                 else
                 {
