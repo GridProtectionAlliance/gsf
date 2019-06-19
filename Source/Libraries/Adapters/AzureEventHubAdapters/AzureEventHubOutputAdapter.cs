@@ -357,7 +357,7 @@ namespace AzureEventHubAdapters
 
         private void PostMeasurementsToEventHub(IMeasurement[] measurements)
         {
-            const string PostFormat = "{{\"{0}\":[{1},{2},{3}]}}";
+            const string PostFormat = "{{\"V{0}\":[{1},{2},{3}]}}";
 
             try
             {
@@ -367,7 +367,7 @@ namespace AzureEventHubAdapters
                 foreach (IMeasurement measurement in measurements)
                 {
                     // Encode JSON data as UTF8
-                    string jsonData = string.Format(PostFormat, measurement.Key.SignalID, GetEpochMilliseconds(measurement.Timestamp), measurement.AdjustedValue, (uint)measurement.StateFlags);
+                    string jsonData = string.Format(PostFormat, measurement.Key.ID, GetEpochMilliseconds(measurement.Timestamp), measurement.AdjustedValue, (uint)measurement.StateFlags);
                     samples.Add(new EventData(Encoding.UTF8.GetBytes(jsonData)));
                 }             
 
