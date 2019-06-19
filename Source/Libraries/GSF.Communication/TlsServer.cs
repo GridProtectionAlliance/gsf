@@ -1417,7 +1417,7 @@ namespace GSF.Communication
         /// </summary>
         private void ReceivePayloadAwareAsync(TransportProvider<TlsSocket> client, bool waitingForHeader)
         {
-            client.Provider.SslStream.BeginRead(client.ReceiveBuffer,
+            client?.Provider?.SslStream?.BeginRead(client.ReceiveBuffer,
                                                 client.BytesReceived,
                                                 client.ReceiveBufferSize - client.BytesReceived,
                                                 ProcessReceivePayloadAware,
@@ -1517,7 +1517,7 @@ namespace GSF.Communication
         /// </summary>
         private void ReceivePayloadUnawareAsync(TransportProvider<TlsSocket> client)
         {
-            client.Provider.SslStream.BeginRead(client.ReceiveBuffer,
+            client?.Provider?.SslStream?.BeginRead(client.ReceiveBuffer,
                                                 0,
                                                 client.ReceiveBufferSize,
                                                 ProcessReceivePayloadUnaware,
