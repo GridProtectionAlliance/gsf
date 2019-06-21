@@ -67,16 +67,6 @@ namespace AzureEventHubAdapters
         public const string DefaultDataPostFormat = "{{V{0}:[{1},{2},{3}]}}";
 
         /// <summary>
-        /// Default value for <see cref="UseParallelPosting"/>.
-        /// </summary>
-        public const bool DefaultUseParallelPosting = false;
-
-        /// <summary>
-        /// Default value for <see cref="ValuesPerPost"/>.
-        /// </summary>
-        public const int DefaultValuesPerPost = 50;
-
-        /// <summary>
         /// Default value for <see cref="SerializeMetadata"/>.
         /// </summary>
         public const bool DefaultSerializeMetadata = true;
@@ -85,7 +75,6 @@ namespace AzureEventHubAdapters
         private string m_connectionResponse;        // Response from connection attempt
         private long m_totalValues;                 // Total archived values
         private long m_totalPosts;                  // Total post to the Azure Event Hub connection
-        private long m_totalParallelGroups;         // Total measurement groups processed in parallel
 
         #endregion
 
@@ -150,30 +139,6 @@ namespace AzureEventHubAdapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if multiple posts to Azure Event Hub should be made in parallel.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines flag that determines if multiple posts to Azure Event Hub should be made in parallel.")]
-        [DefaultValue(DefaultUseParallelPosting)]
-        public bool UseParallelPosting
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum values to send per post when <see cref="UseParallelPosting"/> is <c>true</c> for the Azure Event Hub connection.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("When parallel posting is enabled, defines the maximum values to send per post for the Azure Event Hub connection.")]
-        [DefaultValue(DefaultValuesPerPost)]
-        public int ValuesPerPost
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets flag that determines if metadata should be serialized into Azure event hub.
         /// </summary>
         [ConnectionStringParameter]
@@ -210,19 +175,8 @@ namespace AzureEventHubAdapters
                 status.AppendLine();
                 status.AppendFormat("          Data post format: {0}", DataPostFormat);
                 status.AppendLine();
-                status.AppendFormat("      Use parallel posting: {0}", UseParallelPosting);
-                status.AppendLine();
                 status.AppendFormat("       Serialize meta-data: {0}", SerializeMetadata);
                 status.AppendLine();
-
-                if (UseParallelPosting)
-                {
-                    status.AppendFormat("   Maximum values per post: {0:N0}", ValuesPerPost);
-                    status.AppendLine();
-                    status.AppendFormat("  Average parallel threads: {0:0.0}", m_totalParallelGroups / (double)InternalProcessQueue.TotalFunctionCalls);
-                    status.AppendLine();
-                }
-
                 status.AppendFormat("     Total archived values: {0:N0}", m_totalValues);
                 status.AppendLine();
                 status.AppendFormat("               Total posts: {0:N0}", m_totalPosts);
@@ -352,30 +306,6 @@ namespace AzureEventHubAdapters
             if (measurements.Length == 0)
                 return;
 
-            if (UseParallelPosting)
-            {
-                List<IMeasurement[]> measurementGroups = new List<IMeasurement[]>();
-                IMeasurement[] measurementGroup = measurements.Take(ValuesPerPost).ToArray();
-                int skipCount = measurementGroup.Length;
-
-                while (measurementGroup.Length > 0)
-                {
-                    measurementGroups.Add(measurementGroup);
-                    measurementGroup = measurements.Skip(skipCount).Take(ValuesPerPost).ToArray();
-                    skipCount += measurementGroup.Length;
-                }
-
-                Parallel.ForEach(measurementGroups, groupMeasurements => PostMeasurementsToEventHub(groupMeasurements).Wait());
-                m_totalParallelGroups += measurementGroups.Count;
-            }
-            else
-            {
-                PostMeasurementsToEventHub(measurements).Wait();
-            }
-        }
-
-        private async Task PostMeasurementsToEventHub(IMeasurement[] measurements)
-        {
             try
             {
                 // Build a JSON post expression with measurement values to use as post data
@@ -389,7 +319,7 @@ namespace AzureEventHubAdapters
                 }             
 
                 // Write data to event hub
-                await m_eventHubClient.SendAsync(samples, DataPartitionKey);
+                m_eventHubClient.SendAsync(samples, DataPartitionKey).Wait();
 
                 Interlocked.Add(ref m_totalValues, measurements.Length);
                 Interlocked.Increment(ref m_totalPosts);
