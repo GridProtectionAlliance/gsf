@@ -208,6 +208,8 @@ namespace AzureEventHubAdapters
 
                 status.AppendFormat("      Azure event hub name: {0}", EventHubName);
                 status.AppendLine();
+                status.AppendFormat("          Data post format: {0}", DataPostFormat);
+                status.AppendLine();
                 status.AppendFormat("      Use parallel posting: {0}", UseParallelPosting);
                 status.AppendLine();
                 status.AppendFormat("       Serialize meta-data: {0}", SerializeMetadata);
