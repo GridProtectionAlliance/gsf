@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +31,7 @@ using System.Web.Http.Dependencies;
 using GSF.Data;
 using GSF.Web.Model;
 using GSF.Web.Security;
+using Owin;
 
 namespace GSF.Web.Hosting
 {
@@ -40,71 +40,6 @@ namespace GSF.Web.Hosting
     /// </summary>
     public class WebPageController : ApiController
     {
-        #region [ Members ]
-
-        // Nested Types
-
-        // Web page controller dependency resolver
-        private sealed class WebPageControllerResolver : IDependencyResolver
-        {
-            private readonly WebServer m_webServer;
-            private readonly string m_defaultWebPage;
-            private readonly object m_model;
-            private readonly Type m_modelType;
-            private readonly AdoDataConnection m_database;
-
-            public WebPageControllerResolver(WebServer webServer, string defaultWebPage, object model, Type modelType, AdoDataConnection database)
-            {
-                m_webServer = webServer;
-                m_defaultWebPage = defaultWebPage;
-                m_model = model;
-                m_modelType = modelType;
-                m_database = database;
-            }
-
-            void IDisposable.Dispose()
-            {
-            }
-
-            public object GetService(Type serviceType)
-            {
-                if (serviceType == typeof(WebPageController))
-                    return new WebPageController(m_webServer)
-                    {
-                        DefaultWebPage = m_defaultWebPage,
-                        Model = m_model,
-                        ModelType = m_modelType,
-                        Database = m_database
-                    };
-
-                return null;
-            }
-
-            public IEnumerable<object> GetServices(Type serviceType)
-            {
-                if (serviceType == typeof(WebPageController))
-                    return new[]
-                    {
-                        new WebPageController(m_webServer)
-                        {
-                            DefaultWebPage = m_defaultWebPage,
-                            Model = m_model,
-                            ModelType = m_modelType,
-                            Database = m_database
-                        }
-                    };
-
-                return new List<object>();
-            }
-
-            public IDependencyScope BeginScope() => this;
-        }
-
-        // Fields
-        private readonly WebServer m_webServer;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -120,22 +55,12 @@ namespace GSF.Web.Hosting
         /// <param name="webServer"><see cref="WebServer"/> instance to use for controller; uses default instance if not provided.</param>
         public WebPageController(WebServer webServer)
         {
-            m_webServer = webServer ?? WebServer.Default;
-            DefaultWebPage = "Index.html";
+            WebServer = webServer ?? WebServer.Default;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets default web page to use for this <see cref="WebPageController"/>.
-        /// </summary>
-        public string DefaultWebPage
-        {
-            get;
-            set;
-        }
 
         /// <summary>
         /// Gets or sets the <see cref="RazorView"/> model instance for this <see cref="WebPageController"/>, if any.
@@ -156,33 +81,13 @@ namespace GSF.Web.Hosting
         }
 
         /// <summary>
-        /// Gets or sets database connection to provide to <see cref="RazorView"/> instances in this <see cref="WebPageController"/>, if any.
-        /// </summary>
-        public AdoDataConnection Database
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets the <see cref="Hosting.WebServer"/> instance used by this <see cref="WebPageController"/>.
         /// </summary>
-        public WebServer WebServer => m_webServer;
+        public WebServer WebServer { get; }
 
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Default page request handler.
-        /// </summary>
-        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
-        /// <returns>Rendered page result for given page.</returns>
-        [Route, HttpGet]
-        public Task<HttpResponseMessage> GetPage(CancellationToken cancellationToken)
-        {
-            return GetPage(DefaultWebPage, cancellationToken);
-        }
 
         /// <summary>
         /// Common page request handler.
@@ -190,23 +95,9 @@ namespace GSF.Web.Hosting
         /// <param name="pageName">Page name to render.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <returns>Rendered page result for given page.</returns>
-        [Route("{*pageName}"), HttpGet]
         public Task<HttpResponseMessage> GetPage(string pageName, CancellationToken cancellationToken)
         {
-            return m_webServer.RenderResponse(Request, pageName, cancellationToken, Model, ModelType, Database);
-        }
-        /// <summary>
-        /// Common page post handler.
-        /// </summary>
-        /// <param name="pageName">Page name to render.</param>
-        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
-        /// <returns>Rendered page result for given page.</returns>
-        [Route("{*pageName}"), HttpPost]
-        [ValidateRequestVerificationToken(FormValidation = true)]
-        [SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public Task<HttpResponseMessage> PostPage(string pageName, CancellationToken cancellationToken)
-        {
-            return GetPage(pageName, cancellationToken);
+            return WebServer.RenderResponse(Request, pageName, cancellationToken, Model, ModelType);
         }
 
         #endregion
@@ -215,20 +106,109 @@ namespace GSF.Web.Hosting
 
         // Static Methods
 
+        #endregion
+    }
+
+    /// <summary>
+    /// Defines extension function for registering <see cref="WebPageController"/> in web server pipeline.
+    /// </summary>
+    public static class WebPageControllerAppBuilderExtensions
+    {
+        // Web page controller dependency resolver
+        private sealed class WebPageControllerResolver : IDependencyResolver
+        {
+            private readonly WebServer m_webServer;
+            private readonly object m_model;
+            private readonly Type m_modelType;
+            private readonly AdoDataConnection m_database;
+
+            public WebPageControllerResolver(WebServer webServer, object model, Type modelType)
+            {
+                m_webServer = webServer;
+                m_model = model;
+                m_modelType = modelType;
+            }
+
+            void IDisposable.Dispose()
+            {
+            }
+
+            public object GetService(Type serviceType)
+            {
+                if (serviceType == typeof(WebPageController))
+                    return new WebPageController(m_webServer)
+                    {
+                        Model = m_model,
+                        ModelType = m_modelType
+                    };
+
+                return null;
+            }
+
+            public IEnumerable<object> GetServices(Type serviceType)
+            {
+                if (serviceType == typeof(WebPageController))
+                    return new[]
+                    {
+                        new WebPageController(m_webServer)
+                        {
+                            Model = m_model,
+                            ModelType = m_modelType
+                        }
+                    };
+
+                return new List<object>();
+            }
+
+            public IDependencyScope BeginScope() => this;
+        }
+
+        /// <summary>
+        /// Registers web page controller in web server pipeline.
+        /// </summary>
+        /// <param name="app">The app builder for the web server pipeline.</param>
+        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller.</param>
+        /// <param name="defaultWebPage">The default page to display on the default path.</param>
+        /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
+        /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
+        /// <param name="options">Authentication options for enabling sessions.</param>
+        public static void UseWebPageController(this IAppBuilder app, WebServer webServer, string defaultWebPage = "Index.html", object model = null, Type modelType = null, AuthenticationOptions options = null)
+        {
+            HttpConfiguration httpConfig = new HttpConfiguration();
+            httpConfig.DependencyResolver = GetDependencyResolver(webServer, model, modelType);
+
+            if (options != null)
+                httpConfig.EnableSessions(options);
+
+            httpConfig.Routes.MapHttpRoute(
+                name: "WebPage",
+                routeTemplate: "{*pageName}",
+                defaults: new
+                {
+                    controller = "WebPage",
+                    action = "GetPage",
+                    pageName = defaultWebPage
+                }
+            );
+
+            app.UseWebApi(httpConfig);
+
+            httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+
+            // Check for configuration issues before first request
+            httpConfig.EnsureInitialized();
+        }
+
         /// <summary>
         /// Gets a dependency resolver.
         /// </summary>
-        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller; uses default instance if not provided.</param>
-        /// <param name="defaultWebPage">Default web page name to use for controller; uses "index.html" if not provided.</param>
+        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller.</param>
         /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
         /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
-        /// <param name="connection"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <returns>Dependency resolver for the specified parameters.</returns>
-        public static IDependencyResolver GetDependencyResolver(WebServer webServer, string defaultWebPage = null, object model = null, Type modelType = null, AdoDataConnection connection = null)
+        private static IDependencyResolver GetDependencyResolver(WebServer webServer, object model = null, Type modelType = null)
         {
-            return new WebPageControllerResolver(webServer, defaultWebPage, model, modelType, connection);
+            return new WebPageControllerResolver(webServer, model, modelType);
         }
-
-        #endregion
     }
 }
