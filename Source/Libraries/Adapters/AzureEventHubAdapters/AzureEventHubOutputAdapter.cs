@@ -336,7 +336,7 @@ namespace AzureEventHubAdapters
                 jsonMetadata.Append("]}");
 
                 // Write metadata to event hub:
-                m_eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonMetadata.ToString())), MetadataPartitionKey);
+                new Task(async() => await m_eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonMetadata.ToString())), MetadataPartitionKey)).Wait();
             }
             catch (Exception ex)
             {
@@ -365,16 +365,16 @@ namespace AzureEventHubAdapters
                     skipCount += measurementGroup.Length;
                 }
 
-                Parallel.ForEach(measurementGroups, PostMeasurementsToEventHub);
+                Parallel.ForEach(measurementGroups, groupMeasurements => PostMeasurementsToEventHub(groupMeasurements).Wait());
                 m_totalParallelGroups += measurementGroups.Count;
             }
             else
             {
-                PostMeasurementsToEventHub(measurements);
+                PostMeasurementsToEventHub(measurements).Wait();
             }
         }
 
-        private void PostMeasurementsToEventHub(IMeasurement[] measurements)
+        private async Task PostMeasurementsToEventHub(IMeasurement[] measurements)
         {
             try
             {
@@ -389,17 +389,14 @@ namespace AzureEventHubAdapters
                 }             
 
                 // Write data to event hub
-                m_eventHubClient.SendAsync(samples, DataPartitionKey);
+                await m_eventHubClient.SendAsync(samples, DataPartitionKey);
 
                 Interlocked.Add(ref m_totalValues, measurements.Length);
                 Interlocked.Increment(ref m_totalPosts);
             }
-            catch
+            catch (Exception ex)
             {
-                if (RequeueOnException)
-                    InternalProcessQueue.InsertRange(0, measurements);
-
-                throw;
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to serialize current time-series data records: {ex.Message}", ex));
             }
         }
 
