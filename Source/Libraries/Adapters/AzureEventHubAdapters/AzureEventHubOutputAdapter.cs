@@ -52,6 +52,21 @@ namespace AzureEventHubAdapters
         // Constants
 
         /// <summary>
+        /// Default value for <see cref="DataPartitionKey"/>.
+        /// </summary>
+        public const string DefaultDataPartitionKey = "data";
+
+        /// <summary>
+        /// Default value for <see cref="MetadataPartitionKey"/>.
+        /// </summary>
+        public const string DefaultMetadataPartitionKey = "metadata";
+
+        /// <summary>
+        /// Default value for <see cref="DataPostFormat"/>.
+        /// </summary>
+        public const string DefaultDataPostFormat = "{{V{0}:[{1},{2},{3}]}}";
+
+        /// <summary>
         /// Default value for <see cref="UseParallelPosting"/>.
         /// </summary>
         public const bool DefaultUseParallelPosting = false;
@@ -65,16 +80,6 @@ namespace AzureEventHubAdapters
         /// Default value for <see cref="SerializeMetadata"/>.
         /// </summary>
         public const bool DefaultSerializeMetadata = true;
-
-        /// <summary>
-        /// Default value for <see cref="DataPartitionKey"/>.
-        /// </summary>
-        public const string DefaultDataPartitionKey = "data";
-
-        /// <summary>
-        /// Default value for <see cref="MetadataPartitionKey"/>.
-        /// </summary>
-        public const string DefaultMetadataPartitionKey = "metadata";
 
         private EventHubClient m_eventHubClient;    // Azure Event Hub Client
         private string m_connectionResponse;        // Response from connection attempt
@@ -127,6 +132,18 @@ namespace AzureEventHubAdapters
         [Description("Defines the Azure event hub partition key for the time-series meta-data.")]
         [DefaultValue(DefaultMetadataPartitionKey)]
         public string MetadataPartitionKey
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the Azure event hub JSON data posting format for the time-series meta-data.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the Azure event hub JSON data posting format for the time-series meta-data.")]
+        [DefaultValue(DefaultDataPostFormat)]
+        public string DataPostFormat
         {
             get;
             set;
@@ -357,8 +374,6 @@ namespace AzureEventHubAdapters
 
         private void PostMeasurementsToEventHub(IMeasurement[] measurements)
         {
-            const string PostFormat = "{{\"V{0}\":[{1},{2},{3}]}}";
-
             try
             {
                 // Build a JSON post expression with measurement values to use as post data
@@ -367,7 +382,7 @@ namespace AzureEventHubAdapters
                 foreach (IMeasurement measurement in measurements)
                 {
                     // Encode JSON data as UTF8
-                    string jsonData = string.Format(PostFormat, measurement.Key.ID, GetEpochMilliseconds(measurement.Timestamp), measurement.AdjustedValue, (uint)measurement.StateFlags);
+                    string jsonData = string.Format(DataPostFormat, measurement.Key.ID, GetEpochMilliseconds(measurement.Timestamp), measurement.AdjustedValue, (uint)measurement.StateFlags);
                     samples.Add(new EventData(Encoding.UTF8.GetBytes(jsonData)));
                 }             
 
