@@ -64,6 +64,11 @@ namespace AzureEventHubAdapters
         public const string DefaultDataPostFormat = "{{V{0}:[{1},{2},{3}]}}";
 
         /// <summary>
+        /// Default value for <see cref="TimestampFormat"/>.
+        /// </summary>
+        public const string DefaultTimestampFormat = "EpochMilliseconds";
+
+        /// <summary>
         /// Default value for <see cref="SerializeMetadata"/>.
         /// </summary>
         public const bool DefaultSerializeMetadata = true;
@@ -72,6 +77,7 @@ namespace AzureEventHubAdapters
         private string m_connectionResponse;        // Response from connection attempt
         private long m_totalValues;                 // Total archived values
         private long m_totalPosts;                  // Total post to the Azure Event Hub connection
+        private bool m_useEpochMilliseconds;        // Flag that determines if timestamp should be Unix epoch milliseconds
 
         #endregion
 
@@ -136,6 +142,18 @@ namespace AzureEventHubAdapters
         }
 
         /// <summary>
+        /// Gets or sets the default timestamp format for the time-series data.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the default timestamp format for the time-series data, e.g.: \"yyyy-MM-dd HH:mm:ss.fff\", without quotes. Set to literal \"EpochMilliseconds\", without quotes, to use Unix epoch milliseconds timestamp.")]
+        [DefaultValue(DefaultTimestampFormat)]
+        public string TimestampFormat
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines if metadata should be serialized into Azure event hub.
         /// </summary>
         [ConnectionStringParameter]
@@ -171,6 +189,8 @@ namespace AzureEventHubAdapters
                 status.AppendFormat("      Azure event hub name: {0}", EventHubName);
                 status.AppendLine();
                 status.AppendFormat("          Data post format: {0}", DataPostFormat);
+                status.AppendLine();
+                status.AppendFormat("          Timestamp format: {0}", TimestampFormat);
                 status.AppendLine();
                 status.AppendFormat("       Serialize meta-data: {0}", SerializeMetadata);
                 status.AppendLine();
@@ -208,6 +228,11 @@ namespace AzureEventHubAdapters
         {
             base.Initialize();
             new ConnectionStringParser().ParseConnectionString(ConnectionString, this);
+
+            if (string.IsNullOrWhiteSpace(TimestampFormat))
+                TimestampFormat = DefaultTimestampFormat;
+
+            m_useEpochMilliseconds = TimestampFormat.Trim().Equals(DefaultTimestampFormat, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -311,7 +336,12 @@ namespace AzureEventHubAdapters
                 foreach (IMeasurement measurement in measurements)
                 {
                     // Encode JSON data as UTF8
-                    string jsonData = string.Format(DataPostFormat, measurement.Key.ID, GetEpochMilliseconds(measurement.Timestamp), measurement.AdjustedValue, (uint)measurement.StateFlags);
+                    string jsonData = string.Format(DataPostFormat, 
+                        measurement.Key.ID,
+                        m_useEpochMilliseconds ? GetEpochMilliseconds(measurement.Timestamp).ToString() : measurement.Timestamp.ToString(TimestampFormat),
+                        measurement.AdjustedValue,
+                        (uint)measurement.StateFlags);
+
                     samples.Add(new EventData(Encoding.UTF8.GetBytes(jsonData)));
                 }             
 
