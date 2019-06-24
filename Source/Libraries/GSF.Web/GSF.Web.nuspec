@@ -42,6 +42,7 @@
       <dependency id="GSF.Core" version="$version$" />
       <dependency id="GSF.Security" version="$version$" />
       <dependency id="GSF.ServiceModel" version="$version$" />
+      <dependency id="GSF.TimeSeries" version="$version$" />
     </dependencies>
   </metadata>
 </package>
