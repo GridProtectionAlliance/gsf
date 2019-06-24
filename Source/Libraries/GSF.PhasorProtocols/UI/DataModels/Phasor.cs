@@ -167,7 +167,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets nominal voltage level of line/bus associated with phasor.
         /// </summary>
-        [DefaultValue("0")]
+        [DefaultValue(0)]
         public int BaseKV
         {
             get
