@@ -488,13 +488,13 @@ namespace GSF.Console
                 @"\\.",
 
                 // Substring wrapped in double quotes
-                @"""(?:(?:\\"")|[^""])*""",
+                @"""(?:\\.|[^\\""])*""",
 
                 // Substring wrapped in single quotes
                 @"'[^']*'",
 
                 // Mismatched double quote
-                @"""(?:(?:\\"")|[^""])*$",
+                @"""(?:\\.|[^\\""])*\\?$",
 
                 // Mismatched single quote
                 @"'[^']*$",
@@ -509,19 +509,24 @@ namespace GSF.Console
 
             // This function converts an escape
             // sequence into the corresponding character
-            Func<string, char> toChar = escapeSequence =>
+            Func<string, string> unescape = escapeSequence =>
             {
                 if (escapeSequence == @"\n")
-                    return '\n';
+                    return "\n";
 
                 if (escapeSequence == @"\r")
-                    return '\r';
+                    return "\r";
 
                 if (escapeSequence == @"\t")
-                    return '\t';
+                    return "\t";
 
-                return escapeSequence[1];
+                return escapeSequence.Substring(1);
             };
+
+            // This function unquotes the given string by
+            // simply removing the first and last characters
+            Func<string, string> unquote = str =>
+                str.Substring(1, str.Length - 2);
 
             // This function converts a token character into
             // its corresponding output in the args array
@@ -531,38 +536,40 @@ namespace GSF.Console
 
                 switch (value[0])
                 {
-                    // Backslash followed by any character produces
-                    // only the character following the backslash
+                    // Backslash indicates an escape sequence
                     case '\\':
                         if (value.Length == 1)
                             throw new FormatException("Malformed expression - dangling escape sequence.");
 
-                        return toChar(value).ToString();
+                        return unescape(value);
 
-                    // Expressions wrapped in double quotes must be stripped of the
-                    // surrounding double quotes, and backslashes inside double-quoted
-                    // expressions must be replaces by the character immediately following them
+                    // Expressions wrapped in double quotes must be stripped of the surrounding
+                    // double quotes, and processed internally for escape sequences
                     case '"':
                         if (!value.EndsWith("\"", StringComparison.Ordinal))
-                            throw new FormatException("Malformed expression - mismatched quote.");
+                            throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
 
-                        return new string(value.Zip(value.Substring(1, value.Length - 2), (c1, c2) =>
-                        {
-                            // Handle escape sequences
-                            // inside double quotes
-                            if (c1 == '\\')
-                                return toChar(string.Concat(c1, c2));
+                        // A simple regex can be used to find the escape sequences since
+                        // it's already known that this is a cohesive double-quoted token
+                        List<string> innerTokens = Regex.Matches(unquote(value), @"\\?.")
+                            .Cast<Match>()
+                            .Select(match => match.Value)
+                            .ToList();
 
-                            return c2;
-                        }).ToArray());
+                        // Mismatched quotes could also end in an escaped quote,
+                        // indicated here by an inner dangling escape sequence
+                        if (innerTokens.Last() == @"\")
+                            throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
+
+                        return string.Concat(innerTokens.Select(token => token.Length > 1 ? unescape(token) : token));
 
                     // Expressions wrapped in single quotes must
                     // be stripped of the surrounding single quotes
                     case '\'':
                         if (!value.EndsWith("'", StringComparison.Ordinal))
-                            throw new FormatException("Malformed expression - mismatched quote.");
+                            throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
 
-                        return value.Substring(1, value.Length - 2);
+                        return unquote(value);
 
                     // Any other character produces itself
                     default:
