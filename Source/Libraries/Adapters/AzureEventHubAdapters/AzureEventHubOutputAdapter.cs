@@ -73,33 +73,58 @@ namespace AzureEventHubAdapters
         /// </summary>
         public const bool DefaultSerializeMetadata = true;
 
-        private EventHubClient m_eventHubClient;    // Azure Event Hub Client
-        private string m_connectionResponse;        // Response from connection attempt
-        private long m_totalValues;                 // Total archived values
-        private long m_totalPosts;                  // Total post to the Azure Event Hub connection
-        private bool m_useEpochMilliseconds;        // Flag that determines if timestamp should be Unix epoch milliseconds
+        private EventHubClient m_eventHubDataClient;        // Azure Event Hub Data Client
+        private EventHubClient m_eventHubMetadataClient;    // Azure Event Hub Metadata Client
+        private string m_connectionResponse;                // Response from connection attempt
+        private long m_totalValues;                         // Total archived values
+        private long m_totalPosts;                          // Total post to the Azure Event Hub connection
+        private bool m_useEpochMilliseconds;                // Flag that determines if timestamp should be Unix epoch milliseconds
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the event hub connection string for the Azure event hub connection.
+        /// Gets or sets the event hub time-series data client connection string for the Azure event hub connection.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the event hub connection string for the Azure event hub connection.")]
-        public string EventHubConnectionString
+        [Description("Defines the event hub time-series data client connection string for the Azure event hub connection.")]
+        public string EventHubDataClientConnectionString
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets the event hub name for the Azure event hub connection.
+        /// Gets or sets the event hub time-series data client name for the Azure event hub connection.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the event hub name for the Azure event hub connection.")]
-        public string EventHubName
+        [Description("Defines the event hub time-series data client name for the Azure event hub connection.")]
+        public string EventHubDataClientName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the event hub meta-data client connection string for the Azure event hub connection.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the event hub meta-data client connection string for the Azure event hub connection. Leave empty to post to time-series data client event hub.")]
+        [DefaultValue("")]
+        public string EventHubMetadataClientConnectionString
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the event hub meta-data client name for the Azure event hub connection.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the event hub meta-data client name for the Azure event hub connection. Empty value will default to time-series data client name.")]
+        [DefaultValue("")]
+        public string EventHubMetadataClientName
         {
             get;
             set;
@@ -186,7 +211,9 @@ namespace AzureEventHubAdapters
 
                 status.Append(base.Status);
 
-                status.AppendFormat("      Azure event hub name: {0}", EventHubName);
+                status.AppendFormat("       Data event hub name: {0}", EventHubDataClientName);
+                status.AppendLine();
+                status.AppendFormat("  Meta-data event hub name: {0}", string.IsNullOrWhiteSpace(EventHubMetadataClientName) ? EventHubDataClientName : EventHubMetadataClientName);
                 status.AppendLine();
                 status.AppendFormat("          Data post format: {0}", DataPostFormat);
                 status.AppendLine();
@@ -218,7 +245,7 @@ namespace AzureEventHubAdapters
         /// <returns>Status</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return $"Archived {m_totalValues:N0} measurements via {m_totalPosts:N0} posts to \"{EventHubName}\".".CenterText(maxLength);
+            return $"Archived {m_totalValues:N0} measurements via {m_totalPosts:N0} posts to \"{EventHubDataClientName}\".".CenterText(maxLength);
         }
 
         /// <summary>
@@ -242,13 +269,28 @@ namespace AzureEventHubAdapters
         {
             try
             {
-                // Establish event hub connection
-                EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(EventHubConnectionString)
+                // Establish data event hub connection
+                EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(EventHubDataClientConnectionString)
                 {
-                    EntityPath = EventHubName
+                    EntityPath = EventHubDataClientName
                 };
 
-                m_eventHubClient = EventHubClient.CreateFromConnectionString(builder.ToString());
+                m_eventHubDataClient = EventHubClient.CreateFromConnectionString(builder.ToString());
+
+                if (string.IsNullOrWhiteSpace(EventHubMetadataClientConnectionString))
+                {
+                    m_eventHubMetadataClient = m_eventHubDataClient;
+                }
+                else
+                {
+                    // Establish meta-data event hub connection
+                    builder = new EventHubsConnectionStringBuilder(EventHubMetadataClientConnectionString)
+                    {
+                        EntityPath = string.IsNullOrWhiteSpace(EventHubMetadataClientName) ? EventHubDataClientName : EventHubMetadataClientName
+                    };
+
+                    m_eventHubMetadataClient = EventHubClient.CreateFromConnectionString(builder.ToString());
+                }
                 
                 m_connectionResponse = "Connected";
             }
@@ -267,7 +309,10 @@ namespace AzureEventHubAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            m_eventHubClient.Close();
+            m_eventHubDataClient.Close();
+            
+            if (m_eventHubDataClient != m_eventHubMetadataClient)
+                m_eventHubMetadataClient.Close();
         }
 
         /// <summary>
@@ -312,7 +357,7 @@ namespace AzureEventHubAdapters
                 jsonMetadata.Append("]}");
 
                 // Write metadata to event hub:
-                new Task(async() => await m_eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonMetadata.ToString())), MetadataPartitionKey)).Wait();
+                new Task(async() => await m_eventHubMetadataClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonMetadata.ToString())), MetadataPartitionKey)).Wait();
             }
             catch (Exception ex)
             {
@@ -346,7 +391,7 @@ namespace AzureEventHubAdapters
                 }             
 
                 // Write data to event hub
-                m_eventHubClient.SendAsync(samples, DataPartitionKey).Wait();
+                m_eventHubDataClient.SendAsync(samples, DataPartitionKey).Wait();
 
                 Interlocked.Add(ref m_totalValues, measurements.Length);
                 Interlocked.Increment(ref m_totalPosts);
