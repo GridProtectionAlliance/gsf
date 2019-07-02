@@ -272,6 +272,7 @@ namespace GSF.Parsing
 
         // Parses expressions of the form "[?expression[result]]". Expressions can be nested, e.g., "[?expression1[?expression2[result]]]".
         // Returns list of complete expressions (used as base replacement text), cumulative boolean expression evaluations and expression results
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private List<ParsedExpression> ParseExpressions(string fieldReplacedTemplatedExpression, bool ignoreCase)
         {
             List<ParsedExpression> parsedExpressions = new List<ParsedExpression>();
