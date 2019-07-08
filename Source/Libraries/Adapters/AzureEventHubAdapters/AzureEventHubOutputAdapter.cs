@@ -70,6 +70,11 @@ namespace AzureEventHubAdapters
         public const string DefaultMetadataPostFormat = "{{ID:{0},Source:\"{1}\",SignalID:\"{2}\",PointTag:\"{3}\",Device:\"{4}\",SignalType:\"{5}\",Longitude:{6},Latitude:{7},Description:\"{8}\",LastUpdate:{9}}}";
 
         /// <summary>
+        /// Default value for <see cref="PostSizeLimit"/>.
+        /// </summary>
+        public const int DefaultPostSizeLimit = 65536;
+
+        /// <summary>
         /// Default value for <see cref="TimestampFormat"/>.
         /// </summary>
         public const string DefaultTimestampFormat = "EpochMilliseconds";
@@ -179,6 +184,18 @@ namespace AzureEventHubAdapters
         [Description("Defines the Azure event hub JSON data posting format for the time-series meta-data.")]
         [DefaultValue(DefaultMetadataPostFormat)]
         public string MetadataPostFormat
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the Azure event hub JSON data posting size limit.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the Azure event hub JSON data posting size limit.")]
+        [DefaultValue(DefaultPostSizeLimit)]
+        public int PostSizeLimit
         {
             get;
             set;
@@ -354,7 +371,7 @@ namespace AzureEventHubAdapters
                     if (samples.Count > 0)
                     {
                         // Write data to event hub
-                        new Task(async() => await m_eventHubDataClient.SendAsync(samples, MetadataPartitionKey)).Wait();
+                        m_eventHubMetadataClient.SendAsync(samples, MetadataPartitionKey).Wait();
                         Interlocked.Increment(ref m_totalPosts);
                     }
 
@@ -382,7 +399,7 @@ namespace AzureEventHubAdapters
                         EventData record = new EventData(Encoding.UTF8.GetBytes(jsonData));
 
                         // Keep total post size under 1MB
-                        if (size + record.Body.Count < SI2.Mega)
+                        if (size + record.Body.Count < PostSizeLimit)
                         {
                             samples.Add(record);
                         }
@@ -425,7 +442,7 @@ namespace AzureEventHubAdapters
                     if (samples.Count > 0)
                     {
                         // Write data to event hub
-                        new Task(async() => await m_eventHubDataClient.SendAsync(samples, DataPartitionKey)).Wait();
+                        m_eventHubDataClient.SendAsync(samples, DataPartitionKey).Wait();
 
                         Interlocked.Add(ref m_totalValues, measurements.Length);
                         Interlocked.Increment(ref m_totalPosts);
@@ -446,7 +463,7 @@ namespace AzureEventHubAdapters
                     EventData record = new EventData(Encoding.UTF8.GetBytes(jsonData));
 
                     // Keep total post size under 1MB
-                    if (size + record.Body.Count < SI2.Mega)
+                    if (size + record.Body.Count < PostSizeLimit)
                     {
                         samples.Add(record);
                     }
