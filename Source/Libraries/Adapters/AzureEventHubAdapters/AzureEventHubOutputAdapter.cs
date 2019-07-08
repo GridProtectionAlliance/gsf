@@ -72,7 +72,7 @@ namespace AzureEventHubAdapters
         /// <summary>
         /// Default value for <see cref="PostSizeLimit"/>.
         /// </summary>
-        public const int DefaultPostSizeLimit = 65536;
+        public const int DefaultPostSizeLimit = 500000;
 
         /// <summary>
         /// Default value for <see cref="TimestampFormat"/>.
@@ -88,7 +88,8 @@ namespace AzureEventHubAdapters
         private EventHubClient m_eventHubMetadataClient;    // Azure Event Hub Metadata Client
         private string m_connectionResponse;                // Response from connection attempt
         private long m_totalValues;                         // Total archived values
-        private long m_totalPosts;                          // Total post to the Azure Event Hub connection
+        private long m_totalDataPosts;                      // Total post to the Azure Event Hub connection
+        private long m_totalMetadataPosts;                  // Total post to the Azure Event Hub connection
         private bool m_useEpochMilliseconds;                // Flag that determines if timestamp should be Unix epoch milliseconds
 
         #endregion
@@ -260,9 +261,11 @@ namespace AzureEventHubAdapters
                 status.AppendLine();
                 status.AppendFormat("     Total archived values: {0:N0}", m_totalValues);
                 status.AppendLine();
-                status.AppendFormat("               Total posts: {0:N0}", m_totalPosts);
+                status.AppendFormat("          Total data posts: {0:N0}", m_totalDataPosts);
                 status.AppendLine();
-                status.AppendFormat("   Average values per post: {0:R}", Math.Round(m_totalValues / (double)m_totalPosts, 2));
+                status.AppendFormat("   Average values per post: {0:R}", Math.Round(m_totalValues / (double)m_totalDataPosts, 2));
+                status.AppendLine();
+                status.AppendFormat("     Total meta-data posts: {0:N0}", m_totalMetadataPosts);
                 status.AppendLine();
                 status.AppendFormat("       Connection response: {0}", m_connectionResponse);
                 status.AppendLine();
@@ -282,7 +285,7 @@ namespace AzureEventHubAdapters
         /// <returns>Status</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return $"Archived {m_totalValues:N0} measurements via {m_totalPosts:N0} posts to \"{EventHubDataClientName}\".".CenterText(maxLength);
+            return $"Archived {m_totalValues:N0} measurements via {m_totalDataPosts:N0} posts to \"{EventHubDataClientName}\".".CenterText(maxLength);
         }
 
         /// <summary>
@@ -366,13 +369,13 @@ namespace AzureEventHubAdapters
                 List<EventData> samples = new List<EventData>();
                 int size = 0;
 
-                void pushToEventHub()
+                async Task pushToEventHub()
                 {
                     if (samples.Count > 0)
                     {
                         // Write data to event hub
-                        m_eventHubMetadataClient.SendAsync(samples, MetadataPartitionKey).Wait();
-                        Interlocked.Increment(ref m_totalPosts);
+                        await m_eventHubMetadataClient.SendAsync(samples, MetadataPartitionKey);
+                        Interlocked.Increment(ref m_totalMetadataPosts);
                     }
 
                     samples.Clear();
@@ -396,26 +399,27 @@ namespace AzureEventHubAdapters
                             /* {9} */ GetEpochMilliseconds(row.Field<DateTime>("UpdatedOn").Ticks)
                         );
 
-                        EventData record = new EventData(Encoding.UTF8.GetBytes(jsonData));
+                        byte[] bytes = Encoding.UTF8.GetBytes(jsonData);
+                        EventData record = new EventData(bytes);
 
                         // Keep total post size under 1MB
-                        if (size + record.Body.Count < PostSizeLimit)
+                        if (size + bytes.Length < PostSizeLimit)
                         {
                             samples.Add(record);
                         }
                         else
                         {
-                            pushToEventHub();
+                            pushToEventHub().Wait();
                             samples.Add(record);
                             size = 0;
                         }
 
-                        size += record.Body.Count;
+                        size += bytes.Length;
                     }
                 }
 
                 // Push any remaining events
-                pushToEventHub();
+                pushToEventHub().Wait();
             }
             catch (Exception ex)
             {
@@ -437,15 +441,15 @@ namespace AzureEventHubAdapters
                 List<EventData> samples = new List<EventData>();
                 int size = 0;
 
-                void pushToEventHub()
+                async Task pushToEventHub()
                 {
                     if (samples.Count > 0)
                     {
                         // Write data to event hub
-                        m_eventHubDataClient.SendAsync(samples, DataPartitionKey).Wait();
+                        await m_eventHubDataClient.SendAsync(samples, DataPartitionKey);
 
                         Interlocked.Add(ref m_totalValues, measurements.Length);
-                        Interlocked.Increment(ref m_totalPosts);
+                        Interlocked.Increment(ref m_totalDataPosts);
                     }
 
                     samples.Clear();
@@ -460,25 +464,26 @@ namespace AzureEventHubAdapters
                         measurement.AdjustedValue,
                         (uint)measurement.StateFlags);
 
-                    EventData record = new EventData(Encoding.UTF8.GetBytes(jsonData));
+                    byte[] bytes = Encoding.UTF8.GetBytes(jsonData);
+                    EventData record = new EventData(bytes);
 
                     // Keep total post size under 1MB
-                    if (size + record.Body.Count < PostSizeLimit)
+                    if (size + bytes.Length < PostSizeLimit)
                     {
                         samples.Add(record);
                     }
                     else
                     {
-                        pushToEventHub();
+                        pushToEventHub().Wait();
                         samples.Add(record);
                         size = 0;
                     }
 
-                    size += record.Body.Count;
+                    size += bytes.Length;
                 }
 
                 // Push any remaining events
-                pushToEventHub();
+                pushToEventHub().Wait();
             }
             catch (Exception ex)
             {
