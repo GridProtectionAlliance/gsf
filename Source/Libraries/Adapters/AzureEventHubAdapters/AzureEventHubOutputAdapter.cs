@@ -33,6 +33,7 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units;
 using Microsoft.Azure.EventHubs;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 
@@ -62,6 +63,11 @@ namespace AzureEventHubAdapters
         /// Default value for <see cref="DataPostFormat"/>.
         /// </summary>
         public const string DefaultDataPostFormat = "{{V{0}:[{1},{2},{3}]}}";
+
+        /// <summary>
+        /// Default value for <see cref="MetadataPostFormat"/>.
+        /// </summary>
+        public const string DefaultMetadataPostFormat = "{{ID:{0},Source:\"{1}\",SignalID:\"{2}\",PointTag:\"{3}\",Device:\"{4}\",SignalType:\"{5}\",Longitude:{6},Latitude:{7},Description:\"{8}\",LastUpdate:{9}}}";
 
         /// <summary>
         /// Default value for <see cref="TimestampFormat"/>.
@@ -155,12 +161,24 @@ namespace AzureEventHubAdapters
         }
 
         /// <summary>
+        /// Gets or sets the Azure event hub JSON data posting format for the time-series data.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the Azure event hub JSON data posting format for the time-series data.")]
+        [DefaultValue(DefaultDataPostFormat)]
+        public string DataPostFormat
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the Azure event hub JSON data posting format for the time-series meta-data.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the Azure event hub JSON data posting format for the time-series meta-data.")]
-        [DefaultValue(DefaultDataPostFormat)]
-        public string DataPostFormat
+        [DefaultValue(DefaultMetadataPostFormat)]
+        public string MetadataPostFormat
         {
             get;
             set;
@@ -216,6 +234,8 @@ namespace AzureEventHubAdapters
                 status.AppendFormat("  Meta-data event hub name: {0}", string.IsNullOrWhiteSpace(EventHubMetadataClientName) ? EventHubDataClientName : EventHubMetadataClientName);
                 status.AppendLine();
                 status.AppendFormat("          Data post format: {0}", DataPostFormat);
+                status.AppendLine();
+                status.AppendFormat("     Meta-data post format: {0}", MetadataPostFormat);
                 status.AppendLine();
                 status.AppendFormat("          Timestamp format: {0}", TimestampFormat);
                 status.AppendLine();
@@ -323,23 +343,30 @@ namespace AzureEventHubAdapters
             if (!Initialized || !Enabled || !SerializeMetadata)
                 return;
 
-            const string PostFormat = "{{ID:{0},Source:\"{1}\",SignalID:\"{2}\",PointTag:\"{3}\",Device:\"{4}\",SignalType:\"{5}\",Longitude:{6},Latitude:{7},Description:\"{8}\",LastUpdate:{9}}}";
-
             try
             {
-                StringBuilder jsonMetadata = new StringBuilder("{Metadata:[");
-                bool injectComma = false;
+                // Build a JSON post expression with meta-data values to use as post data
+                List<EventData> samples = new List<EventData>();
+                int size = 0;
+
+                void pushToEventHub()
+                {
+                    if (samples.Count > 0)
+                    {
+                        // Write data to event hub
+                        new Task(async() => await m_eventHubDataClient.SendAsync(samples, MetadataPartitionKey)).Wait();
+                        Interlocked.Increment(ref m_totalPosts);
+                    }
+
+                    samples.Clear();
+                }
 
                 foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].AsEnumerable())
                 {
                     if (MeasurementKey.TryParse(row.Field<string>("ID") ?? MeasurementKey.Undefined.ToString(), out MeasurementKey key))
                     {
-                        if (injectComma)
-                            jsonMetadata.Append(',');
-                        else
-                            injectComma = true;
-
-                        jsonMetadata.AppendFormat(PostFormat,
+                        // Encode JSON data as UTF8
+                        string jsonData = string.Format(MetadataPostFormat,
                             /* {0} */ (uint)key.ID,
                             /* {1} */ key.Source,
                             /* {2} */ row.Field<object>("SignalID"),
@@ -351,13 +378,27 @@ namespace AzureEventHubAdapters
                             /* {8} */ row.Field<string>("Description"),
                             /* {9} */ GetEpochMilliseconds(row.Field<DateTime>("UpdatedOn").Ticks)
                         );
+
+                        EventData record = new EventData(Encoding.UTF8.GetBytes(jsonData));
+
+                        // Keep total post size under 1MB
+                        if (size + record.Body.Count < SI2.Mega)
+                        {
+                            samples.Add(record);
+                        }
+                        else
+                        {
+                            pushToEventHub();
+                            samples.Add(record);
+                            size = 0;
+                        }
+
+                        size += record.Body.Count;
                     }
                 }
 
-                jsonMetadata.Append("]}");
-
-                // Write metadata to event hub:
-                new Task(async() => await m_eventHubMetadataClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonMetadata.ToString())), MetadataPartitionKey)).Wait();
+                // Push any remaining events
+                pushToEventHub();
             }
             catch (Exception ex)
             {
@@ -377,6 +418,21 @@ namespace AzureEventHubAdapters
             {
                 // Build a JSON post expression with measurement values to use as post data
                 List<EventData> samples = new List<EventData>();
+                int size = 0;
+
+                void pushToEventHub()
+                {
+                    if (samples.Count > 0)
+                    {
+                        // Write data to event hub
+                        new Task(async() => await m_eventHubDataClient.SendAsync(samples, DataPartitionKey)).Wait();
+
+                        Interlocked.Add(ref m_totalValues, measurements.Length);
+                        Interlocked.Increment(ref m_totalPosts);
+                    }
+
+                    samples.Clear();
+                }
 
                 foreach (IMeasurement measurement in measurements)
                 {
@@ -387,14 +443,25 @@ namespace AzureEventHubAdapters
                         measurement.AdjustedValue,
                         (uint)measurement.StateFlags);
 
-                    samples.Add(new EventData(Encoding.UTF8.GetBytes(jsonData)));
-                }             
+                    EventData record = new EventData(Encoding.UTF8.GetBytes(jsonData));
 
-                // Write data to event hub
-                m_eventHubDataClient.SendAsync(samples, DataPartitionKey).Wait();
+                    // Keep total post size under 1MB
+                    if (size + record.Body.Count < SI2.Mega)
+                    {
+                        samples.Add(record);
+                    }
+                    else
+                    {
+                        pushToEventHub();
+                        samples.Add(record);
+                        size = 0;
+                    }
 
-                Interlocked.Add(ref m_totalValues, measurements.Length);
-                Interlocked.Increment(ref m_totalPosts);
+                    size += record.Body.Count;
+                }
+
+                // Push any remaining events
+                pushToEventHub();
             }
             catch (Exception ex)
             {
