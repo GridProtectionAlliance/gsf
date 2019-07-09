@@ -1052,7 +1052,7 @@ namespace PhasorProtocolAdapters
                 m_lagTime = 10.0D;
 
             if (!(settings.TryGetValue("leadTime", out setting) && double.TryParse(setting, out m_leadTime)))
-                m_leadTime = 3.0D;
+                m_leadTime = 5.0D;
 
             if (!(settings.TryGetValue("timeResolution", out setting) && long.TryParse(setting, out m_timeResolution)))
                 m_timeResolution = 10000L;
@@ -1665,7 +1665,8 @@ namespace PhasorProtocolAdapters
             AnalogValueCollection analogs;
             DigitalValueCollection digitals;
             IMeasurement[] measurements;
-            long timestamp;
+            Ticks timestamp;
+            bool timestampIsValid;
             int x, count;
 
             // Adjust time to UTC based on source time zone
@@ -1678,16 +1679,17 @@ namespace PhasorProtocolAdapters
 
             // Get adjusted timestamp of this frame
             timestamp = frame.Timestamp;
+            timestampIsValid = timestamp.UtcTimeIsValid(m_lagTime, m_leadTime);
 
             // Track latest reporting time for mapper
-            if (timestamp > m_lastReportTime.Value)
+            if (timestamp > m_lastReportTime && timestampIsValid)
                 m_lastReportTime = timestamp;
             else
                 m_outOfOrderFrames++;
 
             // Track latency statistics against system time - in order for these statistics
             // to be useful, the local clock must be fairly accurate
-            long latency = frame.CreatedTimestamp.Value - timestamp;
+            long latency = frame.CreatedTimestamp - timestamp;
 
             // Throw out latencies that exceed one hour as invalid
             if (Math.Abs(latency) <= Time.SecondsPerHour * Ticks.PerSecond)
@@ -1727,7 +1729,7 @@ namespace PhasorProtocolAdapters
                         definedDevice = statisticsHelper.Device;
 
                         // Track latest reporting time for this device
-                        if (timestamp > definedDevice.LastReportTime.Value)
+                        if (timestamp > definedDevice.LastReportTime && timestampIsValid)
                             definedDevice.LastReportTime = timestamp;
 
                         // Track quality statistics for this device
