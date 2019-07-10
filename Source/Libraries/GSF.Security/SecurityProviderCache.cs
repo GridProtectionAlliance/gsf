@@ -104,17 +104,8 @@ namespace GSF.Security
             {
                 get
                 {
-                    ISecurityProvider provider;
-
                     m_lastAccessTime = DateTime.UtcNow;
-
-                    if ((object)m_provider != null)
-                        return m_provider;
-
-                    if ((object)m_weakProvider != null && m_weakProvider.TryGetTarget(out provider))
-                        return provider;
-
-                    return null;
+                    return _Provider;
                 }
             }
 
@@ -128,6 +119,20 @@ namespace GSF.Security
             /// </summary>
             public DateTime LastAccessTime => m_lastAccessTime;
 
+            private ISecurityProvider _Provider
+            {
+                get
+                {
+                    if ((object)m_provider != null)
+                        return m_provider;
+
+                    if ((object)m_weakProvider != null && m_weakProvider.TryGetTarget(out ISecurityProvider provider))
+                        return provider;
+
+                    return null;
+                }
+            }
+
             #endregion
 
             #region [ Methods ]
@@ -137,7 +142,7 @@ namespace GSF.Security
             /// </summary>
             public bool Refresh()
             {
-                ISecurityProvider provider = Provider;
+                ISecurityProvider provider = _Provider;
 
                 if ((object)provider == null)
                     return false;
