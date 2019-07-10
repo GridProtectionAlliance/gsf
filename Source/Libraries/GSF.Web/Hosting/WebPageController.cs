@@ -28,7 +28,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Dependencies;
-using GSF.Data;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using Owin;
@@ -120,7 +119,6 @@ namespace GSF.Web.Hosting
             private readonly WebServer m_webServer;
             private readonly object m_model;
             private readonly Type m_modelType;
-            private readonly AdoDataConnection m_database;
 
             public WebPageControllerResolver(WebServer webServer, object model, Type modelType)
             {
