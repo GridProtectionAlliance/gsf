@@ -4087,7 +4087,7 @@ namespace GSF.TimeSeries.Transport
         private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data publisher encountered an exception while connecting client to the command channel: {ex.Message}", ex));
+            OnProcessException(MessageLevel.Info, new ConnectionException($"Data publisher encountered an exception while connecting client to the command channel: {ex.Message}", ex));
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)

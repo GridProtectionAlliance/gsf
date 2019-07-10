@@ -1057,9 +1057,6 @@ namespace PhasorProtocolAdapters
             if (!(settings.TryGetValue("timeResolution", out setting) && long.TryParse(setting, out m_timeResolution)))
                 m_timeResolution = 10000L;
 
-            if (settings.TryGetValue("enableConnectionErrors", out setting))
-                EnableConnectionErrors = setting.ParseBoolean();
-
             // Provide access ID to frame parser as this may be necessary to make a phasor connection
             frameParser.DeviceID = m_accessID;
             frameParser.SourceName = Name;
@@ -2235,7 +2232,7 @@ namespace PhasorProtocolAdapters
             Exception ex = e.Argument1;
 
             if (EnableConnectionErrors)
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed for {ConnectionInfo}: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed for {ConnectionInfo}: {ex.Message}", ex));
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)

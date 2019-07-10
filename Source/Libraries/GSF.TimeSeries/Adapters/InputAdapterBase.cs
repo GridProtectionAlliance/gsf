@@ -67,7 +67,6 @@ namespace GSF.TimeSeries.Adapters
         private SharedTimer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
-        private bool m_enableConnectionErrors = true;
 
         #endregion
 
@@ -250,17 +249,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// When false, connection errors do not get logged through OnProcessException. When true, connection errors will be logged normally.
         /// </summary>
-        protected bool EnableConnectionErrors
-        {
-            get
-            {
-                return m_enableConnectionErrors;
-            }
-            set
-            {
-                m_enableConnectionErrors = value;
-            }
-        }
+        protected bool EnableConnectionErrors { get; set; } = true;
 
         #endregion
 
@@ -309,6 +298,9 @@ namespace GSF.TimeSeries.Adapters
                 OutputSourceIDs = setting.Split(',');
             else
                 OutputSourceIDs = null;
+
+            if (settings.TryGetValue("enableConnectionErrors", out setting))
+                EnableConnectionErrors = setting.ParseBoolean();
         }
 
         /// <summary>
@@ -368,7 +360,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 if (EnableConnectionErrors)
-                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, new ConnectionException($"Exception occurred during disconnect: {ex.Message}", ex));
             }
         }
 
@@ -446,7 +438,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 if (EnableConnectionErrors)
-                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed{((object)ConnectionInfo == null ? "" : " for " + ConnectionInfo)}: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed{((object)ConnectionInfo == null ? "" : " for " + ConnectionInfo)}: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
