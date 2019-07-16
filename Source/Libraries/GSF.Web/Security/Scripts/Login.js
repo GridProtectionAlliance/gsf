@@ -117,13 +117,16 @@ function passthroughNTLM() {
         cache: false,
         url: securePage + "?scheme=NTLM",
         complete: function (xhr) {
-            switch (xhr.status) {
-                case 200:
-                    loginComplete(true);
-                    break;
-                default:
-                    loginComplete(false, "No access available for \"" + xhr.getResponseHeader("CurrentIdentity") + "\" using pass-through authentication");
-                    break;
+            if (xhr.status === 200) {
+                loginComplete(true);
+            }
+            else {
+                const currentIdentity = xhr.getResponseHeader("CurrentIdentity");
+
+                if (currentIdentity)
+                    loginComplete(false, "No access available for \"" + currentIdentity + "\" using pass-through authentication.");
+                else
+                    loginComplete(false, "Current identity unavailable, cannot attempt pass-through authentication - check database configuration.");
             }
         },
         beforeSend: function (xhr) {
@@ -202,7 +205,7 @@ function login(username, password) {
     $("#workingIcon").show();
 
     if (username) {
-        // Attempt authentication with specifed user name and password
+        // Attempt authentication with specified user name and password
         $("#response").text("Attempting authentication...");
 
         if (username.indexOf("\\") > 0 && $("#ntlm").prop("checked"))
