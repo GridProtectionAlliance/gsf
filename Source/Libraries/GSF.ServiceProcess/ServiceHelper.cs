@@ -1793,7 +1793,17 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatus(Guid client, UpdateType type, bool publishToLog, string message, params object[] args)
         {
-            string formattedMessage = string.Format(message, args);
+            string formattedMessage;
+
+            try
+            {
+                formattedMessage = string.Format(message, args);
+            }
+            catch (FormatException ex)
+            {
+                formattedMessage = message;
+                Logger.SwallowException(ex);
+            }
 
             if (publishToLog)
             {
