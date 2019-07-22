@@ -852,6 +852,12 @@ namespace PhasorProtocolAdapters
                                 StatisticsEngine.Unregister(device);
                             }
                         }
+
+                        if ((object)m_missingDataMonitor != null)
+                        {
+                            m_missingDataMonitor.Dispose();
+                            m_missingDataMonitor = null;
+                        }
                     }
                 }
                 finally
@@ -2241,7 +2247,12 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Info, e.Argument, "Frame Parsing Exception");
+            Exception ex = e.Argument;
+
+            if (ex is ConnectionException && !EnableConnectionErrors)
+                return;
+
+            OnProcessException(MessageLevel.Info, ex, "Frame Parsing Exception");
         }
 
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)

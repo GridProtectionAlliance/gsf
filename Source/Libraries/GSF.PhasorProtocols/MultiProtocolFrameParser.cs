@@ -66,9 +66,6 @@
 //
 //******************************************************************************************************
 
-// Define this constant to enable a raw data export for debugging - do not leave this on for deployed builds
-#undef RawDataCapture
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -282,9 +279,6 @@ namespace GSF.PhasorProtocols
             private TcpServer m_tcpServer;
             private IPAddress m_remoteAddress;
             private Guid m_clientID;
-            private string m_configurationString;
-            private int m_receiveBufferSize;
-
             private bool m_disposed;
 
             #endregion
@@ -322,18 +316,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets or sets the data required by the server to initialize.
             /// </summary>
-            public string ConfigurationString
-            {
-                get
-                {
-                    return m_configurationString;
-                }
-                set
-                {
-                    // ReSharper disable once InconsistentlySynchronizedField
-                    m_configurationString = value;
-                }
-            }
+            public string ConfigurationString { get; set; }
 
             /// <summary>
             /// Gets or sets the maximum number of clients that can connect to the server.
@@ -373,17 +356,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
             /// </summary>
-            public int ReceiveBufferSize
-            {
-                get
-                {
-                    return m_receiveBufferSize;
-                }
-                set
-                {
-                    m_receiveBufferSize = value;
-                }
-            }
+            public int ReceiveBufferSize { get; set; }
 
             /// <summary>
             /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
@@ -498,11 +471,10 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public void Initialize()
             {
-                Dictionary<string, string> settings = m_configurationString.ParseKeyValuePairs();
+                Dictionary<string, string> settings = ConfigurationString.ParseKeyValuePairs();
                 IPStack ipStack;
-                string receiveFromSetting;
 
-                if (settings.TryGetValue("receiveFrom", out receiveFromSetting))
+                if (settings.TryGetValue("receiveFrom", out string receiveFromSetting))
                 {
                     ipStack = Transport.GetInterfaceIPStack(settings);
                     m_remoteAddress = Transport.CreateEndPoint(receiveFromSetting, 0, ipStack).Address;
@@ -648,17 +620,16 @@ namespace GSF.PhasorProtocols
 
                 bool sharing;
                 EndPoint localEndPoint;
-                TcpServer sharedServer;
 
                 lock (s_sharedServers)
                 {
                     localEndPoint = GetLocalEndPoint();
-                    sharing = s_sharedServers.TryGetValue(localEndPoint, out sharedServer);
+                    sharing = s_sharedServers.TryGetValue(localEndPoint, out TcpServer sharedServer);
 
                     if (sharing)
                     {
                         // Validate settings to ensure that they match
-                        if (sharedServer.ReceiveBufferSize != m_receiveBufferSize)
+                        if (sharedServer.ReceiveBufferSize != ReceiveBufferSize)
                             throw new InvalidOperationException(string.Format(ConfigurationMismatchError, "Receive buffer size"));
                     }
                     else
@@ -687,8 +658,8 @@ namespace GSF.PhasorProtocols
                     if (!sharing)
                     {
                         // Initialize settings and connect
-                        sharedServer.ConfigurationString = m_configurationString;
-                        sharedServer.ReceiveBufferSize = m_receiveBufferSize;
+                        sharedServer.ConfigurationString = ConfigurationString;
+                        sharedServer.ReceiveBufferSize = ReceiveBufferSize;
                         sharedServer.Start();
                     }
 
@@ -747,13 +718,12 @@ namespace GSF.PhasorProtocols
             private void TerminateSharedClient()
             {
                 EndPoint localEndPoint;
-                TcpServer sharedServer;
 
                 lock (s_sharedServers)
                 {
                     localEndPoint = GetLocalEndPoint();
 
-                    if (s_sharedServers.TryGetValue(localEndPoint, out sharedServer))
+                    if (s_sharedServers.TryGetValue(localEndPoint, out TcpServer sharedServer))
                     {
                         // If the wrapped server and the shared server are the same,
                         // no one has terminated the shared server yet
@@ -784,20 +754,17 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> settings;
                 IPStack ipStack;
-                string localInterface;
-                string localPortSetting;
-                int localPort;
 
-                settings = m_configurationString.ParseKeyValuePairs();
+                settings = ConfigurationString.ParseKeyValuePairs();
                 ipStack = Transport.GetInterfaceIPStack(settings);
 
-                if (!settings.TryGetValue("interface", out localInterface))
+                if (!settings.TryGetValue("interface", out string localInterface))
                     localInterface = string.Empty;
 
-                if (!settings.TryGetValue("port", out localPortSetting))
-                    throw new InvalidOperationException($"Local port property missing from connection string: {m_configurationString}");
+                if (!settings.TryGetValue("port", out string localPortSetting))
+                    throw new InvalidOperationException($"Local port property missing from connection string: {ConfigurationString}");
 
-                if (!int.TryParse(localPortSetting, out localPort))
+                if (!int.TryParse(localPortSetting, out int localPort))
                     throw new InvalidOperationException($"Unable to parse local port from \"{localPortSetting}\".");
 
                 return Transport.CreateEndPoint(localInterface, localPort, ipStack);
@@ -807,11 +774,10 @@ namespace GSF.PhasorProtocols
             // Forwards event to users attached to this server.
             private void SharedServer_ClientConnected(object sender, EventArgs<Guid> e)
             {
-                TransportProvider<Socket> client;
                 Guid clientID = e.Argument;
                 IPEndPoint remoteEndPoint;
 
-                if (m_tcpServer.TryGetClient(clientID, out client))
+                if (m_tcpServer.TryGetClient(clientID, out TransportProvider<Socket> client))
                 {
                     remoteEndPoint = client.Provider.RemoteEndPoint as IPEndPoint;
 
@@ -938,11 +904,7 @@ namespace GSF.PhasorProtocols
             private EndPoint m_sendDestination;
             private IPAddress m_multicastServerAddress;
             private IPAddress m_multicastSourceAddress;
-            private string m_connectionString;
-            private int m_receiveBufferSize;
-            private int m_maxConnectionAttempts;
             private bool m_receivePacketInfo;
-
             private bool m_disposed;
 
             #endregion
@@ -952,17 +914,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets or sets the data required by the client to connect to the server.
             /// </summary>
-            public string ConnectionString
-            {
-                get
-                {
-                    return m_connectionString;
-                }
-                set
-                {
-                    m_connectionString = value;
-                }
-            }
+            public string ConnectionString { get; set; }
 
             /// <summary>
             /// Gets the <see cref="Time"/> for which the client has been connected to the server.
@@ -996,33 +948,13 @@ namespace GSF.PhasorProtocols
             /// Gets or sets the maximum number of times the client will attempt to connect to the server.
             /// </summary>
             /// <remarks>Set <see cref="MaxConnectionAttempts"/> to -1 for infinite connection attempts.</remarks>
-            public int MaxConnectionAttempts
-            {
-                get
-                {
-                    return m_maxConnectionAttempts;
-                }
-                set
-                {
-                    m_maxConnectionAttempts = value;
-                }
-            }
+            public int MaxConnectionAttempts { get; set; }
 
             /// <summary>
             /// Gets or sets the size of the buffer used by the client for receiving data from the server.
             /// </summary>
             /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
-            public int ReceiveBufferSize
-            {
-                get
-                {
-                    return m_receiveBufferSize;
-                }
-                set
-                {
-                    m_receiveBufferSize = value;
-                }
-            }
+            public int ReceiveBufferSize { get; set; }
 
             /// <summary>
             /// Gets or sets the size of the buffer used by the client for sending data to the server.
@@ -1187,24 +1119,20 @@ namespace GSF.PhasorProtocols
             /// </remarks>
             public WaitHandle ConnectAsync()
             {
-                Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+                Dictionary<string, string> settings = ConnectionString.ParseKeyValuePairs();
                 Match endPointMatch;
                 IPStack ipStack;
                 IPEndPoint sendDestination;
-                string serverSetting;
-                string remotePortSetting;
-                string multicastSourceSetting;
-                int remotePort;
 
                 // Set up destination used for send operations
-                if (settings.TryGetValue("server", out serverSetting))
+                if (settings.TryGetValue("server", out string serverSetting))
                 {
-                    if (settings.TryGetValue("remoteport", out remotePortSetting))
+                    if (settings.TryGetValue("remoteport", out string remotePortSetting))
                         serverSetting = $"{serverSetting}:{remotePortSetting}";
 
                     endPointMatch = Regex.Match(serverSetting, Transport.EndpointFormatRegex);
 
-                    if (int.TryParse(endPointMatch.Groups["port"].Value, out remotePort))
+                    if (int.TryParse(endPointMatch.Groups["port"].Value, out int remotePort))
                     {
                         ipStack = Transport.GetInterfaceIPStack(settings);
                         sendDestination = Transport.CreateEndPoint(endPointMatch.Groups["host"].Value, remotePort, ipStack);
@@ -1214,7 +1142,7 @@ namespace GSF.PhasorProtocols
                         {
                             m_multicastServerAddress = sendDestination.Address;
 
-                            if (settings.TryGetValue("multicastSource", out multicastSourceSetting))
+                            if (settings.TryGetValue("multicastSource", out string multicastSourceSetting))
                                 m_multicastSourceAddress = IPAddress.Parse(multicastSourceSetting);
                         }
                     }
@@ -1336,10 +1264,10 @@ namespace GSF.PhasorProtocols
                     if (sharing)
                     {
                         // Validate settings to ensure that they match
-                        if (sharedClient.ReceiveBufferSize != m_receiveBufferSize)
+                        if (sharedClient.ReceiveBufferSize != ReceiveBufferSize)
                             throw new InvalidOperationException(string.Format(ConfigurationMismatchError, "Receive buffer size"));
 
-                        if (sharedClient.MaxConnectionAttempts != m_maxConnectionAttempts)
+                        if (sharedClient.MaxConnectionAttempts != MaxConnectionAttempts)
                             throw new InvalidOperationException(string.Format(ConfigurationMismatchError, "Max connection attempts"));
                     }
                     else
@@ -1372,9 +1300,9 @@ namespace GSF.PhasorProtocols
                     if (!sharing)
                     {
                         // Initialize settings and connect
-                        sharedClient.ConnectionString = m_connectionString;
-                        sharedClient.ReceiveBufferSize = m_receiveBufferSize;
-                        sharedClient.MaxConnectionAttempts = m_maxConnectionAttempts;
+                        sharedClient.ConnectionString = ConnectionString;
+                        sharedClient.ReceiveBufferSize = ReceiveBufferSize;
+                        sharedClient.MaxConnectionAttempts = MaxConnectionAttempts;
                         sharedClient.ConnectAsync();
                     }
 
@@ -1434,13 +1362,12 @@ namespace GSF.PhasorProtocols
             private void TerminateSharedClient()
             {
                 EndPoint localEndPoint;
-                UdpClient sharedClient;
 
                 lock (s_sharedClients)
                 {
                     localEndPoint = GetLocalEndPoint();
 
-                    if (s_sharedClients.TryGetValue(localEndPoint, out sharedClient))
+                    if (s_sharedClients.TryGetValue(localEndPoint, out UdpClient sharedClient))
                     {
                         // If the wrapped client and the shared client are the same,
                         // no one has terminated the shared client yet
@@ -1471,20 +1398,17 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> settings;
                 IPStack ipStack;
-                string localInterface;
-                string localPortSetting;
-                int localPort;
 
-                settings = m_connectionString.ParseKeyValuePairs();
+                settings = ConnectionString.ParseKeyValuePairs();
                 ipStack = Transport.GetInterfaceIPStack(settings);
 
-                if (!settings.TryGetValue("interface", out localInterface))
+                if (!settings.TryGetValue("interface", out string localInterface))
                     localInterface = string.Empty;
 
-                if (!settings.TryGetValue("localport", out localPortSetting) && !settings.TryGetValue("port", out localPortSetting))
-                    throw new InvalidOperationException($"Local port property missing from connection string: {m_connectionString}");
+                if (!settings.TryGetValue("localport", out string localPortSetting) && !settings.TryGetValue("port", out localPortSetting))
+                    throw new InvalidOperationException($"Local port property missing from connection string: {ConnectionString}");
 
-                if (!int.TryParse(localPortSetting, out localPort))
+                if (!int.TryParse(localPortSetting, out int localPort))
                     throw new InvalidOperationException($"Unable to parse local port from \"{localPortSetting}\".");
 
                 return Transport.CreateEndPoint(localInterface, localPort, ipStack);
@@ -1758,7 +1682,6 @@ namespace GSF.PhasorProtocols
         private TransportProtocol m_transportProtocol;
         private string m_connectionString;
         private int m_maximumConnectionAttempts;
-        private ushort m_deviceID;
         private int m_bufferSize;
         private IFrameParser m_frameParser;
         private IClient m_dataChannel;
@@ -1771,11 +1694,7 @@ namespace GSF.PhasorProtocols
         private SharedTimer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
         private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
-        private bool m_trustHeaderLength;
         private long m_dataStreamStartTime;
-        private bool m_keepCommandChannelOpen;
-        private bool m_autoRepeatCapturedPlayback;
-        private bool m_injectSimulatedTimestamp;
         private long m_totalFramesReceived;
         private long m_totalMissingFrames;
         private long m_missingFramesOverflow;
@@ -1789,16 +1708,10 @@ namespace GSF.PhasorProtocols
         private volatile int m_parsingExceptionCount;
         private long m_lastParsingExceptionTime;
         private int m_configuredFrameRate;
-        private string m_sourceName;
         private int m_definedFrameRate;
-        private bool m_autoStartDataParsingSequence;
-        private bool m_skipDisableRealTimeData;
         private bool m_initiatingDataStream;
         private long m_initialBytesReceived;
         private bool m_initiatingSerialConnection;
-        private bool m_deviceSupportsCommands;
-        private int m_allowedParsingExceptions;
-        private Ticks m_parsingExceptionWindow;
         private IConnectionParameters m_connectionParameters;
         private int m_connectionAttempts;
         private bool m_enabled;
@@ -1814,23 +1727,23 @@ namespace GSF.PhasorProtocols
         public MultiProtocolFrameParser()
         {
             m_connectionString = "server=127.0.0.1:4712";
-            m_deviceID = 1;
             m_bufferSize = DefaultBufferSize;
             m_maximumConnectionAttempts = DefaultMaximumConnectionAttempts;
-            m_autoStartDataParsingSequence = DefaultAutoStartDataParsingSequence;
-            m_allowedParsingExceptions = DefaultAllowedParsingExceptions;
-            m_parsingExceptionWindow = DefaultParsingExceptionWindow;
-            m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
-            m_trustHeaderLength = true;
-            m_keepCommandChannelOpen = true;
-            m_rateCalcTimer = TimerScheduler.CreateTimer();
-
             m_phasorProtocol = PhasorProtocol.IEEEC37_118V1;
             m_transportProtocol = TransportProtocol.Tcp;
+            m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
 
+            DeviceID = 1;
+            AutoStartDataParsingSequence = DefaultAutoStartDataParsingSequence;
+            AllowedParsingExceptions = DefaultAllowedParsingExceptions;
+            ParsingExceptionWindow = DefaultParsingExceptionWindow;
+            TrustHeaderLength = true;
+            KeepCommandChannelOpen = true;
+            
             // Set default frame rate, this calculates milliseconds for each frame
             DefinedFrameRate = DefaultDefinedFrameRate;
 
+            m_rateCalcTimer = TimerScheduler.CreateTimer();
             m_rateCalcTimer.Elapsed += m_rateCalcTimer_Elapsed;
             m_rateCalcTimer.Interval = 5000;
             m_rateCalcTimer.AutoReset = true;
@@ -1864,7 +1777,7 @@ namespace GSF.PhasorProtocols
             set
             {
                 m_phasorProtocol = value;
-                m_deviceSupportsCommands = DeriveCommandSupport();
+                DeviceSupportsCommands = DeriveCommandSupport();
 
                 // Setup protocol specific connection parameters, for those protocols that have them...
                 switch (value)
@@ -1903,7 +1816,7 @@ namespace GSF.PhasorProtocols
             set
             {
                 m_transportProtocol = value;
-                m_deviceSupportsCommands = DeriveCommandSupport();
+                DeviceSupportsCommands = DeriveCommandSupport();
 
                 // File based input connections are handled more carefully
                 if (m_transportProtocol == TransportProtocol.File)
@@ -1929,19 +1842,17 @@ namespace GSF.PhasorProtocols
 
                 // Parse connection string to see if a phasor or transport protocol was assigned
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-                string setting;
-                int bufferSize;
 
-                if (settings.TryGetValue("phasorProtocol", out setting))
+                if (settings.TryGetValue("phasorProtocol", out string setting))
                     PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), setting, true);
 
                 if (settings.TryGetValue("transportProtocol", out setting) || settings.TryGetValue("protocol", out setting))
                     TransportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), setting, true);
 
                 if (settings.TryGetValue("keepCommandChannelOpen", out setting))
-                    m_keepCommandChannelOpen = setting.ParseBoolean();
+                    KeepCommandChannelOpen = setting.ParseBoolean();
 
-                if (settings.TryGetValue("bufferSize", out setting) && int.TryParse(setting, out bufferSize) && bufferSize >= 1)
+                if (settings.TryGetValue("bufferSize", out setting) && int.TryParse(setting, out int bufferSize) && bufferSize >= 1)
                     BufferSize = bufferSize;
 
                 if (settings.TryGetValue("checkSumValidationFrameTypes", out setting))
@@ -1951,9 +1862,9 @@ namespace GSF.PhasorProtocols
                 }
 
                 if (settings.TryGetValue("trustHeaderLength", out setting))
-                    m_trustHeaderLength = setting.ParseBoolean();
+                    TrustHeaderLength = setting.ParseBoolean();
 
-                m_deviceSupportsCommands = DeriveCommandSupport();
+                DeviceSupportsCommands = DeriveCommandSupport();
             }
         }
 
@@ -1961,17 +1872,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets flag that determines whether to keep the
         /// command channel open after the initial startup sequence.
         /// </summary>
-        public bool KeepCommandChannelOpen
-        {
-            get
-            {
-                return m_keepCommandChannelOpen;
-            }
-            set
-            {
-                m_keepCommandChannelOpen = value;
-            }
-        }
+        public bool KeepCommandChannelOpen { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if a device supports commands.
@@ -1980,18 +1881,7 @@ namespace GSF.PhasorProtocols
         /// This property is automatically derived based on the selected <see cref="PhasorProtocol"/>, <see cref="TransportProtocol"/>
         /// and <see cref="ConnectionString"/>, but can be overridden if the consumer already knows that a device supports commands.
         /// </remarks>
-        public bool DeviceSupportsCommands
-        {
-            get
-            {
-                return m_deviceSupportsCommands;
-            }
-            set
-            {
-                // Consumers can choose to override command support if needed
-                m_deviceSupportsCommands = value;
-            }
-        }
+        public bool DeviceSupportsCommands { get; set; }
 
         /// <summary>
         /// Gets or sets the device identification code often needed to establish a connection.
@@ -1999,17 +1889,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Most devices validate this ID when sending commands, so it must be correct in order to start parsing sequence.
         /// </remarks>
-        public ushort DeviceID
-        {
-            get
-            {
-                return m_deviceID;
-            }
-            set
-            {
-                m_deviceID = value;
-            }
-        }
+        public ushort DeviceID { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the <see cref="MultiProtocolFrameParser"/> for sending and receiving data from a device.
@@ -2062,17 +1942,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// For devices that support IEEE commands, setting this property to true will automatically start the data parsing sequence.
         /// </remarks>
-        public bool AutoStartDataParsingSequence
-        {
-            get
-            {
-                return m_autoStartDataParsingSequence;
-            }
-            set
-            {
-                m_autoStartDataParsingSequence = value;
-            }
-        }
+        public bool AutoStartDataParsingSequence { get; set; }
 
         /// <summary>
         /// Gets or sets flag to skip automatic disabling of the real-time data stream on shutdown or startup.
@@ -2080,62 +1950,22 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This flag may important when using UDP multicast with several subscribed clients.
         /// </remarks>
-        public bool SkipDisableRealTimeData
-        {
-            get
-            {
-                return m_skipDisableRealTimeData;
-            }
-            set
-            {
-                m_skipDisableRealTimeData = value;
-            }
-        }
+        public bool SkipDisableRealTimeData { get; set; }
 
         /// <summary>
         /// Gets or sets number of parsing exceptions allowed during <see cref="ParsingExceptionWindow"/> before connection is reset.
         /// </summary>
-        public int AllowedParsingExceptions
-        {
-            get
-            {
-                return m_allowedParsingExceptions;
-            }
-            set
-            {
-                m_allowedParsingExceptions = value;
-            }
-        }
+        public int AllowedParsingExceptions { get; set; }
 
         /// <summary>
         /// Gets or sets time duration, in <see cref="Ticks"/>, to monitor parsing exceptions.
         /// </summary>
-        public Ticks ParsingExceptionWindow
-        {
-            get
-            {
-                return m_parsingExceptionWindow;
-            }
-            set
-            {
-                m_parsingExceptionWindow = value;
-            }
-        }
+        public Ticks ParsingExceptionWindow { get; set; }
 
         /// <summary>
         /// Gets or sets a descriptive name for a device connection.
         /// </summary>
-        public string SourceName
-        {
-            get
-            {
-                return m_sourceName;
-            }
-            set
-            {
-                m_sourceName = value;
-            }
-        }
+        public string SourceName { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if a high-resolution precision timer should be used for file based input.
@@ -2217,17 +2047,7 @@ namespace GSF.PhasorProtocols
         /// When connection is made to a file for replay purposes or consumer doesn't trust remote clock source, this flag
         /// can be set to true replace all frame timestamps with a UTC timestamp derived from the local system clock.
         /// </remarks>
-        public bool InjectSimulatedTimestamp
-        {
-            get
-            {
-                return m_injectSimulatedTimestamp;
-            }
-            set
-            {
-                m_injectSimulatedTimestamp = value;
-            }
-        }
+        public bool InjectSimulatedTimestamp { get; set; }
 
         /// <summary>
         /// Gets or sets a flag that determines if a file used for replaying data should be restarted at the beginning once it has been completed.
@@ -2235,17 +2055,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This is only applicable when connection is made to a file for replay purposes.
         /// </remarks>
-        public bool AutoRepeatCapturedPlayback
-        {
-            get
-            {
-                return m_autoRepeatCapturedPlayback;
-            }
-            set
-            {
-                m_autoRepeatCapturedPlayback = value;
-            }
-        }
+        public bool AutoRepeatCapturedPlayback { get; set; }
 
         /// <summary>
         /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
@@ -2294,17 +2104,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be left as <c>true</c>.
         /// </remarks>
-        public bool TrustHeaderLength
-        {
-            get
-            {
-                return m_trustHeaderLength;
-            }
-            set
-            {
-                m_trustHeaderLength = value;
-            }
-        }
+        public bool TrustHeaderLength { get; set; }
 
         /// <summary>
         /// Gets the number of redundant frames in each packet.
@@ -2340,7 +2140,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                if ((object)m_commandChannel != null && m_keepCommandChannelOpen)
+                if ((object)m_commandChannel != null && KeepCommandChannelOpen)
                     return m_commandChannel.CurrentState == ClientState.Connected;
 
                 if ((object)m_dataChannel != null)
@@ -2404,11 +2204,9 @@ namespace GSF.PhasorProtocols
                 {
                     Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
 
-                    string server;
                     Match endPoint;
-                    IPAddress serverAddress;
 
-                    if (settings.TryGetValue("server", out server))
+                    if (settings.TryGetValue("server", out string server))
                     {
                         if (!settings.ContainsKey("remotePort"))
                         {
@@ -2416,7 +2214,7 @@ namespace GSF.PhasorProtocols
                             server = endPoint.Groups["host"].Value;
                         }
 
-                        if (IPAddress.TryParse(server, out serverAddress))
+                        if (IPAddress.TryParse(server, out IPAddress serverAddress))
                             return Transport.IsMulticastIP(serverAddress);
                     }
                 }
@@ -2433,7 +2231,6 @@ namespace GSF.PhasorProtocols
             get
             {
                 Dictionary<string, string> settings;
-                string setting;
 
                 // Listener setting is only valid for TCP data channels
                 if (m_transportProtocol != TransportProtocol.Tcp)
@@ -2443,7 +2240,7 @@ namespace GSF.PhasorProtocols
                 {
                     settings = m_connectionString.ParseKeyValuePairs();
 
-                    if (settings.TryGetValue("islistener", out setting))
+                    if (settings.TryGetValue("islistener", out string setting))
                         return setting.ParseBoolean();
                 }
 
@@ -2519,9 +2316,8 @@ namespace GSF.PhasorProtocols
                     if (!string.IsNullOrWhiteSpace(m_connectionString))
                     {
                         Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-                        string setting;
 
-                        if (settings.TryGetValue("islistener", out setting))
+                        if (settings.TryGetValue("islistener", out string setting))
                             return setting.ParseBoolean();
 
                         return false;
@@ -2586,10 +2382,10 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(m_sourceName))
-                    return "ID " + m_deviceID + " using " + m_phasorProtocol.GetFormattedProtocolName() + " over " + m_transportProtocol;
+                if (string.IsNullOrWhiteSpace(SourceName))
+                    return "ID " + DeviceID + " using " + m_phasorProtocol.GetFormattedProtocolName() + " over " + m_transportProtocol;
 
-                return m_sourceName + " (" + m_deviceID + ")";
+                return SourceName + " (" + DeviceID + ")";
             }
         }
 
@@ -2602,7 +2398,7 @@ namespace GSF.PhasorProtocols
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("      Device Connection ID: {0}", m_deviceID);
+                status.AppendFormat("      Device Connection ID: {0}", DeviceID);
                 status.AppendLine();
                 status.AppendFormat("           Phasor protocol: {0}", m_phasorProtocol.GetFormattedProtocolName());
                 status.AppendLine();
@@ -2624,13 +2420,13 @@ namespace GSF.PhasorProtocols
                 status.AppendLine();
                 status.AppendFormat("     Calculated frame rate: {0}", m_calculatedFrameRate);
                 status.AppendLine();
-                status.AppendFormat("      Calculated data rate: {0} bytes/sec, {1} Mbps", m_calculatedByteRate.ToString("0.0"), MegaBitRate.ToString("0.0000"));
+                status.AppendFormat("      Calculated data rate: {0:0.0} bytes/sec, {1:0.0000} Mbps", m_calculatedByteRate, MegaBitRate);
                 status.AppendLine();
-                status.AppendFormat("Allowed parsing exceptions: {0}", m_allowedParsingExceptions);
+                status.AppendFormat("Allowed parsing exceptions: {0}", AllowedParsingExceptions);
                 status.AppendLine();
-                status.AppendFormat("  Parsing exception window: {0} seconds", m_parsingExceptionWindow.ToSeconds().ToString("0.00"));
+                status.AppendFormat("  Parsing exception window: {0:0.00} seconds", ParsingExceptionWindow.ToSeconds());
                 status.AppendLine();
-                status.AppendFormat("Using simulated timestamps: {0}", m_injectSimulatedTimestamp ? "Yes" : "No");
+                status.AppendFormat("Using simulated timestamps: {0}", InjectSimulatedTimestamp ? "Yes" : "No");
                 status.AppendLine();
 
                 if (m_transportProtocol == TransportProtocol.File)
@@ -2787,7 +2583,6 @@ namespace GSF.PhasorProtocols
             {
                 // Parse connection string to check for special parameters
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-                string setting;
 
                 // Reset connection attempt counter
                 m_connectionAttempts = 0;
@@ -2802,7 +2597,7 @@ namespace GSF.PhasorProtocols
                 if ((object)configurationFrame != null)
                     ConfigurationFrame = configurationFrame;
 
-                if (settings.TryGetValue("commandChannel", out setting))
+                if (settings.TryGetValue("commandChannel", out string setting))
                 {
                     // Establish command channel connection, if defined...
                     InitializeCommandChannel(setting);
@@ -2875,13 +2670,13 @@ namespace GSF.PhasorProtocols
                 case PhasorProtocol.IEEEC37_118V2:
                 case PhasorProtocol.IEEEC37_118V1:
                 case PhasorProtocol.IEEEC37_118D6:
-                    m_frameParser = new IEEEC37_118.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength, m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
+                    m_frameParser = new IEEEC37_118.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength, m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
                     break;
                 case PhasorProtocol.IEEE1344:
-                    m_frameParser = new IEEE1344.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
+                    m_frameParser = new IEEE1344.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
                     break;
                 case PhasorProtocol.IEC61850_90_5:
-                    m_frameParser = new IEC61850_90_5.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
+                    m_frameParser = new IEC61850_90_5.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
 
                     // Check for IEC 61850-90-5 protocol specific parameters in connection string
                     IEC61850_90_5.ConnectionParameters iecParameters = m_connectionParameters as IEC61850_90_5.ConnectionParameters;
@@ -2906,7 +2701,7 @@ namespace GSF.PhasorProtocols
 
                     break;
                 case PhasorProtocol.BPAPDCstream:
-                    m_frameParser = new BPAPDCstream.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
+                    m_frameParser = new BPAPDCstream.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
 
                     // Check for BPA PDCstream protocol specific parameters in connection string
                     BPAPDCstream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BPAPDCstream.ConnectionParameters;
@@ -2930,7 +2725,7 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 case PhasorProtocol.FNET:
-                    m_frameParser = new FNET.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
+                    m_frameParser = new FNET.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
 
                     // Check for F-NET protocol specific parameters in connection string
                     FNET.ConnectionParameters fnetParameters = m_connectionParameters as FNET.ConnectionParameters;
@@ -2951,7 +2746,7 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 case PhasorProtocol.SelFastMessage:
-                    m_frameParser = new SelFastMessage.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
+                    m_frameParser = new SelFastMessage.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
 
                     // Check for SEL Fast Message protocol specific parameters in connection string
                     SelFastMessage.ConnectionParameters selParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
@@ -2963,16 +2758,14 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 case PhasorProtocol.Macrodyne:
-                    m_frameParser = new Macrodyne.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
+                    m_frameParser = new Macrodyne.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
 
                     // Check for Macrodyne protocol specific parameters in connection string
                     Macrodyne.ConnectionParameters macrodyneParameters = m_connectionParameters as Macrodyne.ConnectionParameters;
 
                     if ((object)macrodyneParameters != null)
                     {
-                        ProtocolVersion protocolVersion;
-
-                        if (settings.TryGetValue("protocolVersion", out setting) && Enum.TryParse(setting, true, out protocolVersion))
+                        if (settings.TryGetValue("protocolVersion", out setting) && Enum.TryParse(setting, true, out ProtocolVersion protocolVersion))
                             macrodyneParameters.ProtocolVersion = protocolVersion;
 
                         // INI file name setting is required for 1690G protocol
@@ -3026,14 +2819,13 @@ namespace GSF.PhasorProtocols
             // Parse command channel connection settings
             TransportProtocol transportProtocol;
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-            string setting;
 
             // Verify user did not attempt to setup command channel as a TCP server
             if (settings.ContainsKey("islistener") && settings["islistener"].ParseBoolean())
                 throw new ArgumentException("Command channel cannot be setup as a TCP server.");
 
             // Determine what transport protocol user selected
-            if (settings.TryGetValue("transportProtocol", out setting) || settings.TryGetValue("protocol", out setting))
+            if (settings.TryGetValue("transportProtocol", out string setting) || settings.TryGetValue("protocol", out setting))
             {
                 transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), setting, true);
 
@@ -3072,8 +2864,6 @@ namespace GSF.PhasorProtocols
         /// <param name="settings">Key/value pairs dictionary parsed from connection string.</param>
         private void InitializeDataChannel(Dictionary<string, string> settings)
         {
-            string setting;
-
             // Instantiate selected transport layer
             switch (m_transportProtocol)
             {
@@ -3081,7 +2871,7 @@ namespace GSF.PhasorProtocols
                     // The TCP transport may be set up as a server or as a client, we distinguish
                     // this simply by deriving the value of an added key/value pair in the
                     // connection string called "IsListener"
-                    if (settings.TryGetValue("islistener", out setting))
+                    if (settings.TryGetValue("islistener", out string setting))
                     {
                         if (setting.ParseBoolean())
                             m_serverBasedDataChannel = settings.ContainsKey("receiveFrom") ? (IServer)new SharedTcpServerReference() : new TcpServer();
@@ -3111,7 +2901,7 @@ namespace GSF.PhasorProtocols
                     fileClient.FileShareMode = FileShare.Read;
                     fileClient.ReceiveOnDemand = true;
                     fileClient.ReceiveBufferSize = ushort.MaxValue;
-                    fileClient.AutoRepeat = m_autoRepeatCapturedPlayback;
+                    fileClient.AutoRepeat = AutoRepeatCapturedPlayback;
 
                     // Setup synchronized read operation for file client operations
                     m_readNextBuffer = new ShortSynchronizedOperation(ReadNextFileBuffer, ex => OnParsingException(new InvalidOperationException("Encountered an exception while reading file data: " + ex.Message, ex)));
@@ -3168,16 +2958,11 @@ namespace GSF.PhasorProtocols
         {
             SharedUdpClientReference udpRef;
             IPStack ipStack;
-
-            string receiveFromSetting;
-            string serverSetting;
-            string remotePortSetting;
             Match endPointMatch;
-            IPAddress serverAddress;
 
             m_multicastServerAddress = null;
 
-            if (!settings.TryGetValue("receiveFrom", out receiveFromSetting))
+            if (!settings.TryGetValue("receiveFrom", out string receiveFromSetting))
             {
                 m_dataChannel = new UdpClient();
             }
@@ -3191,14 +2976,14 @@ namespace GSF.PhasorProtocols
                 udpRef.ReceiveDataFrom += m_dataChannel_ReceiveDataFrom;
                 m_dataChannel = udpRef;
 
-                if (settings.TryGetValue("server", out serverSetting))
+                if (settings.TryGetValue("server", out string serverSetting))
                 {
-                    if (settings.TryGetValue("remoteport", out remotePortSetting))
+                    if (settings.TryGetValue("remoteport", out string remotePortSetting))
                         serverSetting = $"{serverSetting}:{remotePortSetting}";
 
                     endPointMatch = Regex.Match(serverSetting, Transport.EndpointFormatRegex);
 
-                    if (IPAddress.TryParse(endPointMatch.Groups["host"].Value, out serverAddress) && Transport.IsMulticastIP(serverAddress))
+                    if (IPAddress.TryParse(endPointMatch.Groups["host"].Value, out IPAddress serverAddress) && Transport.IsMulticastIP(serverAddress))
                     {
                         m_multicastServerAddress = serverAddress;
                         udpRef.ReceivePacketInfo = true;
@@ -3219,7 +3004,7 @@ namespace GSF.PhasorProtocols
             m_configurationFrame = null;
 
             // Make sure data stream is disabled
-            if (!m_skipDisableRealTimeData)
+            if (!SkipDisableRealTimeData)
             {
                 commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);
 
@@ -3235,7 +3020,7 @@ namespace GSF.PhasorProtocols
                 }
                 catch (Exception ex)
                 {
-                    OnParsingException(ex, "Failed to properly disconnect data channel: {0}", ex.Message);
+                    OnParsingException(new ConnectionException($"Failed to properly disconnect data channel: {ex.Message}", ex));
                 }
                 finally
                 {
@@ -3263,7 +3048,7 @@ namespace GSF.PhasorProtocols
                 }
                 catch (Exception ex)
                 {
-                    OnParsingException(ex, "Failed to properly disconnect server based data channel: {0}", ex.Message);
+                    OnParsingException(new ConnectionException($"Failed to properly disconnect server based data channel: {ex.Message}", ex));
                 }
                 finally
                 {
@@ -3290,7 +3075,7 @@ namespace GSF.PhasorProtocols
                 }
                 catch (Exception ex)
                 {
-                    OnParsingException(ex, "Failed to properly disconnect command channel: {0}", ex.Message);
+                    OnParsingException(new ConnectionException($"Failed to properly disconnect command channel: {ex.Message}", ex));
                 }
                 finally
                 {
@@ -3367,7 +3152,7 @@ namespace GSF.PhasorProtocols
 
             try
             {
-                if (m_deviceSupportsCommands && ((object)m_dataChannel != null || (object)m_serverBasedDataChannel != null || (object)m_commandChannel != null))
+                if (DeviceSupportsCommands && ((object)m_dataChannel != null || (object)m_serverBasedDataChannel != null || (object)m_commandChannel != null))
                 {
                     ICommandFrame commandFrame;
 
@@ -3377,13 +3162,13 @@ namespace GSF.PhasorProtocols
                         case PhasorProtocol.IEEEC37_118V2:
                         case PhasorProtocol.IEEEC37_118V1:
                         case PhasorProtocol.IEEEC37_118D6:
-                            commandFrame = new IEEEC37_118.CommandFrame(m_deviceID, command, 1);
+                            commandFrame = new IEEEC37_118.CommandFrame(DeviceID, command, 1);
                             break;
                         case PhasorProtocol.IEEE1344:
-                            commandFrame = new IEEE1344.CommandFrame(m_deviceID, command);
+                            commandFrame = new IEEE1344.CommandFrame(DeviceID, command);
                             break;
                         case PhasorProtocol.IEC61850_90_5:
-                            commandFrame = new IEC61850_90_5.CommandFrame(m_deviceID, command, 1);
+                            commandFrame = new IEC61850_90_5.CommandFrame(DeviceID, command, 1);
                             break;
                         case PhasorProtocol.SelFastMessage:
                             // Get defined message period
@@ -3432,7 +3217,7 @@ namespace GSF.PhasorProtocols
             }
             catch (Exception ex)
             {
-                OnParsingException(ex, "Failed to send device command \"{0}\": {1}", command, ex.Message);
+                OnParsingException(new ConnectionException($"Failed to send device command \"{command}\": {ex.Message}", ex));
             }
 
             return handle;
@@ -3492,7 +3277,7 @@ namespace GSF.PhasorProtocols
             if ((object)ParsingException != null && !(ex is ThreadAbortException) && !(ex is ObjectDisposedException))
                 ParsingException(this, new EventArgs<Exception>(ex));
 
-            if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
+            if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > ParsingExceptionWindow)
             {
                 // Exception window has passed since last exception, so we reset counters
                 m_lastParsingExceptionTime = DateTime.UtcNow.Ticks;
@@ -3501,7 +3286,7 @@ namespace GSF.PhasorProtocols
 
             m_parsingExceptionCount++;
 
-            if (m_parsingExceptionCount > m_allowedParsingExceptions)
+            if (m_parsingExceptionCount > AllowedParsingExceptions)
             {
                 try
                 {
@@ -3573,14 +3358,12 @@ namespace GSF.PhasorProtocols
 
                     if (m_transportProtocol == TransportProtocol.Udp)
                     {
-                        string server;
                         Match endPoint;
-                        IPAddress serverAddress;
 
                         // IEEE protocols "can" use UDP connection to support devices commands, but only
                         // when remote device acts as a UDP listener (i.e., a "server" connection)
                         // and remote device is not a multicast end point
-                        if (settings.TryGetValue("server", out server))
+                        if (settings.TryGetValue("server", out string server))
                         {
                             if (!settings.ContainsKey("remotePort"))
                             {
@@ -3588,7 +3371,7 @@ namespace GSF.PhasorProtocols
                                 server = endPoint.Groups["host"].Value;
                             }
 
-                            if (IPAddress.TryParse(server, out serverAddress))
+                            if (IPAddress.TryParse(server, out IPAddress serverAddress))
                                 return !Transport.IsMulticastIP(serverAddress);
                         }
                     }
@@ -3604,7 +3387,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 // Attempt to stop real-time data, waiting a maximum of three seconds for this activity
-                if (!m_skipDisableRealTimeData && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
+                if (!SkipDisableRealTimeData && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
                 {
                     // Some devices will only send a config frame once data streaming has been disabled, so
                     // we use this code to disable real-time data and wait for data to stop streaming...
@@ -3704,7 +3487,7 @@ namespace GSF.PhasorProtocols
                     ConnectionEstablished(this, EventArgs.Empty);
 
                 // Begin data parsing sequence to handle reception of configuration frame
-                if (m_deviceSupportsCommands && m_autoStartDataParsingSequence)
+                if (DeviceSupportsCommands && AutoStartDataParsingSequence)
                 {
                     m_initialBytesReceived = 0;
                     m_initiatingDataStream = true;
@@ -3739,7 +3522,7 @@ namespace GSF.PhasorProtocols
 
                 m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
 
-                if (m_injectSimulatedTimestamp)
+                if (InjectSimulatedTimestamp)
                     simulatedTimestamp = Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate);
             }
             else
@@ -3753,7 +3536,7 @@ namespace GSF.PhasorProtocols
             }
 
             // If injecting a simulated timestamp, use the last received time
-            if (m_injectSimulatedTimestamp)
+            if (InjectSimulatedTimestamp)
                 sourceFrame.Timestamp = simulatedTimestamp;
 
             // Read next buffer if output frames are almost all processed
@@ -3837,7 +3620,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Data channel send exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Data channel send exception: {ex.Message}", ex));
         }
 
         private void m_dataChannel_ReceiveDataException(object sender, EventArgs<Exception> e)
@@ -3852,7 +3635,7 @@ namespace GSF.PhasorProtocols
             }
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Data channel receive exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Data channel receive exception: {ex.Message}", ex));
         }
 
         private void m_dataChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
@@ -3860,7 +3643,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Data channel user unhandled exception: {0}", ex.Message);
+                OnParsingException(ex, "Data channel user unhandled exception: {0}", ex.Message);
         }
 
         #endregion
@@ -3893,7 +3676,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(ex, "Server based data channel send exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Server based data channel send exception: {ex.Message}", ex));
         }
 
         private void m_serverBasedDataChannel_ServerStarted(object sender, EventArgs e)
@@ -3913,7 +3696,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument2;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(ex, "Server based data channel send exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Server based data channel send exception: {ex.Message}", ex));
         }
 
         private void m_serverBasedDataChannel_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
@@ -3921,7 +3704,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument2;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(ex, "Server based data channel receive exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Server based data channel receive exception: {ex.Message}", ex));
         }
 
         private void m_serverBasedDataChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
@@ -3975,7 +3758,7 @@ namespace GSF.PhasorProtocols
 
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
         {
-            if (m_keepCommandChannelOpen)
+            if (KeepCommandChannelOpen)
             {
                 if ((object)ConnectionTerminated != null)
                     ConnectionTerminated(this, EventArgs.Empty);
@@ -3987,7 +3770,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Command channel send exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Command channel send exception: {ex.Message}", ex));
         }
 
         private void m_commandChannel_ReceiveDataException(object sender, EventArgs<Exception> e)
@@ -3995,7 +3778,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Command channel receive exception: {0}", ex.Message);
+                OnParsingException(new ConnectionException($"Command channel receive exception: {ex.Message}", ex));
         }
 
         private void m_commandChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
@@ -4003,7 +3786,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Command channel user unhandled exception: {0}", ex.Message);
+                OnParsingException(ex, "Command channel user unhandled exception: {0}", ex.Message);
         }
 
         #endregion
@@ -4015,7 +3798,7 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (m_injectSimulatedTimestamp)
+                if (InjectSimulatedTimestamp)
                     e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedCommandFrame != null)
@@ -4031,7 +3814,7 @@ namespace GSF.PhasorProtocols
         {
             // We automatically request enabling of real-time data upon reception of config frame if requested. Note that SEL Fast Message will
             // have already been enabled at this point so we don't duplicate request for enabling real-time data stream
-            if ((object)m_configurationFrame == null && m_deviceSupportsCommands && m_autoStartDataParsingSequence && m_phasorProtocol != PhasorProtocol.SelFastMessage && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
+            if ((object)m_configurationFrame == null && DeviceSupportsCommands && AutoStartDataParsingSequence && m_phasorProtocol != PhasorProtocol.SelFastMessage && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
                 SendDeviceCommand(DeviceCommand.EnableRealTimeData);
 
             m_configurationFrame = e.Argument;
@@ -4039,7 +3822,7 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (m_injectSimulatedTimestamp)
+                if (InjectSimulatedTimestamp)
                     e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedConfigurationFrame != null)
@@ -4054,7 +3837,7 @@ namespace GSF.PhasorProtocols
             }
 
             // If user has requested to not keep the command channel open, disconnect it once the system has received a configuration frame
-            if (!m_keepCommandChannelOpen && (object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
+            if (!KeepCommandChannelOpen && (object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
             {
                 m_commandChannel.Disconnect();
             }
@@ -4087,7 +3870,7 @@ namespace GSF.PhasorProtocols
                             m_readNextBuffer?.RunOnceAsync();
                     }
                 }
-                else if (m_injectSimulatedTimestamp)
+                else if (InjectSimulatedTimestamp)
                 {
                     dataFrame.Timestamp = DateTime.UtcNow.Ticks;
                 }
@@ -4110,7 +3893,7 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (m_injectSimulatedTimestamp)
+                if (InjectSimulatedTimestamp)
                     e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedHeaderFrame != null)
@@ -4127,7 +3910,7 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (m_injectSimulatedTimestamp)
+                if (InjectSimulatedTimestamp)
                     e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedUndeterminedFrame != null)

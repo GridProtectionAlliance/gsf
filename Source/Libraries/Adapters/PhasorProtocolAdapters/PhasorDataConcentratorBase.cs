@@ -882,7 +882,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to start publication channel: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Warning, new ConnectionException("Failed to start publication channel: " + ex.Message, ex));
                     }
                 }
 
@@ -926,15 +926,14 @@ namespace PhasorProtocolAdapters
             const string errorMessage = "{0} is missing from Settings - Example: IDCode=235; dataChannel={{Port=0; Clients=localhost:8800}}";
 
             Dictionary<string, string> settings = Settings;
-            string setting, dataChannel, commandChannel;
 
             // Load required parameters
-            if (!settings.TryGetValue("IDCode", out setting))
+            if (!settings.TryGetValue("IDCode", out string setting))
                 throw new ArgumentException(string.Format(errorMessage, "IDCode"));
 
             m_idCode = ushort.Parse(setting);
-            settings.TryGetValue("dataChannel", out dataChannel);
-            settings.TryGetValue("commandChannel", out commandChannel);
+            settings.TryGetValue("dataChannel", out string dataChannel);
+            settings.TryGetValue("commandChannel", out string commandChannel);
 
             // Data channel and/or command channel must be defined
             if (string.IsNullOrEmpty(dataChannel) && string.IsNullOrEmpty(commandChannel))
@@ -1018,14 +1017,14 @@ namespace PhasorProtocolAdapters
 
             if (settings.TryGetValue("replaceWithSpaceChar", out setting))
             {
-                if (!string.IsNullOrWhiteSpace(setting) && setting.Length > 0)
+                if (!string.IsNullOrWhiteSpace(setting))
                     m_replaceWithSpaceChar = setting[0];
                 else
-                    m_replaceWithSpaceChar = Char.MinValue;
+                    m_replaceWithSpaceChar = char.MinValue;
             }
             else
             {
-                m_replaceWithSpaceChar = Char.MinValue;
+                m_replaceWithSpaceChar = char.MinValue;
             }
 
             if (settings.TryGetValue("useAdjustedValue", out setting))
@@ -1120,7 +1119,7 @@ namespace PhasorProtocolAdapters
                         phase = phasorRow["Phase"].ToNonNullString("+").Trim().ToUpper()[0];
                         scale = phasorRow["ScalingValue"].ToNonNullString("0");
 
-                        if (m_replaceWithSpaceChar != Char.MinValue)
+                        if (m_replaceWithSpaceChar != char.MinValue)
                             label = label.Replace(m_replaceWithSpaceChar, ' ');
 
                         // Scale can be defined as a negative value in database, so check both formatting styles
@@ -1153,7 +1152,7 @@ namespace PhasorProtocolAdapters
                             analogType = (AnalogType)int.Parse(analogRow["Type"].ToNonNullString("0"));
                             scale = analogRow["ScalingValue"].ToNonNullString("0");
 
-                            if (m_replaceWithSpaceChar != Char.MinValue)
+                            if (m_replaceWithSpaceChar != char.MinValue)
                                 label = label.Replace(m_replaceWithSpaceChar, ' ');
 
                             // Scale can be defined as a negative value in database, so check both formatting styles
@@ -1179,7 +1178,7 @@ namespace PhasorProtocolAdapters
                             // IEEE C37.118 digital labels are defined with all 16-labels (one for each bit) in one large formatted string
                             label = digitalRow["Label"].ToNonNullString("Digital " + order).Trim().TruncateRight(LabelLength * 16);
 
-                            if (m_replaceWithSpaceChar != Char.MinValue)
+                            if (m_replaceWithSpaceChar != char.MinValue)
                                 label = label.Replace(m_replaceWithSpaceChar, ' ');
 
                             // Mask can be defined as a negative value in database, so check both formatting styles
@@ -1436,7 +1435,6 @@ namespace PhasorProtocolAdapters
         {
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = Interlocked.CompareExchange(ref m_signalReferences, null, null);
             List<IMeasurement> inputMeasurements = new List<IMeasurement>();
-            SignalReference[] signals;
 
             if ((object)signalReferences == null)
                 return;
@@ -1445,7 +1443,7 @@ namespace PhasorProtocolAdapters
             {
                 // We assign signal reference to measurement in advance since we are using this as a filter
                 // anyway, this will save a lookup later during measurement assignment to frame...
-                if (signalReferences.TryGetValue(measurement.Key, out signals))
+                if (signalReferences.TryGetValue(measurement.Key, out SignalReference[] signals))
                 {
                     // Loop through each signal reference defined for this measurement - this handles
                     // the case where there can be more than one destination for a measurement within
@@ -1691,7 +1689,7 @@ namespace PhasorProtocolAdapters
                 catch (Exception ex)
                 {
                     retry = true;
-                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to reinitialize socket layer: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Warning, new ConnectionException($"Failed to reinitialize socket layer: {ex.Message}", ex));
                 }
                 finally
                 {
@@ -1747,28 +1745,24 @@ namespace PhasorProtocolAdapters
         /// <returns>Connection ID (i.e., IP:Port) for specified <paramref name="clientID"/>.</returns>
         protected virtual string GetConnectionID(IServer server, Guid clientID)
         {
-            string connectionID;
-
-            if (!m_connectionIDCache.TryGetValue(clientID, out connectionID))
+            if (!m_connectionIDCache.TryGetValue(clientID, out string connectionID))
             {
                 // Attempt to lookup remote connection identification for logging purposes
                 try
                 {
                     IPEndPoint remoteEndPoint = null;
                     TcpServer commandChannel = server as TcpServer;
-                    TransportProvider<Socket> tcpClient;
-                    TransportProvider<EndPoint> udpClient;
 
                     if ((object)commandChannel != null)
                     {
-                        if (commandChannel.TryGetClient(clientID, out tcpClient))
+                        if (commandChannel.TryGetClient(clientID, out TransportProvider<Socket> tcpClient))
                             remoteEndPoint = tcpClient.Provider.RemoteEndPoint as IPEndPoint;
                     }
                     else
                     {
                         UdpServer dataChannel = server as UdpServer;
 
-                        if ((object)dataChannel != null && dataChannel.TryGetClient(clientID, out udpClient))
+                        if ((object)dataChannel != null && dataChannel.TryGetClient(clientID, out TransportProvider<EndPoint> udpClient))
                             remoteEndPoint = udpClient.Provider as IPEndPoint;
                     }
 
@@ -1786,7 +1780,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, new ConnectionException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
                 }
 
                 if (string.IsNullOrEmpty(connectionID))
@@ -1923,7 +1917,7 @@ namespace PhasorProtocolAdapters
             }
             else
             {
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new ConnectionException($"Data channel exception occurred while sending client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
             }
         }
 
@@ -1955,11 +1949,10 @@ namespace PhasorProtocolAdapters
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
             Guid clientID = e.Argument;
-            string connectionID;
 
             OnStatusMessage(MessageLevel.Info, $"Client \"{GetConnectionID(m_commandChannel, clientID)}\" disconnected from command channel.");
 
-            m_connectionIDCache.TryRemove(clientID, out connectionID);
+            m_connectionIDCache.TryRemove(clientID, out string _);
         }
 
         private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
@@ -1988,7 +1981,7 @@ namespace PhasorProtocolAdapters
             }
             else
             {
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Command channel exception occurred while sending client data to \"{GetConnectionID(m_commandChannel, e.Argument1)}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new ConnectionException($"Command channel exception occurred while sending client data to \"{GetConnectionID(m_commandChannel, e.Argument1)}\": {ex.Message}", ex));
             }
         }
 
@@ -2025,7 +2018,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to restart command channel: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, new ConnectionException("Failed to restart command channel: " + ex.Message, ex));
                 }
             }
         }

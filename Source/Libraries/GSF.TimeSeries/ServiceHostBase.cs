@@ -3549,7 +3549,7 @@ namespace GSF.TimeSeries
         protected virtual void LogException(Exception ex)
         {
             // Connection exceptions are logged separately since these types of exceptions
-            // can be so frequent when a device is offline which makes looking for specific,
+            // can be so frequent when a device is offline it makes looking for specific,
             // non-connection related, exceptions more difficult.
             if (ex is ConnectionException connectionException)
                 m_serviceHelper.LogConnectionException(connectionException);
