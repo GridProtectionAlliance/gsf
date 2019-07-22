@@ -5054,12 +5054,16 @@ namespace GSF.TimeSeries.Transport
 
         private void UpdateStatisticsHelpers()
         {
-            long now = RealTime;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
+
+            if ((object)statisticsHelpers == null)
+                return;
+
+            long now = RealTime;
 
             foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
             {
-                statisticsHelper.Update(now);
+                statisticsHelper?.Update(now);
 
                 // TODO: Missing data detection could be complex. For example, no need to continue logging data outages for devices that are offline - but how to detect?
                 //// If data channel is UDP, measurements are missing for time span and data gap recovery enabled, request missing
