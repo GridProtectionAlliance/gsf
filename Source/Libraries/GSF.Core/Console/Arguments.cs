@@ -587,7 +587,7 @@ namespace GSF.Console
 
                         // Mismatched quotes could also end in an escaped quote,
                         // indicated here by an inner dangling escape sequence
-                        if (innerTokens.Last() == @"\")
+                        if (innerTokens.Any() && innerTokens.Last() == @"\")
                             throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
 
                         return string.Concat(innerTokens.Select(token => token.Length > 1 ? unescape(token) : token));
