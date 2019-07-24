@@ -5054,12 +5054,16 @@ namespace GSF.TimeSeries.Transport
 
         private void UpdateStatisticsHelpers()
         {
-            long now = RealTime;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
+
+            if ((object)statisticsHelpers == null)
+                return;
+
+            long now = RealTime;
 
             foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
             {
-                statisticsHelper.Update(now);
+                statisticsHelper?.Update(now);
 
                 // TODO: Missing data detection could be complex. For example, no need to continue logging data outages for devices that are offline - but how to detect?
                 //// If data channel is UDP, measurements are missing for time span and data gap recovery enabled, request missing
@@ -5201,7 +5205,7 @@ namespace GSF.TimeSeries.Transport
         private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(MessageLevel.Info, new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
+            OnProcessException(MessageLevel.Info, new ConnectionException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
@@ -5255,7 +5259,7 @@ namespace GSF.TimeSeries.Transport
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(MessageLevel.Info, new InvalidOperationException("Data subscriber encountered an exception while attempting to establish UDP data channel connection: " + ex.Message, ex));
+            OnProcessException(MessageLevel.Info, new ConnectionException("Data subscriber encountered an exception while attempting to establish UDP data channel connection: " + ex.Message, ex));
         }
 
         private void m_dataChannel_ConnectionAttempt(object sender, EventArgs e)

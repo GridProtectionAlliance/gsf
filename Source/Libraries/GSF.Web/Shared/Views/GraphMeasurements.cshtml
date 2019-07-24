@@ -307,7 +307,7 @@
                                                 <tr><th></th><th>ID</th><th>Stream</th><th>Signal</th><th></th></tr>
                                                 <tr title="{{measurement.Description}}" ng-repeat="measurement in device.measurements">
                                                     <td>
-                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-change="updateFilter(checked, measurement)" />
+                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-init="checked=measurementChecked(measurement.SignalID)" ng-change="updateFilter(checked, measurement)" />
                                                     </td>
                                                     <td>{{measurement.ID.split(':')[1]}}</td>
                                                     <td>{{cleanSignalref(measurement)}}</td>
@@ -568,6 +568,21 @@
                 });
 
                 $('#datapoints').val($scope.dataPoints);
+            }
+
+            function measurementChecked($scope, signalID) {
+                if (signalID) {
+                    const selections = $.jStorage.get("selections");
+
+                    if (selections) {
+                        for (let i = 0; i < selections.length; i++) {
+                            if (selections[i].signalID == signalID)
+                                return true;
+                        }                    
+                    }
+                }
+
+                return false;
             }
 
             // Updates the subscription filter for the data subscriber
@@ -874,6 +889,10 @@
                 $scope.statSubscriber = $.subscriber();
                 $scope.selectedMeasurements = {};
                 $scope.statLookup = {};
+
+                $scope.measurementChecked = function (signalID) {
+                    return measurementChecked($scope, signalID);
+                }
 
                 $scope.updateFilter = function (checked, measurement) {
                     updateFilter($scope, checked, measurement);

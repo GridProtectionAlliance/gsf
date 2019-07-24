@@ -480,6 +480,35 @@ namespace GSF.Console
         /// </summary>
         /// <param name="command">The command to be parsed.</param>
         /// <returns>An array of arguments.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function processes a set of command line arguments using a simple set of rules based on
+        /// those used in popular POSIX command shells. It is important to note that these rules do not apply
+        /// to instances of the <see cref="Arguments"/> class or the <see cref="ParseCommand"/> function.
+        /// </para>
+        /// 
+        /// <para>
+        /// The motivation for this function was to provide a more user-friendly set of rules by which to
+        /// specify command-line arguments. This is of course helpful for the user who has to type the
+        /// command-line arguments by hand, but it also ends up being useful for systems that have to
+        /// programmatically escape arguments to be consumed by other command-line applications (see
+        /// the <see cref="Escape"/> function).
+        /// </para>
+        /// 
+        /// <para>
+        /// Also note that Windows has historically not provided a standard method for handling
+        /// command-line arguments and that some of the command-line tools in Windows have rolled their
+        /// own (potentially faulty) methods for doing so. More recently, Microsoft has provided the
+        /// <see cref="Environment.GetCommandLineArgs"/> function for .NET applications to retrieve their
+        /// own command line arguments using a standard format, but this function lacks the appropriate
+        /// supporting functions for programmatically handling arbitrary command strings within an
+        /// application. Furthermore, the rules for escaping spaces, quotes, and backslashes are very
+        /// inconsistent, making it difficult to write a robust method for escaping individual arguments,
+        /// let alone fully reproducing the same command parsing rules. For this reason, some programmers
+        /// may be interested in using this method in conjunction with <see cref="Environment.CommandLine"/>
+        /// for parsing their own command line arguments.
+        /// </para>
+        /// </remarks>
         public static string[] ToArgs(string command)
         {
             string[] tokenCharacterPatterns =
@@ -488,13 +517,13 @@ namespace GSF.Console
                 @"\\.",
 
                 // Substring wrapped in double quotes
-                @"""(?:(?:\\"")|[^""])*""",
+                @"""(?:\\.|[^\\""])*""",
 
                 // Substring wrapped in single quotes
                 @"'[^']*'",
 
                 // Mismatched double quote
-                @"""(?:(?:\\"")|[^""])*$",
+                @"""(?:\\.|[^\\""])*\\?$",
 
                 // Mismatched single quote
                 @"'[^']*$",
@@ -509,19 +538,24 @@ namespace GSF.Console
 
             // This function converts an escape
             // sequence into the corresponding character
-            Func<string, char> toChar = escapeSequence =>
+            Func<string, string> unescape = escapeSequence =>
             {
                 if (escapeSequence == @"\n")
-                    return '\n';
+                    return "\n";
 
                 if (escapeSequence == @"\r")
-                    return '\r';
+                    return "\r";
 
                 if (escapeSequence == @"\t")
-                    return '\t';
+                    return "\t";
 
-                return escapeSequence[1];
+                return escapeSequence.Substring(1);
             };
+
+            // This function unquotes the given string by
+            // simply removing the first and last characters
+            Func<string, string> unquote = str =>
+                str.Substring(1, str.Length - 2);
 
             // This function converts a token character into
             // its corresponding output in the args array
@@ -531,38 +565,40 @@ namespace GSF.Console
 
                 switch (value[0])
                 {
-                    // Backslash followed by any character produces
-                    // only the character following the backslash
+                    // Backslash indicates an escape sequence
                     case '\\':
                         if (value.Length == 1)
                             throw new FormatException("Malformed expression - dangling escape sequence.");
 
-                        return toChar(value).ToString();
+                        return unescape(value);
 
-                    // Expressions wrapped in double quotes must be stripped of the
-                    // surrounding double quotes, and backslashes inside double-quoted
-                    // expressions must be replaces by the character immediately following them
+                    // Expressions wrapped in double quotes must be stripped of the surrounding
+                    // double quotes, and processed internally for escape sequences
                     case '"':
                         if (!value.EndsWith("\"", StringComparison.Ordinal))
-                            throw new FormatException("Malformed expression - mismatched quote.");
+                            throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
 
-                        return new string(value.Zip(value.Substring(1, value.Length - 2), (c1, c2) =>
-                        {
-                            // Handle escape sequences
-                            // inside double quotes
-                            if (c1 == '\\')
-                                return toChar(string.Concat(c1, c2));
+                        // A simple regex can be used to find the escape sequences since
+                        // it's already known that this is a cohesive double-quoted token
+                        List<string> innerTokens = Regex.Matches(unquote(value), @"\\?.")
+                            .Cast<Match>()
+                            .Select(match => match.Value)
+                            .ToList();
 
-                            return c2;
-                        }).ToArray());
+                        // Mismatched quotes could also end in an escaped quote,
+                        // indicated here by an inner dangling escape sequence
+                        if (innerTokens.Any() && innerTokens.Last() == @"\")
+                            throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
+
+                        return string.Concat(innerTokens.Select(token => token.Length > 1 ? unescape(token) : token));
 
                     // Expressions wrapped in single quotes must
                     // be stripped of the surrounding single quotes
                     case '\'':
                         if (!value.EndsWith("'", StringComparison.Ordinal))
-                            throw new FormatException("Malformed expression - mismatched quote.");
+                            throw new FormatException($"Malformed expression - mismatched quote. arg: {value}");
 
-                        return value.Substring(1, value.Length - 2);
+                        return unquote(value);
 
                     // Any other character produces itself
                     default:

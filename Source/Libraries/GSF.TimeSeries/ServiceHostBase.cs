@@ -166,123 +166,57 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the related remote console application name.
         /// </summary>
-        protected virtual string ConsoleApplicationName
-        {
-            get
-            {
-                return ServiceName + "Console.exe";
-            }
-        }
+        protected virtual string ConsoleApplicationName => ServiceName + "Console.exe";
 
         /// <summary>
         /// Gets access to the <see cref="GSF.ServiceProcess.ServiceHelper"/>.
         /// </summary>
-        protected ServiceHelper ServiceHelper
-        {
-            get
-            {
-                return m_serviceHelper;
-            }
-        }
+        protected ServiceHelper ServiceHelper => m_serviceHelper;
 
         /// <summary>
         /// Gets reference to the <see cref="TcpServer"/> based remoting server.
         /// </summary>
-        protected ServerBase RemotingServer
-        {
-            get
-            {
-                return m_remotingServer;
-            }
-        }
+        protected ServerBase RemotingServer => m_remotingServer;
 
         /// <summary>
         /// Gets reference to the <see cref="AllAdaptersCollection"/>.
         /// </summary>
-        protected AllAdaptersCollection AllAdapters
-        {
-            get
-            {
-                return m_iaonSession.AllAdapters;
-            }
-        }
+        protected AllAdaptersCollection AllAdapters => m_iaonSession.AllAdapters;
 
         /// <summary>
         /// Gets reference to the <see cref="InputAdapterCollection"/>.
         /// </summary>
-        protected InputAdapterCollection InputAdapters
-        {
-            get
-            {
-                return m_iaonSession.InputAdapters;
-            }
-        }
+        protected InputAdapterCollection InputAdapters => m_iaonSession.InputAdapters;
 
         /// <summary>
         /// Gets reference to the <see cref="ActionAdapterCollection"/>.
         /// </summary>
-        protected ActionAdapterCollection ActionAdapters
-        {
-            get
-            {
-                return m_iaonSession.ActionAdapters;
-            }
-        }
+        protected ActionAdapterCollection ActionAdapters => m_iaonSession.ActionAdapters;
 
         /// <summary>
         /// Gets reference to the <see cref="OutputAdapterCollection"/>.
         /// </summary>
-        protected OutputAdapterCollection OutputAdapters
-        {
-            get
-            {
-                return m_iaonSession.OutputAdapters;
-            }
-        }
+        protected OutputAdapterCollection OutputAdapters => m_iaonSession.OutputAdapters;
 
         /// <summary>
         /// Gets the current node ID.
         /// </summary>
-        protected Guid NodeID
-        {
-            get
-            {
-                return m_iaonSession.NodeID;
-            }
-        }
+        protected Guid NodeID => m_iaonSession.NodeID;
 
         /// <summary>
         /// Gets the current node ID formatted for use in a SQL query string based on <see cref="ServiceHostBase.ConfigurationType"/>.
         /// </summary>
-        protected string NodeIDQueryString
-        {
-            get
-            {
-                return m_nodeIDQueryString;
-            }
-        }
+        protected string NodeIDQueryString => m_nodeIDQueryString;
 
         /// <summary>
         /// Gets the currently loaded system configuration <see cref="DataSet"/>.
         /// </summary>
-        protected DataSet DataSource
-        {
-            get
-            {
-                return m_iaonSession.DataSource;
-            }
-        }
+        protected DataSet DataSource => m_iaonSession.DataSource;
 
         /// <summary>
         /// Gets the defined system <see cref="GSF.TimeSeries.ConfigurationType"/>.
         /// </summary>
-        protected ConfigurationType ConfigurationType
-        {
-            get
-            {
-                return m_configurationType;
-            }
-        }
+        protected ConfigurationType ConfigurationType => m_configurationType;
 
         #endregion
 
@@ -742,13 +676,19 @@ namespace GSF.TimeSeries
             if ((object)m_serviceHelper.StatusLog != null)
             {
                 m_serviceHelper.StatusLog.Flush();
-                m_serviceHelper.StatusLog.LogException -= LogExceptionHandler;
+                m_serviceHelper.StatusLog.LogException -= StatusLogExceptionHandler;
             }
 
             if ((object)m_serviceHelper.ErrorLogger != null && (object)m_serviceHelper.ErrorLogger.ErrorLog != null)
             {
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
-                m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
+                m_serviceHelper.ErrorLogger.ErrorLog.LogException -= ErrorLogExceptionHandler;
+            }
+
+            if ((object)m_serviceHelper.ConnectionErrorLogger != null && (object)m_serviceHelper.ConnectionErrorLogger.ErrorLog != null)
+            {
+                m_serviceHelper.ConnectionErrorLogger.ErrorLog.Flush();
+                m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException -= ConnectionErrorLogExceptionHandler;
             }
 
             // Detach from handler for unobserved task exceptions
@@ -813,7 +753,7 @@ namespace GSF.TimeSeries
                     .AppendLine(ex.ToString())
                     .AppendLine()
                     .AppendLine("Debug info:")
-                    .AppendLine(string.Join(Environment.NewLine, certificateGenerator?.DebugLog))
+                    .AppendLine(string.Join(Environment.NewLine, certificateGenerator?.DebugLog ?? new List<string>()))
                     .ToString();
 
                 EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Error, 0);
@@ -843,6 +783,16 @@ namespace GSF.TimeSeries
             m_serviceHelper.ErrorLogger.PersistSettings = true;
             m_serviceHelper.ErrorLogger.SmtpServer = "";
             m_serviceHelper.ErrorLogger.Initialize();
+
+            m_serviceHelper.ConnectionErrorLogger.ErrorLog.FileName = "ConnectionErrorLog.txt";
+            m_serviceHelper.ConnectionErrorLogger.ErrorLog.PersistSettings = true;
+            m_serviceHelper.ConnectionErrorLogger.ErrorLog.SettingsCategory = "ConnectionErrorLog";
+            m_serviceHelper.ConnectionErrorLogger.ErrorLog.Initialize();
+
+            m_serviceHelper.ConnectionErrorLogger.LogToEventLog = false;
+            m_serviceHelper.ConnectionErrorLogger.PersistSettings = true;
+            m_serviceHelper.ConnectionErrorLogger.SmtpServer = "";
+            m_serviceHelper.ConnectionErrorLogger.Initialize();
 
             m_serviceHelper.ProcessScheduler.PersistSettings = true;
             m_serviceHelper.ProcessScheduler.SettingsCategory = "ProcessScheduler";
@@ -923,10 +873,8 @@ namespace GSF.TimeSeries
                 }
 
                 // Log current thread pool size
-                int minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads;
-
-                ThreadPool.GetMinThreads(out minWorkerThreads, out minIOThreads);
-                ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxIOThreads);
+                ThreadPool.GetMinThreads(out int minWorkerThreads, out int minIOThreads);
+                ThreadPool.GetMaxThreads(out int maxWorkerThreads, out int maxIOThreads);
 
                 DisplayStatusMessage("Thread pool size: minimum {0} worker {1} I/O, maximum {2} worker {3} I/O", UpdateType.Information, minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads);
             })));
@@ -1478,10 +1426,13 @@ namespace GSF.TimeSeries
             m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
             if (m_serviceHelper.StatusLog != null)
-                m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
+                m_serviceHelper.StatusLog.LogException += StatusLogExceptionHandler;
 
             if (m_serviceHelper.ErrorLogger?.ErrorLog != null)
-                m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
+                m_serviceHelper.ErrorLogger.ErrorLog.LogException += ErrorLogExceptionHandler;
+
+            if (m_serviceHelper.ConnectionErrorLogger?.ErrorLog != null)
+                m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException += ConnectionErrorLogExceptionHandler;
 
             m_serviceHelper.OnStart(args);
         }
@@ -1558,11 +1509,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         private void ConfigurationChangedHandler(object sender, EventArgs e)
         {
-            Action<bool> empty = success =>
-            {
-            };
-
-            m_reloadConfigQueue.Add(Tuple.Create("System", empty));
+            m_reloadConfigQueue.Add(Tuple.Create("System", (Action<bool>)(success => {})));
         }
 
         // Handle task scheduler exceptions
@@ -1577,13 +1524,49 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Event handler for processing exceptions encountered while writing entries to a log file.
+        /// Event handler for processing exceptions encountered while writing entries to any log file.
         /// </summary>
         /// <param name="sender">Event source of the exception.</param>
         /// <param name="e">Event arguments containing the exception to report.</param>
+        /// <remarks>
+        /// This function is for derived classes wanting access to any logged exception without needing
+        /// to override all specific log exception handlers.
+        /// </remarks>
         protected virtual void LogExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            DisplayStatusMessage("Log file exception: " + e.Argument.Message, UpdateType.Alarm);
+        }
+
+        /// <summary>
+        /// Event handler for processing exceptions encountered while writing entries to the status log file.
+        /// </summary>
+        /// <param name="sender">Event source of the exception.</param>
+        /// <param name="e">Event arguments containing the exception to report.</param>
+        protected virtual void StatusLogExceptionHandler(object sender, EventArgs<Exception> e)
+        {
+            DisplayStatusMessage("Status log file exception: " + e.Argument.Message, UpdateType.Alarm);
+            LogExceptionHandler(sender, e);
+        }
+
+        /// <summary>
+        /// Event handler for processing exceptions encountered while writing entries to the error log file.
+        /// </summary>
+        /// <param name="sender">Event source of the exception.</param>
+        /// <param name="e">Event arguments containing the exception to report.</param>
+        protected virtual void ErrorLogExceptionHandler(object sender, EventArgs<Exception> e)
+        {
+            DisplayStatusMessage("Error log file exception: " + e.Argument.Message, UpdateType.Alarm);
+            LogExceptionHandler(sender, e);
+        }
+
+        /// <summary>
+        /// Event handler for processing exceptions encountered while writing entries to the connection log file.
+        /// </summary>
+        /// <param name="sender">Event source of the exception.</param>
+        /// <param name="e">Event arguments containing the exception to report.</param>
+        protected virtual void ConnectionErrorLogExceptionHandler(object sender, EventArgs<Exception> e)
+        {
+            DisplayStatusMessage("Connection log file exception: " + e.Argument.Message, UpdateType.Alarm);
+            LogExceptionHandler(sender, e);
         }
 
         /// <summary>
@@ -1670,8 +1653,7 @@ namespace GSF.TimeSeries
         /// <returns>Requested <see cref="IAdapter"/>.</returns>
         protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo)
         {
-            IAdapterCollection collection;
-            return GetRequestedAdapter(requestInfo, out collection);
+            return GetRequestedAdapter(requestInfo, out IAdapterCollection _);
         }
 
         /// <summary>
@@ -1688,11 +1670,9 @@ namespace GSF.TimeSeries
 
             if (!string.IsNullOrWhiteSpace(adapterID))
             {
-                uint id;
-
                 adapterID = adapterID.Trim();
 
-                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out id))
+                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out uint id))
                 {
                     // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
                     if (collection.TryGetAdapterByID(id, out adapter))
@@ -1990,10 +1970,8 @@ namespace GSF.TimeSeries
                             // Invoke method
                             if (method != null)
                             {
-                                AdapterCommandAttribute commandAttribute;
-
                                 // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                                if (method.TryGetAttribute(out commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
+                                if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
                                 {
                                     ParameterInfo[] parameterInfo = method.GetParameters();
                                     object returnValue = null;
@@ -2121,7 +2099,6 @@ namespace GSF.TimeSeries
 
                         // Invoke method
                         StringBuilder methodList = new StringBuilder();
-                        AdapterCommandAttribute commandAttribute;
                         bool firstParameter;
                         string typeName;
 
@@ -2133,7 +2110,7 @@ namespace GSF.TimeSeries
                         foreach (MethodInfo method in methods)
                         {
                             // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                            if (method.TryGetAttribute(out commandAttribute))
+                            if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute))
                             {
                                 // Don't bother displaying commands to users who cannot invoke them
                                 if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
@@ -2270,7 +2247,6 @@ namespace GSF.TimeSeries
             IAdapterCollection collection;
             IAdapter adapter;
             string adapterID;
-            uint id;
 
             // See if specific ID for an adapter was requested
             if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
@@ -2278,7 +2254,7 @@ namespace GSF.TimeSeries
                 adapterID = requestInfo.Request.Arguments["OrderedArg1"];
 
                 // Try initializing new adapter by ID searching in any collection if all runtime ID's are unique
-                if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
+                if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out uint id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
                 {
                     if (m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
                         SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
@@ -2456,12 +2432,11 @@ namespace GSF.TimeSeries
 
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
-                DateTime reportDate;
                 string reportPath;
 
                 try
                 {
-                    if (!requestInfo.Request.Arguments.Exists("OrderedArg2") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg2"], out reportDate))
+                    if (!requestInfo.Request.Arguments.Exists("OrderedArg2") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg2"], out DateTime reportDate))
                         reportDate = today - TimeSpan.FromDays(1);
 
                     if (reportDate < today)
@@ -2584,12 +2559,11 @@ namespace GSF.TimeSeries
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 DateTime today = DateTime.UtcNow;
-                DateTime reportDate;
                 bool emailReport = requestInfo.Request.Arguments.Exists("email");
 
                 try
                 {
-                    if (!requestInfo.Request.Arguments.Exists("OrderedArg2") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg2"], out reportDate))
+                    if (!requestInfo.Request.Arguments.Exists("OrderedArg2") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg2"], out DateTime reportDate))
                         reportDate = today - TimeSpan.FromDays(1);
 
                     if (reportDate < today)
@@ -2727,14 +2701,11 @@ namespace GSF.TimeSeries
                     try
                     {
                         string message = requestInfo.Request.Arguments["Message"];
-                        string type, id;
-                        EventLogEntryType entryType;
-                        ushort eventID;
 
-                        if (!(requestInfo.Request.Arguments.TryGetValue("Type", out type) && Enum.TryParse(type, out entryType)))
+                        if (!(requestInfo.Request.Arguments.TryGetValue("Type", out string type) && Enum.TryParse(type, out EventLogEntryType entryType)))
                             entryType = EventLogEntryType.Information;
 
-                        if (!(requestInfo.Request.Arguments.TryGetValue("ID", out id) && ushort.TryParse(id, out eventID)))
+                        if (!(requestInfo.Request.Arguments.TryGetValue("ID", out string id) && ushort.TryParse(id, out ushort eventID)))
                             eventID = 0;
 
                         EventLog.WriteEntry(ServiceName, message, entryType, eventID);
@@ -3298,34 +3269,31 @@ namespace GSF.TimeSeries
         /// <returns>True if the requested adapter exists; false otherwise.</returns>
         private bool RequestedAdapterExists(ClientRequestInfo requestInfo)
         {
-            IAdapter adapter;
             string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
             IAdapterCollection collection = GetRequestedCollection(requestInfo);
 
             if (!string.IsNullOrWhiteSpace(adapterID))
             {
-                uint id;
-
                 adapterID = adapterID.Trim();
 
-                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out id))
+                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out uint id))
                 {
                     // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
-                    if (collection.TryGetAdapterByID(id, out adapter))
+                    if (collection.TryGetAdapterByID(id, out _))
                         return true;
 
                     // Try looking for ID in any collection if all runtime ID's are unique
-                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out _, out _))
                         return true;
                 }
                 else
                 {
                     // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
-                    if (collection.TryGetAdapterByName(adapterID, out adapter))
+                    if (collection.TryGetAdapterByName(adapterID, out _))
                         return true;
 
                     // Try looking for adapter name in any collection
-                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
+                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out _, out _))
                         return true;
                 }
             }
@@ -3580,7 +3548,13 @@ namespace GSF.TimeSeries
         /// <param name="ex"><see cref="Exception"/> to log.</param>
         protected virtual void LogException(Exception ex)
         {
-            m_serviceHelper.LogException(ex);
+            // Connection exceptions are logged separately since these types of exceptions
+            // can be so frequent when a device is offline it makes looking for specific,
+            // non-connection related, exceptions more difficult.
+            if (ex is ConnectionException connectionException)
+                m_serviceHelper.LogConnectionException(connectionException);
+            else
+                m_serviceHelper.LogException(ex);
         }
 
         // Processes exceptions coming from the configuration loaders.

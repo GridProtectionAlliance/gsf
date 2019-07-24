@@ -33,11 +33,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Principal;
-using System.Timers;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Threading;
-using Timer = System.Timers.Timer;
 
 namespace GSF.Security
 {
@@ -60,8 +58,7 @@ namespace GSF.Security
             // Fields
             private readonly ISecurityProvider m_provider;
             private readonly WeakReference<ISecurityProvider> m_weakProvider;
-            private DateTime m_lastRefreshTime;
-            private DateTime m_lastAccessTime;
+            private bool m_disposed;
 
             #endregion
 
@@ -89,8 +86,8 @@ namespace GSF.Security
 
                 m_provider = provider;
                 m_weakProvider = weakProvider;
-                m_lastRefreshTime = now;
-                m_lastAccessTime = now;
+                LastRefreshTime = now;
+                LastAccessTime = now;
             }
 
             #endregion
@@ -104,29 +101,38 @@ namespace GSF.Security
             {
                 get
                 {
-                    ISecurityProvider provider;
-
-                    m_lastAccessTime = DateTime.UtcNow;
-
-                    if ((object)m_provider != null)
-                        return m_provider;
-
-                    if ((object)m_weakProvider != null && m_weakProvider.TryGetTarget(out provider))
-                        return provider;
-
-                    return null;
+                    LastAccessTime = DateTime.UtcNow;
+                    return _Provider;
                 }
             }
 
             /// <summary>
             /// Gets the <see cref="DateTime"/> of when the <see cref="CacheContext"/> was last refreshed.
             /// </summary>
-            public DateTime LastRefreshTime => m_lastRefreshTime;
+            public DateTime LastRefreshTime { get; private set; }
 
             /// <summary>
             /// Gets the <see cref="DateTime"/> of when the <see cref="CacheContext"/> was last accessed.
             /// </summary>
-            public DateTime LastAccessTime => m_lastAccessTime;
+            public DateTime LastAccessTime { get; private set; }
+
+            // Gets the provider without updating LastAccessTime.
+            private ISecurityProvider _Provider
+            {
+                get
+                {
+                    if (m_disposed)
+                        return null;
+
+                    if ((object)m_provider != null)
+                        return m_provider;
+
+                    if ((object)m_weakProvider != null && m_weakProvider.TryGetTarget(out ISecurityProvider provider))
+                        return provider;
+
+                    return null;
+                }
+            }
 
             #endregion
 
@@ -137,16 +143,24 @@ namespace GSF.Security
             /// </summary>
             public bool Refresh()
             {
-                ISecurityProvider provider = Provider;
+                try
+                {
+                    ISecurityProvider provider = _Provider;
 
-                if ((object)provider == null)
+                    if ((object)provider == null)
+                        return false;
+
+                    provider.RefreshData();
+                    provider.Authenticate();
+                    LastRefreshTime = DateTime.UtcNow;
+
+                    return true;
+                }
+                catch (ObjectDisposedException)
+                {
+                    m_disposed = true;
                     return false;
-
-                provider.RefreshData();
-                provider.Authenticate();
-                m_lastRefreshTime = DateTime.UtcNow;
-
-                return true;
+                }
             }
 
             #endregion
@@ -295,46 +309,81 @@ namespace GSF.Security
 
         private static void ManageCachedCredentials()
         {
-            HashSet<CacheContext> refreshedContexts = new HashSet<CacheContext>();
+            DateTime now = DateTime.UtcNow;
 
-            lock (s_cache)
+            void RefreshCache()
             {
-                foreach (string username in s_cache.Keys.ToList())
+                var cachedProviders = Enumerable.Empty<object>()
+                    .Select(obj => new { Username = "", Context = (CacheContext)null })
+                    .ToList();
+
+                lock (s_cache)
                 {
-                    CacheContext cacheContext = s_cache[username];
-
-                    if (DateTime.UtcNow.Subtract(cacheContext.LastAccessTime).TotalMinutes > s_userCacheTimeout)
-                        s_cache.Remove(username);
-                    else
-                        refreshedContexts.Add(s_cache[username]);
-                }
-            }
-
-            lock (s_autoRefreshProviders)
-            {
-                for (int i = s_autoRefreshProviders.Count - 1; i >= 0; i--)
-                {
-                    CacheContext cacheContext = s_autoRefreshProviders[i];
-
-                    if (DateTime.UtcNow.Subtract(cacheContext.LastRefreshTime).TotalMinutes > s_userCacheTimeout)
+                    foreach (var kvp in s_cache.ToList())
                     {
-                        if ((object)cacheContext.Provider == null)
-                        {
-                            s_autoRefreshProviders[i] = s_autoRefreshProviders[s_autoRefreshProviders.Count - 1];
-                            s_autoRefreshProviders.RemoveAt(s_autoRefreshProviders.Count - 1);
-                        }
-                        else
-                        {
-                            refreshedContexts.Add(cacheContext);
-                        }
+                        string username = kvp.Key;
+                        CacheContext context = kvp.Value;
+
+                        // Because CacheContext.LastAccessTime is used to purge
+                        // records from s_cache, it is important here not to invoke
+                        // the CacheContext.Provider property on any contexts in s_cache
+                        if (now.Subtract(context.LastAccessTime).TotalMinutes >= s_userCacheTimeout)
+                            s_cache.Remove(username);
+                    }
+
+                    cachedProviders = s_cache
+                        .Select(kvp => new { Username = kvp.Key, Context = kvp.Value })
+                        .Where(obj => now.Subtract(obj.Context.LastRefreshTime).TotalMinutes >= s_userCacheTimeout)
+                        .ToList();
+                }
+
+                // It is important to avoid calling CacheContext.Refresh()
+                // inside a lock for performance reasons
+                var purgedProviders = cachedProviders
+                    .Where(obj => !obj.Context.Refresh())
+                    .ToList();
+
+                lock (s_cache)
+                {
+                    // CacheContext.Refresh() failed due to an ObjectDisposedException, so it
+                    // needs to be purged from the cache to prevent cached data from growing stale
+                    foreach (var obj in purgedProviders)
+                    {
+                        if (s_cache.TryGetValue(obj.Username, out CacheContext cachedContext) && ReferenceEquals(obj.Context, cachedContext))
+                            s_cache.Remove(obj.Username);
                     }
                 }
             }
 
-            // It's important to avoid calling refresh
-            // inside the lock for performance reasons
-            foreach (CacheContext cacheContext in refreshedContexts)
-                cacheContext.Refresh();
+            void RefreshAutoRefreshProviders()
+            {
+                List<CacheContext> autoRefreshProviders;
+
+                lock (s_autoRefreshProviders)
+                {
+                    // It is okay to access CacheContext.Provider here because
+                    // CacheContext.LastAccessTime is not used to purge auto refresh providers
+                    bool ShouldRemove(CacheContext context) =>
+                        now.Subtract(context.LastRefreshTime).TotalMinutes >= s_userCacheTimeout &&
+                        context.Provider == null;
+
+                    s_autoRefreshProviders.RemoveWhere(ShouldRemove);
+
+                    autoRefreshProviders = s_autoRefreshProviders
+                        .Where(context => now.Subtract(context.LastRefreshTime).TotalMinutes >= s_userCacheTimeout)
+                        .ToList();
+                }
+
+                // It is important to avoid calling CacheContext.Refresh()
+                // inside a lock for performance reasons; also, no need to
+                // check the return value of CacheContext.Refresh() since the
+                // logic above checks whether CacheContext.Provider is null
+                foreach (CacheContext context in autoRefreshProviders)
+                    context.Refresh();
+            }
+
+            RefreshCache();
+            RefreshAutoRefreshProviders();
 
             // The refresh could take several minutes so we should
             // wait to kick off the timer until after we are finished

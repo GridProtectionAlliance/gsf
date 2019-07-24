@@ -684,6 +684,7 @@ namespace GSF.ServiceProcess
         private readonly LogFile m_statusLog;
         private readonly ScheduleManager m_processScheduler;
         private readonly ErrorLogger m_errorLogger;
+        private readonly ErrorLogger m_connectionErrorLogger;
         private PerformanceMonitor m_performanceMonitor;
         private readonly List<ServiceProcess> m_processes;
         private readonly List<object> m_serviceComponents;
@@ -755,6 +756,12 @@ namespace GSF.ServiceProcess
             m_errorLogger.SettingsCategory = "ErrorLogger";
             m_errorLogger.ErrorLog.SettingsCategory = "ErrorLog";
             m_errorLogger.LoggingException += ErrorLogger_LoggingException;
+
+            m_connectionErrorLogger = new ErrorLogger();
+            m_connectionErrorLogger.ExitOnUnhandledException = false;
+            m_connectionErrorLogger.SettingsCategory = "ConnectionErrorLogger";
+            m_connectionErrorLogger.ErrorLog.SettingsCategory = "ConnectionErrorLog";
+            m_connectionErrorLogger.LoggingException += ConnectionErrorLogger_LoggingException;
         }
 
         /// <summary>
@@ -1101,6 +1108,14 @@ namespace GSF.ServiceProcess
         Description("ErrorLogger component used for logging errors encountered in the ParentService."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ErrorLogger ErrorLogger => m_errorLogger;
+
+        /// <summary>
+        /// Gets the <see cref="ErrorLogger"/> component used for logging connection related exceptions encountered in the <see cref="ParentService"/>.
+        /// </summary>
+        [Category("Components"),
+        Description("ConnectionErrorLogger component used for logging connection related exceptions encountered in the ParentService."),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public ErrorLogger ConnectionErrorLogger => m_connectionErrorLogger;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> is currently enabled.
@@ -1551,6 +1566,8 @@ namespace GSF.ServiceProcess
                 m_serviceComponents.Add(m_statusLog);
                 m_serviceComponents.Add(m_errorLogger);
                 m_serviceComponents.Add(m_errorLogger.ErrorLog);
+                m_serviceComponents.Add(m_connectionErrorLogger);
+                m_serviceComponents.Add(m_connectionErrorLogger.ErrorLog);
                 m_serviceComponents.Add(m_remotingServer);
             }
 
@@ -1776,7 +1793,17 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatus(Guid client, UpdateType type, bool publishToLog, string message, params object[] args)
         {
-            string formattedMessage = string.Format(message, args);
+            string formattedMessage;
+
+            try
+            {
+                formattedMessage = string.Format(message, args);
+            }
+            catch (FormatException ex)
+            {
+                formattedMessage = message;
+                Logger.SwallowException(ex);
+            }
 
             if (publishToLog)
             {
@@ -2079,6 +2106,20 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
+        /// Log exception to <see cref="ConnectionErrorLogger"/>.
+        /// </summary>
+        /// <param name="ex">Connection exception to log.</param>
+        public void LogConnectionException(Exception ex)
+        {
+            s_logError.Publish(null, null, ex);
+
+            if ((object)m_connectionErrorLogger != null)
+                m_connectionErrorLogger.Log(ex);
+
+            OnLoggedException(ex);
+        }
+
+        /// <summary>
         /// Raises the <see cref="ServiceStarting"/> event.
         /// </summary>
         /// <param name="args">Arguments to be sent to <see cref="ServiceStarting"/> event.</param>
@@ -2269,6 +2310,12 @@ namespace GSF.ServiceProcess
                 {
                     m_errorLogger.LoggingException -= ErrorLogger_LoggingException;
                     m_errorLogger.Dispose();
+                }
+
+                if ((object)m_connectionErrorLogger != null)
+                {
+                    m_connectionErrorLogger.LoggingException -= ConnectionErrorLogger_LoggingException;
+                    m_connectionErrorLogger.Dispose();
                 }
 
                 if ((object)m_performanceMonitor != null)
@@ -2493,12 +2540,17 @@ namespace GSF.ServiceProcess
 
         private void ErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
         {
-            UpdateStatus(UpdateType.Alarm, "Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
+            UpdateStatus(UpdateType.Alarm, "Exception occurred while logging to error log - {0}\r\n\r\n", e.Argument.Message);
+        }
+
+        private void ConnectionErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
+        {
+            UpdateStatus(UpdateType.Alarm, "Exception occurred while logging to connection error log - {0}\r\n\r\n", e.Argument.Message);
         }
 
         private void RemotingServer_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
-            UpdateStatus(UpdateType.Alarm, "Error occurred while connecting client to remoting server - {0}\r\n\r\n", e.Argument.Message);
+            UpdateStatus(UpdateType.Alarm, "Error occurred while client was connecting to remoting server - {0}\r\n\r\n", e.Argument.Message);
             LogException(e.Argument);
         }
 

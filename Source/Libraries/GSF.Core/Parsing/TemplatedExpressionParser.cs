@@ -86,10 +86,6 @@ namespace GSF.Parsing
         private readonly Regex m_evaluationParser;
         private readonly string[] m_escapedReservedSymbols;
         private readonly string[] m_encodedReservedSymbols;
-        private readonly char m_startTokenDelimiter;
-        private readonly char m_endTokenDelimiter;
-        private readonly char m_startExpressionDelimiter;
-        private readonly char m_endExpressionDelimiter;
         private string m_templatedExpression;
 
         #endregion
@@ -99,8 +95,7 @@ namespace GSF.Parsing
         /// <summary>
         /// Creates a new <see cref="TemplatedExpressionParser"/>.
         /// </summary>
-        public TemplatedExpressionParser()
-            : this('{', '}', '[', ']')
+        public TemplatedExpressionParser() : this('{', '}', '[', ']')
         {
         }
 
@@ -135,10 +130,10 @@ namespace GSF.Parsing
             for (int i = 0; i < m_encodedReservedSymbols.Length; i++)
                 m_encodedReservedSymbols[i] = m_escapedReservedSymbols[i][1].RegexEncode();
 
-            m_startTokenDelimiter = startTokenDelimiter;
-            m_endTokenDelimiter = endTokenDelimiter;
-            m_startExpressionDelimiter = startExpressionDelimiter;
-            m_endExpressionDelimiter = endExpressionDelimiter;
+            StartTokenDelimiter = startTokenDelimiter;
+            EndTokenDelimiter = endTokenDelimiter;
+            StartExpressionDelimiter = startExpressionDelimiter;
+            EndExpressionDelimiter = endExpressionDelimiter;
         }
 
         #endregion
@@ -173,58 +168,27 @@ namespace GSF.Parsing
         /// <remarks>
         /// The default reserved symbol list is: \, &lt;, &gt;, =, !, {, }, [ and ]
         /// </remarks>
-        public char[] ReservedSymbols
-        {
-            get
-            {
-                // Return unescaped reserved symbols
-                return m_escapedReservedSymbols.Select(symbol => symbol[1]).ToArray();
-            }
-        }
+        public char[] ReservedSymbols => m_escapedReservedSymbols.Select(symbol => symbol[1]).ToArray(); // Return unescaped reserved symbols
 
         /// <summary>
         /// Gets the character that identifies the beginning of a token.
         /// </summary>
-        public char StartTokenDelimiter
-        {
-            get
-            {
-                return m_startTokenDelimiter;
-            }
-        }
+        public char StartTokenDelimiter { get; }
 
         /// <summary>
         /// Gets the character that identifies the end of a token.
         /// </summary>
-        public char EndTokenDelimiter
-        {
-            get
-            {
-                return m_endTokenDelimiter;
-            }
-        }
+        public char EndTokenDelimiter { get; }
 
         /// <summary>
         /// Gets the character that identifies the start of an expression.
         /// </summary>
-        public char StartExpressionDelimiter
-        {
-            get
-            {
-                return m_startExpressionDelimiter;
-            }
-        }
+        public char StartExpressionDelimiter { get; }
 
         /// <summary>
         /// Gets the character that identifies the end of an expression.
         /// </summary>
-        public char EndExpressionDelimiter
-        {
-            get
-            {
-                return m_endExpressionDelimiter;
-            }
-        }
+        public char EndExpressionDelimiter { get; }
 
         #endregion
 
@@ -308,6 +272,7 @@ namespace GSF.Parsing
 
         // Parses expressions of the form "[?expression[result]]". Expressions can be nested, e.g., "[?expression1[?expression2[result]]]".
         // Returns list of complete expressions (used as base replacement text), cumulative boolean expression evaluations and expression results
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private List<ParsedExpression> ParseExpressions(string fieldReplacedTemplatedExpression, bool ignoreCase)
         {
             List<ParsedExpression> parsedExpressions = new List<ParsedExpression>();
@@ -320,14 +285,11 @@ namespace GSF.Parsing
                 Group capturedExpressions = match.Groups["Expressions"];
                 StringBuilder completeExpression = new StringBuilder();
                 List<bool> evaluations = new List<bool>();
-                CodeBinaryOperatorExpression expression;
-                TypeCode expressionType;
-                IComparer comparer;
-                int depth = 0;
+                int depth = 0, lastDepth = 0;
 
                 foreach (Capture capture in capturedExpressions.Captures)
                 {
-                    if (capture.Value.StartsWith(m_startExpressionDelimiter + "?", StringComparison.Ordinal))
+                    if (capture.Value.StartsWith(StartExpressionDelimiter + "?", StringComparison.Ordinal))
                     {
                         int result;
                         bool evaluation;
@@ -335,13 +297,21 @@ namespace GSF.Parsing
                         // Found binary operation expression
                         depth++;
                         completeExpression.Append(capture.Value);
+                        
+                        // Only apply cumulative AND logic for items at continued depth
+                        if (depth == lastDepth && evaluations.Count > 0)
+                            evaluations.RemoveAt(evaluations.Count - 1);
+
+                        lastDepth = depth;
 
                         // Parse binary expression
-                        expression = ParseBinaryOperatorExpression(capture.Value.Substring(2), out expressionType);
+                        CodeBinaryOperatorExpression expression = ParseBinaryOperatorExpression(capture.Value.Substring(2), out TypeCode expressionType);
 
                         // Evaluate binary expression
                         if ((object)expression != null)
                         {
+                            IComparer comparer;
+
                             // Select comparer based on expression type
                             switch (expressionType)
                             {
@@ -365,22 +335,22 @@ namespace GSF.Parsing
                             switch (expression.Operator)
                             {
                                 case CodeBinaryOperatorType.IdentityEquality:
-                                    evaluation = (result == 0);
+                                    evaluation = result == 0;
                                     break;
                                 case CodeBinaryOperatorType.IdentityInequality:
-                                    evaluation = (result != 0);
+                                    evaluation = result != 0;
                                     break;
                                 case CodeBinaryOperatorType.LessThan:
-                                    evaluation = (result < 0);
+                                    evaluation = result < 0;
                                     break;
                                 case CodeBinaryOperatorType.LessThanOrEqual:
-                                    evaluation = (result <= 0);
+                                    evaluation = result <= 0;
                                     break;
                                 case CodeBinaryOperatorType.GreaterThan:
-                                    evaluation = (result > 0);
+                                    evaluation = result > 0;
                                     break;
                                 case CodeBinaryOperatorType.GreaterThanOrEqual:
-                                    evaluation = (result >= 0);
+                                    evaluation = result >= 0;
                                     break;
                                 default:
                                     evaluation = false;
@@ -395,29 +365,41 @@ namespace GSF.Parsing
                             evaluations.Add(false);
                         }
                     }
-                    else if (capture.Value.StartsWith(m_startExpressionDelimiter.ToString(), StringComparison.Ordinal))
+                    else if (capture.Value.StartsWith(StartExpressionDelimiter.ToString(), StringComparison.Ordinal))
                     {
                         if (depth > 0)
                         {
-                            // Found expression result
                             depth++;
+
+                            // Found expression result
                             completeExpression.Append(capture.Value);
 
-                            // Close expression
-                            completeExpression.Append(new string(m_endExpressionDelimiter, depth));
+                            // Complete closed expression
+                            int index = capture.Index + capture.Length;
+
+                            while (index < fieldReplacedTemplatedExpression.Length && fieldReplacedTemplatedExpression[index] == EndExpressionDelimiter)
+                            {
+                                completeExpression.Append(EndExpressionDelimiter);
+                                index++;
+                                depth--;
+                            }
 
                             // Add complete expression, cumulative boolean expression evaluation and expression result to parsed expression list
                             parsedExpressions.Add(new ParsedExpression(completeExpression.ToString(), evaluations.All(item => item), capture.Value.Substring(1)));
 
                             // Reset for next expression
-                            depth = 0;
                             completeExpression.Clear();
-                            evaluations.Clear();
+                            
+                            if (depth <= 0)
+                            {
+                                evaluations.Clear();
+                                depth = 0;
+                            }
                         }
                         else
                         {
                             // Unbalanced expression - exception not expected since regex should already catch this
-                            throw new InvalidOperationException(string.Format("Unbalanced delimiters detected in field replaced templated expression \"{0}\"", fieldReplacedTemplatedExpression));
+                            throw new InvalidOperationException($"Unbalanced delimiters detected in field replaced templated expression \"{fieldReplacedTemplatedExpression}\"");
                         }
                     }
                 }
@@ -430,25 +412,22 @@ namespace GSF.Parsing
         {
             if (!string.IsNullOrEmpty(expression))
             {
-                CodePrimitiveExpression leftOperand, rightOperand;
-                CodeBinaryOperatorType operatorType;
-
                 string[] operands = expression.Split(s_operatorSymbols, StringSplitOptions.None);
 
                 // Expression is only valid if there are exactly two operands
                 if (operands.Length == 2)
                 {
-                    int left, right;
-                    double leftF, rightF;
+                    CodePrimitiveExpression leftOperand, rightOperand;
+                    CodeBinaryOperatorType operatorType;
 
-                    if (int.TryParse(operands[0], out left) && int.TryParse(operands[1], out right))
+                    if (int.TryParse(operands[0], out int left) && int.TryParse(operands[1], out int right))
                     {
                         // Both operands can be compared as integers
                         leftOperand = new CodePrimitiveExpression(left);
                         rightOperand = new CodePrimitiveExpression(right);
                         expressionType = TypeCode.Int32;
                     }
-                    else if (double.TryParse(operands[0], out leftF) && double.TryParse(operands[1], out rightF))
+                    else if (double.TryParse(operands[0], out double leftF) && double.TryParse(operands[1], out double rightF))
                     {
                         // Both operands can be compared as doubles
                         leftOperand = new CodePrimitiveExpression(leftF);
@@ -500,14 +479,11 @@ namespace GSF.Parsing
             Match match = m_evaluationParser.Match(fieldReplacedTemplatedExpression);
 
             if (match.Success)
-            {
-                foreach (Capture capture in match.Captures)
-                {
-                    CompiledExpression expression = new CompiledExpression(capture.Value);
-                    string source = string.Format("eval{0}{1}{2}", m_startTokenDelimiter, capture.Value, m_endTokenDelimiter);
-                    string result = expression.Eval().ToString();
-                    parsedEvaluations.Add(new ParsedEvaluation(source, result));
-                }
+            {                
+                string source = match.Groups[0].Value;
+                string result = new CompiledExpression(match.Groups[1].Value).Eval().ToString();
+                parsedEvaluations.Add(new ParsedEvaluation(source, result));
+                
             }
 
             #endif

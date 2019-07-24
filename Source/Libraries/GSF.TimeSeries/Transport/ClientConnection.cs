@@ -757,7 +757,7 @@ namespace GSF.TimeSeries.Transport
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            m_parent.OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
+            m_parent.OnProcessException(MessageLevel.Info, new ConnectionException($"Data channel client connection exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
