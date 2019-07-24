@@ -3333,9 +3333,12 @@ namespace GSF.TimeSeries
             else
             {
                 IAdapter adapter = GetRequestedAdapter(requestInfo);
-                if (adapter.Settings.ContainsKey("server"))
+
+                if (adapter.Settings.TryGetValue("server", out string server))
                 {
-                    SendResponse(requestInfo, true, $"Attempting to ping {adapter.Name} ...");
+                    string hostName = server.Split(':')[0];
+
+                    SendResponse(requestInfo, true, $"Attempting to ping {adapter.Name} @ {hostName}...");
 
                     try
                     {
@@ -3345,7 +3348,7 @@ namespace GSF.TimeSeries
                             WindowStyle = ProcessWindowStyle.Hidden,
                             UseShellExecute = false,
                             FileName = "ping",
-                            Arguments = adapter.Settings["server"].Split(':')[0],
+                            Arguments = hostName,
                             RedirectStandardOutput = true,
                             RedirectStandardError = true
                         };
@@ -3355,6 +3358,7 @@ namespace GSF.TimeSeries
                             using (Process shell = new Process())
                             {
                                 shell.StartInfo = psi;
+
                                 shell.OutputDataReceived += (sender, processArgs) =>
                                 {
                                     if (string.IsNullOrWhiteSpace(processArgs.Data))
@@ -3385,13 +3389,13 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        SendResponse(requestInfo, false, "Failed to restart host service: {0}", ex.Message);
+                        SendResponse(requestInfo, false, $"Failed to ping {adapter.Name} @ {hostName}: {ex.Message}");
                         LogException(ex);
                     }
                 }
                 else
                 {
-                    SendResponse(requestInfo, false, "Unable to ping this adapter because it does not have an IP address.");
+                    SendResponse(requestInfo, false, "Unable to ping this adapter because it does not have a host name or IP address defined by the 'server' connection string parameter.");
                 }
             }
         }
