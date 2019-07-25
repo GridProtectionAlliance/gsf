@@ -1008,10 +1008,21 @@ namespace GSF.TimeSeries.Statistics
 
         private void RestartReloadStatisticsTimer()
         {
-            if ((object)m_reloadStatisticsTimer != null)
+            try
             {
-                m_reloadStatisticsTimer.Stop();
-                m_reloadStatisticsTimer.Start();
+                Timer reloadStatisticsTimer = m_reloadStatisticsTimer;
+
+                if ((object)reloadStatisticsTimer != null)
+                {
+                    reloadStatisticsTimer.Stop();
+                    reloadStatisticsTimer.Start();
+                }
+            }
+            catch (ObjectDisposedException ex)
+            {
+                string message = $"ReloadStatisticsTimer was disposed on another thread: {ex.Message}";
+                Exception wrapper = new ObjectDisposedException(message, ex);
+                OnProcessException(MessageLevel.Warning, wrapper);
             }
         }
 
