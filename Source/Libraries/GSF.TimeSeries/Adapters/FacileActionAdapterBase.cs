@@ -491,7 +491,7 @@ namespace GSF.TimeSeries.Adapters
                     // Track latest timestamp as real-time, if requested.
                     // This class is not currently going through hassle of determining if
                     // the latest timestamp is reasonable...
-                    if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks)
+                    if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks && measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
                         m_realTimeTicks = measurement.Timestamp;
                 }
             }

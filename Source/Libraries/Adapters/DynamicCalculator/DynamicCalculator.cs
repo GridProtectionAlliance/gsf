@@ -542,7 +542,7 @@ namespace DynamicCalculator
             {
                 m_latestMeasurements.UpdateMeasurementValue(measurement);
 
-                if (measurement.Timestamp > m_latestTimestamp)
+                if (measurement.Timestamp > m_latestTimestamp && measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
                     m_latestTimestamp = measurement.Timestamp;
             }
 

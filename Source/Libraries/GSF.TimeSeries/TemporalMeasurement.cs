@@ -162,8 +162,8 @@ namespace GSF.TimeSeries
         /// <returns><c>true</c> if value was updated; otherwise <c>false</c>.</returns>
         public bool SetValue(Ticks timestamp, double value)
         {
-            // We only store a value that is is newer than the current value
-            if (timestamp > Timestamp)
+            // We only store a value that is newer than the current value
+            if (timestamp > Timestamp && timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
             {
                 base.Value = value;
                 Timestamp = timestamp;
