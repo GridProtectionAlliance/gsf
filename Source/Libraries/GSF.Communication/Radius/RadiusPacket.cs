@@ -32,6 +32,8 @@ using System.Text;
 using GSF.Parsing;
 using Random = GSF.Security.Cryptography.Random;
 
+#pragma warning disable SCS0006 // Weak hashing function
+
 namespace GSF.Communication.Radius
 {
     #region [ Enumerations ]
@@ -211,7 +213,7 @@ namespace GSF.Communication.Radius
                 if ((object)value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if ((object)value == null || value.Length != 16)
+                if (value.Length != 16)
                     throw new ArgumentException("Value must 16-byte long.");
 
                 m_authenticator = value;
@@ -458,7 +460,7 @@ namespace GSF.Communication.Radius
                 for (int i = 0; i <= result.Length - 1; i += 16)
                 {
                     // Perform XOR-based encryption of the password in 16-byte segments.
-                    if (i > 0)
+                    if (i > 0 && (object)xorBytes != null)
                     {
                         // For passwords that are more than 16 characters in length, each consecutive 16-byte
                         // segment of the password is XORed with MD5 hash value that's computed as follows:
