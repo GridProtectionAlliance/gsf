@@ -183,7 +183,7 @@ namespace GSF.Historian.Files
                     {
                         dataPoint = enumerator.Current;
 
-                        if (dataPoint.Time.CompareTo(publishTime) < 0)
+                        if (dataPoint?.Time.CompareTo(publishTime) < 0)
                             publishTime = dataPoint.Time;
                     }
 
@@ -195,7 +195,7 @@ namespace GSF.Historian.Files
                         bool enumerationComplete = false;
                         dataPoint = enumerator.Current;
 
-                        if (dataPoint.Time.CompareTo(publishTime) <= 0)
+                        if (dataPoint?.Time.CompareTo(publishTime) <= 0)
                         {
                             // Attempt to advance to next data point, tracking completed enumerators
                             if (!enumerator.MoveNext())
@@ -209,7 +209,7 @@ namespace GSF.Historian.Files
                             // Make sure any point IDs with duplicated times directly follow
                             if (!enumerationComplete)
                             {
-                                while (enumerator.Current.Time.CompareTo(publishTime) <= 0)
+                                while (enumerator.Current?.Time.CompareTo(publishTime) <= 0)
                                 {
                                     yield return enumerator.Current;
 
