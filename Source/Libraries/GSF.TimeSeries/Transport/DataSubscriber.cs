@@ -1566,20 +1566,13 @@ namespace GSF.TimeSeries.Transport
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
-
-            OperationalModes operationalModes;
-            CompressionModes compressionModes;
-            int metadataSynchronizationTimeout;
-            double interval;
-            int bufferSize;
 
             // Setup connection to data publishing server with or without authentication required
-            if (settings.TryGetValue("requireAuthentication", out setting))
+            if (settings.TryGetValue("requireAuthentication", out string setting))
                 RequireAuthentication = setting.ParseBoolean();
 
             // See if user has opted for different operational modes
-            if (settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out operationalModes))
+            if (settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out OperationalModes operationalModes))
                 OperationalModes = operationalModes;
 
             // Set the security mode if explicitly defined
@@ -1587,7 +1580,7 @@ namespace GSF.TimeSeries.Transport
                 m_securityMode = SecurityMode.None;
 
             // Apply gateway compression mode to operational mode flags
-            if (settings.TryGetValue("compressionModes", out setting) && Enum.TryParse(setting, true, out compressionModes))
+            if (settings.TryGetValue("compressionModes", out setting) && Enum.TryParse(setting, true, out CompressionModes compressionModes))
                 CompressionModes = compressionModes;
 
             // Check if output measurements should be filtered to only those belonging to the subscriber
@@ -1600,7 +1593,7 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("useZeroMQChannel", out setting))
                 m_useZeroMQChannel = setting.ParseBoolean();
 
-            // TODO: Remove this exception when CURVE is enabled in GSF ZeroMQ library
+            // FUTURE: Remove this exception when CURVE is enabled in GSF ZeroMQ library
             if (m_useZeroMQChannel && m_securityMode == SecurityMode.TLS)
                 throw new ArgumentException("CURVE security settings are not yet available for GSF ZeroMQ client channel.");
 
@@ -1648,7 +1641,7 @@ namespace GSF.TimeSeries.Transport
                 ReceiveExternalMetadata = setting.ParseBoolean();
 
             // Check if user has defined a meta-data synchronization timeout
-            if (settings.TryGetValue("metadataSynchronizationTimeout", out setting) && int.TryParse(setting, out metadataSynchronizationTimeout))
+            if (settings.TryGetValue("metadataSynchronizationTimeout", out setting) && int.TryParse(setting, out int metadataSynchronizationTimeout))
                 m_metadataSynchronizationTimeout = metadataSynchronizationTimeout;
 
             // Check if user has defined a flag for using a transaction during meta-data synchronization
@@ -1693,11 +1686,11 @@ namespace GSF.TimeSeries.Transport
                 m_useSourcePrefixNames = setting.ParseBoolean();
 
             // Define data loss interval
-            if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out interval))
+            if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out double interval))
                 DataLossInterval = interval;
 
             // Define buffer size
-            if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
+            if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out int bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
 
             if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
@@ -1765,7 +1758,7 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.ReceiveBufferSize = bufferSize;
                     commandChannel.SendBufferSize = bufferSize;
 
-                    // TODO: Parse certificate and pass keys to ZeroMQClient for CURVE security
+                    // FUTURE: Parse certificate and pass keys to ZeroMQClient for CURVE security
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;
@@ -1872,7 +1865,7 @@ namespace GSF.TimeSeries.Transport
 
             if (!settings.TryGetValue("BypassStatistics", out setting) || !setting.ParseBoolean())
             {
-                EventHandler statisticsCalculated = (sender, args) => ResetMeasurementsPerSecondCounters();
+                void statisticsCalculated(object sender, EventArgs args) => ResetMeasurementsPerSecondCounters();
                 StatisticsEngine.Register(this, "Subscriber", "SUB");
                 StatisticsEngine.Calculated += statisticsCalculated;
                 Disposed += (sender, args) => StatisticsEngine.Calculated -= statisticsCalculated;
@@ -1934,9 +1927,7 @@ namespace GSF.TimeSeries.Transport
             // measurements that could now be applicable as desired output measurements.
             if (!initialCall)
             {
-                string setting;
-
-                if (Settings.TryGetValue("outputMeasurements", out setting))
+                if (Settings.TryGetValue("outputMeasurements", out string setting))
                     OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
 
                 OutputSourceIDs = OutputSourceIDs;
@@ -2120,7 +2111,7 @@ namespace GSF.TimeSeries.Transport
                 connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
                 connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod);
                 connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
-                connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+                connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4:yyyy-MM-dd HH:mm:ss}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
 
                 if (!string.IsNullOrWhiteSpace(info.FilterExpression))
                     connectionString.AppendFormat("inputMeasurementKeys={{{0}}};", info.FilterExpression);
@@ -2210,7 +2201,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
             connectionString.AppendFormat("useMillisecondResolution={0};", info.UseMillisecondResolution);
             connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
-            connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+            connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4:yyyy-MM-dd HH:mm:ss}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
 
             if (!string.IsNullOrWhiteSpace(info.FilterExpression))
                 connectionString.AppendFormat("inputMeasurementKeys={{{0}}};", info.FilterExpression);
@@ -2334,7 +2325,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4:yyyy-MM-dd HH:mm:ss}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
@@ -2464,7 +2455,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
             connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4:yyyy-MM-dd HH:mm:ss}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
@@ -2569,7 +2560,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
             connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
             connectionString.AppendFormat("requestNaNValueFilter={0}; ", m_requestNaNValueFilter);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4:yyyy-MM-dd HH:mm:ss}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
@@ -2603,10 +2594,9 @@ namespace GSF.TimeSeries.Transport
                     // Parse connection string to see if it contains a data channel definition
                     Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
                     UdpClient dataChannel = null;
-                    string setting;
 
                     // Track specified time inclusion for later deserialization
-                    if (settings.TryGetValue("includeTime", out setting))
+                    if (settings.TryGetValue("includeTime", out string setting))
                         m_includeTime = setting.ParseBoolean();
                     else
                         m_includeTime = true;
@@ -2748,7 +2738,6 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
         public virtual void LogDataGap(string timeString)
         {
-            DateTimeOffset start;
             DateTimeOffset end = default(DateTimeOffset);
             string[] split = timeString.Split(';');
 
@@ -2762,7 +2751,7 @@ namespace GSF.TimeSeries.Transport
             string endTime = split[1];
 
             bool parserSuccessful =
-                DateTimeOffset.TryParse(startTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out start) &&
+                DateTimeOffset.TryParse(startTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out DateTimeOffset start) &&
                 DateTimeOffset.TryParse(endTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out end);
 
             if (!parserSuccessful)
@@ -2778,7 +2767,6 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Removes a data gap from data gap recovery.", "Administrator", "Editor")]
         public virtual string RemoveDataGap(string timeString)
         {
-            DateTimeOffset start;
             DateTimeOffset end = default(DateTimeOffset);
             string[] split = timeString.Split(';');
 
@@ -2792,7 +2780,7 @@ namespace GSF.TimeSeries.Transport
             string endTime = split[1];
 
             bool parserSuccessful =
-                DateTimeOffset.TryParse(startTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out start) &&
+                DateTimeOffset.TryParse(startTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out DateTimeOffset start) &&
                 DateTimeOffset.TryParse(endTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out end);
 
             if (!parserSuccessful)
@@ -3261,7 +3249,7 @@ namespace GSF.TimeSeries.Transport
                                     {
                                         // Determine the number of measurements received with valid values
                                         const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
-                                        Func<MeasurementStateFlags, bool> hasError = stateFlags => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
+                                        bool hasError(MeasurementStateFlags stateFlags) => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
                                         int measurementsReceived = frame.Count(measurement => !double.IsNaN(measurement.Value));
                                         int measurementsWithError = frame.Count(measurement => !double.IsNaN(measurement.Value) && hasError(measurement.StateFlags));
 
@@ -3371,7 +3359,6 @@ namespace GSF.TimeSeries.Transport
                             uint sequenceNumber = BigEndian.ToUInt32(buffer, responseIndex);
                             int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
                             BufferBlockMeasurement bufferBlockMeasurement;
-                            MeasurementKey measurementKey;
                             ushort signalIndex;
 
                             // Check if this buffer block has already been processed (e.g., mistaken retransmission due to timeout)
@@ -3383,7 +3370,7 @@ namespace GSF.TimeSeries.Transport
                                 // Get measurement key from signal index cache
                                 signalIndex = BigEndian.ToUInt16(buffer, responseIndex + 4);
 
-                                if (!m_signalIndexCache.Reference.TryGetValue(signalIndex, out measurementKey))
+                                if (!m_signalIndexCache.Reference.TryGetValue(signalIndex, out MeasurementKey measurementKey))
                                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
 
                                 // Skip the sequence number and signal index when creating the buffer block measurement
@@ -3588,12 +3575,8 @@ namespace GSF.TimeSeries.Transport
 
             Measurement measurement;
             MeasurementKey key = null;
-            ushort id;
-            long time;
-            uint quality;
-            float value;
 
-            while (m_tsscDecoder.TryGetMeasurement(out id, out time, out quality, out value))
+            while (m_tsscDecoder.TryGetMeasurement(out ushort id, out long time, out uint quality, out float value))
             {
                 if (m_signalIndexCache?.Reference.TryGetValue(id, out key) ?? false)
                 {
@@ -4012,13 +3995,12 @@ namespace GSF.TimeSeries.Transport
 
                             // Define local signal type ID deletion exclusion set
                             List<int> excludedSignalTypeIDs = new List<int>();
-                            int signalTypeID;
 
                             // We are intentionally ignoring CALC and ALRM signals during measurement deletion since if you have subscribed to a device and subsequently created local
                             // calculations and alarms associated with this device, these signals are locally owned and not part of the publisher subscription stream. As a result any
                             // CALC or ALRM measurements that are created at source and then removed could be orphaned in subscriber. The best fix would be to have a simple flag that
                             // clearly designates that a measurement was created locally and is not part of the remote synchronization set.
-                            if (signalTypeIDs.TryGetValue("CALC", out signalTypeID))
+                            if (signalTypeIDs.TryGetValue("CALC", out int signalTypeID))
                                 excludedSignalTypeIDs.Add(signalTypeID);
 
                             if (signalTypeIDs.TryGetValue("ALRM", out signalTypeID))
@@ -4269,18 +4251,14 @@ namespace GSF.TimeSeries.Transport
                             // Once all phasor records have been processed, handle updating of destination phasor IDs
                             foreach (KeyValuePair<int, int> item in sourceToDestinationIDMap)
                             {
-                                int sourcePhasorID, destinationPhasorID;
-
-                                if (metadataToDatabaseIDMap.TryGetValue(item.Key, out sourcePhasorID) && metadataToDatabaseIDMap.TryGetValue(item.Value, out destinationPhasorID))
+                                if (metadataToDatabaseIDMap.TryGetValue(item.Key, out int sourcePhasorID) && metadataToDatabaseIDMap.TryGetValue(item.Value, out int destinationPhasorID))
                                     command.ExecuteNonQuery(updateDestinationPhasorIDSql, m_metadataSynchronizationTimeout, destinationPhasorID, sourcePhasorID);
                             }
 
                             // Remove any phasor records associated with existing devices in this session but no longer exist in the meta-data
                             foreach (int id in deviceIDs.Values)
                             {
-                                List<int> sourceIndicies;
-
-                                if (definedSourceIndicies.TryGetValue(id, out sourceIndicies))
+                                if (definedSourceIndicies.TryGetValue(id, out List<int> sourceIndicies))
                                     command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", m_metadataSynchronizationTimeout, id);
                                 else
                                     command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, id);
@@ -4575,9 +4553,7 @@ namespace GSF.TimeSeries.Transport
             List<DeviceStatisticsHelper<SubscribedDevice>> subscribedDevices;
             ISet<string> subscribedDeviceNames;
             ISet<string> definedDeviceNames;
-
             DataSet dataSource;
-            Guid signalID;
 
             try
             {
@@ -4640,7 +4616,7 @@ namespace GSF.TimeSeries.Transport
 
                             foreach (DataRow measurementRow in measurementLookup.LookupByDeviceNameNoStat(deviceName))
                             {
-                                if (Guid.TryParse(measurementRow["SignalID"].ToNonNullString(), out signalID))
+                                if (Guid.TryParse(measurementRow["SignalID"].ToNonNullString(), out Guid signalID))
                                 {
                                     // In some rare cases duplicate signal ID's have been encountered (likely bad configuration),
                                     // as a result we use a GetOrAdd instead of an Add
@@ -4700,8 +4676,6 @@ namespace GSF.TimeSeries.Transport
         {
             Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup = m_subscribedDevicesLookup;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
-            DeviceStatisticsHelper<SubscribedDevice> statisticsHelper;
-
             SignalIndexCache signalIndexCache = m_signalIndexCache;
             DataSet dataSource = DataSource;
 
@@ -4726,7 +4700,7 @@ namespace GSF.TimeSeries.Transport
 
                 // Get expected measurement counts
                 groups = signalIndexCache.AuthorizedSignalIDs
-                    .Where(signalID => subscribedDevicesLookup.TryGetValue(signalID, out statisticsHelper))
+                    .Where(signalID => subscribedDevicesLookup.TryGetValue(signalID, out _))
                     .Select(signalID => Tuple.Create(subscribedDevicesLookup[signalID], signalID))
                     .ToList()
                     .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2);
@@ -5065,7 +5039,7 @@ namespace GSF.TimeSeries.Transport
             {
                 statisticsHelper?.Update(now);
 
-                // TODO: Missing data detection could be complex. For example, no need to continue logging data outages for devices that are offline - but how to detect?
+                // FUTURE: Missing data detection could be complex. For example, no need to continue logging data outages for devices that are offline - but how to detect?
                 //// If data channel is UDP, measurements are missing for time span and data gap recovery enabled, request missing
                 //if ((object)m_dataChannel != null && m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null && m_lastMeasurementCheck > 0 &&
                 //    statisticsHelper.Device.MeasurementsExpected - statisticsHelper.Device.MeasurementsReceived > m_minimumMissingMeasurementThreshold)
