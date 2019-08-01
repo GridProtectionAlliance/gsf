@@ -618,8 +618,9 @@ namespace GSF.Net.Ftp
             {
                 m_session.Close();
             }
-            catch
+            catch (Exception ex)
             {
+                Diagnostics.Logger.SwallowException(ex);
             }
         }
 
