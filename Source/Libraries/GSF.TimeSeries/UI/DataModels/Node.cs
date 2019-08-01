@@ -466,9 +466,9 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable nodeTable;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                nodeTable = database.Connection.RetrieveData(database.AdapterType, string.Format("Select ID From NodeDetail {0}", sortClause));
+                nodeTable = database.Connection.RetrieveData(database.AdapterType, $"Select ID From NodeDetail {sortClause}");
 
 
                 foreach (DataRow row in nodeTable.Rows)
@@ -509,8 +509,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " +
-                        "MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    query = "Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " + $"MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
                     nodeList = new Node[nodeTable.Rows.Count];
@@ -645,6 +644,9 @@ namespace GSF.TimeSeries.UI.DataModels
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, Node node)
         {
+            if (node == null)
+                throw new ArgumentException(nameof(node));
+
             bool createdConnection = false;
             string query;
 
@@ -652,7 +654,7 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (node.ID == null || node.ID == Guid.Empty)
+                if (node.ID == Guid.Empty)
                 {
                     query = database.ParameterizedQueryString("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, " +
                         "Master, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, " +
@@ -665,10 +667,10 @@ namespace GSF.TimeSeries.UI.DataModels
                 }
                 else
                 {
-                    query = string.Format("SELECT Name FROM NodeDetail WHERE ID IN ('{0}')", node.ID);
+                    query = $"SELECT Name FROM NodeDetail WHERE ID IN ('{node.ID}')";
                     DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
 
-                    query = string.Format("SELECT SignalIndex FROM Statistic WHERE Source = 'System'");
+                    query = "SELECT SignalIndex FROM Statistic WHERE Source = \'System\'";
                     DataTable systemTable = database.Connection.RetrieveData(database.AdapterType, query);
 
                     query = database.ParameterizedQueryString("UPDATE Node SET Name = {0}, CompanyID = {1}, Longitude = {2}, Latitude = {3}, " +
@@ -696,9 +698,9 @@ namespace GSF.TimeSeries.UI.DataModels
                         for (int i = 0; i < systemTable.Rows.Count; i++)
                         {
                             string signalIndex = systemTable.Rows[i]["SignalIndex"].ToString();
-                            string pointTag = string.Format("{0}!SYSTEM:ST{1}", newNodeName, signalIndex);
-                            string newSignalReference = string.Format("{0}!SYSTEM-ST{1}", newNodeName, signalIndex);
-                            string oldSignalReference = string.Format("{0}!SYSTEM-ST{1}", oldNodeName, signalIndex);
+                            string pointTag = $"{newNodeName}!SYSTEM:ST{signalIndex}";
+                            string newSignalReference = $"{newNodeName}!SYSTEM-ST{signalIndex}";
+                            string oldSignalReference = $"{oldNodeName}!SYSTEM-ST{signalIndex}";
 
                             query = database.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalReference = {1} WHERE SignalReference = {2}", "name", "newSignalReference", "oldSignalReference");
                             database.Connection.ExecuteNonQuery(query, DefaultTimeout, pointTag, newSignalReference, oldSignalReference);
