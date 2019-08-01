@@ -167,7 +167,7 @@ namespace GSF.SELEventParser
             {
                 headers = lines[headerLineIndex].Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
 
-                if (headers.Length == fields.Length)
+                if (headers.Length == fields?.Length)
                     break;
 
                 headerLineIndex--;
@@ -213,9 +213,9 @@ namespace GSF.SELEventParser
                 headers = lines[headerLineIndex].Remove(analogEndIndex).Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
 
             // Generate analog channels from header row
-            analogSection.AnalogChannels = headers
-                .Select(header => new Channel<double>() { Name = header })
-                .ToList();
+            analogSection.AnalogChannels = headers?
+                .Select(header => new Channel<double> { Name = header })
+                .ToList() ?? new List<Channel<double>>();
 
             // Scan through the lines of data
             dataLineIndex = firstDataLineIndex;
@@ -269,7 +269,7 @@ namespace GSF.SELEventParser
                     currentCycles[i].Samples.Add(analogs[i]);
 
                 // Determine whether this line represents the sample that triggered the event
-                if (currentLine.Contains('>') || (eventSample == -1 && currentLine.Contains('*')))
+                if (currentLine.Contains('>') || eventSample == -1 && currentLine.Contains('*'))
                     eventSample = sampleCount;
 
                 sampleCount++;
@@ -287,14 +287,14 @@ namespace GSF.SELEventParser
 
             for (int i = 0; i < sampleCount; i++)
             {
-                if ((i % firstCycleCount) == 0)
+                if (i % firstCycleCount == 0)
                 {
                     currentTimeCycle = new Cycle<DateTime>();
                     analogSection.TimeChannel.Cycles.Add(currentTimeCycle);
                 }
 
                 // Null reference not possible since 0 % firstCycleCount is 0
-                currentTimeCycle.Samples.Add(eventTime + TimeSpan.FromTicks(timePerSample * (i - eventSample)));
+                currentTimeCycle?.Samples.Add(eventTime + TimeSpan.FromTicks(timePerSample * (i - eventSample)));
             }
 
             return analogSection;
