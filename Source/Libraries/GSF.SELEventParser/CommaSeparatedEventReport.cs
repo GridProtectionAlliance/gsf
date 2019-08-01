@@ -61,7 +61,7 @@ namespace GSF.SELEventParser
                 if (string.IsNullOrEmpty(Name))
                     return "";
 
-                return string.Format("{0}: StartLine = {1}, Length = {2}", Name, StartLine, Length);
+                return $"{Name}: StartLine = {StartLine}, Length = {Length}";
             }
         }
 
@@ -90,19 +90,18 @@ namespace GSF.SELEventParser
         public int ExpectedDigitalCount { get; set; }
         public int ExpectedDataRecordValueCount { get; set; }
         public int ExpectedSampleCount { get; set; }
-        public bool ProcessSettings { get; set; } = false;
-        public bool ProcessDigitals { get; set; } = false;
+        public bool ProcessSettings { get; set; }
+        public bool ProcessDigitals { get; set; }
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Returns the value for a specific setting group and key
+        /// Returns the value for a specific setting group and key.
         /// </summary>
-        /// <param name="groupName"></param>
-        /// <param name="valueKey"></param>
-        /// <param name="value"></param>
+        /// <param name="groupName">Group name.</param>
+        /// <param name="valueKey">Value key.</param>
         public string GetSettingValue(string groupName, string valueKey)
         {
             if (string.IsNullOrEmpty(groupName) || string.IsNullOrEmpty(valueKey))
@@ -117,11 +116,9 @@ namespace GSF.SELEventParser
         }
 
         /// <summary>
-        /// Returns the value for a specific setting group and key
+        /// Returns the value for a specific setting full key.
         /// </summary>
-        /// <param name="groupName"></param>
-        /// <param name="valueKey"></param>
-        /// <param name="value"></param>
+        /// <param name="fullKey">Full key</param>
         public string GetSettingValue(string fullKey)
         {
             if (string.IsNullOrEmpty(fullKey))
@@ -159,7 +156,7 @@ namespace GSF.SELEventParser
 
             if (lines == null || lines.Length == 0)
             {
-                OnDebugMessage(string.Format("SEL CEV Parse aborted.  Nothing to do. Sent line array from file {0} is null or empty.", fileIdentifier));
+                OnDebugMessage($"SEL CEV Parse aborted.  Nothing to do. Sent line array from file {fileIdentifier} is null or empty.");
                 return null;
             }
 
@@ -171,7 +168,7 @@ namespace GSF.SELEventParser
             cSER.ProcessDigitals = processDigitals;
 
             int lineIndex = 0;      //relative to the first line in the file
-            string inString = string.Empty;
+            string inString;
             int headerRecordNumber = 1;
 
             string[] headerFields = null;
@@ -193,7 +190,7 @@ namespace GSF.SELEventParser
             }
             if (lineIndex >= lines.Length)
             {
-                OnDebugMessage(string.Format("No SEL CEV data found. Nothing to do processing file {0} of length {1}", fileIdentifier, lines.Length.ToString()));
+                OnDebugMessage($"No SEL CEV data found. Nothing to do processing file {fileIdentifier} of length {lines.Length.ToString()}");
                 return null;
             }
 
@@ -214,10 +211,10 @@ namespace GSF.SELEventParser
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             if (headerFields.Length < 2)
-                                OnDebugMessage(string.Format("Processing SEL CEV header record 1 for SEL CEV file: {0}  Expected at least 2 fields and {1} were found.", fileIdentifier, headerFields.Length));
+                                OnDebugMessage($"Processing SEL CEV header record 1 for SEL CEV file: {fileIdentifier}  Expected at least 2 fields and {headerFields.Length} were found.");
 
                             headerRecordNumber++;
                             //lastHeaderFields = headerFields;
@@ -228,15 +225,15 @@ namespace GSF.SELEventParser
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             if (headerFields.Length < 2)
-                                OnDebugMessage(string.Format("Processing SEL CEV  header record 2 for SEL CEV file: {0}  Expected at least 2 fields and {1} were found.", fileIdentifier, headerFields.Length));
+                                OnDebugMessage($"Processing SEL CEV  header record 2 for SEL CEV file: {fileIdentifier}  Expected at least 2 fields and {headerFields.Length} were found.");
 
                             if (!headerFields[0].Contains("SEL"))
                             {
-                                OnDebugMessage(string.Format("Processing field 0 for header record 2 for file {0}  Expected string to contain 'SEL' and '{1}' was found.", fileIdentifier, headerFields[0]));
-                                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                                OnDebugMessage($"Processing field 0 for header record 2 for file {fileIdentifier}  Expected string to contain 'SEL' and '{headerFields[0]}' was found.");
+                                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                                 return null;
                             }
 
@@ -252,14 +249,14 @@ namespace GSF.SELEventParser
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             string[] expectedFieldNames3 = { "MONTH", "DAY", "YEAR", "HOUR", "MIN", "SEC", "MSEC" };
 
                             if (!StringParser.ExpectedFieldNamesMatch(expectedFieldNames3, headerFields, true, 6))
                             {
                                 OnDebugMessage("Processing SEL CEV header record 3, field names for date header. The expected values for the date labels did not match.");
-                                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                                 return null;
                             }
 
@@ -272,23 +269,21 @@ namespace GSF.SELEventParser
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             if (headerFields.Length < 6)
-                                OnDebugMessage(string.Format("Processing SEL CEV header record 4 for SEL CEV file: {0}  Expected at least 6 fields and {1} were found.", fileIdentifier, headerFields.Length));
+                                OnDebugMessage($"Processing SEL CEV header record 4 for SEL CEV file: {fileIdentifier}  Expected at least 6 fields and {headerFields.Length} were found.");
                             else
                             {
-                                int[] values;
-
-                                if (!TryConvertInt32(headerFields, out values, headerFields.Length - 1))
+                                if (!TryConvertInt32(headerFields, out int[] values, headerFields.Length - 1))
                                 {
-                                    OnDebugMessage(string.Format("One or more date fields in header record 4 did not parse to integers.  Event time not set in SEL CEV File: {0}", fileIdentifier));
+                                    OnDebugMessage($"One or more date fields in header record 4 did not parse to integers.  Event time not set in SEL CEV File: {fileIdentifier}");
                                 }
                                 else
                                 {
                                     cSER.Header.EventTime = new DateTime(values[2], values[0], values[1], values[3], values[4], values[5]);
                                     if (cSER.Header.EventTime.CompareTo(Convert.ToDateTime("01/01/2000")) < 0)
-                                        OnDebugMessage(string.Format("The event time of {0} is prior to January 1, 2000.", cSER.Header.EventTime.ToShortDateString()));
+                                        OnDebugMessage($"The event time of {cSER.Header.EventTime.ToShortDateString()} is prior to January 1, 2000.");
                                 }
                             }
 
@@ -301,12 +296,12 @@ namespace GSF.SELEventParser
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             if (StringParser.FindIndex("FREQ", headerFields) < 0 || StringParser.FindIndex("EVENT", headerFields) < 0)  //just check a couple
                             {
                                 OnDebugMessage("Processing header record 5 and the minimum expected values of 'FREQ' and 'EVENT' were not found.");
-                                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                                 return null;
                             }
 
@@ -315,16 +310,23 @@ namespace GSF.SELEventParser
                             break;
 
                         case 6:
+                            if (lastHeaderFields == null)
+                            {
+                                OnDebugMessage("Processing header record 6 -- no header values were found");
+                                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
+                                return null;
+                            }
+
                             //The summary data  - no try-parse data tests performed since there is confirmation of the availability of specific fields
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             if (headerFields.Length != lastHeaderFields.Length)
                             {
-                                OnDebugMessage(string.Format("Processing header record 6 -- expected {0} values and {1} were found", lastHeaderFields.Length, headerFields.Length));
-                                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                                OnDebugMessage($"Processing header record 6 -- expected {lastHeaderFields.Length} values and {headerFields.Length} were found");
+                                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                                 return null;
                             }
 
@@ -373,9 +375,10 @@ namespace GSF.SELEventParser
                             while (sb.ToString().CharCount('\"') % 2 == 1)
                             {
                                 sb.Append(lines[++lineIndex]);
+                                
                                 if (lineIndex >= lines.Length)
                                 {
-                                    OnDebugMessage(string.Format("Only partial CEV header data found. Processing of SEL CEV file: {0} aborted at line {1}", fileIdentifier, lineIndex.ToString()));
+                                    OnDebugMessage($"Only partial CEV header data found. Processing of SEL CEV file: {fileIdentifier} aborted at line {lineIndex.ToString()}");
                                     return null;
                                 }
                             }
@@ -384,56 +387,57 @@ namespace GSF.SELEventParser
                             byteSum.Check(inString, fileIdentifier);
 
                             if (!byteSum.Match)  //moved inside case switch due to case 7
-                                OnDebugMessage(string.Format("ByteSum check failed for header record {0} in SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                                OnDebugMessage($"ByteSum check failed for header record {headerRecordNumber} in SEL CEV file: {fileIdentifier}");
 
                             if (StringParser.FindIndex("IA", headerFields, false, true) < 0 || StringParser.FindIndex("IB", headerFields, false, true) < 0 ||
                                 StringParser.FindIndex("IC", headerFields, false, true) < 0)
                             {
                                 OnDebugMessage("Processing header record 7, the field names for the data records, and did not find the minimum set of 'IA', 'IB' and 'IC'");
-                                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                                 return null;
                             }
 
                             headerRecordNumber++;
                             lastHeaderFields = headerFields;
                             break;
-
-                        default:
-                            break;
                     }
                 }
                 else
                 {
-                    OnDebugMessage(string.Format("Unexpected empty header reader in advance of header record number {0} for SEL CEV file: {1}", headerRecordNumber, fileIdentifier));
+                    OnDebugMessage($"Unexpected empty header reader in advance of header record number {headerRecordNumber} for SEL CEV file: {fileIdentifier}");
                 }
 
                 lineIndex++;
                 if (lineIndex >= lines.Length)
                 {
-                    OnDebugMessage(string.Format("Only partial CEV header data found. Processing of SEL CEV file: {0} aborted at line {1}", fileIdentifier, lineIndex.ToString()));
+                    OnDebugMessage($"Only partial CEV header data found. Processing of SEL CEV file: {fileIdentifier} aborted at line {lineIndex.ToString()}");
                     return null;
                 }
             }
 
             cSER.InitialReadingIndex = lineIndex;
 
+            if (headerFields == null)
+            {
+                OnDebugMessage($"Processing header record 8, cannot search for {m_triggerFieldName} as the analog/digital data field separator.  No header field values have been defined.");
+                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
+                return null;
+            }
+
             //determine the number of analog data fields based on the position of "TRIG" (the trigger field name) and setup up Analog Section
             int triggerFieldPosition = Array.FindIndex(headerFields, x => x.ToUpper().Contains(m_triggerFieldName));
+            
             if (triggerFieldPosition < 0)  //not found
             {
-                OnDebugMessage(string.Format("Processing header record 8, the field names for data, searching for {0} as the analog/digital data field separator.  It was not found within the values of {1}.",
-                                    m_triggerFieldName, headerFields.ToString()));
-
-                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                OnDebugMessage($"Processing header record 8, the field names for data, searching for {m_triggerFieldName} as the analog/digital data field separator.  It was not found within the values of {headerFields}.");
+                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                 return null;
             }
 
             if (headerFields.Length < triggerFieldPosition + 2)  //too few field names past separator
             {
-                OnDebugMessage(string.Format("Processing header record 8, the field names for data, too few field names found past {0} (the analog/digital data field separator) within the values of {1}.",
-                                   m_triggerFieldName, headerFields.ToString()));
-
-                OnDebugMessage(string.Format("Processing TERMINATED for SEL CEV file: {0}", fileIdentifier));
+                OnDebugMessage($"Processing header record 8, the field names for data, too few field names found past {m_triggerFieldName} (the analog/digital data field separator) within the values of {headerFields}.");
+                OnDebugMessage($"Processing TERMINATED for SEL CEV file: {fileIdentifier}");
                 return null;
             }
 
@@ -475,8 +479,7 @@ namespace GSF.SELEventParser
             if (cSER.ExpectedDigitalCount <= 0)
                 cSER.ExpectedDigitalCount = digitalChannelCount;
             else if (digitalChannelCount != cSER.ExpectedDigitalCount)
-                OnDebugMessage(string.Format("Processing SEL CEV header record 8, the field names for data, the {0} digital channel names found does not match the expected number of {1}",
-                  cSER.ExpectedDigitalCount, digitalChannelCount));
+                OnDebugMessage($"Processing SEL CEV header record 8, the field names for data, the {cSER.ExpectedDigitalCount} digital channel names found does not match the expected number of {digitalChannelCount}");
 
             //find the trigger record within the data section, Carry on if none found.
             int triggerIndexRelative = 0;   //relative to the first data line
@@ -484,7 +487,7 @@ namespace GSF.SELEventParser
             {
                 if (string.IsNullOrEmpty(lines[lineIndex]) || lines[lineIndex].Trim().Length == 0)
                 {
-                    OnDebugMessage(string.Format("Null or empty data record was found at line {0} in file {1} and was skipped in the determination of the trigger record time.", lineIndex, fileIdentifier));
+                    OnDebugMessage($"Null or empty data record was found at line {lineIndex} in file {fileIdentifier} and was skipped in the determination of the trigger record time.");
                     //this condition logged at Info level later
                     continue;  //skip this line to be consistent with data parsing logic.
                 }
@@ -498,7 +501,7 @@ namespace GSF.SELEventParser
                 if (s.Length > 0 && s[0].ToUpper().Contains("SETTINGS"))  //we're done with data and no trigger was found.
                 {
                     triggerIndexRelative = 0;
-                    OnDebugMessage(string.Format("No trigger index found in SEL CEV file: {0}", fileIdentifier));
+                    OnDebugMessage($"No trigger index found in SEL CEV file: {fileIdentifier}");
                     break;
                 }
                 ++triggerIndexRelative;
@@ -506,7 +509,7 @@ namespace GSF.SELEventParser
 
             if (lineIndex >= lines.Length)  //we've looped through all the lines, no trigger && no SETTINGS
             {
-                OnDebugMessage(string.Format("No SETTINGS line terminator and No trigger index found in SEL CEV file: {0}", fileIdentifier));
+                OnDebugMessage($"No SETTINGS line terminator and No trigger index found in SEL CEV file: {fileIdentifier}");
                 //this condition logged at the Info level later
                 triggerIndexRelative = 0;
             }
@@ -547,7 +550,7 @@ namespace GSF.SELEventParser
 
                 if (data == null || data.Length == 0)
                 {
-                    OnDebugMessage(string.Format("Data record {0} in SEL CEV file: {1} was empty and was skipped.", dataRecordCount, fileIdentifier));
+                    OnDebugMessage($"Data record {dataRecordCount} in SEL CEV file: {fileIdentifier} was empty and was skipped.");
                     continue; //get next line
                 }
 
@@ -560,12 +563,12 @@ namespace GSF.SELEventParser
 
                 if (data.Length != cSER.ExpectedDataRecordValueCount)
                 {
-                    OnDebugMessage(string.Format("Data record {0} in SEL CEV file: {1} did not contain the anticipated values.", dataRecordCount, fileIdentifier));
+                    OnDebugMessage($"Data record {dataRecordCount} in SEL CEV file: {fileIdentifier} did not contain the anticipated values.");
 
                     //let's try to survive it.
                     foreach (var analogChannel in cSER.AnalogSection.AnalogChannels)
                     {
-                        analogChannel.Samples.Add(Double.NaN);    //what are the consequences here??
+                        analogChannel.Samples.Add(double.NaN);    //what are the consequences here??
                     }
                     foreach (Channel<bool?> channel in cSER.AnalogSection.DigitalChannels)
                     {
@@ -581,16 +584,16 @@ namespace GSF.SELEventParser
 
                 if (!byteSum.Match)
                 {
-                    OnDebugMessage(string.Format("Byte sum does not match for data record {0} in SEL CEV file {1}. This record processed as if it is valid.", dataRecordCount, fileIdentifier));
+                    OnDebugMessage($"Byte sum does not match for data record {dataRecordCount} in SEL CEV file {fileIdentifier}. This record processed as if it is valid.");
                 }
 
                 //LOAD ANALOG DATA (overall record tests above are sufficient to verify expected number of values)
                 int channelIndex = 0;
+
                 foreach (var analogChannel in cSER.AnalogSection.AnalogChannels)
                 {
-                    double value = 0D;
-                    if (!double.TryParse(data[channelIndex], out value))
-                        analogChannel.Samples.Add(Double.NaN);
+                    if (!double.TryParse(data[channelIndex], out double _))
+                        analogChannel.Samples.Add(double.NaN);
                     else if (scalingRequired)
                         analogChannel.Samples.Add(Convert.ToDouble(data[channelIndex]) * scalingFactors[channelIndex]);
                     else
@@ -612,8 +615,7 @@ namespace GSF.SELEventParser
 
                     if (hexDigitals.Length * 4 < cSER.AnalogSection.DigitalChannels.Count)
                     {
-                        OnDebugMessage(string.Format("The expected {0} digital channels were not found for data record {1} in SEL CEV file {2}.  {3} were found.  Setting digitals to null and continuing.",
-                            hexDigitals.Length * 4, dataRecordCount, fileIdentifier, cSER.AnalogSection.DigitalChannels.Count));
+                        OnDebugMessage($"The expected {hexDigitals.Length * 4} digital channels were not found for data record {dataRecordCount} in SEL CEV file {fileIdentifier}.  {cSER.AnalogSection.DigitalChannels.Count} were found.  Setting digitals to null and continuing.");
                         foreach (Channel<bool?> channel in cSER.AnalogSection.DigitalChannels)
                         {
                             channel.Samples.Add(null);
@@ -622,7 +624,8 @@ namespace GSF.SELEventParser
                     }
 
                     channelIndex = 0;
-                    int hexCharIndex = 0;
+                    int hexCharIndex;
+
                     if (cSER.AnalogSection.DigitalChannels.Count > 0)
                     {
                         foreach (Channel<bool?> channel in cSER.AnalogSection.DigitalChannels)  //loop through the channels and add the values
@@ -639,11 +642,9 @@ namespace GSF.SELEventParser
                                 channel.Samples.Add(null);
 
                             channelIndex++;
-
                         }
                     }
                 }
-
             }
 
             cSER.ExpectedSampleCount = dataRecordCount;
@@ -653,9 +654,7 @@ namespace GSF.SELEventParser
 
             //Directed to not process settings or lines.Length busted.
             if (!cSER.ProcessSettings || lineIndex > lines.Length)
-            {
                 return cSER;
-            }
 
             //advance to 'SETTINGS' if we're not there already
             if (!lines[lineIndex].Contains("SETTINGS"))
@@ -671,18 +670,21 @@ namespace GSF.SELEventParser
 
             if (lineIndex >= lines.Length)  //we've looped through all the lines no settings found to add
             {
-                OnDebugMessage(string.Format("No settings were found following the SETTINGS line terminator was found at end of data section in SEL CEV file: {0}", fileIdentifier));
+                OnDebugMessage($"No settings were found following the SETTINGS line terminator was found at end of data section in SEL CEV file: {fileIdentifier}");
                 return cSER;
             }
 
 
             //------------------------------  SETTINGS BLOCK -----------------------------------------
 
+            // TODO: Check this logic- settingsRegions is updated but never used (JRC)
+            // ReSharper disable once CollectionNeverQueried.Local
             List<SectionDefinition> settingsRegions = new List<SectionDefinition>();
             string sectionName = "Settings";
 
             //verify that settings are within quotes -- start line
             int startSettingsLine = -1;
+
             while (lineIndex < lines.Length)
             {
                 if (lines[lineIndex].Trim().Equals(DoubleQuote))
@@ -695,10 +697,11 @@ namespace GSF.SELEventParser
             }
 
             int endSettingsLine = -1;
+
             //verify that settings are within quotes; i.e,. look for the next quote character
             while (lineIndex < lines.Length)
             {
-                if (lines[lineIndex].IndexOf(DoubleQuote) > -1)
+                if (lines[lineIndex].IndexOf(DoubleQuote, StringComparison.Ordinal) > -1)
                 {
                     endSettingsLine = lineIndex;
                     break;
@@ -708,7 +711,7 @@ namespace GSF.SELEventParser
 
             if (startSettingsLine < 0 || endSettingsLine < 0)
             {
-                OnDebugMessage(string.Format("The settings block in the CEV file as malformed.  Processing of this section skipped: {0}", fileIdentifier));
+                OnDebugMessage($"The settings block in the CEV file as malformed.  Processing of this section skipped: {fileIdentifier}");
                 return cSER;
             }
 
@@ -728,7 +731,7 @@ namespace GSF.SELEventParser
 
             while (lineIndex <= endSettingsLine)  //there may be content in the last settings line
             {
-                if (lines[lineIndex].Length < 2 || lines[lineIndex].IndexOf(":=") == -1)  //skip it
+                if (lines[lineIndex].Length < 2 || lines[lineIndex].IndexOf(":=", StringComparison.Ordinal) == -1)  //skip it
                 {
                     lineIndex++;
                     continue;
@@ -751,10 +754,10 @@ namespace GSF.SELEventParser
                     if (string.IsNullOrEmpty(key))
                         continue;
 
-                    string value = string.Empty;
+                    string value;
 
                     if (j < keySeparaterIndicies.Length - 1 && lines[lineIndex].Length > index + 3)
-                            value = NextToken(lines[lineIndex], index + 2);
+                        value = NextToken(lines[lineIndex], index + 2);
                     else
                         value = lines[lineIndex].Substring(index + 2).Trim();
 
@@ -762,7 +765,7 @@ namespace GSF.SELEventParser
                         value = "0.0";
 
                     if (settingValues.ContainsKey(key))
-                        OnDebugMessage(string.Format("Settings already contains key:{0}", key));
+                        OnDebugMessage($"Settings already contains key:{key}");
                     else
                         settingValues.Add(key, value);
                 }         
@@ -858,9 +861,7 @@ namespace GSF.SELEventParser
 
             for (int i = 0; i < length; i++)
             {
-                int value;
-
-                if (int.TryParse(data[i], out value))
+                if (int.TryParse(data[i], out int value))
                 {
                     values[i] = value;
                 }
