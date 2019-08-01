@@ -68,7 +68,6 @@ namespace GSF.TimeSeries.UI
         private ICollection<Alarm> m_raisedAlarms;
         private readonly LongSynchronizedOperation m_alarmStateQueryOperation;
         private AutoResetEvent m_responseComplete;
-        private int m_responseTimeout;
         private bool m_connectedToService;
         private bool m_disposed;
 
@@ -92,7 +91,6 @@ namespace GSF.TimeSeries.UI
                 IsBackground = true
             };
             m_responseComplete = new AutoResetEvent(false);
-            m_responseTimeout = DefaultResponseTimeout;
         }
 
         /// <summary>
@@ -110,17 +108,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Gets or sets allowed timeout, in milliseconds, for a command request response.
         /// </summary>
-        public int ResponseTimeout
-        {
-            get
-            {
-                return m_responseTimeout;
-            }
-            set
-            {
-                m_responseTimeout = value;
-            }
-        }
+        public int ResponseTimeout { get; set; } = DefaultResponseTimeout;
 
         #endregion
 
@@ -258,8 +246,8 @@ namespace GSF.TimeSeries.UI
                 // Wait for command response allowing for processing time
                 if ((object)m_responseComplete != null)
                 {
-                    if (!m_responseComplete.WaitOne(m_responseTimeout))
-                        OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for service response{1}.", (m_responseTimeout / 1000.0D).ToString("0.00"), m_connectedToService ? "" : " - service is disconnected")));
+                    if (!m_responseComplete.WaitOne(ResponseTimeout))
+                        OnProcessException(new TimeoutException($"Timed-out after {(ResponseTimeout / 1000.0D):0.00} seconds waiting for service response."));
                 }
 
                 // If alarms were returned, expose them to consumer
@@ -305,12 +293,9 @@ namespace GSF.TimeSeries.UI
 
                 if ((object)response != null)
                 {
-                    string sourceCommand;
-                    bool responseSuccess;
-
-                    if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess) && responseSuccess)
+                    if (ClientHelper.TryParseActionableResponse(response, out string sourceCommand, out bool responseSuccess) && responseSuccess)
                     {
-                        if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "INVOKE", true) == 0)
+                        if (!string.IsNullOrWhiteSpace(sourceCommand) && String.Compare(sourceCommand.Trim(), "INVOKE", StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             List<object> attachments = response.Attachments;
 
@@ -320,7 +305,7 @@ namespace GSF.TimeSeries.UI
                                 Arguments arguments = attachments[1] as Arguments;
 
                                 // Check the method that was invoked - the second argument after the adapter ID
-                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetRaisedAlarms", true) == 0)
+                                if ((object)arguments != null && String.Compare(arguments["OrderedArg2"], "GetRaisedAlarms", StringComparison.OrdinalIgnoreCase) == 0)
                                 {
                                     m_raisedAlarms = attachments[0] as ICollection<Alarm>;
 
