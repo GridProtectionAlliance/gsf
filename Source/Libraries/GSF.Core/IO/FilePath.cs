@@ -169,9 +169,7 @@ namespace GSF.IO
 
                         if (elems.Length > 4)
                         {
-                            long totalKB, availableKB;
-
-                            if (long.TryParse(elems[1], out totalKB) && long.TryParse(elems[3], out availableKB))
+                            if (long.TryParse(elems[1], out long totalKB) && long.TryParse(elems[3], out long availableKB))
                             {
                                 freeSpace = availableKB * SI2.Kilo;
                                 totalSize = totalKB * SI2.Kilo;
@@ -187,14 +185,11 @@ namespace GSF.IO
 
                 string fullPath = Path.GetFullPath(pathName);
 
-                ulong lpFreeBytesAvailable;
-                ulong lpTotalNumberOfBytes;
-                ulong lpTotalNumberOfFreeBytes;
-
-                bool success = GetDiskFreeSpaceEx(fullPath, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes);
+                bool success = GetDiskFreeSpaceEx(fullPath, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong _);
 
                 freeSpace = (long)lpFreeBytesAvailable;
                 totalSize = (long)lpTotalNumberOfBytes;
+
                 return success;
             }
             catch
@@ -463,9 +458,9 @@ namespace GSF.IO
             if (sourceIsFile && targetIsDirectory)
                 throw new InvalidOperationException("Unable to copy permissions from a file to a directory");
 
-            if (sourceIsDirectory && targetIsDirectory)
+            if (sourceIsDirectory /* && targetIsDirectory*/)
                 CopyDirectoryPermissions(sourceAbsolutePath, targetAbsolutePath);
-            else if (sourceIsFile && targetIsFile)
+            else /* if (sourceIsFile && targetIsFile)*/
                 CopyFilePermissions(sourceAbsolutePath, targetAbsolutePath);
         }
 
