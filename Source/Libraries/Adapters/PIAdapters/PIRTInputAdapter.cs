@@ -55,27 +55,28 @@ namespace PIAdapters
         #region [ Members ]
 
         // Nested Types
-        //private class DataUpdateObserver : IObserver<AFDataPipeEvent>
-        //{
-        //    public EventHandler<EventArgs<AFValue>> DataUpdated;
-        //    public EventHandler Completed;
-        //    private Action<Exception> m_exceptionHandler;
+        private class DataUpdateObserver : IObserver<AFDataPipeEvent>
+        {
+            public event EventHandler<EventArgs<AFValue>> DataUpdated;
+            public event EventHandler Completed;
+            
+            private readonly Action<Exception> m_exceptionHandler;
 
-        //    public DataUpdateObserver(Action<Exception> exceptionHandler)
-        //    {
-        //        m_exceptionHandler = exceptionHandler;
-        //    }
+            public DataUpdateObserver(Action<Exception> exceptionHandler)
+            {
+                m_exceptionHandler = exceptionHandler;
+            }
 
-        //    public void OnCompleted() => Completed?.Invoke(this, EventArgs.Empty);
+            public void OnCompleted() => Completed?.Invoke(this, EventArgs.Empty);
 
-        //    public void OnError(Exception error) => m_exceptionHandler?.Invoke(error);
+            public void OnError(Exception error) => m_exceptionHandler?.Invoke(error);
 
-        //    public void OnNext(AFDataPipeEvent value)
-        //    {
-        //        if (value.Action != AFDataPipeAction.Delete)
-        //            DataUpdated?.Invoke(this, new EventArgs<AFValue>(value.Value));
-        //    }
-        //}
+            public void OnNext(AFDataPipeEvent value)
+            {
+                if (value.Action != AFDataPipeAction.Delete)
+                    DataUpdated?.Invoke(this, new EventArgs<AFValue>(value.Value));
+            }
+        }
 
         // Fields
         private readonly ConcurrentDictionary<int, MeasurementKey> m_tagKeyMap; // Map PI tag ID to GSFSchema measurement keys
@@ -88,11 +89,11 @@ namespace PIAdapters
         private string m_serverName;                                            // Server name for PI connection string
         private string m_userName;                                              // Username for PI connection string
         private string m_password;                                              // Password for PI connection string
-        //private readonly DataUpdateObserver m_dataUpdateObserver;               // Custom observer class for handling point updates
+        private readonly DataUpdateObserver m_dataUpdateObserver;               // Custom observer class for handling point updates
         private int m_connectTimeout;                                           // PI connection timeout
         private Ticks m_lastReceivedTimestamp;                                  // Last received timestamp from PI event pipe
         private double m_lastReceivedValue;
-        private List<IMeasurement> m_measurements;                              // Queried measurements that are prepared to be published
+        //private List<IMeasurement> m_measurements;                              // Queried measurements that are prepared to be published
         private bool m_disposed;
 
         #endregion
@@ -107,8 +108,8 @@ namespace PIAdapters
             m_tagKeyMap = new ConcurrentDictionary<int, MeasurementKey>();
             m_restartConnection = new ShortSynchronizedOperation(Start);
             m_readEvents = new ShortSynchronizedOperation(ReadEvents);
-            //m_dataUpdateObserver = new DataUpdateObserver(OnProcessException);
-            //m_dataUpdateObserver.DataUpdated += m_dataUpdateObserver_DataUpdated;
+            m_dataUpdateObserver = new DataUpdateObserver(ex => OnProcessException(MessageLevel.Error, ex));
+            m_dataUpdateObserver.DataUpdated += m_dataUpdateObserver_DataUpdated;
             m_eventTimer = new System.Timers.Timer(1000.0D);
             m_eventTimer.Elapsed += m_eventTimer_Elapsed;
             m_eventTimer.AutoReset = true;
@@ -294,15 +295,14 @@ namespace PIAdapters
         {
             base.Initialize();
 
-            m_measurements = new List<IMeasurement>();
+            //m_measurements = new List<IMeasurement>();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             if (!settings.TryGetValue("ServerName", out m_serverName))
                 throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format servername=myservername to the connection string.");
 
-            if (settings.TryGetValue("UserName", out setting))
+            if (settings.TryGetValue("UserName", out string setting))
                 m_userName = setting;
             else
                 m_userName = null;
@@ -335,7 +335,7 @@ namespace PIAdapters
             m_connection.Open();
 
             m_dataPipe = new PIDataPipe(AFDataPipeType.Snapshot);
-            //m_dataPipe.Subscribe(m_dataUpdateObserver);
+            m_dataPipe.Subscribe(m_dataUpdateObserver);
 
             if (AutoStart && (object)OutputMeasurements != null && OutputMeasurements.Any())
                 SubscribeToPointUpdates(this.OutputMeasurementKeys());
@@ -397,20 +397,26 @@ namespace PIAdapters
                 if (!string.IsNullOrWhiteSpace(row.AlternateTag))
                     tagName = row.AlternateTag;
 
+                #if DEBUG
                 OnStatusMessage(MessageLevel.Debug, $"DEBUG: Looking up point tag '{tagName}'...");
+                #endif
 
                 PIPoint point = GetPIPoint(m_connection.Server, tagName);
 
                 if ((object)point != null)
                 {
+                    #if DEBUG
                     OnStatusMessage(MessageLevel.Debug, $"DEBUG: Found point tag '{tagName}'...");
+                    #endif
                     dataPoints.Add(point);
                     m_tagKeyMap[point.ID] = row.Key;
                 }
+                #if DEBUG
                 else
                 {
                     OnStatusMessage(MessageLevel.Debug, $"DEBUG: Failed to find point tag '{tagName}'...");
                 }
+                #endif
             }
 
             // Remove sign-ups for any existing point list
@@ -420,11 +426,15 @@ namespace PIAdapters
             // Sign up for updates on selected points
             AFListResults<PIPoint, AFDataPipeEvent> initialEvents = m_dataPipe.AddSignupsWithInitEvents(dataPoints);
 
+            #if DEBUG
             OnStatusMessage(MessageLevel.Debug, $"DEBUG: Initial event count = {initialEvents.Results.Count}...");
+            #endif
 
             foreach (AFDataPipeEvent item in initialEvents.Results)
             {
+                #if DEBUG
                 OnStatusMessage(MessageLevel.Debug, "DEBUG: Found initial event for action...");
+                #endif
 
                 if (item.Action != AFDataPipeAction.Delete)
                     m_dataUpdateObserver_DataUpdated(this, new EventArgs<AFValue>(item.Value));
@@ -437,14 +447,15 @@ namespace PIAdapters
 
         private PIPoint GetPIPoint(PIServer server, string tagName)
         {
-            PIPoint point;
-            PIPoint.TryFindPIPoint(server, tagName, out point);
+            PIPoint.TryFindPIPoint(server, tagName, out PIPoint point);
             return point;
         }
 
         private void m_eventTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            #if DEBUG
             OnStatusMessage(MessageLevel.Debug, "DEBUG: Timer elapsed...");
+            #endif
             m_readEvents.TryRunOnceAsync();
         }
 
@@ -453,15 +464,21 @@ namespace PIAdapters
             if ((object)m_dataPipe == null)
                 return;
 
+            #if DEBUG
             OnStatusMessage(MessageLevel.Debug, "DEBUG: Data pipe called for next 100 GetUpdateEvents...");
+            #endif
 
             AFListResults<PIPoint, AFDataPipeEvent> updateEvents = m_dataPipe.GetUpdateEvents(100);
 
+            #if DEBUG
             OnStatusMessage(MessageLevel.Debug, $"DEBUG: Update event count = {updateEvents.Count}...");
+            #endif
 
             foreach (AFDataPipeEvent item in updateEvents.Results)
             {
+                #if DEBUG
                 OnStatusMessage(MessageLevel.Debug, "DEBUG: Found update event for action...");
+                #endif
 
                 if (item.Action != AFDataPipeAction.Delete)
                     m_dataUpdateObserver_DataUpdated(this, new EventArgs<AFValue>(item.Value));
@@ -471,15 +488,22 @@ namespace PIAdapters
         // PI data updated handler
         private void m_dataUpdateObserver_DataUpdated(object sender, EventArgs<AFValue> e)
         {
+            #if DEBUG
             OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler called with a new value: {Convert.ToDouble(e.Argument.Value):N3}...");
+            #endif
+
             AFValue value = e.Argument;
-            MeasurementKey key;
 
-            OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler looking up point ID {value.PIPoint.ID:N0} in table...");
+            #if DEBUG
+            OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler looking up point ID {value?.PIPoint.ID:N0} in table...");
+            #endif
 
-            if ((object)value != null && m_tagKeyMap.TryGetValue(value.PIPoint.ID, out key))
+            if ((object)value != null && m_tagKeyMap.TryGetValue(value.PIPoint.ID, out MeasurementKey key))
             {
+                #if DEBUG
                 OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler found point ID {value.PIPoint.ID:N0} in table: {key}...");
+                #endif
+
                 Measurement measurement = new Measurement();
 
                 measurement.Metadata = key.Metadata;
@@ -491,10 +515,12 @@ namespace PIAdapters
                 m_lastReceivedTimestamp = measurement.Timestamp;
                 m_lastReceivedValue = measurement.Value;
             }
+            #if DEBUG
             else
             {
                 OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler did not find point ID {value.PIPoint.ID:N0} in table...");
             }
+            #endif
         }
 
         private void m_connection_Disconnected(object sender, EventArgs e)
