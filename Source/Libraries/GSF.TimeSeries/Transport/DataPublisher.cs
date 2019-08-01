@@ -710,9 +710,7 @@ namespace GSF.TimeSeries.Transport
 
             private void UpdateInputMeasurementKeys()
             {
-                string inputMeasurementKeys;
-
-                if (Settings.TryGetValue("inputMeasurementKeys", out inputMeasurementKeys))
+                if (Settings.TryGetValue("inputMeasurementKeys", out string inputMeasurementKeys))
                     InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, inputMeasurementKeys);
             }
         }
@@ -1524,12 +1522,9 @@ namespace GSF.TimeSeries.Transport
             Clear();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
-            double period;
-            int strength;
 
             // Setup data publishing server with or without required authentication 
-            if (settings.TryGetValue("requireAuthentication", out setting))
+            if (settings.TryGetValue("requireAuthentication", out string setting))
                 RequireAuthentication = setting.ParseBoolean();
 
             // Check flag that will determine if subscriber payloads should be encrypted by default
@@ -1546,7 +1541,7 @@ namespace GSF.TimeSeries.Transport
                 m_metadataTables = setting;
 
             // See if a user defined compression strength has been provided
-            if (settings.TryGetValue("compressionStrength", out setting) && int.TryParse(setting, out strength))
+            if (settings.TryGetValue("compressionStrength", out setting) && int.TryParse(setting, out int strength))
                 CompressionStrength = strength;
 
             // Check flag to see if payload compression is allowed
@@ -1578,7 +1573,7 @@ namespace GSF.TimeSeries.Transport
                 MeasurementReportingInterval = AdapterBase.DefaultMeasurementReportingInterval;
 
             // Get user specified period for cipher key rotation
-            if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
+            if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out double period))
                 CipherKeyRotationPeriod = period;
 
             // Get security mode used for the command channel
@@ -1588,7 +1583,7 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("useZeroMQChannel", out setting))
                 m_useZeroMQChannel = setting.ParseBoolean();
 
-            // TODO: Remove this exception when CURVE is enabled in GSF ZeroMQ library
+            // FUTURE: Option is to enable CURVE in GSF ZeroMQ library with same cert
             if (m_useZeroMQChannel && m_securityMode == SecurityMode.TLS)
                 throw new ArgumentException("CURVE security settings are not yet available for GSF ZeroMQ server channel.");
 
@@ -1665,7 +1660,7 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.ConfigurationString = "server=tcp://*:6165";
                     commandChannel.PersistSettings = true;
 
-                    // TODO: Parse certificate and pass keys to ZeroMQServer for CURVE security
+                    // FUTURE: Parse certificate and pass keys to ZeroMQServer for CURVE security
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;
@@ -1809,7 +1804,6 @@ namespace GSF.TimeSeries.Transport
         {
             StringBuilder clientEnumeration = new StringBuilder();
             Guid[] clientIDs = (Guid[])m_commandChannel.ClientIDs.Clone();
-            ClientConnection connection;
             bool hasActiveTemporalSession;
 
             if (filterToTemporalSessions)
@@ -1819,7 +1813,7 @@ namespace GSF.TimeSeries.Transport
 
             for (int i = 0; i < clientIDs.Length; i++)
             {
-                if (m_clientConnections.TryGetValue(clientIDs[i], out connection) && (object)connection != null && (object)connection.Subscription != null)
+                if (m_clientConnections.TryGetValue(clientIDs[i], out ClientConnection connection) && (object)connection != null && (object)connection.Subscription != null)
                 {
                     hasActiveTemporalSession = connection.Subscription.TemporalConstraintIsDefined();
 
@@ -1902,9 +1896,7 @@ namespace GSF.TimeSeries.Transport
 
             if (success)
             {
-                ClientConnection connection;
-
-                if (m_clientConnections.TryGetValue(clientID, out connection))
+                if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
                     connection.RotateCipherKeys();
                 else
                     OnStatusMessage(MessageLevel.Error, $"Failed to find connected client {clientID}");
@@ -1933,9 +1925,7 @@ namespace GSF.TimeSeries.Transport
 
             if (success)
             {
-                ClientConnection connection;
-
-                if (m_clientConnections.TryGetValue(clientID, out connection))
+                if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
                     return connection.SubscriberInfo;
 
                 OnStatusMessage(MessageLevel.Error, $"Failed to find connected client {clientID}");
@@ -1966,9 +1956,7 @@ namespace GSF.TimeSeries.Transport
 
             if (success)
             {
-                ClientConnection connection;
-
-                if (m_clientConnections.TryGetValue(clientID, out connection))
+                if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
                 {
                     string temporalStatus = null;
 
@@ -1999,7 +1987,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Gets the local certificate currently in use by the data publisher.", "Administrator", "Editor")]
         public virtual byte[] GetLocalCertificate()
         {
-            // TODO: Also validate ZeroMQServer with CURVE security enabled
+            // FUTURE: Also validate ZeroMQServer with CURVE security enabled
             TlsServer commandChannel;
 
             commandChannel = m_commandChannel as TlsServer;
@@ -2019,7 +2007,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Imports a certificate to the trusted certificates path.", "Administrator", "Editor")]
         public virtual string ImportCertificate(string fileName, byte[] certificateData)
         {
-            // TODO: Also validate ZeroMQServer with CURVE security enabled
+            // FUTURE: Also validate ZeroMQServer with CURVE security enabled
             TlsServer commandChannel;
             string trustedCertificatesPath;
             string filePath;
@@ -2072,7 +2060,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Sends a notification to all subscribers.", "Administrator", "Editor")]
         public virtual void SendNotification(string message)
         {
-            string notification = $"[{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")}] {message}";
+            string notification = $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}] {message}";
 
             lock (m_clientNotificationsLock)
             {
@@ -2098,10 +2086,7 @@ namespace GSF.TimeSeries.Transport
             List<Guid> unauthorizedKeys = new List<Guid>();
             ushort index = 0;
             Guid signalID;
-
             byte[] serializedSignalIndexCache;
-            ClientConnection connection;
-
             Func<Guid, bool> hasRightsFunc;
 
             if ((object)inputMeasurementKeys != null)
@@ -2130,7 +2115,7 @@ namespace GSF.TimeSeries.Transport
             serializedSignalIndexCache = SerializeSignalIndexCache(clientID, signalIndexCache);
 
             // Send client updated signal index cache
-            if (m_clientConnections.TryGetValue(clientID, out connection) && connection.IsSubscribed)
+            if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection) && connection.IsSubscribed)
                 SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
         }
 
@@ -2142,16 +2127,10 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                string cacheMeasurementKeys;
-                IActionAdapter cache;
-
-                if (Settings.TryGetValue("cacheMeasurementKeys", out cacheMeasurementKeys))
+                if (Settings.TryGetValue("cacheMeasurementKeys", out string cacheMeasurementKeys) && TryGetAdapterByName("LatestMeasurementCache", out IActionAdapter cache))
                 {
-                    if (TryGetAdapterByName("LatestMeasurementCache", out cache))
-                    {
-                        cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
-                        m_routingTables.CalculateRoutingTables(null);
-                    }
+                    cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
+                    m_routingTables.CalculateRoutingTables(null);
                 }
             }
             catch (Exception ex)
@@ -2176,8 +2155,6 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                Guid subscriberID;
-
                 lock (m_clientNotificationsLock)
                 {
                     m_clientNotifications.Clear();
@@ -2186,7 +2163,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         foreach (DataRow row in DataSource.Tables["Subscribers"].Rows)
                         {
-                            if (Guid.TryParse(row["ID"].ToNonNullString(), out subscriberID))
+                            if (Guid.TryParse(row["ID"].ToNonNullString(), out Guid subscriberID))
                                 m_clientNotifications.Add(subscriberID, new Dictionary<int, string>());
                         }
                     }
@@ -2237,9 +2214,7 @@ namespace GSF.TimeSeries.Transport
         private void DeserializeClientNotifications()
         {
             string notificationsFileName = FilePath.GetAbsolutePath($"{Name}Notifications.txt");
-            Dictionary<int, string> notifications;
             string notification;
-            Guid subscriberID;
 
             if (File.Exists(notificationsFileName))
             {
@@ -2252,9 +2227,9 @@ namespace GSF.TimeSeries.Transport
                     {
                         int separatorIndex = line.IndexOf(',');
 
-                        if (Guid.TryParse(line.Substring(0, separatorIndex), out subscriberID))
+                        if (Guid.TryParse(line.Substring(0, separatorIndex), out Guid subscriberID))
                         {
-                            if (m_clientNotifications.TryGetValue(subscriberID, out notifications))
+                            if (m_clientNotifications.TryGetValue(subscriberID, out Dictionary<int, string> notifications))
                             {
                                 notification = line.Substring(separatorIndex + 1);
                                 notifications.Add(notification.GetHashCode(), notification);
@@ -2275,13 +2250,12 @@ namespace GSF.TimeSeries.Transport
 
         private void SendNotifications(ClientConnection connection)
         {
-            Dictionary<int, string> notifications;
             byte[] hash;
             byte[] message;
 
             using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
             {
-                if (m_clientNotifications.TryGetValue(connection.SubscriberID, out notifications))
+                if (m_clientNotifications.TryGetValue(connection.SubscriberID, out Dictionary<int, string> notifications))
                 {
                     foreach (KeyValuePair<int, string> pair in notifications)
                     {
@@ -2304,9 +2278,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>Text encoding associated with a particular client.</returns>
         protected internal Encoding GetClientEncoding(Guid clientID)
         {
-            ClientConnection connection;
-
-            if (m_clientConnections.TryGetValue(clientID, out connection))
+            if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
             {
                 Encoding clientEncoding = connection.Encoding;
 
@@ -2327,9 +2299,7 @@ namespace GSF.TimeSeries.Transport
         {
             bool result = SendClientResponse(clientID, ServerResponse.DataStartTime, ServerCommand.Subscribe, BigEndian.GetBytes((long)startTime));
 
-            ClientConnection connection;
-
-            if (m_clientConnections.TryGetValue(clientID, out connection))
+            if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
                 OnStatusMessage(MessageLevel.Info, $"Start time sent to {connection.ConnectionID}.");
 
             return result;
@@ -2421,19 +2391,17 @@ namespace GSF.TimeSeries.Transport
         // Attempts to get the subscriber for the given client based on that client's X.509 certificate.
         private void TryFindClientDetails(ClientConnection connection)
         {
-            // TODO: Also validate ZeroMQServer with CURVE security enabled
+            // FUTURE: Also validate ZeroMQServer with CURVE security enabled
             TlsServer commandChannel = m_commandChannel as TlsServer;
-            TransportProvider<TlsServer.TlsSocket> client;
             X509Certificate remoteCertificate;
             X509Certificate trustedCertificate;
-            DataRow subscriber;
 
             // If connection is not TLS, there is no X.509 certificate
             if ((object)commandChannel == null)
                 return;
 
             // If connection is not found, cannot get X.509 certificate
-            if (!commandChannel.TryGetClient(connection.ClientID, out client))
+            if (!commandChannel.TryGetClient(connection.ClientID, out TransportProvider<TlsServer.TlsSocket> client))
                 return;
 
             // Get remote certificate and corresponding trusted certificate
@@ -2442,7 +2410,7 @@ namespace GSF.TimeSeries.Transport
 
             if ((object)trustedCertificate != null)
             {
-                if (m_subscriberIdentities.TryGetValue(trustedCertificate, out subscriber))
+                if (m_subscriberIdentities.TryGetValue(trustedCertificate, out DataRow subscriber))
                 {
                     // Load client details from subscriber identity
                     connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
@@ -2458,13 +2426,12 @@ namespace GSF.TimeSeries.Transport
         {
             string[] splitList = addressList.Split(';', ',');
             List<IPAddress> ipAddressList = new List<IPAddress>();
-            IPAddress ipAddress;
             string dualStackAddress;
 
             foreach (string address in splitList)
             {
                 // Attempt to parse the IP address
-                if (!IPAddress.TryParse(address.Trim(), out ipAddress))
+                if (!IPAddress.TryParse(address.Trim(), out IPAddress ipAddress))
                     continue;
 
                 // Add the parsed address to the list
@@ -2490,9 +2457,6 @@ namespace GSF.TimeSeries.Transport
             try
             {
                 CertificatePolicy policy;
-                SslPolicyErrors validPolicyErrors;
-                X509ChainStatusFlags validChainFlags;
-
                 string remoteCertificateFile;
                 X509Certificate certificate;
 
@@ -2509,10 +2473,10 @@ namespace GSF.TimeSeries.Transport
                         policy = new CertificatePolicy();
                         remoteCertificateFile = subscriber["RemoteCertificateFile"].ToNonNullString();
 
-                        if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out validPolicyErrors))
+                        if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out SslPolicyErrors validPolicyErrors))
                             policy.ValidPolicyErrors = validPolicyErrors;
 
-                        if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out validChainFlags))
+                        if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out X509ChainStatusFlags validChainFlags))
                             policy.ValidChainFlags = validChainFlags;
 
                         if (File.Exists(remoteCertificateFile))
@@ -2593,11 +2557,10 @@ namespace GSF.TimeSeries.Transport
         // Send binary response packet to client
         private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
-            ClientConnection connection;
             bool success = false;
 
             // Attempt to lookup associated client connection
-            if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null && !connection.ClientNotFoundExceptionOccurred)
+            if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection) && (object)connection != null && !connection.ClientNotFoundExceptionOccurred)
             {
                 try
                 {
@@ -2669,7 +2632,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
                         if (useDataChannel)
-                            publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
+                            publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection.PublishChannel);
                         else
                             publishChannel = m_commandChannel;
 
@@ -2755,18 +2718,16 @@ namespace GSF.TimeSeries.Transport
             try
             {
                 Guid clientID = (Guid)state;
-                ClientConnection connection;
-                IServer publicationChannel;
 
                 RemoveClientSubscription(clientID);
 
-                if (m_clientConnections.TryRemove(clientID, out connection))
+                if (m_clientConnections.TryRemove(clientID, out ClientConnection connection))
                 {
                     connection.Dispose();
                     OnStatusMessage(MessageLevel.Info, "Client disconnected from command channel.");
                 }
 
-                m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
+                m_clientPublicationChannels.TryRemove(clientID, out _);
             }
             catch (Exception ex)
             {
@@ -2779,9 +2740,7 @@ namespace GSF.TimeSeries.Transport
         {
             lock (this)
             {
-                IClientSubscription clientSubscription;
-
-                if (TryGetClientSubscription(clientID, out clientSubscription))
+                if (TryGetClientSubscription(clientID, out IClientSubscription clientSubscription))
                 {
                     clientSubscription.Stop();
                     Remove(clientSubscription);
@@ -2809,10 +2768,8 @@ namespace GSF.TimeSeries.Transport
         // Attempt to find client subscription
         private bool TryGetClientSubscription(Guid clientID, out IClientSubscription subscription)
         {
-            IActionAdapter adapter;
-
             // Lookup adapter by its client ID
-            if (TryGetAdapter(clientID, GetClientSubscription, out adapter))
+            if (TryGetAdapter(clientID, GetClientSubscription, out IActionAdapter adapter))
             {
                 subscription = (IClientSubscription)adapter;
                 return true;
@@ -3058,7 +3015,7 @@ namespace GSF.TimeSeries.Transport
         {
             Guid clientID = connection.ClientID;
             IClientSubscription subscription;
-            string message, setting;
+            string message;
 
             // Handle subscribe
             try
@@ -3155,7 +3112,7 @@ namespace GSF.TimeSeries.Transport
                             subscription.DataSource = DataSource;
 
                             // Pass subscriber assembly information to connection, if defined
-                            if (subscription.Settings.TryGetValue("assemblyInfo", out setting))
+                            if (subscription.Settings.TryGetValue("assemblyInfo", out string setting))
                                 connection.SubscriberInfo = setting;
 
                             // Set up UDP data channel if client has requested this
@@ -3200,8 +3157,7 @@ namespace GSF.TimeSeries.Transport
                             }
 
                             // Remove any existing cached publication channel since connection is changing
-                            IServer publicationChannel;
-                            m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
+                            m_clientPublicationChannels.TryRemove(clientID, out IServer _);
 
                             // Update payload compression state and strength
                             subscription.UsePayloadCompression = usePayloadCompression;
@@ -3360,7 +3316,6 @@ namespace GSF.TimeSeries.Transport
                 IDbConnection dbConnection = adoDatabase.Connection;
                 DataSet metadata = new DataSet();
                 DataTable table;
-                Tuple<string, string, int> filterParameters;
                 string sortField;
                 int takeCount;
 
@@ -3406,7 +3361,7 @@ namespace GSF.TimeSeries.Transport
                     if (table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata))
                         filters.Add($"OriginalSource IS {(sendExternalMetadata ? "NOT" : "")} NULL");
 
-                    if (filterExpressions.TryGetValue(table.TableName, out filterParameters))
+                    if (filterExpressions.TryGetValue(table.TableName, out Tuple<string, string, int> filterParameters))
                     {
                         filters.Add($"({filterParameters.Item1})");
                         sortField = filterParameters.Item2;
@@ -3528,8 +3483,7 @@ namespace GSF.TimeSeries.Transport
 
             Guid clientID = connection.ClientID;
             Dictionary<string, Tuple<string, string, int>> filterExpressions = new Dictionary<string, Tuple<string, string, int>>(StringComparer.OrdinalIgnoreCase);
-            string message, tableName, filterExpression, sortField;
-            int takeCount;
+            string message;
             Ticks startTime = DateTime.UtcNow.Ticks;
 
             // Attempt to parse out any subscriber provided meta-data filter expressions
@@ -3551,7 +3505,7 @@ namespace GSF.TimeSeries.Transport
                         foreach (string expression in expressions)
                         {
                             // Attempt to parse filter expression and add it dictionary if successful
-                            if (AdapterBase.ParseFilterExpression(expression, out tableName, out filterExpression, out sortField, out takeCount))
+                            if (AdapterBase.ParseFilterExpression(expression, out string tableName, out string filterExpression, out string sortField, out int takeCount))
                                 filterExpressions.Add(tableName, Tuple.Create(filterExpression, sortField, takeCount));
                         }
                     }
@@ -3643,16 +3597,14 @@ namespace GSF.TimeSeries.Transport
         private void HandleConfirmNotification(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
             int hash = BigEndian.ToInt32(buffer, startIndex);
-            Dictionary<int, string> notifications;
-            string notification;
 
             if (length >= 4)
             {
                 lock (m_clientNotificationsLock)
                 {
-                    if (m_clientNotifications.TryGetValue(connection.SubscriberID, out notifications))
+                    if (m_clientNotifications.TryGetValue(connection.SubscriberID, out Dictionary<int, string> notifications))
                     {
-                        if (notifications.TryGetValue(hash, out notification))
+                        if (notifications.TryGetValue(hash, out string notification))
                         {
                             notifications.Remove(hash);
                             OnStatusMessage(MessageLevel.Info, $"Subscriber {connection.ConnectionID} confirmed receipt of notification: {notification}.");
@@ -3686,7 +3638,7 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void HandlePublishCommandMeasurements(ClientConnection connection, byte[] buffer, int startIndex, int length)
+        private void HandlePublishCommandMeasurements(ClientConnection connection, byte[] buffer, int startIndex)
         {
             try
             {
@@ -3739,9 +3691,8 @@ namespace GSF.TimeSeries.Transport
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
         {
             byte[] serializedSignalIndexCache = null;
-            ClientConnection connection;
 
-            if (m_clientConnections.TryGetValue(clientID, out connection))
+            if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
             {
                 OperationalModes operationalModes = connection.OperationalModes;
                 CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
@@ -3780,8 +3731,7 @@ namespace GSF.TimeSeries.Transport
                     }
                     finally
                     {
-                        if ((object)deflater != null)
-                            deflater.Close();
+                        deflater?.Close();
                     }
                 }
             }
@@ -3792,9 +3742,8 @@ namespace GSF.TimeSeries.Transport
         private byte[] SerializeMetadata(Guid clientID, DataSet metadata)
         {
             byte[] serializedMetadata = null;
-            ClientConnection connection;
 
-            if (m_clientConnections.TryGetValue(clientID, out connection))
+            if (m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
             {
                 OperationalModes operationalModes = connection.OperationalModes;
                 CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
@@ -3839,8 +3788,7 @@ namespace GSF.TimeSeries.Transport
                     }
                     finally
                     {
-                        if ((object)deflater != null)
-                            deflater.Close();
+                        deflater?.Close();
                     }
                 }
 
@@ -3915,17 +3863,15 @@ namespace GSF.TimeSeries.Transport
 
                 if (length > 0 && (object)buffer != null)
                 {
-                    ClientConnection connection;
-                    ServerCommand command;
                     string message;
                     byte commandByte = buffer[index];
                     index++;
 
                     // Attempt to parse solicited server command
-                    bool validServerCommand = Enum.TryParse(commandByte.ToString(), out command);
+                    bool validServerCommand = Enum.TryParse(commandByte.ToString(), out ServerCommand command);
 
                     // Look up this client connection
-                    if (!m_clientConnections.TryGetValue(clientID, out connection))
+                    if (!m_clientConnections.TryGetValue(clientID, out ClientConnection connection))
                     {
                         // Received a request from an unknown client, this request is denied
                         OnStatusMessage(MessageLevel.Warning, $"Ignored {length} byte {(validServerCommand ? command.ToString() : "unidentified")} command request received from an unrecognized client: {clientID}", flags: MessageFlags.UsageIssue);
@@ -3994,7 +3940,7 @@ namespace GSF.TimeSeries.Transport
 
                             case ServerCommand.PublishCommandMeasurements:
                                 // Handle publication of command measurements
-                                HandlePublishCommandMeasurements(connection, buffer, index, length);
+                                HandlePublishCommandMeasurements(connection, buffer, index);
                                 break;
 
                             case ServerCommand.UserCommand00:
@@ -4040,7 +3986,7 @@ namespace GSF.TimeSeries.Transport
 
             connection.ClientNotFoundExceptionOccurred = false;
 
-            // TODO: Also validate ZeroMQServer with CURVE security enabled
+            // FUTURE: Also validate ZeroMQServer with CURVE security enabled
             if (m_securityMode == SecurityMode.TLS)
             {
                 TryFindClientDetails(connection);
