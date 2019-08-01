@@ -85,7 +85,7 @@ namespace GSF.Units.EE
                     Kind = signalType.Substring(0, 2).ParseSignalKind();
 
                     if (Kind != SignalKind.Unknown)
-                        Index = int.Parse(signalType.Substring(2));
+                        int.TryParse(signalType.Substring(2), out Index);
                 }
                 else
                     Kind = signalType.ParseSignalKind();
