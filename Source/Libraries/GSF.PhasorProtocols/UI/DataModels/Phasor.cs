@@ -411,7 +411,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             Label = row.Field<string>("Label"),
                             Type = row.Field<string>("Type"),
                             Phase = row.Field<string>("Phase"),
-                            BaseKV = row.Field<int>("BaseKV"),
+                            BaseKV = row.ConvertField<int>("BaseKV"),
                             SourceIndex = row.ConvertField<int>("SourceIndex")
                         };
                     }
@@ -652,7 +652,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         Label = row.Field<string>("Label"),
                         Type = row.Field<string>("Type"),
                         Phase = row.Field<string>("Phase"),
-                        BaseKV = row.Field<int>("BaseKV"),
+                        BaseKV = row.ConvertField<int>("BaseKV"),
                         SourceIndex = row.ConvertField<int>("SourceIndex")
                     };
 
