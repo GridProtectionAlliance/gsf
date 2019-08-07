@@ -52,5 +52,10 @@ namespace GrafanaAdapters
         /// Data source values enumerable.
         /// </summary>
         public IEnumerable<DataSourceValue> Source;
+
+        /// <summary>
+        /// Defines flag that determines if empty series are produced.
+        /// </summary>
+        public bool DropEmptySeries;
     }
 }

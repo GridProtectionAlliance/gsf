@@ -795,7 +795,8 @@ namespace GrafanaAdapters
                     target = valueGroup.Target,
                     rootTarget = valueGroup.RootTarget,
                     latitude = LookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
-                    longitude = LookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
+                    longitude = LookupTargetCoordinate(valueGroup.RootTarget, "Longitude"),
+                    dropEmptySeries = valueGroup.DropEmptySeries
                 }).ToList();
 
                 // Process series data in parallel
@@ -831,7 +832,7 @@ namespace GrafanaAdapters
 
                 #endregion
 
-                return result;
+                return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
             },
             cancellationToken);
         }
@@ -869,6 +870,15 @@ namespace GrafanaAdapters
 
         private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
+            const string DropEmptySeries = "dropemptyseries";
+            bool dropEmptySeries = false;
+
+            if (queryExpression.ToLowerInvariant().Contains(DropEmptySeries))
+            {
+                dropEmptySeries = true;
+                queryExpression = queryExpression.ReplaceCaseInsensitive(DropEmptySeries, "");
+            }
+
             // A single target might look like the following:
             // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
 
@@ -950,7 +960,8 @@ namespace GrafanaAdapters
                         Target = target.Value,
                         RootTarget = target.Value,
                         SourceTarget = sourceTarget,
-                        Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value))
+                        Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
+                        DropEmptySeries = dropEmptySeries
                     };
             }
         }

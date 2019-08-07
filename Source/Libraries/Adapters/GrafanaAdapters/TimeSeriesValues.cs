@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace GrafanaAdapters
@@ -62,6 +63,12 @@ namespace GrafanaAdapters
         /// Defines a Grafana time-series underlying point tag longitude.
         /// </summary>
         public float longitude;
+
+        /// <summary>
+        /// Defines flag that determines if empty series are produced.
+        /// </summary>
+        [JsonIgnore]
+        public bool dropEmptySeries;
 
         /// <summary>
         /// Defines a Grafana time-series value data.
