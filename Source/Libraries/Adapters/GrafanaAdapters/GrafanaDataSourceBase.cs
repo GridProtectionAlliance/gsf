@@ -787,7 +787,7 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
-                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, true, cancellationToken)).SelectMany(groups => groups).ToArray();
+                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, true, false, cancellationToken)).SelectMany(groups => groups).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
@@ -868,10 +868,9 @@ namespace GrafanaAdapters
             return TargetCache<float>.GetOrAdd($"{target}_{field}", () => LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
         }
 
-        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, bool dropEmptySeries, CancellationToken cancellationToken)
         {
             const string DropEmptySeries = "dropemptyseries";
-            bool dropEmptySeries = false;
 
             if (queryExpression.ToLowerInvariant().Contains(DropEmptySeries))
             {
@@ -918,7 +917,7 @@ namespace GrafanaAdapters
             {
                 // Execute series functions
                 foreach (Tuple<SeriesFunction, string, GroupOperation> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
-                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, decimate, cancellationToken))
+                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, decimate, dropEmptySeries, cancellationToken))
                         yield return valueGroup;
 
                 // Use reduced target set that excludes any series functions
@@ -966,7 +965,7 @@ namespace GrafanaAdapters
             }
         }
 
-        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool decimate, bool dropEmptySeries, CancellationToken cancellationToken)
         {
             SeriesFunction seriesFunction = parsedFunction.Item1;
             string expression = parsedFunction.Item2;
@@ -1046,7 +1045,7 @@ namespace GrafanaAdapters
                 decimate = false;
 
             // Query function expression to get series data
-            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, decimate, cancellationToken);
+            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, decimate, dropEmptySeries, cancellationToken);
 
             // Handle label function as a special edge case - group operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)
@@ -1086,7 +1085,8 @@ namespace GrafanaAdapters
                         Target = seriesLabel,
                         RootTarget = target,
                         SourceTarget = sourceTarget,
-                        Source = groups[i].Source
+                        Source = groups[i].Source,
+                        DropEmptySeries = dropEmptySeries
                     };
                 }
             }
@@ -1101,7 +1101,8 @@ namespace GrafanaAdapters
                             Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
                             RootTarget = queryExpression,
                             SourceTarget = sourceTarget,
-                            Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
+                            Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters),
+                            DropEmptySeries = dropEmptySeries
                         };
 
                         // Handle edge-case set operations - for these functions there is data in the target series as well
@@ -1125,7 +1126,8 @@ namespace GrafanaAdapters
                             Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
                             RootTarget = queryExpression,
                             SourceTarget = sourceTarget,
-                            Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters)
+                            Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters),
+                            DropEmptySeries = dropEmptySeries
                         };
 
                         break;
@@ -1136,7 +1138,8 @@ namespace GrafanaAdapters
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
                                 RootTarget = dataValues.RootTarget ?? dataValues.Target,
                                 SourceTarget = sourceTarget,
-                                Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
+                                Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters),
+                                DropEmptySeries = dropEmptySeries
                             };
 
                         break;
