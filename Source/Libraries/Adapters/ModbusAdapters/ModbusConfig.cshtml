@@ -39,6 +39,7 @@
 //  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
 //
 //*****************************************************************************************************@
+@using System.Collections.Generic
 @using System.Net.Http
 @using GSF
 @using GSF.Data.Model
@@ -1431,13 +1432,14 @@
                     }
                     break;
                 case RecordType.DerivedValue:
-                    const records = sequence.sequenceRecords();
-
-                    for (let i = group.start; i <= group.stop; i++) {
-                        const record = records[i];
-                        getDerivedValue(sequence, record.address(), record.dataValue);
+                    {
+                        const records = sequence.sequenceRecords();
+                        
+                        for (let i = group.start; i <= group.stop; i++) {
+                            const record = records[i];
+                            getDerivedValue(sequence, record.address(), record.dataValue);
+                        }
                     }
-
                     break;
             }
         }
