@@ -47,9 +47,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Reports, Version=0.9.5821.33856, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\Report.NET.0.09.06\lib\net46\Reports.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Reports, Version=0.9.7114.24540, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\Report.NET.0.9.8\lib\net46\Reports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -90,7 +89,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="packages.StatHistorianReportGenerator.config" />
+    <None Include="packages.StatHistorianReportGenerator.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
