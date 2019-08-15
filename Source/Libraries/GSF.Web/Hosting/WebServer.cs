@@ -219,9 +219,7 @@ namespace GSF.Web.Hosting
 
                     if (m_options.ClientCacheEnabled)
                     {
-                        long responseHash;
-
-                        if (!m_etagCache.TryGetValue(fileName, out responseHash))
+                        if (!m_etagCache.TryGetValue(fileName, out long responseHash))
                         {
                             if (!ResourceExists(fileName, embeddedResource))
                             {
@@ -280,9 +278,8 @@ namespace GSF.Web.Hosting
         private async Task ProcessHTTPHandlerAsync(string pageName, bool embeddedResource, HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             string fileName = GetResourceFileName(pageName, embeddedResource);
-            Type handlerType;
 
-            if (!m_handlerTypeCache.TryGetValue(fileName, out handlerType))
+            if (!m_handlerTypeCache.TryGetValue(fileName, out Type handlerType))
             {
                 if (!ResourceExists(fileName, embeddedResource))
                 {
@@ -292,7 +289,7 @@ namespace GSF.Web.Hosting
 
                 using (Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken))
                 {
-                    string handlerHeader, className;
+                    string handlerHeader;
 
                     // Parse class name from ASHX handler header parameters
                     using (StreamReader reader = new StreamReader(source))
@@ -308,7 +305,7 @@ namespace GSF.Web.Hosting
 
                     Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
 
-                    if (!parameters.TryGetValue("Class", out className))
+                    if (!parameters.TryGetValue("Class", out string className))
                         throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
 
                     // Remove quotes from class name
@@ -404,9 +401,7 @@ namespace GSF.Web.Hosting
             // See if client's version of cached resource is up to date
             foreach (EntityTagHeaderValue headerValue in request.Headers.IfNoneMatch)
             {
-                long requestHash;
-
-                if (long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out requestHash) && responseHash == requestHash)
+                if (long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out long requestHash) && responseHash == requestHash)
                 {
                     response.StatusCode = HttpStatusCode.NotModified;
                     return false;
@@ -415,8 +410,8 @@ namespace GSF.Web.Hosting
 
             response.Headers.CacheControl = new CacheControlHeaderValue
             {
-                Public = true,
-                MaxAge = new TimeSpan(31536000 * TimeSpan.TicksPerSecond)
+                NoCache = true,
+                MustRevalidate = true
             };
 
             response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
@@ -455,13 +450,10 @@ namespace GSF.Web.Hosting
 
         private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
         {
-            long responseHash;
-            Type handlerType;
-
-            if (m_etagCache.TryRemove(e.FullPath, out responseHash))
+            if (m_etagCache.TryRemove(e.FullPath, out long responseHash))
                 OnStatusMessage($"Cache [{responseHash}] cleared for file \"{e.FullPath}\"");
 
-            if (m_handlerTypeCache.TryRemove(e.FullPath, out handlerType))
+            if (m_handlerTypeCache.TryRemove(e.FullPath, out Type handlerType))
                 OnStatusMessage($"Cleared handler type [{handlerType?.FullName}] from cache for file \"{e.FullPath}\"");
         }
 
