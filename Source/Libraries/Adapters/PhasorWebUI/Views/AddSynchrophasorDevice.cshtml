@@ -137,24 +137,26 @@
     private static double s_defaultCalculationLeadTime;
     private static int s_nominalFrequency;
 
-    private static Dictionary<string, object> ToDynamic(object anonymous)
-    {
-        Dictionary<string, object> expando = new Dictionary<string, object>();
-
-        foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(anonymous))
-        {
-            expando.Add(propertyDescriptor.Name, propertyDescriptor.GetValue(anonymous));
-        }
-
-        return expando;
-    }
-
     // Quasi-Static Properties
     private Dictionary<string, object> AppModelGlobal
     {
         get
         {
-            return s_appModelGlobal ?? (s_appModelGlobal = ToDynamic(ValueExpressionParser.DefaultTypeRegistry["Global"]));
+            if (s_appModelGlobal != null)
+                return s_appModelGlobal;
+
+            s_appModelGlobal = new Dictionary<string, object>();
+            ExpressionEvaluator.ValueType global = ValueExpressionParser.DefaultTypeRegistry["Global"] as ExpressionEvaluator.ValueType;
+
+            if (global == null)
+                return s_appModelGlobal;
+
+            foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(global.Value))
+            {
+                s_appModelGlobal.Add(propertyDescriptor.Name, propertyDescriptor.GetValue(global.Value));
+            }
+
+            return s_appModelGlobal;
         }
     }
 
@@ -219,6 +221,7 @@
     <script>
         "use script";
 
+        var phasorHub, phasorHubClient;
         var firstConnect = true;
         var deviceID = @deviceID;
         var nodeID = "@NodeID";
@@ -423,7 +426,7 @@
             self._instanceName = ko.observable("");
             self._templateType = ko.observable("");
             self._historianID = ko.observable(-1);
-            self._dataHubIsConnected = ko.observable(false);
+            self._phasorHubIsConnected = ko.observable(false);
             self._isDirty = ko.observable(false);
 
             // Properties
@@ -480,7 +483,7 @@
                         self._instanceName("");
                     }
 
-                    if (self.dataHubIsConnected()) {
+                    if (self.phasorHubIsConnected()) {
                         if (isEmpty(self._instanceName())) {
                             self._historianID(-1);
                         }
@@ -525,13 +528,13 @@
                 owner: self
             });
 
-            self.dataHubIsConnected = ko.pureComputed({
-                read: self._dataHubIsConnected,
+            self.phasorHubIsConnected = ko.pureComputed({
+                read: self._phasorHubIsConnected,
                 write: function (value) {
                     if (value === undefined)
                         value = false;
 
-                    self._dataHubIsConnected(value);
+                    self._phasorHubIsConnected(value);
 
                     if (value)
                         self.refreshValidationErrors();
@@ -593,7 +596,7 @@
                 self.voltageCount = 0;
 
                 if (configFrame.ProtocolID > 0) {
-                    dataHub.getProtocolCategory(configFrame.ProtocolID).done(function (category) {
+                    phasorHub.getProtocolCategory(configFrame.ProtocolID).done(function (category) {
                         self.readOnly(category.toLowerCase() === "gateway");
                     });
                 }
@@ -733,7 +736,7 @@
             };
 
             self.loadExisting = function () {
-                if (!self.dataHubIsConnected())
+                if (!self.phasorHubIsConnected())
                     return;
 
                 self.voltages.removeAll();
@@ -747,7 +750,7 @@
 
                 self.configFrameDetails("Analyzing...");
 
-                dataHub.extractConfigurationFrame(deviceID).done(self.loadConfigFrame).fail(function (error) {
+                phasorHub.extractConfigurationFrame(deviceID).done(self.loadConfigFrame).fail(function (error) {
                     showErrorMessage(String.format("Failed to extract config file from existing device: {0}", error));
 
                     self.configFrameDetails("Unavailable");
@@ -758,7 +761,7 @@
             };
 
             self.analyzeConfig = function (sourceData) {
-                if (!self.dataHubIsConnected())
+                if (!self.phasorHubIsConnected())
                     return;
 
                 self.voltages.removeAll();
@@ -777,7 +780,7 @@
                 if (deviceID > 0)
                     serviceHub.sendCommand("disconnect " + deviceID);
 
-                dataHub.loadConfigurationFrame(sourceData).done(self.loadConfigFrame).then(function () {
+                phasorHub.loadConfigurationFrame(sourceData).done(self.loadConfigFrame).then(function () {
                     // Reconnect device
                     if (deviceID > 0)
                         serviceHub.sendCommand("connect " + deviceID);
@@ -1005,7 +1008,7 @@
             const signalReference = String.format("{0}-{1}{2}", cell.IDLabel(), signalType.Suffix, index);
 
             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-            return dataHub.queryMeasurement(orgSignalReference).then(function (measurement) {
+            return phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
                 // Determine defined nominal voltage kV level of phasor
                 let baseKV = 0;
 
@@ -1020,7 +1023,7 @@
                 }
 
                 // Create point tag using system defined naming convention
-                return dataHub.createPhasorPointTag(cell.IDLabel(), signalType.Acronym, phasorDefinition.Label(), phasorDefinition.Phase(), index, baseKV).then(function (pointTag) {
+                return phasorHub.createPhasorPointTag(cell.IDLabel(), signalType.Acronym, phasorDefinition.Label(), phasorDefinition.Phase(), index, baseKV).then(function (pointTag) {
                     measurement.DeviceID = cell.ID;
                     measurement.HistorianID = viewModel.historianID();
                     measurement.PointTag = pointTag;
@@ -1031,7 +1034,7 @@
                     measurement.Internal = true;
                     measurement.Enabled = true;
 
-                    return dataHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
+                    return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
                         showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
                     });
                 })
@@ -1056,7 +1059,7 @@
                 return $.Deferred().resolve().promise();
             }
 
-            return dataHub.queryPhasorsForDevice(cell.ID).then(function (phasors) {
+            return phasorHub.queryPhasorsForDevice(cell.ID).then(function (phasors) {
                 let dropAndAdd = phasors.length !== cell.PhasorDefinitions.length;
 
                 if (!dropAndAdd) {
@@ -1096,7 +1099,7 @@
 
                 if (dropAndAdd) {
                     // Handle drop and (re)add phasors operation
-                    const promise = cell.PhasorDefinitions.length > 0 ? dataHub.deletePhasorsForDevice(cell.ID) : $.Deferred().resolve().promise();
+                    const promise = cell.PhasorDefinitions.length > 0 ? phasorHub.deletePhasorsForDevice(cell.ID) : $.Deferred().resolve().promise();
 
                     return promise.then(function () {
                         const promises = [];
@@ -1105,7 +1108,7 @@
                         for (let i = 0; i < voltages.length; i++) {
                             const voltage = voltages[i];
 
-                            promises.push(dataHub.newPhasor().then(function (phasor) {
+                            promises.push(phasorHub.newPhasor().then(function (phasor) {
                                 phasor.DeviceID = cell.ID;
                                 phasor.Label = voltage.Label();
                                 phasor.Type = "V";
@@ -1114,7 +1117,7 @@
                                 phasor.DestinationPhasorID = null;
                                 phasor.SourceIndex = voltage.SourceIndex;
 
-                                return dataHub.addNewPhasor(phasor).then(function () {
+                                return phasorHub.addNewPhasor(phasor).then(function () {
                                     if (!voltage.Enabled())
                                         return $.Deferred().resolve().promise();
 
@@ -1124,19 +1127,19 @@
                                     .then(function () {
                                         const vphmSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), vphmSignalType.Suffix, phasor.SourceIndex);
 
-                                        return dataHub.queryMeasurement(vphmSignalReference).done(function (measurement) {
+                                        return phasorHub.queryMeasurement(vphmSignalReference).done(function (measurement) {
                                             voltage.vphmMeasurement = measurement;
                                         });
                                     })
                                     .then(function () {
                                         const vphaSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), vphaSignalType.Suffix, phasor.SourceIndex);
 
-                                        return dataHub.queryMeasurement(vphaSignalReference).done(function (measurement) {
+                                        return phasorHub.queryMeasurement(vphaSignalReference).done(function (measurement) {
                                             voltage.vphaMeasurement = measurement;
                                         });
                                     })
                                     .then(function () {
-                                        return dataHub.queryPhasorForDevice(cell.ID, phasor.SourceIndex).then(function (newPhasor) {
+                                        return phasorHub.queryPhasorForDevice(cell.ID, phasor.SourceIndex).then(function (newPhasor) {
                                             voltageIDMap[voltage.ID] = newPhasor.ID;
                                         })
                                         .fail(function (error) {
@@ -1156,7 +1159,7 @@
                         for (let i = 0; i < currents.length; i++) {
                             const current = currents[i];
 
-                            promises.push(dataHub.newPhasor().then(function (phasor) {
+                            promises.push(phasorHub.newPhasor().then(function (phasor) {
                                 const associatedVoltage = current.Current.AssociatedVoltage();
                                 const voltage = lookupAssociatedVoltage(cell, associatedVoltage);
                                 let baseKV = 0;
@@ -1175,7 +1178,7 @@
                                 if (phasor.DestinationPhasorID === undefined)
                                     phasor.DestinationPhasorID = null;
 
-                                return dataHub.addNewPhasor(phasor).then(function () {
+                                return phasorHub.addNewPhasor(phasor).then(function () {
                                     if (!current.Enabled())
                                         return $.Deferred().resolve().promise();
 
@@ -1185,14 +1188,14 @@
                                     .then(function () {
                                         const iphmSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), iphmSignalType.Suffix, phasor.SourceIndex);
 
-                                        return dataHub.queryMeasurement(iphmSignalReference).done(function (measurement) {
+                                        return phasorHub.queryMeasurement(iphmSignalReference).done(function (measurement) {
                                             current.iphmMeasurement = measurement;
                                         });
                                     })
                                     .then(function () {
                                         const iphaSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), iphaSignalType.Suffix, phasor.SourceIndex);
 
-                                        return dataHub.queryMeasurement(iphaSignalReference).done(function (measurement) {
+                                        return phasorHub.queryMeasurement(iphaSignalReference).done(function (measurement) {
                                             current.iphaMeasurement = measurement;
                                         });
                                     });
@@ -1220,7 +1223,7 @@
                     for (let i = 0; i < voltages.length; i++) {
                         const voltage = voltages[i];
 
-                        promises.push(dataHub.queryPhasorForDevice(cell.ID, voltage.SourceIndex).then(function (phasor) {
+                        promises.push(phasorHub.queryPhasorForDevice(cell.ID, voltage.SourceIndex).then(function (phasor) {
                             phasor.DeviceID = cell.ID;
                             phasor.Label = voltage.Label();
                             phasor.Type = "V";
@@ -1231,7 +1234,7 @@
 
                             voltageIDMap[voltage.ID] = phasor.ID;
 
-                            return dataHub.updatePhasor(phasor).then(function () {
+                            return phasorHub.updatePhasor(phasor).then(function () {
                                 if (!voltage.Enabled())
                                     return $.Deferred().resolve().promise();
 
@@ -1241,14 +1244,14 @@
                                 .then(function () {
                                     const vphmSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), vphmSignalType.Suffix, phasor.SourceIndex);
 
-                                    return dataHub.queryMeasurement(vphmSignalReference).done(function (measurement) {
+                                    return phasorHub.queryMeasurement(vphmSignalReference).done(function (measurement) {
                                         voltage.vphmMeasurement = measurement;
                                     });
                                 })
                                 .then(function () {
                                     const vphaSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), vphaSignalType.Suffix, phasor.SourceIndex);
 
-                                    return dataHub.queryMeasurement(vphaSignalReference).done(function (measurement) {
+                                    return phasorHub.queryMeasurement(vphaSignalReference).done(function (measurement) {
                                         voltage.vphaMeasurement = measurement;
                                     });
                                 });
@@ -1271,7 +1274,7 @@
                         if (voltage)
                             baseKV = voltage.Voltage.NominalVoltage();
 
-                        promises.push(dataHub.queryPhasorForDevice(cell.ID, current.SourceIndex).then(function (phasor) {
+                        promises.push(phasorHub.queryPhasorForDevice(cell.ID, current.SourceIndex).then(function (phasor) {
                             phasor.DeviceID = cell.ID;
                             phasor.Label = current.Label();
                             phasor.Type = "I";
@@ -1283,7 +1286,7 @@
                             if (phasor.DestinationPhasorID === undefined)
                                 phasor.DestinationPhasorID = null;
 
-                            return dataHub.updatePhasor(phasor).then(function () {
+                            return phasorHub.updatePhasor(phasor).then(function () {
                                 if (!current.Enabled())
                                     return $.Deferred().resolve().promise();
 
@@ -1293,14 +1296,14 @@
                                 .then(function () {
                                     const iphmSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), iphmSignalType.Suffix, phasor.SourceIndex);
 
-                                    return dataHub.queryMeasurement(iphmSignalReference).done(function (measurement) {
+                                    return phasorHub.queryMeasurement(iphmSignalReference).done(function (measurement) {
                                         current.iphmMeasurement = measurement;
                                     });
                                 })
                                 .then(function () {
                                     const iphaSignalReference = String.format("{0}-{1}{2}", cell.IDLabel(), iphaSignalType.Suffix, phasor.SourceIndex);
 
-                                    return dataHub.queryMeasurement(iphaSignalReference).done(function (measurement) {
+                                    return phasorHub.queryMeasurement(iphaSignalReference).done(function (measurement) {
                                         current.iphaMeasurement = measurement;
                                     });
                                 });
@@ -1327,8 +1330,8 @@
             const signalReference = String.format("{0}-{1}", cell.IDLabel(), signalType.Suffix);
 
             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-            return dataHub.queryMeasurement(orgSignalReference).then(function (measurement) {
-                return dataHub.createPointTag(cell.IDLabel(), signalType.Acronym).then(function (pointTag) {
+            return phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
+                return phasorHub.createPointTag(cell.IDLabel(), signalType.Acronym).then(function (pointTag) {
                     measurement.DeviceID = cell.ID;
                     measurement.HistorianID = viewModel.historianID();
                     measurement.PointTag = pointTag;
@@ -1338,7 +1341,7 @@
                     measurement.Internal = true;
                     measurement.Enabled = true;
 
-                    return dataHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
+                    return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
                         showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
                     });
                 })
@@ -1385,8 +1388,8 @@
                             const signalReference = String.format("{0}-{1}{2}", cell.IDLabel(), analogSignalType.Suffix, index);
 
                             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-                            promises.push(dataHub.queryMeasurement(orgSignalReference).then(function (measurement) {
-                                return dataHub.createIndexedPointTag(cell.IDLabel(), analogSignalType.Acronym, index).then(function (pointTag) {
+                            promises.push(phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
+                                return phasorHub.createIndexedPointTag(cell.IDLabel(), analogSignalType.Acronym, index).then(function (pointTag) {
                                     measurement.DeviceID = cell.ID;
                                     measurement.HistorianID = viewModel.historianID();
                                     measurement.PointTag = pointTag;
@@ -1397,7 +1400,7 @@
                                     measurement.Internal = true;
                                     measurement.Enabled = true;
 
-                                    return dataHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
+                                    return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
                                         showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
                                     });
                                 })
@@ -1436,8 +1439,8 @@
                             const signalReference = String.format("{0}-{1}{2}", cell.IDLabel(), digitalSignalType.Suffix, index);
 
                             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-                            promises.push(dataHub.queryMeasurement(orgSignalReference).then(function (measurement) {
-                                return dataHub.createIndexedPointTag(cell.IDLabel(), digitalSignalType.Acronym, index).then(function (pointTag) {
+                            promises.push(phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
+                                return phasorHub.createIndexedPointTag(cell.IDLabel(), digitalSignalType.Acronym, index).then(function (pointTag) {
                                     measurement.DeviceID = cell.ID;
                                     measurement.HistorianID = viewModel.historianID();
                                     measurement.PointTag = pointTag;
@@ -1448,7 +1451,7 @@
                                     measurement.Internal = true;
                                     measurement.Enabled = true;
 
-                                    return dataHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
+                                    return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
                                         showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
                                     });
                                 })
@@ -1498,7 +1501,7 @@
                             const iphmID = current.iphmMeasurement.SignalID;
 
                             // Query for existing power calculation, this will create a new record if not found
-                            promises.push(dataHub.queryPowerCalculationForDescriptionOrInputs(circuitDescription, vphaID, vphmID, iphaID, iphmID).then(function (powerCalculation) {
+                            promises.push(phasorHub.queryPowerCalculationForDescriptionOrInputs(circuitDescription, vphaID, vphmID, iphaID, iphmID).then(function (powerCalculation) {
                                 powerCalculation.VoltageAngleSignalID = vphaID;
                                 powerCalculation.VoltageMagSignalID = vphmID;
                                 powerCalculation.CurrentAngleSignalID = iphaID;
@@ -1512,12 +1515,12 @@
                                     powerCalculation.CircuitDescription = circuitDescription;
 
                                 if (powerCalculation.ID === 0) {
-                                    return dataHub.addNewPowerCalculation(powerCalculation).fail(function (error) {
+                                    return phasorHub.addNewPowerCalculation(powerCalculation).fail(function (error) {
                                         showErrorMessage("Failed to add new power calculation record: " + error);
                                     });
                                 }
                                 else {
-                                    return dataHub.updatePowerCalculation(powerCalculation).fail(function (error) {
+                                    return phasorHub.updatePowerCalculation(powerCalculation).fail(function (error) {
                                         showErrorMessage("Failed to update power calculation record: " + error);
                                     });
                                 }
@@ -1633,7 +1636,7 @@
             const iphaID = linePhase.current.iphaMeasurement.SignalID;
             const iphmID = linePhase.current.iphmMeasurement.SignalID;
 
-            return dataHub.queryPowerCalculationForInputs(vphaID, vphmID, iphaID, iphmID).then(function (powerCalculation) {
+            return phasorHub.queryPowerCalculationForInputs(vphaID, vphmID, iphaID, iphmID).then(function (powerCalculation) {
                 if (powerCalculation.ID > 0) {
                     switch (type) {
                         case "MW":
@@ -1709,7 +1712,7 @@
                     const signalReference = String.format("{0}-{1}-{2}-{3}", cell.IDLabel(), tagTemplate.TagName, lineName, calcSignalType.Suffix);
 
                     // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-                    return dataHub.queryMeasurement(orgSignalReference).then(function (measurement) {
+                    return phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
                         measurement.DeviceID = cell.ID;
                         measurement.HistorianID = viewModel.historianID();
                         measurement.PointTag = getCleanAcronym(String.format("{0}-{1}:CALC-{2}", cell.IDLabel(), lineName, tagTemplate.TagName));
@@ -1719,8 +1722,8 @@
                         measurement.Internal = true;
                         measurement.Enabled = true;
 
-                        return dataHub.addNewOrUpdateMeasurement(measurement).then(function () {
-                            return dataHub.queryMeasurement(signalReference).then(function (measurement) {
+                        return phasorHub.addNewOrUpdateMeasurement(measurement).then(function () {
+                            return phasorHub.queryMeasurement(signalReference).then(function (measurement) {
                                 const connectionString = new Dictionary();
                                 const variableList = new Dictionary();
                                 const equation = "APW+BPW+CPW";
@@ -1737,7 +1740,7 @@
                                 connectionString.set("outputMeasurements", measurement.SignalID);
                                 connectionString.set("useLatestValues", "false");
 
-                                return dataHub.newCustomActionAdapter().then(function (adapter) {
+                                return phasorHub.newCustomActionAdapter().then(function (adapter) {
                                     adapter.NodeID = nodeID;
                                     adapter.AdapterName = measurement.PointTag;
                                     adapter.AssemblyName = "DynamicCalculator.dll";
@@ -1746,7 +1749,7 @@
                                     adapter.LoadOrder = 100;
                                     adapter.Enabled = true;
 
-                                    return dataHub.addNewOrUpdateCustomActionAdapter(adapter).then(function () {
+                                    return phasorHub.addNewOrUpdateCustomActionAdapter(adapter).then(function () {
                                         return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                                     })
                                     .fail(function (error) {
@@ -1902,9 +1905,9 @@
                     }
                 }
 
-                promises.push(dataHub.queryMeasurement(label + "-FQ").then(function (measurement) {
+                promises.push(phasorHub.queryMeasurement(label + "-FQ").then(function (measurement) {
                     vars.FREQ = measurement.SignalID;
-                    return dataHub.queryMeasurement(label + "-SF");
+                    return phasorHub.queryMeasurement(label + "-SF");
                 })
                 .then(function (measurement) {
                     vars.FLAGS = measurement.SignalID;
@@ -1916,7 +1919,7 @@
             }
 
             return $(promises).whenAll().then(function () {
-                return dataHub.queryMeasurement("SYSTEM!FREQ-AVG-FQ");
+                return phasorHub.queryMeasurement("SYSTEM!FREQ-AVG-FQ");
             })
             .then(function (measurement) {
                 if (measurement && measurement.SignalID)
@@ -2069,7 +2072,7 @@
                         const signalReference = String.format("{0}-{1}-{2}{3}", cell.IDLabel(), tagTemplate.TagName, calcSignalType.Suffix, singletonCalculation ? "" : String(index));
 
                         // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-                        promises.push(dataHub.queryMeasurement(orgSignalReference).then(function (measurement) {
+                        promises.push(phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
                             measurement.DeviceID = cell.ID;
                             measurement.HistorianID = viewModel.historianID();
                             measurement.PointTag = String.format("{0}-<0>:CALC-{1}", cell.IDLabel(), tagTemplate.TagName);
@@ -2079,8 +2082,8 @@
                             measurement.Internal = true;
                             measurement.Enabled = true;
 
-                            return dataHub.addNewOrUpdateMeasurement(measurement).then(function () {
-                                return dataHub.queryMeasurement(signalReference).then(function (measurement) {
+                            return phasorHub.addNewOrUpdateMeasurement(measurement).then(function () {
+                                return phasorHub.queryMeasurement(signalReference).then(function (measurement) {
                                     var phasorDefinition = null;
                                     const connectionString = new Dictionary();
                                     const variableList = new Dictionary();
@@ -2124,12 +2127,12 @@
                                         const label = phasorDefinition.Label().replaceAll(" ", "_").toUpperCase();
                                         measurement.PointTag = getCleanAcronym(String.format(measurement.PointTag.replace("<0>", "{0}"), label));
                                         measurement.Description = String.format(measurement.Description.replace("<0>", "{0}"), phasorDefinition.Label());
-                                        dataHub.updateMeasurement(measurement);
+                                        phasorHub.updateMeasurement(measurement);
                                     }
                                     else {
                                         measurement.PointTag = getCleanAcronym(measurement.PointTag.replace("-<0>", ""));
                                         measurement.Description = measurement.Description.replace(" <0>", "");
-                                        dataHub.updateMeasurement(measurement);
+                                        phasorHub.updateMeasurement(measurement);
                                     }
 
                                     connectionString.set("variableList", variableList.joinKeyValuePairs());
@@ -2140,7 +2143,7 @@
                                     connectionString.set("outputMeasurements", measurement.SignalID);
                                     connectionString.set("useLatestValues", "false");
 
-                                    return dataHub.newCustomActionAdapter().then(function (adapter) {
+                                    return phasorHub.newCustomActionAdapter().then(function (adapter) {
                                         adapter.NodeID = nodeID;
                                         adapter.AdapterName = measurement.PointTag;
                                         adapter.AssemblyName = "DynamicCalculator.dll";
@@ -2149,7 +2152,7 @@
                                         adapter.LoadOrder = 100;
                                         adapter.Enabled = true;
 
-                                        return dataHub.addNewOrUpdateCustomActionAdapter(adapter).then(function () {
+                                        return phasorHub.addNewOrUpdateCustomActionAdapter(adapter).then(function () {
                                             return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                                         })
                                         .fail(function (error) {
@@ -2191,8 +2194,8 @@
                 return $.Deferred().resolve().promise();
             }
 
-            return dataHub.loadTemplate(templateType).then(function (tagTemplates) {
-                return dataHub.validateCalculatorConfigurations(viewModel.historianID()).then(function () {
+            return phasorHub.loadTemplate(templateType).then(function (tagTemplates) {
+                return phasorHub.validateCalculatorConfigurations(viewModel.historianID()).then(function () {
                     return serviceHub.sendCommand("initialize PHASOR!AVERAGEFREQ").then(function () {
                         const promises = [];
 
@@ -2283,12 +2286,12 @@
                         showInfoMessage(String.format("Saving \"{0}\" device {1} / {2} please wait...", cell.IDLabel(), index + 1, cellCount), -1);
 
                         // Query existing child device record - function will create a new blank device record if one does not exist
-                        return dataHub.queryDeviceByID(cell.ID).then(function (device) {
+                        return phasorHub.queryDeviceByID(cell.ID).then(function (device) {
                             // Check if this is a direct update to child device
                             if (cellCount === 1 && device.ID === id) {
                                 cell.ID = id;
 
-                                return dataHub.updateDevice(device).then(function () {
+                                return phasorHub.updateDevice(device).then(function () {
                                     // Save measurements and calculations associated with a directly edited child device
                                     return saveDeviceMeasurements(cell).then(function () {
                                         return saveTemplateCalculations(cell);
@@ -2312,9 +2315,9 @@
                                 // Check if this is a new device or an edit to an existing one
                                 if (device.ID === 0) {
                                     // Add new device record
-                                    return dataHub.addNewDevice(device).then(function () {
+                                    return phasorHub.addNewDevice(device).then(function () {
                                         // Get newly added device with auto-incremented ID
-                                        return dataHub.queryDevice(device.Acronym).then(function (newDevice) {
+                                        return phasorHub.queryDevice(device.Acronym).then(function (newDevice) {
                                             // Save associated device records...
                                             cell.ID = newDevice.ID;
 
@@ -2332,7 +2335,7 @@
                                 }
                                 else {
                                     // Update existing device record
-                                    return dataHub.updateDevice(device).then(function () {
+                                    return phasorHub.updateDevice(device).then(function () {
                                         // Save associated device records...
                                         cell.ID = device.ID;
 
@@ -2380,7 +2383,7 @@
             disableUIButtons();
 
             // Query existing device record - function will create a new blank device record if one does not exist
-            return dataHub.queryDeviceByID(deviceID).then(function (device) {
+            return phasorHub.queryDeviceByID(deviceID).then(function (device) {
                 // Set device properties
                 const configFrame = viewModel.configFrame();
                 var connectionString = configFrame.ConnectionString + "";
@@ -2422,9 +2425,9 @@
                 // Check if this is a new device or an edit to an existing one
                 if (device.ID === 0) {
                     // Add new device record
-                    return dataHub.addNewDevice(device).then(function () {
+                    return phasorHub.addNewDevice(device).then(function () {
                         // Get newly added device with auto-incremented ID
-                        return dataHub.queryDevice(device.Acronym).then(function (newDevice) {
+                        return phasorHub.queryDevice(device.Acronym).then(function (newDevice) {
                             // Save associated device records...
                             deviceID = newDevice.ID;
 
@@ -2448,7 +2451,7 @@
                 }
                 else {
                     // Update existing device record
-                    return dataHub.updateDevice(device).then(function () {
+                    return phasorHub.updateDevice(device).then(function () {
                         // Save associated device records...
                         return saveDeviceRecords(device.ID).then(function () {
                             enableUIButtons("Save complete.");
@@ -2477,7 +2480,7 @@
             if (!hubIsConnected)
                 return;
 
-            dataHub.queryDeviceByID(id).done(function (device) {
+            phasorHub.queryDeviceByID(id).done(function (device) {
                 $("#editDeviceName").html("Editing&nbsp;" + device.Acronym);
             })
             .fail(function (error) {
@@ -2511,15 +2514,36 @@
 
         // Page initialization function
         $(function () {
+            // Connect to phasor hub
+            phasorHub = $.connection.phasorHub.server;
+            phasorHubClient = $.connection.phasorHub.client;
+
+            // Create hub client functions for message control
+            function encodeInfoMessage(message, timeout) {
+                // Html encode message
+                const encodedMessage = $("<div />").text(message).html();
+                showInfoMessage(encodedMessage, timeout);
+            }
+
+            function encodeErrorMessage(message, timeout) {
+                // Html encode message
+                const encodedMessage = $("<div />").text(message).html();
+                showErrorMessage(encodedMessage, timeout);
+            }
+
+            // Register info and error message handlers for each hub client
+            phasorHubClient.sendInfoMessage = encodeInfoMessage;
+            phasorHubClient.sendErrorMessage = encodeErrorMessage;
+
             $("#bodyContainer").addClass("fill-height");
 
             // Define local rule that will check that device acronym is unique in the database
             ko.validation.rules["deviceUniqueInDatabase"] = {
                 async: true,
                 validator: function (newVal, options, callback) {
-                    if (viewModel.dataHubIsConnected()) {
+                    if (viewModel.phasorHubIsConnected()) {
                         // Lookup Device record by Acronym - this will return an empty record if not found
-                        dataHub.queryDevice(newVal).done(function (device) {
+                        phasorHub.queryDevice(newVal).done(function (device) {
                             // Valid if device doesn't exist or is itself
                             callback(device.ID === 0 || device.ID === options);
                         })
@@ -2578,7 +2602,7 @@
 
             // Let view model know about hub connectivity changes
             $(window).on("hubConnected", function () {
-                viewModel.dataHubIsConnected(true);
+                viewModel.phasorHubIsConnected(true);
 
                 if (!firstConnect)
                     return;
@@ -2587,6 +2611,8 @@
 
                 if (deviceID > 0)
                     loadDeviceConnection(deviceID);
+
+                // TODO: Handle "instance" names for openPDC
 
                 const instanceNameSelect = $("#instanceName");
 
@@ -2619,7 +2645,7 @@
 
                 // Load available calculation templates, if not already loaded
                 if (templateTypeSelect.children("option").length === 0) {
-                    dataHub.getTemplateTypes().done(function (names) {
+                    phasorHub.getTemplateTypes().done(function (names) {
                         for (let i = 0; i < names.length; i++) {
                             const value = names[i];
                             templateTypeSelect.append($("<option>", { value: value, text: value }));
@@ -2640,10 +2666,10 @@
                     });
                 }
 
-                dataHub.loadSignalTypes("PMU").then(function (result) {
+                phasorHub.loadSignalTypes("PMU").then(function (result) {
                     deviceSignalTypes = result;
 
-                    return dataHub.loadSignalTypes("Phasor").then(function (result) {
+                    return phasorHub.loadSignalTypes("Phasor").then(function (result) {
                         phasorSignalTypes = result;
 
                         if (deviceID > 0)
@@ -2653,7 +2679,7 @@
             });
 
             $(window).on("hubDisconnected", function () {
-                viewModel.dataHubIsConnected(false);
+                viewModel.phasorHubIsConnected(false);
             });
 
             $(window).on("messageVisibiltyChanged", function () {
@@ -2759,7 +2785,7 @@
                                 <label><input type="checkbox" data-bind="checked: addDigitals"> Add Digitals</label>
                             </div>
                         </form>
-                        <button type="button" class="btn btn-sm btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !dataHubIsConnected() || (!editMode() && isEmpty(configFrame().ConnectionString))">
+                        <button type="button" class="btn btn-sm btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !phasorHubIsConnected() || (!editMode() && isEmpty(configFrame().ConnectionString))">
                             <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Save&nbsp;Device
                         </button>
                     </div>
@@ -2783,52 +2809,52 @@
             <h3>Voltages</h3>
             <table class="table table-condensed table-striped table-hover">
                 <thead>
-                    <tr>
-                        <!-- ko if: configFrame().Cells.length > 1 -->
-                        <th class="text-left">Device&nbsp;Acronym</th>
-                        <!-- /ko -->
-                        <th class="text-left">Phasor&nbsp;Label</th>
-                        <th class="text-center">Phase</th>
-                        <th class="text-left">Nominal&nbsp;Voltage</th>
-                    </tr>
+                <tr>
+                    <!-- ko if: configFrame().Cells.length > 1 -->
+                    <th class="text-left">Device&nbsp;Acronym</th>
+                    <!-- /ko -->
+                    <th class="text-left">Phasor&nbsp;Label</th>
+                    <th class="text-center">Phase</th>
+                    <th class="text-left">Nominal&nbsp;Voltage</th>
+                </tr>
                 </thead>
                 <tbody data-bind="foreach: { data: voltages }">
-                    <tr id="voltageRow" style="visibility: hidden" data-bind="css: { 'top-border': FirstVoltage }">
-                        <!-- ko if: !FirstVoltage && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left valign-middle">
-                            <div class="input-group"></div>
-                        </td>
-                        <!-- /ko -->
-                        <!-- ko if: FirstVoltage && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left valign-middle">
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
-                                <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
-                            </div>
-                        </td>
-                        <!-- /ko -->
-                        <td width="210px" class="text-left valign-middle">
-                            <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
-                                <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
-                            </div>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true) }">
-                                <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
-                            </div>
-                        </td>
-                        <td width="55px" class="text-center valign-middle">
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true) }">
-                                <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
-                            </div>
-                        </td>
-                        <td class="text-left valign-middle">
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(NominalVoltage, true), 'has-feedback': !fieldIsValid(NominalVoltage, true) }">
-                                <input type="text" class="form-control" style="width: 70px; margin-left: 10px" data-bind="integer: NominalVoltage, textInput: NominalVoltage, enable: Enabled" required>&nbsp;<span class="table-cell-text">kV</span>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(NominalVoltage, true)"></span>
-                            </div>
-                        </td>
-                    </tr>
+                <tr id="voltageRow" style="visibility: hidden" data-bind="css: { 'top-border': FirstVoltage }">
+                    <!-- ko if: !FirstVoltage && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left valign-middle">
+                        <div class="input-group"></div>
+                    </td>
+                    <!-- /ko -->
+                    <!-- ko if: FirstVoltage && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left valign-middle">
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
+                            <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
+                        </div>
+                    </td>
+                    <!-- /ko -->
+                    <td width="210px" class="text-left valign-middle">
+                        <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
+                            <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
+                        </div>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true) }">
+                            <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
+                        </div>
+                    </td>
+                    <td width="55px" class="text-center valign-middle">
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true) }">
+                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
+                        </div>
+                    </td>
+                    <td class="text-left valign-middle">
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(NominalVoltage, true), 'has-feedback': !fieldIsValid(NominalVoltage, true) }">
+                            <input type="text" class="form-control" style="width: 70px; margin-left: 10px" data-bind="integer: NominalVoltage, textInput: NominalVoltage, enable: Enabled" required>&nbsp;<span class="table-cell-text">kV</span>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(NominalVoltage, true)"></span>
+                        </div>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -2838,51 +2864,55 @@
             <h3>Currents</h3>
             <table class="table table-condensed table-striped table-hover">
                 <thead>
-                    <tr>
-                        <!-- ko if: configFrame().Cells.length > 1 -->
-                        <th class="text-left">Device&nbsp;Acronym</th>
-                        <!-- /ko -->
-                        <th class="text-left">Phasor&nbsp;Label</th>
-                        <th class="text-center">Phase</th>
-                        <th class="text-left">Associated&nbsp;Voltage</th>
-                    </tr>
+                <tr>
+                    <!-- ko if: configFrame().Cells.length > 1 -->
+                    <th class="text-left">Device&nbsp;Acronym</th>
+                    <!-- /ko -->
+                    <th class="text-left">Phasor&nbsp;Label</th>
+                    <th class="text-center">Phase</th>
+                    <th class="text-left">Associated&nbsp;Voltage</th>
+                </tr>
                 </thead>
                 <tbody data-bind="foreach: { data: currents }">
-                    <tr id="currentRow" style="visibility: hidden" data-bind="css: { 'top-border': FirstCurrent }">
-                        <!-- ko if: !FirstCurrent && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left valign-middle">
-                            <div class="input-group"></div>
-                        </td>
-                        <!-- /ko -->
-                        <!-- ko if: FirstCurrent && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left valign-middle">
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
-                                <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
-                            </div>
-                        </td>
-                        <!-- /ko -->
-                        <td width="210px" class="text-left valign-middle">
-                            <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
-                                <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
-                            </div>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true) }">
-                                <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
-                            </div>
-                        </td>
-                        <td width="55px" class="text-center valign-middle">
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true) }">
-                                <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
-                            </div>
-                        </td>
-                        <td class="text-left valign-middle">
-                            <select class="form-control" style="width: 90%" data-bind="options: DeviceVoltages, optionsCaption: '', value: AssociatedVoltage, optionsText: 'Label', optionsValue: 'ID', valueAllowUnset: true, enable: Enabled"></select>
-                        </td>
-                    </tr>
+                <tr id="currentRow" style="visibility: hidden" data-bind="css: { 'top-border': FirstCurrent }">
+                    <!-- ko if: !FirstCurrent && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left valign-middle">
+                        <div class="input-group"></div>
+                    </td>
+                    <!-- /ko -->
+                    <!-- ko if: FirstCurrent && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left valign-middle">
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
+                            <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
+                        </div>
+                    </td>
+                    <!-- /ko -->
+                    <td width="210px" class="text-left valign-middle">
+                        <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
+                            <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
+                        </div>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true) }">
+                            <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
+                        </div>
+                    </td>
+                    <td width="55px" class="text-center valign-middle">
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true) }">
+                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
+                        </div>
+                    </td>
+                    <td class="text-left valign-middle">
+                        <select class="form-control" style="width: 90%" data-bind="options: DeviceVoltages, optionsCaption: '', value: AssociatedVoltage, optionsText: 'Label', optionsValue: 'ID', valueAllowUnset: true, enable: Enabled"></select>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+@{
+    ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
+    ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
+}
