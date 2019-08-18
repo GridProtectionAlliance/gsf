@@ -21,14 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Formatters;
-using System.Runtime.Serialization.Formatters.Soap;
-using System.Text;
-using System.Threading.Tasks;
 using GSF;
 using GSF.ComponentModel;
 using GSF.Data.Model;
@@ -42,6 +34,14 @@ using PhasorProtocolAdapters;
 using PhasorWebUI.Adapters;
 using PhasorWebUI.Model;
 using PowerCalculations.PowerMultiCalculator;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Formatters;
+using System.Runtime.Serialization.Formatters.Soap;
+using System.Text;
+using System.Threading.Tasks;
 using Phasor = PhasorWebUI.Model.Phasor;
 using SignalType = PhasorWebUI.Model.SignalType;
 
@@ -149,7 +149,7 @@ namespace PhasorWebUI
 
         private int VirtualProtocolID => s_virtualProtocolID != default(int) ? s_virtualProtocolID : (s_virtualProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'"));
 
-        private dynamic AppModelGlobal => s_appModelGlobal != default(dynamic) ? s_appModelGlobal : (s_appModelGlobal = ValueExpressionParser.DefaultTypeRegistry["Global"]);
+        private dynamic AppModelGlobal => s_appModelGlobal != default(dynamic) ? s_appModelGlobal : (s_appModelGlobal = (ValueExpressionParser.DefaultTypeRegistry["Global"] as ExpressionEvaluator.ValueType)?.Value);
 
         private string CompanyAcronym => s_companyAcronym ?? (s_companyAcronym = AppModelGlobal.CompanyAcronym);
 
