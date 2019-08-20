@@ -80,10 +80,10 @@ namespace DeviceStatAdapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the external database connection string used for synchronization of alarm states. Leave blank to use local configuration database defined in "systemSettings".
+        /// Gets or sets the external database connection string used for saving device stats.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the database connection string used for saving device stats. Leave blank to use local configuration database defined in \"systemSettings\".")]
+        [Description("Defines the database connection string used for saving device stats.")]
         public string DatabaseConnnectionString
         {
             get;
@@ -91,10 +91,10 @@ namespace DeviceStatAdapters
         }
 
         /// <summary>
-        /// Gets or sets the external database provider string used for synchronization of alarm states.
+        /// Gets or sets the external database provider string used for saving device stats.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the external database provider string used for synchronization of alarm states.")]
+        [Description("Defines the external database provider string used for saving device stats.")]
         [DefaultValue("AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter")]
         public string DatabaseProviderString
         {
@@ -115,7 +115,7 @@ namespace DeviceStatAdapters
         /// <summary>
         /// Gets or sets output measurements that the adapter will produce, if any.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)] // Automatically controlled
+        [EditorBrowsable(EditorBrowsableState.Never)] // Not used
         public override IMeasurement[] OutputMeasurements
         {
             get => base.OutputMeasurements;
@@ -125,10 +125,7 @@ namespace DeviceStatAdapters
         /// <summary>
         /// Gets or sets the frames per second to be used by the <see cref="FacileActionAdapterBase"/>.
         /// </summary>
-        /// <remarks>
-        /// This value is only tracked in the <see cref="FacileActionAdapterBase"/>, derived class will determine its use.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)] // Automatically controlled
+        [EditorBrowsable(EditorBrowsableState.Never)] // Not used
         public override int FramesPerSecond
         {
             get => base.FramesPerSecond;
@@ -138,7 +135,7 @@ namespace DeviceStatAdapters
         /// <summary>
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)] // Automatically controlled
+        [EditorBrowsable(EditorBrowsableState.Never)] // Not used
         public new double LagTime
         {
             get;
@@ -148,7 +145,7 @@ namespace DeviceStatAdapters
         /// <summary>
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)] // Automatically controlled
+        [EditorBrowsable(EditorBrowsableState.Never)] // Not used
         public new double LeadTime
         {
             get;
@@ -168,6 +165,8 @@ namespace DeviceStatAdapters
             set
             {
                 base.DataSource = value;
+
+                // Update device synchronization at any data source update to check for newly added devices
                 QueueDeviceSync();
             }
         }
@@ -244,7 +243,7 @@ namespace DeviceStatAdapters
                         if (statDevice.ID == 0)
                             statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", device["Acronym"]);
 
-                        DataRow row = gsfConnection.RetrieveRow("SELECT SignalID, ID FROM  MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'", statDevice.Acronym);
+                        DataRow row = gsfConnection.RetrieveRow("SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'", statDevice.Acronym);
 
                         if (!string.IsNullOrEmpty(row.ConvertField<string>("ID")))
                         {
