@@ -56,6 +56,9 @@ namespace DeviceStatAdapters
         private readonly ConcurrentDictionary<int, Ticks> m_deviceMinuteTime;
         private readonly ConcurrentDictionary<int, Tuple<long, long, long>> m_deviceMinuteCounts;
         private readonly HashSet<int> m_deviceMinuteInitialized;
+        private long m_measurementTests;
+        private long m_databaseWrites;
+        private string m_lastDatabaseResult;
 
         #endregion
 
@@ -186,6 +189,12 @@ namespace DeviceStatAdapters
                 status.Append(base.Status);
                 status.AppendFormat("    Monitored Device Count: {0:N0}", InputMeasurementKeys?.Length ?? 0);
                 status.AppendLine();
+                status.AppendFormat("         Measurement Tests: {0:N0}", m_measurementTests);
+                status.AppendLine();
+                status.AppendFormat("           Database Writes: {0:N0}", m_databaseWrites);
+                status.AppendLine();
+                status.AppendFormat("      Last Database Result: {0}", m_lastDatabaseResult ?? "N/A");
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -213,9 +222,9 @@ namespace DeviceStatAdapters
                 using (AdoDataConnection statConnection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
                 using (AdoDataConnection gsfConnection = new AdoDataConnection("systemSettings"))
                 {
-                    // Load any newly defined devices into the alarm device table
+                    // Load any newly defined devices into the statistics device table
                     TableOperations<Device> deviceTable = new TableOperations<Device>(statConnection);
-                    DataRow[] devices = gsfConnection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0 ").Select();
+                    DataRow[] devices = gsfConnection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0").Select();
 
                     foreach (DataRow device in devices)
                     {
@@ -273,62 +282,75 @@ namespace DeviceStatAdapters
         /// <returns>A short one-line summary of the current status of this adapter.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return (Enabled ? $"Actively counting statistics for {InputMeasurementKeys.Length:N0} devices..." : "Adapter is not running").CenterText(maxLength);
+            return (Enabled ? $"Actively counting statistics for {InputMeasurementKeys.Length:N0} devices, {m_databaseWrites:N0} database writes so far..." : "Adapter is not running").CenterText(maxLength);
         }
 
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
             foreach (IMeasurement measurement in measurements)
             {
-                if (m_measurementDevice.TryGetValue(measurement.ID, out int deviceID))
+                if (!m_measurementDevice.TryGetValue(measurement.ID, out int deviceID))
+                    continue;
+
+                if (!m_deviceMinuteTime.TryGetValue(deviceID, out Ticks lastMinuteTime))
+                    continue;
+
+                Ticks minuteTime = measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Minute);
+
+                if (minuteTime > lastMinuteTime)
                 {
-                    if (m_deviceMinuteTime.TryGetValue(deviceID, out Ticks lastMinuteTime))
+                    if (lastMinuteTime > 0L)
                     {
-                        Ticks minuteTime = measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Minute);
-
-                        if (minuteTime > lastMinuteTime)
-                        {
-                            if (lastMinuteTime > 0)
-                            {
-                                // Skip first minute of data, it will likely not contain a full set of data
-                                if (m_deviceMinuteInitialized.Contains(deviceID))
-                                    WriteDeviceMinuteCounts(deviceID, lastMinuteTime, m_deviceMinuteCounts[deviceID]);
-                                else
-                                    m_deviceMinuteInitialized.Add(deviceID);
-                            }
-
-                            // Reset counts
-                            m_deviceMinuteTime[deviceID] = minuteTime;
-                            m_deviceMinuteCounts[deviceID] = new Tuple<long, long, long>(0L, 0L, 0L);
-                        }
-
-                        Tuple<long, long, long> counts = m_deviceMinuteCounts[deviceID];
-
-                        // Increment counts
-                        m_deviceMinuteCounts[deviceID] = new Tuple<long, long, long>(
-                            /*  ReceivedCount */ counts.Item1 + 1L,
-                            /* DataErrorCount */ counts.Item2 + (measurement.ValueQualityIsGood() ? 0L : 1L),
-                            /* TimeErrorCount */ counts.Item3 + (measurement.TimestampQualityIsGood() ? 0L : 1L));
+                        // Skip first minute of data, it will likely not contain a full set of data
+                        if (m_deviceMinuteInitialized.Contains(deviceID))
+                            WriteDeviceMinuteCounts(deviceID, lastMinuteTime, m_deviceMinuteCounts[deviceID]);
+                        else
+                            m_deviceMinuteInitialized.Add(deviceID);
                     }
+
+                    // Reset counts
+                    m_deviceMinuteTime[deviceID] = minuteTime;
+                    m_deviceMinuteCounts[deviceID] = new Tuple<long, long, long>(0L, 0L, 0L);
                 }
+
+                Tuple<long, long, long> counts = m_deviceMinuteCounts[deviceID];
+
+                // Increment counts
+                m_deviceMinuteCounts[deviceID] = new Tuple<long, long, long>(
+                    /*  ReceivedCount */ counts.Item1 + 1L,
+                    /* DataErrorCount */ counts.Item2 + (measurement.ValueQualityIsGood() ? 0L : 1L),
+                    /* TimeErrorCount */ counts.Item3 + (measurement.TimestampQualityIsGood() ? 0L : 1L));
+
+                m_measurementTests++;
             }
         }
 
         private void WriteDeviceMinuteCounts(int deviceID, Ticks minuteTime, Tuple<long, long, long> counts)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+            try
             {
-                TableOperations<MinuteStats> minuteStatsTable = new TableOperations<MinuteStats>(connection);
+                using (AdoDataConnection connection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+                {
+                    TableOperations<MinuteStats> minuteStatsTable = new TableOperations<MinuteStats>(connection);
 
-                MinuteStats record = minuteStatsTable.NewRecord();
+                    MinuteStats record = minuteStatsTable.NewRecord();
 
-                record.DeviceID = deviceID;
-                record.Timestamp = minuteTime;
-                record.ReceivedCount = counts.Item1;
-                record.DataErrorCount = counts.Item2;
-                record.TimeErrorCount = counts.Item3;
+                    record.DeviceID = deviceID;
+                    record.Timestamp = minuteTime;
+                    record.ReceivedCount = counts.Item1;
+                    record.DataErrorCount = counts.Item2;
+                    record.TimeErrorCount = counts.Item3;
 
-                minuteStatsTable.AddNewRecord(record);
+                    minuteStatsTable.AddNewRecord(record);
+
+                    m_databaseWrites++;
+                    m_lastDatabaseResult = "Success";
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Error, ex);
+                m_lastDatabaseResult = ex.Message;
             }
         }
 
