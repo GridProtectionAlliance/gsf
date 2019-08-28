@@ -1003,12 +1003,13 @@ namespace GSF.Parsing
         /// <summary>
         /// Validates that expected field names match field names found.
         /// </summary>
-        /// <param name="expectedFieldNames"></param>
-        /// <param name="actualFieldNames"></param>
+        /// <param name="expectedFieldNames">The string array of expected field names.</param>
+        /// <param name="actualFieldNames">The string array of actual field names.</param>
         /// <param name="matchCase">Set to TRUE to require case to match.</param>
         /// <param name="length">The number of fields to check.  Less than 1 sets length to expectedFieldName length</param>
+        /// <param name="startIndex">The index to use to start matching test.</param>
         /// <returns></returns>
-        public static bool ExpectedFieldNamesMatch(string[] expectedFieldNames, string[] actualFieldNames, bool matchCase = true, int length = 0)
+        public static bool ExpectedFieldNamesMatch(string[] expectedFieldNames, string[] actualFieldNames, bool matchCase = true, int length = 0, int startIndex = 0)
         {
             if (expectedFieldNames == null || actualFieldNames == null)
                 return false;
@@ -1016,7 +1017,10 @@ namespace GSF.Parsing
             if (length <= 0 || length > expectedFieldNames.Length)
                 length = expectedFieldNames.Length;
 
-            for (int i = 0; i < length; i++)
+            if (startIndex < 0 || startIndex > expectedFieldNames.Length - 1)
+                return false;
+
+            for (int i = startIndex; i < length; i++)
             {
                 if (i == actualFieldNames.Length)
                     return false;
