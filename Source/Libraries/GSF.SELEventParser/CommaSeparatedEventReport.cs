@@ -655,7 +655,12 @@ namespace GSF.SELEventParser
                 cSER.AnalogSection.AnalogChannels[fieldIndex].Name = lastHeaderFields[fieldIndex];
                 if (lastHeaderFields[fieldIndex].ToUpper().Contains("KV"))
                 {
-                    scalingFactors[fieldIndex] = 1000D;
+                    scalingFactors[fieldIndex] = 1000D * Math.Sqrt(2);
+                    scalingRequired = true;
+                }
+                else if (lastHeaderFields[fieldIndex].ToUpper().Contains("VA(V)") || lastHeaderFields[fieldIndex].ToUpper().Contains("VB(V)") || lastHeaderFields[fieldIndex].ToUpper().Contains("VC(V)"))
+                {
+                    scalingFactors[fieldIndex] = 1D * Math.Sqrt(2);
                     scalingRequired = true;
                 }
                 else
