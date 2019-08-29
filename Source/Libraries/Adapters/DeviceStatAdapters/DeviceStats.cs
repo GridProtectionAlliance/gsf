@@ -50,11 +50,27 @@ namespace DeviceStatAdapters
     {
         #region [ Members ]
 
+        // Nested Types
+        private class MinuteCounts
+        {
+            public long ReceivedCount { get; set; }
+            public long DataErrorCount { get; set; }
+            public long TimeErrorCount { get; set; }
+            public double MinLatency { get; set; } = double.NaN;
+            public double MaxLatency { get; set; } = double.NaN;
+            public double AvgLatencyTotal { get; set; }
+            public int LatencyCount { get; set; }
+        }
+
+        #endregion
+
+        #region [ Members ]
+
         // Fields
         private ShortSynchronizedOperation m_deviceSyncOperation;
         private readonly ConcurrentDictionary<Guid, int> m_measurementDevice;
         private readonly ConcurrentDictionary<int, Ticks> m_deviceMinuteTime;
-        private readonly ConcurrentDictionary<int, Tuple<long, long, long>> m_deviceMinuteCounts;
+        private readonly ConcurrentDictionary<int, MinuteCounts> m_deviceMinuteCounts;
         private readonly HashSet<int> m_deviceMinuteInitialized;
         private long m_measurementTests;
         private long m_databaseWrites;
@@ -71,7 +87,7 @@ namespace DeviceStatAdapters
         {
             m_measurementDevice = new ConcurrentDictionary<Guid, int>();
             m_deviceMinuteTime = new ConcurrentDictionary<int, Ticks>();
-            m_deviceMinuteCounts = new ConcurrentDictionary<int, Tuple<long, long, long>>();
+            m_deviceMinuteCounts = new ConcurrentDictionary<int, MinuteCounts>();
             m_deviceMinuteInitialized = new HashSet<int>();
         }
 
@@ -255,7 +271,7 @@ namespace DeviceStatAdapters
                             // Update device minute maps
                             m_measurementDevice.GetOrAdd(key.SignalID, statDevice.ID);
                             m_deviceMinuteTime.GetOrAdd(statDevice.ID, 0L);
-                            m_deviceMinuteCounts.GetOrAdd(statDevice.ID, new Tuple<long, long, long>(0L, 0L, 0L));
+                            m_deviceMinuteCounts.GetOrAdd(statDevice.ID, new MinuteCounts());
                         }
                     }
                 }
@@ -286,6 +302,8 @@ namespace DeviceStatAdapters
 
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            Ticks currentTime = DateTime.UtcNow.Ticks;
+
             foreach (IMeasurement measurement in measurements)
             {
                 if (!m_measurementDevice.TryGetValue(measurement.ID, out int deviceID))
@@ -309,22 +327,34 @@ namespace DeviceStatAdapters
 
                     // Reset counts
                     m_deviceMinuteTime[deviceID] = minuteTime;
-                    m_deviceMinuteCounts[deviceID] = new Tuple<long, long, long>(0L, 0L, 0L);
+                    m_deviceMinuteCounts[deviceID] = new MinuteCounts();
                 }
 
-                Tuple<long, long, long> counts = m_deviceMinuteCounts[deviceID];
+                if (m_deviceMinuteCounts.TryGetValue(deviceID, out MinuteCounts counts))
+                {
+                    // Increment counts
+                    counts.ReceivedCount++;
+                    counts.DataErrorCount += measurement.ValueQualityIsGood() ? 0L : 1L;
+                    counts.TimeErrorCount += measurement.TimestampQualityIsGood() ? 0L : 1L;
 
-                // Increment counts
-                m_deviceMinuteCounts[deviceID] = new Tuple<long, long, long>(
-                    /*  ReceivedCount */ counts.Item1 + 1L,
-                    /* DataErrorCount */ counts.Item2 + (measurement.ValueQualityIsGood() ? 0L : 1L),
-                    /* TimeErrorCount */ counts.Item3 + (measurement.TimestampQualityIsGood() ? 0L : 1L));
+                    // Track latency statistics
+                    double latency = (currentTime - measurement.Timestamp).ToMilliseconds();
 
-                m_measurementTests++;
+                    if (double.IsNaN(counts.MinLatency) || latency < counts.MinLatency)
+                        counts.MinLatency = latency;
+
+                    if (double.IsNaN(counts.MaxLatency) || latency > counts.MaxLatency)
+                        counts.MaxLatency = latency;
+
+                    counts.AvgLatencyTotal += latency;
+                    counts.LatencyCount++;
+
+                    m_measurementTests++;
+                }
             }
         }
 
-        private void WriteDeviceMinuteCounts(int deviceID, Ticks minuteTime, Tuple<long, long, long> counts)
+        private void WriteDeviceMinuteCounts(int deviceID, Ticks minuteTime, MinuteCounts counts)
         {
             try
             {
@@ -336,9 +366,12 @@ namespace DeviceStatAdapters
 
                     record.DeviceID = deviceID;
                     record.Timestamp = minuteTime;
-                    record.ReceivedCount = counts.Item1;
-                    record.DataErrorCount = counts.Item2;
-                    record.TimeErrorCount = counts.Item3;
+                    record.ReceivedCount = counts.ReceivedCount;
+                    record.DataErrorCount = counts.DataErrorCount;
+                    record.TimeErrorCount = counts.TimeErrorCount;
+                    record.MinLatency = (int)Math.Round(counts.MinLatency);
+                    record.MaxLatency = (int)Math.Round(counts.MaxLatency);
+                    record.AvgLatency = (int)Math.Round(counts.AvgLatencyTotal / counts.LatencyCount);
 
                     minuteStatsTable.AddNewRecord(record);
 

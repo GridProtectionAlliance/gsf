@@ -88,17 +88,23 @@ CREATE TABLE [dbo].[MinuteStats](
     [ID] [int] IDENTITY(1,1) NOT NULL,
     [DeviceID] [int] NOT NULL,
     [Timestamp] [datetime] NOT NULL DEFAULT (getutcdate()),
-    [ReceivedCount] [bigint] NOT NULL DEFAULT (0),
+    [ReceivedCount] [bigint] NOT NULL,
     [DataErrorCount] [bigint] NOT NULL,
-    [TimeErrorCount] [bigint] NOT NULL
+    [TimeErrorCount] [bigint] NOT NULL,
+	[MinLatency] [int] NOT NULL,
+	[MaxLatency] [int] NOT NULL,
+	[AvgLatency] [int] NOT NULL
     CONSTRAINT [PK_MinuteStats] PRIMARY KEY CLUSTERED ( [ID] ASC )
     WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
 ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[MinuteStats]  WITH CHECK ADD  CONSTRAINT [FK_MinuteStats_Device] FOREIGN KEY([DeviceID])
+ALTER TABLE [dbo].[MinuteStats] WITH CHECK ADD CONSTRAINT [FK_MinuteStats_Device] FOREIGN KEY([DeviceID])
 REFERENCES [dbo].[Device] ([ID])
+GO
+
+ALTER TABLE [dbo].[MinuteStats] WITH CHECK ADD CONSTRAINT [UC_MinuteStats_DeviceID_Timestamp] UNIQUE ([DeviceID], [Timestamp])
 GO
 
 SET ANSI_NULLS ON
@@ -113,35 +119,64 @@ CREATE TABLE [dbo].[DailyStats](
     [Timestamp] [datetime] NOT NULL DEFAULT (getutcdate()),
     [ReceivedCount] [bigint] NOT NULL DEFAULT (0),
     [DataErrorCount] [bigint] NOT NULL,
-    [TimeErrorCount] [bigint] NOT NULL
+    [TimeErrorCount] [bigint] NOT NULL,
+	[MinLatency] [int] NOT NULL,
+	[MaxLatency] [int] NOT NULL,
+	[AvgLatency] [int] NOT NULL
     CONSTRAINT [PK_DailyStats] PRIMARY KEY CLUSTERED ( [ID] ASC )
     WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
 ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[DailyStats]  WITH CHECK ADD  CONSTRAINT [FK_DailyStats_Device] FOREIGN KEY([DeviceID])
+ALTER TABLE [dbo].[DailyStats]  WITH CHECK ADD CONSTRAINT [FK_DailyStats_Device] FOREIGN KEY([DeviceID])
 REFERENCES [dbo].[Device] ([ID])
 GO
 
+ALTER TABLE [dbo].[DailyStats] WITH CHECK ADD CONSTRAINT [UC_DailyStats_DeviceID_Timestamp] UNIQUE ([DeviceID], [Timestamp])
 GO
+
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE VIEW [dbo].[MinuteStatsDetail]
 AS
-SELECT MS.ID AS ID, D.Acronym, D.ParentAcronym, MS.Timestamp, MS.ReceivedCount, (MS.ReceivedCount / (D.FramesPerSecond * 60.0) * 100.0) AS Completeness, MS.DataErrorCount, MS.TimeErrorCount
+SELECT MS.ID AS ID,
+       D.Acronym,
+	   D.ParentAcronym,
+	   MS.Timestamp,
+	   MS.ReceivedCount,
+       (MS.ReceivedCount / (D.FramesPerSecond * 60.0) * 100.0) AS Completeness,
+	   MS.DataErrorCount,
+	   MS.TimeErrorCount,
+	   MS.MinLatency,
+	   MS.MaxLatency,
+	   MS.AvgLatency
 FROM [DeviceStats].[dbo].[MinuteStats] AS MS INNER JOIN
 [DeviceStats].[dbo].[Device] D ON MS.DeviceID = D.ID
-
 GO
+
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE VIEW [dbo].[DailyStatsDetail]
 AS
-SELECT DS.ID AS ID, D.Acronym, D.ParentAcronym, DS.Timestamp, DS.ReceivedCount, (DS.ReceivedCount / (D.FramesPerSecond * 86400.0) * 100.0) AS Completeness, DS.DataErrorCount, DS.TimeErrorCount
+SELECT DS.ID AS ID,
+       D.Acronym,
+	   D.ParentAcronym,
+	   DS.Timestamp,
+	   DS.ReceivedCount,
+	   (DS.ReceivedCount / (D.FramesPerSecond * 86400.0) * 100.0) AS Completeness,
+	   DS.DataErrorCount,
+	   DS.TimeErrorCount,
+	   DS.MinLatency,
+	   DS.MaxLatency,
+	   DS.AvgLatency
 FROM [DeviceStats].[dbo].[DailyStats] AS DS INNER JOIN
 [DeviceStats].[dbo].[Device] D ON DS.DeviceID = D.ID

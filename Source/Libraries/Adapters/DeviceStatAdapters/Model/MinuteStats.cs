@@ -17,5 +17,11 @@ namespace DeviceStatAdapters.Model
         public long DataErrorCount { get; set; }
 
         public long TimeErrorCount { get; set; }
+
+        public int MinLatency { get; set; }
+
+        public int MaxLatency { get; set; }
+
+        public int AvgLatency { get; set; }
     }
 }
