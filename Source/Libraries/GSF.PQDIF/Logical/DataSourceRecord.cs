@@ -230,6 +230,44 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
+        /// Gets or sets the name of the data source Owner.
+        /// </summary>
+        public string DataSourceOwner
+        {
+            get
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceNameElement = collectionElement.GetVectorByTag(DataSourceOwnerTag);
+                return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                collectionElement.AddOrUpdateVector(DataSourceOwnerTag, PhysicalType.Char1, bytes);
+            }
+        }
+
+        // <summary>
+        /// Gets or sets the name of the data source Location.
+        /// </summary>
+        public string DataSourceLocation
+        {
+            get
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                VectorElement dataSourceNameElement = collectionElement.GetVectorByTag(DataSourceLocationTag);
+                return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                collectionElement.AddOrUpdateVector(DataSourceLocationTag, PhysicalType.Char1, bytes);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the longitude at which the data source is located.
         /// </summary>
         public uint Longitude
@@ -404,6 +442,15 @@ namespace GSF.PQDIF.Logical
         /// </summary>
         public static readonly Guid DataSourceNameTag = new Guid("b48d8587-f5f5-11cf-9d89-0080c72e70a3");
 
+        /// <summary>
+        /// Tag that identifies the data source owner.
+        /// </summary>
+        public static readonly Guid DataSourceOwnerTag = new Guid("b48d8588-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the data source owner.
+        /// </summary>
+        public static readonly Guid DataSourceLocationTag = new Guid("b48d8589-f5f5-11cf-9d89-0080c72e70a3");
         /// <summary>
         /// Tag that identifies the physical location of the data source.
         /// </summary>
