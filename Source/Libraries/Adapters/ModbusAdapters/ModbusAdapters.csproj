@@ -232,7 +232,6 @@
     <EmbeddedResource Include="ModbusConfigs\KelmanTransformerDGA\TransOpto Last Record.json" />
     <EmbeddedResource Include="ModbusConfigs\PQube\Mappings.json" />
     <EmbeddedResource Include="ModbusConfigs\PQube\PQubeScript.py" />
-    <None Include="app.config" />
     <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 1 Alarm 1+2+3 Settings.json" />
     <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 2 Alarm 1+2+3 Settings.json" />
     <None Include="ModbusConfigs\KelmanTransformerDGA\Analog Input 3 Alarm 1+2+3 Settings.json" />
