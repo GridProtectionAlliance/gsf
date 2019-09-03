@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.MainTabControl = new System.Windows.Forms.TabControl();
             this.ExportTabPage = new System.Windows.Forms.TabPage();
             this.ExportFieldsPanel = new System.Windows.Forms.FlowLayoutPanel();
@@ -56,10 +57,11 @@
             this.SerializedSchemaConfigurationPanel = new System.Windows.Forms.Panel();
             this.SerializedSchemaTextBox = new System.Windows.Forms.TextBox();
             this.SerializedSchemaBrowseButton = new System.Windows.Forms.Button();
+            this.ConfigurationTipLabel = new System.Windows.Forms.Label();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ImportFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.SerializedSchemaBrowseDialog = new System.Windows.Forms.OpenFileDialog();
-            this.ConfigurationTipLabel = new System.Windows.Forms.Label();
+            this.LogoPictureBox = new System.Windows.Forms.PictureBox();
             this.MainTabControl.SuspendLayout();
             this.ExportTabPage.SuspendLayout();
             this.ExportTopBarPanel.SuspendLayout();
@@ -69,6 +71,7 @@
             this.ConfigurationTabPage.SuspendLayout();
             this.ConfigurationPanel.SuspendLayout();
             this.SerializedSchemaConfigurationPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).BeginInit();
             this.SuspendLayout();
             // 
             // MainTabControl
@@ -188,13 +191,15 @@
             this.ImportActionsPanel.Controls.Add(this.InsertButton, 0, 0);
             this.ImportActionsPanel.Controls.Add(this.UpdateButton, 0, 1);
             this.ImportActionsPanel.Controls.Add(this.DeleteButton, 0, 2);
+            this.ImportActionsPanel.Controls.Add(this.LogoPictureBox, 0, 3);
             this.ImportActionsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ImportActionsPanel.Location = new System.Drawing.Point(10, 37);
             this.ImportActionsPanel.Name = "ImportActionsPanel";
-            this.ImportActionsPanel.RowCount = 3;
+            this.ImportActionsPanel.RowCount = 4;
             this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.ImportActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.ImportActionsPanel.Size = new System.Drawing.Size(456, 265);
             this.ImportActionsPanel.TabIndex = 3;
             // 
@@ -418,6 +423,16 @@
             this.SerializedSchemaBrowseButton.UseVisualStyleBackColor = true;
             this.SerializedSchemaBrowseButton.Click += new System.EventHandler(this.SerializedSchemaBrowseButton_Click);
             // 
+            // ConfigurationTipLabel
+            // 
+            this.ConfigurationTipLabel.AutoSize = true;
+            this.ConfigurationTipLabel.Location = new System.Drawing.Point(13, 298);
+            this.ConfigurationTipLabel.Name = "ConfigurationTipLabel";
+            this.ConfigurationTipLabel.Size = new System.Drawing.Size(449, 26);
+            this.ConfigurationTipLabel.TabIndex = 11;
+            this.ConfigurationTipLabel.Text = "Tip: Erasing a setting will revert that setting to its default value. All changes" +
+    " will be saved upon switching to another tab.";
+            // 
             // ExportFileDialog
             // 
             this.ExportFileDialog.DefaultExt = "csv";
@@ -433,15 +448,16 @@
             this.SerializedSchemaBrowseDialog.FileName = "SerializedSchema.bin";
             this.SerializedSchemaBrowseDialog.Filter = "Bin files|*.bin|All files|*.*";
             // 
-            // ConfigurationTipLabel
+            // LogoPictureBox
             // 
-            this.ConfigurationTipLabel.AutoSize = true;
-            this.ConfigurationTipLabel.Location = new System.Drawing.Point(13, 298);
-            this.ConfigurationTipLabel.Name = "ConfigurationTipLabel";
-            this.ConfigurationTipLabel.Size = new System.Drawing.Size(449, 26);
-            this.ConfigurationTipLabel.TabIndex = 11;
-            this.ConfigurationTipLabel.Text = "Tip: Erasing a setting will revert that setting to its default value. All changes" +
-    " will be saved upon switching to another tab.";
+            this.LogoPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.LogoPictureBox.Image = ((System.Drawing.Image)(resources.GetObject("LogoPictureBox.Image")));
+            this.LogoPictureBox.Location = new System.Drawing.Point(4, 115);
+            this.LogoPictureBox.Name = "LogoPictureBox";
+            this.LogoPictureBox.Size = new System.Drawing.Size(448, 146);
+            this.LogoPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.LogoPictureBox.TabIndex = 3;
+            this.LogoPictureBox.TabStop = false;
             // 
             // MainWindow
             // 
@@ -449,6 +465,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(484, 361);
             this.Controls.Add(this.MainTabControl);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(500, 39);
             this.Name = "MainWindow";
             this.Text = "CSV Data Manager";
@@ -468,6 +485,7 @@
             this.ConfigurationPanel.PerformLayout();
             this.SerializedSchemaConfigurationPanel.ResumeLayout(false);
             this.SerializedSchemaConfigurationPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -506,6 +524,7 @@
         private System.Windows.Forms.TextBox SerializedSchemaTextBox;
         private System.Windows.Forms.OpenFileDialog SerializedSchemaBrowseDialog;
         private System.Windows.Forms.Label ConfigurationTipLabel;
+        private System.Windows.Forms.PictureBox LogoPictureBox;
     }
 }
 
