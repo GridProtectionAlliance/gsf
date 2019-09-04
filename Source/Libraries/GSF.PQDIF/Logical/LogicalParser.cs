@@ -104,6 +104,10 @@ namespace GSF.PQDIF.Logical
             }
         }
 
+        /// <summary>
+        /// Gets a list of all DataSource records from the PQDIF file. This is
+        /// parsed when passing throug the observation records <see cref="NextObservationRecord()"/>ed.
+        /// </summary>
         public List<DataSourceRecord> DataSourceRecords
         {
             get

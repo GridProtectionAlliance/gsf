@@ -248,7 +248,7 @@ namespace GSF.PQDIF.Logical
             }
         }
 
-        // <summary>
+        /// <summary>
         /// Gets or sets the name of the data source Location.
         /// </summary>
         public string DataSourceLocation
