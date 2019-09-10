@@ -91,9 +91,9 @@ CREATE TABLE [dbo].[MinuteStats](
     [ReceivedCount] [bigint] NOT NULL,
     [DataErrorCount] [bigint] NOT NULL,
     [TimeErrorCount] [bigint] NOT NULL,
-	[MinLatency] [int] NOT NULL,
-	[MaxLatency] [int] NOT NULL,
-	[AvgLatency] [int] NOT NULL
+    [MinLatency] [int] NOT NULL,
+    [MaxLatency] [int] NOT NULL,
+    [AvgLatency] [int] NOT NULL
     CONSTRAINT [PK_MinuteStats] PRIMARY KEY CLUSTERED ( [ID] ASC )
     WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
@@ -120,9 +120,9 @@ CREATE TABLE [dbo].[DailyStats](
     [ReceivedCount] [bigint] NOT NULL DEFAULT (0),
     [DataErrorCount] [bigint] NOT NULL,
     [TimeErrorCount] [bigint] NOT NULL,
-	[MinLatency] [int] NOT NULL,
-	[MaxLatency] [int] NOT NULL,
-	[AvgLatency] [int] NOT NULL
+    [MinLatency] [int] NOT NULL,
+    [MaxLatency] [int] NOT NULL,
+    [AvgLatency] [int] NOT NULL
     CONSTRAINT [PK_DailyStats] PRIMARY KEY CLUSTERED ( [ID] ASC )
     WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
@@ -146,15 +146,15 @@ CREATE VIEW [dbo].[MinuteStatsDetail]
 AS
 SELECT MS.ID AS ID,
        D.Acronym,
-	   D.ParentAcronym,
-	   MS.Timestamp,
-	   MS.ReceivedCount,
+       D.ParentAcronym,
+       MS.Timestamp,
+       MS.ReceivedCount,
        (MS.ReceivedCount / (D.FramesPerSecond * 60.0) * 100.0) AS Completeness,
-	   MS.DataErrorCount,
-	   MS.TimeErrorCount,
-	   MS.MinLatency,
-	   MS.MaxLatency,
-	   MS.AvgLatency
+       MS.DataErrorCount,
+       MS.TimeErrorCount,
+       MS.MinLatency,
+       MS.MaxLatency,
+       MS.AvgLatency
 FROM [DeviceStats].[dbo].[MinuteStats] AS MS INNER JOIN
 [DeviceStats].[dbo].[Device] D ON MS.DeviceID = D.ID
 GO
@@ -169,14 +169,14 @@ CREATE VIEW [dbo].[DailyStatsDetail]
 AS
 SELECT DS.ID AS ID,
        D.Acronym,
-	   D.ParentAcronym,
-	   DS.Timestamp,
-	   DS.ReceivedCount,
-	   (DS.ReceivedCount / (D.FramesPerSecond * 86400.0) * 100.0) AS Completeness,
-	   DS.DataErrorCount,
-	   DS.TimeErrorCount,
-	   DS.MinLatency,
-	   DS.MaxLatency,
-	   DS.AvgLatency
+       D.ParentAcronym,
+       DS.Timestamp,
+       DS.ReceivedCount,
+       (DS.ReceivedCount / (D.FramesPerSecond * 86400.0) * 100.0) AS Completeness,
+       DS.DataErrorCount,
+       DS.TimeErrorCount,
+       DS.MinLatency,
+       DS.MaxLatency,
+       DS.AvgLatency
 FROM [DeviceStats].[dbo].[DailyStats] AS DS INNER JOIN
 [DeviceStats].[dbo].[Device] D ON DS.DeviceID = D.ID

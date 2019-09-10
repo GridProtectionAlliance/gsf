@@ -62,10 +62,6 @@ namespace DeviceStatAdapters
             public int LatencyCount { get; set; }
         }
 
-        #endregion
-
-        #region [ Members ]
-
         // Fields
         private ShortSynchronizedOperation m_deviceSyncOperation;
         private readonly ConcurrentDictionary<Guid, int> m_measurementDevice;
