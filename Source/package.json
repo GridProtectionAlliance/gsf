@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "angular": "1.6.8",
-    "bootstrap": "3.3.7",
+    "bootstrap": "3.4.1",
     "jquery": "3.4.1",
     "jquery-ui": "1.12.1",
     "signalR": "2.2.2",
