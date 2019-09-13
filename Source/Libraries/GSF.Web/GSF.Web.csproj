@@ -274,6 +274,7 @@
     <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.woff" />
     <EmbeddedResource Include="Shared\Content\Fonts\glyphicons-halflings-regular.woff2" />
     <None Include="GSF.Web.nuspec" />
+    <EmbeddedResource Include="Model\Views\PagedViewModelDivTable.cshtml" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

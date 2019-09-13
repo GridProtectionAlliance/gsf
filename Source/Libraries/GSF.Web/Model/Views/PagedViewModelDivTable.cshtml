@@ -1,0 +1,524 @@
+﻿@*******************************************************************************************************
+//  PagedViewModelDivTable.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/22/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Net.Http
+@using System.Text
+@using GSF
+@using GSF.Web
+@using GSF.Web.Model
+@using GSF.Web.Shared
+@inherits ExtendedTemplateBase
+@{
+    // ReSharper disable NotResolvedInText
+    DataContext dataContext = ViewBag.DataContext;
+    string resourcesRoot = Url.Content("~" + Resources.Root);
+
+    if (dataContext == null) {
+        throw new ArgumentNullException("ViewBag.DataContext", "DataContext was not defined in ViewBag, cannot render PagedViewModel");
+    }
+
+    if (ViewBag.HeaderColumns == null) {
+        throw new ArgumentNullException("ViewBag.HeaderColumns", "HeaderColumns was not defined in ViewBag, cannot render PagedViewModel");
+    }
+
+    if (ViewBag.PageControlScripts == null) {
+        ViewBag.PageControlScripts = new StringBuilder();
+    }
+
+    bool includeScripts = true;
+
+    if (ViewBag.IncludeScripts != null) {
+        includeScripts = (bool)ViewBag.IncludeScripts;
+    }
+
+    // Setup page control scripts
+    StringBuilder pageControlScripts = ViewBag.PageControlScripts;
+
+    pageControlScripts.AppendFormat(@"
+    <script>
+        $(""#titleText"").html(""{0}: <span data-bind='text: recordCount'>calculating...</span>"");
+    </script>
+    ",
+        ViewBag.RecordsTitle ?? "Records"
+    );
+
+    if (includeScripts) {
+        pageControlScripts.AppendFormat(@"
+    <script src=""{0}/Shared/Scripts/knockout.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.mapping.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.validation.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.reactor.js""></script>
+    <script src=""{0}/Shared/Scripts/knockout.observableDictionary.js""></script>
+    <script src=""{0}/Shared/Scripts/js.cookie.js""></script>
+    <script src=""{0}/Shared/Scripts/gsf.web.knockout.js""></script>
+    <script src=""{0}/Model/Scripts/bootstrap-toolkit.js""></script>
+    <script src=""{0}/Model/Scripts/bootstrap-datepicker.js""></script>
+    <script src=""{0}/Model/Scripts/pagedViewModel.js""></script>
+    ",
+        resourcesRoot);
+    }
+
+    pageControlScripts.Append(@"
+    <script>
+        $(function() {
+            $(""#clearSortOrder"").click(function() {
+                viewModel.updateSortOrder(viewModel.defaultSortField, viewModel.defaultSortAscending);
+            });
+    ");
+
+    // Check for optional page behaviors
+
+    // Hide the add new button
+    bool hideAddNewButton = ViewBag.HideAddNewButton ?? false;
+
+    // Hide export to CSV button
+    bool hideExportCSVButton = ViewBag.HideExportCSVButton ?? false;
+
+    // Define label for export CSV button
+    string exportCSVLabel = (ViewBag.ExportCSVLabel ?? "Export&nbsp;CSV").Replace(" ", "&nbsp;");
+
+    // Hide unauthorized controls as disallowed by Edit/AddNew/Delete roles - otherwise unauthorized controls will be disabled
+    bool hideUnauthorizedControls = ViewBag.HideUnauthorizedControls ?? false;
+    bool hidePaginationButtons = ViewBag.HidePaginationButtons ?? false;
+
+    HttpRequestMessage request = ViewBag.Request;
+    string baseURL = request.RequestUri.AbsolutePath;
+
+    // Auto pop-up add new dialog
+    string routeID = ViewBag.RouteID;
+    bool autoShowAddNew = routeID.ToNonNullString().Equals("AddNew", StringComparison.OrdinalIgnoreCase);
+    bool showIsDeletedToggleLink = false;
+    bool showingDeletedRecords = false;
+
+    // Check for existence of ShowDeleted property to control toggle link visibility
+    if (ViewBag.ShowDeleted != null) {
+        showIsDeletedToggleLink = true;
+        showingDeletedRecords = Convert.ToBoolean(ViewBag.ShowDeleted);
+    }
+
+    // Get current allowed create / update / delete states for user - default to none.
+    // Note that overriding view bag settings will only affect UI, back end security
+    // will still be applicable
+    bool canEdit = ViewBag.CanEdit ?? false;
+    bool canAddNew = ViewBag.CanAddNew ?? false;
+    bool canDelete = ViewBag.CanDelete ?? false;
+
+    // Check if search filter should be enabled for page
+    bool showSearchFilter = ViewBag.ShowSearchFilter ?? false;
+
+    // Allow custom foreach bindings for page records
+    string pageRecordsForEachBinding = "";
+
+    if (ViewBag.PageRecordsForEachBinding != null) {
+        pageRecordsForEachBinding = ", " + ViewBag.PageRecordsForEachBinding;
+    }
+}
+@functions
+{
+    string RemoveSpaces(string value)
+    {
+        return value.RemoveWhiteSpace().RemoveInvalidFileNameCharacters();
+    }
+
+    string RenderSortScript(string fieldName, bool ascending)
+    {
+        const string ScriptFormat = @"
+            $(""#sort{0} #{1}"").click(function() {{
+                viewModel.updateSortOrder(""{0}"", {2});
+            }});
+        ";
+
+        return string.Format(ScriptFormat, fieldName, ascending ? "asc" : "desc", ascending.ToString().ToLower());
+    }
+}
+@helper WriteFieldHeader(StringBuilder pageControlScripts, string fieldName, string labelName = null, string classes = null)
+{
+    if (string.IsNullOrEmpty(fieldName))
+    {
+        <div class="divTableHead @Raw(classes ?? "text-center")" nowrap>@Raw(labelName ?? "")</div>
+    }
+    else
+    {
+        <div class="divTableHead @Raw(classes ?? "text-center")" id="sort@(fieldName)" nowrap>@Raw(labelName ?? fieldName)&nbsp;
+            <div class="btn-group-vertical btn-group-sort">
+                <button type="button" class="btn" id="asc" title="Sort&nbsp;ascending..." data-bind="css: {'btn-primary': isSortOrder('@fieldName', true)}, enable: dataHubIsConnected"><span class="glyphicon glyphicon-chevron-up"></span></button>
+                <button type="button" class="btn" id="desc" title="Sort&nbsp;descending..." data-bind="css: {'btn-primary': isSortOrder('@fieldName', false)}, enable: dataHubIsConnected"><span class="glyphicon glyphicon-chevron-down"></span></button>
+            </div>
+        </div>
+
+        pageControlScripts.Append(RenderSortScript(fieldName, true));
+        pageControlScripts.Append(RenderSortScript(fieldName, false));
+    }
+}
+@helper SearchFilter()
+{
+    @* Make sure to use single quotes in this function: *@
+    <div class='form-group' style='margin: 0'>
+        <div class='right-inner-addon'>
+            <i class='glyphicon glyphicon-search'></i>
+            <input class='form-control' type='search' id='searchFilter' placeholder='Search' />
+        </div>
+    </div>
+}
+@if (showSearchFilter) {
+<div style="display: none" search-header></div>
+}
+<style>
+
+    .divTable {
+    display: table;
+    width: 100%;
+}
+
+.divTableRow {
+    display: table-row;
+}
+
+/*.divTableRow:nth-child(even) {
+                background-color: lightgrey
+            }*/
+
+.divTableHeading {
+    display: table-header-group;
+}
+
+.divTableCell, .divTableHead {
+    /*border: 1px solid #999999;*/
+    display: table-cell;
+    padding: 3px 10px;
+}
+
+.divTableCell {
+    border-top: 1px solid #ddd;
+}
+
+.divTableHeading {
+    display: table-header-group;
+    font-weight: bold;
+}
+
+.divTableFoot {
+    display: table-footer-group;
+    font-weight: bold;
+}
+
+.divTableBody {
+    display: table-row-group;
+}
+
+</style>
+<div class="well well-dynamic-content" id="contentWell" content-fill-height>
+    <div class="table-responsive" id="responsiveTableDiv">
+        <div class="divTable table table-condensed table-hover" id="recordsTable">
+            <div class="divTableHeading">
+                <div class="divTableRow">                
+                    @foreach (string[] headerColumn in ViewBag.HeaderColumns) {
+                        @WriteFieldHeader(pageControlScripts, headerColumn[0], headerColumn[1], headerColumn[2])
+                    }
+                    <div class="divTableHead text-center">
+                        <button type="button" class="btn btn-link btn-xs" style="line-height: 1.1" id="clearSortOrder" data-bind="enable: dataHubIsConnected">Clear<br />Sort</button>
+                    </div>
+                </div>
+            </div>
+            <div class="divTableBody" data-bind="foreach: {data: pageRecords@(Raw(pageRecordsForEachBinding))}">
+                <div class="divTableRow" style="visibility: hidden" id="recordRow"@Raw(ViewBag.ShowDeleted ?? false ? string.Format(" data-bind=\"css: {{'danger': {0}}}\"", ViewBag.IsDeletedField) : "")>
+                    @Raw(ViewBag.BodyRows)
+                </div>
+            </div>
+        </div>
+        <div id="loadingDataLabel">
+            Loading&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>
+        </div>
+    </div>
+    <div class="pull-right" id="pageControlsRow">
+        @if (!hideExportCSVButton || (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls)))
+        {
+            if (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls))
+            {
+                <button type="button" class="btn btn-sm btn-primary pull-right" id="addRecordButton" @Raw(canAddNew ? "data-bind=\"enable: dataHubIsConnected\"" : "disabled")>
+                    <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add&nbsp;New
+                </button>
+            }
+            if (!hideExportCSVButton)
+            {
+                <span class="pull-right">&nbsp;</span>
+                <a role="button" class="btn btn-sm btn-default pull-right" id="exportCSVButton" hub-dependent>
+                    <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;@Raw(exportCSVLabel)
+                </a>
+                <a id="exportCSVLink" download hidden></a>
+            }
+            <br />
+            <hr class="half-break" />
+        }
+        @if (!hidePaginationButtons)
+        {
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" id="firstPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-backward"></span></button>
+                <button type="button" class="btn btn-default" id="previousPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
+            </div>
+            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" id="selectedPage" data-bind="numeric, textInput: currentPage, enable: dataHubIsConnected" value="1">
+            <span>&nbsp;of&nbsp;</span>    
+            <span data-bind="text: totalPages">1</span>
+            <span>&nbsp;</span>
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" id="nextPageButton" data-bind="css: {'disabled': onLastPage()}, enable: dataHubIsConnected() && !onLastPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
+                <button type="button" class="btn btn-default" id="lastPageButton" data-bind="css: {'disabled': onLastPage()}, enable: dataHubIsConnected() && !onLastPage()"><span class="glyphicon glyphicon-forward"></span></button>
+            </div>
+        }
+    </div>
+</div>
+<div id="addNewEditDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" data-bind="css: {'modal-readonly': recordMode()===RecordMode.View}">
+                <button type="button" class="close" id="dismissDialogButton">&times;</button>
+                <h4 class="modal-title">
+                    <span data-bind="visible: recordMode()===RecordMode.View">View</span>
+                    <span data-bind="visible: recordMode()===RecordMode.Edit">Edit</span>
+                    <span data-bind="visible: recordMode()===RecordMode.AddNew">Add New</span>
+                    @(ViewBag.AddNewEditTitle ?? GSF.StringExtensions.ToSingular(ViewBag.Title ?? ""))
+                </h4>
+            </div>
+            <div class="modal-body auto-height" data-bind="with: currentRecord, validationOptions: {messageTemplate: 'validationMessageTemplate'}, css: {'modal-readonly': recordMode()===RecordMode.View}">
+                <form role="form">
+                    @Raw(ViewBag.AddNewEditDialog)
+                </form>
+            </div>
+            <div class="modal-footer" data-bind="css: {'modal-readonly': recordMode()===RecordMode.View}">
+                <em data-bind="visible: unassignedFieldCount() > 0 || validationErrors() > 0">
+                    <span data-bind="visible: unassignedFieldCount() > 0">Missing <span data-bind="text: unassignedFieldCount"></span> required field<span data-bind="visible: unassignedFieldCount() > 1">s</span></span>
+                    <span data-bind="visible: unassignedFieldCount() > 0 && validationErrors() > 0"> and </span>
+                    <span data-bind="visible: validationErrors() > 0"><span data-bind="text: validationErrors()"></span> validation error<span data-bind="visible: validationErrors() > 1">s</span></span>
+                    ...
+                </em>
+                @if (canEdit || !hideUnauthorizedControls) {
+                    <button type="button" class="btn btn-info" data-bind="visible: recordMode()===RecordMode.View@(Raw(canEdit ? ", enable: dataHubIsConnected" : ""))" id="editRecordButton"@Raw(canEdit ? "" : " disabled")>Edit</button>
+                }
+                @if (canEdit || canAddNew || !hideUnauthorizedControls) {
+                    <button type="submit" class="btn btn-primary" data-dismiss="modal" data-bind="visible: recordMode()!==RecordMode.View@(Raw(canEdit || canAddNew ? ", disable: unassignedFieldCount() > 0 || validationErrors() > 0 || !dataHubIsConnected()" : ""))" id="saveRecordButton"@Raw(canEdit || canAddNew ? "" : " disabled")>Save</button>
+                }
+                <button type="button" class="btn btn-default" id="cancelRecordButton">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@{
+    if (autoShowAddNew) {
+        pageControlScripts.Append(@"
+            // Add new pop-up requested via URL parameter
+            setTimeout(viewModel.addPageRecord, 250);
+        ");
+    }
+
+    if (showIsDeletedToggleLink) {
+        if (showingDeletedRecords) {
+            pageControlScripts.AppendFormat(@"
+            $(""#titleText"").append(""<br/><div style='margin-top: 3px' class='small text-center'><a href='{0}'>Hide Deleted</a></div>"");
+        ", baseURL);
+        }
+        else {
+            pageControlScripts.AppendFormat(@"
+                $(""#titleText"").append(""<br/><div style='margin-top: 3px' class='small text-center'><a href='{0}?ShowDeleted'>Show Deleted</a></div>"");
+        ", baseURL);
+        }
+    }
+
+    if (showSearchFilter) {
+        pageControlScripts.AppendFormat(@"
+            $(""#pageHeader"").append(""{0}"");
+            
+            var searchFilterTimeout = null;
+            $(""#searchFilter"").on(""keyup"", function (e) {{
+                const searchText = $(""#searchFilter"").val();
+
+                if(searchFilterTimeout != null)
+                    clearTimeout(searchFilterTimeout);
+                searchFilterTimeout = setTimeout(function(){{
+                    searchFilterTimeout = null;
+                    if (searchText.length === 0) {{
+                        viewModel.filterText = """";
+                        viewModel.queryPageRecords();
+                    }} else {{
+                        viewModel.filterText = searchText;
+                        viewModel.queryPageRecords();
+                    }}
+                }}, 500);              
+            }});
+        ", Raw(SearchFilter().ToString().RemoveDuplicateWhiteSpace().Replace("\r\n", "")));
+    }
+
+    pageControlScripts.AppendFormat(@"
+            $(""#addRecordButton"").click(function() {{
+                viewModel.addPageRecord();
+            }});
+
+            $(""#editRecordButton"").click(function() {{
+                viewModel.recordMode(RecordMode.Edit);
+            }});
+
+            $(""#saveRecordButton"").click(function() {{
+                viewModel.savePageRecord();
+            }});
+
+            $(""#cancelRecordButton"").click(function() {{
+                viewModel.cancelPageRecord();
+            }});
+
+            $(""#dismissDialogButton"").click(function() {{
+                viewModel.cancelPageRecord();
+            }});
+
+            $(""#addNewEditDialog"").modal({{show: false, backdrop: ""static"", keyboard: false}});
+
+            $(""#exportCSVButton"").click(function() {{
+                if (!hubIsConnected)
+                    return;
+
+                dataHub.getConnectionID().done(function(connectionID) {{
+                    $(""#exportCSVLink"").attr(""href"", ""{0}/Model/Handlers/CsvDownloadHandler.ashx"" +
+                        ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
+                        ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
+                        ""&ConnectionID="" + encodeURIComponent(connectionID) + 
+                        ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
+                        ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
+                        ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
+                        ""&ShowDeleted={1}&ParentKeys={2}"");
+
+                    $(""#exportCSVLink"")[0].click();
+                }}).
+                fail(function(error) {{
+                    showErrorMessage(error);
+                }});
+            }});
+
+            $(window).on(""beforeunload"", function() {{
+                if ($(""#addNewEditDialog"").hasClass(""in"") && viewModel.isDirty())
+                    return ""There are unsaved changes to this record."";
+
+                return undefined;
+            }});
+        }});
+    ",
+        resourcesRoot,
+        ViewBag.ShowDeleted ?? false,
+        WebExtensions.UrlEncode((ViewBag.ParentKeys ?? "").ToString())
+    );
+
+    pageControlScripts.AppendFormat(@"
+        viewModel.canEdit({0});
+        viewModel.canAddNew({1});
+        viewModel.canDelete({2});
+
+        viewModel.initialFocusField = ""{3}"";
+        viewModel.pageName = ""{4}"";",
+        canEdit.ToString().ToLower(),
+        canAddNew.ToString().ToLower(),
+        canDelete.ToString().ToLower(),
+        dataContext.InitialFocusField,
+        RemoveSpaces(ViewBag.Title)
+    );
+
+    if (dataContext.FieldValueInitializers.Count > 0) {
+        pageControlScripts.AppendFormat(@"
+
+        $(viewModel).on(""newRecord"", function(event, newRecord) {{
+            // Set initial field values");
+
+        foreach (Tuple<string, string> initialValueScript in dataContext.FieldValueInitializers) {
+            pageControlScripts.AppendFormat("\r\n            newRecord.{0} = {1};",
+                initialValueScript.Item1, initialValueScript.Item2);
+        }
+
+        pageControlScripts.Append("\r\n        });");
+    }
+
+    if (dataContext.DefinedDateFields.Count > 0) {
+        pageControlScripts.AppendFormat(@"
+
+        $(viewModel).on(""beforeEdit"", function(event, observableRecord) {{
+            // Convert date objects to strings");
+
+        foreach (string dateField in dataContext.DefinedDateFields) {
+            pageControlScripts.AppendFormat("\r\n            observableRecord.{0}(notNull(observableRecord.{0}()).formatDate(DateFormat));", dateField);
+        }
+
+        pageControlScripts.Append("\r\n        });");
+
+        pageControlScripts.AppendFormat(@"
+
+        $(viewModel).on(""beforeSave"", function(event, observableRecord) {{
+            // Convert date strings back to date objects before serialization");
+
+        foreach (string dateField in dataContext.DefinedDateFields) {
+            pageControlScripts.AppendFormat("\r\n            observableRecord.{0}(observableRecord.{0}().toDate());", dateField);
+        }
+
+        pageControlScripts.Append("\r\n        });");
+    }
+
+    if (dataContext.FieldValidationParameters.Count > 0) {
+        pageControlScripts.Append("\r\n\r\n        viewModel.setApplyValidationParameters(function() {");
+
+        foreach (KeyValuePair<string, Tuple<string, string>> fieldValidation in dataContext.FieldValidationParameters) {
+            pageControlScripts.AppendFormat("\r\n            {0}.extend({{ pattern: {{ message: \"{1}\", params: \"{2}\" }} }});",
+                fieldValidation.Key,
+                fieldValidation.Value.Item2.JavaScriptEncode(),
+                fieldValidation.Value.Item1.JavaScriptEncode());
+        }
+
+        pageControlScripts.Append("\r\n        });");
+    }
+
+    pageControlScripts.Append(@"
+
+        $(""#addNewEditDialog"").on(""shown.bs.modal"", function() {
+            $(""#addNewEditDialog .input-group.date"").datepicker({
+                todayBtn: ""linked"",
+                enableOnReadonly: false,
+                autoclose: true
+            });");
+
+    if (dataContext.ReadonlyHotLinkFields.Count > 0) {
+        foreach (Tuple<string, string, string, bool> readonlyHotLinkField in dataContext.ReadonlyHotLinkFields) {
+            pageControlScripts.AppendLine();
+
+            if (readonlyHotLinkField.Item4) {
+                pageControlScripts.AppendFormat("\r\n            $(\"#{0}\").after(\"<div id=\\\"{1}\\\" tabindex=\\\"0\\\" class=\\\"form-control readonly textarea\\\" data-bind=\\\"html: renderHotLinks(notNull({2}())), visible: viewModel.recordMode()===RecordMode.View\\\"></div>\");",
+                    readonlyHotLinkField.Item1, readonlyHotLinkField.Item2, readonlyHotLinkField.Item3);
+                pageControlScripts.AppendFormat("\r\n            $(\"#{0}\").height($(\"#{1}\").height());",
+                    readonlyHotLinkField.Item2, readonlyHotLinkField.Item1);
+            }
+            else {
+                pageControlScripts.AppendFormat("\r\n            $(\"#{0}\").after(\"<div id=\\\"{1}\\\" tabindex=\\\"0\\\" class=\\\"form-control readonly inputtext\\\" data-bind=\\\"html: renderHotLinks(notNull({2}())), visible: viewModel.recordMode()===RecordMode.View\\\"></div>\");",
+                    readonlyHotLinkField.Item1, readonlyHotLinkField.Item2, readonlyHotLinkField.Item3);
+            }
+
+            pageControlScripts.AppendFormat("\r\n            ko.applyBindings(viewModel.currentRecord, $(\"#{0}\")[0]);",
+                readonlyHotLinkField.Item2);
+        }
+    }
+
+    pageControlScripts.Append("\r\n        });");
+
+    pageControlScripts.Append(@"
+    </script>");
+}
