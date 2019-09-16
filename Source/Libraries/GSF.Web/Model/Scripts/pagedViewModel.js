@@ -622,6 +622,6 @@ var viewModel = new PagedViewModel();
     $(window).trigger("beforeApplyBindings", [data]);
     viewModel = data.viewModel;
 
-    ko.applyBindings(viewModel, document.getElementById('pageContentWrapper'));
+    ko.applyBindings(viewModel, document.getElementsByTagName('body')[0]);
 
 })(jQuery, ResponsiveBootstrapToolkit);
