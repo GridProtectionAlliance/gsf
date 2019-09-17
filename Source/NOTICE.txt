@@ -33,6 +33,9 @@ This includes, but may not be limited to, the following:
 * GSF.Web includes anti-CSRF code derived from AspNetWebStack (https://github.com/aspnet/AspNetWebStack):
     Copyright (c) .NET Foundation. All rights reserved.
 
+* GSF.Core includes code derived from diff-match-path (https://github.com/google/diff-match-patch)
+    Copyright 2018 The diff-match-patch Authors.
+
 =========================================================================================================
 
 Portions of this software, where noted in the source file header, were implemented using source code

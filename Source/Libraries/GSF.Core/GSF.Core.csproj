@@ -308,6 +308,9 @@
     <Compile Include="Security\Cryptography\X509\DerWriter.cs" />
     <Compile Include="Security\Cryptography\X509\X509CertificateGenerator.cs" />
     <Compile Include="StringExtensions.cs" />
+    <Compile Include="Text\Diff.cs" />
+    <Compile Include="Text\DiffMatchPatch.cs" />
+    <Compile Include="Text\Patch.cs" />
     <Compile Include="Threading\WaitHandleExtensions.cs" />
     <Compile Include="Trackable.cs" />
     <Compile Include="ReusableObjectPool.cs" />
