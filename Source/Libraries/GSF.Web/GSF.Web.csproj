@@ -338,6 +338,7 @@
     <Content Include="Shared\Content\Images\ui-icons_cc0000_256x240.png" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.rangeselection.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.dashes.js" />
+    <EmbeddedResource Include="Shared\Scripts\default.polyfill.min.js" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
