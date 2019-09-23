@@ -33,7 +33,6 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.Units;
 using Microsoft.Azure.EventHubs;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 
@@ -315,8 +314,9 @@ namespace AzureEventHubAdapters
         /// </summary>
         public override void Initialize()
         {
-            base.Initialize();
             new ConnectionStringParser().ParseConnectionString(ConnectionString, this);
+
+            base.Initialize();
 
             if (string.IsNullOrWhiteSpace(TimestampFormat))
                 TimestampFormat = DefaultTimestampFormat;
