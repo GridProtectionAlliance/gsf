@@ -84,12 +84,18 @@ namespace AzureEventHubAdapters
         /// </summary>
         public const bool DefaultSerializeMetadata = true;
 
+        /// <summary>
+        /// Default value for <see cref="PushMetadataInParallel"/>.
+        /// </summary>
+        public const bool DefaultPushMetadataInParallel = false;
+
         private EventHubClient m_eventHubDataClient;        // Azure Event Hub Data Client
         private EventHubClient m_eventHubMetadataClient;    // Azure Event Hub Metadata Client
         private string m_connectionResponse;                // Response from connection attempt
         private long m_totalValues;                         // Total archived values
         private long m_totalDataPosts;                      // Total post to the Azure Event Hub connection
         private long m_totalMetadataPosts;                  // Total post to the Azure Event Hub connection
+        private long m_skippedMeasurements;                 // Total measurements skipped during meta-data posting
         private bool m_useEpochMilliseconds;                // Flag that determines if timestamp should be Unix epoch milliseconds
 
         #endregion
@@ -227,6 +233,18 @@ namespace AzureEventHubAdapters
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if data and metadata should be pushed in parallel to Azure event hub.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Determines if data and metadata should be pushed in parallel to Azure event hub.")]
+        [DefaultValue(DefaultPushMetadataInParallel)]
+        public bool PushMetadataInParallel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="AzureEventHubOutputAdapter"/> are destined for archival.
         /// </summary>
         public override bool OutputIsForArchive => true;
@@ -258,6 +276,10 @@ namespace AzureEventHubAdapters
                 status.AppendFormat("          Timestamp format: {0}", TimestampFormat);
                 status.AppendLine();
                 status.AppendFormat("       Serialize meta-data: {0}", SerializeMetadata);
+                status.AppendLine();
+                status.AppendFormat("Push meta-data in parallel: {0}", PushMetadataInParallel);
+                status.AppendLine();
+                status.AppendFormat("Total skipped measurements: {0:N0} during meta-data posting", m_skippedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("     Total archived values: {0:N0}", m_totalValues);
                 status.AppendLine();
@@ -434,6 +456,12 @@ namespace AzureEventHubAdapters
         {
             if (measurements.Length == 0)
                 return;
+
+            if (!PushMetadataInParallel && MetadataRefreshOperation.IsRunning)
+            {
+                m_skippedMeasurements += measurements.Length;
+                return;
+            }
 
             try
             {
