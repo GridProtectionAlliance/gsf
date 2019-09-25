@@ -293,12 +293,12 @@ namespace GSF.Communication
         private IPStack m_ipStack;
         private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
         private string[] m_serverList;
+        private int m_serverIndex;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private ConnectState m_connectState;
         private ReceiveState m_receiveState;
         private SendState m_sendState;
-        private int m_serverIndex;
         private bool m_disposed;
 
         #endregion
@@ -1621,7 +1621,7 @@ namespace GSF.Communication
                     }
                 }
 
-                throw new InvalidOperationException($"UDP client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
+                throw new InvalidOperationException($"TCP client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
             }
         }
 
