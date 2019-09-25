@@ -58,6 +58,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -291,11 +292,13 @@ namespace GSF.Communication
         private EndianOrder m_payloadEndianOrder;
         private IPStack m_ipStack;
         private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
+        private string[] m_serverList;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private ConnectState m_connectState;
         private ReceiveState m_receiveState;
         private SendState m_sendState;
+        private int m_serverIndex;
         private bool m_disposed;
 
         #endregion
@@ -436,7 +439,7 @@ namespace GSF.Communication
         /// Gets the server URI of the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri => $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
+        public override string ServerUri => $"{TransportProtocol}://{ServerList[m_serverIndex]}".ToLower();
 
         /// <summary>
         /// Gets or sets network credential that is used when
@@ -448,6 +451,21 @@ namespace GSF.Communication
         /// Determines whether the base class should track statistics.
         /// </summary>
         protected override bool TrackStatistics => false;
+
+        // Gets server connect data as an array - will always be at least one empty string, not null
+        private string[] ServerList
+        {
+            get
+            {
+                if (m_serverList != null)
+                    return m_serverList;
+
+                if (m_connectData?.ContainsKey("server") ?? false)
+                    m_serverList = m_connectData["server"].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(server => server.Trim()).ToArray();
+
+                return m_serverList?.Length == 0 ? new[] { string.Empty } : m_serverList;
+            }
+        }
 
         /// <summary>
         /// Gets the descriptive status of the client.
@@ -569,7 +587,7 @@ namespace GSF.Communication
                         NoDelay = noDelaySetting.ParseBoolean();
 
                     // Initialize state object for the asynchronous connection loop
-                    endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                    endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
 
                     connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                     connectState.ConnectArgs.SocketFlags = SocketFlags.None;
@@ -620,6 +638,29 @@ namespace GSF.Communication
 
             if (!connectState.Socket.ConnectAsync(connectState.ConnectArgs))
                 ThreadPool.QueueUserWorkItem(state => ProcessConnect(connectState));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientBase.ConnectionException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.ConnectionException"/> event.</param>
+        protected override void OnConnectionException(Exception ex)
+        {
+            int serverListLength = ServerList.Length;
+
+            if (serverListLength < 1)
+                serverListLength = 1;
+
+            if (serverListLength > 1)
+            {
+                // When multiple servers are available, move to next server connection
+                m_serverIndex++;
+
+                if (m_serverIndex >= serverListLength)
+                    m_serverIndex = 0;
+            }
+
+            base.OnConnectionException(ex);
         }
 
         /// <summary>
@@ -696,11 +737,14 @@ namespace GSF.Communication
                     connectState.SendArgs.Completed += (sender, args) => ProcessSend((SendState)args.UserToken);
 
                     // Initialize state object for the asynchronous send loop
-                    sendState = new SendState();
-                    sendState.Token = connectState.Token;
-                    sendState.Socket = connectState.Socket;
-                    sendState.ReceiveArgs = connectState.ReceiveArgs;
-                    sendState.SendArgs = connectState.SendArgs;
+                    sendState = new SendState
+                    {
+                        Token = connectState.Token,
+                        Socket = connectState.Socket,
+                        ReceiveArgs = connectState.ReceiveArgs,
+                        SendArgs = connectState.SendArgs
+                    };
+
                     sendState.SendArgs.UserToken = sendState;
 
                     // Store sendState in m_sendState so that calls to Disconnect
@@ -720,11 +764,14 @@ namespace GSF.Communication
                     OnConnectionEstablished();
 
                     // Initialize state object for the asynchronous receive loop
-                    receiveState = new ReceiveState();
-                    receiveState.Token = connectState.Token;
-                    receiveState.Socket = connectState.Socket;
-                    receiveState.Buffer = connectState.ReceiveArgs.Buffer;
-                    receiveState.ReceiveArgs = connectState.ReceiveArgs;
+                    receiveState = new ReceiveState
+                    {
+                        Token = connectState.Token,
+                        Socket = connectState.Socket,
+                        Buffer = connectState.ReceiveArgs.Buffer,
+                        ReceiveArgs = connectState.ReceiveArgs
+                    };
+
                     receiveState.ReceiveArgs.UserToken = receiveState;
                     receiveState.SendArgs = connectState.SendArgs;
 
@@ -753,7 +800,7 @@ namespace GSF.Communication
 
                 // If the connection is refused by the server,
                 // keep trying until we reach our maximum connection attempts
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused && (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused && (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts * ServerList.Length))
                 {
                     // Server is unavailable, so keep retrying connection to the server.
                     try
@@ -1488,23 +1535,28 @@ namespace GSF.Communication
             m_ipStack = Transport.GetInterfaceIPStack(m_connectData);
 
             // Check if 'server' property is missing.
-            if (!m_connectData.ContainsKey("server"))
+            if (!m_connectData.ContainsKey("server") || string.IsNullOrWhiteSpace(m_connectData["server"]))
                 throw new ArgumentException($"Server property is missing (Example: {DefaultConnectionString})");
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888
             // Old Format: Server=localhost; Port=8888
-            if (m_connectData.ContainsKey("port"))
+            if (m_connectData.ContainsKey("port") && !m_connectData["server"].Contains(','))
                 m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["port"]}";
 
-            // Check if 'server' property is valid.
-            Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+            m_serverList = null;
 
-            if (endpoint == Match.Empty)
-                throw new FormatException($"Server property is invalid (Example: {DefaultConnectionString})");
+            foreach (string server in ServerList)
+            {
+                // Check if 'server' property is valid.
+                Match endpoint = Regex.Match(server, Transport.EndpointFormatRegex);
 
-            if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
-                throw new ArgumentOutOfRangeException(nameof(connectionString), $"Server port must between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
+                if (endpoint == Match.Empty)
+                    throw new FormatException($"Server property is invalid (Example: {DefaultConnectionString})");
+
+                if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
+                    throw new ArgumentOutOfRangeException(nameof(connectionString), $"Server port must between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
+            }
         }
 
         /// <summary>
