@@ -71,6 +71,7 @@ using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.Threading;
 
+// ReSharper disable AccessToDisposedClosure
 namespace GSF.Communication
 {
     /// <summary>
@@ -156,17 +157,17 @@ namespace GSF.Communication
         private sealed class ConnectState : IDisposable
         {
             public Socket Socket;
-#if !MONO
+        #if !MONO
             public NetworkStream NetworkStream;
             public NegotiateStream NegotiateStream;
-#endif
+        #endif
 
             public readonly SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
             public SocketAsyncEventArgs ReceiveArgs;
             public SocketAsyncEventArgs SendArgs;
             public int ConnectionAttempts;
 
-            public CancellationToken Token = new CancellationToken();
+            public readonly CancellationToken Token = new CancellationToken();
             public ICancellationToken TimeoutToken;
 
             public void Dispose()
@@ -175,10 +176,10 @@ namespace GSF.Communication
                 ReceiveArgs?.Dispose();
                 SendArgs?.Dispose();
                 Socket?.Dispose();
-#if !MONO
+            #if !MONO
                 NetworkStream?.Dispose();
                 NegotiateStream?.Dispose();
-#endif
+            #endif
             }
         }
 
@@ -201,11 +202,7 @@ namespace GSF.Communication
                 Dispose(SendArgs);
             }
 
-            private static void Dispose(IDisposable obj)
-            {
-                if ((object)obj != null)
-                    obj.Dispose();
-            }
+            private static void Dispose(IDisposable obj) => obj?.Dispose();
         }
 
         private sealed class SendState : IDisposable
@@ -214,7 +211,7 @@ namespace GSF.Communication
             public SocketAsyncEventArgs ReceiveArgs;
             public SocketAsyncEventArgs SendArgs;
 
-            public ConcurrentQueue<TcpClientPayload> SendQueue = new ConcurrentQueue<TcpClientPayload>();
+            public readonly ConcurrentQueue<TcpClientPayload> SendQueue = new ConcurrentQueue<TcpClientPayload>();
             public TcpClientPayload Payload;
             public int Sending;
 
@@ -222,24 +219,18 @@ namespace GSF.Communication
 
             public void Dispose()
             {
-                TcpClientPayload payload;
-
                 Dispose(Socket);
                 Dispose(ReceiveArgs);
                 Dispose(SendArgs);
 
-                while (SendQueue.TryDequeue(out payload))
+                while (SendQueue.TryDequeue(out TcpClientPayload payload))
                 {
                     payload.WaitHandle.Set();
                     payload.WaitHandle.Dispose();
                 }
             }
 
-            private static void Dispose(IDisposable obj)
-            {
-                if ((object)obj != null)
-                    obj.Dispose();
-            }
+            private static void Dispose(IDisposable obj) => obj?.Dispose();
         }
         private class TcpClientPayload
         {
@@ -253,18 +244,9 @@ namespace GSF.Communication
         {
             private int m_cancelled;
 
-            public bool Cancelled
-            {
-                get
-                {
-                    return Interlocked.CompareExchange(ref m_cancelled, 0, 0) != 0;
-                }
-            }
+            public bool Cancelled => Interlocked.CompareExchange(ref m_cancelled, 0, 0) != 0;
 
-            public bool Cancel()
-            {
-                return Interlocked.Exchange(ref m_cancelled, 1) != 0;
-            }
+            public bool Cancel() => Interlocked.Exchange(ref m_cancelled, 1) != 0;
         }
 
         // Constants
@@ -305,24 +287,15 @@ namespace GSF.Communication
         public const string DefaultConnectionString = "Server=localhost:8888";
 
         // Fields
-        private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private EndianOrder m_payloadEndianOrder;
-        private bool m_integratedSecurity;
-        private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
-        private bool m_allowDualStackSocket;
-        private int m_maxSendQueueSize;
-        private bool m_noDelay;
-        private ShortSynchronizedOperation m_dumpPayloadsOperation;
+        private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
-        private NetworkCredential m_networkCredential;
-
         private ConnectState m_connectState;
         private ReceiveState m_receiveState;
         private SendState m_sendState;
-
         private bool m_disposed;
 
         #endregion
@@ -344,14 +317,14 @@ namespace GSF.Communication
         public TcpClient(string connectString)
             : base(TransportProtocol.Tcp, connectString)
         {
-            m_payloadAware = DefaultPayloadAware;
+            PayloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_payloadEndianOrder = EndianOrder.LittleEndian;
-            m_integratedSecurity = DefaultIntegratedSecurity;
-            m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
-            m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_noDelay = DefaultNoDelay;
+            IntegratedSecurity = DefaultIntegratedSecurity;
+            IgnoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
+            AllowDualStackSocket = DefaultAllowDualStackSocket;
+            MaxSendQueueSize = DefaultMaxSendQueueSize;
+            NoDelay = DefaultNoDelay;
             m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
         }
 
@@ -362,8 +335,7 @@ namespace GSF.Communication
         public TcpClient(IContainer container)
             : this()
         {
-            if (container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -376,17 +348,7 @@ namespace GSF.Communication
         [Category("Data"),
         DefaultValue(DefaultPayloadAware),
         Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
-        public bool PayloadAware
-        {
-            get
-            {
-                return m_payloadAware;
-            }
-            set
-            {
-                m_payloadAware = value;
-            }
-        }
+        public bool PayloadAware { get; set; }
 
         /// <summary>
         /// Gets or sets the byte sequence used to mark the beginning of a payload in a <see cref="PayloadAware"/> transmission.
@@ -398,14 +360,8 @@ namespace GSF.Communication
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] PayloadMarker
         {
-            get
-            {
-                return m_payloadMarker;
-            }
-            set
-            {
-                m_payloadMarker = value ?? new byte[0];
-            }
+            get => m_payloadMarker;
+            set => m_payloadMarker = value ?? new byte[0];
         }
 
         /// <summary>
@@ -418,14 +374,8 @@ namespace GSF.Communication
          DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EndianOrder PayloadEndianOrder
         {
-            get
-            {
-                return m_payloadEndianOrder;
-            }
-            set
-            {
-                m_payloadEndianOrder = value ?? EndianOrder.LittleEndian;
-            }
+            get => m_payloadEndianOrder;
+            set => m_payloadEndianOrder = value ?? EndianOrder.LittleEndian;
         }
 
         /// <summary>
@@ -437,22 +387,7 @@ namespace GSF.Communication
         [Category("Security"),
         DefaultValue(DefaultIntegratedSecurity),
         Description("Indicates whether the current Windows account credentials are used for authentication.")]
-        public bool IntegratedSecurity
-        {
-            get
-            {
-                return m_integratedSecurity;
-            }
-            set
-            {
-#if MONO
-                if (value)
-                    throw new NotImplementedException("Not supported under Mono.");
-#else
-                m_integratedSecurity = value;
-#endif
-            }
-        }
+        public bool IntegratedSecurity { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the server
@@ -465,17 +400,7 @@ namespace GSF.Communication
         [Category("Security"),
         DefaultValue(DefaultIgnoreInvalidCredentials),
         Description("Indicates whether the client Windows account credentials are validated during authentication.")]
-        public bool IgnoreInvalidCredentials
-        {
-            get
-            {
-                return m_ignoreInvalidCredentials;
-            }
-            set
-            {
-                m_ignoreInvalidCredentials = value;
-            }
-        }
+        public bool IgnoreInvalidCredentials { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
@@ -483,17 +408,7 @@ namespace GSF.Communication
         [Category("Settings"),
         DefaultValue(DefaultAllowDualStackSocket),
         Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
-        public bool AllowDualStackSocket
-        {
-            get
-            {
-                return m_allowDualStackSocket;
-            }
-            set
-            {
-                m_allowDualStackSocket = value;
-            }
-        }
+        public bool AllowDualStackSocket { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
@@ -501,17 +416,7 @@ namespace GSF.Communication
         [Category("Settings"),
         DefaultValue(DefaultMaxSendQueueSize),
         Description("The maximum size for the send queue before payloads are dumped from the queue.")]
-        public int MaxSendQueueSize
-        {
-            get
-            {
-                return m_maxSendQueueSize;
-            }
-            set
-            {
-                m_maxSendQueueSize = value;
-            }
-        }
+        public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if small packets are delivered to the remote host without delay.
@@ -519,73 +424,30 @@ namespace GSF.Communication
         [Category("Settings"),
         DefaultValue(DefaultNoDelay),
         Description("Determines if small packets are delivered to the remote host without delay.")]
-        public bool NoDelay
-        {
-            get
-            {
-                return m_noDelay;
-            }
-            set
-            {
-                m_noDelay = value;
-            }
-        }
+        public bool NoDelay { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public Socket Client
-        {
-            get
-            {
-                ConnectState connectState = m_connectState;
-
-                if ((object)connectState != null)
-                    return connectState.Socket;
-
-                return null;
-            }
-        }
+        public Socket Client => m_connectState?.Socket;
 
         /// <summary>
         /// Gets the server URI of the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri
-        {
-            get
-            {
-                return $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
-            }
-        }
+        public override string ServerUri => $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
 
         /// <summary>
         /// Gets or sets network credential that is used when
         /// <see cref="IntegratedSecurity"/> is set to <c>true</c>.
         /// </summary>
-        public NetworkCredential NetworkCredential
-        {
-            get
-            {
-                return m_networkCredential;
-            }
-            set
-            {
-                m_networkCredential = value;
-            }
-        }
+        public NetworkCredential NetworkCredential { get; set; }
 
         /// <summary>
         /// Determines whether the base class should track statistics.
         /// </summary>
-        protected override bool TrackStatistics
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool TrackStatistics => false;
 
         /// <summary>
         /// Gets the descriptive status of the client.
@@ -597,7 +459,7 @@ namespace GSF.Communication
                 SendState sendState = m_sendState;
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
 
-                if ((object)sendState != null)
+                if (sendState != null)
                 {
                     statusBuilder.AppendFormat("           Queued payloads: {0}", sendState.SendQueue.Count);
                     statusBuilder.AppendLine();
@@ -617,16 +479,17 @@ namespace GSF.Communication
         public override void SaveSettings()
         {
             base.SaveSettings();
+
             if (PersistSettings)
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["PayloadAware", true].Update(m_payloadAware);
-                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
-                settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
-                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
-                settings["NoDelay", true].Update(m_noDelay);
+                settings["PayloadAware", true].Update(PayloadAware);
+                settings["IntegratedSecurity", true].Update(IntegratedSecurity);
+                settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
+                settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+                settings["NoDelay", true].Update(NoDelay);
                 config.Save();
             }
         }
@@ -636,28 +499,27 @@ namespace GSF.Communication
         /// </summary>
         public override void LoadSettings()
         {
-            int maxSendQueueSize;
-
             base.LoadSettings();
+
             if (PersistSettings)
             {
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
-                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
-                settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
-                settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                settings.Add("NoDelay", m_noDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
-                PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
-                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
-                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
-                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
-                NoDelay = settings["NoDelay"].ValueAs(m_noDelay);
+                settings.Add("PayloadAware", PayloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                settings.Add("IntegratedSecurity", IntegratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
+                settings.Add("AllowDualStackSocket", AllowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+                settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+                settings.Add("NoDelay", NoDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
+                PayloadAware = settings["PayloadAware"].ValueAs(PayloadAware);
+                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(IntegratedSecurity);
+                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(AllowDualStackSocket);
+                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
+                NoDelay = settings["NoDelay"].ValueAs(NoDelay);
 
                 // Overwrite config file if max send queue size exists in connection string.
-                if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out maxSendQueueSize))
-                    m_maxSendQueueSize = maxSendQueueSize;
+                if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out int maxSendQueueSize))
+                    MaxSendQueueSize = maxSendQueueSize;
             }
         }
 
@@ -677,7 +539,7 @@ namespace GSF.Communication
                 {
                     // If we do not already have a wait handle to use
                     // for connections, get one from the base class
-                    if ((object)m_connectWaitHandle == null)
+                    if (m_connectWaitHandle == null)
                         m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                     // Create state object for the asynchronous connection loop
@@ -695,15 +557,16 @@ namespace GSF.Communication
 
                     // Overwrite config file if integrated security exists in connection string
                     if (m_connectData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
-                        m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
-#if MONO
+                        IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
+                
+                #if MONO
                     // Force integrated security to be False under Mono since it's not supported
                     m_integratedSecurity = false;
-#endif
+                #endif
 
                     // Overwrite config file if no delay exists in connection string.
                     if (m_connectData.TryGetValue("noDelay", out string noDelaySetting))
-                        m_noDelay = noDelaySetting.ParseBoolean();
+                        NoDelay = noDelaySetting.ParseBoolean();
 
                     // Initialize state object for the asynchronous connection loop
                     endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
@@ -714,8 +577,8 @@ namespace GSF.Communication
                     connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
 
                     // Create client socket
-                    connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                    connectState.Socket.NoDelay = m_noDelay;
+                    connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
+                    connectState.Socket.NoDelay = NoDelay;
 
                     // Initiate the asynchronous connection loop
                     ConnectAsync(connectState);
@@ -726,19 +589,18 @@ namespace GSF.Communication
                     OnConnectionException(ex);
 
                     // Terminate the connection
-                    if ((object)connectState != null)
+                    if (connectState != null)
                         TerminateConnection(connectState.Token);
 
                     // Ensure that the wait handle is set so that operations waiting
                     // for completion of the asynchronous connection loop can continue
-                    if ((object)m_connectWaitHandle != null)
-                        m_connectWaitHandle.Set();
+                    m_connectWaitHandle?.Set();
                 }
                 finally
                 {
                     // If the operation was cancelled during execution,
                     // make sure to dispose of erroneously allocated resources
-                    if ((object)connectState != null && connectState.Token.Cancelled)
+                    if (connectState != null && connectState.Token.Cancelled)
                         connectState.Dispose();
                 }
             }
@@ -753,11 +615,11 @@ namespace GSF.Communication
         /// </summary>
         private void ConnectAsync(ConnectState connectState)
         {
-            if (!connectState.Token.Cancelled)
-            {
-                if (!connectState.Socket.ConnectAsync(connectState.ConnectArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessConnect(connectState));
-            }
+            if (connectState.Token.Cancelled)
+                return;
+
+            if (!connectState.Socket.ConnectAsync(connectState.ConnectArgs))
+                ThreadPool.QueueUserWorkItem(state => ProcessConnect(connectState));
         }
 
         /// <summary>
@@ -785,9 +647,9 @@ namespace GSF.Communication
                 // Set the size of the buffer used by the socket to store incoming data from the server
                 connectState.Socket.ReceiveBufferSize = ReceiveBufferSize;
 
-                if (m_integratedSecurity)
+                if (IntegratedSecurity)
                 {
-#if !MONO
+                #if !MONO
                     // Check the state of cancellation one more time before
                     // proceeding to the next step of the connection loop
                     if (connectState.Token.Cancelled)
@@ -808,14 +670,14 @@ namespace GSF.Communication
 
                     try
                     {
-                        connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
+                        connectState.NegotiateStream.BeginAuthenticateAsClient(NetworkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
                     }
                     catch
                     {
                         connectState.TimeoutToken.Cancel();
                         throw;
                     }
-#endif
+                #endif
                 }
                 else
                 {
@@ -823,7 +685,7 @@ namespace GSF.Communication
                     connectState.ReceiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                     connectState.ReceiveArgs.SetBuffer(new byte[ReceiveBufferSize], 0, ReceiveBufferSize);
 
-                    if (m_payloadAware)
+                    if (PayloadAware)
                         connectState.ReceiveArgs.Completed += (sender, args) => ProcessReceivePayloadAware((ReceiveState)args.UserToken);
                     else
                         connectState.ReceiveArgs.Completed += (sender, args) => ProcessReceivePayloadUnaware((ReceiveState)args.UserToken);
@@ -874,7 +736,7 @@ namespace GSF.Communication
                     }
 
                     // Start receiving data
-                    if (m_payloadAware)
+                    if (PayloadAware)
                         ReceivePayloadAwareAsync(receiveState);
                     else
                         ReceivePayloadUnawareAsync(receiveState);
@@ -891,8 +753,7 @@ namespace GSF.Communication
 
                 // If the connection is refused by the server,
                 // keep trying until we reach our maximum connection attempts
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused && (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
                 {
                     // Server is unavailable, so keep retrying connection to the server.
                     try
@@ -922,18 +783,18 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of erroneously allocated resources
-                if ((object)connectState != null && connectState.Token.Cancelled)
+                if (connectState != null && connectState.Token.Cancelled)
                     connectState.Dispose();
 
-                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState != null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
 
-                if ((object)sendState != null && sendState.Token.Cancelled)
+                if (sendState != null && sendState.Token.Cancelled)
                     sendState.Dispose();
             }
         }
 
-#if !MONO
+    #if !MONO
         private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
         {
             ConnectState connectState = null;
@@ -960,7 +821,7 @@ namespace GSF.Communication
                 }
                 catch (InvalidCredentialException)
                 {
-                    if (!m_ignoreInvalidCredentials)
+                    if (!IgnoreInvalidCredentials)
                         throw;
                 }
 
@@ -968,7 +829,7 @@ namespace GSF.Communication
                 connectState.ReceiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                 connectState.ReceiveArgs.SetBuffer(new byte[ReceiveBufferSize], 0, ReceiveBufferSize);
 
-                if (m_payloadAware)
+                if (PayloadAware)
                     connectState.ReceiveArgs.Completed += (sender, args) => ProcessReceivePayloadAware((ReceiveState)args.UserToken);
                 else
                     connectState.ReceiveArgs.Completed += (sender, args) => ProcessReceivePayloadUnaware((ReceiveState)args.UserToken);
@@ -979,11 +840,14 @@ namespace GSF.Communication
                 connectState.SendArgs.Completed += (sender, args) => ProcessSend((SendState)args.UserToken);
 
                 // Initialize state object for the asynchronous send loop
-                sendState = new SendState();
-                sendState.Token = connectState.Token;
-                sendState.Socket = connectState.Socket;
-                sendState.ReceiveArgs = connectState.ReceiveArgs;
-                sendState.SendArgs = connectState.SendArgs;
+                sendState = new SendState
+                {
+                    Token = connectState.Token,
+                    Socket = connectState.Socket,
+                    ReceiveArgs = connectState.ReceiveArgs,
+                    SendArgs = connectState.SendArgs
+                };
+
                 sendState.SendArgs.UserToken = sendState;
 
                 // Store sendState in m_sendState so that calls to Disconnect
@@ -1004,11 +868,14 @@ namespace GSF.Communication
                 OnConnectionEstablished();
 
                 // Initialize state object for the asynchronous receive loop
-                receiveState = new ReceiveState();
-                receiveState.Token = connectState.Token;
-                receiveState.Socket = connectState.Socket;
-                receiveState.Buffer = connectState.ReceiveArgs.Buffer;
-                receiveState.ReceiveArgs = connectState.ReceiveArgs;
+                receiveState = new ReceiveState
+                {
+                    Token = connectState.Token,
+                    Socket = connectState.Socket,
+                    Buffer = connectState.ReceiveArgs.Buffer,
+                    ReceiveArgs = connectState.ReceiveArgs
+                };
+
                 receiveState.ReceiveArgs.UserToken = receiveState;
                 receiveState.SendArgs = connectState.SendArgs;
 
@@ -1020,7 +887,7 @@ namespace GSF.Communication
                 }
 
                 // Start receiving data
-                if (m_payloadAware)
+                if (PayloadAware)
                     ReceivePayloadAwareAsync(receiveState);
                 else
                     ReceivePayloadUnawareAsync(receiveState);
@@ -1035,13 +902,12 @@ namespace GSF.Communication
                 OnConnectionException(ex);
 
                 // If connectState is null, we cannot proceed
-                if ((object)connectState == null)
+                if (connectState == null)
                     return;
 
                 // If the connection is refused by the server,
                 // keep trying until we reach our maximum connection attempts
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused && (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
                 {
                     try
                     {
@@ -1066,12 +932,12 @@ namespace GSF.Communication
                 OnConnectionException(new Exception(errorMessage, ex));
 
                 // Terminate the connection
-                if ((object)connectState != null)
+                if (connectState != null)
                     TerminateConnection(connectState.Token);
             }
             finally
             {
-                if ((object)connectState != null)
+                if (connectState != null)
                 {
                     // If the operation was cancelled during execution,
                     // make sure to dispose of erroneously allocated resources;
@@ -1087,37 +953,37 @@ namespace GSF.Communication
                     }
                 }
 
-                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState != null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
 
-                if ((object)sendState != null && sendState.Token.Cancelled)
+                if (sendState != null && sendState.Token.Cancelled)
                     sendState.Dispose();
             }
         }
-#endif
+    #endif
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
         private void ReceivePayloadAwareAsync(ReceiveState receiveState)
         {
+            if (receiveState.Token.Cancelled)
+                return;
+
             int length;
 
-            if (!receiveState.Token.Cancelled)
-            {
-                if (receiveState.PayloadLength < 0)
-                    length = m_payloadMarker.Length + Payload.LengthSegment;
-                else
-                    length = receiveState.PayloadLength;
+            if (receiveState.PayloadLength < 0)
+                length = m_payloadMarker.Length + Payload.LengthSegment;
+            else
+                length = receiveState.PayloadLength;
 
-                if (receiveState.Buffer != receiveState.ReceiveArgs.Buffer)
-                    receiveState.ReceiveArgs.SetBuffer(receiveState.Buffer, 0, length);
-                else
-                    receiveState.ReceiveArgs.SetBuffer(receiveState.Offset, length - receiveState.Offset);
+            if (receiveState.Buffer != receiveState.ReceiveArgs.Buffer)
+                receiveState.ReceiveArgs.SetBuffer(receiveState.Buffer, 0, length);
+            else
+                receiveState.ReceiveArgs.SetBuffer(receiveState.Offset, length - receiveState.Offset);
 
-                if (!receiveState.Socket.ReceiveAsync(receiveState.ReceiveArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadAware(receiveState));
-            }
+            if (!receiveState.Socket.ReceiveAsync(receiveState.ReceiveArgs))
+                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadAware(receiveState));
         }
 
         /// <summary>
@@ -1199,7 +1065,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState != null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
             }
         }
@@ -1293,12 +1159,12 @@ namespace GSF.Communication
         {
             ReceiveState receiveState = m_receiveState;
 
-            if ((object)receiveState == null || receiveState.Token.Cancelled)
+            if (receiveState == null || receiveState.Token.Cancelled)
                 return 0;
 
             buffer.ValidateParameters(startIndex, length);
 
-            if ((object)receiveState.Buffer != null)
+            if (receiveState.Buffer != null)
             {
                 int sourceLength = receiveState.PayloadLength - ReadIndex;
                 int readBytes = length > sourceLength ? sourceLength : length;
@@ -1327,9 +1193,6 @@ namespace GSF.Communication
         {
             SendState sendState = null;
 
-            TcpClientPayload payload;
-            ManualResetEvent handle;
-
             try
             {
                 // Get the current send state
@@ -1340,12 +1203,12 @@ namespace GSF.Communication
                     return null;
 
                 // Prepare for payload-aware transmission.
-                if (m_payloadAware)
+                if (PayloadAware)
                     Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker, m_payloadEndianOrder);
 
                 // Create payload and wait handle.
-                payload = FastObjectFactory<TcpClientPayload>.CreateObjectFunction();
-                handle = new ManualResetEvent(false);
+                TcpClientPayload payload = FastObjectFactory<TcpClientPayload>.CreateObjectFunction();
+                ManualResetEvent handle = new ManualResetEvent(false);
 
                 payload.Data = data;
                 payload.Offset = offset;
@@ -1381,7 +1244,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if ((object)sendState != null && sendState.Token.Cancelled)
+                if (sendState != null && sendState.Token.Cancelled)
                     sendState.Dispose();
             }
 
@@ -1393,15 +1256,13 @@ namespace GSF.Communication
         /// </summary>
         private void SendPayloadAsync(SendState sendState)
         {
-            TcpClientPayload payload;
-
             try
             {
                 // Quit if this send loop has been cancelled
                 if (sendState.Token.Cancelled)
                     return;
 
-                if (sendState.SendQueue.TryDequeue(out payload))
+                if (sendState.SendQueue.TryDequeue(out TcpClientPayload payload))
                 {
                     // Save the payload currently
                     // being sent to the send state
@@ -1452,13 +1313,12 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessSend(SendState sendState)
         {
-            TcpClientPayload payload;
             ManualResetEvent handle = null;
 
             try
             {
                 // Get the payload and its wait handle.
-                payload = sendState.Payload;
+                TcpClientPayload payload = sendState.Payload;
                 handle = payload.WaitHandle;
 
                 // Quit if this send loop has been cancelled
@@ -1511,15 +1371,14 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if ((object)sendState != null && sendState.Token.Cancelled)
+                if (sendState != null && sendState.Token.Cancelled)
                     sendState.Dispose();
 
                 try
                 {
                     // Make sure to set the wait handle
                     // even if an exception occurs
-                    if ((object)handle != null)
-                        handle.Set();
+                    handle?.Set();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -1537,34 +1396,25 @@ namespace GSF.Communication
         /// </summary>
         public override void Disconnect()
         {
-            ConnectState connectState;
-            ReceiveState receiveState;
-            SendState sendState;
-
             try
             {
-                if (CurrentState != ClientState.Disconnected)
+                if (CurrentState == ClientState.Disconnected)
+                    return;
+
+                ConnectState connectState = m_connectState;
+                ReceiveState receiveState = m_receiveState;
+                SendState sendState = m_sendState;
+
+                if (connectState != null)
                 {
-                    connectState = m_connectState;
-                    receiveState = m_receiveState;
-                    sendState = m_sendState;
-
-                    if ((object)connectState != null)
-                    {
-                        TerminateConnection(connectState.Token);
-                        connectState.Socket.Disconnect(false);
-                        connectState.Dispose();
-                    }
-
-                    if ((object)receiveState != null)
-                        receiveState.Dispose();
-
-                    if ((object)sendState != null)
-                        sendState.Dispose();
-
-                    if ((object)m_connectWaitHandle != null)
-                        m_connectWaitHandle.Set();
+                    TerminateConnection(connectState.Token);
+                    connectState.Socket.Disconnect(false);
+                    connectState.Dispose();
                 }
+
+                receiveState?.Dispose();
+                sendState?.Dispose();
+                m_connectWaitHandle?.Set();
             }
             catch (ObjectDisposedException)
             {
@@ -1582,44 +1432,44 @@ namespace GSF.Communication
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (disposing)
                 {
-                    if (disposing)
+                    if (m_connectState != null)
                     {
-                        if ((object)m_connectState != null)
-                        {
-                            TerminateConnection(m_connectState.Token);
-                            m_connectState.Dispose();
-                            m_connectState = null;
-                        }
+                        TerminateConnection(m_connectState.Token);
+                        m_connectState.Dispose();
+                        m_connectState = null;
+                    }
 
-                        if ((object)m_receiveState != null)
-                        {
-                            m_receiveState.Dispose();
-                            m_receiveState = null;
-                        }
+                    if (m_receiveState != null)
+                    {
+                        m_receiveState.Dispose();
+                        m_receiveState = null;
+                    }
 
-                        if ((object)m_sendState != null)
-                        {
-                            m_sendState.Dispose();
-                            m_sendState = null;
-                        }
+                    if (m_sendState != null)
+                    {
+                        m_sendState.Dispose();
+                        m_sendState = null;
+                    }
 
-                        if ((object)m_connectWaitHandle != null)
-                        {
-                            m_connectWaitHandle.Set();
-                            m_connectWaitHandle.Dispose();
-                            m_connectWaitHandle = null;
-                        }
+                    if (m_connectWaitHandle != null)
+                    {
+                        m_connectWaitHandle.Set();
+                        m_connectWaitHandle.Dispose();
+                        m_connectWaitHandle = null;
                     }
                 }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -1679,7 +1529,6 @@ namespace GSF.Communication
                 OnReceiveDataException((Exception)ex);
             else
                 Logger.SwallowException(ex, "TcpClient.cs: The socket was disconnecting");
-
         }
 
         /// <summary>
@@ -1700,28 +1549,27 @@ namespace GSF.Communication
         private void DumpPayloads()
         {
             SendState sendState = m_sendState;
-            TcpClientPayload payload;
 
             // Quit if this send loop has been cancelled
-            if ((object)sendState == null || sendState.Token.Cancelled)
+            if (sendState == null || sendState.Token.Cancelled)
                 return;
 
             // Check to see if the client has reached the maximum send queue size.
-            if (m_maxSendQueueSize > 0 && sendState.SendQueue.Count >= m_maxSendQueueSize)
+            if (MaxSendQueueSize > 0 && sendState.SendQueue.Count >= MaxSendQueueSize)
             {
-                for (int i = 0; i < m_maxSendQueueSize; i++)
+                for (int i = 0; i < MaxSendQueueSize; i++)
                 {
                     if (sendState.Token.Cancelled)
                         return;
 
-                    if (sendState.SendQueue.TryDequeue(out payload))
+                    if (sendState.SendQueue.TryDequeue(out TcpClientPayload payload))
                     {
                         payload.WaitHandle.Set();
                         payload.WaitHandle.Dispose();
                     }
                 }
 
-                throw new InvalidOperationException($"UDP client reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
+                throw new InvalidOperationException($"UDP client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
             }
         }
 
