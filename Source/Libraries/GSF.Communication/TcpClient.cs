@@ -648,9 +648,6 @@ namespace GSF.Communication
         {
             int serverListLength = ServerList.Length;
 
-            if (serverListLength < 1)
-                serverListLength = 1;
-
             if (serverListLength > 1)
             {
                 // When multiple servers are available, move to next server connection
