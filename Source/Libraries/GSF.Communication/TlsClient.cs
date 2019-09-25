@@ -227,12 +227,7 @@ namespace GSF.Communication
             m_defaultCertificateChecker = new SimpleCertificateChecker();
             LocalCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
             m_clientCertificates = new X509Certificate2Collection();
-        #if MONO
-            // Tls12 is not supported under Mono as of v3.8.0
-            m_enabledSslProtocols = SslProtocols.Tls;
-        #else
             m_enabledSslProtocols = SslProtocols.Tls12;
-        #endif
             CheckCertificateRevocation = true;
 
             TrustedCertificatesPath = DefaultTrustedCertificatesPath;
