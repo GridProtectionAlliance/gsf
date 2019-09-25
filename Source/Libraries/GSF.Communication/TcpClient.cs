@@ -800,7 +800,7 @@ namespace GSF.Communication
 
                 // If the connection is refused by the server,
                 // keep trying until we reach our maximum connection attempts
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused && (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts * ServerList.Length))
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused && (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
                 {
                     // Server is unavailable, so keep retrying connection to the server.
                     try
