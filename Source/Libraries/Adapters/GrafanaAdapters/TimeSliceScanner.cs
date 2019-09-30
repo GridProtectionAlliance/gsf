@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GrafanaAdapters
 {
@@ -51,7 +52,7 @@ namespace GrafanaAdapters
             m_enumerators = new List<IEnumerator<DataSourceValue>>();
             m_tolerance = tolerance;
 
-            foreach (DataSourceValueGroup group in dataset)
+            foreach (DataSourceValueGroup group in dataset.ToList())
             {
                 IEnumerator<DataSourceValue> enumerator = group.Source.GetEnumerator();
 
@@ -75,6 +76,10 @@ namespace GrafanaAdapters
         /// </summary>
         public double Tolerance => m_tolerance;
 
+        /// <summary>
+        /// Get the number of enumerators
+        /// </summary>
+        public int EnumeratorCount => m_enumerators.Count;
         #endregion
 
         #region [ Methods ]
@@ -109,7 +114,7 @@ namespace GrafanaAdapters
             double publishTime = double.MaxValue;
 
             // Find minimum publication time for current values
-            foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
+            foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators.ToList())
             {
                 dataPoint = enumerator.Current;
 
@@ -123,7 +128,7 @@ namespace GrafanaAdapters
             int index = 0;
 
             // Publish all values at the current time
-            foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
+            foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators.ToList())
             {
                 bool enumerationComplete = false;
                 dataPoint = enumerator.Current;

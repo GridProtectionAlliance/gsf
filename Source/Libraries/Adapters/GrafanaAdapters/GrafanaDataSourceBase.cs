@@ -518,6 +518,19 @@ namespace GrafanaAdapters
         /// <summary>
         /// Not a recognized function.
         /// </summary>
+        VAddS,
+        /// <summary>
+        /// Adds a series (vector) to a reference series of values(vector) using vector addition. If multiple series are targeted, the reference vector gets added to each series independently
+        /// and returns new vector for each orginal series.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>VAdd(Series1, Series2) or Vadd(Expression, Series from group)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>VAdd( SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'), TestDevice.F)</c><br/>
+        /// Variants: Label, Name<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+
         None
     }
 
@@ -537,7 +550,21 @@ namespace GrafanaAdapters
         /// <summary>
         /// Performs no group operation on the series set.
         /// </summary>
-        None
+        Vector,
+        /// <summary>
+        /// Adds a series (vector) to a reference series of values(vector) using vector addition. If multiple series are targeted, the reference vector gets added to each series independently
+        /// and returns new vector for each orginal series.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>VAdd(Series1, Series2) or Vadd(Expression, Series from group)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>VAdd( SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'), TestDevice.F)</c><br/>
+        /// Variants: Label, Name<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+       None,
+
+
     }
 
     #endregion
@@ -635,14 +662,14 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public virtual Task<string[]> Search(Target request)
         {
-            string target = request.target == "select metric" ? "" : request.target;
+            string target = request.target == null || request.target == "select metric"  ? "" : request.target;
 
             return Task.Factory.StartNew(() =>
             {
                 return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
                 {
                     // Attempt to parse search target as a SQL SELECT statement
-                    if (ParseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                    if (ParseSelectExpression(target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                     {
                         DataTableCollection tables = Metadata.Tables;
                         List<string> results = new List<string>();
@@ -804,7 +831,7 @@ namespace GrafanaAdapters
                 {
                     // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
                     DataSourceValueGroup valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
-                    IEnumerable<DataSourceValue> values = valueGroup.Source;
+                    IEnumerable<DataSourceValue> values = valueGroup.Source.ToList();
 
                     if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
                         values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
@@ -980,7 +1007,7 @@ namespace GrafanaAdapters
                 int requiredParameters = s_requiredParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
 
                 // Any slice operation adds one required parameter for time tolerance
-                if (groupOperation == GroupOperation.Slice)
+                if (groupOperation == GroupOperation.Slice || groupOperation == GroupOperation.Vector)
                     requiredParameters++;
 
                 if (requiredParameters > 0)
@@ -1058,6 +1085,8 @@ namespace GrafanaAdapters
 
                 DataSourceValueGroup[] groups = dataset.ToArray();
 
+                List<DataSourceValueGroup> returnList = new List<DataSourceValueGroup>();
+
                 for (int i = 0; i < groups.Length; i++)
                 {
                     string target = groups[i].RootTarget;
@@ -1080,18 +1109,21 @@ namespace GrafanaAdapters
                         return derivedLabel;
                     });
                                                               
-                    yield return new DataSourceValueGroup
+                    returnList.Add( new DataSourceValueGroup
                     {
                         Target = seriesLabel,
                         RootTarget = target,
                         SourceTarget = sourceTarget,
                         Source = groups[i].Source,
                         DropEmptySeries = dropEmptySeries
-                    };
+                    });
                 }
+
+                return returnList;
             }
             else
             {
+
                 switch (groupOperation)
                 {
                     case GroupOperation.Set:
@@ -1113,36 +1145,67 @@ namespace GrafanaAdapters
                             result.RootTarget = dataValue.Target;
                         }
 
-                        yield return result;
+                        return new List<DataSourceValueGroup>() { result };
 
-                        break;
                     case GroupOperation.Slice:
                         TimeSliceScanner scanner = new TimeSliceScanner(dataset, ParseFloat(parameters[0]) / SI.Milli);
                         parameters = parameters.Skip(1).ToArray();
 
                         // Flatten all series into a single enumerable
-                        yield return new DataSourceValueGroup
+                        return new List<DataSourceValueGroup>() { new DataSourceValueGroup
                         {
                             Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
                             RootTarget = queryExpression,
                             SourceTarget = sourceTarget,
                             Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters),
                             DropEmptySeries = dropEmptySeries
-                        };
+                        } };
 
-                        break;
+                    case GroupOperation.Vector:
+                    {
+                        List<DataSourceValueGroup> returnList = new List<DataSourceValueGroup>();
+
+                        DataSourceValueGroup refGroup = dataset.Where(x => x.RootTarget == parameters[1]).First();
+                        foreach (var data in dataset)
+                        {
+                            if (data.RootTarget == refGroup.RootTarget) continue;
+
+                            string[] paramets = parameters.ToList().ToArray();
+                            IEnumerable<DataSourceValueGroup> smallDatset = new List<DataSourceValueGroup>() { refGroup, data };
+                            TimeSliceScanner vaddscanner = new TimeSliceScanner(smallDatset, ParseFloat(paramets[0]) / SI.Milli);
+                            paramets = paramets.Skip(1).ToArray();
+
+
+                            // Flatten all series into a single enumerable
+                            DataSourceValueGroup record = new DataSourceValueGroup
+                            {
+                                Target = $"Vector{seriesFunction}({string.Join(", ", paramets)}{(paramets.Length > 0 ? ", " : "")}{data.Target};{refGroup.Target})",
+                                RootTarget = queryExpression,
+                                SourceTarget = sourceTarget,
+                                Source = ExecuteSeriesFunctionOverVectorTimeSlices(vaddscanner, seriesFunction, paramets),
+                                DropEmptySeries = dropEmptySeries
+                            };
+
+                            returnList.Add(record);
+                        }
+                        return returnList;
+                    }
                     default:
+                    {
+                        List<DataSourceValueGroup> returnList = new List<DataSourceValueGroup>();
+
                         foreach (DataSourceValueGroup dataValues in dataset)
-                            yield return new DataSourceValueGroup
+                            returnList.Add(new DataSourceValueGroup
                             {
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
                                 RootTarget = dataValues.RootTarget ?? dataValues.Target,
                                 SourceTarget = sourceTarget,
                                 Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters),
                                 DropEmptySeries = dropEmptySeries
-                            };
+                            });
 
-                        break;
+                        return returnList;
+                    }
                 }
             }
         }
@@ -1188,6 +1251,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_filterNaNExpression;
         private static readonly Regex s_unwrapAngleExpression;
         private static readonly Regex s_wrapAngleExpression;
+        private static readonly Regex s_vAddExpression;
         private static readonly Regex s_labelExpression;
         private static readonly Regex s_selectExpression;
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
@@ -1240,7 +1304,7 @@ namespace GrafanaAdapters
             s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
+            s_vAddExpression = new Regex(string.Format(GetExpression, "VAddS"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
             s_selectExpression = new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -1282,7 +1346,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.FilterNaN] = 0,
                 [SeriesFunction.UnwrapAngle] = 0,
                 [SeriesFunction.WrapAngle] = 0,
-                [SeriesFunction.Label] = 1
+                [SeriesFunction.Label] = 1,
+                [SeriesFunction.VAddS] = 1,
             };
 
             // Define optional parameter counts for each function
@@ -1323,7 +1388,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.FilterNaN] = 1,
                 [SeriesFunction.UnwrapAngle] = 1,
                 [SeriesFunction.WrapAngle] = 1,
-                [SeriesFunction.Label] = 0
+                [SeriesFunction.Label] = 0,
+                [SeriesFunction.VAddS] = 0,
+
             };
         }
 
@@ -1445,6 +1512,13 @@ namespace GrafanaAdapters
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Add, match.Result("${Expression}").Trim(), groupOperation);
+
+                //Look for vadd function
+                lock (s_vAddExpression)
+                        match = s_vAddExpression.Match(expression);
+
+                if (match.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.VAddS, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for subtract function
                 lock (s_subtractExpression)
@@ -1653,8 +1727,16 @@ namespace GrafanaAdapters
                     yield return dataValue;
         }
 
+        // Execute series function over a set of points from each series at the same time-slice
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverVectorTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
+        {
+            while (!scanner.DataReadComplete)
+                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true, true, scanner.EnumeratorCount))
+                    yield return dataValue;
+        }
+
         // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
-        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters, bool isSliceOperation = false)
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters, bool isSliceOperation = false, bool isVectorOperation = false, int enumeratorCount = 0)
         {
             DataSourceValue[] values;
             DataSourceValue result = new DataSourceValue();
@@ -1754,29 +1836,47 @@ namespace GrafanaAdapters
                 case SeriesFunction.Add:
                     value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
+                    if(!isVectorOperation)
+                        foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
+                    else if(source.Count() == enumeratorCount)
+                    {
 
+                        foreach (DataSourceValue dataValue in source.Where(dataValue => dataValue.Target != parameters[0]).Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
+                    }
                     break;
                 case SeriesFunction.Subtract:
                     value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
+                    if (!isVectorOperation)
+                        foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
+                    else if (source.Count() == enumeratorCount)
+                        foreach (DataSourceValue dataValue in source.Where(dataValue => dataValue.Target != parameters[0]).Select(dataValue => new DataSourceValue { Value = dataValue.Value - value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
 
                     break;
                 case SeriesFunction.Multiply:
                     value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
+                    if (!isVectorOperation)
+                        foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
+                    else if (source.Count() == enumeratorCount)
+                        foreach (DataSourceValue dataValue in source.Where(dataValue => dataValue.Target != parameters[0]).Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
 
                     break;
                 case SeriesFunction.Divide:
                     value = ParseFloat(parameters[0], source, false, isSliceOperation);
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
+                    if (!isVectorOperation)
+                        foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
+                    else if (source.Count() == enumeratorCount)
+                        foreach (DataSourceValue dataValue in source.Where(dataValue => dataValue.Target != parameters[0]).Select(dataValue => new DataSourceValue { Value = dataValue.Value / value, Time = dataValue.Time, Target = dataValue.Target }))
+                            yield return dataValue;
 
                     break;
                 case SeriesFunction.Round:
