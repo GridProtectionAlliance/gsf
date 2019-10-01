@@ -35,7 +35,6 @@ namespace GrafanaAdapters
 
         // Fields
         private readonly List<IEnumerator<DataSourceValue>> m_enumerators;
-        private readonly double m_tolerance;
 
         #endregion
 
@@ -49,7 +48,7 @@ namespace GrafanaAdapters
         public TimeSliceScanner(IEnumerable<DataSourceValueGroup> dataset, double tolerance = 0.0D)
         {
             m_enumerators = new List<IEnumerator<DataSourceValue>>();
-            m_tolerance = tolerance;
+            Tolerance = tolerance;
 
             foreach (DataSourceValueGroup group in dataset)
             {
@@ -73,7 +72,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Gets time tolerance for data slices in Unix epoch milliseconds.
         /// </summary>
-        public double Tolerance => m_tolerance;
+        public double Tolerance { get; }
 
         #endregion
 
@@ -117,7 +116,7 @@ namespace GrafanaAdapters
                     publishTime = dataPoint.Time;
             }
 
-            publishTime += m_tolerance;
+            publishTime += Tolerance;
 
             List<int> completed = new List<int>();
             int index = 0;

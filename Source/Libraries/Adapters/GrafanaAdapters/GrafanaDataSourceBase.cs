@@ -943,8 +943,36 @@ namespace GrafanaAdapters
                     // Reduce all targets down to a dictionary of point ID's mapped to point tags
                     MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
 
-                    if (key != MeasurementKey.Undefined)
+                    if (key == MeasurementKey.Undefined)
+                    {
+                        Tuple<MeasurementKey, string> result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(Metadata));
+                        
+                        key = result.Item1;
+                        string pointTag = result.Item2;
+
+                        if (key == MeasurementKey.Undefined)
+                        {
+                            result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"key@{target}", () =>
+                            {
+                                MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
+                                return new Tuple<MeasurementKey, string>(parsedKey, parsedKey.TagFromKey(Metadata));
+                            });
+
+                            key = result.Item1;
+                            pointTag = result.Item2;
+
+                            if (key != MeasurementKey.Undefined)
+                                targetMap[key.ID] = pointTag;
+                        }
+                        else
+                        {
+                            targetMap[key.ID] = pointTag;
+                        }
+                    }
+                    else
+                    {
                         targetMap[key.ID] = target;
+                    }
                 }
 
                 long readCount = 0;
@@ -1064,8 +1092,21 @@ namespace GrafanaAdapters
 
                     string seriesLabel = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
                     {
-                        string derivedLabel = label;
-                        DataRow record = target.MetadataRecordFromTag(Metadata);
+                        string table, derivedLabel;
+                        string[] components = label.Split('.');
+
+                        if (components.Length == 2)
+                        {
+                            table = components[0].Trim();
+                            derivedLabel = components[1].Trim();
+                        }
+                        else
+                        {
+                            table = "ActiveMeasurements";
+                            derivedLabel = label;
+                        }
+
+                        DataRow record = target.MetadataRecordFromTag(Metadata, table);
 
                         if ((object)record != null && derivedLabel.IndexOf('{') >= 0)
                         {

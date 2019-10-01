@@ -23,13 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using GSF;
 using GSF.Historian;
-using GSF.Historian.DataServices;
 using HistorianAdapters;
 
 namespace GrafanaAdapters
@@ -38,7 +36,7 @@ namespace GrafanaAdapters
     /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
     /// </summary>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-    public partial class GrafanaDataService : DataService, IGrafanaDataService
+    public partial class GrafanaDataService
     {
         #region [ Members ]
 
@@ -143,9 +141,7 @@ namespace GrafanaAdapters
 
         private void Archive_MetadataUpdated(object sender, EventArgs e)
         {
-            LocalOutputAdapter adapter;
-
-            if (LocalOutputAdapter.Instances.TryGetValue(m_dataSource.InstanceName, out adapter))
+            if (LocalOutputAdapter.Instances.TryGetValue(m_dataSource.InstanceName, out LocalOutputAdapter adapter))
                 m_dataSource.Metadata = adapter.DataSource;
 
             TargetCaches.ResetAll();

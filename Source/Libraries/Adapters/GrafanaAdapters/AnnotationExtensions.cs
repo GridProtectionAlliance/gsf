@@ -27,9 +27,11 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
+// ReSharper disable CompareOfFloatsByEqualityOperator
 namespace GrafanaAdapters
 {
     /// <summary>
@@ -37,6 +39,8 @@ namespace GrafanaAdapters
     /// </summary>
     public static class AnnotationExtensions
     {
+        private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(AnnotationExtensions), MessageClass.Component);
+
         /// <summary>
         /// Gets table name for specified annotation <paramref name="type"/>.
         /// </summary>
@@ -187,11 +191,9 @@ namespace GrafanaAdapters
             Tuple<AnnotationType, bool> result = TargetCache<Tuple<AnnotationType, bool>>.GetOrAdd(query, () =>
             {
                 AnnotationType type = AnnotationType.Undefined;
-                string tableName, expression, sortField;
-                int takeCount;
                 bool parsedFilterExpression = false;
 
-                if (AdapterBase.ParseFilterExpression(query, out tableName, out expression, out sortField, out takeCount))
+                if (AdapterBase.ParseFilterExpression(query, out string tableName, out string _, out string _, out int _))
                 {
                     parsedFilterExpression = true;
 
@@ -268,10 +270,7 @@ namespace GrafanaAdapters
 
                 if (useFilterExpression)
                 {
-                    string tableName, expression, sortField;
-                    int takeCount;
-
-                    if (AdapterBase.ParseFilterExpression(query, out tableName, out expression, out sortField, out takeCount))
+                    if (AdapterBase.ParseFilterExpression(query, out string tableName, out string expression, out string sortField, out int takeCount))
                         rows = source.Tables[tableName.Translate()].Select(expression, sortField).Take(takeCount).ToArray();
                     else
                         throw new InvalidOperationException("Invalid FILTER syntax for annotation query expression.");
@@ -334,15 +333,16 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="pointTag">Point tag to lookup.</param>
         /// <param name="source">Source metadata.</param>
+        /// <param name="table">Table to search.</param>
         /// <returns>Measurement key from source metadata.</returns>
         /// <remarks>
         /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
         /// search algorithm that can be slow for large data sets, it is recommended that any results
         /// for calls to this function be cached to improve performance.
         /// </remarks>
-        internal static MeasurementKey KeyFromTag(this string pointTag, DataSet source)
+        internal static MeasurementKey KeyFromTag(this string pointTag, DataSet source, string table = "ActiveMeasurements")
         {
-            DataRow record = pointTag.MetadataRecordFromTag(source);
+            DataRow record = pointTag.MetadataRecordFromTag(source, table);
 
             if ((object)record == null)
                 return MeasurementKey.Undefined;
@@ -351,9 +351,43 @@ namespace GrafanaAdapters
             {
                 return MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex);
                 return MeasurementKey.Undefined;
+            }
+        }
+
+        /// <summary>
+        /// Looks up measurement key from signal ID.
+        /// </summary>
+        /// <param name="signalID">Signal ID to lookup.</param>
+        /// <param name="source">Source metadata.</param>
+        /// <param name="table">Table to search.</param>
+        /// <returns>Measurement key from source metadata.</returns>
+        /// <remarks>
+        /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+        /// search algorithm that can be slow for large data sets, it is recommended that any results
+        /// for calls to this function be cached to improve performance.
+        /// </remarks>
+        internal static Tuple<MeasurementKey, string> KeyAndTagFromSignalID(this string signalID, DataSet source, string table = "ActiveMeasurements")
+        {
+            DataRow record = signalID.MetadataRecordFromSignalID(source, table);
+            string pointTag = "Undefined";
+
+            if ((object)record == null)
+                return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
+
+            try
+            {
+                MeasurementKey key = MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
+                pointTag = record["PointTag"].ToNonNullString(key.ToString());
+                return new Tuple<MeasurementKey, string>(key, pointTag);
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+                return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
             }
         }
 
@@ -362,15 +396,38 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="pointTag">Point tag to lookup.</param>
         /// <param name="source">Source metadata.</param>
+        /// <param name="table">Table to search.</param>
+        /// <returns>Metadata record from source metadata for provided point tag.</returns>
+        /// <remarks>
+        /// <para>
+        /// Use "table.pointTag" format to specify which table to pull point tag from.
+        /// </para>
+        /// <para>
+        /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+        /// search algorithm that can be slow for large data sets, it is recommended that any results
+        /// for calls to this function be cached to improve performance.
+        /// </para>
+        /// </remarks>
+        internal static DataRow MetadataRecordFromTag(this string pointTag, DataSet source, string table)
+        {
+            return GetMetaData(source, table, $"PointTag = '{pointTag}'");
+        }
+
+        /// <summary>
+        /// Looks up metadata record from signal ID.
+        /// </summary>
+        /// <param name="signalID">Signal ID to lookup.</param>
+        /// <param name="source">Source metadata.</param>
+        /// <param name="table">Table to search.</param>
         /// <returns>Metadata record from source metadata for provided point tag.</returns>
         /// <remarks>
         /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
         /// search algorithm that can be slow for large data sets, it is recommended that any results
         /// for calls to this function be cached to improve performance.
         /// </remarks>
-        internal static DataRow MetadataRecordFromTag(this string pointTag, DataSet source)
+        internal static DataRow MetadataRecordFromSignalID(this string signalID, DataSet source, string table)
         {
-            return GetMetaData(source, "ActiveMeasurements", $"PointTag = '{pointTag}'");
+            return GetMetaData(source, table, $"SignalID = '{signalID}'");
         }
 
         private static DataRow GetMetaData(DataSet source, string table, string expression)
@@ -378,10 +435,15 @@ namespace GrafanaAdapters
             try
             {
                 DataRow[] filteredRows = source.Tables[table].Select(expression);
+
+                if (filteredRows.Length > 1)
+                    s_log.Publish(MessageLevel.Warning, "Duplicate Tag Names", $"Grafana query for \"{expression}\" produced {filteredRows.Length:N0} records. Key values for meta-data are expected to be unique, invalid meta-data results may be returned.");
+
                 return filteredRows.Length > 0 ? filteredRows[0] : null;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex);
                 return null;
             }
         }
@@ -400,9 +462,7 @@ namespace GrafanaAdapters
 
             description = new StringBuilder("value");
 
-            AlarmOperation operation;
-
-            if (!Enum.TryParse(defintion["Operation"].ToNonNullNorWhiteSpace(AlarmOperation.Equal.ToString()), out operation))
+            if (!Enum.TryParse(defintion["Operation"].ToNonNullNorWhiteSpace(AlarmOperation.Equal.ToString()), out AlarmOperation operation))
                 operation = AlarmOperation.Equal;
 
             switch (operation)
