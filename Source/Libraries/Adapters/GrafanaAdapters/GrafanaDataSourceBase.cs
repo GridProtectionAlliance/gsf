@@ -1851,7 +1851,7 @@ namespace GrafanaAdapters
                 case SeriesFunction.Median:
                     values = source.Median();
 
-                    if (values.Length == 0)
+                    if (values.Length == 0) //-V3080
                         yield break;
 
                     result = values.Last();
@@ -2095,7 +2095,7 @@ namespace GrafanaAdapters
                 case SeriesFunction.FilterNaN:
                     bool alsoFilterInifinity = parameters.Length == 0 || parameters[0].Trim().ParseBoolean();
 
-                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || alsoFilterInifinity && double.IsInfinity(dataValue.Value))))
+                    foreach (DataSourceValue dataValue in source.Where(dataValue => !(double.IsNaN(dataValue.Value) || alsoFilterInifinity && double.IsInfinity(dataValue.Value)))) //-V3130
                         yield return dataValue;
 
                     break;
