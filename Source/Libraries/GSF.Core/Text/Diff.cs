@@ -1,4 +1,29 @@
-﻿/*
+﻿//******************************************************************************************************
+//  Diff.cs - Gbtc
+//
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  09/17/2019 - Stephen C. Wills
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+#region [ Contributor License Agreements ]
+
+/*
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
  * https://github.com/google/diff-match-patch
@@ -16,9 +41,11 @@
  * limitations under the License.
  */
 
+#endregion
+
+// ReSharper disable NonReadonlyMemberInGetHashCode
 namespace GSF.Text
 {
-
     /// <summary>
     /// The data structure representing a diff is a List of Diff objects:
     /// {Diff(Operation.DELETE, "Hello"), Diff(Operation.INSERT, "Goodbye"),
@@ -46,6 +73,10 @@ namespace GSF.Text
     /// <summary>
     /// Class representing one diff operation.
     /// </summary>
+    /// <remarks>
+    /// This class produces a dynamic hash code, do not use
+    /// an instance of this class as key in a dictionary.
+    /// </remarks>
     public class Diff
     {
         /// <summary>

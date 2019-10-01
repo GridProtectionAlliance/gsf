@@ -1,4 +1,29 @@
-﻿/*
+﻿//******************************************************************************************************
+//  DiffMatchPatch.cs - Gbtc
+//
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  09/17/2019 - Stephen C. Wills
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+#region [ Contributor License Agreements ]
+
+/*
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
  * https://github.com/google/diff-match-patch
@@ -15,6 +40,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
+#endregion
 
 using System;
 using System.Collections.Generic;
@@ -23,6 +50,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 
+// ReSharper disable UnusedMember.Global
 namespace GSF.Text
 {
     internal static class CompatibilityExtensions
@@ -770,7 +798,8 @@ namespace GSF.Text
             {
                 return null;
             }
-            else if (hm2 == null)
+            
+            if (hm2 == null)
             {
                 hm = hm1;
             }
@@ -788,12 +817,10 @@ namespace GSF.Text
             if (text1.Length > text2.Length)
             {
                 return hm;
-                //return new string[]{hm[0], hm[1], hm[2], hm[3], hm[4]};
+                //return new[]{hm[0], hm[1], hm[2], hm[3], hm[4]};
             }
-            else
-            {
-                return new string[] { hm[2], hm[3], hm[0], hm[1], hm[4] };
-            }
+
+            return new[] { hm[2], hm[3], hm[0], hm[1], hm[4] };
         }
 
         /// <summary>
@@ -833,9 +860,9 @@ namespace GSF.Text
             }
 
             if (bestCommon.Length * 2 >= longtext.Length)
-                return new string[] { bestLongtextA, bestLongtextB, bestShorttextA, bestShorttextB, bestCommon };
-            else
-                return null;
+                return new[] { bestLongtextA, bestLongtextB, bestShorttextA, bestShorttextB, bestCommon };
+
+            return null;
         }
 
         /// <summary>
@@ -1116,8 +1143,8 @@ namespace GSF.Text
         }
 
         // Define some regex patterns for matching boundaries.
-        private Regex BLANKLINEEND = new Regex("\\n\\r?\\n\\Z");
-        private Regex BLANKLINESTART = new Regex("\\A\\r?\\n\\r?\\n");
+        private readonly Regex BLANKLINEEND = new Regex("\\n\\r?\\n\\Z");
+        private readonly Regex BLANKLINESTART = new Regex("\\A\\r?\\n\\r?\\n");
 
         /// <summary>
         /// Reduce the number of edits by eliminating operationally trivial equalities.
@@ -1596,7 +1623,7 @@ namespace GSF.Text
         {
             List<Diff> diffs = new List<Diff>();
             int pointer = 0;  // Cursor in text1
-            string[] tokens = delta.Split(new string[] { "\t" }, StringSplitOptions.None);
+            string[] tokens = delta.Split(new[] { "\t" }, StringSplitOptions.None);
 
             foreach (string token in tokens)
             {
@@ -1704,21 +1731,21 @@ namespace GSF.Text
                 // Shortcut (potentially not guaranteed by the algorithm)
                 return 0;
             }
-            else if (text.Length == 0)
+            
+            if (text.Length == 0)
             {
                 // Nothing to match.
                 return -1;
             }
-            else if (loc + pattern.Length <= text.Length && text.Substring(loc, pattern.Length) == pattern)
+            
+            if (loc + pattern.Length <= text.Length && text.Substring(loc, pattern.Length) == pattern)
             {
                 // Perfect match at the perfect spot!  (Includes case of null pattern)
                 return loc;
             }
-            else
-            {
-                // Do a fuzzy compare.
-                return MatchBitap(text, pattern, loc);
-            }
+
+            // Do a fuzzy compare.
+            return MatchBitap(text, pattern, loc);
         }
 
         /// <summary>
@@ -2054,7 +2081,7 @@ namespace GSF.Text
                         break;
 
                     case Operation.EQUAL:
-                        if (aDiff.Text.Length <= 2 * PatchMargin && patch.Diffs.Count() != 0 && aDiff != diffs.Last())
+                        if (aDiff.Text.Length <= 2 * PatchMargin && patch.Diffs.Count() != 0 && !Equals(aDiff, diffs.Last()))
                         {
                             // Small equality inside a patch.
                             patch.Diffs.Add(aDiff);
@@ -2420,7 +2447,7 @@ namespace GSF.Text
                     precontext = DiffText2(patch.Diffs);
                     precontext = precontext.Substring(Math.Max(0, precontext.Length - PatchMargin));
 
-                    string postcontext = null;
+                    string postcontext;
 
                     // Append the end context for this patch.
                     if (DiffText1(bigPatch.Diffs).Length > PatchMargin)
