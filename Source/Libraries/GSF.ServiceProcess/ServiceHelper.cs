@@ -2638,7 +2638,6 @@ namespace GSF.ServiceProcess
                     try
                     {
                         requestInfo = new ClientRequestInfo(client, request);
-                        string resource = requestInfo.Request.Command;
 
                         if (m_remoteCommandClientID == Guid.Empty)
                         {
@@ -2651,6 +2650,8 @@ namespace GSF.ServiceProcess
                                     m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
                             }
 
+                            ClientRequestHandler requestHandler = FindClientRequestHandler(request.Command);
+
                             // Check if remote client has permission to invoke the requested command.
                             if (m_secureRemoteInteractions)
                             {
@@ -2660,14 +2661,14 @@ namespace GSF.ServiceProcess
                                     throw new SecurityException($"Authentication failure for client '{client.ClientUsername}'.");
                                 }
 
+                                string resource = requestHandler?.Command ?? requestInfo.Request.Command;
+
                                 if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource, client.ClientUser))
                                     throw new SecurityException($"Access to '{requestInfo.Request.Command}' is denied");
                             }
 
                             // Notify the consumer about the incoming request from client.
                             OnReceivedClientRequest(request, client);
-
-                            ClientRequestHandler requestHandler = FindClientRequestHandler(request.Command);
 
                             if ((object)requestHandler != null)
                             {
