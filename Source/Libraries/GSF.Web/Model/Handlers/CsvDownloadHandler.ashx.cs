@@ -279,7 +279,9 @@ namespace GSF.Web.Model.Handlers
             bool hasDeletedField;
 
             table = dataContext.Table(modelType);
-            fieldNames = table.GetFieldNames(false);
+
+            fieldNames = table.GetFieldNames(false).Where(field =>  (!(table.FieldHasAttribute<GSF.Data.Model.CSVExcludeField>(field)))).ToArray();
+           
             hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
 
             Task readTask = Task.Factory.StartNew(() =>
