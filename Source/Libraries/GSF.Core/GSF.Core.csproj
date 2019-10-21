@@ -133,6 +133,7 @@
     <Compile Include="Data\DataInserter.cs" />
     <Compile Include="Data\DataUpdater.cs" />
     <Compile Include="Data\Model\EncryptDataAttribute.cs" />
+    <Compile Include="Data\Model\CSVExludeAttribute.cs" />
     <Compile Include="Data\Model\NonRecordFieldAttribute.cs" />
     <Compile Include="Data\Model\ITableOperations.cs" />
     <Compile Include="Data\Model\RootQueryRestrictionAttribute.cs" />
