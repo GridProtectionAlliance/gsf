@@ -627,7 +627,7 @@ namespace GSF.ComponentModel
             ConstructorInfo constructor = typeof(T).GetConstructor(Type.EmptyTypes);
 
             if ((object)constructor == null)
-                return scope => { throw new InvalidOperationException($"No parameterless constructor exists for type \"{typeof(T).FullName}\"."); };
+                return _ => throw new InvalidOperationException($"No parameterless constructor exists for type \"{typeof(T).FullName}\".");
 
             if ((object)properties == null)
                 properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(property => property.CanRead && property.CanWrite);
@@ -635,7 +635,6 @@ namespace GSF.ComponentModel
             List<Expression> expressions = new List<Expression>();
             ParameterExpression newInstance = Expression.Variable(typeof(T));
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
-            DefaultValueAttribute defaultValueAttribute;
             TValueExpressionAttribute valueExpressionAttribute;
 
             // Sort properties by any specified evaluation order
@@ -651,7 +650,7 @@ namespace GSF.ComponentModel
             // Find any defined value attributes for properties and assign them to new instance
             foreach (PropertyInfo property in properties)
             {
-                if (property.TryGetAttribute(out defaultValueAttribute))
+                if (property.TryGetAttribute(out DefaultValueAttribute defaultValueAttribute))
                 {
                     try
                     {
@@ -659,7 +658,7 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error evaluating \"DefaultValueAttribute\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return _ => throw new ArgumentException($"Error evaluating \"DefaultValueAttribute\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex);
                     }
                 }
                 else if (property.TryGetAttribute(out valueExpressionAttribute))
@@ -676,11 +675,11 @@ namespace GSF.ComponentModel
                     catch (EvaluationOrderException ex)
                     {
                         // Need to wrap exceptions in order to keep original call stack
-                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
+                        return _ => throw new InvalidOperationException(ex.Message, ex);
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex); };
+                        return _ => throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex);
                     }
                 }
             }
@@ -774,7 +773,6 @@ namespace GSF.ComponentModel
             List<Expression> expressions = new List<Expression>();
             ParameterExpression instance = Expression.Variable(typeof(T));
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
-            DefaultValueAttribute defaultValueAttribute;
             TValueExpressionAttribute valueExpressionAttribute;
 
             // Sort properties by any specified evaluation order
@@ -787,7 +785,7 @@ namespace GSF.ComponentModel
             // Find any defined value attributes for properties and assign them to instance
             foreach (PropertyInfo property in properties)
             {
-                if (property.TryGetAttribute(out defaultValueAttribute))
+                if (property.TryGetAttribute(out DefaultValueAttribute defaultValueAttribute))
                 {
                     try
                     {
@@ -795,7 +793,7 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error evaluating \"DefaultValueAttribute\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return _ => throw new ArgumentException($"Error evaluating \"DefaultValueAttribute\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex);
                     }
                 }
                 else if (property.TryGetAttribute(out valueExpressionAttribute))
@@ -812,11 +810,11 @@ namespace GSF.ComponentModel
                     catch (EvaluationOrderException ex)
                     {
                         // Need to wrap exceptions in order to keep original call stack
-                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
+                        return _ => throw new InvalidOperationException(ex.Message, ex);
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex); };
+                        return _ => throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex);
                     }
                 }
             }
@@ -931,11 +929,11 @@ namespace GSF.ComponentModel
                     catch (EvaluationOrderException ex)
                     {
                         // Need to wrap exceptions in order to keep original call stack
-                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
+                        return _ => throw new InvalidOperationException(ex.Message, ex);
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex); };
+                        return _ => throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex);
                     }
                 }
             }
@@ -1061,11 +1059,11 @@ namespace GSF.ComponentModel
                     catch (EvaluationOrderException ex)
                     {
                         // Need to wrap exceptions in order to keep original call stack
-                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
+                        return _ => throw new InvalidOperationException(ex.Message, ex);
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex); };
+                        return _ => throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex);
                     }
                 }
             }
@@ -1074,7 +1072,7 @@ namespace GSF.ComponentModel
             if (expressions.Count > 0)
                 return Expression.Lambda<Action<TExpressionScope>>(Expression.Block(expressions), scopeParameter).Compile();
 
-            return scope => { };
+            return _ => { };
         }
 
         private static Expression AssignParsedValueExpression(IValueExpressionAttribute valueExpressionAttribute, TypeRegistry typeRegistry, PropertyInfo property, ParameterExpression scopeParameter, ParameterExpression instance, out string expression)
