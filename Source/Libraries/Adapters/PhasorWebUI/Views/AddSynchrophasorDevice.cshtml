@@ -164,7 +164,7 @@
     {
         get
         {
-            return s_nodeID != default(Guid) ? s_nodeID : (s_nodeID = (Guid)AppModelGlobal["NodeID"]);
+            return s_nodeID != default(Guid) ? s_nodeID : s_nodeID = (Guid)AppModelGlobal["NodeID"];
         }
     }
 
@@ -172,7 +172,7 @@
     {
         get
         {
-            return s_defaultCalculationLagTime != default(double) ? s_defaultCalculationLagTime : (s_defaultCalculationLagTime = (double)AppModelGlobal["DefaultCalculationLagTime"]);
+            return s_defaultCalculationLagTime != default(double) ? s_defaultCalculationLagTime : s_defaultCalculationLagTime = (double)AppModelGlobal["DefaultCalculationLagTime"];
         }
     }
 
@@ -180,7 +180,7 @@
     {
         get
         {
-            return s_defaultCalculationLeadTime != default(double) ? s_defaultCalculationLeadTime : (s_defaultCalculationLeadTime = (double)AppModelGlobal["DefaultCalculationLeadTime"]);
+            return s_defaultCalculationLeadTime != default(double) ? s_defaultCalculationLeadTime : s_defaultCalculationLeadTime = (double)AppModelGlobal["DefaultCalculationLeadTime"];
         }
     }
 
@@ -188,7 +188,7 @@
     {
         get
         {
-            return s_nominalFrequency != default(int) ? s_nominalFrequency : (s_nominalFrequency = (int)AppModelGlobal["NominalFrequency"]);
+            return s_nominalFrequency != default(int) ? s_nominalFrequency : s_nominalFrequency = (int)AppModelGlobal["NominalFrequency"];
         }
     }
 
@@ -2593,7 +2593,7 @@
             viewModel = new DeviceViewModel();
 
             // Initialize primary view model
-            ko.applyBindings(viewModel);
+            ko.applyBindings(viewModel, document.body);
 
             // Monitor for view model changes
             ko.watch(viewModel.devices, { depth: -1 }, function (parents, child, item) {
