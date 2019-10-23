@@ -146,19 +146,19 @@ namespace PhasorWebUI
 
         // Quasi-Static Properties
 
-        private int IeeeC37_118ProtocolID => s_ieeeC37_118ProtocolID != default ? s_ieeeC37_118ProtocolID : s_ieeeC37_118ProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='IeeeC37_118V1'");
+        private int IeeeC37_118ProtocolID => s_ieeeC37_118ProtocolID != default(int) ? s_ieeeC37_118ProtocolID : s_ieeeC37_118ProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='IeeeC37_118V1'");
 
-        private int VirtualProtocolID => s_virtualProtocolID != default ? s_virtualProtocolID : s_virtualProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
+        private int VirtualProtocolID => s_virtualProtocolID != default(int) ? s_virtualProtocolID : s_virtualProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
 
         private dynamic AppModelGlobal => s_appModelGlobal != default(dynamic) ? s_appModelGlobal : s_appModelGlobal = (ValueExpressionParser.DefaultTypeRegistry["Global"] as ExpressionEvaluator.ValueType)?.Value;
 
         private string CompanyAcronym => s_companyAcronym ?? (s_companyAcronym = AppModelGlobal.CompanyAcronym);
 
-        private double DefaultCalculationLagTime => s_defaultCalculationLagTime != default ? s_defaultCalculationLagTime : s_defaultCalculationLagTime = AppModelGlobal.DefaultCalculationLagTime;
+        private double DefaultCalculationLagTime => s_defaultCalculationLagTime != default(double) ? s_defaultCalculationLagTime : s_defaultCalculationLagTime = AppModelGlobal.DefaultCalculationLagTime;
         
-        private double DefaultCalculationLeadTime => s_defaultCalculationLeadTime != default ? s_defaultCalculationLeadTime : s_defaultCalculationLeadTime = AppModelGlobal.DefaultCalculationLeadTime;
+        private double DefaultCalculationLeadTime => s_defaultCalculationLeadTime != default(double) ? s_defaultCalculationLeadTime : s_defaultCalculationLeadTime = AppModelGlobal.DefaultCalculationLeadTime;
 
-        private int DefaultCalculationFramesPerSecond => s_defaultCalculationFramesPerSecond != default ? s_defaultCalculationFramesPerSecond : s_defaultCalculationFramesPerSecond = AppModelGlobal.DefaultCalculationFramesPerSecond;
+        private int DefaultCalculationFramesPerSecond => s_defaultCalculationFramesPerSecond != default(int) ? s_defaultCalculationFramesPerSecond : s_defaultCalculationFramesPerSecond = AppModelGlobal.DefaultCalculationFramesPerSecond;
 
         private const string SystemFrequencyDeviceName = "SYSTEM!FREQ";
 
