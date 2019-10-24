@@ -79,7 +79,7 @@ namespace GSF.Parsing
 
         // Constants
         private const string ExpressionParser = @"^[^\{0}\{1}]*(((?<Expressions>(?'Open'\{0})[^\{0}\{1}]*))+((?'Close-Open'\{1})[^\{0}\{1}]*)+)*(?(Open)(?!))$";
-        private const string EvaluationParser = @"eval\{0}([^\]]+)\{1}";
+        private const string EvaluationParser = @"eval\{0}([^\{0}]+)\{1}"; 
 
         // Fields
         private readonly Regex m_expressionParser;
@@ -476,14 +476,13 @@ namespace GSF.Parsing
 
             #if DNF46
 
-            Match match = m_evaluationParser.Match(fieldReplacedTemplatedExpression);
+            MatchCollection matches = m_evaluationParser.Matches(fieldReplacedTemplatedExpression);
 
-            if (match.Success)
-            {                
+            foreach (Match match in matches)
+            {
                 string source = match.Groups[0].Value;
                 string result = new CompiledExpression(match.Groups[1].Value).Eval().ToString();
                 parsedEvaluations.Add(new ParsedEvaluation(source, result));
-                
             }
 
             #endif
