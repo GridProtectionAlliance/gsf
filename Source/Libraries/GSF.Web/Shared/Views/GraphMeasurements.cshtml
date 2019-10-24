@@ -310,7 +310,7 @@
                                                         <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-init="checked=measurementChecked(measurement.SignalID)" ng-change="updateFilter(checked, measurement)" />
                                                     </td>
                                                     <td>{{measurement.ID.split(':')[1]}}</td>
-                                                    <td>{{cleanSignalref(measurement)}}</td>
+                                                    <td>{{cleanPointTag(measurement)}}</td>
                                                     <td>{{measurement.SignalAcronym}}</td>
                                                     @*<td><button class="btn btn-xs badge" data-toggle="modal" data-target="#measmod{{measurement.SignalID}}" style="font-size: xx-small;">Stats</button></td>*@
                                                 </tr>
@@ -597,7 +597,7 @@
                             signalID: measurement.SignalID
                         },
                         plotData: {
-                            label: measurement.SignalReference.split("!")[measurement.SignalReference.split("!").length - 1] + " - " + measurement.SignalAcronym,
+                            label: measurement.PointTag + " - " + measurement.SignalAcronym,
                             yaxis: measurement.YAxis,
                             data: []
                         }
@@ -958,8 +958,8 @@
                     return cleanIdentifier(identifier);
                 }
 
-                $scope.cleanSignalref = function (object) {
-                    return cleanIdentifier(object.SignalReference);
+                $scope.cleanPointTag = function (object) {
+                    return cleanIdentifier(object.PointTag);
                 }
 
                 // function called to update settings on change from the inputs
