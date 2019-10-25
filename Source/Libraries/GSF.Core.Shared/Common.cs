@@ -308,7 +308,7 @@ namespace GSF
             {
                 // Attempt to use type converter to set field value
                 TypeConverter converter = TypeDescriptor.GetConverter(value);
-                
+
                 // ReSharper disable once AssignNullToNotNullAttribute
                 return converter.ConvertToString(null, culture, value).ToNonNullString();
             }
@@ -472,43 +472,67 @@ namespace GSF
         }
 
         /// <summary>
-        /// Determines if given <paramref name="item"/> is a numeric type.
+        /// Determines if <paramref name="typeCode"/> is a numeric type, i.e., one of:
+        /// <see cref="TypeCode.Boolean"/>, <see cref="TypeCode.SByte"/>, <see cref="TypeCode.Byte"/>,
+        /// <see cref="TypeCode.Int16"/>, <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>,
+        /// <see cref="TypeCode.UInt32"/>, <see cref="TypeCode.Int64"/>, <see cref="TypeCode.UInt64"/>
+        /// <see cref="TypeCode.Single"/>, <see cref="TypeCode.Double"/> or <see cref="TypeCode.Decimal"/>.
         /// </summary>
-        /// <param name="item">Object to evaluate.</param>
-        /// <returns><c>true</c> if <paramref name="item"/> is a numeric type; otherwise, <c>false</c>.</returns>
+        /// <param name="typeCode"><see cref="TypeCode"/> value to check.</param>
+        /// <returns><c>true</c> if <paramref name="typeCode"/> is a numeric type; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNumericType(object item)
+        public static bool IsNumericType(TypeCode typeCode)
         {
-            IConvertible convertible = item as IConvertible;
-
-            if ((object)convertible != null)
+            switch (typeCode)
             {
-                switch (convertible.GetTypeCode())
-                {
-                    case TypeCode.Boolean:
-                    case TypeCode.SByte:
-                    case TypeCode.Byte:
-                    case TypeCode.Int16:
-                    case TypeCode.UInt16:
-                    case TypeCode.Int32:
-                    case TypeCode.UInt32:
-                    case TypeCode.Int64:
-                    case TypeCode.UInt64:
-                    case TypeCode.Single:
-                    case TypeCode.Double:
-                    case TypeCode.Decimal:
-                        return true;
-                }
+                case TypeCode.Boolean:
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Single:
+                case TypeCode.Double:
+                case TypeCode.Decimal:
+                    return true;
             }
 
             return false;
         }
 
         /// <summary>
-        /// Determines if given <paramref name="item"/> is, or can be interpreted to be, a numeric type.
+        /// Determines if <typeparamref name="T"/> is a numeric type, i.e., has a <see cref="TypeCode"/> that is one of:
+        /// <see cref="TypeCode.Boolean"/>, <see cref="TypeCode.SByte"/>, <see cref="TypeCode.Byte"/>,
+        /// <see cref="TypeCode.Int16"/>, <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>,
+        /// <see cref="TypeCode.UInt32"/>, <see cref="TypeCode.Int64"/>, <see cref="TypeCode.UInt64"/>
+        /// <see cref="TypeCode.Single"/>, <see cref="TypeCode.Double"/> or <see cref="TypeCode.Decimal"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> to check.</typeparam>
+        /// <returns><c>true</c> if <typeparamref name="T"/> is a numeric type; otherwise, <c>false</c>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumericType<T>() => IsNumericType(Type.GetTypeCode(typeof(T)));
+
+        /// <summary>
+        /// Determines if <see cref="Type"/> of <paramref name="item"/> is a numeric type, i.e., <paramref name="item"/>
+        /// is <see cref="IConvertible"/> and has a <see cref="TypeCode"/> that is one of:
+        /// <see cref="TypeCode.Boolean"/>, <see cref="TypeCode.SByte"/>, <see cref="TypeCode.Byte"/>,
+        /// <see cref="TypeCode.Int16"/>, <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>,
+        /// <see cref="TypeCode.UInt32"/>, <see cref="TypeCode.Int64"/>, <see cref="TypeCode.UInt64"/>
+        /// <see cref="TypeCode.Single"/>, <see cref="TypeCode.Double"/> or <see cref="TypeCode.Decimal"/>.
         /// </summary>
         /// <param name="item">Object to evaluate.</param>
-        /// <returns><c>true</c> if <paramref name="item"/> is, or can be interpreted to be, a numeric type; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if <paramref name="item"/> is a numeric type; otherwise, <c>false</c>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumericType(object item) => item is IConvertible convertible && IsNumericType(convertible.GetTypeCode());
+
+        /// <summary>
+        /// Determines if given <paramref name="item"/> is or can be interpreted as numeric.
+        /// </summary>
+        /// <param name="item">Object to evaluate.</param>
+        /// <returns><c>true</c> if <paramref name="item"/> is or can be interpreted as numeric; otherwise, <c>false</c>.</returns>
         /// <remarks>
         /// If type of <paramref name="item"/> is a <see cref="char"/> or a <see cref="string"/>, then if value can be parsed as a numeric
         /// value, result will be <c>true</c>.
@@ -519,13 +543,7 @@ namespace GSF
             if (IsNumericType(item))
                 return true;
 
-            if (item is char || item is string)
-            {
-                double result;
-                return double.TryParse(item.ToString(), out result);
-            }
-
-            return false;
+            return (item is char || item is string) && decimal.TryParse(item.ToString(), out _);
         }
 
         /// <summary>Returns the smallest item from a list of parameters.</summary>
@@ -533,20 +551,14 @@ namespace GSF
         /// <param name="itemList">A variable number of parameters of the specified type.</param>
         /// <returns>Result is the minimum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Min<T>(params T[] itemList)
-        {
-            return itemList.Min();
-        }
+        public static T Min<T>(params T[] itemList) => itemList.Min();
 
         /// <summary>Returns the largest item from a list of parameters.</summary>
         /// <typeparam name="T">Return type <see cref="Type"/> that is the maximum value in the <paramref name="itemList"/>.</typeparam>
         /// <param name="itemList">A variable number of parameters of the specified type .</param>
         /// <returns>Result is the maximum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Max<T>(params T[] itemList)
-        {
-            return itemList.Max();
-        }
+        public static T Max<T>(params T[] itemList) => itemList.Max();
 
         /// <summary>Returns the value that is neither the largest nor the smallest.</summary>
         /// <typeparam name="T"><see cref="Type"/> of the objects passed to and returned from this method.</typeparam>
