@@ -641,7 +641,7 @@ namespace GrafanaAdapters
             {
                 return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
                 {
-                    // Attempt to parse search target as a SQL SELECT statement
+                    // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
                     if (ParseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                     {
                         DataTableCollection tables = Metadata.Tables;
@@ -664,6 +664,45 @@ namespace GrafanaAdapters
 
                             if (fieldNames.Length == 0)
                                 fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+                            // If no filter expression or take count was specified, limit search target results - user can
+                            // still request larger results sets by specifying desired TOP count.
+                            if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
+                                takeCount = MaximumSearchTargetsPerRequest;
+
+                            void executeSelect(IEnumerable<DataRow> queryOperation)
+                            {
+                                results.AddRange(queryOperation.Take(takeCount).Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
+                            }
+
+                            if (string.IsNullOrWhiteSpace(expression))
+                            {
+                                if (string.IsNullOrWhiteSpace(sortField))
+                                {
+                                    executeSelect(table.Select());
+                                }
+                                else
+                                {
+                                    if (Common.IsNumericType(table.Columns[sortField].DataType))
+                                    {
+                                        decimal parseAsNumeric(DataRow row)
+                                        {
+                                            decimal.TryParse(row[sortField].ToString(), out decimal result);
+                                            return result;
+                                        }
+
+                                        executeSelect(table.Select().OrderBy(parseAsNumeric));
+                                    }
+                                    else
+                                    {
+                                        executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                executeSelect(table.Select(expression, sortField));
+                            }
 
                             foreach (DataRow row in table.Select(expression, sortField).Take(takeCount))
                                 results.Add(string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString())));
@@ -1283,7 +1322,7 @@ namespace GrafanaAdapters
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
-            s_selectExpression = new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_selectExpression = new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
             s_requiredParameters = new Dictionary<SeriesFunction, int>
