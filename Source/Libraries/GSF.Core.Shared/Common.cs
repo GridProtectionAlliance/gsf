@@ -504,6 +504,17 @@ namespace GSF
         }
 
         /// <summary>
+        /// Determines if <paramref name="type"/> is a numeric type, i.e., has a <see cref="TypeCode"/> that is one of:
+        /// <see cref="TypeCode.Boolean"/>, <see cref="TypeCode.SByte"/>, <see cref="TypeCode.Byte"/>,
+        /// <see cref="TypeCode.Int16"/>, <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>,
+        /// <see cref="TypeCode.UInt32"/>, <see cref="TypeCode.Int64"/>, <see cref="TypeCode.UInt64"/>
+        /// <see cref="TypeCode.Single"/>, <see cref="TypeCode.Double"/> or <see cref="TypeCode.Decimal"/>.
+        /// </summary>
+        /// <param name="type"><see cref="Type"/> to check.</param>
+        /// <returns><c>true</c> if <paramref name="type"/> is a numeric type; otherwise, <c>false</c>.</returns>
+        public static bool IsNumericType(Type type) => IsNumericType(Type.GetTypeCode(type));
+
+        /// <summary>
         /// Determines if <typeparamref name="T"/> is a numeric type, i.e., has a <see cref="TypeCode"/> that is one of:
         /// <see cref="TypeCode.Boolean"/>, <see cref="TypeCode.SByte"/>, <see cref="TypeCode.Byte"/>,
         /// <see cref="TypeCode.Int16"/>, <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>,
