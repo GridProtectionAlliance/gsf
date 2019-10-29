@@ -27,7 +27,9 @@ using System;
 using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 #if DNF46
@@ -95,7 +97,8 @@ namespace GSF.Parsing
         /// <summary>
         /// Creates a new <see cref="TemplatedExpressionParser"/>.
         /// </summary>
-        public TemplatedExpressionParser() : this('{', '}', '[', ']')
+        public TemplatedExpressionParser() :
+            this('{', '}', '[', ']')
         {
         }
 
@@ -106,6 +109,9 @@ namespace GSF.Parsing
         /// <param name="endTokenDelimiter">Character that identifies the end of a token.</param>
         /// <param name="startExpressionDelimiter">Character that identifies the beginning of an expression.</param>
         /// <param name="endExpressionDelimiter">Character that identifies the beginning of an expression.</param>
+        /// <exception cref="ArgumentException">
+        /// All delimiters must be unique -- or -- the symbol <c>'u'</c> is reserved for encoding and cannot be used as a delimiter.
+        /// </exception>
         public TemplatedExpressionParser(char startTokenDelimiter, char endTokenDelimiter, char startExpressionDelimiter, char endExpressionDelimiter)
         {
             if (startTokenDelimiter == endTokenDelimiter ||
@@ -115,6 +121,12 @@ namespace GSF.Parsing
                 endTokenDelimiter == endExpressionDelimiter ||
                 startExpressionDelimiter == endExpressionDelimiter)
                 throw new ArgumentException("All delimiters must be unique");
+
+            if (startTokenDelimiter == 'u' ||
+                endTokenDelimiter == 'u' ||
+                startExpressionDelimiter == 'u' ||
+                endExpressionDelimiter == 'u')
+                throw new ArgumentException("The symbol 'u' is reserved for encoding and cannot be used as a delimiter.");
 
             // Define a regular expression that can parse nested binary expressions
             m_expressionParser = new Regex(string.Format(ExpressionParser, startExpressionDelimiter, endExpressionDelimiter), RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -145,28 +157,15 @@ namespace GSF.Parsing
         /// </summary>
         public string TemplatedExpression
         {
-            get
-            {
-                return m_templatedExpression;
-            }
-            set
-            {
-                m_templatedExpression = value;
-
-                // Encode any escaped reserved symbols in template expression
-                if (!string.IsNullOrEmpty(m_templatedExpression))
-                {
-                    for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
-                        m_templatedExpression = m_templatedExpression.Replace(m_escapedReservedSymbols[i], m_encodedReservedSymbols[i]);
-                }
-            }
+            get => m_templatedExpression;
+            set => m_templatedExpression = EncodeEscapedReservedSymbols(value);
         }
 
         /// <summary>
         /// Gets the reserved symbols - this includes all delimiters and expression operators.
         /// </summary>
         /// <remarks>
-        /// The default reserved symbol list is: \, &lt;, &gt;, =, !, {, }, [ and ]
+        /// The default reserved symbol list is: <c>'\', '&lt;', '&gt;', '=', '!', '{', '}', '[', ']'</c>.
         /// </remarks>
         public char[] ReservedSymbols => m_escapedReservedSymbols.Select(symbol => symbol[1]).ToArray(); // Return unescaped reserved symbols
 
@@ -201,6 +200,7 @@ namespace GSF.Parsing
         /// <param name="substitutions">Dictionary of substitutions. Dictionary keys are tokens to be replaced by the values.</param>
         /// <param name="ignoreCase">Determines if substitutions should be case insensitive. Defaults to <c>true</c>.</param>
         /// <param name="evaluateExpressions">Determines if expressions should be evaluated. Defaults to <c>true</c>.</param>
+        /// <param name="escapeSubstitutionValues">Determines if reserved symbols in substitution values should be automatically escaped. Defaults to <c>true</c>.</param>
         /// <returns>A string that was based on <see cref="TemplatedExpression"/> with tokens replaced and expressions evaluated.</returns>
         /// <remarks>
         /// <para>
@@ -229,8 +229,13 @@ namespace GSF.Parsing
         /// instead of double quotes, this includes substitution parameters, e.g., <c>eval{'{DeviceAcronym}'.Length + 1}</c>. Advanced evaluation
         /// expressions using the eval function are always parsed after common expressions. Eval functions cannot be nested.
         /// </para>
+        /// <para>
+        /// When <paramref name="evaluateExpressions"/> is <c>true</c> and values in <paramref name="substitutions"/> intentionally contain
+        /// expressions to be evaluated, then <paramref name="escapeSubstitutionValues"/> should be set to <c>false</c> so that the reserved
+        /// symbols in the values are not automatically escaped.
+        /// </para>
         /// </remarks>
-        public string Execute(IDictionary<string, string> substitutions, bool ignoreCase = true, bool evaluateExpressions = true)
+        public string Execute(IDictionary<string, string> substitutions, bool ignoreCase = true, bool evaluateExpressions = true, bool escapeSubstitutionValues = true)
         {
             if (string.IsNullOrEmpty(m_templatedExpression))
                 return "";
@@ -241,9 +246,9 @@ namespace GSF.Parsing
             foreach (KeyValuePair<string, string> substitution in substitutions)
             {
                 if (ignoreCase)
-                    result = result.ReplaceCaseInsensitive(substitution.Key, substitution.Value);
+                    result = result.ReplaceCaseInsensitive(substitution.Key, escapeSubstitutionValues ? EscapeAndEncodeReservedSymbols(substitution.Value) : EncodeEscapedReservedSymbols(substitution.Value));
                 else
-                    result = result.Replace(substitution.Key, substitution.Value);
+                    result = result.Replace(substitution.Key, escapeSubstitutionValues ? EscapeAndEncodeReservedSymbols(substitution.Value) : EncodeEscapedReservedSymbols(substitution.Value));
             }
 
             if (evaluateExpressions)
@@ -264,15 +269,55 @@ namespace GSF.Parsing
             }
 
             // Decode any reserved symbols that were escaped in original templated expression
-            for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
-                result = result.Replace(m_encodedReservedSymbols[i], m_escapedReservedSymbols[i].Substring(1));
+            return DecodeReservedSymbols(result);
+        }
 
-            return result;
+        // Encodes escaped reserved symbols in a value.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string EncodeEscapedReservedSymbols(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return value;
+
+            for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
+                value = value.Replace(m_escapedReservedSymbols[i], m_encodedReservedSymbols[i]);
+
+            return value;
+        }
+
+        // Escapes then encodes reserved symbols in a value.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string EscapeAndEncodeReservedSymbols(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return value;
+
+            // Encode any values that have already been escaped
+            value = EncodeEscapedReservedSymbols(value);
+
+            // Escape any remaining reserved symbols, e.g., replace '{' with '\{'
+            for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
+                value = value.Replace(m_escapedReservedSymbols[i].Substring(1), m_escapedReservedSymbols[i]);
+
+            return EncodeEscapedReservedSymbols(value);
+        }
+
+        // Decodes reserved symbols in a value.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string DecodeReservedSymbols(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return value;
+
+            for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
+                value = value.Replace(m_encodedReservedSymbols[i], m_escapedReservedSymbols[i].Substring(1));
+
+            return value;
         }
 
         // Parses expressions of the form "[?expression[result]]". Expressions can be nested, e.g., "[?expression1[?expression2[result]]]".
         // Returns list of complete expressions (used as base replacement text), cumulative boolean expression evaluations and expression results
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private List<ParsedExpression> ParseExpressions(string fieldReplacedTemplatedExpression, bool ignoreCase)
         {
             List<ParsedExpression> parsedExpressions = new List<ParsedExpression>();
