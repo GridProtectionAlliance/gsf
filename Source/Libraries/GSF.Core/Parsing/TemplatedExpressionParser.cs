@@ -134,13 +134,10 @@ namespace GSF.Parsing
             // Define a regular expression that will find each "eval[]" expression
             m_evaluationParser = new Regex(string.Format(EvaluationParser, startTokenDelimiter, endTokenDelimiter), RegexOptions.Compiled);
 
-            // Reserved symbols include all expression operators and delimiters (hashset keeps symbol list unique)
-            HashSet<string> escapedReservedSymbols = new HashSet<string>(new[] { "\\\\", "\\<", "\\>", "\\=", "\\!", "\\" + startTokenDelimiter, "\\" + endTokenDelimiter, "\\" + startExpressionDelimiter, "\\" + endExpressionDelimiter });
-            m_escapedReservedSymbols = escapedReservedSymbols.ToArray();
-            m_encodedReservedSymbols = new string[m_escapedReservedSymbols.Length];
-
-            for (int i = 0; i < m_encodedReservedSymbols.Length; i++)
-                m_encodedReservedSymbols[i] = m_escapedReservedSymbols[i][1].RegexEncode();
+            // Reserved symbols include all expression operators and delimiters
+            ReservedSymbols = new[] { '\\', '<', '>', '=', '!', startTokenDelimiter, endTokenDelimiter, startExpressionDelimiter, endExpressionDelimiter };
+            m_escapedReservedSymbols = ReservedSymbols.Select(symbol => $"\\{symbol}").ToArray();
+            m_encodedReservedSymbols = ReservedSymbols.Select(symbol => symbol.RegexEncode()).ToArray();
 
             StartTokenDelimiter = startTokenDelimiter;
             EndTokenDelimiter = endTokenDelimiter;
@@ -167,7 +164,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// The default reserved symbol list is: <c>'\', '&lt;', '&gt;', '=', '!', '{', '}', '[', ']'</c>.
         /// </remarks>
-        public char[] ReservedSymbols => m_escapedReservedSymbols.Select(symbol => symbol[1]).ToArray(); // Return unescaped reserved symbols
+        public char[] ReservedSymbols { get; }
 
         /// <summary>
         /// Gets the character that identifies the beginning of a token.
@@ -296,8 +293,8 @@ namespace GSF.Parsing
             value = EncodeEscapedReservedSymbols(value);
 
             // Escape any remaining reserved symbols, e.g., replace '{' with '\{'
-            for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
-                value = value.Replace(m_escapedReservedSymbols[i].Substring(1), m_escapedReservedSymbols[i]);
+            for (int i = 0; i < ReservedSymbols.Length; i++)
+                value = value.Replace(ReservedSymbols[i].ToString(), m_escapedReservedSymbols[i]);
 
             return EncodeEscapedReservedSymbols(value);
         }
@@ -309,8 +306,8 @@ namespace GSF.Parsing
             if (string.IsNullOrWhiteSpace(value))
                 return value;
 
-            for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
-                value = value.Replace(m_encodedReservedSymbols[i], m_escapedReservedSymbols[i].Substring(1));
+            for (int i = 0; i < ReservedSymbols.Length; i++)
+                value = value.Replace(m_encodedReservedSymbols[i], ReservedSymbols[i].ToString());
 
             return value;
         }
@@ -334,7 +331,7 @@ namespace GSF.Parsing
 
                 foreach (Capture capture in capturedExpressions.Captures)
                 {
-                    if (capture.Value.StartsWith(StartExpressionDelimiter + "?", StringComparison.Ordinal))
+                    if (capture.Value.StartsWith($"{StartExpressionDelimiter}?", StringComparison.Ordinal))
                     {
                         int result;
                         bool evaluation;
