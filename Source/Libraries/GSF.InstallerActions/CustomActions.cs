@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
@@ -630,6 +631,7 @@ namespace GSF.InstallerActions
             string connectionString;
             string dataProviderString;
             string query;
+            string dllPath;
 
             logger.Log("Begin DatabaseQueryAction");
 
@@ -640,6 +642,20 @@ namespace GSF.InstallerActions
 
             try
             {
+                dllPath = GetPropertyValue(session, "LIBPATH");
+            }
+            catch (Exception ex)
+            {
+                dllPath = "";
+            }
+
+            try
+            {
+                //Load the DLL for a data connetcion if neccesary
+                if (dllPath != "")
+                {
+                    Assembly.Load(File.ReadAllBytes(dllPath));
+                }
                 // Execute the database script
                 using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
                 {
@@ -654,6 +670,7 @@ namespace GSF.InstallerActions
                 logger.Log(EventLogEntryType.Error, ex);
 
                 logger.Log(InstallMessage.Error,
+                    $"Library Path: {dllPath}{Environment.NewLine}" +
                     $"Database Query: {query}{Environment.NewLine}" +
                     $"Connection string: {connectionString}{Environment.NewLine}" +
                     $"Data provider string: {dataProviderString}");
