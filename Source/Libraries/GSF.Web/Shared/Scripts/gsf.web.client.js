@@ -27,7 +27,7 @@
 "use strict";
 
 if (typeof jQuery === "undefined") {
-  throw new Error("gsf.web.client script requires jQuery - make sure jquery.js is loaded first");
+    throw new Error("gsf.web.client script requires jQuery - make sure jquery.js is loaded first");
 }
 
 const isIE = detectIE();
@@ -35,7 +35,8 @@ var textMetrics;
 
 $(function() {
     // Create a canvas object that will be used for text metrics calculations
-    $("<canvas id=\"textMetricsCanvas\" height=\"1px\" width=\"1px\" style=\"visibility: hidden\"></canvas>").appendTo("body");
+    $("<canvas id=\"textMetricsCanvas\" height=\"1px\" width=\"1px\" style=\"visibility: hidden\"></canvas>")
+        .appendTo("body");
 
     // Get text metrics canvas context
     textMetrics = document.getElementById("textMetricsCanvas").getContext("2d");
@@ -119,7 +120,7 @@ function getParameterByName(name, url) {
 function clearCachedCredentials(securedUrl, successCallback) {
     if (isIE) {
         document.execCommand("ClearAuthenticationCache", "false");
-                
+
         if (successCallback)
             successCallback(true);
     } else {
@@ -152,29 +153,29 @@ const persistentStorage = (function() {
             storage.setItem(x, x);
             storage.removeItem(x);
             return true;
-        }
-        catch (e) {
-            return e instanceof DOMException && (
-                // everything except Firefox
-                e.code === 22 ||
-                // Firefox
-                e.code === 1014 ||
-                // test name field too, because code might not be present
-                // everything except Firefox
-                e.name === "QuotaExceededError" ||
-                // Firefox
-                e.name === "NS_ERROR_DOM_QUOTA_REACHED"
-            ) &&
-            // acknowledge QuotaExceededError only if there's something already stored
-            storage.length !== 0;
+        } catch (e) {
+            return e instanceof DOMException &&
+                (
+                    // everything except Firefox
+                    e.code === 22 ||
+                        // Firefox
+                        e.code === 1014 ||
+                        // test name field too, because code might not be present
+                        // everything except Firefox
+                        e.name === "QuotaExceededError" ||
+                        // Firefox
+                        e.name === "NS_ERROR_DOM_QUOTA_REACHED"
+                ) &&
+                // acknowledge QuotaExceededError only if there's something already stored
+                storage.length !== 0;
         }
     }
 
     function fakeStorage() {
         return {
-            getItem: function() { },
-            setItem: function() { },
-            removeItem: function() { }
+            getItem: function() {},
+            setItem: function() {},
+            removeItem: function() {}
         };
     }
 
@@ -186,26 +187,26 @@ const persistentStorage = (function() {
 
 // Number functions
 Number.prototype.truncate = function() {
-    if (typeof Math.trunc != "function")
+    if (typeof Math.trunc !== "function")
         return parseInt(this.toString());
 
     return Math.trunc(this);
-}
+};
 
 Number.prototype.padLeft = function(totalWidth, paddingChar) {
     return this.truncate().toString().padLeft(totalWidth, paddingChar || "0");
-}
+};
 
 Number.prototype.padRight = function(totalWidth, paddingChar) {
     return this.truncate().toString().padRight(totalWidth, paddingChar || "0");
-}
+};
 
 // Array functions
 
 // Combines a dictionary of key-value pairs into a string. Values will be escaped within startValueDelimiter and endValueDelimiter
 // to contain nested key/value pair expressions like the following: "normalKVP=-1; nestedKVP={p1=true; p2=0.001}" when either the
 // parameterDelimiter or the keyValueDelimiter are detected in the value of the key/value pair.
-function joinKeyValuePairs (source, parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter) {
+function joinKeyValuePairs(source, parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter) {
     if (!parameterDelimiter)
         parameterDelimiter = ";";
 
@@ -229,7 +230,10 @@ function joinKeyValuePairs (source, parameterDelimiter, keyValueDelimiter, start
             else
                 value = value ? value.toString() : "";
 
-            if (value.indexOf(parameterDelimiter) >= 0 || value.indexOf(keyValueDelimiter) >= 0 || value.indexOf(startValueDelimiter) >= 0 || value.indexOf(endValueDelimiter) >= 0)
+            if (value.indexOf(parameterDelimiter) >= 0 ||
+                value.indexOf(keyValueDelimiter) >= 0 ||
+                value.indexOf(startValueDelimiter) >= 0 ||
+                value.indexOf(endValueDelimiter) >= 0)
                 value = startValueDelimiter + value + endValueDelimiter;
 
             values.push(key + keyValueDelimiter + value);
@@ -239,25 +243,26 @@ function joinKeyValuePairs (source, parameterDelimiter, keyValueDelimiter, start
     return values.join(parameterDelimiter + " ");
 }
 
-Array.prototype.joinKeyValuePairs = function(parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter) {
-    return joinKeyValuePairs(this, parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter);
-};
+Array.prototype.joinKeyValuePairs =
+    function(parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter) {
+        return joinKeyValuePairs(this, parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter);
+    };
 
 Array.prototype.forEachWithDelay = function(iterationCallback, timeout, completedCallback, thisArg) {
     var index = 0,
-    count = this.length,
-    self = this,
-    next = function() {
-        if (self[index])
-            iterationCallback.call(thisArg || self, self[index], index, self);
-        
-        index++;
+        count = this.length,
+        self = this,
+        next = function() {
+            if (self[index])
+                iterationCallback.call(thisArg || self, self[index], index, self);
 
-        if (index < count)
-            setTimeout(next, timeout);
-        else
-            completedCallback.call(thisArg || self, self);
-    };
+            index++;
+
+            if (index < count)
+                setTimeout(next, timeout);
+            else
+                completedCallback.call(thisArg || self, self);
+        };
 
     next();
 };
@@ -266,12 +271,11 @@ if (!Array.prototype.any) {
 
     if (Array.prototype.some) {
         Array.prototype.any = Array.prototype.some;
-    }
-    else {
+    } else {
         Array.prototype.any = function(callback, thisArg) {
             var args;
 
-            if (this == null)
+            if (this === null)
                 throw new TypeError("this is null or not defined");
 
             const array = Object(this);
@@ -299,7 +303,7 @@ if (!Array.prototype.any) {
             }
 
             return false;
-        }
+        };
     }
 }
 
@@ -322,7 +326,7 @@ function Dictionary(source) {
         }
 
         return size;
-    }
+    };
 
     self.keys = function() {
         const keys = [];
@@ -333,7 +337,7 @@ function Dictionary(source) {
         }
 
         return keys;
-    }
+    };
 
     self.values = function() {
         const values = [];
@@ -344,11 +348,11 @@ function Dictionary(source) {
         }
 
         return values;
-    }
+    };
 
     self.get = function(key) {
         return self._values[String(key).toLowerCase()];
-    }
+    };
 
     self.set = function(key, value) {
         const lkey = String(key).toLowerCase();
@@ -360,13 +364,13 @@ function Dictionary(source) {
             self._values[lkey] = getBool(value);
         else
             self._values[lkey] = value;
-    }
+    };
 
     self.remove = function(key) {
         const lkey = String(key).toLowerCase();
         delete self._keys[lkey];
         delete self._values[lkey];
-    }
+    };
 
     self.containsKey = function(key) {
         const lkey = String(key).toLowerCase();
@@ -377,7 +381,7 @@ function Dictionary(source) {
         }
 
         return false;
-    }
+    };
 
     self.containsValue = function(value) {
         for (let property in self._values) {
@@ -386,12 +390,12 @@ function Dictionary(source) {
         }
 
         return false;
-    }
+    };
 
     self.clear = function() {
         self._keys = [];
         self._values = [];
-    }
+    };
 
     self.joinKeyValuePairs = function(parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter) {
         const keyValuePairs = [];
@@ -401,14 +405,17 @@ function Dictionary(source) {
                 keyValuePairs[self._keys[property]] = self._values[property];
         }
 
-        return keyValuePairs.joinKeyValuePairs(parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter);
-    }
+        return keyValuePairs.joinKeyValuePairs(parameterDelimiter,
+            keyValueDelimiter,
+            startValueDelimiter,
+            endValueDelimiter);
+    };
 
     self.pushAll = function(source) {
         for (let property in source)
             if (source.hasOwnProperty(property))
                 self.set(property, source[property]);
-    }
+    };
 
     self.toObservableDictionary = function(useLowerKeys) {
         // See ko.observableDictionary.js
@@ -420,22 +427,21 @@ function Dictionary(source) {
         }
 
         return observableDictionary;
-    }
+    };
 
     self.updateObservableDictionary = function(observableDictionary, useLowerKeys) {
         for (let property in self._values) {
             if (self._values.hasOwnProperty(property))
                 observableDictionary.set(useLowerKeys ? property : self._keys[property], self._values[property]);
         }
-    }
+    };
 
     // Construction
     if (source instanceof Dictionary) {
         for (let property in source._values)
             if (source._values.hasOwnProperty(property))
                 self.set(source._keys[property], source._values[property]);
-    }
-    else {
+    } else {
         for (let property in source) {
             if (source.hasOwnProperty(property))
                 self.set(property, source[property]);
@@ -447,16 +453,17 @@ Dictionary.fromObservableDictionary = function(observableDictionary) {
     const dictionary = new Dictionary();
     dictionary.pushAll(observableDictionary.toJSON());
     return dictionary;
-}
+};
 
 // String functions
 function isEmpty(str) {
     return !str || String(str).length === 0;
 }
 
-String.prototype.trimLeft = String.prototype.trimLeft || function () {
-    return this.replace(/^\s+/,"");
-}
+String.prototype.trimLeft = String.prototype.trimLeft ||
+    function() {
+        return this.replace(/^\s+/, "");
+    };
 
 String.prototype.truncate = function(limit) {
     const text = this.trim();
@@ -465,23 +472,29 @@ String.prototype.truncate = function(limit) {
         return text.substr(0, limit - 3) + "...";
 
     return text;
-}
+};
 
 String.prototype.replaceAll = function(findText, replaceWith, ignoreCase) {
     return this.replace(
-        new RegExp(findText.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"), (ignoreCase ? "gi" : "g")),
-        (typeof replaceWith == "string") ? replaceWith.replace(/\$/g, "$$$$") : replaceWith);
-}
+            new RegExp(findText.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"),
+                ignoreCase ? "gi" : "g"),
+            typeof replaceWith === "string")
+        ? replaceWith.replace(/\$/g, "$$$$")
+        : replaceWith;
+};
 
 if (!String.prototype.endsWith) {
     String.prototype.endsWith = function(searchString, position) {
-        const subjectString = this.toString() ;
+        const subjectString = this.toString();
 
-        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length)
+        if (typeof position !== 'number' ||
+            !isFinite(position) ||
+            Math.floor(position) !== position ||
+            position > subjectString.length)
             position = subjectString.length;
 
         position -= searchString.length;
-      
+
         const lastIndex = subjectString.lastIndexOf(searchString, position);
 
         return lastIndex !== -1 && lastIndex === position;
@@ -504,33 +517,37 @@ String.prototype.padLeft = function(totalWidth, paddingChar) {
         return Array(totalWidth - this.length + 1).join(paddingChar || " ") + this;
 
     return this;
-}
+};
 
 String.prototype.padRight = function(totalWidth, paddingChar) {
     if (totalWidth > this.length)
         return this + Array(totalWidth - this.length + 1).join(paddingChar || " ");
 
     return this;
-}
+};
 
 String.prototype.countOccurrences = function(searchString) {
-    return (this.split(searchString).length - 1);
-}
+    return this.split(searchString).length - 1;
+};
 
 if (!String.prototype.startsWith) {
     String.prototype.startsWith = function(searchString, position) {
         position = position || 0;
         return this.substr(position, searchString.length) === searchString;
-    }
+    };
 }
 
 String.prototype.regexEncode = function() {
     return "\\u" + this.charCodeAt(0).toString(16).padLeft(4, "0");
-}
+};
 
 // Returns a Dictionary of the parsed key/value pair expressions from a string. Parameter pairs are delimited by keyValueDelimiter
 // and multiple pairs separated by parameterDelimiter. Supports encapsulated nested expressions.
-String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelimiter, startValueDelimiter, endValueDelimiter, ignoreDuplicateKeys) {
+String.prototype.parseKeyValuePairs = function(parameterDelimiter,
+    keyValueDelimiter,
+    startValueDelimiter,
+    endValueDelimiter,
+    ignoreDuplicateKeys) {
     if (!parameterDelimiter)
         parameterDelimiter = ";";
 
@@ -552,7 +569,7 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
         keyValueDelimiter === startValueDelimiter ||
         keyValueDelimiter === endValueDelimiter ||
         startValueDelimiter === endValueDelimiter)
-            throw "All delimiters must be unique";
+        throw "All delimiters must be unique";
 
     const escapedParameterDelimiter = parameterDelimiter.regexEncode();
     const escapedKeyValueDelimiter = keyValueDelimiter.regexEncode();
@@ -576,7 +593,7 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
         if (character === startValueDelimiter) {
             if (!valueEscaped) {
                 valueEscaped = true;
-                continue;   // Don't add tag start delimiter to final value
+                continue; // Don't add tag start delimiter to final value
             }
 
             // Handle nested delimiters
@@ -588,14 +605,16 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
                 if (delimiterDepth > 0) {
                     // Handle nested delimiters
                     delimiterDepth--;
-                }
-                else {
+                } else {
                     valueEscaped = false;
-                    continue;   // Don't add tag stop delimiter to final value
+                    continue; // Don't add tag stop delimiter to final value
                 }
-            }
-            else {
-                throw "Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \"" + endValueDelimiter + "\" before start value delimiter \"" + startValueDelimiter + "\".";
+            } else {
+                throw "Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \"" +
+                    endValueDelimiter +
+                    "\" before start value delimiter \"" +
+                    startValueDelimiter +
+                    "\".";
             }
         }
 
@@ -613,8 +632,7 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
                 escapedValue.push(backslashDelimiter);
             else
                 escapedValue.push(character);
-        }
-        else {
+        } else {
             if (character === "\\")
                 escapedValue.push(backslashDelimiter);
             else
@@ -627,9 +645,15 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
         if (valueEscaped)
             delimiterDepth = 1;
 
-        throw "Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more " + 
-            (delimiterDepth > 0 ? "start value delimiters \"" + startValueDelimiter + "\"" : "end value delimiters \"" + endValueDelimiter + "\"") + " than " + 
-            (delimiterDepth < 0 ? "start value delimiters \"" + startValueDelimiter + "\"" : "end value delimiters \"" + endValueDelimiter + "\"") + ".";
+        throw "Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more " +
+            (delimiterDepth > 0
+                ? "start value delimiters \"" + startValueDelimiter + "\""
+                : "end value delimiters \"" + endValueDelimiter + "\"") +
+            " than " +
+            (delimiterDepth < 0
+                ? "start value delimiters \"" + startValueDelimiter + "\""
+                : "end value delimiters \"" + endValueDelimiter + "\"") +
+            ".";
     }
 
     // Parse key/value pairs from escaped value
@@ -644,22 +668,23 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
             var key = elements[0].trim();
 
             // Get unescaped value
-            var unescapedValue = elements[1].trim().
-                replaceAll(escapedParameterDelimiter, parameterDelimiter).
-                replaceAll(escapedKeyValueDelimiter, keyValueDelimiter).
-                replaceAll(escapedStartValueDelimiter, startValueDelimiter).
-                replaceAll(escapedEndValueDelimiter, endValueDelimiter).
-                replaceAll(backslashDelimiter, "\\");
+            var unescapedValue = elements[1].trim().replaceAll(escapedParameterDelimiter, parameterDelimiter)
+                .replaceAll(escapedKeyValueDelimiter, keyValueDelimiter)
+                .replaceAll(escapedStartValueDelimiter, startValueDelimiter)
+                .replaceAll(escapedEndValueDelimiter, endValueDelimiter).replaceAll(backslashDelimiter, "\\");
 
             // Add key/value pair to dictionary
             if (ignoreDuplicateKeys) {
                 // Add or replace key elements with unescaped value
                 keyValuePairs.set(key, unescapedValue);
-            }
-            else {
+            } else {
                 // Add key elements with unescaped value throwing an exception for encountered duplicate keys
                 if (keyValuePairs.containsKey(key))
-                    throw "Failed to parse key/value pairs: duplicate key encountered. Key \"" + key + "\" is not unique within the string: \"" + this + "\"";
+                    throw "Failed to parse key/value pairs: duplicate key encountered. Key \"" +
+                        key +
+                        "\" is not unique within the string: \"" +
+                        this +
+                        "\"";
 
                 keyValuePairs.set(key, unescapedValue);
             }
@@ -667,7 +692,7 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter, keyValueDelim
     }
 
     return keyValuePairs;
-}
+};
 
 // Renders URLs and e-mail addresses as clickable links
 function renderHotLinks(sourceText, target) {
@@ -676,7 +701,7 @@ function renderHotLinks(sourceText, target) {
 
     sourceText = sourceText.toString();
 
-    var replacedText;    
+    var replacedText;
 
     // URLs starting with http://, https://, or ftp://
     const replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
@@ -696,17 +721,17 @@ function renderHotLinks(sourceText, target) {
 // Date Functions
 Date.prototype.addDays = function(days) {
     return new Date(this.setDate(this.getDate() + days));
-}
+};
 
 Date.prototype.toUTC = function() {
     this.setMinutes(this.getMinutes() - this.getTimezoneOffset());
     return this;
-}
+};
 
 Date.prototype.daysBetween = function(startDate) {
     const millisecondsPerDay = 24 * 60 * 60 * 1000;
     return (this.toUTC() - startDate.toUTC()) / millisecondsPerDay;
-}
+};
 
 String.prototype.toDate = function() {
     return new Date(Date.parse(this));
@@ -724,24 +749,27 @@ function formatDate(date, format, utc) {
     if (typeof date === "string")
         return formatDate(date.toDate(), format, utc);
 
-    if (format === undefined && DateTimeFormat != undefined)
+    if (format === undefined && DateTimeFormat !== undefined)
         format = DateTimeFormat;
 
     if (utc === undefined)
         utc = true;
 
+    function ii(i, len) {
+        var ss = i + "";
+        len = len || 2;
+        while (ss.length < len) ss = "0" + ss;
+        return ss;
+    }
+
     if (!(format === null || format === undefined)) {
-        var MMMM = ["\x00", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        var MMMM = [
+            "\x00", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+            "November", "December"
+        ];
         var MMM = ["\x01", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         var dddd = ["\x02", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         var ddd = ["\x03", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-        function ii(i, len) {
-            var ss = i + "";
-            len = len || 2;
-            while (ss.length < len) ss = "0" + ss;
-            return ss;
-        }
 
         var y = utc ? date.getUTCFullYear() : date.getFullYear();
         format = format.replace(/(^|[^\\])yyyy+/g, "$1" + y);
@@ -813,55 +841,57 @@ function formatDate(date, format, utc) {
 
         return format;
     }
-};
+
+    return null;
+}
 
 // jQuery extensions
 $.fn.enable = function() {
     return this.each(function() {
         this.disabled = false;
     });
-}
+};
 
 $.fn.disable = function() {
     return this.each(function() {
         this.disabled = true;
     });
-}
+};
 
 $.fn.visible = function() {
     return this.each(function() {
         $(this).css("visibility", "visible");
     });
-}
+};
 
 $.fn.invisible = function() {
     return this.each(function() {
         $(this).css("visibility", "hidden");
     });
-}
+};
 
 $.fn.readCookie = function(name) {
     $(this).val(Cookies.get(name));
-}
+};
 
 $.fn.writeCookie = function(name, expiration) {
     if (expiration) // Date or number of days
         Cookies.set(name, $(this).val(), { expires: expiration });
     else
         Cookies.set(name, $(this).val());
-}
+};
 
 $.fn.removeCookie = function(name) {
     Cookies.remove(name);
-}
+};
 
 $.fn.paddingHeight = function() {
     return this.outerHeight(true) - this.height();
-}
+};
 
 $.fn.paddingWidth = function() {
     return this.outerWidth(true) - this.width();
-}
+};
 
 // Call function once at start-up to auto-size drop-down to selected option contents
 $.fn.autoSizeSelect = function() {
@@ -880,10 +910,10 @@ $.fn.autoSizeSelect = function() {
             $test.remove();
 
             // Set select width
-            $this.width(width + arrowWidth);        
+            $this.width(width + arrowWidth);
         }).change();
     });
-}
+};
 
 // Cell truncations should only be used with .table-cell-hard-wrap style
 $.fn.truncateToWidth = function(text, rows) {
@@ -898,7 +928,7 @@ $.fn.truncateToWidth = function(text, rows) {
     var targetWidth = this.innerWidth();
 
     if (rows > 1)
-        targetWidth *= ((isIE ? 0.45 : 0.75) * rows);
+        targetWidth *= (isIE ? 0.45 : 0.75) * rows;
 
     if (targetWidth > 30) {
         let textWidth = textMetrics.measureText(text).width;
@@ -909,13 +939,12 @@ $.fn.truncateToWidth = function(text, rows) {
             text = text.truncate(limit);
             textWidth = textMetrics.measureText(text).width;
         }
-    }
-    else {
+    } else {
         text = text.charAt(0) + "...";
     }
 
     return text;
-}
+};
 
 // The following target arrays of promises
 $.fn.whenAny = function() {
@@ -924,42 +953,47 @@ $.fn.whenAny = function() {
     if (this.length === 0)
         finish.resolve();
     else
-        $.each(this, function(index, deferred) {
-            deferred.done(finish.resolve);
-        });
+        $.each(this,
+            function(index, deferred) {
+                deferred.done(finish.resolve);
+            });
 
     return finish.promise();
-}
+};
 
 $.fn.whenAll = function() {
     if (this.length > 0)
         return $.when.apply($, this);
 
     return $.Deferred().resolve().promise();
-}
+};
 
 // Fix for IE11 not having this function
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
 if (!Array.from) {
-    Array.from = (function () {
+    Array.from = (function() {
         var toStr = Object.prototype.toString;
-        var isCallable = function (fn) {
+        var isCallable = function(fn) {
             return typeof fn === 'function' || toStr.call(fn) === '[object Function]';
         };
-        var toInteger = function (value) {
+        var toInteger = function(value) {
             var number = Number(value);
-            if (isNaN(number)) { return 0; }
-            if (number === 0 || !isFinite(number)) { return number; }
+            if (isNaN(number)) {
+                return 0;
+            }
+            if (number === 0 || !isFinite(number)) {
+                return number;
+            }
             return (number > 0 ? 1 : -1) * Math.floor(Math.abs(number));
         };
         var maxSafeInteger = Math.pow(2, 53) - 1;
-        var toLength = function (value) {
+        var toLength = function(value) {
             var len = toInteger(value);
             return Math.min(Math.max(len, 0), maxSafeInteger);
         };
 
         // The length property of the from method is 1.
-        return function from(arrayLike/*, mapFn, thisArg */) {
+        return function from(arrayLike /*, mapFn, thisArg */) {
             // 1. Let C be the this value.
             var C = this;
 
@@ -967,7 +1001,7 @@ if (!Array.from) {
             var items = Object(arrayLike);
 
             // 3. ReturnIfAbrupt(items).
-            if (arrayLike == null) {
+            if (arrayLike === null) {
                 throw new TypeError('Array.from requires an array-like object - not null or undefined');
             }
 
@@ -1022,97 +1056,96 @@ if (!Array.from) {
 // https://tc39.github.io/ecma262/#sec-array.prototype.find
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
 if (!Array.prototype.find) {
-    Object.defineProperty(Array.prototype, 'find', {
-        value: function (predicate) {
-            // 1. Let O be ? ToObject(this value).
-            if (this == null) {
-                throw new TypeError('"this" is null or not defined');
-            }
-
-            var o = Object(this);
-
-            // 2. Let len be ? ToLength(? Get(O, "length")).
-            var len = o.length >>> 0;
-
-            // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-            if (typeof predicate !== 'function') {
-                throw new TypeError('predicate must be a function');
-            }
-
-            // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
-            var thisArg = arguments[1];
-
-            // 5. Let k be 0.
-            var k = 0;
-
-            // 6. Repeat, while k < len
-            while (k < len) {
-                // a. Let Pk be ! ToString(k).
-                // b. Let kValue be ? Get(O, Pk).
-                // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
-                // d. If testResult is true, return kValue.
-                var kValue = o[k];
-                if (predicate.call(thisArg, kValue, k, o)) {
-                    return kValue;
+    Object.defineProperty(Array.prototype,
+        'find',
+        {
+            value: function(predicate) {
+                // 1. Let O be ? ToObject(this value).
+                if (this === null) {
+                    throw new TypeError('"this" is null or not defined');
                 }
-                // e. Increase k by 1.
-                k++;
-            }
 
-            // 7. Return undefined.
-            return undefined;
-        },
-        configurable: true,
-        writable: true
-    });
+                var o = Object(this);
+
+                // 2. Let len be ? ToLength(? Get(O, "length")).
+                var len = o.length >>> 0;
+
+                // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+
+                // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+                var thisArg = arguments[1];
+
+                // 5. Let k be 0.
+                var k = 0;
+
+                // 6. Repeat, while k < len
+                while (k < len) {
+                    // a. Let Pk be ! ToString(k).
+                    // b. Let kValue be ? Get(O, Pk).
+                    // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+                    // d. If testResult is true, return kValue.
+                    var kValue = o[k];
+                    if (predicate.call(thisArg, kValue, k, o)) {
+                        return kValue;
+                    }
+                    // e. Increase k by 1.
+                    k++;
+                }
+
+                // 7. Return undefined.
+                return undefined;
+            },
+            configurable: true,
+            writable: true
+        });
 }
 
 // Fix for IE11 not having this function
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill
 
 if (!Array.prototype.fill) {
-    Object.defineProperty(Array.prototype, 'fill', {
-        value: function (value) {
+    Object.defineProperty(Array.prototype,
+        'fill',
+        {
+            value: function(value) {
 
-            // Steps 1-2.
-            if (this == null) {
-                throw new TypeError('this is null or not defined');
+                // Steps 1-2.
+                if (this === null) {
+                    throw new TypeError('this is null or not defined');
+                }
+
+                var O = Object(this);
+
+                // Steps 3-5.
+                var len = O.length >>> 0;
+
+                // Steps 6-7.
+                var start = arguments[1];
+                var relativeStart = start >> 0;
+
+                // Step 8.
+                var k = relativeStart < 0 ? Math.max(len + relativeStart, 0) : Math.min(relativeStart, len);
+
+                // Steps 9-10.
+                var end = arguments[2];
+                var relativeEnd = end === undefined ? len : end >> 0;
+
+                // Step 11.
+                var final = relativeEnd < 0 ? Math.max(len + relativeEnd, 0) : Math.min(relativeEnd, len);
+
+                // Step 12.
+                while (k < final) {
+                    O[k] = value;
+                    k++;
+                }
+
+                // Step 13.
+                return O;
             }
-
-            var O = Object(this);
-
-            // Steps 3-5.
-            var len = O.length >>> 0;
-
-            // Steps 6-7.
-            var start = arguments[1];
-            var relativeStart = start >> 0;
-
-            // Step 8.
-            var k = relativeStart < 0 ?
-                Math.max(len + relativeStart, 0) :
-                Math.min(relativeStart, len);
-
-            // Steps 9-10.
-            var end = arguments[2];
-            var relativeEnd = end === undefined ?
-                len : end >> 0;
-
-            // Step 11.
-            var final = relativeEnd < 0 ?
-                Math.max(len + relativeEnd, 0) :
-                Math.min(relativeEnd, len);
-
-            // Step 12.
-            while (k < final) {
-                O[k] = value;
-                k++;
-            }
-
-            // Step 13.
-            return O;
-        }
-    });
+        });
 }
 
 // Fix for IE11 not having this function
@@ -1122,8 +1155,9 @@ if (Number.parseFloat === void 0)
 
 // Fix for IE11 not having this function
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
-Number.isInteger = Number.isInteger || function (value) {
-    return typeof value === 'number' &&
-        isFinite(value) &&
-        Math.floor(value) === value;
-};
+Number.isInteger = Number.isInteger ||
+    function(value) {
+        return typeof value === 'number' &&
+            isFinite(value) &&
+            Math.floor(value) === value;
+    };
