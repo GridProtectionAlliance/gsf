@@ -64,6 +64,7 @@
     <Compile Include="Logical\LogicalWriter.cs" />
     <Compile Include="Logical\QuantityCharacteristic.cs" />
     <Compile Include="Logical\SeriesValueType.cs" />
+    <Compile Include="Logical\DisturbanceCategory.cs" />
     <Compile Include="Logical\Vendor.cs" />
     <Compile Include="Physical\CollectionElement.cs" />
     <Compile Include="Logical\ContainerRecord.cs" />

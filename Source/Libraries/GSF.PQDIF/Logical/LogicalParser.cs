@@ -26,6 +26,7 @@
 using System;
 using System.IO;
 using GSF.PQDIF.Physical;
+using System.Collections.Generic;
 
 namespace GSF.PQDIF.Logical
 {
@@ -42,6 +43,7 @@ namespace GSF.PQDIF.Logical
         private DataSourceRecord m_currentDataSourceRecord;
         private MonitorSettingsRecord m_currentMonitorSettingsRecord;
         private ObservationRecord m_nextObservationRecord;
+        private List<DataSourceRecord> m_allDataSourceRecords;
 
         #endregion
 
@@ -54,6 +56,7 @@ namespace GSF.PQDIF.Logical
         public LogicalParser(string fileName)
         {
             m_physicalParser = new PhysicalParser(fileName);
+            m_allDataSourceRecords = new List<DataSourceRecord>();
         }
 
         /// <summary>
@@ -66,6 +69,7 @@ namespace GSF.PQDIF.Logical
         public LogicalParser(Stream stream, bool leaveOpen = false)
         {
             m_physicalParser = new PhysicalParser(null);
+            m_allDataSourceRecords = new List<DataSourceRecord>();
             Open(stream, leaveOpen);
         }
 
@@ -100,6 +104,17 @@ namespace GSF.PQDIF.Logical
             }
         }
 
+        /// <summary>
+        /// Gets a list of all DataSource records from the PQDIF file. This is
+        /// parsed when passing throug the observation records <see cref="NextObservationRecord()"/>ed.
+        /// </summary>
+        public List<DataSourceRecord> DataSourceRecords
+        {
+            get
+            {
+                return m_allDataSourceRecords;
+            }
+        }
         #endregion
 
         #region [ Methods ]
@@ -155,6 +170,7 @@ namespace GSF.PQDIF.Logical
                     case RecordType.DataSource:
                         // Keep track of the latest data source record in order to associate it with observation records
                         m_currentDataSourceRecord = DataSourceRecord.CreateDataSourceRecord(physicalRecord);
+                        m_allDataSourceRecords.Add(m_currentDataSourceRecord);
                         break;
 
                     case RecordType.MonitorSettings:
@@ -210,6 +226,7 @@ namespace GSF.PQDIF.Logical
             m_currentDataSourceRecord = null;
             m_currentMonitorSettingsRecord = null;
             m_nextObservationRecord = null;
+            m_allDataSourceRecords = new List<DataSourceRecord>();
 
             m_physicalParser.Reset();
             m_physicalParser.NextRecord(); // skip container record

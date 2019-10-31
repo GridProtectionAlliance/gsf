@@ -214,6 +214,7 @@ namespace GSF.PQDIF.Logical
             }
         }
 
+
         /// <summary>
         /// Gets the time the observation was triggered.
         /// </summary>
@@ -237,6 +238,31 @@ namespace GSF.PQDIF.Logical
                 timeTriggeredElement.SetTimestamp(value);
             }
         }
+
+        /// <summary>
+        /// Gets or sets the Disturbance Category ID
+        /// </summary>
+        public Guid DisturbanceCategoryID
+        {
+            get
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement DisturbanceIDElement = collectionElement.GetScalarByTag(DisturbanceCategoryTag);
+
+                if ((object)DisturbanceIDElement == null)
+                    return DisturbanceCategory.None;
+
+                return DisturbanceIDElement.GetGuid();
+            }
+            set
+            {
+                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
+                ScalarElement vendorIDElement = collectionElement.GetOrAddScalar(DisturbanceCategoryTag);
+                vendorIDElement.TypeOfValue = PhysicalType.Guid;
+                vendorIDElement.SetGuid(value);
+            }
+        }
+    
 
         /// <summary>
         /// Gets or sets the index into <see cref="ChannelInstancesTag"/> collection within this record which initiated the observation.
@@ -381,6 +407,12 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies a single channel instance in the collection.
         /// </summary>
         public static readonly Guid OneChannelInstanceTag = new Guid("3d786f92-f76e-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the Disturbance Category.
+        /// </summary>
+        public static readonly Guid DisturbanceCategoryTag = new Guid("b48d8597-f5f5-11cf-9d89-0080c72e70a3");
+
 
         // Static Methods
 
