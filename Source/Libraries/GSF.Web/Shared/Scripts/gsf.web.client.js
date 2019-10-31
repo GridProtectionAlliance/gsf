@@ -845,6 +845,12 @@ function formatDate(date, format, utc) {
     return null;
 }
 
+function delayedPromise(timeout) {
+    const $d = $.Deferred();
+    setTimeout(function () { $d.resolve(); }, timeout || 0);
+    return $d.promise();
+}
+
 // jQuery extensions
 $.fn.enable = function() {
     return this.each(function() {
