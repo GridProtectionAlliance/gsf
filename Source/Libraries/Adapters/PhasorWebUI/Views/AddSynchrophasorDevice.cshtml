@@ -2673,6 +2673,8 @@
             phasorHub.queryDeviceByID(id).done(function (device) {
                 $("#editDeviceName").html("Editing&nbsp;" + device.Acronym);
                 viewModel.deviceAcronym(device.Acronym);
+                viewModel.longitude(device.Longitude);
+                viewModel.latitude(device.Latitude);
             })
             .fail(function (error) {
                 showErrorMessage(String.format("Failed to load existing device \"{0}\": {1}", id, error));
@@ -2971,6 +2973,31 @@
             </tr>
             <tr>
                 <td class="input-label">
+                    <label for="longitude">Longitude:</label>
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <td>
+                                <div class="input-group">
+                                    <input class="form-control" id="longitude" type="number" style="width: 90px" data-bind="textInput: longitude">
+                                </div>
+                            </td>
+                            <td class="input-label" style="width: 10px; padding-right: 4px">
+                                <label for="latitude">Latitude:</label>
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input class="form-control" id="latitude" type="number" style="width: 90px" data-bind="textInput: latitude">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+            <tr>
+                <td class="input-label">
                     <label for="templateType">Tag Template:</label>
                 </td>
                 <td>
@@ -2979,26 +3006,6 @@
                         <div class="checkbox" style="display:inline; margin-left: 15px">
                             <label class="disabled" style="margin-top: 6px; display: none"><input type="checkbox" data-bind="checked: addTagsAsVirtualPoints" disabled> Generate virtual tags (otherwise tags will be archived)</label>
                         </div>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="input-label">
-                    <label for="longitude">Longitude:</label>
-                </td>
-                <td>
-                    <div class="input-group">
-                        <input class="form-control" id="longitude" type="number" data-bind="textInput: longitude">
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="input-label">
-                    <label for="latitude">Latitude:</label>
-                </td>
-                <td>
-                    <div class="input-group">
-                        <input class="form-control" id="latitude" type="number" data-bind="textInput: latitude">
                     </div>
                 </td>
             </tr>
