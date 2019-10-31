@@ -475,18 +475,11 @@ String.prototype.truncate = function(limit) {
 };
 
 String.prototype.replaceAll = function (findText, replaceWith, ignoreCase) {
-    if (typeof findText !== "string")
-        findText = String(findText);
-
-    if (typeof replaceWith !== "string")
-        replaceWith = String(replaceWith);
+    let findVal = typeof findText === "string" ? findText : String(findText);
+    let replaceVal = typeof replaceWith === "string" ? replaceWith.replace(/\$/g, "$$$$") : replaceWith;
 
     return this.replace(
-            new RegExp(findText.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"),
-                ignoreCase ? "gi" : "g"),
-            typeof replaceWith === "string")
-        ? replaceWith.replace(/\$/g, "$$$$")
-        : replaceWith;
+        new RegExp(findVal.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"), ignoreCase ? "gi" : "g"), replaceVal);
 };
 
 if (!String.prototype.endsWith) {
