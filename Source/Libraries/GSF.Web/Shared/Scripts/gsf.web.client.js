@@ -474,7 +474,13 @@ String.prototype.truncate = function(limit) {
     return text;
 };
 
-String.prototype.replaceAll = function(findText, replaceWith, ignoreCase) {
+String.prototype.replaceAll = function (findText, replaceWith, ignoreCase) {
+    if (typeof findText !== "string")
+        findText = String(findText);
+
+    if (typeof replaceWith !== "string")
+        replaceWith = String(replaceWith);
+
     return this.replace(
             new RegExp(findText.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"),
                 ignoreCase ? "gi" : "g"),
@@ -487,7 +493,7 @@ if (!String.prototype.endsWith) {
     String.prototype.endsWith = function(searchString, position) {
         const subjectString = this.toString();
 
-        if (typeof position !== 'number' ||
+        if (typeof position !== "number" ||
             !isFinite(position) ||
             Math.floor(position) !== position ||
             position > subjectString.length)
@@ -980,7 +986,7 @@ if (!Array.from) {
     Array.from = (function() {
         var toStr = Object.prototype.toString;
         var isCallable = function(fn) {
-            return typeof fn === 'function' || toStr.call(fn) === '[object Function]';
+            return typeof fn === "function" || toStr.call(fn) === "[object Function]";
         };
         var toInteger = function(value) {
             var number = Number(value);
@@ -1008,17 +1014,17 @@ if (!Array.from) {
 
             // 3. ReturnIfAbrupt(items).
             if (arrayLike === null) {
-                throw new TypeError('Array.from requires an array-like object - not null or undefined');
+                throw new TypeError("Array.from requires an array-like object - not null or undefined");
             }
 
             // 4. If mapfn is undefined, then let mapping be false.
             var mapFn = arguments.length > 1 ? arguments[1] : void undefined;
             var T;
-            if (typeof mapFn !== 'undefined') {
+            if (typeof mapFn !== "undefined") {
                 // 5. else
                 // 5. a If IsCallable(mapfn) is false, throw a TypeError exception.
                 if (!isCallable(mapFn)) {
-                    throw new TypeError('Array.from: when provided, the second argument must be a function');
+                    throw new TypeError("Array.from: when provided, the second argument must be a function");
                 }
 
                 // 5. b. If thisArg was supplied, let T be thisArg; else let T be undefined.
@@ -1044,7 +1050,7 @@ if (!Array.from) {
             while (k < len) {
                 kValue = items[k];
                 if (mapFn) {
-                    A[k] = typeof T === 'undefined' ? mapFn(kValue, k) : mapFn.call(T, kValue, k);
+                    A[k] = typeof T === "undefined" ? mapFn(kValue, k) : mapFn.call(T, kValue, k);
                 } else {
                     A[k] = kValue;
                 }
@@ -1063,7 +1069,7 @@ if (!Array.from) {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
 if (!Array.prototype.find) {
     Object.defineProperty(Array.prototype,
-        'find',
+        "find",
         {
             value: function(predicate) {
                 // 1. Let O be ? ToObject(this value).
@@ -1077,8 +1083,8 @@ if (!Array.prototype.find) {
                 var len = o.length >>> 0;
 
                 // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-                if (typeof predicate !== 'function') {
-                    throw new TypeError('predicate must be a function');
+                if (typeof predicate !== "function") {
+                    throw new TypeError("predicate must be a function");
                 }
 
                 // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
@@ -1114,13 +1120,13 @@ if (!Array.prototype.find) {
 
 if (!Array.prototype.fill) {
     Object.defineProperty(Array.prototype,
-        'fill',
+        "fill",
         {
             value: function(value) {
 
                 // Steps 1-2.
                 if (this === null) {
-                    throw new TypeError('this is null or not defined');
+                    throw new TypeError("this is null or not defined");
                 }
 
                 var O = Object(this);
@@ -1163,7 +1169,7 @@ if (Number.parseFloat === void 0)
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
 Number.isInteger = Number.isInteger ||
     function(value) {
-        return typeof value === 'number' &&
+        return typeof value === "number" &&
             isFinite(value) &&
             Math.floor(value) === value;
     };
