@@ -110,10 +110,9 @@ namespace CsvAdapters
         /// </summary>
         public override void Initialize()
         {
-            base.Initialize();
-
             ConnectionStringParser<ConnectionStringParameterAttribute> parser = new ConnectionStringParser<ConnectionStringParameterAttribute>();
             parser.ParseConnectionString(ConnectionString, this);
+            base.Initialize();
             m_scheduleManager.AddSchedule(ScheduleName, ImportSchedule, true);
         }
 
