@@ -351,6 +351,12 @@ namespace GSF.Communication
         public Socket Client => m_connectState?.Socket;
 
         /// <summary>
+        /// Gets the <see cref="SslStream"/> object for the <see cref="TlsClient"/>.
+        /// </summary>
+        [Browsable(false)]
+        public SslStream SslStream => m_connectState?.SslStream;
+
+        /// <summary>
         /// Gets the server URI of the <see cref="TlsClient"/>.
         /// </summary>
         [Browsable(false)]
