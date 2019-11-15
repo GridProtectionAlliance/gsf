@@ -50,17 +50,23 @@
                 <Label Grid.Row="1" Grid.Column="2" Content="Port" />
                 <TextBox Grid.Row="1" Grid.Column="3" Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=PublisherPort}" />
 
-                <Label Grid.Row="2" Grid.Column="0" Content="Security mode" />
+                <Label Grid.Row="2" Grid.Column="0" Content="Protocol" Margin="0,12,0,0"/>
                 <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
+                    <RadioButton Name="STTP" Margin="0,5,5,0" Content="STTP" IsChecked="{Binding Mode=TwoWay, Path=UseSTTP}" />
+                    <RadioButton Name="GEP" Margin="0,1,5,5" Content="GEP" IsChecked="{Binding Mode=TwoWay, Path=UseGEP}" />
+                </StackPanel>
+
+                <Label Grid.Row="2" Grid.Column="0" Content="Security mode" Visibility="Hidden" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="5"  Visibility="Hidden">
                     <RadioButton GroupName="SecurityMode" Content="TLS" IsChecked="True" Checked="SecurityModeRadioButton_Checked" />
-                    <RadioButton GroupName="SecurityMode" Content="Gateway" Checked="SecurityModeRadioButton_Checked" />
+                    <RadioButton GroupName="SecurityMode" Content="Gateway" Checked="SecurityModeRadioButton_Checked" IsEnabled="False" />
                 </StackPanel>
                 
                 <Label Grid.Row="2" Grid.Column="2" Content="UDP Port" />
                 <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
                     <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=UdpDataChannelPort}" IsEnabled="{Binding ElementName=UdpCheckBox, Path=IsChecked}" />
                     <CheckBox Name="UdpCheckBox" IsChecked="{Binding Mode=TwoWay, Path=UseUdpDataChannel}">
-                        <TextBlock FontSize="10" FontStyle="Italic">
+                        <TextBlock FontSize="10" FontStyle="Italic" Margin="0,2">
                             Leave unchecked for TCP only.
                         </TextBlock>
                     </CheckBox>

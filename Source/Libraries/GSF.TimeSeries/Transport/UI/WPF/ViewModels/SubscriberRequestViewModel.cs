@@ -62,6 +62,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_hostname;
         private int m_publisherPort;
         private SecurityMode m_securityMode;
+        private bool m_useSTTP;
+        private bool m_useGEP;
+        private bool m_useSourcePrefix;
         private bool m_receiveExternalMetadata;
         private bool m_receiveInternalMetadata;
         private bool m_useUdpDataChannel;
@@ -114,10 +117,12 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public SubscriberRequestViewModel()
         {
-            m_internalDataPublisherPort = 6170;
+            m_internalDataPublisherPort = 7165;
             m_securityMode = SecurityMode.TLS;
+            m_useSTTP = true;
+            m_useSourcePrefix = true;
             m_receiveInternalMetadata = true;
-            m_udpDataChannelPort = 6175;
+            m_udpDataChannelPort = 64170;
             m_publisherPort = DefaultPort;
             m_responseComplete = new AutoResetEvent(false);
 
@@ -141,20 +146,17 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string PublisherAcronym
         {
-            get
-            {
-                return m_publisherAcronym;
-            }
+            get => m_publisherAcronym;
             set
             {
                 bool updateRemoteCertificateFile = (string.IsNullOrEmpty(m_publisherAcronym) && string.IsNullOrEmpty(m_remoteCertificateFile)) ||
-                    m_remoteCertificateFile.Equals(string.Format("{0}.cer", m_publisherAcronym), StringComparison.CurrentCultureIgnoreCase);
+                    m_remoteCertificateFile.Equals($"{m_publisherAcronym}.cer", StringComparison.CurrentCultureIgnoreCase);
 
                 m_publisherAcronym = value;
-                OnPropertyChanged("Acronym");
+                OnPropertyChanged("PublisherAcronym");
 
                 if (updateRemoteCertificateFile)
-                    RemoteCertificateFile = string.IsNullOrEmpty(m_publisherAcronym) ? string.Empty : string.Format("{0}.cer", m_publisherAcronym);
+                    RemoteCertificateFile = string.IsNullOrEmpty(m_publisherAcronym) ? string.Empty : $"{m_publisherAcronym}.cer";
             }
         }
 
@@ -163,14 +165,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string PublisherName
         {
-            get
-            {
-                return m_publisherName;
-            }
+            get => m_publisherName;
             set
             {
                 m_publisherName = value;
-                OnPropertyChanged("Name");
+                OnPropertyChanged("PublisherName");
             }
         }
 
@@ -179,10 +178,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string Hostname
         {
-            get
-            {
-                return m_hostname;
-            }
+            get => m_hostname;
             set
             {
                 m_hostname = value;
@@ -195,10 +191,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public int PublisherPort
         {
-            get
-            {
-                return m_publisherPort;
-            }
+            get => m_publisherPort;
             set
             {
                 m_publisherPort = value;
@@ -211,10 +204,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public SecurityMode SecurityMode
         {
-            get
-            {
-                return m_securityMode;
-            }
+            get => m_securityMode;
             set
             {
                 int oldDefaultPort = DefaultPort;
@@ -230,15 +220,51 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if STTP protocol should be used.
+        /// </summary>
+        public bool UseSTTP
+        {
+            get => m_useSTTP;
+            set
+            {
+                m_useSTTP = value;
+                OnPropertyChanged("UseSTTP");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if GEP protocol should be used.
+        /// </summary>
+        public bool UseGEP
+        {
+            get => m_useGEP;
+            set
+            {
+                m_useGEP = value;
+                OnPropertyChanged("UseGEP");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if source prefix should be used.
+        /// </summary>
+        public bool UseSourcePrefix
+        {
+            get => m_useSourcePrefix;
+            set
+            {
+                m_useSourcePrefix = value;
+                OnPropertyChanged("UseSourcePrefix");
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the flag that determines whether the subscriber is
         /// requesting metadata for internal signals from the publisher.
         /// </summary>
         public bool ReceiveInternalMetadata
         {
-            get
-            {
-                return m_receiveInternalMetadata;
-            }
+            get => m_receiveInternalMetadata;
             set
             {
                 m_receiveInternalMetadata = value;
@@ -255,10 +281,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public bool ReceiveExternalMetadata
         {
-            get
-            {
-                return m_receiveExternalMetadata;
-            }
+            get => m_receiveExternalMetadata;
             set
             {
                 m_receiveExternalMetadata = value;
@@ -275,10 +298,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public bool UseUdpDataChannel
         {
-            get
-            {
-                return m_useUdpDataChannel;
-            }
+            get => m_useUdpDataChannel;
             set
             {
                 m_useUdpDataChannel = value;
@@ -291,10 +311,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public int UdpDataChannelPort
         {
-            get
-            {
-                return m_udpDataChannelPort;
-            }
+            get => m_udpDataChannelPort;
             set
             {
                 m_udpDataChannelPort = value;
@@ -307,10 +324,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public bool EnableDataGapRecovery
         {
-            get
-            {
-                return m_enableDataGapRecovery;
-            }
+            get => m_enableDataGapRecovery;
             set
             {
                 m_enableDataGapRecovery = value;
@@ -336,10 +350,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </remarks>
         public double RecoveryStartDelay
         {
-            get
-            {
-                return m_recoveryStartDelay;
-            }
+            get => m_recoveryStartDelay;
             set
             {
                 m_recoveryStartDelay = value;
@@ -363,10 +374,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </remarks>
         public double DataMonitoringInterval
         {
-            get
-            {
-                return m_dataMonitoringInterval;
-            }
+            get => m_dataMonitoringInterval;
             set
             {
                 m_dataMonitoringInterval = value;
@@ -380,10 +388,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public double MinimumRecoverySpan
         {
-            get
-            {
-                return m_minimumRecoverySpan;
-            }
+            get => m_minimumRecoverySpan;
             set
             {
                 m_minimumRecoverySpan = value;
@@ -397,10 +402,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public double MaximumRecoverySpan
         {
-            get
-            {
-                return m_maximumRecoverySpan;
-            }
+            get => m_maximumRecoverySpan;
             set
             {
                 m_maximumRecoverySpan = value;
@@ -424,10 +426,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </remarks>
         public int RecoveryProcessingInterval
         {
-            get
-            {
-                return m_recoveryProcessingInterval;
-            }
+            get => m_recoveryProcessingInterval;
             set
             {
                 m_recoveryProcessingInterval = value;
@@ -446,10 +445,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </remarks>
         public string LoggingPath
         {
-            get
-            {
-                return m_loggingPath;
-            }
+            get => m_loggingPath;
             set
             {
                 m_loggingPath = value;
@@ -462,10 +458,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public int InternalDataPublisherPort
         {
-            get
-            {
-                return m_internalDataPublisherPort;
-            }
+            get => m_internalDataPublisherPort;
             set
             {
                 int oldDefaultPort = DefaultPort;
@@ -482,10 +475,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string SubscriberAcronym
         {
-            get
-            {
-                return m_subscriberAcronym;
-            }
+            get => m_subscriberAcronym;
             set
             {
                 m_subscriberAcronym = value;
@@ -498,10 +488,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string SubscriberName
         {
-            get
-            {
-                return m_subscriberName;
-            }
+            get => m_subscriberName;
             set
             {
                 m_subscriberName = value;
@@ -512,23 +499,14 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <summary>
         /// Gets the flag that indicates whether the user has selected TLS as the security mode.
         /// </summary>
-        public bool TransportLayerSecuritySelected
-        {
-            get
-            {
-                return m_securityMode == SecurityMode.TLS;
-            }
-        }
+        public bool TransportLayerSecuritySelected => m_securityMode == SecurityMode.TLS;
 
         /// <summary>
         /// Gets or sets the path to the local certificate used to identify the subscriber.
         /// </summary>
         public string LocalCertificateFile
         {
-            get
-            {
-                return m_localCertificateFile;
-            }
+            get => m_localCertificateFile;
             set
             {
                 bool updateServerPath = (string.IsNullOrEmpty(m_localCertificateFile) && string.IsNullOrEmpty(m_localCertificateServerPath)) ||
@@ -547,10 +525,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string LocalCertificateServerPath
         {
-            get
-            {
-                return m_localCertificateServerPath;
-            }
+            get => m_localCertificateServerPath;
             set
             {
                 m_localCertificateServerPath = value;
@@ -563,10 +538,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string ImportCertificatePath
         {
-            get
-            {
-                return m_importCertificatePath;
-            }
+            get => m_importCertificatePath;
             set
             {
                 m_importCertificatePath = value;
@@ -579,10 +551,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string RemoteCertificateFile
         {
-            get
-            {
-                return m_remoteCertificateFile;
-            }
+            get => m_remoteCertificateFile;
             set
             {
                 m_remoteCertificateFile = value;
@@ -595,10 +564,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public bool RemoteCertificateIsSelfSigned
         {
-            get
-            {
-                return m_isRemoteCertificateSelfSigned;
-            }
+            get => m_isRemoteCertificateSelfSigned;
             set
             {
                 m_isRemoteCertificateSelfSigned = value;
@@ -611,10 +577,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string ValidPolicyErrors
         {
-            get
-            {
-                return m_validPolicyErrors;
-            }
+            get => m_validPolicyErrors;
             set
             {
                 m_validPolicyErrors = value;
@@ -627,10 +590,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string ValidChainFlags
         {
-            get
-            {
-                return m_validChainFlags;
-            }
+            get => m_validChainFlags;
             set
             {
                 m_validChainFlags = value;
@@ -641,23 +601,14 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <summary>
         /// Gets the flag that indicates whether the user has selected Gateway security.
         /// </summary>
-        public bool GatewaySecuritySelected
-        {
-            get
-            {
-                return m_securityMode == SecurityMode.Gateway;
-            }
-        }
+        public bool GatewaySecuritySelected => m_securityMode == SecurityMode.Gateway;
 
         /// <summary>
         /// Gets or sets the shared key sent to the publisher for Gateway security encryption.
         /// </summary>
         public string SharedKey
         {
-            get
-            {
-                return m_sharedKey;
-            }
+            get => m_sharedKey;
             set
             {
                 m_sharedKey = value;
@@ -670,10 +621,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string IdentityCertificate
         {
-            get
-            {
-                return m_identityCertificate;
-            }
+            get => m_identityCertificate;
             set
             {
                 m_identityCertificate = value;
@@ -686,10 +634,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public string ValidIPAddresses
         {
-            get
-            {
-                return m_validIPAddresses;
-            }
+            get => m_validIPAddresses;
             set
             {
                 m_validIPAddresses = value;
@@ -790,10 +735,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public Visibility ConnectivityMessageVisibility
         {
-            get
-            {
-                return m_connectivityMessageVisibility;
-            }
+            get => m_connectivityMessageVisibility;
             set
             {
                 m_connectivityMessageVisibility = value;
@@ -806,10 +748,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public bool AdvancedTlsSettingsPopupIsOpen
         {
-            get
-            {
-                return m_advancedTlsSettingsPopupIsOpen;
-            }
+            get => m_advancedTlsSettingsPopupIsOpen;
             set
             {
                 m_advancedTlsSettingsPopupIsOpen = value;
@@ -896,13 +835,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
         private void Load()
         {
-            string companyAcronym;
-
             // Try to populate defaults for subscriber acronym and name using company information from the host application configuration file
-            if (TryGetCompanyAcronym(out companyAcronym))
+            if (TryGetCompanyAcronym(out string companyAcronym))
             {
                 SubscriberAcronym = companyAcronym;
-                SubscriberName = string.Format("{0} Subscription Authorization", companyAcronym);
+                SubscriberName = $"{companyAcronym} Subscription Authorization";
             }
 
             // Connect to database to retrieve company information for current node
@@ -944,9 +881,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 try
                 {
                     Dictionary<string, string> settings;
-                    string server;
                     string[] splitServer;
-                    int dataPublisherPort;
 
                     //IPAddress[] hostIPs = null;
                     //IEnumerable<IPAddress> localIPs;
@@ -954,12 +889,12 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     settings = database.DataPublisherConnectionString().ToNonNullString().ParseKeyValuePairs();
                     //localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
 
-                    if (settings.TryGetValue("server", out server))
+                    if (settings.TryGetValue("server", out string server))
                     {
                         splitServer = server.Split(':');
                         //hostIPs = Dns.GetHostAddresses(splitServer[0]);
 
-                        if (splitServer.Length > 1 && int.TryParse(splitServer[1], out dataPublisherPort))
+                        if (splitServer.Length > 1 && int.TryParse(splitServer[1], out int dataPublisherPort))
                             InternalDataPublisherPort = dataPublisherPort;
                     }
 
@@ -1137,7 +1072,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                             }
                             catch (Exception ex)
                             {
-                                string message = string.Format("Unable to get the local certificate used by the service: {0}", ex.Message);
+                                string message = $"Unable to get the local certificate used by the service: {ex.Message}";
                                 throw new InvalidOperationException(message, ex);
                             }
                         }
@@ -1148,7 +1083,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                             serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
 
                             clientRequest = new ClientRequest("INVOKE");
-                            clientRequest.Arguments = new Arguments(string.Format("TLS!DATAPUBLISHER ImportCertificate {0}", m_remoteCertificateFile));
+                            clientRequest.Arguments = new Arguments($"TLS!DATAPUBLISHER ImportCertificate {m_remoteCertificateFile}");
                             clientRequest.Attachments.Add(m_remoteCertificateData);
                             serviceClient.Helper.SendRequest(clientRequest);
 
@@ -1177,7 +1112,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
             catch (Exception ex)
             {
-                string message = string.Format("Error creating authorization request: {0}", ex.Message);
+                string message = $"Error creating authorization request: {ex.Message}";
                 Popup(message, "Subscription Request Error", MessageBoxImage.Error);
                 CommonFunctions.LogException(null, "Subscription Request", ex);
             }
@@ -1195,12 +1130,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
                 nodeID = database.CurrentNodeID().ToString();
-                return Device.GetDevice(database, string.Format(" WHERE NodeID = '{0}' AND Acronym = '{1}'", nodeID, acronym));
+                return Device.GetDevice(database, $" WHERE NodeID = '{nodeID}' AND Acronym = '{acronym}'");
             }
             finally
             {
-                if ((object)database != null)
-                    database.Dispose();
+                database?.Dispose();
             }
         }
 
@@ -1260,13 +1194,13 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             Process configCrypter;
 
             configCrypterInfo.FileName = FilePath.GetAbsolutePath("ConfigCrypter.exe");
-            configCrypterInfo.Arguments = string.Format("-password {0} -keySize {1}", password, keySize);
+            configCrypterInfo.Arguments = $"-password {password} -keySize {keySize}";
             configCrypterInfo.CreateNoWindow = true;
 
             configCrypter = Process.Start(configCrypterInfo);
-            configCrypter.WaitForExit();
+            configCrypter?.WaitForExit();
 
-            return configCrypter.ExitCode == 0;
+            return configCrypter?.ExitCode == 0;
         }
 
         // Send service command to reload crypto cache.
@@ -1317,58 +1251,56 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
-        // Associate the given device with the
-        // authorization request and save it.
+        // Associate the given device with the authorization request and save it.
         private void SaveDevice()
         {
-            const string TcpConnectionStringFormat = "interface=0.0.0.0; compression=true; autoConnect=true; securityMode={0}; " +
-                "server={1}:{2}; {3}{4}";
+            string securitySpecificSettings = "";
+            string dataGapRecoverySettings = "";
 
-            const string UdpConnectionStringFormat = "interface=0.0.0.0; compression=true; autoConnect=true; securityMode={0}; " +
-                "localport={1}; transportprotocol=udp; commandChannel={{server={2}:{3}; interface=0.0.0.0}}; {4}{5}";
+            if (string.IsNullOrWhiteSpace(PublisherAcronym))
+                throw new NoNullAllowedException("Acronym is a required field");
 
-            Device device;
+            if (UseGEP && string.IsNullOrWhiteSpace(Hostname))
+                throw new NoNullAllowedException("Hostname is required when using GEP. Only STTP supports reverse server-based data subscription connection mode.");
 
-            SslPolicyErrors validPolicyErrors;
-            X509ChainStatusFlags validChainFlags;
-            string securitySpecificSettings = string.Empty;
-            string dataGapRecoverySettings = string.Empty;
-
-            if (SecurityMode == SecurityMode.None)
+            switch (SecurityMode)
             {
-                securitySpecificSettings = string.Format("internal={0}; receiveInternalMetadata={1}; receiveExternalMetadata={2}; outputMeasurements={{FILTER ActiveMeasurements WHERE Protocol = 'GatewayTransport'}}", !(m_receiveExternalMetadata && !m_receiveInternalMetadata), m_receiveInternalMetadata, m_receiveExternalMetadata);
-            }
-            else if (SecurityMode == SecurityMode.Gateway)
-            {
-                securitySpecificSettings = string.Format("sharedSecret={0}; authenticationID={{{1}}}", SharedKey, IdentityCertificate);
-            }
-            else if (SecurityMode == SecurityMode.TLS)
-            {
-                if (!Enum.TryParse(ValidPolicyErrors, out validPolicyErrors))
-                    validPolicyErrors = SslPolicyErrors.None;
-
-                if (!Enum.TryParse(ValidChainFlags, out validChainFlags))
-                    validChainFlags = X509ChainStatusFlags.NoError;
-
-                if (RemoteCertificateIsSelfSigned)
+                case SecurityMode.None:
+                    securitySpecificSettings = $"internal={!(ReceiveExternalMetadata && !ReceiveInternalMetadata)}; receiveInternalMetadata={ReceiveInternalMetadata}; receiveExternalMetadata={ReceiveExternalMetadata}; outputMeasurements={{FILTER ActiveMeasurements WHERE Protocol = '{(UseSTTP ? "STTP" : "GatewayTransport")}'}}";
+                    break;
+                case SecurityMode.Gateway:
+                    securitySpecificSettings = $"sharedSecret={SharedKey}; authenticationID={{{IdentityCertificate}}}";
+                    break;
+                case SecurityMode.TLS:
                 {
-                    validPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
-                    validChainFlags |= X509ChainStatusFlags.UntrustedRoot;
-                }
+                    if (!Enum.TryParse(ValidPolicyErrors, out SslPolicyErrors validPolicyErrors))
+                        validPolicyErrors = SslPolicyErrors.None;
 
-                securitySpecificSettings = string.Format("{0}remoteCertificate={1}; validPolicyErrors={2}; validChainFlags={3}; checkCertificateRevocation={4}",
-                    GetLocalCertificateSetting(), RemoteCertificateFile, validPolicyErrors, validChainFlags, !m_isRemoteCertificateSelfSigned);
+                    if (!Enum.TryParse(ValidChainFlags, out X509ChainStatusFlags validChainFlags))
+                        validChainFlags = X509ChainStatusFlags.NoError;
+
+                    if (RemoteCertificateIsSelfSigned)
+                    {
+                        validPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
+                        validChainFlags |= X509ChainStatusFlags.UntrustedRoot;
+                    }
+
+                    securitySpecificSettings = $"{GetLocalCertificateSetting()}remoteCertificate={RemoteCertificateFile}; validPolicyErrors={validPolicyErrors}; validChainFlags={validChainFlags}; checkCertificateRevocation={!m_isRemoteCertificateSelfSigned}";
+                    break;
+                }
             }
 
             if (m_enableDataGapRecovery)
-                dataGapRecoverySettings = string.Format("; dataGapRecovery={{enabled=true; recoveryStartDelay={0}; dataMonitoringInterval={1}; minimumRecoverySpan={2}; maximumRecoverySpan={3}; recoveryProcessingInterval={4}}}{5}", m_recoveryStartDelay, m_dataMonitoringInterval, m_minimumRecoverySpan, m_maximumRecoverySpan * Time.SecondsPerDay, m_recoveryProcessingInterval, string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath);
+                dataGapRecoverySettings = $"; dataGapRecovery={{enabled=true; recoveryStartDelay={RecoveryStartDelay}; dataMonitoringInterval={DataMonitoringInterval}; minimumRecoverySpan={MinimumRecoverySpan}; maximumRecoverySpan={MaximumRecoverySpan * Time.SecondsPerDay}; recoveryProcessingInterval={RecoveryProcessingInterval}}}{(string.IsNullOrWhiteSpace(LoggingPath) ? "" : "; loggingPath=" + LoggingPath)}";
 
-            device = new Device();
-            device.Acronym = PublisherAcronym.Replace(" ", "");
-            device.Name = PublisherName;
-            device.Enabled = m_securityMode == SecurityMode.None;  // TODO: Is this good logic? What if I want to tweak my subscribed measurement filter before I synchronize metadata?
-            device.IsConcentrator = true;
-            device.ProtocolID = GetGatewayProtocolID();
+            Device device = new Device
+            {
+                Acronym = PublisherAcronym.Replace(" ", ""),
+                Name = PublisherName,
+                Enabled = m_securityMode == SecurityMode.None,
+                IsConcentrator = true,
+                ProtocolID = UseSTTP ? GetSTTPProtocolID() : GetGEPProtocolID()
+            };
 
             IList<int> historianIDs = Historian.LoadKeys(null);
             IList<Historian> historians = Historian.Load(null, historianIDs);
@@ -1381,10 +1313,13 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             if ((object)historianID != null)
                 device.HistorianID = historianID.GetValueOrDefault();
 
+            string commandChannelConnectionString = string.IsNullOrWhiteSpace(Hostname) ? $"port={PublisherPort}" : $"server={Hostname}:{PublisherPort}";
+            string useSourcePrefixNames = UseSourcePrefix.ToString().ToLower();
+
             if (UseUdpDataChannel)
-                device.ConnectionString = string.Format(UdpConnectionStringFormat, SecurityMode, UdpDataChannelPort, Hostname, PublisherPort, securitySpecificSettings, dataGapRecoverySettings);
+                device.ConnectionString = $"interface=0.0.0.0; useSourcePrefixNames={useSourcePrefixNames}; compression=true; autoConnect=true; securityMode={SecurityMode}; localPort={UdpDataChannelPort}; transportProtocol=UDP; commandChannel={{{commandChannelConnectionString}; interface=0.0.0.0}}; {securitySpecificSettings}{dataGapRecoverySettings}";
             else
-                device.ConnectionString = string.Format(TcpConnectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings, dataGapRecoverySettings);
+                device.ConnectionString = $"interface=0.0.0.0; useSourcePrefixNames={useSourcePrefixNames}; compression=true; autoConnect=true; securityMode={SecurityMode}; {commandChannelConnectionString}; {securitySpecificSettings}{dataGapRecoverySettings}";
 
             try
             {
@@ -1405,11 +1340,30 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             if (string.IsNullOrEmpty(LocalCertificateServerPath))
                 return string.Empty;
 
-            return string.Format("localCertificate={0}; ", LocalCertificateServerPath);
+            return $"localCertificate={LocalCertificateServerPath}; ";
         }
 
-        // Get the Gateway Transport protocol ID by querying the database.
-        private int? GetGatewayProtocolID()
+        // Get the STTP protocol ID by querying the database.
+        private int? GetSTTPProtocolID()
+        {
+            const string Query = "SELECT ID FROM Protocol WHERE Acronym = 'STTP'";
+            AdoDataConnection database = null;
+            object queryResult;
+
+            try
+            {
+                database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                queryResult = database.Connection.ExecuteScalar(Query);
+                return (queryResult != null) ? Convert.ToInt32(queryResult) : 8;
+            }
+            finally
+            {
+                database?.Dispose();
+            }
+        }
+
+        // Get the GEP protocol ID by querying the database.
+        private int? GetGEPProtocolID()
         {
             const string Query = "SELECT ID FROM Protocol WHERE Acronym = 'GatewayTransport'";
             AdoDataConnection database = null;
@@ -1423,8 +1377,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
             finally
             {
-                if ((object)database != null)
-                    database.Dispose();
+                database?.Dispose();
             }
         }
 
@@ -1441,12 +1394,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
                 if ((object)response != null)
                 {
-                    string sourceCommand;
-                    bool responseSuccess;
-
-                    if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess) && responseSuccess)
+                    if (ClientHelper.TryParseActionableResponse(response, out string sourceCommand, out bool responseSuccess) && responseSuccess)
                     {
-                        if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "INVOKE", true) == 0)
+                        if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "INVOKE", StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             List<object> attachments = response.Attachments;
 
@@ -1456,7 +1406,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                                 Arguments arguments = attachments[1] as Arguments;
 
                                 // Check the method that was invoked - the second argument after the adapter ID
-                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetLocalCertificate", true) == 0)
+                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetLocalCertificate", StringComparison.OrdinalIgnoreCase) == 0)
                                 {
                                     m_localCertificateData = attachments[0] as byte[];
 
@@ -1464,7 +1414,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                                     if ((object)m_responseComplete != null)
                                         m_responseComplete.Set();
                                 }
-                                else if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "ImportCertificate", true) == 0)
+                                else if ((object)arguments == null || string.Compare(arguments["OrderedArg2"], "ImportCertificate", StringComparison.OrdinalIgnoreCase) != 0)
                                 {
                                     m_remoteCertificateFile = attachments[0] as string;
 

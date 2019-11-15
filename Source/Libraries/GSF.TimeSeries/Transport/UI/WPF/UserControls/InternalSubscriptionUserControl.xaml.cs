@@ -21,7 +21,12 @@
 //
 //******************************************************************************************************
 
+using System.Text.RegularExpressions;
 using GSF.TimeSeries.Transport.UI.ViewModels;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using GSF.ComponentModel.DataAnnotations;
 
 namespace GSF.TimeSeries.Transport.UI.UserControls
 {
@@ -42,38 +47,25 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// <summary>
         /// Creates a new <see cref="InternalSubscriptionUserControl"/>.
         /// </summary>
-        public InternalSubscriptionUserControl()
-        {
-            InitializeComponent();
-        }
+        public InternalSubscriptionUserControl() => InitializeComponent();
 
         #endregion
 
         #region [ Properties ]
 
-        private SubscriberRequestViewModel ViewModel
-        {
-            get
-            {
-                return Resources["ViewModel"] as SubscriberRequestViewModel;
-            }
-        }
+        private SubscriberRequestViewModel ViewModel => Resources["ViewModel"] as SubscriberRequestViewModel;
 
         #endregion
 
         #region [ Methods ]
 
-        private void InternalSubscriptionUserControl_Unloaded(object sender, System.Windows.RoutedEventArgs e)
+        private void InternalSubscriptionUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             SubscriberRequestViewModel model = ViewModel;
-
-            if ((object)model != null)
-                model.Dispose();
+            model?.Dispose();
         }
 
-        #endregion
-
-        private void EnableDataGapRecovery_Checked(object sender, System.Windows.RoutedEventArgs e)
+        private void EnableDataGapRecovery_Checked(object sender, RoutedEventArgs e)
         {
             if (!m_defaultsInitialized && EnableDataGapRecovery.IsChecked.GetValueOrDefault())
             {
@@ -85,5 +77,73 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 m_defaultsInitialized = true;
             }
         }
+
+        private void Acronym_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            SourcePrefix.Content = $"Use Source Prefix: \"{Acronym.Text}!\"";
+        }
+
+        private void STTP_Checked(object sender, RoutedEventArgs e)
+        {
+            openPDCPort.Content = "7165";
+            openHistorianPort.Content = "7175";
+            SIEGatePort.Content = "7170";
+            openMICPort.Content = "7195";
+            HostNameNote.Visibility = Visibility.Visible;
+
+            SubscriberRequestViewModel model = ViewModel;
+
+            if ((object)model != null)
+                model.PublisherPort = 7165;
+        }
+
+        private void GEP_Checked(object sender, RoutedEventArgs e)
+        {
+            openPDCPort.Content = "6165";
+            openHistorianPort.Content = "6175";
+            SIEGatePort.Content = "6170";
+            openMICPort.Content = "6195";
+            HostNameNote.Visibility = Visibility.Hidden;
+
+            SubscriberRequestViewModel model = ViewModel;
+
+            if ((object)model != null)
+                model.PublisherPort = 6165;
+        }
+
+        private void Acronym_PreviewTextInput(object sender, TextCompositionEventArgs e) => e.Handled = !ValidAcronym(((TextBox)sender).Text + e.Text);
+
+        private void PortRange_PreviewTextInput(object sender, TextCompositionEventArgs e) => e.Handled = !InRange(((TextBox)sender).Text + e.Text, ushort.MinValue, ushort.MaxValue);
+
+        private void PositiveInt_PreviewTextInput(object sender, TextCompositionEventArgs e) => e.Handled = !IsPositiveInt(e.Text);
+
+        private void PositiveFloat_PreviewTextInput(object sender, TextCompositionEventArgs e) => e.Handled = !IsPositiveFloat(e.Text);
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly Regex s_acronymValidator = new Regex($"[a-z{AcronymValidationAttribute.ValidationPattern.Substring(2)}");
+        private static readonly Regex s_positiveFloat = new Regex("[0-9.]+");
+        private static readonly Regex s_positiveInt = new Regex("[0-9]+");
+
+        // Static Methods
+
+        private static bool ValidAcronym(string text) => s_acronymValidator.IsMatch(text);
+
+        private static bool IsPositiveFloat(string text) => s_positiveFloat.IsMatch(text);
+
+        private static bool IsPositiveInt(string text) => s_positiveInt.IsMatch(text);
+
+        private static bool InRange(string text, int low, int high)
+        {
+            if (int.TryParse(text, out int value))
+                return value > low && value < high;
+
+            return false;
+        }
+
+        #endregion
     }
 }

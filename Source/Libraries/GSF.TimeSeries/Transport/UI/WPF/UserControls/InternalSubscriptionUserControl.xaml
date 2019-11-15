@@ -37,32 +37,43 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Grid.Row="0" Grid.Column="0" Content="Acronym" />
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=PublisherAcronym}" CharacterCasing="Upper" />
+                <TextBox Name="Acronym" Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=PublisherAcronym}" CharacterCasing="Upper" PreviewTextInput="Acronym_PreviewTextInput" TextChanged="Acronym_TextChanged" />
                 <Label Grid.Row="0" Grid.Column="2" Content="{x:Static p:Resources.InternalSubscriptionUserControl_NameLabel}" />
                 <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=PublisherName}" />
 
                 <Label Grid.Row="1" Grid.Column="0" Content="Hostname" />
+                <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom" Margin="6,0,0,-2" Padding="0" Content="Protocol" />
                 <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=Hostname}" />
+                <TextBlock Name="HostNameNote" Grid.Row="1" Grid.Column="1" FontSize="10" FontStyle="Italic" Margin="0,14,6,0">
+                    Leave blank for server-based connection.
+                </TextBlock>
+
                 <Label Grid.Row="1" Grid.Column="2" Content="Port" />
                 <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
-                    <TextBox Width="{StaticResource XXSmallItemSize}" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=PublisherPort}" />
+                    <TextBox Name="Port" Width="{StaticResource XXSmallItemSize}" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=PublisherPort}" PreviewTextInput="PortRange_PreviewTextInput" />
                     <TextBlock FontSize="10" FontStyle="Italic" TextAlignment="Left">
                         Common ports:<LineBreak />
-                        openPDC - 6165<LineBreak />
-                        SIEGate - 6170
+                        openPDC - <Label Name="openPDCPort" Content="6165" Margin="0,0,0,-3" Padding="0" />, openHistorian - <Label Name="openHistorianPort" Content="6175" Margin="0,0,0,-3" Padding="0" /><LineBreak />
+                        SIEGate - <Label Name="SIEGatePort" Content="6170" Margin="0,0,0,-3" Padding="0" />, openMIC - <Label Name="openMICPort" Content="6195" Margin="0,0,0,-3" Padding="0" />
                     </TextBlock>
                 </StackPanel>
 
+                <StackPanel Grid.Row="2" Grid.Column="0">
+                    <RadioButton Name="STTP" Margin="5,5,5,0" Content="STTP" IsChecked="{Binding Mode=TwoWay, Path=UseSTTP}" Checked="STTP_Checked" />
+                    <RadioButton Name="GEP" Margin="5,1,5,5" Content="GEP" IsChecked="{Binding Mode=TwoWay, Path=UseGEP}" Checked="GEP_Checked" />
+                </StackPanel>
+
                 <StackPanel Grid.Row="2" Grid.Column="1">
-                    <CheckBox Margin="5,5,5,0" Content="Receive Internal Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveInternalMetadata}" />
+                    <CheckBox Name="SourcePrefix" Margin="5,-5,0,-4" Content="Use Source Prefix: &quot;!&quot;" IsChecked="{Binding Mode=TwoWay, Path=UseSourcePrefix}" />
+                    <CheckBox Margin="5,5,5,2" Content="Receive Internal Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveInternalMetadata}" />
                     <CheckBox Margin="5,0,5,5" Content="Receive External Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveExternalMetadata}" />
                 </StackPanel>
 
                 <Label Grid.Row="2" Grid.Column="2" Content="UDP Port" />
                 <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
-                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=UdpDataChannelPort}" IsEnabled="{Binding ElementName=UdpCheckBox, Path=IsChecked}" />
+                    <TextBox Name="UdpPort" Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=UdpDataChannelPort}" IsEnabled="{Binding ElementName=UdpCheckBox, Path=IsChecked}" PreviewTextInput="PortRange_PreviewTextInput" />
                     <CheckBox Name="UdpCheckBox" IsChecked="{Binding Mode=TwoWay, Path=UseUdpDataChannel}">
-                        <TextBlock FontSize="10" FontStyle="Italic">
+                        <TextBlock FontSize="10" FontStyle="Italic" Margin="0,2">
                             Leave unchecked for TCP only.
                         </TextBlock>
                     </CheckBox>
@@ -90,27 +101,27 @@
 
                 <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" Content="Recovery Start Delay" ToolTip="Defines the minimum time delay, in seconds, to wait before starting a data gap recovery" Height="32" VerticalAlignment="Bottom" />
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-                    <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryStartDelay}" />
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryStartDelay}" PreviewTextInput="PositiveFloat_PreviewTextInput" />
                     <Label Content="seconds" />
                 </StackPanel>
                 <Label Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Content="Data Monitoring Interval" ToolTip="Defines the interval, in seconds, over which the data monitor will check for new data" />
                 <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
-                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=DataMonitoringInterval}" />
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=DataMonitoringInterval}" PreviewTextInput="PositiveFloat_PreviewTextInput" />
                     <Label Content="seconds" />
                 </StackPanel>
                 <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" Content="Minimum Recovery Span" ToolTip="Defines the minimum time span, in seconds, for which a data recovery will be attempted - set to zero for no minimum" />
                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
-                    <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MinimumRecoverySpan}" />
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MinimumRecoverySpan}" PreviewTextInput="PositiveFloat_PreviewTextInput" />
                     <Label Content="seconds" />
                 </StackPanel>
                 <Label Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right" Content="Maximum Recovery Span" ToolTip="Defines the maximum time span, in days, for which a data recovery will be attempted" />
                 <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal">
-                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MaximumRecoverySpan}" />
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MaximumRecoverySpan}" PreviewTextInput="PositiveFloat_PreviewTextInput" />
                     <Label Content="days" />
                 </StackPanel>
                 <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" Content="Recovery Processing Interval" ToolTip="Defines the data recovery processing interval, in whole milliseconds, to use when recovering data - set to zero to recover as fast as possible" />
                 <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
-                    <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryProcessingInterval}" />
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryProcessingInterval}" PreviewTextInput="PositiveInt_PreviewTextInput" />
                     <Label Content="milliseconds" />
                 </StackPanel>
                 <Label Grid.Row="3" Grid.Column="2" HorizontalAlignment="Right" Content="Logging Path" ToolTip="Defines the path for runtime and outage logs for this subscriber used for recovering data - leave blank for default folder. Can be a relative path to installation, e.g., ConfigurationCache" />
