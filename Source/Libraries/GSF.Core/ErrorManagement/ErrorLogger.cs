@@ -1985,6 +1985,11 @@ namespace GSF.ErrorManagement
                 MemberInfo method = stackFrame.GetMethod();
                 string codeFileName = stackFrame.GetFileName();
 
+                if (method == null) {
+                    trace.AppendFormat("   Missing Method");
+                    continue;
+                }
+
                 // Build method name.
                 if ((object)method.DeclaringType != null)
                     trace.AppendFormat("   {0}.{1}.{2}", method.DeclaringType.Namespace, method.DeclaringType.Name, method.Name);
