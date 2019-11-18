@@ -1624,6 +1624,39 @@ namespace GSF
             return new Ticks(destinationTicks);
         }
 
+        /// <summary>
+        /// Returns the nearest distribution timestamp for given <paramref name="timestamp"/>.
+        /// </summary>
+        /// <param name="timestamp">Timestamp to align.</param>
+        /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
+        /// <returns>The nearest distribution timestamp for given <paramref name="timestamp"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Ticks RoundToSecondDistribution(Ticks timestamp, double samplesPerSecond)
+        {
+            // Calculate destination ticks for this frame
+            long ticks = timestamp.Value;
+            long baseTicks, ticksBeyondSecond, destinationTicks;
+            double frameIndex;
+
+            // Baseline timestamp to the top of the second
+            baseTicks = ticks - ticks % Ticks.PerSecond;
+
+            // Remove the seconds from ticks
+            ticksBeyondSecond = ticks - baseTicks;
+
+            // Calculate a frame index between 0 and m_framesPerSecond-1,
+            // corresponding to ticks rounded to the nearest frame
+            frameIndex = Math.Round((double)ticksBeyondSecond / (double)(Ticks.PerSecond / (double)samplesPerSecond));
+
+            // Calculate the timestamp of the nearest frame
+            destinationTicks = (long)(frameIndex * Ticks.PerSecond / samplesPerSecond);
+
+            // Recover the seconds that were removed
+            destinationTicks += baseTicks;
+
+            return new Ticks(destinationTicks);
+        }
+
         #endregion
     }
 }
