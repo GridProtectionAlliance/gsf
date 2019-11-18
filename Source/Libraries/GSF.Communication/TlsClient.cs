@@ -690,7 +690,7 @@ namespace GSF.Communication
 
                 #if MONO
                     // Force integrated security to be False under Mono since it's not supported
-                    m_integratedSecurity = false;
+                    IntegratedSecurity = false;
                 #endif
 
                     // Overwrite config file if no delay exists in connection string.
