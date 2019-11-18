@@ -1631,15 +1631,15 @@ namespace GSF
         /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
         /// <returns>The nearest distribution timestamp for given <paramref name="timestamp"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Ticks RoundToSecondDistribution(Ticks timestamp, double samplesPerSecond)
+        public static Ticks RoundToSecondDistribution(Ticks timestamp, double samplesPerSecond, Ticks Baseline)
         {
             // Calculate destination ticks for this frame
             long ticks = timestamp.Value;
             long baseTicks, ticksBeyondSecond, destinationTicks;
             double frameIndex;
 
-            // Baseline timestamp to the top of the second
-            baseTicks = ticks - ticks % Ticks.PerSecond;
+            // Baseline timestamp based on start Time
+            baseTicks = ticks - ticks % Baseline;
 
             // Remove the seconds from ticks
             ticksBeyondSecond = ticks - baseTicks;
