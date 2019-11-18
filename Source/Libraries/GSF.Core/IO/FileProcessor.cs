@@ -369,7 +369,7 @@ namespace GSF.IO
 
                     // If subdirectories do not need to be processed in parallel,
                     // we can simply process a recursive call to enumerate all files
-                    IEnumerable<string> fileEnumerable = FilePath.EnumerateFiles(Path, exceptionHandler: m_fileProcessor.OnError);
+                    IEnumerable<string> fileEnumerable = EnumerateFilesRecursively(Path);
                     EnumerateNextFile(new EnumerableWrapper(fileEnumerable, m_cancellationToken));
                 }
                 else
@@ -386,6 +386,24 @@ namespace GSF.IO
                 m_cancellationToken.Cancel();
             }
 
+            // Recursively enumerates files under the given path, ignoring subfolders based on folder exclusion setting.
+            private IEnumerable<string> EnumerateFilesRecursively(string path)
+            {
+                try
+                {
+                    IEnumerable<string> subDirectoryEnumerable = FilePath.EnumerateDirectories(path, exceptionHandler: m_fileProcessor.OnError)
+                        .Where(directory => !m_fileProcessor.MatchesFolderExclusion(directory))
+                        .SelectMany(EnumerateFilesRecursively);
+
+                    return FilePath.EnumerateFiles(path, exceptionHandler: m_fileProcessor.OnError).Concat(subDirectoryEnumerable);
+                }
+                catch (Exception ex)
+                {
+                    m_fileProcessor.OnError(ex);
+                    return null;
+                }
+            }
+
             // Initializes the FileEnumerators for subdirectories.
             private void InitializeSubdirectoryEnumerators()
             {
@@ -396,7 +414,10 @@ namespace GSF.IO
                     List<string> subDirectories = new List<string>();
 
                     while (wrapper.MoveNext())
-                        subDirectories.Add(wrapper.Current);
+                    {
+                        if (!m_fileProcessor.MatchesFolderExclusion(wrapper.Current))
+                            subDirectories.Add(wrapper.Current);
+                    }
 
                     SubdirectoryEnumerators = subDirectories
                         .Select(path => new FileEnumerator(path, m_fileProcessor, m_cancellationToken))
@@ -436,6 +457,23 @@ namespace GSF.IO
                 {
                     m_active = false;
                     throw;
+                }
+            }
+
+            // Advances enumeration until the next file that matches the filter.
+            private bool AdvanceToNextSubdirectory(EnumerableWrapper wrapper)
+            {
+                List<string> skippedFiles = new List<string>();
+
+                while (true)
+                {
+                    if (!wrapper.MoveNext())
+                        return false;
+
+                    if (!m_fileProcessor.MatchesFolderExclusion(wrapper.Current))
+                        return true;
+
+                    m_lastVisitedPath = wrapper.Current;
                 }
             }
 
@@ -674,6 +712,11 @@ namespace GSF.IO
         public const string DefaultFilter = @"**\*";
 
         /// <summary>
+        /// Default value for the <see cref="FolderExclusion"/> property.
+        /// </summary>
+        public const string DefaultFolderExclusion = "";
+
+        /// <summary>
         /// Default value for the <see cref="TrackChanges"/> property.
         /// </summary>
         public const bool DefaultTrackChanges = false;
@@ -715,6 +758,7 @@ namespace GSF.IO
         private readonly Guid m_processorID;
 
         private string m_filter;
+        private string m_folderExclusion;
         private Func<string, bool> m_filterMethod;
         private bool m_trackChanges;
         private string m_cachePath;
@@ -759,6 +803,7 @@ namespace GSF.IO
             m_processorID = processorID;
 
             m_filter = DefaultFilter;
+            m_folderExclusion = DefaultFolderExclusion;
             m_filterMethod = filePath => true;
             m_trackChanges = DefaultTrackChanges;
             m_cachePath = DefaultCachePath;
@@ -807,6 +852,21 @@ namespace GSF.IO
             set
             {
                 m_filter = value ?? DefaultFilter;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the pattern used to determine whether a folder should be excluded from enumeration.
+        /// </summary>
+        public string FolderExclusion
+        {
+            get
+            {
+                return m_folderExclusion;
+            }
+            set
+            {
+                m_folderExclusion = value ?? DefaultFolderExclusion;
             }
         }
 
@@ -1208,6 +1268,25 @@ namespace GSF.IO
                 OnError(new Exception(message, ex));
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Determines if the given folder matches the exclusion string provided through the <see cref="FolderExclusion"/> property.
+        /// </summary>
+        /// <param name="folderPath">The path to the folder to be tested against the exclusion string.</param>
+        /// <returns>True if the folder matches the exclusion string; false otherwise.</returns>
+        public bool MatchesFolderExclusion(string folderPath)
+        {
+            if (m_disposed)
+                throw new ObjectDisposedException(nameof(FileProcessor));
+
+            string folderPathWithoutSeparator = folderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string folderPathWithSeparator = $"{folderPathWithoutSeparator}\\";
+            string[] patterns = m_folderExclusion.Split(Path.PathSeparator);
+
+            return
+                FilePath.IsFilePatternMatch(patterns, folderPathWithoutSeparator, true) ||
+                FilePath.IsFilePatternMatch(patterns, folderPathWithSeparator, true);
         }
 
         /// <summary>
