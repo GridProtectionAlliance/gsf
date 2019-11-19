@@ -58,6 +58,10 @@ namespace GSF.PhasorProtocols
         /// </summary>
         SendConfigurationFrame2 = (ushort)Bits.Bit00 | (ushort)Bits.Bit02,
         /// <summary>
+        /// 0110 Send configuration file 3.
+        /// </summary>
+        SendConfigurationFrame3 = (ushort)Bits.Bit01 | (ushort)Bits.Bit02,
+        /// <summary>
         /// 1000 Receive extended frame for IEEE C37.118 / receive reference phasor for IEEE 1344.
         /// </summary>
         ReceiveExtendedFrame = (ushort)Bits.Bit03,
