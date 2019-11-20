@@ -5,7 +5,7 @@
   "author": "Grid Protection Alliance",
   "license": "MIT",
   "dependencies": {
-    "angular": "1.6.8",
+    "angular": "1.7.9",
     "bootstrap": "3.4.1",
     "jquery": "3.4.1",
     "jquery-ui": "1.12.1",
