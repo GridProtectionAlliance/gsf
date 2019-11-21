@@ -1629,6 +1629,7 @@ namespace GSF
         /// </summary>
         /// <param name="timestamp">Timestamp to align.</param>
         /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
+        /// <param name="Baseline"> Starting Timestamp of the Distribution.</param>
         /// <returns>The nearest distribution timestamp for given <paramref name="timestamp"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Ticks RoundToSecondDistribution(Ticks timestamp, double samplesPerSecond, Ticks Baseline)
@@ -1655,6 +1656,25 @@ namespace GSF
             destinationTicks += baseTicks;
 
             return new Ticks(destinationTicks);
+        }
+
+        /// <summary>
+        /// Returns the distribution timestamp for given <paramref name="timestamp"/> or <see cref="Ticks.MinValue"/> if there is no TS within the specified Tolerance.
+        /// </summary>
+        /// <param name="timestamp">Timestamp to align.</param>
+        /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
+        /// <param name="tolerance">Tolerance of the TS in ticks.</param>
+        /// <param name="baseline"> Starting Timestamp of the Distribution.</param>
+        /// <returns>The distribution timestamp for given <paramref name="timestamp"/>or <see cref="Ticks.MinValue"/> .</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Ticks ToSecondDistribution(Ticks timestamp, double samplesPerSecond, Ticks baseline, int tolerance)
+        {
+            Ticks result = RoundToSecondDistribution(timestamp, samplesPerSecond, baseline);
+
+            if (Math.Abs(result.Value - timestamp.Value) > tolerance)
+                return Ticks.MinValue;
+
+            return result;
         }
 
         #endregion
