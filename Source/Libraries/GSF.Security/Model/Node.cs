@@ -49,10 +49,58 @@ namespace GSF.Security.Model
         public string Name { get; set; }
 
         /// <summary>
+        /// Company ID field.
+        /// </summary>
+        public int? CompanyID { get; set; }
+
+        /// <summary>
+        /// Longitude field.
+        /// </summary>
+        public decimal Longitude { get; set; }
+
+        /// <summary>
+        /// Latitude field.
+        /// </summary>
+        public decimal Latitude { get; set; }
+
+        /// <summary>
         /// Description field.
         /// </summary>
         public string Description { get; set; }
 
+        /// <summary>
+        /// Image path field.
+        /// </summary>
+        public string ImagePath { get; set; }
+
+        /// <summary>
+        /// Settings field.
+        /// </summary>
+        public string Settings { get; set; }
+
+        /// <summary>
+        /// Menu type field.
+        /// </summary>
+        [Required]
+        [StringLength(200)]
+        public string MenuType { get; set; }
+
+        /// <summary>
+        /// Description field.
+        /// </summary>
+        [Required]
+        public string MenuData { get; set; }
+
+        /// <summary>
+        /// Master field.
+        /// </summary>
+        public bool Master { get; set; }
+
+        /// <summary>
+        /// Load order field.
+        /// </summary>
+        public int LoadOrder { get; set; }
+        
         /// <summary>
         /// Enabled field.
         /// </summary>
@@ -77,6 +125,7 @@ namespace GSF.Security.Model
         /// Updated on field.
         /// </summary>
         [DefaultValueExpression("this.CreatedOn", EvaluationOrder = 1)]
+        [UpdateValueExpression("DateTime.UtcNow")]
         public DateTime UpdatedOn { get; set; }
 
         /// <summary>
@@ -85,6 +134,7 @@ namespace GSF.Security.Model
         [Required]
         [StringLength(200)]
         [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
+        [UpdateValueExpression("UserInfo.CurrentUserID")]
         public string UpdatedBy { get; set; }
     }
 }
