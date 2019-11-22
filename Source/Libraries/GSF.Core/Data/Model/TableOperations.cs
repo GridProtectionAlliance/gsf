@@ -42,6 +42,7 @@ using System.Text;
 // ReSharper disable StaticMemberInGenericType
 // ReSharper disable UnusedMember.Local
 // ReSharper disable AssignNullToNotNullAttribute
+// ReSharper disable NotAccessedField.Local
 namespace GSF.Data.Model
 {
     /// <summary>
