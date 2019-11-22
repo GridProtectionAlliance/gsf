@@ -45,6 +45,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -71,7 +72,7 @@ namespace GSF.Text
 
     /// <summary>
     /// Class containing the diff, match and patch methods.
-    /// Also Contains the behaviour settings.
+    /// Also Contains the behavior settings.
     /// </summary>
     public class DiffMatchPatch
     {
@@ -391,6 +392,7 @@ namespace GSF.Text
         /// <param name="text2">New string to be diffed</param>
         /// <param name="deadline">Time at which to bail if not yet complete</param>
         /// <returns>List of Diff objects</returns>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         protected List<Diff> DiffBisect(string text1, string text2, DateTime deadline)
         {
             // Cache the text lengths to prevent multiple calls.
@@ -1903,7 +1905,7 @@ namespace GSF.Text
         }
 
         /// <summary>
-        /// Initialise the alphabet for the Bitap algorithm.
+        /// Initialize the alphabet for the Bitap algorithm.
         /// </summary>
         /// <param name="pattern">The text to encode</param>
         /// <returns>Hash of character locations</returns>
@@ -2081,7 +2083,7 @@ namespace GSF.Text
                         break;
 
                     case Operation.EQUAL:
-                        if (aDiff.Text.Length <= 2 * PatchMargin && patch.Diffs.Count() != 0 && !Equals(aDiff, diffs.Last()))
+                        if (aDiff.Text.Length <= 2 * PatchMargin && patch.Diffs.Count != 0 && !Equals(aDiff, diffs.Last()))
                         {
                             // Small equality inside a patch.
                             patch.Diffs.Add(aDiff);
@@ -2613,6 +2615,7 @@ namespace GSF.Text
         /// </summary>
         /// <param name="str">The string to encode</param>
         /// <returns>The encoded string</returns>
+        [SuppressMessage("Microsoft.Design", "CA1055:UriReturnValuesShouldNotBeStrings")]
         public static string EncodeURI(string str)
         {
             // C# is overzealous in the replacements.  Walk back on a few.

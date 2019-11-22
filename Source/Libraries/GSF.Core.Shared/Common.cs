@@ -45,6 +45,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -524,6 +525,7 @@ namespace GSF
         /// <typeparam name="T"><see cref="Type"/> to check.</typeparam>
         /// <returns><c>true</c> if <typeparamref name="T"/> is a numeric type; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static bool IsNumericType<T>() => IsNumericType(Type.GetTypeCode(typeof(T)));
 
         /// <summary>

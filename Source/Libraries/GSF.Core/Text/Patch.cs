@@ -45,6 +45,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace GSF.Text
@@ -57,6 +58,7 @@ namespace GSF.Text
         /// <summary>
         /// List of <see cref="Diff"/>s in the patch
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public List<Diff> Diffs { get; set; } = new List<Diff>();
 
         /// <summary>

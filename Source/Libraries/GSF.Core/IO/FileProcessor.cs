@@ -463,7 +463,7 @@ namespace GSF.IO
             // Advances enumeration until the next file that matches the filter.
             private bool AdvanceToNextSubdirectory(EnumerableWrapper wrapper)
             {
-                List<string> skippedFiles = new List<string>();
+                //List<string> skippedFiles = new List<string>();
 
                 while (true)
                 {
