@@ -60,6 +60,11 @@
             <TextBlock Grid.Row="1" Grid.Column="2" Text="Phase"/>
             <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource PhaseLookupList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=Phase, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource PhaseLookupList}}"/>
+            
+            <!--Third Row-->
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="Base kV"/>
+            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=BaseKV}" Width="{StaticResource XSmallItemSize}"/>
+            
         </Grid>
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
