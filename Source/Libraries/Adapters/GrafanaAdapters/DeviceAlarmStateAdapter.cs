@@ -118,7 +118,7 @@ namespace GrafanaAdapters
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DeviceAlarmStateAdapter"/>.
+        /// Creates a new <see cref="GSFDeviceAlarmStateAdapter"/>.
         /// </summary>
         public GSFDeviceAlarmStateAdapter()
         {
@@ -374,7 +374,7 @@ namespace GrafanaAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="DeviceAlarmStateAdapter"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="GSFDeviceAlarmStateAdapter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -404,7 +404,7 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Initializes <see cref="DeviceAlarmStateAdapter" />.
+        /// Initializes <see cref="GSFDeviceAlarmStateAdapter" />.
         /// </summary>
         public override void Initialize()
         {
