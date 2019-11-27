@@ -54,8 +54,8 @@ namespace GrafanaAdapters
     /// <summary>
     /// Represents an adapter that will monitor and report device alarm states.
     /// </summary>
-    [Description("Device Alarm State GSF: Monitors and updates alarm states for devices")]
-    class DeviceAlarmStateAdapter : FacileActionAdapterBase
+    [Description("Device Alarm State: Monitors and updates alarm states for devices")]
+    public class GSFDeviceAlarmStateAdapter : FacileActionAdapterBase
     {
         #region [ Members ]
 
@@ -120,7 +120,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Creates a new <see cref="DeviceAlarmStateAdapter"/>.
         /// </summary>
-        public DeviceAlarmStateAdapter()
+        public GSFDeviceAlarmStateAdapter()
         {
             m_alarmTime = TimeSpan.FromMinutes(DefaultAlarmMinutes).Ticks;
         }
