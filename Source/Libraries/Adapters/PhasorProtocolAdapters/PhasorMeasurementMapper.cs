@@ -33,11 +33,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using GSF;
 using GSF.Communication;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.Parsing;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
 using GSF.Threading;
@@ -47,6 +51,7 @@ using GSF.TimeSeries.Data;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using GSF.Units.EE;
+using TcpClient = GSF.Communication.TcpClient;
 
 namespace PhasorProtocolAdapters
 {
@@ -82,10 +87,7 @@ namespace PhasorProtocolAdapters
             /// </summary>
             public int RedundantFramesPerPacket
             {
-                set
-                {
-                    m_redundantFramesPerPacket = value;
-                }
+                set => m_redundantFramesPerPacket = value;
             }
 
             /// <summary>
@@ -139,7 +141,10 @@ namespace PhasorProtocolAdapters
 
         // Fields
         private MultiProtocolFrameParser m_frameParser;
+        private IServer m_publishChannel;
+        private TcpClient m_clientBasedPublishChannel;
         private IConfigurationFrame m_lastConfigurationFrame;
+        private bool m_proxyOnly;
         private Dictionary<string, MeasurementKey> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
@@ -151,6 +156,11 @@ namespace PhasorProtocolAdapters
         private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
         private readonly object m_configurationOperationLock;
+        private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
+        private volatile IConfigurationFrame m_configurationFrame;
+        private int m_lastConfigurationPublishMinute;
+        private bool m_configurationFramePublished;
+        private long m_receivedConfigurationFrames;
         private TimeZoneInfo m_timezone;
         private Ticks m_timeAdjustmentTicks;
         private Ticks m_lastReportTime;
@@ -212,6 +222,9 @@ namespace PhasorProtocolAdapters
 
             m_undefinedDevices = new ConcurrentDictionary<string, long>();
             m_configurationOperationLock = new object();
+
+            // Create a new connection ID cache
+            m_connectionIDCache = new ConcurrentDictionary<Guid, string>();
         }
 
         #endregion
@@ -229,14 +242,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public ushort AccessID
         {
-            get
-            {
-                return m_accessID;
-            }
-            set
-            {
-                m_accessID = value;
-            }
+            get => m_accessID;
+            set => m_accessID = value;
         }
 
         private IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> StatisticsHelpers
@@ -260,14 +267,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public bool AllowUseOfCachedConfiguration
         {
-            get
-            {
-                return m_allowUseOfCachedConfiguration;
-            }
-            set
-            {
-                m_allowUseOfCachedConfiguration = value;
-            }
+            get => m_allowUseOfCachedConfiguration;
+            set => m_allowUseOfCachedConfiguration = value;
         }
 
         /// <summary>
@@ -284,14 +285,8 @@ namespace PhasorProtocolAdapters
         /// </remarks>
         public TimeZoneInfo TimeZone
         {
-            get
-            {
-                return m_timezone;
-            }
-            set
-            {
-                m_timezone = value;
-            }
+            get => m_timezone;
+            set => m_timezone = value;
         }
 
         /// <summary>
@@ -303,14 +298,8 @@ namespace PhasorProtocolAdapters
         /// </remarks>
         public Ticks TimeAdjustmentTicks
         {
-            get
-            {
-                return m_timeAdjustmentTicks;
-            }
-            set
-            {
-                m_timeAdjustmentTicks = value;
-            }
+            get => m_timeAdjustmentTicks;
+            set => m_timeAdjustmentTicks = value;
         }
 
         /// <summary>
@@ -346,14 +335,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public Ticks LastReportTime
         {
-            get
-            {
-                return m_lastReportTime;
-            }
-            set
-            {
-                m_lastReportTime = value;
-            }
+            get => m_lastReportTime;
+            set => m_lastReportTime = value;
         }
 
         /// <summary>
@@ -488,10 +471,7 @@ namespace PhasorProtocolAdapters
         /// </remarks>
         public string SharedMapping
         {
-            get
-            {
-                return m_sharedMapping;
-            }
+            get => m_sharedMapping;
             set
             {
                 m_sharedMapping = value;
@@ -555,10 +535,7 @@ namespace PhasorProtocolAdapters
         /// </summary>
         protected MultiProtocolFrameParser FrameParser
         {
-            get
-            {
-                return m_frameParser;
-            }
+            get => m_frameParser;
             set
             {
                 if ((object)m_frameParser != null)
@@ -575,7 +552,10 @@ namespace PhasorProtocolAdapters
                     m_frameParser.ReceivedDataFrame -= m_frameParser_ReceivedDataFrame;
                     m_frameParser.ReceivedHeaderFrame -= m_frameParser_ReceivedHeaderFrame;
                     m_frameParser.ReceivedFrameImage -= m_frameParser_ReceivedFrameImage;
-                    m_frameParser.Dispose();
+                    m_frameParser.ReceivedFrameBufferImage -= m_frameParser_ReceivedFrameBufferImage;
+
+                    if (m_frameParser != value)
+                        m_frameParser.Dispose();
                 }
 
                 // Assign new frame parser reference
@@ -595,6 +575,161 @@ namespace PhasorProtocolAdapters
                     m_frameParser.ReceivedDataFrame += m_frameParser_ReceivedDataFrame;
                     m_frameParser.ReceivedHeaderFrame += m_frameParser_ReceivedHeaderFrame;
                     m_frameParser.ReceivedFrameImage += m_frameParser_ReceivedFrameImage;
+
+                    // Only attach to full frame buffer reception event if data forwarding is enabled as attaching
+                    // to this event engages an async queue to guarantee ordered delivery of buffer images
+                    if ((object)m_publishChannel != null || (object)m_clientBasedPublishChannel != null)
+                        m_frameParser.ReceivedFrameBufferImage += m_frameParser_ReceivedFrameBufferImage;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets reference to <see cref="UdpServer"/> publication channel, attaching and/or detaching to events as needed.
+        /// </summary>
+        protected UdpServer UdpPublishChannel
+        {
+            get => m_publishChannel as UdpServer;
+            set
+            {
+                UdpServer udpPublishChannel = m_publishChannel as UdpServer;
+
+                if ((object)m_publishChannel != null && (object)udpPublishChannel == null)
+                {
+                    // Trying to dispose non-UDP publication channel - nothing to do...
+                    if ((object)value == null)
+                        return;
+
+                    // Publish channel is currently TCP, detach from TCP events
+                    TcpPublishChannel = null;
+                }
+
+                if ((object)udpPublishChannel != null)
+                {
+                    // Detach from events on existing data channel reference
+                    udpPublishChannel.ClientConnectingException -= udpPublishChannel_ClientConnectingException;
+                    udpPublishChannel.ReceiveClientDataComplete -= udpPublishChannel_ReceiveClientDataComplete;
+                    udpPublishChannel.SendClientDataException -= udpPublishChannel_SendClientDataException;
+                    udpPublishChannel.ServerStarted -= udpPublishChannel_ServerStarted;
+                    udpPublishChannel.ServerStopped -= udpPublishChannel_ServerStopped;
+
+                    if (udpPublishChannel != value)
+                        udpPublishChannel.Dispose();
+                }
+
+                // Assign new UDP publish channel reference
+                udpPublishChannel = value;
+
+                if ((object)udpPublishChannel != null)
+                {
+                    // Detach any existing client based publish channels
+                    TcpClientPublishChannel = null;
+
+                    // Attach to events on new data channel reference
+                    udpPublishChannel.ClientConnectingException += udpPublishChannel_ClientConnectingException;
+                    udpPublishChannel.ReceiveClientDataComplete += udpPublishChannel_ReceiveClientDataComplete;
+                    udpPublishChannel.SendClientDataException += udpPublishChannel_SendClientDataException;
+                    udpPublishChannel.ServerStarted += udpPublishChannel_ServerStarted;
+                    udpPublishChannel.ServerStopped += udpPublishChannel_ServerStopped;
+                }
+
+                m_publishChannel = udpPublishChannel;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets reference to <see cref="TcpServer"/> publication channel, attaching and/or detaching to events as needed.
+        /// </summary>
+        protected TcpServer TcpPublishChannel
+        {
+            get => m_publishChannel as TcpServer;
+            set
+            {
+                TcpServer tcpPublishChannel = m_publishChannel as TcpServer;
+
+                if ((object)m_publishChannel != null && (object)tcpPublishChannel == null)
+                {
+                    // Trying to dispose non-TCP publication channel - nothing to do...
+                    if ((object)value == null)
+                        return;
+
+                    // Publish channel is currently UDP, detach from UDP events
+                    UdpPublishChannel = null;
+                }
+
+                if ((object)tcpPublishChannel != null)
+                {
+                    // Detach from events on existing command channel reference
+                    tcpPublishChannel.ClientConnected -= tcpPublishChannel_ClientConnected;
+                    tcpPublishChannel.ClientDisconnected -= tcpPublishChannel_ClientDisconnected;
+                    tcpPublishChannel.ClientConnectingException -= tcpPublishChannel_ClientConnectingException;
+                    tcpPublishChannel.ReceiveClientDataComplete -= tcpPublishChannel_ReceiveClientDataComplete;
+                    tcpPublishChannel.SendClientDataException -= tcpPublishChannel_SendClientDataException;
+                    tcpPublishChannel.ServerStarted -= tcpPublishChannel_ServerStarted;
+                    tcpPublishChannel.ServerStopped -= tcpPublishChannel_ServerStopped;
+
+                    if (tcpPublishChannel != value)
+                        tcpPublishChannel.Dispose();
+                }
+
+                // Assign new TCP publish channel reference
+                tcpPublishChannel = value;
+
+                if ((object)tcpPublishChannel != null)
+                {
+                    // Detach any existing client based publish channels
+                    TcpClientPublishChannel = null;
+
+                    // Attach to events on new command channel reference
+                    tcpPublishChannel.ClientConnected += tcpPublishChannel_ClientConnected;
+                    tcpPublishChannel.ClientDisconnected += tcpPublishChannel_ClientDisconnected;
+                    tcpPublishChannel.ClientConnectingException += tcpPublishChannel_ClientConnectingException;
+                    tcpPublishChannel.ReceiveClientDataComplete += tcpPublishChannel_ReceiveClientDataComplete;
+                    tcpPublishChannel.SendClientDataException += tcpPublishChannel_SendClientDataException;
+                    tcpPublishChannel.ServerStarted += tcpPublishChannel_ServerStarted;
+                    tcpPublishChannel.ServerStopped += tcpPublishChannel_ServerStopped;
+                }
+
+                m_publishChannel = tcpPublishChannel;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets reference to <see cref="TcpClient"/> publication channel, attaching and/or detaching to events as needed.
+        /// </summary>
+        protected TcpClient TcpClientPublishChannel
+        {
+            get => m_clientBasedPublishChannel;
+            set
+            {
+                if ((object)m_clientBasedPublishChannel != null)
+                {
+                    // Detach from events on existing command channel reference
+                    m_clientBasedPublishChannel.ConnectionEstablished -= tcpClientBasedPublishChannel_ConnectionEstablished;
+                    m_clientBasedPublishChannel.ConnectionTerminated -= tcpClientBasedPublishChannel_ConnectionTerminated;
+                    m_clientBasedPublishChannel.ConnectionException -= tcpClientBasedPublishChannel_ConnectionException;
+                    m_clientBasedPublishChannel.ReceiveDataComplete -= tcpClientBasedPublishChannel_ReceiveDataComplete;
+                    m_clientBasedPublishChannel.SendDataException -= tcpClientBasedPublishChannel_SendDataException;
+
+                    if (m_clientBasedPublishChannel != value)
+                        m_clientBasedPublishChannel.Dispose();
+                }
+
+                // Assign new TCP client based publish channel reference
+                m_clientBasedPublishChannel = value;
+
+                if ((object)m_clientBasedPublishChannel != null)
+                {
+                    // Detach any existing server based publish channels
+                    UdpPublishChannel = null;
+                    TcpPublishChannel = null;
+
+                    // Attach to events on new command channel reference
+                    m_clientBasedPublishChannel.ConnectionEstablished += tcpClientBasedPublishChannel_ConnectionEstablished;
+                    m_clientBasedPublishChannel.ConnectionTerminated += tcpClientBasedPublishChannel_ConnectionTerminated;
+                    m_clientBasedPublishChannel.ConnectionException += tcpClientBasedPublishChannel_ConnectionException;
+                    m_clientBasedPublishChannel.ReceiveDataComplete += tcpClientBasedPublishChannel_ReceiveDataComplete;
+                    m_clientBasedPublishChannel.SendDataException += tcpClientBasedPublishChannel_SendDataException;
                 }
             }
         }
@@ -674,14 +809,8 @@ namespace PhasorProtocolAdapters
         DefaultValue(true)]
         public new bool EnableConnectionErrors
         {
-            get
-            {
-                return base.EnableConnectionErrors;
-            }
-            set
-            {
-                base.EnableConnectionErrors = value;
-            }
+            get => base.EnableConnectionErrors;
+            set => base.EnableConnectionErrors = value;
         }
 
         /// <summary>
@@ -701,24 +830,26 @@ namespace PhasorProtocolAdapters
                 status.Append(base.Status);
                 status.AppendFormat("    Source is concentrator: {0}", m_isConcentrator);
                 status.AppendLine();
+                status.AppendFormat("     Proxy only connection: {0}", m_proxyOnly);
+                status.AppendLine();
                 if (!string.IsNullOrWhiteSpace(SharedMapping))
                 {
                     status.AppendFormat("     Shared mapping source: {0}", SharedMapping);
                     status.AppendLine();
                 }
-                status.AppendFormat(" Source connection ID code: {0}", m_accessID);
+                status.AppendFormat(" Source connection ID code: {0:N0}", m_accessID);
                 status.AppendLine();
                 status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
                 status.AppendLine();
-                status.AppendFormat("      Label mapped devices: {0}", (object)m_labelDefinedDevices == null ? 0 : m_labelDefinedDevices.Count);
+                status.AppendFormat("      Label mapped devices: {0:N0}", (object)m_labelDefinedDevices == null ? 0 : m_labelDefinedDevices.Count);
                 status.AppendLine();
                 status.AppendFormat("          Target time zone: {0}", m_timezone.Id);
                 status.AppendLine();
-                status.AppendFormat("    Manual time adjustment: {0} seconds", m_timeAdjustmentTicks.ToSeconds().ToString("0.000"));
+                status.AppendFormat("    Manual time adjustment: {0:0.000} seconds", m_timeAdjustmentTicks.ToSeconds());
                 status.AppendLine();
                 status.AppendFormat("Allow use of cached config: {0}", m_allowUseOfCachedConfiguration);
                 status.AppendLine();
-                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
+                status.AppendFormat("No data reconnect interval: {0:0.000} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds());
                 status.AppendLine();
 
                 if (m_injectBadData)
@@ -731,17 +862,57 @@ namespace PhasorProtocolAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("       Out of order frames: {0}", m_outOfOrderFrames);
+                status.AppendFormat("       Out of order frames: {0:N0}", m_outOfOrderFrames);
                 status.AppendLine();
-                status.AppendFormat("           Minimum latency: {0}ms over {1} tests", MinimumLatency, m_latencyFrames);
+                status.AppendFormat("           Minimum latency: {0:N0}ms over {1} tests", MinimumLatency, m_latencyFrames);
                 status.AppendLine();
-                status.AppendFormat("           Maximum latency: {0}ms over {1} tests", MaximumLatency, m_latencyFrames);
+                status.AppendFormat("           Maximum latency: {0:N0}ms over {1} tests", MaximumLatency, m_latencyFrames);
                 status.AppendLine();
-                status.AppendFormat("           Average latency: {0}ms over {1} tests", AverageLatency, m_latencyFrames);
+                status.AppendFormat("           Average latency: {0:N0}ms over {1} tests", AverageLatency, m_latencyFrames);
                 status.AppendLine();
+
+                if ((object)m_configurationFrame != null)
+                {
+                    status.AppendFormat("  Configuration frame size: {0:N0} bytes", m_configurationFrame.BinaryLength);
+                    status.AppendLine();
+                }
 
                 if ((object)m_frameParser != null)
                     status.Append(m_frameParser.Status);
+
+                if ((object)m_publishChannel != null)
+                {
+                    status.AppendLine();
+                    status.AppendLine("Publication Channel Status".CenterText(50));
+                    status.AppendLine("--------------------------".CenterText(50));
+                    status.Append(m_publishChannel.Status);
+
+                    TcpServer tcpPublishChannel = m_publishChannel as TcpServer;
+
+                    if ((object)tcpPublishChannel != null)
+                    {
+                        Guid[] clientIDs = tcpPublishChannel.ClientIDs;
+
+                        if (clientIDs != null && clientIDs.Length > 0)
+                        {
+                            status.AppendLine();
+                            status.AppendFormat("TCP publish channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
+
+                            for (int i = 0; i < clientIDs.Length; i++)
+                                status.AppendFormat("    {0}) {1}\r\n", i + 1, GetConnectionID(tcpPublishChannel, clientIDs[i]));
+
+                            status.AppendLine();
+                        }
+                    }
+                }
+
+                if ((object)m_clientBasedPublishChannel != null)
+                {
+                    status.AppendLine();
+                    status.AppendLine("Publication Channel Status".CenterText(50));
+                    status.AppendLine("--------------------------".CenterText(50));
+                    status.Append(m_clientBasedPublishChannel.Status);
+                }
 
                 status.AppendLine();
                 status.Append("Parsed Frame Quality Statistics".CenterText(78));
@@ -781,20 +952,20 @@ namespace PhasorProtocolAdapters
 
                     status.Append(stationName.TruncateRight(22).PadRight(22));
                     status.Append(' ');
-                    status.Append(definedDevice.DataQualityErrors.ToString().CenterText(10));
+                    status.Append(definedDevice.DataQualityErrors.ToString("N0").CenterText(10));
                     status.Append(' ');
-                    status.Append(definedDevice.TimeQualityErrors.ToString().CenterText(10));
+                    status.Append(definedDevice.TimeQualityErrors.ToString("N0").CenterText(10));
                     status.Append(' ');
-                    status.Append(definedDevice.DeviceErrors.ToString().CenterText(10));
+                    status.Append(definedDevice.DeviceErrors.ToString("N0").CenterText(10));
                     status.Append(' ');
-                    status.Append(definedDevice.TotalFrames.ToString().CenterText(10));
+                    status.Append(definedDevice.TotalFrames.ToString("N0").CenterText(10));
                     status.Append(' ');
                     status.Append(((DateTime)definedDevice.LastReportTime).ToString("HH:mm:ss.fff"));
                     status.AppendLine();
                 }
 
                 status.AppendLine();
-                status.AppendFormat("Undefined devices encountered: {0}", m_undefinedDevices.Count);
+                status.AppendFormat("Undefined devices encountered: {0:N0}", m_undefinedDevices.Count);
                 status.AppendLine();
 
                 foreach (KeyValuePair<string, long> item in m_undefinedDevices)
@@ -827,6 +998,11 @@ namespace PhasorProtocolAdapters
                 {
                     if (disposing)
                     {
+                        // Detach from fowarding channel events and set any references to null
+                        TcpPublishChannel = null;
+                        UdpPublishChannel = null;
+                        TcpClientPublishChannel = null;
+
                         // Detach from frame parser events and set reference to null
                         FrameParser = null;
 
@@ -876,10 +1052,9 @@ namespace PhasorProtocolAdapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load optional mapper specific connection parameters
-            if (settings.TryGetValue("isConcentrator", out setting))
+            if (settings.TryGetValue("isConcentrator", out string setting))
                 m_isConcentrator = setting.ParseBoolean();
             else
                 m_isConcentrator = false;
@@ -1008,8 +1183,6 @@ namespace PhasorProtocolAdapters
             // For captured data simulations we will inject a simulated timestamp and auto-repeat file stream...
             if (frameParser.TransportProtocol == TransportProtocol.File)
             {
-                DateTime replayTime;
-
                 if (settings.TryGetValue("definedFrameRate", out setting))
                     frameParser.DefinedFrameRate = int.Parse(setting);
                 else
@@ -1025,7 +1198,7 @@ namespace PhasorProtocolAdapters
                 else
                     frameParser.UseHighResolutionInputTimer = false;
 
-                if (settings.TryGetValue("replayStartTime", out setting) && DateTime.TryParse(setting, out replayTime))
+                if (settings.TryGetValue("replayStartTime", out setting) && DateTime.TryParse(setting, out DateTime replayTime))
                     frameParser.ReplayStartTime = replayTime;
                 else
                     frameParser.ReplayStartTime = DateTime.MinValue;
@@ -1069,6 +1242,29 @@ namespace PhasorProtocolAdapters
 
             // Assign reference to frame parser for this connection and attach to needed events
             FrameParser = frameParser;
+
+            // Check for proxySettings parameter which will establish a data fowarding channel
+            if (settings.TryGetValue("proxySettings", out string proxySettings) && !string.IsNullOrWhiteSpace(proxySettings))
+            {
+                if (proxySettings.ParseKeyValuePairs().TryGetValue("useClientPublishChannel", out setting) && setting.ParseBoolean())
+                {
+                    // Create a new client based publication channel (for reverse TCP connections)
+                    TcpClientPublishChannel = ClientBase.Create(proxySettings) as TcpClient;
+
+                    if ((object)m_clientBasedPublishChannel != null)
+                        m_clientBasedPublishChannel.MaxConnectionAttempts = -1;
+                }
+                else
+                {
+                    // Create a new server based publication channel
+                    IServer publicationServer = ServerBase.Create(proxySettings);
+                    TcpPublishChannel = publicationServer as TcpServer;
+                    UdpPublishChannel = publicationServer as UdpServer;
+                }
+            }
+
+            if (settings.TryGetValue("proxyOnly", out setting))
+                m_proxyOnly = setting.ParseBoolean();
 
             // Load input devices associated with this connection
             LoadInputDevices();
@@ -1362,10 +1558,9 @@ namespace PhasorProtocolAdapters
         {
             if ((object)m_definedDevices != null)
             {
-                DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;
                 ConfigurationCell definedDevice;
 
-                if (m_definedDevices.TryGetValue(idCode, out statisticsHelper))
+                if (m_definedDevices.TryGetValue(idCode, out DeviceStatisticsHelper<ConfigurationCell> statisticsHelper))
                 {
                     definedDevice = statisticsHelper.Device;
                     definedDevice.DataQualityErrors = 0;
@@ -1607,6 +1802,13 @@ namespace PhasorProtocolAdapters
             m_receivedConfigFrame = false;
             m_cachedConfigLoadAttempted = false;
 
+            // Start publication server
+            if ((object)m_publishChannel != null)
+                m_publishChannel.Start();
+
+            if ((object)m_clientBasedPublishChannel != null)
+                m_clientBasedPublishChannel.ConnectAsync();
+
             // Start frame parser
             if ((object)m_frameParser != null)
                 m_frameParser.Start();
@@ -1623,6 +1825,13 @@ namespace PhasorProtocolAdapters
             // Stop frame parser
             if ((object)m_frameParser != null)
                 m_frameParser.Stop();
+
+            // Stop publication server
+            if ((object)m_publishChannel != null)
+                m_publishChannel.Stop();
+
+            if ((object)m_clientBasedPublishChannel != null)
+                m_clientBasedPublishChannel.Disconnect();
 
             if ((object)m_measurementCounter != null)
                 m_measurementCounter.Stop();
@@ -1812,9 +2021,8 @@ namespace PhasorProtocolAdapters
                     else
                     {
                         // Encountered an undefined device, track frame counts
-                        long frameCount;
 
-                        if (m_undefinedDevices.TryGetValue(parsedDevice.StationName, out frameCount))
+                        if (m_undefinedDevices.TryGetValue(parsedDevice.StationName, out long frameCount))
                         {
                             frameCount++;
                             m_undefinedDevices[parsedDevice.StationName] = frameCount;
@@ -1996,10 +2204,9 @@ namespace PhasorProtocolAdapters
         public string GetSignalReference(SignalKind type)
         {
             // We cache non-indexed signal reference strings so they don't need to be generated at each mapping call.
-            string[] references;
 
             // Look up synonym in dictionary based on signal type, if found return single element
-            if (m_generatedSignalReferenceCache.TryGetValue(type, out references))
+            if (m_generatedSignalReferenceCache.TryGetValue(type, out string[] references))
                 return references[0];
 
             // Create a new signal reference array (for single element)
@@ -2026,10 +2233,9 @@ namespace PhasorProtocolAdapters
             // We cache indexed signal reference strings so they don't need to be generated at each mapping call.
             // For speed purposes we intentionally do not validate that signalIndex falls within signalCount, be
             // sure calling procedures are very careful with parameters...
-            string[] references;
 
             // Look up synonym in dictionary based on signal type
-            if (m_generatedSignalReferenceCache.TryGetValue(type, out references))
+            if (m_generatedSignalReferenceCache.TryGetValue(type, out string[] references))
             {
                 // Verify signal count has not changed (we may have received new configuration from device)
                 if (count == references.Length)
@@ -2146,136 +2352,154 @@ namespace PhasorProtocolAdapters
         //    Stop();
         //}
 
-        private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
+        /// <summary>
+        /// Gets connection ID (i.e., IP:Port) for specified <paramref name="clientID"/>.
+        /// </summary>
+        /// <param name="server">Server connection of associated <paramref name="clientID"/>.</param>
+        /// <param name="clientID">Guid of client for ID lookup.</param>
+        /// <returns>Connection ID (i.e., IP:Port) for specified <paramref name="clientID"/>.</returns>
+        protected virtual string GetConnectionID(IServer server, Guid clientID)
         {
-            ExtractFrameMeasurements(e.Argument);
-            m_totalDataFrames++;
+            if (((object)server == null || clientID.Equals(Guid.Empty)) && (object)m_clientBasedPublishChannel != null)
+                return m_clientBasedPublishChannel.ServerUri;
 
-            if (m_frameParser.RedundantFramesPerPacket > 0)
+            if (!m_connectionIDCache.TryGetValue(clientID, out string connectionID))
             {
-                if ((object)m_missingDataMonitor == null)
+                // Attempt to lookup remote connection identification for logging purposes
+                try
                 {
-                    m_missingDataMonitor = new MissingDataMonitor
+                    IPEndPoint remoteEndPoint = null;
+                    TcpServer commandChannel = server as TcpServer;
+
+                    if ((object)commandChannel != null)
                     {
-                        LagTime = m_lagTime,
-                        LeadTime = m_leadTime,
-                        FramesPerSecond = m_frameParser.DefinedFrameRate,
-                        TimeResolution = m_timeResolution,
-                        UsePrecisionTimer = false
-                    };
-                }
-
-                m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
-                m_missingDataMonitor.SortMeasurements(e.Argument.Cells.Select(cell => cell.GetStatusFlagsMeasurement()));
-            }
-        }
-
-        private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
-        {
-            lock (m_configurationOperationLock)
-            {
-                bool configurationChanged = CheckForConfigurationChanges();
-
-                if (!m_receivedConfigFrame || configurationChanged)
-                {
-                    OnStatusMessage(MessageLevel.Info, $"Received {(m_receivedConfigFrame ? "updated" : "initial")} configuration frame at {DateTime.UtcNow}");
-
-                    try
-                    {
-                        // Cache configuration on an independent thread in case this takes some time
-                        ConfigurationFrame.Cache(e.Argument, ex => OnProcessException(MessageLevel.Info, ex), Name);
+                        if (commandChannel.TryGetClient(clientID, out TransportProvider<Socket> tcpClient))
+                            remoteEndPoint = tcpClient.Provider.RemoteEndPoint as IPEndPoint;
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        // Process exception for logging
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                        UdpServer dataChannel = server as UdpServer;
+
+                        if ((object)dataChannel != null && dataChannel.TryGetClient(clientID, out TransportProvider<EndPoint> udpClient))
+                            remoteEndPoint = udpClient.Provider as IPEndPoint;
                     }
 
-                    StartMeasurementCounter();
+                    if ((object)remoteEndPoint != null)
+                    {
+                        if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
+                            connectionID = "[" + remoteEndPoint.Address + "]:" + remoteEndPoint.Port;
+                        else
+                            connectionID = remoteEndPoint.Address + ":" + remoteEndPoint.Port;
 
-                    m_receivedConfigFrame = true;
+                        // Cache value for future lookup
+                        m_connectionIDCache.TryAdd(clientID, connectionID);
+                        ThreadPool.QueueUserWorkItem(LookupHostName, new Tuple<Guid, string, IPEndPoint>(clientID, connectionID, remoteEndPoint));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
+                }
+
+                if (string.IsNullOrEmpty(connectionID))
+                    connectionID = "unavailable";
+            }
+
+            return connectionID;
+        }
+
+        private void LookupHostName(object state)
+        {
+            try
+            {
+                Tuple<Guid, string, IPEndPoint> parameters = (Tuple<Guid, string, IPEndPoint>)state;
+                IPHostEntry ipHost = Dns.GetHostEntry(parameters.Item3.Address);
+
+                if (!string.IsNullOrWhiteSpace(ipHost.HostName))
+                    m_connectionIDCache[parameters.Item1] = ipHost.HostName + " (" + parameters.Item2 + ")";
+            }
+            catch (Exception ex)
+            {
+                // Just ignoring possible DNS lookup failures...
+                Logger.SwallowException(ex, "DNS Lookup Failure");
+            }
+        }
+
+        /// <summary>
+        /// Handles incoming commands from devices connected over the command channel.
+        /// </summary>
+        /// <param name="clientID">Guid of client that sent the command.</param>
+        /// <param name="connectionID">Remote client connection identification (i.e., IP:Port).</param>
+        /// <param name="commandBuffer">Data buffer received from connected client device.</param>
+        /// <param name="length">Valid length of data within the buffer.</param>
+        protected virtual void DeviceCommandHandler(Guid clientID, string connectionID, byte[] commandBuffer, int length)
+        {
+            try
+            {
+                ICommandFrame commandFrame;
+
+                // Attempt to interpret data received from a client as a command frame
+                switch (m_frameParser.PhasorProtocol)
+                {
+                    case PhasorProtocol.IEEEC37_118V2:
+                    case PhasorProtocol.IEEEC37_118V1:
+                    case PhasorProtocol.IEEEC37_118D6:
+                        commandFrame = new GSF.PhasorProtocols.IEEEC37_118.CommandFrame(commandBuffer, 0, length);
+                        break;
+                    case PhasorProtocol.IEEE1344:
+                        commandFrame = new GSF.PhasorProtocols.IEEE1344.CommandFrame(commandBuffer, 0, length);
+                        break;
+                    case PhasorProtocol.SelFastMessage:
+                        commandFrame = new GSF.PhasorProtocols.SelFastMessage.CommandFrame(commandBuffer, 0, length);
+                        break;
+                    case PhasorProtocol.IEC61850_90_5:
+                        commandFrame = new GSF.PhasorProtocols.IEC61850_90_5.CommandFrame(commandBuffer, 0, length);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"Protocol \"{m_frameParser.PhasorProtocol}\" does not support commands.");
+                }
+
+                switch (commandFrame.Command)
+                {
+                    case DeviceCommand.SendConfigurationFrame1:
+                    case DeviceCommand.SendConfigurationFrame2:
+                        // Reset received configuration frame counter
+                        m_receivedConfigurationFrames = 0;
+
+                        if ((object)m_configurationFrame != null)
+                        {
+                            if ((object)m_publishChannel != null)
+                                m_publishChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
+                            else if ((object)m_clientBasedPublishChannel != null)
+                                m_clientBasedPublishChannel.SendAsync(m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
+
+                            OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
+                        }
+
+                        break;
+                    case DeviceCommand.EnableRealTimeData:
+                    case DeviceCommand.DisableRealTimeData:
+                        // We ignore these commands without message, these commands are normally sent by synchrophasor devices
+                        // but we do not allow stream control in a proxy situation
+                        break;
+                    default:
+                        OnStatusMessage(MessageLevel.Warning, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported by stream splitter.");
+                        break;
                 }
             }
-
-            m_totalConfigurationFrames++;
-        }
-
-        private void m_frameParser_ReceivedHeaderFrame(object sender, EventArgs<IHeaderFrame> e)
-        {
-            m_totalHeaderFrames++;
-        }
-
-        private void m_frameParser_ReceivedFrameImage(object sender, EventArgs<FundamentalFrameType, int> e)
-        {
-            // We track bytes received so that connection can be restarted if data is not flowing
-            m_bytesReceived += e.Argument2;
-        }
-
-        private void m_frameParser_ConnectionTerminated(object sender, EventArgs e)
-        {
-            OnDisconnected();
-
-            if (m_frameParser.Enabled)
+            catch (Exception ex)
             {
-                // Communications layer closed connection (close not initiated by system) - so we restart connection cycle...
-                OnStatusMessage(MessageLevel.Info, "Connection closed by remote device, attempting reconnection...");
-                Start();
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Remotely connected device \"{connectionID}\" sent an unrecognized data sequence to the concentrator, no action was taken. Exception details: {ex.Message}", ex));
             }
         }
 
-        private void m_frameParser_ConnectionEstablished(object sender, EventArgs e)
+        // Thread procedure used to proxy data to the user implemented device command handler
+        private void DeviceCommandHandlerProc(object state)
         {
-            OnConnected();
+            EventArgs<Guid, byte[], int> e = state as EventArgs<Guid, byte[], int>;
 
-            ResetStatistics();
-
-            // Enable data stream monitor for connections that support commands
-            m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || m_allowUseOfCachedConfiguration;
-        }
-
-        private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
-        {
-            Exception ex = e.Argument1;
-
-            if (EnableConnectionErrors)
-                OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed for {ConnectionInfo}: {ex.Message}", ex));
-
-            // So long as user hasn't requested to stop, keep trying connection
-            if (Enabled)
-                Start();
-        }
-
-        private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
-        {
-            Exception ex = e.Argument;
-
-            if (ex is ConnectionException && !EnableConnectionErrors)
-                return;
-
-            OnProcessException(MessageLevel.Info, ex, "Frame Parsing Exception");
-        }
-
-        private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
-        {
-            if (EnableConnectionErrors)
-                OnStatusMessage(MessageLevel.Info, "\r\nConnection is being reset due to an excessive number of exceptions...\r\n");
-
-            // So long as user hasn't already requested to stop, we restart connection
-            if (Enabled)
-                Start();
-        }
-
-        private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
-        {
-            OnStatusMessage(MessageLevel.Info, $"Initiating {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} protocol connection...");
-            m_connectionAttempts++;
-        }
-
-        private void m_frameParser_ConfigurationChanged(object sender, EventArgs e)
-        {
-            OnStatusMessage(MessageLevel.Info, "NOTICE: Configuration has changed, requesting new configuration frame...");
-            m_receivedConfigFrame = false;
-            SendCommand(DeviceCommand.SendConfigurationFrame2);
+            if ((object)e != null)
+                DeviceCommandHandler(e.Argument1, GetConnectionID(m_publishChannel, e.Argument1), e.Argument2, e.Argument3);
         }
 
         private void m_dataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
@@ -2385,6 +2609,376 @@ namespace PhasorProtocolAdapters
 
             return configurationChanged;
         }
+
+        #region [ Frame Parser Event Handlers ]
+
+        // Redistribute received data.
+        private void m_frameParser_ReceivedFrameBufferImage(object sender, EventArgs<FundamentalFrameType, byte[], int, int> e)
+        {
+            if ((object)m_publishChannel == null && (object)m_clientBasedPublishChannel == null)
+                return;
+
+            byte[] image;
+            int offset, length;
+
+            // Track total number of received configuration frames - data source could be auto-sending config frames every minute
+            if (e.Argument1 == FundamentalFrameType.ConfigurationFrame)
+                m_receivedConfigurationFrames++;
+
+            // Send the configuration frame at the top of each minute if publication channel is UDP and source is not auto-sending configuration frames
+            if (m_receivedConfigurationFrames < 2 && m_publishChannel is UdpServer && (object)m_configurationFrame != null)
+            {
+                DateTime currentTime = DateTime.UtcNow;
+
+                if (currentTime.Second == 0)
+                {
+                    if (currentTime.Minute != m_lastConfigurationPublishMinute)
+                    {
+                        m_lastConfigurationPublishMinute = currentTime.Minute;
+                        m_configurationFramePublished = false;
+                    }
+
+                    if (!m_configurationFramePublished)
+                    {
+                        // Publish binary image for configuration frame
+                        m_configurationFramePublished = true;
+                        m_configurationFrame.Timestamp = currentTime;
+
+                        image = m_configurationFrame.BinaryImage();
+
+                        try
+                        {
+                            m_publishChannel.MulticastAsync(image, 0, image.Length);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during proxy output: {ex.Message}", ex));
+                        }
+
+                        // Sleep for a moment between config frame and data frame transmissions
+                        Thread.Sleep(1);
+                    }
+                }
+            }
+
+            // Publish binary image for frame 
+            image = e.Argument2;
+            offset = e.Argument3;
+            length = e.Argument4;
+
+            // We republish exactly what we receive to the current destinations
+            if ((object)m_publishChannel != null)
+            {
+                try
+                {
+                    m_publishChannel.MulticastAsync(image, offset, length);
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during proxy output: {ex.Message}", ex));
+                }
+            }
+            else if ((object)m_clientBasedPublishChannel != null && m_clientBasedPublishChannel.CurrentState == ClientState.Connected)
+            {
+                try
+                {
+                    m_clientBasedPublishChannel.SendAsync(image, offset, length);
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP client based publication channel exception during proxy output: {ex.Message}", ex));
+                }
+            }
+        }
+
+        private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
+        {
+            // Do not process data frames when connection is setup to only forward data
+            if (m_proxyOnly)
+                return;
+
+            ExtractFrameMeasurements(e.Argument);
+            m_totalDataFrames++;
+
+            if (m_frameParser.RedundantFramesPerPacket > 0)
+            {
+                if ((object)m_missingDataMonitor == null)
+                {
+                    m_missingDataMonitor = new MissingDataMonitor
+                    {
+                        LagTime = m_lagTime,
+                        LeadTime = m_leadTime,
+                        FramesPerSecond = m_frameParser.DefinedFrameRate,
+                        TimeResolution = m_timeResolution,
+                        UsePrecisionTimer = false
+                    };
+                }
+
+                m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
+                m_missingDataMonitor.SortMeasurements(e.Argument.Cells.Select(cell => cell.GetStatusFlagsMeasurement()));
+            }
+        }
+
+        private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
+        {
+            // Keep a reference to latest configuration frame that was received for fowarding
+            m_configurationFrame = e.Argument;
+
+            lock (m_configurationOperationLock)
+            {
+                bool configurationChanged = CheckForConfigurationChanges();
+
+                if (!m_receivedConfigFrame || configurationChanged)
+                {
+                    OnStatusMessage(MessageLevel.Info, $"Received {(m_receivedConfigFrame ? "updated" : "initial")} configuration frame at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}");
+
+                    try
+                    {
+                        // Cache configuration on an independent thread in case this takes some time
+                        ConfigurationFrame.Cache(e.Argument, ex => OnProcessException(MessageLevel.Info, ex), Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Process exception for logging
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                    }
+
+                    StartMeasurementCounter();
+
+                    m_receivedConfigFrame = true;
+                }
+            }
+
+            m_totalConfigurationFrames++;
+        }
+
+        private void m_frameParser_ReceivedHeaderFrame(object sender, EventArgs<IHeaderFrame> e)
+        {
+            m_totalHeaderFrames++;
+        }
+
+        private void m_frameParser_ReceivedFrameImage(object sender, EventArgs<FundamentalFrameType, int> e)
+        {
+            // We track bytes received so that connection can be restarted if data is not flowing
+            m_bytesReceived += e.Argument2;
+        }
+
+        private void m_frameParser_ConnectionTerminated(object sender, EventArgs e)
+        {
+            OnDisconnected();
+
+            if (m_frameParser.Enabled)
+            {
+                // Communications layer closed connection (close not initiated by system) - so we restart connection cycle...
+                OnStatusMessage(MessageLevel.Info, "Connection closed by remote device, attempting reconnection...");
+                Start();
+            }
+        }
+
+        private void m_frameParser_ConnectionEstablished(object sender, EventArgs e)
+        {
+            OnConnected();
+
+            ResetStatistics();
+
+            // Enable data stream monitor for connections that support commands
+            m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || m_allowUseOfCachedConfiguration;
+
+            // Reinitialize proxy connection if needed...
+            if (Enabled && m_clientBasedPublishChannel != null && m_clientBasedPublishChannel.CurrentState != ClientState.Connected)
+            {
+                ThreadPool.QueueUserWorkItem(state =>
+                {
+                    m_clientBasedPublishChannel.Disconnect();
+                    m_clientBasedPublishChannel.ConnectAsync();
+                });
+            }
+        }
+
+        private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
+        {
+            Exception ex = e.Argument1;
+
+            if (EnableConnectionErrors)
+                OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed for {ConnectionInfo}: {ex.Message}", ex));
+
+            // So long as user hasn't requested to stop, keep trying connection
+            if (Enabled)
+                Start();
+        }
+
+        private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            if (ex is ConnectionException && !EnableConnectionErrors)
+                return;
+
+            OnProcessException(MessageLevel.Info, ex, "Frame Parsing Exception");
+        }
+
+        private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
+        {
+            if (EnableConnectionErrors)
+                OnStatusMessage(MessageLevel.Info, "\r\nConnection is being reset due to an excessive number of exceptions...\r\n");
+
+            // So long as user hasn't already requested to stop, we restart connection
+            if (Enabled)
+                Start();
+        }
+
+        private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, $"Initiating {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} protocol connection...");
+            m_connectionAttempts++;
+        }
+
+        private void m_frameParser_ConfigurationChanged(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "NOTICE: Configuration has changed, requesting new configuration frame...");
+            m_receivedConfigFrame = false;
+            SendCommand(DeviceCommand.SendConfigurationFrame2);
+        }
+
+        #endregion
+
+        #region [ UDP Publish Channel Event Handlers ]
+
+        private void udpPublishChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+            
+            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Exception occurred while client attempting to connect to UDP publication channel: {ex.Message}", ex));
+        }
+
+        private void udpPublishChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
+        {
+            // Queue up device command handling on a different thread since this will often
+            // engage sending data back on the same command channel and we want this async
+            // thread to complete gracefully...
+            if ((object)m_publishChannel == null)
+                ThreadPool.QueueUserWorkItem(DeviceCommandHandlerProc, e);
+        }
+
+        private void udpPublishChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
+        {
+            Exception ex = e.Argument2;
+
+            if (ex is SocketException)
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred on the UDP publication channel while attempting to send client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
+            else
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"UDP publication channel exception occurred while sending client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
+        }
+
+        private void udpPublishChannel_ServerStarted(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "UDP publication channel started.");
+        }
+
+        private void udpPublishChannel_ServerStopped(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "UDP publication channel stopped.");
+        }
+
+        #endregion
+
+        #region [ TCP Publish Channel Event Handlers ]
+
+        private void tcpPublishChannel_ClientConnected(object sender, EventArgs<Guid> e)
+        {
+            OnStatusMessage(MessageLevel.Info, "Client \"{0}\" connected to TCP publication channel.", GetConnectionID(m_publishChannel, e.Argument));
+        }
+
+        private void tcpPublishChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
+        {
+            Guid clientID = e.Argument;
+
+            OnStatusMessage(MessageLevel.Info, "Client \"{0}\" disconnected from TCP publication channel.", GetConnectionID(m_publishChannel, clientID));
+            m_connectionIDCache.TryRemove(clientID, out _);
+        }
+
+        private void tcpPublishChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred while client was attempting to connect to TCP publication channel: {ex.Message}", ex));
+        }
+
+        private void tcpPublishChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
+        {
+            // Queue up derived class device command handling on a different thread
+            ThreadPool.QueueUserWorkItem(DeviceCommandHandlerProc, e);
+        }
+
+        private void tcpPublishChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
+        {
+            Exception ex = e.Argument2;
+
+            if (ex is SocketException)
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred on the TCP publication channel while attempting to send client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
+            else
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP publication channel exception occurred while sending client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
+        }
+
+        private void tcpPublishChannel_ServerStarted(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "TCP publication channel started.");
+        }
+
+        private void tcpPublishChannel_ServerStopped(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "TCP publication channel stopped.");
+        }
+
+        #endregion
+
+        #region [ TCP Client Based Publish Channel Event Handlers ]
+
+        private void tcpClientBasedPublishChannel_ConnectionEstablished(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "TCP publishing client connected to TCP listening server channel \"{0}\".", m_clientBasedPublishChannel.ServerUri);
+        }
+
+        private void tcpClientBasedPublishChannel_ConnectionTerminated(object sender, EventArgs e)
+        {
+            OnStatusMessage(MessageLevel.Info, "TCP publishing client disconnected from TCP listening server channel \"{0}\".", m_clientBasedPublishChannel.ServerUri);
+
+            // Reinitialize client connection if it was just disconnected...
+            if (Enabled && m_frameParser.IsConnected)
+            {
+                new Action(() =>
+                {
+                    if (m_clientBasedPublishChannel.CurrentState == ClientState.Disconnected)
+                        m_clientBasedPublishChannel.ConnectAsync();
+                })
+                .DelayAndExecute(1000);
+            }
+        }
+
+        private void tcpClientBasedPublishChannel_ConnectionException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred while TCP publishing client was attempting to connect to TCP listening server channel \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
+        }
+
+        private void tcpClientBasedPublishChannel_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+        {
+            // Queue up derived class device command handling on a different thread
+            ThreadPool.QueueUserWorkItem(DeviceCommandHandlerProc, new EventArgs<Guid, byte[], int>(Guid.Empty, e.Argument1, e.Argument2));
+        }
+
+        private void tcpClientBasedPublishChannel_SendDataException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            if (ex is SocketException)
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred on the TCP publication client channel while attempting to send client data to TCP listening server \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
+            else
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP publication client channel exception occurred while sending client data to TCP listening server \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
+        }
+
+        #endregion
 
         #endregion
     }
