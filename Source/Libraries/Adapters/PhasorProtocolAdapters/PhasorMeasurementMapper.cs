@@ -144,7 +144,7 @@ namespace PhasorProtocolAdapters
         private IServer m_publishChannel;
         private TcpClient m_clientBasedPublishChannel;
         private IConfigurationFrame m_lastConfigurationFrame;
-        private bool m_proxyOnly;
+        private bool m_forwardOnly;
         private Dictionary<string, MeasurementKey> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
@@ -830,7 +830,7 @@ namespace PhasorProtocolAdapters
                 status.Append(base.Status);
                 status.AppendFormat("    Source is concentrator: {0}", m_isConcentrator);
                 status.AppendLine();
-                status.AppendFormat("     Proxy only connection: {0}", m_proxyOnly);
+                status.AppendFormat("Forwarding only connection: {0}", m_forwardOnly);
                 status.AppendLine();
                 if (!string.IsNullOrWhiteSpace(SharedMapping))
                 {
@@ -1243,13 +1243,13 @@ namespace PhasorProtocolAdapters
             // Assign reference to frame parser for this connection and attach to needed events
             FrameParser = frameParser;
 
-            // Check for proxySettings parameter which will establish a data fowarding channel
-            if (settings.TryGetValue("proxySettings", out string proxySettings) && !string.IsNullOrWhiteSpace(proxySettings))
+            // Check for forwarding settings which will establish a data forwarding channel (also supporting proxySettings parameter as used by stream splitter application)
+            if ((settings.TryGetValue("forwardingSettings", out string forwardingSettings) || settings.TryGetValue("proxySettings", out forwardingSettings))  && !string.IsNullOrWhiteSpace(forwardingSettings))
             {
-                if (proxySettings.ParseKeyValuePairs().TryGetValue("useClientPublishChannel", out setting) && setting.ParseBoolean())
+                if (forwardingSettings.ParseKeyValuePairs().TryGetValue("useClientPublishChannel", out setting) && setting.ParseBoolean())
                 {
                     // Create a new client based publication channel (for reverse TCP connections)
-                    TcpClientPublishChannel = ClientBase.Create(proxySettings) as TcpClient;
+                    TcpClientPublishChannel = ClientBase.Create(forwardingSettings) as TcpClient;
 
                     if ((object)m_clientBasedPublishChannel != null)
                         m_clientBasedPublishChannel.MaxConnectionAttempts = -1;
@@ -1257,14 +1257,14 @@ namespace PhasorProtocolAdapters
                 else
                 {
                     // Create a new server based publication channel
-                    IServer publicationServer = ServerBase.Create(proxySettings);
+                    IServer publicationServer = ServerBase.Create(forwardingSettings);
                     TcpPublishChannel = publicationServer as TcpServer;
                     UdpPublishChannel = publicationServer as UdpServer;
                 }
             }
 
-            if (settings.TryGetValue("proxyOnly", out setting))
-                m_proxyOnly = setting.ParseBoolean();
+            if (settings.TryGetValue("forwardOnly", out setting))
+                m_forwardOnly = setting.ParseBoolean();
 
             // Load input devices associated with this connection
             LoadInputDevices();
@@ -2483,13 +2483,13 @@ namespace PhasorProtocolAdapters
                         // but we do not allow stream control in a proxy situation
                         break;
                     default:
-                        OnStatusMessage(MessageLevel.Warning, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported by stream splitter.");
+                        OnStatusMessage(MessageLevel.Info, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported for data forwarding.");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Remotely connected device \"{connectionID}\" sent an unrecognized data sequence to the concentrator, no action was taken. Exception details: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Remotely connected device \"{connectionID}\" sent an unrecognized data sequence to the data forwarding engine, no action was taken. Exception details: {ex.Message}", ex));
             }
         }
 
@@ -2652,7 +2652,7 @@ namespace PhasorProtocolAdapters
                         }
                         catch (Exception ex)
                         {
-                            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during proxy output: {ex.Message}", ex));
+                            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during data forwarding: {ex.Message}", ex));
                         }
 
                         // Sleep for a moment between config frame and data frame transmissions
@@ -2675,7 +2675,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during proxy output: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during data forwarding: {ex.Message}", ex));
                 }
             }
             else if ((object)m_clientBasedPublishChannel != null && m_clientBasedPublishChannel.CurrentState == ClientState.Connected)
@@ -2686,7 +2686,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP client based publication channel exception during proxy output: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP client based publication channel exception during data forwarding: {ex.Message}", ex));
                 }
             }
         }
@@ -2694,7 +2694,7 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
         {
             // Do not process data frames when connection is setup to only forward data
-            if (m_proxyOnly)
+            if (m_forwardOnly)
                 return;
 
             ExtractFrameMeasurements(e.Argument);
