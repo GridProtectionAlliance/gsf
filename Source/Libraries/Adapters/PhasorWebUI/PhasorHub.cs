@@ -731,7 +731,7 @@ namespace PhasorWebUI
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
                 Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-                protocolID = DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", settings["phasorProtocol"]).ID;
+                protocolID = GetProtocolID(settings["phasorProtocol"]);
             }
 
             derivedFrame = new ConfigurationFrame
@@ -818,9 +818,23 @@ namespace PhasorWebUI
             return tagTemplates;
         }
 
+        public int GetProtocolID(string protocolAcronym)
+        {
+            return DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", protocolAcronym).ID;
+        }
+
         public string GetProtocolCategory(int protocolID)
         {
             return DataContext.Table<Protocol>().QueryRecordWhere("ID = {0}", protocolID).Category;
+        }
+
+        public IEnumerable<SynchrophasorProtocol> GetSynchrophasorProtocols()
+        {
+            return Enum.GetValues(typeof(PhasorProtocol)).Cast<PhasorProtocol>().Select(protocol => new SynchrophasorProtocol
+            {
+                Acronym = protocol.ToString(),
+                Name = protocol.GetFormattedProtocolName()
+            });
         }
 
         public void ValidateCalculatorConfigurations(int? historianID)

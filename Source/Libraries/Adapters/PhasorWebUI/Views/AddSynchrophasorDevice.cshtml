@@ -72,12 +72,71 @@
     bool userIsEditor = UserIsEditor();
 }
 @section StyleSheets {
+    <link href="@Resources.Root/Shared/Content/jquery-ui.css" rel="stylesheet">
     <link href="@Resources.Root/Shared/Content/select2.css" rel="stylesheet">
     <link href="@Resources.Root/Shared/Content/select2-bootstrap.css" rel="stylesheet">
     <style>
 
         html, body {
             height: 100%;
+        }
+        
+        .tabs-nohdr {
+            padding: 0;
+            background: none;
+            border-width: 0;
+        }
+         
+        .tabs-nohdr .ui-tabs-nav {
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+
+        .tabs-nohdr .ui-tabs-panel {
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #tabs {
+            border: none;
+            padding: 0;
+        }
+
+        #tabs ul {
+            border: none;
+            background: none;
+        }
+
+        #tabs ul li {
+            outline: none;
+        }
+
+        #tabs ul li:nth-child(1) {
+            margin-left: -3px;
+        }
+
+        #tabs ul li a {
+            outline: none;
+            padding: 2px 8px;
+        }
+
+        .ui-tabs-nav li.ui-tabs-active,
+        .ui-tabs-nav li:hover {
+            background: #337ab7;
+        }
+
+        #tab1 {
+            padding: 10px 0px;
+        }
+
+        #tab2 {
+            padding: 5px 0px;
+        }
+
+        .input-group-btn button {
+            font-size: 14px;
         }
 
         span.table-cell-text {
@@ -122,6 +181,7 @@
 
         div.save-button {
             margin-top: -33px;
+            margin-right: 2px;
             z-index: 10;
         }
 
@@ -131,6 +191,11 @@
             width: 40%;
             white-space: inherit;
             position: relative;
+        }
+
+        div.panel-heading-condensed {
+            height: 30px;
+            padding-top: 5px
         }
 
         tr.separator-top {
@@ -158,6 +223,13 @@
             vertical-align: middle;
         }
 
+        label.col-input {
+            padding-right: 0;
+            margin-right: -10px;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
         tr.top-border {
             border-top-width: 2px;
             border-top-style: solid;
@@ -167,10 +239,85 @@
             padding-bottom: 10px;
         }
 
+        .form-group {
+            padding-top: 5px;
+        }
+
+        .top-padding {
+            padding-top: 5px;
+        }
+
+        .top-margin {
+            margin-top: 5px;
+        }
+
+        .bottom-margin {
+            margin-bottom: 5px;
+        }
+
+        .connection-status {
+            background-color: black;
+            padding: 10px;
+            margin: 0;
+            overflow: auto;
+        }
+
+        .glyphicon-interpret-type {
+            color: darkgrey;
+            vertical-align: middle;
+            font-size: 15pt;
+            margin-right: -5px;
+            margin-left: -5px;
+        }
+
+        .glyphicon-interpret-result {
+            color: darkgrey;
+            vertical-align: middle;
+            font-size: 17pt;
+        }
+
+        .glyphicon-delete-sequence {
+            vertical-align: text-top;
+            color: red;
+            font-size: larger;
+        }
+
+        .glyphicon-action-button {
+            color: #606060;
+            vertical-align: text-top;
+        }
+
+        /* Collapsable button style */
+        .btn-collapsable.btn {
+            color: #606060;
+            font-family: "Glyphicons Halflings";
+            font-size: 8pt;
+            position: relative;
+            top: 0;
+            right: -10px;
+            padding: 0 2px 2px 2px;
+            height: 18px;
+            float: right !important;
+        }
+
+            /* Collapsable button icon when content is shown - arrow down */
+            .btn-collapsable.btn:after {
+                content: "\e114";
+            }
+
+            /* Collapsable button icon when content is hidden - arrow right */
+            .btn-collapsable.btn.collapsed:after {
+                content: "\e080";
+            }
+
         @@media screen {
             .page-logo {
                 margin-bottom: 2px;
                 margin-top: -38px;
+            }
+
+            .offset-width {
+                width: 10px
             }
         }
 
@@ -179,6 +326,10 @@
                 margin-bottom: 2px;
                 margin-top: -12px;
             }
+
+            .offset-width {
+                width: 10px
+            }
         }
 
         @@media screen and (min-width: 868px) {
@@ -186,12 +337,20 @@
                 margin-bottom: 2px;
                 margin-top: -12px;
             }
+
+            .offset-width {
+                width: 10px
+            }
         }
 
         @@media screen and (min-width: 992px) {
             .page-logo {
                 margin-bottom: -25px;
                 margin-top: -4px;
+            }
+
+            .offset-width {
+                width: 150px
             }
         }
     </style>
@@ -481,7 +640,7 @@
                     }
                     else {
                         result(tagName);
-                    }    
+                    }
                 });
             });
 
@@ -864,6 +1023,36 @@
                             firstCurrent = false;
                         }
                     }
+
+                    cell.serializeCell = function () {
+                        var phasorDefinitions = [];
+
+                        cell.PhasorDefinitions.forEach(function (phasorDefinition) {
+                            const isVoltage = phasorDefinition.PhasorType.toLowerCase() === "voltage";
+
+                            phasorDefinitions.push({
+                                ID: phasorDefinition.ID,
+                                Label: phasorDefinition.Label(),
+                                PhasorType: phasorDefinition.PhasorType,
+                                Phase: phasorDefinition.Phase(),
+                                DestinationPhasorID: isVoltage ? phasorDefinition.DestinationPhasorID : phasorDefinition.Current.AssociatedVoltage(),
+                                NominalVoltage: isVoltage ? phasorDefinition.Voltage.NominalVoltage() : phasorDefinition.Current.AssociatedNominalVoltage(),
+                                SourceIndex: phasorDefinition.SourceIndex
+                            });
+                        });
+
+                        return {
+                            ID: cell.ID,
+                            ParentID: cell.ParentID,
+                            IDCode: cell.IDCode,
+                            StationName: self.configFrame().Cells.length === 1 ? self.deviceName() : cell.IDLabel(),
+                            IDLabel: cell.IDLabel(),
+                            FrequencyDefinition: cell.FrequencyDefinition,
+                            PhasorDefinitions: phasorDefinitions,
+                            AnalogDefinitions: cell.AnalogDefinitions,
+                            DigitalDefinitions: cell.DigitalDefinitions
+                        };
+                    };
                 }
 
                 // Make sure table is refreshed
@@ -1125,6 +1314,75 @@
                 phasorDefinition.Enabled = current.Enabled;
 
                 return current;
+            };
+
+            self.serializeConfiguration = function () {
+                const configFrame = self.configFrame();
+                const cells = configFrame.Cells;
+                var serializedCells = [];
+
+                if (cells) {
+                    cells.forEach(function (cell) {
+                        serializedCells.push(cell.serializeCell());
+                    });
+                }
+
+                return {
+                    IDCode: configFrame.IDCode,
+                    StationName: self.deviceName(),
+                    IDLabel: self.deviceAcronym(),
+                    FrameRate: configFrame.FrameRate,
+                    ConnectionString: configFrame.ConnectionString,
+                    ProtocolID: configFrame.ProtocolID,
+                    Cells: serializedCells
+                };
+            };
+
+            self.saveConfiguration = function (fileName) {
+                const data = JSON.stringify(self.serializeConfiguration(), null, 2);
+                const anchor = $("#saveConfigurationFileLink");
+
+                if (typeof anchor[0].download != "undefined") {
+                    anchor.attr("href", "data:text/json;charset=utf-8," + encodeURIComponent(data));
+                    anchor.attr("download", fileName);
+                    anchor[0].click();
+                } else {
+                    if (isIE)
+                        window.navigator.msSaveBlob(new Blob([data]), fileName);
+                    else
+                        window.open("data:text/json;charset=utf-8," + encodeURIComponent(data), "_blank", "");
+                }
+            };
+
+            self.loadConfiguration = function (fileBlob) {
+                var reader = new FileReader();
+
+                reader.onload = function () {
+                    if (!self.phasorHubIsConnected())
+                        return;
+
+                    const configFrame = JSON.parse(reader.result);
+
+                    self.voltages.removeAll();
+                    self.currents.removeAll();
+
+                    $("#responsiveTableDiv").show();
+                    $("[id=voltageRow]").css("visibility", "hidden");
+                    $("[id=currentRow]").css("visibility", "hidden");
+                    $("#bulkSelectionButtons").hide();
+                    showLoadingLabel();
+
+                    self.configFrameDetails("Loading...");
+
+                    self.loadConfigFrame(configFrame);
+                }
+
+                reader.onloadend = function () {
+                    if (reader.error && reader.error.message)
+                        showErrorMessage("Failed to load configuration: " + reader.error.message);
+                };
+
+                reader.readAsText(fileBlob);
             };
 
             // Validations
@@ -2681,11 +2939,18 @@
             });
         }
 
+        function getActiveTab() {
+            return $("#tabs").tabs("option", "active");
+        }
+
         function resizePageElements() {
             if (deviceID === 0) {
-                let inputConfigFileWidth = $("#inputConfigFile").width();
-                $("#inputDeviceAcronym").width(inputConfigFileWidth);
-                $("#inputDeviceName").width(inputConfigFileWidth);
+                let width = $("#connectionSettings").hasClass("in") ?
+                    (getActiveTab() === 0 ? $("#inputConfigFile").width() : $("#inputConnectionString").width()) :
+                    $("#connectionSettingsPanel").width() * 0.60;
+
+                $("#inputDeviceAcronym").width(width);
+                $("#inputDeviceName").width(width);
             }
 
             $("#contentWell").height(calculateRemainingBodyHeight() - $("#headerArea").outerHeight(true));
@@ -2707,9 +2972,104 @@
             else
                 showInfoMessage(message);
         }
+        
+        function showConnectionBuilderDialog() {
+            switch ($("#selectTransport").val()) {
+                case "TCP":
+                    $("#tcpBuilderDialog").show();
+                    $("#inputTcpHostName").focus();
+                    break;
+                case "UDP":
+                    $("#udpBuilderDialog").show();
+                    $("#inputUdpPort").focus();
+                    break;
+                case "SERIAL":
+                    $("#serialBuilderDialog").show();
+                    $("#inputSerialPort").focus();
+                    break;
+                // TODO: case "FILE:"
+            }
+        }
+        
+        function applyTcpConnectionSettings() {
+            //viewModel.connectionString(String.format("hostName = {0}; port = {1}",
+            //    $("#inputTcpHostName").val(),
+            //    $("#inputTcpPort").val()));
+
+            $('#tcpBuilderDialog').hide();
+        }
+
+        function applyUdpConnectionSettings() {
+            //viewModel.connectionString(String.format("port = {0}; interface = {1}",
+            //    $("#inputUdpPort").val(),
+            //    $("#inputUdpInterface").val()));
+
+            $('#udpBuilderDialog').hide();
+        }
+
+        function applySerialConnectionSettings() {
+            //viewModel.connectionString(String.format("portName = COM{0}; baudRate = {1}; dataBits = {2}; parity = {3}; stopBits = {4}",
+            //    $("#inputSerialPort").val(),
+            //    $("#selectSerialBaudRate").val(),
+            //    $("#inputSerialDataBits").val(),
+            //    $("#selectSerialParity").val(),
+            //    $("#selectSerialStopBits").val()));
+
+            $('#serialBuilderDialog').hide();
+        }
+
+        function connectToDevice() {
+            $("#connectionStatus").collapse("hide");
+
+            if (hubIsConnected) {
+                //if (deviceConnected)
+                //    dataHub.modbusDisconnect();
+                //else
+                //    dataHub.modbusConnect($("#inputConnectionString").val());
+            } else {
+                showErrorMessage("Device is inaccessible, cannot connect to server.", -1);
+            }
+        }
+
+        function scrollConnectionStatusWindowToBottom() {
+            const connectionStatusWindow = $("#connectionStatusWindow");
+            connectionStatusWindow.scrollTop(connectionStatusWindow[0].scrollHeight);
+        }
+
+        function showSaveConfigurationFileNameDialog() {
+            $("#saveConfigurationFileNameDialog").toggle();
+
+            if ($("#saveConfigurationFileNameDialog").is(":visible")) {
+                $("#inputConfigurationFileName").val(viewModel.deviceAcronym() + ".json");
+                $("#inputConfigurationFileName").focus();
+            }
+        }
+
+        function showLoadConfigurationFileNameDialog() {
+            $("#loadConfigurationFileName").trigger("click");
+        }
+
+        function loadConfigurationFile(event) {
+            viewModel.loadConfiguration(event.target.files[0]);
+            $("#loadConfigurationFileName").val("");
+        }
 
         // Page initialization function
         $(function () {
+            $("#tabs").tabs({
+                active: 0,
+                activate: function(event, ui) {
+                    switch (ui.newPanel.attr("id")) {
+                        case "tab1":
+                            break;
+                        case "tab2":
+                            break;
+                    }
+
+                    resizePageElements();
+                }
+            });
+
             // Connect to phasor hub
             phasorHub = $.connection.phasorHub.server;
             phasorHubClient = $.connection.phasorHub.client;
@@ -2795,6 +3155,82 @@
             ko.watch(viewModel.devices, { depth: -1 }, function (parents, child, item) {
                 viewModel.isDirty(true);
             });
+            
+            $("#connectionSettings").on("shown.bs.collapse", function() {
+                resizePageElements();
+            });
+            
+            $("#connectionSettings").on("hidden.bs.collapse", function() {
+                resizePageElements();
+            });
+            
+            $("#connectionStatus").on("shown.bs.collapse", function() {
+                scrollConnectionStatusWindowToBottom();
+            });
+
+            $("#tcpBuilderDialog").modal({
+                show: false,
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $("#udpBuilderDialog").modal({
+                show: false,
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $("#serialBuilderDialog").modal({
+                show: false,
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $("#saveDeviceConnectionDialog").modal({
+                show: false,
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $("#inputTcpHostName").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputTcpPort").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputUdpPort").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputUdpInterface").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputSerialPort").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputSerialDataBits").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputDeviceAcronym").focus(function() {
+                $(this).select();
+            });
+
+            $("#inputDeviceName").focus(function() {
+                $(this).select();
+            });
+
+            $("#latitude").focus(function() {
+                $(this).select();
+            });
+
+            $("#longitude").focus(function() {
+                $(this).select();
+            });
 
             // Let view model know about hub connectivity changes
             $(window).on("hubConnected", function () {
@@ -2834,6 +3270,20 @@
                         setTimeout(function () {
                             viewModel.instanceName(lastInstanceName);
                         }, 200);
+                    });
+                }
+
+                const protocolSelect = $("#selectProtocol");
+
+                // Load available synchrophasor protocols, if not already loaded
+                if (protocolSelect.children("option").length === 0) {
+                    phasorHub.getSynchrophasorProtocols().done(function (protocols) {
+                        for (let i = 0; i < protocols.length; i++) {
+                            const protocol = protocols[i];
+                            protocolSelect.append($("<option>", { value: protocol.Acronym, text: protocol.Name }));
+                        }
+
+                        protocolSelect.autoSizeSelect();
                     });
                 }
 
@@ -2906,6 +3356,43 @@
 
                 $("#inputConfigFile").tooltip("hide");
             });
+            
+            // Setup save configuration file name dialog functionality
+            $("#saveConfigurationFile").click(function() {
+                $("#saveConfigurationFileNameDialog").hide();
+
+                var fileName = notNull($("#inputConfigurationFileName").val());
+
+                if (fileName.length === 0)
+                    fileName = viewModel.deviceAcronym() + ".json";
+
+                if (!fileName.endsWith(".json"))
+                    fileName += ".json";
+
+                viewModel.saveConfiguration(fileName);
+            });
+
+            // Make enter key auto-click save
+            $("#inputConfigurationFileName").keyup(function(event) {
+                if (event.keyCode === 13)
+                    $("#saveConfigurationFile").click();
+            });
+
+            // Auto-select all text on focus
+            $("#inputConifgurationFileName").focus(function() {
+                $(this).select();
+            });
+            
+            // Prevent default form submission when user presses enter
+            $("#saveConfigurationFileNameDialog").submit(function() {
+                return false;
+            });
+
+            // Auto-hide pop-up form when user clicks outside form area
+            $("#saveConfigurationFileNameDialog").focusout(function() {
+                if (!$("#saveConfigurationFileNameDialog").is(":hover") && !$("#saveConfigurationFileNameDialogButton").is(":hover"))
+                    $("#saveConfigurationFileNameDialog").hide();
+            });
 
             resizePageElements();
 
@@ -2926,12 +3413,96 @@
     <form>
         <table style="width: 100%">
             <tr data-bind="visible: !editMode()">
-                <td class="input-label">
-                    <label for="inputConfigFile">Connection File:</label>
-                </td>
-                <td>
-                    <div class="input-group input-area">
-                        <input id="inputConfigFile" type="file" placeholder="Connection file name..." title="Select&nbsp;PMUConnection&nbsp;file..." accept=".PmuConnection,.xml,text/xml" data-toggle="tooltip" data-placement="right" class="form-control" style="width: 100%">
+                <td colspan="2">
+                    @* Connection Settings and Status Panel *@
+                    <div class="panel panel-primary" id="connectionSettingsPanel" style="margin: 2px">
+                        <div class="panel-heading panel-heading-condensed clearfix" onclick="$('#connectionSettings').collapse('toggle')">
+                            <label>
+                                Connection&nbsp;Settings
+                            </label>
+                            <div class="pull-right">
+                                <span id="notConnected">Not&nbsp;Connected&nbsp;&nbsp;<span class="glyphicon glyphicon-ban-circle" style="color: #FF003B;"></span></span>&nbsp;&nbsp;
+                                <span id="attemptingConnection" style="display: none">Attempting&nbsp;Connection&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin" style="color: yellow"></span></span>&nbsp;&nbsp;
+                                <span id="connected" style="display: none">Connected&nbsp;&nbsp;<span class="glyphicon glyphicon-check" style="color: chartreuse"></span></span>
+                                <button type="button" class="btn btn-xs btn-collapsable" data-toggle="collapse" data-target="#connectionSettings"></button>
+                            </div>
+                        </div>
+                        <div class="panel-body collapse in" id="connectionSettings" style="padding: 2px 6px">
+                            <div id="tabs">
+                                <ul>
+                                    <li>
+                                        <a href="#tab1">Use Connection File</a>
+                                    </li>
+                                    <li><a href="#tab2">Build Connection</a></li>
+                                </ul>
+                                <hr style="margin: 0; border-top-color: lightgray" />
+                                <div id="tab1" class="ui-tabs-active">
+                                    <table style="width: 100%">
+                                        <tr>
+                                            <td class="input-label" style="width: 150px">
+                                                <label for="inputConfigFile" style="white-space: nowrap">Connection File:</label>
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-area">
+                                                    <input id="inputConfigFile" type="file" placeholder="Connection file name..." title="Select&nbsp;PMUConnection&nbsp;file..." accept=".PmuConnection,.xml" data-toggle="tooltip" data-placement="right" class="form-control" style="width: 100%">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div id="tab2">
+                                    <form class="form-hortizontal" role="form">
+                                        <div class="row">
+                                            <div class="form-group">
+                                                <label class="col-md-2 control-label top-padding text-right text-nowrap col-input offset-width" for="selectProtocol">Protocol:</label>
+                                                <div class="col-md-3">
+                                                    <select class="form-control" id="selectProtocol" @*data-bind="value: frameFormat"*@>
+                                                    </select>
+                                                </div>
+                                                <label class="col-md-2 control-label top-padding text-right text-nowrap col-input" for="selectTransport">Transport:</label>
+                                                <div class="col-md-1">
+                                                    <select class="form-control" id="selectTransport" style="width: 85px" @*data-bind="value: transport"*@>
+                                                        <option value="TCP">TCP</option>
+                                                        <option value="UDP">UDP</option>
+                                                        <option value="SERIAL">Serial</option>
+                                                        <option value="FILE">File</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="padding-top: 0; margin-top: -15px;" @*data-bind="validationElement: unitID"*@>
+                                                <label class="col-md-2 control-label top-padding text-right text-nowrap col-input" for="inputUnitID">Access ID:</label>
+                                                <div class="col-md-2">
+                                                    <input type="number" class="form-control" id="inputUnitID" @*data-bind="integer, textInput: unitID"*@>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group">
+                                                <label class="col-md-2 control-label top-padding text-right text-nowrap col-input offset-width" for="inputConnectionString">Connection String:</label>
+                                                <div class="col-md-10">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="inputConnectionString" @*data-bind="textInput: connectionString"*@>
+                                                        <span class="input-group-btn">
+                                                            <button type="button" class="btn btn-default" onclick="showConnectionBuilderDialog()"><span class="glyphicon glyphicon-edit glyphicon-action-button"></span> Build...</button>
+                                                            <button type="button" class="btn btn-primary" style="margin-left: 5px" onclick="connectToDevice()" title="Connect to Device" hub-dependent><span class="glyphicon glyphicon-transfer" style="vertical-align: text-top"></span> <strong id="connectButtonLabel">Connect</strong>&nbsp;</button>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="panel panel-default" style="margin: 5px 1px">
+                                            <div class="panel-heading panel-heading-condensed" onclick="$('#connectionStatus').collapse('toggle')">
+                                                <label>Connection&nbsp;Status</label>
+                                                <button type="button" class="btn btn-xs btn-collapsable collapsed" data-toggle="collapse" data-target="#connectionStatus"></button>
+                                            </div>
+                                            <div class="panel-body collapse" style="padding: 2px" id="connectionStatus">
+                                                <pre id="connectionStatusWindow" class="small connection-status" style="height: 150px"></pre>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </tr>
@@ -2944,20 +3515,20 @@
                         <input id="inputDeviceAcronym" type="text" class="form-control" style="width: 250px" data-bind="acronym: deviceAcronym, textInput: deviceAcronym, disable: readOnly" required>
                         <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(deviceAcronym, true)"></span>
                     </div>
-                        @if (userIsEditor)
-                        {
-                            <div class="input-group save-button pull-right">
-                                <button type="button" class="btn btn-sm btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !phasorHubIsConnected() || (!editMode() && isEmpty(configFrame().ConnectionString))">
-                                    <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Save&nbsp;Device
-                                </button>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="label label-danger label-md no-access pull-right" style="">
-                                User "@GetCurrentUserID()" does not have rights to add or modify device data.
-                            </div>
-                        }
+                    @if (userIsEditor)
+                    {
+                        <div class="input-group save-button pull-right">
+                            <button type="button" class="btn btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !phasorHubIsConnected() || (!editMode() && isEmpty(configFrame().ConnectionString))">
+                                <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Save&nbsp;Device&nbsp;
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="label label-danger label-md no-access pull-right" style="">
+                            User "@GetCurrentUserID()" does not have rights to add or modify device data.
+                        </div>
+                    }
                 </td>
             </tr>
             <tr>
@@ -2969,6 +3540,28 @@
                         <input id="inputDeviceName" type="text" class="form-control" style="width: 250px" data-bind="textInput: deviceName, disable: readOnly" required>
                         <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldHasValue(deviceName, true)"></span>
                     </div>
+                    @if (userIsEditor)
+                    {
+                        <div class="input-group save-button pull-right">
+                            <button type="button" class="btn btn-default pull-right" onclick="showSaveConfigurationFileNameDialog()" id="saveConfigurationFileNameDialogButton" data-bind="enable: configFrame().Cells.length > 0">
+                                <span class="glyphicon glyphicon-floppy-save glyphicon-action-button"></span>&nbsp;Export&nbsp;Config
+                            </button>
+                        </div>
+                        <div class="well well-sm floating-form" id="saveConfigurationFileNameDialog" style="z-index: 1000">
+                            <form class="form-inline" role="form">
+                                <div class="form-group form-group-sm">
+                                    <button type="button" class="close" onclick="$('#saveConfigurationFileNameDialog').hide()" style="margin-top: -13px; margin-left: 8px">&times;</button>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="inputConfigurationFileName" placeholder="File name..." />
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-default btn-sm" id="saveConfigurationFile" style="margin-right: -3px; font-weight: bold">Save</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <a href="#" id="saveConfigurationFileLink" target="_blank" style="display: none"></a>
+                    }
                 </td>
             </tr>
             <tr>
@@ -2993,7 +3586,15 @@
                             </td>
                         </tr>
                     </table>
-
+                    @if (userIsEditor)
+                    {
+                        <div class="input-group save-button pull-right">
+                            <button type="button" class="btn btn-default pull-right" onclick="showLoadConfigurationFileNameDialog()">
+                                <span class="glyphicon glyphicon-import glyphicon-action-button"></span>&nbsp;Import&nbsp;Config
+                            </button>
+                        </div>
+                        <input id="loadConfigurationFileName" type="file" accept="text/json" style="position: fixed; top: -100em" onchange="loadConfigurationFile(event)">
+                    }
                 </td>
             </tr>
             <tr>
@@ -3043,65 +3644,65 @@
             <h3>Voltages</h3>
             <table class="table table-condensed table-striped table-hover">
                 <thead>
-                    <tr>
-                        <!-- ko if: configFrame().Cells.length > 1 -->
-                        <th class="text-left">Device&nbsp;Acronym</th>
-                        <!-- /ko -->
-                        <th class="text-left">Phasor&nbsp;Label</th>
-                        <th class="text-center">Phase</th>
-                        <th class="text-left">Nominal&nbsp;Voltage</th>
-                    </tr>
+                <tr>
+                    <!-- ko if: configFrame().Cells.length > 1 -->
+                    <th class="text-left">Device&nbsp;Acronym</th>
+                    <!-- /ko -->
+                    <th class="text-left">Phasor&nbsp;Label</th>
+                    <th class="text-center">Phase</th>
+                    <th class="text-left">Nominal&nbsp;Voltage</th>
+                </tr>
                 </thead>
                 <tbody data-bind="foreach: { data: voltages }">
-                    <!-- ko if: $index() > 0 && FirstVoltage && $parent.configFrame().Cells.length > 1 -->
-                    <tr id="voltageRow" class="separator-top">
-                        <td colspan="4" style="padding: 2px"></td>
-                    </tr>
-                    <tr id="voltageRow" class="separator-bottom">
-                        <td colspan="4" style="padding: 2px"></td>
-                    </tr>
+                <!-- ko if: $index() > 0 && FirstVoltage && $parent.configFrame().Cells.length > 1 -->
+                <tr id="voltageRow" class="separator-top">
+                    <td colspan="4" style="padding: 2px"></td>
+                </tr>
+                <tr id="voltageRow" class="separator-bottom">
+                    <td colspan="4" style="padding: 2px"></td>
+                </tr>
+                <!-- /ko -->
+                <tr id="voltageRow" style="visibility: hidden">
+                    <!-- ko if: !FirstVoltage && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left" style="padding-right: 20px">
+                        <div class="input-group"></div>
+                    </td>
                     <!-- /ko -->
-                    <tr id="voltageRow" style="visibility: hidden">
-                        <!-- ko if: !FirstVoltage && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left" style="padding-right: 20px">
-                            <div class="input-group"></div>
-                        </td>
-                        <!-- /ko -->
-                        <!-- ko if: FirstVoltage && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left" style="padding-right: 20px">
-                            <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
-                                <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device.IDLabel, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
-                            </div>
-                        </td>
-                        <!-- /ko -->
-                        <td width="210px" class="text-left" style="position: sticky">
-                            <span class="org-label" data-bind="text: OriginalLabel, visible: OriginalLabel != Label()"></span>
-                            <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
-                                <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
-                            </div>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true), 'error-margin': !fieldIsValid(Label, true) }">
-                                <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
-                            </div>
-                            <span class="tag-name-label">Tag name:</span><span class="tag-name" data-bind="text: TagName"></span>
-                        </td>
-                        <td width="55px" class="text-center">
-                            <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true), 'error-margin': !fieldIsValid(Phase, true) }">
-                                <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
-                            </div>
-                        </td>
-                        <td class="text-left">
-                            <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(NominalVoltage, true), 'has-feedback': !fieldIsValid(NominalVoltage, true), 'error-margin':! fieldIsValid(NominalVoltage, true) }">
-                                <input type="text" class="form-control" style="width: 70px; margin-left: 10px" data-bind="integer: NominalVoltage, textInput: NominalVoltage, enable: Enabled" required>&nbsp;<span class="table-cell-text">kV</span>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5; width: 65px" data-bind="visible: !fieldIsValid(NominalVoltage, true)"></span>
-                            </div>
-                        </td>
-                    </tr>
+                    <!-- ko if: FirstVoltage && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left" style="padding-right: 20px">
+                        <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
+                            <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device.IDLabel, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
+                        </div>
+                    </td>
+                    <!-- /ko -->
+                    <td width="210px" class="text-left" style="position: sticky">
+                        <span class="org-label" data-bind="text: OriginalLabel, visible: OriginalLabel != Label()"></span>
+                        <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
+                            <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
+                        </div>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true), 'error-margin': !fieldIsValid(Label, true) }">
+                            <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
+                        </div>
+                        <span class="tag-name-label">Tag name:</span><span class="tag-name" data-bind="text: TagName"></span>
+                    </td>
+                    <td width="55px" class="text-center">
+                        <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true), 'error-margin': !fieldIsValid(Phase, true) }">
+                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
+                        </div>
+                    </td>
+                    <td class="text-left">
+                        <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(NominalVoltage, true), 'has-feedback': !fieldIsValid(NominalVoltage, true), 'error-margin':! fieldIsValid(NominalVoltage, true) }">
+                            <input type="text" class="form-control" style="width: 70px; margin-left: 10px" data-bind="integer: NominalVoltage, textInput: NominalVoltage, enable: Enabled" required>&nbsp;<span class="table-cell-text">kV</span>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5; width: 65px" data-bind="visible: !fieldIsValid(NominalVoltage, true)"></span>
+                        </div>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -3111,64 +3712,190 @@
             <h3>Currents</h3>
             <table class="table table-condensed table-striped table-hover">
                 <thead>
-                    <tr>
-                        <!-- ko if: configFrame().Cells.length > 1 -->
-                        <th class="text-left">Device&nbsp;Acronym</th>
-                        <!-- /ko -->
-                        <th class="text-left">Phasor&nbsp;Label</th>
-                        <th class="text-center">Phase</th>
-                        <th class="text-left">Associated&nbsp;Voltage</th>
-                    </tr>
+                <tr>
+                    <!-- ko if: configFrame().Cells.length > 1 -->
+                    <th class="text-left">Device&nbsp;Acronym</th>
+                    <!-- /ko -->
+                    <th class="text-left">Phasor&nbsp;Label</th>
+                    <th class="text-center">Phase</th>
+                    <th class="text-left">Associated&nbsp;Voltage</th>
+                </tr>
                 </thead>
                 <tbody data-bind="foreach: { data: currents }">
-                    <!-- ko if: $index() > 0 && FirstCurrent && $parent.configFrame().Cells.length > 1 -->
-                    <tr id="currentRow" class="separator-top">
-                        <td colspan="4" style="padding: 2px"></td>
-                    </tr>
-                    <tr id="currentRow" class="separator-bottom">
-                        <td colspan="4" style="padding: 2px"></td>
-                    </tr>
+                <!-- ko if: $index() > 0 && FirstCurrent && $parent.configFrame().Cells.length > 1 -->
+                <tr id="currentRow" class="separator-top">
+                    <td colspan="4" style="padding: 2px"></td>
+                </tr>
+                <tr id="currentRow" class="separator-bottom">
+                    <td colspan="4" style="padding: 2px"></td>
+                </tr>
+                <!-- /ko -->
+                <tr id="currentRow" style="visibility: hidden">
+                    <!-- ko if: !FirstCurrent && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left" style="padding-right: 20px">
+                        <div class="input-group"></div>
+                    </td>
                     <!-- /ko -->
-                    <tr id="currentRow" style="visibility: hidden">
-                        <!-- ko if: !FirstCurrent && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left" style="padding-right: 20px">
-                            <div class="input-group"></div>
-                        </td>
-                        <!-- /ko -->
-                        <!-- ko if: FirstCurrent && $parent.configFrame().Cells.length > 1 -->
-                        <td width="190px" class="text-left" style="padding-right: 20px">
-                            <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
-                                <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device.IDLabel, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
-                            </div>
-                        </td>
-                        <!-- /ko -->
-                        <td width="210px" class="text-left" style="position: sticky">
-                            <span class="org-label" data-bind="text: OriginalLabel, visible: OriginalLabel != Label()"></span>
-                            <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
-                                <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
-                            </div>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true), 'error-margin': !fieldIsValid(Label, true) }">
-                                <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
-                            </div>
-                            <span class="tag-name-label">Tag name:</span><span class="tag-name" data-bind="text: TagName"></span>
-                        </td>
-                        <td width="55px" class="text-center">
-                            <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
-                            <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true), 'error-margin': !fieldIsValid(Phase, true)}">
-                                <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
-                                <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
-                            </div>
-                        </td>
-                        <td class="text-left">
-                            <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
-                            <select class="form-control" style="width: 90%" data-bind="options: DeviceVoltages, optionsCaption: 'None', value: AssociatedVoltage, optionsText: associatedVoltageLabel, optionsValue: 'ID', valueAllowUnset: true, enable: Enabled, select2: { templateSelection: formatAssociatedVoltageLabel, templateResult: formatAssociatedVoltageLabel, minimumResultsForSearch: -1, theme: 'bootstrap' }"></select>
-                        </td>
-                    </tr>
+                    <!-- ko if: FirstCurrent && $parent.configFrame().Cells.length > 1 -->
+                    <td width="190px" class="text-left" style="padding-right: 20px">
+                        <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Device.IDLabel, true), 'has-feedback': !fieldIsValid(Device.IDLabel, true) }">
+                            <input type="text" class="form-control" style="width: 180px" data-bind="acronym: Device.IDLabel, textInput: Device.IDLabel, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(Device.IDLabel, true)"></span>
+                        </div>
+                    </td>
+                    <!-- /ko -->
+                    <td width="210px" class="text-left" style="position: sticky">
+                        <span class="org-label" data-bind="text: OriginalLabel, visible: OriginalLabel != Label()"></span>
+                        <div class="checkbox" style="margin-top: 0; margin-bottom: 0">
+                            <input type="checkbox" style="margin-top: 10px" data-bind="checked: Enabled">
+                        </div>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Label, true), 'has-feedback': !fieldIsValid(Label, true), 'error-margin': !fieldIsValid(Label, true) }">
+                            <input type="text" class="form-control" style="width: 200px" data-bind="acronym: Label, textInput: Label, disable: $parent.readOnly() || !$data.Enabled()" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Label, true)"></span>
+                        </div>
+                        <span class="tag-name-label">Tag name:</span><span class="tag-name" data-bind="text: TagName"></span>
+                    </td>
+                    <td width="55px" class="text-center">
+                        <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
+                        <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true), 'error-margin': !fieldIsValid(Phase, true)}">
+                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
+                        </div>
+                    </td>
+                    <td class="text-left">
+                        <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
+                        <select class="form-control" style="width: 85%" data-bind="options: DeviceVoltages, optionsCaption: 'None', value: AssociatedVoltage, optionsText: associatedVoltageLabel, optionsValue: 'ID', valueAllowUnset: true, enable: Enabled, select2: { templateSelection: formatAssociatedVoltageLabel, templateResult: formatAssociatedVoltageLabel, minimumResultsForSearch: -1, theme: 'bootstrap' }"></select>
+                    </td>
+                </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+@* JSON Sequences Display Panel *@
+<hr class="thick-spacer" @*data-bind="visible: sequences().length > 0"*@ />
+<div class="panel panel-default">
+    <div class="panel-heading panel-heading-condensed" onclick="$('#serializedConfiguration').collapse('toggle')">
+        <label>Serialized&nbsp;Configuration</label>
+        <button type="button" class="btn btn-xs btn-collapsable collapsed" style="top: 0; right: -10px" data-toggle="collapse" data-target="#serializedConfiguration"></button>
+    </div>
+    <div class="panel-body collapse" style="padding: 2px; margin-bottom: -10px" id="serializedConfiguration">
+        <pre data-bind="text: JSON.stringify(serializeConfiguration(), null, 2)"></pre>
+    </div>
+</div>
+@* TCP Connection String Builder *@
+<div id="tcpBuilderDialog" class="modal" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('#tcpBuilderDialog').hide()">&times;</button>
+                <h4 class="modal-title">Define TCP Connection Parameters</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group" @*data-bind="validationElement: hostName"*@>
+                        <label for="inputTcpHostName">Host Name or IP:</label>
+                        <input type="text" class="form-control" id="inputTcpHostName" maxlength="200" size="200" @*data-bind="textInput: hostName"*@>
+                    </div>
+                    <div class="form-group" @*data-bind="validationElement: ipPort"*@>
+                        <label for="inputTcpPort">Port:</label>
+                        <input type="number" class="form-control" id="inputTcpPort" maxlength="5" size="5" @*data-bind="integer, textInput: ipPort"*@>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="applyTcpConnectionSettings()">Save</button>
+                <button type="button" class="btn btn-default" onclick="$('#tcpBuilderDialog').hide()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* UDP Connection String Builder *@
+<div id="udpBuilderDialog" class="modal" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('#udpBuilderDialog').hide()">&times;</button>
+                <h4 class="modal-title">Define UDP Connection Parameters</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group" @*data-bind="validationElement: ipPort"*@>
+                        <label for="inputUdpPort">Port:</label>
+                        <input type="number" class="form-control" id="inputUdpPort" maxlength="5" size="5" @*data-bind="integer, textInput: ipPort"*@>
+                    </div>
+                    <div class="form-group" @*data-bind="validationElement: interface"*@>
+                        <label for="inputUdpInterface">Interface IP:</label>
+                        <input type="text" class="form-control" id="inputUdpInterface" maxlength="200" size="200" @*data-bind="textInput: interface"*@>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="applyUdpConnectionSettings()">Save</button>
+                <button type="button" class="btn btn-default" onclick="$('#udpBuilderDialog').hide()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* Serial Connection String Builder *@
+<div id="serialBuilderDialog" class="modal" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('#serialBuilderDialog').hide()">&times;</button>
+                <h4 class="modal-title">Define Serial Connection Parameters</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group" @*data-bind="validationElement: comPort"*@>
+                        <label for="inputSerialPort">Port:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon">COM</span>
+                            <input type="number" class="form-control" id="inputSerialPort" maxlength="5" size="5" @*data-bind="integer, textInput: comPort"*@>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectSerialBaudRate">Baud Rate:</label>
+                        <select class="form-control" id="selectSerialBaudRate">
+                            <option value="115200">115200</option>
+                            <option value="57600" selected>57600</option>
+                            <option value="38400">38400</option>
+                            <option value="19200">19200</option>
+                            <option value="9600">9600</option>
+                            <option value="4800">4800</option>
+                            <option value="2400">2400</option>
+                            <option value="1200">1200</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectSerialParity">Parity:</label>
+                        <select class="form-control" id="selectSerialParity">
+                            <option value="None" selected>None</option>
+                            <option value="Odd">Odd</option>
+                            <option value="Even">Even</option>
+                            <option value="Mark">Mark</option>
+                            <option value="Space">Space</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectSerialStopBits">Stop Bits:</label>
+                        <select class="form-control" id="selectSerialStopBits">
+                            <option value="One" selected>One</option>
+                            <option value="Two">Two</option>
+                            <option value="OnePointFive">OnePointFive</option>
+                        </select>
+                    </div>
+                    <div class="form-group" @*data-bind="validationElement: dataBits"*@>
+                        <label for="inputSerialDataBits">Data Bits:</label>
+                        <input type="number" class="form-control" id="inputSerialDataBits" maxlength="200" size="200" @*data-bind="integer, textInput: dataBits"*@>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="applySerialConnectionSettings()">Save</button>
+                <button type="button" class="btn btn-default" onclick="$('#serialBuilderDialog').hide()">Cancel</button>
+            </div>
         </div>
     </div>
 </div>

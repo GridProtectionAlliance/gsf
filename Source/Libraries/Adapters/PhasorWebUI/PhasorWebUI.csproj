@@ -94,6 +94,7 @@
     <Compile Include="Model\SignalType.cs" />
     <Compile Include="Model\TagTemplate.cs" />
     <Compile Include="PhasorHub.cs" />
+    <Compile Include="Model\SynchrophasorProtocol.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Communication\GSF.Communication.csproj">
