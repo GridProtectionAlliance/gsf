@@ -63,4 +63,38 @@ namespace GrafanaAdapters
         [StringLength(10)]
         public string DisplayData { get; set; }
     }
+
+    /// <summary>
+    /// Represents a Grafana Alarm Panel Block
+    /// </summary>
+    public class AlarmDeviceStateView
+    {
+
+        /// <summary>
+        /// Unique ID.
+        /// </summary>
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        /// <summary>
+        /// name of the Device.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Description of the Device State.
+        /// </summary>
+        public string State { get; set; }
+
+        /// <summary>
+        /// Color of the Device State.
+        /// </summary>
+        public string Color { get; set; }
+
+        /// <summary>
+        /// Additional data to be displayed.
+        /// </summary>
+        public string DisplayData { get; set; }
+    }
 }
+
