@@ -300,15 +300,15 @@
             float: right !important;
         }
 
-            /* Collapsable button icon when content is shown - arrow down */
-            .btn-collapsable.btn:after {
-                content: "\e114";
-            }
+        /* Collapsable button icon when content is shown - arrow down */
+        .btn-collapsable.btn:after {
+            content: "\e114";
+        }
 
-            /* Collapsable button icon when content is hidden - arrow right */
-            .btn-collapsable.btn.collapsed:after {
-                content: "\e080";
-            }
+        /* Collapsable button icon when content is hidden - arrow right */
+        .btn-collapsable.btn.collapsed:after {
+            content: "\e080";
+        }
 
         @@media screen {
             .page-logo {
@@ -1000,9 +1000,7 @@
 
                     cell.OriginalAcronym = ko.pureComputed({
                         read: function () {
-                            // ReSharper disable ClosureOnModifiedVariable
                             return self.editMode() ? cell.Acronym : cell.IDLabel();
-                            // ReSharper enable ClosureOnModifiedVariable
                         },
                         owner: cell
                     });
@@ -2815,7 +2813,7 @@
         }
 
         function saveDeviceConnection() {
-            if (!viewModel.editMode() && isEmpty(viewModel.configFrame().ConnectionString)) {
+            if (isEmpty(viewModel.configFrame().ConnectionString)) {
                 showErrorMessage("Cannot save device connection without a connection string");
                 return $.Deferred().resolve().promise();
             }
@@ -2944,14 +2942,14 @@
         }
 
         function resizePageElements() {
-            if (deviceID === 0) {
-                let width = $("#connectionSettings").hasClass("in") ?
-                    (getActiveTab() === 0 ? $("#inputConfigFile").width() : $("#inputConnectionString").width()) :
-                    $("#connectionSettingsPanel").width() * 0.60;
+            //if (deviceID === 0) {
+            //    let width = $("#connectionSettings").hasClass("in") ?
+            //        (getActiveTab() === 0 ? $("#inputConfigFile").width() : $("#inputConnectionString").width()) :
+            //        $("#connectionSettingsPanel").width() * 0.60;
 
-                $("#inputDeviceAcronym").width(width);
-                $("#inputDeviceName").width(width);
-            }
+            //    $("#inputDeviceAcronym").width(width);
+            //    $("#inputDeviceName").width(width);
+            //}
 
             $("#contentWell").height(calculateRemainingBodyHeight() - $("#headerArea").outerHeight(true));
         }
@@ -3058,7 +3056,7 @@
         $(function () {
             $("#tabs").tabs({
                 active: 0,
-                activate: function(event, ui) {
+                activate: function (event, ui) {
                     switch (ui.newPanel.attr("id")) {
                         case "tab1":
                             break;
@@ -3412,7 +3410,7 @@
     </h3>
     <form>
         <table style="width: 100%">
-            <tr data-bind="visible: !editMode()">
+            <tr>
                 <td colspan="2">
                     @* Connection Settings and Status Panel *@
                     <div class="panel panel-primary" id="connectionSettingsPanel" style="margin: 2px">
@@ -3421,21 +3419,28 @@
                                 Connection&nbsp;Settings
                             </label>
                             <div class="pull-right">
-                                <span id="notConnected">Not&nbsp;Connected&nbsp;&nbsp;<span class="glyphicon glyphicon-ban-circle" style="color: #FF003B;"></span></span>&nbsp;&nbsp;
+                                <span id="notConnected" style="display: none">Not&nbsp;Connected&nbsp;&nbsp;<span class="glyphicon glyphicon-ban-circle" style="color: #FF003B;"></span></span>&nbsp;&nbsp;
                                 <span id="attemptingConnection" style="display: none">Attempting&nbsp;Connection&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin" style="color: yellow"></span></span>&nbsp;&nbsp;
                                 <span id="connected" style="display: none">Connected&nbsp;&nbsp;<span class="glyphicon glyphicon-check" style="color: chartreuse"></span></span>
                                 <button type="button" class="btn btn-xs btn-collapsable" data-toggle="collapse" data-target="#connectionSettings"></button>
                             </div>
                         </div>
-                        <div class="panel-body collapse in" id="connectionSettings" style="padding: 2px 6px">
+                        <div class="panel-body collapse" data-bind="css: {'in': !editMode()}" id="connectionSettings" style="padding: 2px 6px">
                             <div id="tabs">
                                 <ul>
                                     <li>
                                         <a href="#tab1">Use Connection File</a>
                                     </li>
-                                    <li><a href="#tab2">Build Connection</a></li>
+                                    <li>
+                                        <a href="#tab2">Build Connection</a>
+                                    </li>
                                 </ul>
                                 <hr style="margin: 0; border-top-color: lightgray" />
+                                <div class="input-group pull-right" style="margin-top: -35px">
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" @*data-bind="checked: addAnalogs"*@> Forward&nbsp;Only</label>
+                                    </div>
+                                </div>
                                 <div id="tab1" class="ui-tabs-active">
                                     <table style="width: 100%">
                                         <tr>
@@ -3450,7 +3455,7 @@
                                         </tr>
                                     </table>
                                 </div>
-                                <div id="tab2">
+                                <div id="tab2" style="display: none">
                                     <form class="form-hortizontal" role="form">
                                         <div class="row">
                                             <div class="form-group">
@@ -3518,7 +3523,7 @@
                     @if (userIsEditor)
                     {
                         <div class="input-group save-button pull-right">
-                            <button type="button" class="btn btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !phasorHubIsConnected() || (!editMode() && isEmpty(configFrame().ConnectionString))">
+                            <button type="button" class="btn btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !phasorHubIsConnected() || isEmpty(configFrame().ConnectionString)">
                                 <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Save&nbsp;Device&nbsp;
                             </button>
                         </div>
@@ -3773,8 +3778,8 @@
         </div>
     </div>
 </div>
-@* JSON Sequences Display Panel *@
-<hr class="thick-spacer" @*data-bind="visible: sequences().length > 0"*@ />
+@* JSON Serialized Configuration Display Panel *@
+<hr class="thick-spacer" />
 <div class="panel panel-default">
     <div class="panel-heading panel-heading-condensed" onclick="$('#serializedConfiguration').collapse('toggle')">
         <label>Serialized&nbsp;Configuration</label>
