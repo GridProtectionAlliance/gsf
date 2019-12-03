@@ -931,6 +931,12 @@ namespace PhasorProtocolAdapters
                 // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
                 foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) OR IsConcentrator = 1) AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({timeQualityProtocolIDs})").Rows)
                 {
+                    Dictionary<string, string> connectionSettings = device.Field<string>("ConnectionString")?.ParseKeyValuePairs();
+
+                    // Do not automatically add quality measurement of device is configured to only forward data
+                    if (connectionSettings != null && connectionSettings.TryGetValue("forwardOnly", out string setting) && setting.ParseBoolean())
+                        continue;
+
                     deviceID = device.ConvertField<int>("ID");
                     acronym = device.Field<string>("Acronym");
                     signalReference = SignalReference.ToString(acronym, SignalKind.Quality);
