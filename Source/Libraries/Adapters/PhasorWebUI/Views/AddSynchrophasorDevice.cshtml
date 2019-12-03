@@ -76,7 +76,6 @@
     <link href="@Resources.Root/Shared/Content/select2.css" rel="stylesheet">
     <link href="@Resources.Root/Shared/Content/select2-bootstrap.css" rel="stylesheet">
     <style>
-
         html, body {
             height: 100%;
         }
@@ -684,6 +683,7 @@
             self.working = ko.observable(false);
 
             // Internal fields
+            self._connectionString = ko.observable("");
             self._addTagsAsVirtualPoints = ko.observable(undefined);
             self._deviceAcronym = ko.observable(defaultDeviceAcronym);
             self._deviceName = ko.observable("Device Name");
@@ -693,9 +693,21 @@
             self._templateType = ko.observable("");
             self._historianID = ko.observable(-1);
             self._phasorHubIsConnected = ko.observable(false);
+            self._forwardOnly = ko.observable(false);
             self._isDirty = ko.observable(false);
 
             // Properties
+            self.connectionString = ko.pureComputed({
+                read: self._connectionString,
+                write: function (value) {
+                    const settings = value.parseKeyValuePairs();
+                    settings.set("forwardOnly", self.forwardOnly());
+                    self._connectionString(settings.joinKeyValuePairs());
+                    self.configFrame.ConnectionString = self._connectionString();
+                },
+                owner: self
+            });
+
             self.addTagsAsVirtualPoints = ko.pureComputed({
                 read: function () {
                     if (self._addTagsAsVirtualPoints() === undefined)
@@ -711,12 +723,6 @@
                     Cookies.set("addTagsAsVirtualPoints", value.toString(), { expires: 365 });
                 },
                 owner: self
-            });
-
-            self.editMode = ko.pureComputed({
-                read: function () {
-                    return deviceID > 0;
-                }
             });
 
             self.deviceAcronym = ko.pureComputed({
@@ -853,6 +859,47 @@
                 owner: self
             });
 
+            self.forwardOnly = ko.pureComputed({
+                read: self._forwardOnly,
+                write: function (value) {
+                    if (value === undefined)
+                        value = false;
+
+                    if (value !== self._forwardOnly()) {
+                        self._forwardOnly(value);
+
+                        self.voltages().forEach(function (voltage) {
+                            voltage.Enabled(!value);
+                        });
+
+                        self.currents().forEach(function (current) {
+                            current.Enabled(!value);
+                        });
+
+                        if (value) {
+                            self.addAnalogs(false);
+                            self.addDigitals(false);
+                        }
+                        else {
+                            var analogCount = 0;
+                            var digitalCount = 0;
+
+                            self.configFrame().Cells.forEach(function (cell) {
+                                analogCount += cell.AnalogDefinitions.length;
+                                digitalCount += cell.DigitalDefinitions.length;
+                            });
+
+                            self.addAnalogs(analogCount > 0);
+                            self.addDigitals(digitalCount > 0);
+                        }
+
+                        // Force update of connection string to reflect new setting
+                        self.connectionString(self.connectionString());
+                    }
+                },
+                owner: self
+            });
+
             self.isDirty = ko.pureComputed({
                 read: self._isDirty,
                 write: function (value) {
@@ -898,11 +945,12 @@
                     analogCount,
                     digitalCount));
 
-                self.addAnalogs(analogCount > 0);
-                self.addDigitals(digitalCount > 0);
+                self.addAnalogs(analogCount > 0 && !self.forwardOnly());
+                self.addDigitals(digitalCount > 0 && !self.forwardOnly());
             };
 
             self.loadConfigFrame = function (configFrame) {
+                self.connectionString(configFrame.ConnectionString);
                 self.configFrame(configFrame);
                 self.voltageCount = 0;
 
@@ -1000,7 +1048,7 @@
 
                     cell.OriginalAcronym = ko.pureComputed({
                         read: function () {
-                            return self.editMode() ? cell.Acronym : cell.IDLabel();
+                            return deviceID > 0 ? cell.Acronym : cell.IDLabel();
                         },
                         owner: cell
                     });
@@ -1079,6 +1127,7 @@
                     $("#currentsSection").removeClass("col-md-6");
                 }
 
+                $("#connectionSettings").collapse("hide");
                 hideLoadingLabel();
             };
 
@@ -1161,7 +1210,7 @@
                 voltage.Phase = ko.observable(phase);
                 voltage.NominalVoltage = ko.observable(nominalVoltage);
                 voltage.FirstVoltage = firstVoltage;
-                voltage.Enabled = ko.observable(true);
+                voltage.Enabled = ko.observable(!self.forwardOnly());
                 voltage.TagName = updateTagName(function () {
                     return phasorHub.createPhasorPointTag(voltage.Device.IDLabel(), vphmSignalType.Acronym, voltage.Label(), voltage.Phase(), phasorDefinition.SourceIndex, voltage.NominalVoltage());
                 }, voltage);
@@ -1194,10 +1243,10 @@
                 current.Label = ko.observable(phasorLabel);
                 current.OriginalLabel = phasorLabel;
                 current.FirstCurrent = firstCurrent;
-                current.Enabled = ko.observable(true);
 
                 current._associatedVoltage = ko.observable(-1);
                 current._phase = ko.observable("");
+                current._enabled = ko.observable(!self.forwardOnly());
 
                 current.AssociatedVoltage = ko.pureComputed({
                     read: function () {
@@ -1287,6 +1336,18 @@
                     owner: current
                 });
 
+                current.Enabled = ko.pureComputed({
+                    read: current._enabled,
+                    write: function (value) {
+                        current._enabled(value);
+
+                        // Re-select associated voltage when enabled
+                        if (value)
+                            current.Phase(current.Phase());
+                    },
+                    owner: current
+                });
+
                 current.TagName = updateTagName(function () {
                     return phasorHub.createPhasorPointTag(current.Device.IDLabel(), iphmSignalType.Acronym, current.Label(), current.Phase(), phasorDefinition.SourceIndex, current.AssociatedNominalVoltage());
                 }, current);
@@ -1372,6 +1433,7 @@
 
                     self.configFrameDetails("Loading...");
 
+                    self.forwardOnly(false);
                     self.loadConfigFrame(configFrame);
                 }
 
@@ -1541,10 +1603,12 @@
                 for (let i = 0; i < cell.PhasorDefinitions.length; i++) {
                     const phasorDefinition = cell.PhasorDefinitions[i];
 
-                    if (phasorDefinition.PhasorType.toLowerCase() === "voltage")
-                        voltages.push(phasorDefinition);
-                    else
-                        currents.push(phasorDefinition);
+                    if (phasorDefinition.Enabled()) {
+                        if (phasorDefinition.PhasorType.toLowerCase() === "voltage")
+                            voltages.push(phasorDefinition);
+                        else
+                            currents.push(phasorDefinition);
+                    }
                 }
 
                 if (dropAndAdd) {
@@ -1568,9 +1632,6 @@
                                 phasor.SourceIndex = voltage.SourceIndex;
 
                                 return phasorHub.addNewPhasor(phasor).then(function () {
-                                    if (!voltage.Enabled())
-                                        return $.Deferred().resolve().promise();
-
                                     return savePhasorMeasurement(cell, vphmSignalType, voltage, phasor.SourceIndex).then(function () {
                                         return savePhasorMeasurement(cell, vphaSignalType, voltage, phasor.SourceIndex);
                                     })
@@ -1629,9 +1690,6 @@
                                     phasor.DestinationPhasorID = null;
 
                                 return phasorHub.addNewPhasor(phasor).then(function () {
-                                    if (!current.Enabled())
-                                        return $.Deferred().resolve().promise();
-
                                     return savePhasorMeasurement(cell, iphmSignalType, current, phasor.SourceIndex).then(function () {
                                         return savePhasorMeasurement(cell, iphaSignalType, current, phasor.SourceIndex);
                                     })
@@ -1685,9 +1743,6 @@
                             voltageIDMap[voltage.ID] = phasor.ID;
 
                             return phasorHub.updatePhasor(phasor).then(function () {
-                                if (!voltage.Enabled())
-                                    return $.Deferred().resolve().promise();
-
                                 return savePhasorMeasurement(cell, vphmSignalType, voltage, phasor.SourceIndex).then(function () {
                                     return savePhasorMeasurement(cell, vphaSignalType, voltage, phasor.SourceIndex);
                                 })
@@ -1731,9 +1786,6 @@
                                 phasor.DestinationPhasorID = null;
 
                             return phasorHub.updatePhasor(phasor).then(function () {
-                                if (!current.Enabled())
-                                    return $.Deferred().resolve().promise();
-
                                 return savePhasorMeasurement(cell, iphmSignalType, current, phasor.SourceIndex).then(function () {
                                     return savePhasorMeasurement(cell, iphaSignalType, current, phasor.SourceIndex);
                                 })
@@ -1799,6 +1851,10 @@
         }
 
         function saveDeviceMeasurements(cell) {
+            // No measurements to save if only forwarding data
+            if (viewModel.forwardOnly())
+                return $.Deferred().resolve().promise();
+
             const freqSignalType = getDeviceSignalType("FREQ");
             const dfdtSignalType = getDeviceSignalType("DFDT");
             const flagSignalType = getDeviceSignalType("FLAG");
@@ -2626,6 +2682,10 @@
         }
 
         function saveTemplateCalculations(cell) {
+            // Do not create calculations if only forwarding data
+            if (viewModel.forwardOnly())
+                return $.Deferred().resolve().promise();
+
             const templateType = viewModel.templateType();
 
             if (templateType.toUpperCase() === "NONE")
@@ -2990,28 +3050,28 @@
         }
         
         function applyTcpConnectionSettings() {
-            //viewModel.connectionString(String.format("hostName = {0}; port = {1}",
-            //    $("#inputTcpHostName").val(),
-            //    $("#inputTcpPort").val()));
+            viewModel.connectionString(String.format("hostName = {0}; port = {1}",
+                $("#inputTcpHostName").val(),
+                $("#inputTcpPort").val()));
 
             $('#tcpBuilderDialog').hide();
         }
 
         function applyUdpConnectionSettings() {
-            //viewModel.connectionString(String.format("port = {0}; interface = {1}",
-            //    $("#inputUdpPort").val(),
-            //    $("#inputUdpInterface").val()));
+            viewModel.connectionString(String.format("port = {0}; interface = {1}",
+                $("#inputUdpPort").val(),
+                $("#inputUdpInterface").val()));
 
             $('#udpBuilderDialog').hide();
         }
 
         function applySerialConnectionSettings() {
-            //viewModel.connectionString(String.format("portName = COM{0}; baudRate = {1}; dataBits = {2}; parity = {3}; stopBits = {4}",
-            //    $("#inputSerialPort").val(),
-            //    $("#selectSerialBaudRate").val(),
-            //    $("#inputSerialDataBits").val(),
-            //    $("#selectSerialParity").val(),
-            //    $("#selectSerialStopBits").val()));
+            viewModel.connectionString(String.format("portName = COM{0}; baudRate = {1}; dataBits = {2}; parity = {3}; stopBits = {4}",
+                $("#inputSerialPort").val(),
+                $("#selectSerialBaudRate").val(),
+                $("#inputSerialDataBits").val(),
+                $("#selectSerialParity").val(),
+                $("#selectSerialStopBits").val()));
 
             $('#serialBuilderDialog').hide();
         }
@@ -3425,7 +3485,7 @@
                                 <button type="button" class="btn btn-xs btn-collapsable" data-toggle="collapse" data-target="#connectionSettings"></button>
                             </div>
                         </div>
-                        <div class="panel-body collapse" data-bind="css: {'in': !editMode()}" id="connectionSettings" style="padding: 2px 6px">
+                        <div class="panel-body collapse" data-bind="css: {'in': deviceID === 0}" id="connectionSettings" style="padding: 2px 6px">
                             <div id="tabs">
                                 <ul>
                                     <li>
@@ -3438,7 +3498,7 @@
                                 <hr style="margin: 0; border-top-color: lightgray" />
                                 <div class="input-group pull-right" style="margin-top: -35px">
                                     <div class="checkbox">
-                                        <label><input type="checkbox" @*data-bind="checked: addAnalogs"*@> Forward&nbsp;Only</label>
+                                        <label><input type="checkbox" data-bind="checked: forwardOnly"> Forward&nbsp;Only</label>
                                     </div>
                                 </div>
                                 <div id="tab1" class="ui-tabs-active">
@@ -3486,7 +3546,7 @@
                                                 <label class="col-md-2 control-label top-padding text-right text-nowrap col-input offset-width" for="inputConnectionString">Connection String:</label>
                                                 <div class="col-md-10">
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" id="inputConnectionString" @*data-bind="textInput: connectionString"*@>
+                                                        <input type="text" class="form-control" id="inputConnectionString" data-bind="textInput: connectionString">
                                                         <span class="input-group-btn">
                                                             <button type="button" class="btn btn-default" onclick="showConnectionBuilderDialog()"><span class="glyphicon glyphicon-edit glyphicon-action-button"></span> Build...</button>
                                                             <button type="button" class="btn btn-primary" style="margin-left: 5px" onclick="connectToDevice()" title="Connect to Device" hub-dependent><span class="glyphicon glyphicon-transfer" style="vertical-align: text-top"></span> <strong id="connectButtonLabel">Connect</strong>&nbsp;</button>
@@ -3523,7 +3583,7 @@
                     @if (userIsEditor)
                     {
                         <div class="input-group save-button pull-right">
-                            <button type="button" class="btn btn-primary pull-right" id="saveData" data-bind="disable: working() || validationErrors() > 0 || !phasorHubIsConnected() || isEmpty(configFrame().ConnectionString)">
+                            <button type="button" class="btn btn-primary pull-right" id="saveData" data-bind="disable: !isDirty() && (working() || validationErrors() > 0 || !phasorHubIsConnected() || isEmpty(configFrame().ConnectionString))">
                                 <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Save&nbsp;Device&nbsp;
                             </button>
                         </div>
@@ -3604,11 +3664,11 @@
             </tr>
             <tr>
                 <td class="input-label">
-                    <label for="templateType">Tag Template:</label>
+                    <label for="templateType" data-bind="css: { 'disabled': forwardOnly }">Tag Template:</label>
                 </td>
                 <td>
                     <div class="input-group">
-                        <select class="form-control" id="templateType" data-bind="value: templateType; valueAllowUnset: false" style="border: 0; width: 250px"></select>
+                        <select class="form-control" id="templateType" data-bind="value: templateType, valueAllowUnset: false, disable: forwardOnly" style="border: 0; width: 250px"></select>
                         <div class="checkbox" style="display:inline; margin-left: 15px">
                             <label class="disabled" style="margin-top: 6px; display: none"><input type="checkbox" data-bind="checked: addTagsAsVirtualPoints" disabled> Generate virtual tags (otherwise tags will be archived)</label>
                         </div>
@@ -3636,7 +3696,7 @@
                 </form>
             </div>
         </div>
-        <span><br />Connection String: <span data-bind="text: configFrame().ConnectionString"></span></span>
+        <span><br />Connection String: <span data-bind="text: connectionString"></span></span>
         <em data-bind="visible: validationErrors() > 0">
             <br />
             <span data-bind="text: validationErrors()"></span> validation error<span data-bind="visible: validationErrors() > 1">s</span>...
