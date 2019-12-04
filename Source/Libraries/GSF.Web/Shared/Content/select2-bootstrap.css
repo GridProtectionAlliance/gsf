@@ -61,6 +61,8 @@
   background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 4px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0
   color: #555555;
   font-size: 14px;
   outline: 0;
@@ -68,6 +70,8 @@
 
 .select2-container--bootstrap .select2-selection.form-control {
   border-radius: 4px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0
 }
 
 .select2-container--bootstrap .select2-search--dropdown .select2-search__field {
@@ -76,6 +80,8 @@
   background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 4px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0
   color: #555555;
   font-size: 14px;
 }
