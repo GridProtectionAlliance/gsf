@@ -76,6 +76,7 @@
     <Compile Include="IGrafanaDataService.NET.cs" />
     <Compile Include="IGrafanaDataServiceMono.cs" />
     <Compile Include="IGrafanaDataService.cs" />
+    <Compile Include="LocationData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryRequest.cs" />
     <Compile Include="Range.cs" />
@@ -91,6 +92,10 @@
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.Geo\GSF.Geo.csproj">
+      <Project>{9d432c71-14d8-407d-9b91-a311f850aa38}</Project>
+      <Name>GSF.Geo</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\GSF.Historian\GSF.Historian.csproj">
       <Project>{7e1abf87-8936-44e5-85c0-37044e0d3877}</Project>
