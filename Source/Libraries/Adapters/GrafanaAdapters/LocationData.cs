@@ -45,7 +45,7 @@ namespace GrafanaAdapters
         public GrafanaDataSourceBase DataSource { get; set; }
 
         /// <summary>
-        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
+        /// Queries Grafana data source for location data offsetting duplicate coordinates using a radial distribution.
         /// </summary>
         /// <param name="radius">Radius of overlapping coordinate distribution.</param>
         /// <param name="zoom">Zoom level.</param>
@@ -100,9 +100,9 @@ namespace GrafanaAdapters
                     if (matchingRows.Count > 1)
                         groupedRows.Add(matchingRows.ToArray());
 
+                    // Create radial distribution for overlapped coordinates, leaving one item at center
                     EPSG3857 coordinateReference = new EPSG3857();
 
-                    // Create radial distribution for overlapped coordinates, leaving one item at center
                     foreach (DataRow[] rows in groupedRows)
                     {
                         int count = rows.Length;
@@ -131,7 +131,7 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Queries openHistorian location data for Grafana.
+        /// Queries Grafana data source for location data.
         /// </summary>
         /// <param name="request"> Query request.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
