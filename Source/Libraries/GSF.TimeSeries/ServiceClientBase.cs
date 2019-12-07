@@ -38,6 +38,7 @@ using System.Threading;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Console;
+using GSF.Diagnostics;
 using GSF.ErrorManagement;
 using GSF.Identity;
 using GSF.IO;
@@ -114,12 +115,19 @@ namespace GSF.TimeSeries
         public void Initialize()
         {
             CategorizedSettingsElementCollection remotingClientSettings;
-            string[] args;
-            string filter;
 
             try
             {
                 remotingClientSettings = ConfigurationFile.Current.Settings["remotingClient"];
+
+                // Setup default logging parameters for remote console applications
+                string logPath = FilePath.GetAbsolutePath("Logs");
+
+                if (!Directory.Exists(logPath))
+                    Directory.CreateDirectory(logPath);
+
+                Logger.FileWriter.SetPath(logPath);
+                Logger.FileWriter.SetLoggingFileCount(10);
             }
             catch
             {
@@ -138,25 +146,32 @@ namespace GSF.TimeSeries
                 m_remotingClient = InitializeTlsClient();
             }
 
-            args = Arguments.ToArgs(Environment.CommandLine);
+            string[] args = Arguments.ToArgs(Environment.CommandLine);
 
-            filter = Enumerable.Range(0, args.Length)
-                .Where(index => args[index].StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))
-                .Select(index => Regex.Replace(args[index], "^--filter=", "", RegexOptions.IgnoreCase))
-                .FirstOrDefault() ?? ClientHelper.DefaultStatusMessageFilter;
+            string filter = Enumerable.Range(0, args.Length)
+                                .Where(index => args[index].StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))
+                                .Select(index => Regex.Replace(args[index], "^--filter=", "", RegexOptions.IgnoreCase))
+                                .FirstOrDefault() ?? ClientHelper.DefaultStatusMessageFilter;
 
-            m_clientHelper = new ClientHelper();
-            m_clientHelper.PersistSettings = true;
-            m_clientHelper.RemotingClient = m_remotingClient;
-            m_clientHelper.StatusMessageFilter = filter;
+            m_clientHelper = new ClientHelper
+            {
+                PersistSettings = true, 
+                RemotingClient = m_remotingClient, 
+                StatusMessageFilter = filter
+            };
+
             m_clientHelper.Initialize();
 
-            m_errorLogger = new ErrorLogger();
+            m_errorLogger = new ErrorLogger
+            {
+                LogToEventLog = false, 
+                LogToUI = true, 
+                PersistSettings = true
+            };
+
             m_errorLogger.ErrorLog.FileName = "ServiceClient.ErrorLog.txt";
-            m_errorLogger.LogToEventLog = false;
-            m_errorLogger.LogToUI = true;
-            m_errorLogger.PersistSettings = true;
             m_errorLogger.ErrorLog.Initialize();
+
             m_errorLogger.Initialize();
         }
 
@@ -169,6 +184,7 @@ namespace GSF.TimeSeries
             string userInput = string.Empty;
             Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
 
+            // Handle external service restart requests
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
             {
                 string serviceName = arguments["OrderedArg1"];
@@ -183,7 +199,9 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        WriteLine("Failed to stop the {0} daemon: {1}\r\n", serviceName, ex.Message);
+                        string errorMessage = $"Failed to stop the {serviceName} daemon: {ex.Message}\r\n";
+                        WriteLine(errorMessage);
+                        Logger.SwallowException(ex, errorMessage);
                     }
 
                     try
@@ -192,7 +210,9 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        WriteLine("Failed to restart the {0} daemon: {1}\r\n", serviceName, ex.Message);
+                        string errorMessage = $"Failed to restart the {serviceName} daemon: {ex.Message}\r\n";
+                        WriteLine(errorMessage);
+                        Logger.SwallowException(ex, errorMessage);
                     }
                 }
                 else
@@ -224,7 +244,9 @@ namespace GSF.TimeSeries
                         }
                         catch (Exception ex)
                         {
-                            WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                            string errorMessage = $"Failed to stop the {serviceName} Windows service: {ex.Message}\r\n";
+                            WriteLine(errorMessage);
+                            Logger.SwallowException(ex, errorMessage);
                         }
                     }
 
@@ -254,7 +276,9 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
+                        string errorMessage = $"Failed to terminate running instances of the {serviceName}: {ex.Message}\r\n";
+                        WriteLine(errorMessage);
+                        Logger.SwallowException(ex, errorMessage);
                     }
 
                     // Attempt to restart Windows service...
@@ -270,136 +294,170 @@ namespace GSF.TimeSeries
                         }
                         catch (Exception ex)
                         {
-                            WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                            string errorMessage = $"Failed to restart the {serviceName} Windows service: {ex.Message}\r\n";
+                            WriteLine(errorMessage);
+                            Logger.SwallowException(ex, errorMessage);
                         }
                     }
                 }
+
+                return;
             }
-            else
+
+            // Handle clearing of dynanmic RazorEngine assemblies
+            if (arguments.Exists("clearCache"))
             {
-                if (arguments.Exists("server"))
-                {
-                    // Override default settings with user provided input. 
-                    m_clientHelper.PersistSettings = false;
-                    m_remotingClient.PersistSettings = false;
-                    m_remotingClient.ConnectionString = $"Server={arguments["server"]}";
-                }
+                string assemblyDirectory = FilePath.GetAbsolutePath(Common.DynamicAssembliesFolderName);
 
-                long lastConnectAttempt = 0;
+                if (!Directory.Exists(assemblyDirectory))
+                    return;
 
-                // Connect to service and send commands.
-                while ((object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                string[] razorFolders = Directory.EnumerateDirectories(assemblyDirectory, "RazorEngine_*", SearchOption.TopDirectoryOnly).ToArray();
+
+                foreach (string razorFolder in razorFolders)
                 {
                     try
                     {
-                        // Do not reattempt connection too quickly
-                        while (DateTime.UtcNow.Ticks - lastConnectAttempt < Ticks.PerSecond)
-                            Thread.Sleep(200);
+                        Directory.Delete(razorFolder, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        string errorMessage = $"Failed to remove temporary dynamic assembly folder: {razorFolder}";
+                        WriteLine(errorMessage);
+                        Logger.SwallowException(ex, errorMessage);
+                    }
+                }
 
-                        lastConnectAttempt = DateTime.UtcNow.Ticks;
+                return;
+            }
 
-                        ICancellationToken timeoutCancellationToken = new Threading.CancellationToken();
+            // Handle normal remote console operations
+            if (arguments.Exists("server"))
+            {
+                // Override default settings with user provided input. 
+                m_clientHelper.PersistSettings = false;
+                m_remotingClient.PersistSettings = false;
+                m_remotingClient.ConnectionString = $"Server={arguments["server"]}";
+            }
 
-                        if (System.Console.IsInputRedirected)
+            long lastConnectAttempt = 0;
+
+            // Connect to service and send commands.
+            while ((object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    // Do not reattempt connection too quickly
+                    while (DateTime.UtcNow.Ticks - lastConnectAttempt < Ticks.PerSecond)
+                        Thread.Sleep(200);
+
+                    lastConnectAttempt = DateTime.UtcNow.Ticks;
+
+                    ICancellationToken timeoutCancellationToken = new Threading.CancellationToken();
+
+                    if (System.Console.IsInputRedirected)
+                    {
+                        // If the client is invoked as part of a command line script,
+                        // implement a 5-second timeout in case of connectivity issues
+                        Action timeoutAction = () =>
                         {
-                            // If the client is invoked as part of a command line script,
-                            // implement a 5-second timeout in case of connectivity issues
-                            Action timeoutAction = () =>
+                            if (!timeoutCancellationToken.IsCancelled)
+                                Environment.Exit(1);
+                        };
+
+                        timeoutAction.DelayAndExecute(5000);
+                    }
+
+                    if (!m_authenticationFailure)
+                    {
+                        // If there has been no authentication
+                        // failure, connect normally
+                        Connect();
+                    }
+                    else
+                    {
+                        StringBuilder username = new StringBuilder();
+                        StringBuilder password = new StringBuilder();
+
+                        // If there has been an authentication failure,
+                        // prompt the user for new credentials
+                        PromptForCredentials(username, password);
+
+                        try
+                        {
+                            // Attempt to set network credentials used when attempting AD authentication
+                            using (UserInfo userInfo = new UserInfo(username.ToString()))
                             {
-                                if (!timeoutCancellationToken.IsCancelled)
-                                    Environment.Exit(1);
-                            };
-
-                            timeoutAction.DelayAndExecute(5000);
-                        }
-
-                        if (!m_authenticationFailure)
-                        {
-                            // If there has been no authentication
-                            // failure, connect normally
-                            Connect();
-                        }
-                        else
-                        {
-                            UserInfo userInfo;
-                            StringBuilder username = new StringBuilder();
-                            StringBuilder password = new StringBuilder();
-
-                            // If there has been an authentication failure,
-                            // prompt the user for new credentials
-                            PromptForCredentials(username, password);
-
-                            try
-                            {
-                                // Attempt to set network credentials used when attempting AD authentication
-                                userInfo = new UserInfo(username.ToString());
                                 userInfo.Initialize();
                                 SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
                             }
-                            catch
-                            {
-                                // Even if this fails, we can still pass along default credentials
-                                SetNetworkCredential(null);
-                            }
-
-                            Connect(username.ToString(), password.ToString());
                         }
-
-                        timeoutCancellationToken.Cancel();
-
-                        while (m_authenticated && m_clientHelper.Enabled && (object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                        catch (Exception ex)
                         {
-                            // Wait for a command from the user. 
-                            userInput = System.Console.ReadLine()?.Trim();
-
-                            // Write a blank line to the console.
-                            WriteLine();
-
-                            if (!string.IsNullOrWhiteSpace(userInput))
-                            {
-                                // The user typed in a command and didn't just hit <ENTER>. 
-                                switch (userInput.ToUpper())
-                                {
-                                    case "CLS":
-                                        // User wants to clear the console window. 
-                                        System.Console.Clear();
-                                        break;
-
-                                    case "EXIT":
-                                        // User wants to exit the telnet session with the service. 
-                                        if (m_telnetActive)
-                                        {
-                                            userInput = string.Empty;
-                                            m_clientHelper.SendRequest("Telnet -disconnect");
-                                        }
-
-                                        break;
-
-                                    case "LOGIN":
-                                        m_authenticated = false;
-                                        m_authenticationFailure = true;
-                                        break;
-
-                                    default:
-                                        // User wants to send a request to the service. 
-                                        m_clientHelper.SendRequest(userInput);
-
-                                        if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
-                                            DisplayHelp();
-
-                                        break;
-                                }
-                            }
+                            // Even if this fails, we can still pass along default credentials
+                            SetNetworkCredential(null);
+                            Logger.SwallowException(ex);
                         }
 
-                        m_clientHelper.Disconnect();
+                        Connect(username.ToString(), password.ToString());
                     }
-                    catch (Exception)
+
+                    timeoutCancellationToken.Cancel();
+
+                    while (m_authenticated && m_clientHelper.Enabled && (object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                     {
-                        // Errors during the outer connection loop
-                        // should simply force an attempt to reconnect
-                        m_clientHelper.Disconnect();
+                        // Wait for a command from the user. 
+                        userInput = System.Console.ReadLine()?.Trim();
+
+                        // Write a blank line to the console.
+                        WriteLine();
+
+                        if (string.IsNullOrWhiteSpace(userInput))
+                            continue;
+
+                        // The user typed in a command and didn't just hit <ENTER>. 
+                        switch (userInput.ToUpper())
+                        {
+                            case "CLS":
+                                // User wants to clear the console window. 
+                                System.Console.Clear();
+                                break;
+
+                            case "EXIT":
+                                // User wants to exit the telnet session with the service. 
+                                if (m_telnetActive)
+                                {
+                                    userInput = string.Empty;
+                                    m_clientHelper.SendRequest("Telnet -disconnect");
+                                }
+
+                                break;
+
+                            case "LOGIN":
+                                m_authenticated = false;
+                                m_authenticationFailure = true;
+                                break;
+
+                            default:
+                                // User wants to send a request to the service. 
+                                m_clientHelper.SendRequest(userInput);
+
+                                if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
+                                    DisplayHelp();
+
+                                break;
+                        }
                     }
+
+                    m_clientHelper.Disconnect();
+                }
+                catch (Exception ex)
+                {
+                    // Errors during the outer connection loop
+                    // should simply force an attempt to reconnect
+                    m_clientHelper.Disconnect();
+                    
+                    Logger.SwallowException(ex);
                 }
             }
         }
@@ -425,23 +483,13 @@ namespace GSF.TimeSeries
                 {
                     if (disposing)
                     {
-                        if ((object)m_clientHelper != null)
-                        {
-                            m_clientHelper.Dispose();
-                            m_clientHelper = null;
-                        }
+                        m_clientHelper?.Dispose();
+                        m_remotingClient?.Dispose();
+                        m_errorLogger?.Dispose();
 
-                        if ((object)m_remotingClient != null)
-                        {
-                            m_remotingClient.Dispose();
-                            m_remotingClient = null;
-                        }
-
-                        if ((object)m_errorLogger != null)
-                        {
-                            m_errorLogger.Dispose();
-                            m_errorLogger = null;
-                        }
+                        m_clientHelper = null;
+                        m_remotingClient = null;
+                        m_errorLogger = null;
                     }
                 }
                 finally
@@ -453,14 +501,15 @@ namespace GSF.TimeSeries
 
         private TcpClient InitializeTcpClient()
         {
-            TcpClient remotingClient;
+            TcpClient remotingClient = new TcpClient
+            {
+                ConnectionString = "Server=localhost:8500",
+                IgnoreInvalidCredentials = true,
+                PayloadAware = true,
+                PersistSettings = true,
+                SettingsCategory = "RemotingClient"
+            };
 
-            remotingClient = new TcpClient();
-            remotingClient.ConnectionString = "Server=localhost:8500";
-            remotingClient.IgnoreInvalidCredentials = true;
-            remotingClient.PayloadAware = true;
-            remotingClient.PersistSettings = true;
-            remotingClient.SettingsCategory = "RemotingClient";
             remotingClient.Initialize();
 
             return remotingClient;
@@ -468,17 +517,18 @@ namespace GSF.TimeSeries
 
         private TlsClient InitializeTlsClient()
         {
-            TlsClient remotingClient;
-
-            remotingClient = new TlsClient();
-            remotingClient.ConnectionString = "Server=localhost:8500";
-            remotingClient.IgnoreInvalidCredentials = true;
-            remotingClient.PayloadAware = true;
-            remotingClient.PersistSettings = true;
-            remotingClient.SettingsCategory = "RemotingClient";
-            remotingClient.TrustedCertificatesPath = $"Certs{Path.DirectorySeparatorChar}Remotes";
-            remotingClient.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
-            remotingClient.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
+            TlsClient remotingClient = new TlsClient
+            {
+                ConnectionString = "Server=localhost:8500",
+                IgnoreInvalidCredentials = true,
+                PayloadAware = true,
+                PersistSettings = true,
+                SettingsCategory = "RemotingClient",
+                TrustedCertificatesPath = $"Certs{Path.DirectorySeparatorChar}Remotes",
+                ValidChainFlags = X509ChainStatusFlags.UntrustedRoot,
+                ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors
+            };
+            
             remotingClient.Initialize();
 
             // Override remote certificate validation so that we always
@@ -524,7 +574,6 @@ namespace GSF.TimeSeries
         private void PromptForCredentials(StringBuilder username, StringBuilder password)
         {
             StringBuilder prompt = new StringBuilder();
-            ConsoleKeyInfo key;
 
             lock (m_displayLock)
             {
@@ -533,6 +582,7 @@ namespace GSF.TimeSeries
                 prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
                 prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
                 prompt.AppendLine();
+
                 Write(prompt.ToString());
 
                 // Capture the user name.
@@ -545,6 +595,7 @@ namespace GSF.TimeSeries
 
                 char endOfLine = GSF.Common.IsPosixEnvironment ? '\n' : '\r';
 
+                ConsoleKeyInfo key;
                 while ((key = System.Console.ReadKey(true)).KeyChar != endOfLine)
                 {
                     switch (key.Key)
@@ -571,50 +622,36 @@ namespace GSF.TimeSeries
 
         private void SetNetworkCredential(NetworkCredential credential)
         {
-            TlsClient tlsClient;
-            TcpClient tcpClient;
-
-            tlsClient = m_remotingClient as TlsClient;
-
-            if ((object)tlsClient != null)
+            switch (m_remotingClient)
             {
-                tlsClient.NetworkCredential = credential;
-            }
-            else
-            {
-                tcpClient = m_remotingClient as TcpClient;
-
-                if ((object)tcpClient != null)
+                case TlsClient tlsClient:
+                    tlsClient.NetworkCredential = credential;
+                    break;
+                case TcpClient tcpClient:
                     tcpClient.NetworkCredential = credential;
+                    break;
             }
         }
 
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            TlsClient remotingClient;
-            IPEndPoint remoteEndPoint;
-            IPHostEntry localhost;
-            SimplePolicyChecker policyChecker;
-
-            remotingClient = m_remotingClient as TlsClient;
-
-            if ((object)remotingClient != null)
+            if (m_remotingClient is TlsClient remotingClient)
             {
-                remoteEndPoint = remotingClient.Client.RemoteEndPoint as IPEndPoint;
-
-                if ((object)remoteEndPoint != null)
+                if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
                 {
                     // Create an exception and do not check policy for localhost
-                    localhost = Dns.GetHostEntry("localhost");
+                    IPHostEntry localhost = Dns.GetHostEntry("localhost");
 
                     if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
                         return true;
                 }
 
                 // Not connected to localhost, so use the policy checker
-                policyChecker = new SimplePolicyChecker();
-                policyChecker.ValidPolicyErrors = remotingClient.ValidPolicyErrors;
-                policyChecker.ValidChainFlags = remotingClient.ValidChainFlags;
+                SimplePolicyChecker policyChecker = new SimplePolicyChecker
+                {
+                    ValidPolicyErrors = remotingClient.ValidPolicyErrors,
+                    ValidChainFlags = remotingClient.ValidChainFlags
+                };
 
                 return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
             }
@@ -710,62 +747,58 @@ namespace GSF.TimeSeries
         /// <param name="e">Event argument containing the service response.</param>
         protected virtual void ClientHelper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
-            string sourceCommand;
-            bool responseSuccess;
-            byte[] reportData;
+            if (!ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out bool responseSuccess))
+                return;
 
-            if (ClientHelper.TryParseActionableResponse(e.Argument, out sourceCommand, out responseSuccess))
+            string message = e.Argument.Message;
+
+            lock (m_displayLock)
             {
-                string message = e.Argument.Message;
+                if (responseSuccess)
+                {
+                    if (string.IsNullOrWhiteSpace(message))
+                        Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
+                    else
+                        Write("{0}\r\n\r\n", message);
+                }
+                else
+                {
+                    System.Console.ForegroundColor = ConsoleColor.Red;
 
+                    if (string.IsNullOrWhiteSpace(message))
+                        Write("{0} failure.\r\n\r\n", sourceCommand);
+                    else
+                        Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
+
+                    System.Console.ForegroundColor = m_originalFgColor;
+                }
+            }
+
+            try
+            {
+                // Handle reports coming from service
+                if (!responseSuccess || !sourceCommand.Equals("GetReport", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                if (e.Argument.Attachments[0] is byte[] reportData)
+                {
+                    string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
+                    File.WriteAllBytes(tempPath, reportData);
+                    using (Process.Start(tempPath))
+                    {
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
                 lock (m_displayLock)
                 {
-                    if (responseSuccess)
-                    {
-                        if (string.IsNullOrWhiteSpace(message))
-                            Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
-                        else
-                            Write("{0}\r\n\r\n", message);
-                    }
-                    else
-                    {
-                        System.Console.ForegroundColor = ConsoleColor.Red;
-
-                        if (string.IsNullOrWhiteSpace(message))
-                            Write("{0} failure.\r\n\r\n", sourceCommand);
-                        else
-                            Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
-
-                        System.Console.ForegroundColor = m_originalFgColor;
-                    }
+                    System.Console.ForegroundColor = ConsoleColor.Red;
+                    WriteLine("Unable to display report due to exception: {0}", ex.Message);
+                    System.Console.ForegroundColor = m_originalFgColor;
                 }
 
-                try
-                {
-                    // Handle reports coming from service
-                    if (responseSuccess && sourceCommand.Equals("GetReport", StringComparison.OrdinalIgnoreCase))
-                    {
-                        reportData = e.Argument.Attachments[0] as byte[];
-
-                        if ((object)reportData != null)
-                        {
-                            string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
-                            File.WriteAllBytes(tempPath, reportData);
-                            using (Process.Start(tempPath))
-                            {
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    lock (m_displayLock)
-                    {
-                        System.Console.ForegroundColor = ConsoleColor.Red;
-                        WriteLine("Unable to display report due to exception: {0}", ex.Message);
-                        System.Console.ForegroundColor = m_originalFgColor;
-                    }
-                }
+                Logger.SwallowException(ex);
             }
         }
 

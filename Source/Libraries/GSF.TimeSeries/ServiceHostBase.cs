@@ -152,11 +152,9 @@ namespace GSF.TimeSeries
         /// Creates a new <see cref="ServiceHostBase"/> from specified parameters.
         /// </summary>
         /// <param name="container">Service host <see cref="IContainer"/>.</param>
-        public ServiceHostBase(IContainer container)
-            : this()
+        public ServiceHostBase(IContainer container) : this()
         {
-            if (container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -757,6 +755,28 @@ namespace GSF.TimeSeries
                     .ToString();
 
                 EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Error, 0);
+            }
+        }
+
+        private void SetupTempPath()
+        {
+            string assemblyDirectory = null;
+
+            try
+            {
+                // Setup custom temp folder for services so that dynamically compiled razor assemblies can be easily managed
+                assemblyDirectory = FilePath.GetAbsolutePath(Common.DynamicAssembliesFolderName);
+
+                if (!Directory.Exists(assemblyDirectory))
+                    Directory.CreateDirectory(assemblyDirectory);
+
+                Environment.SetEnvironmentVariable("TEMP", assemblyDirectory);
+                Environment.SetEnvironmentVariable("TMP", assemblyDirectory);
+            }
+            catch (Exception ex)
+            {
+                // This is not catastrophic
+                Logger.SwallowException(ex, $"Failed to assign temp folder location for \"{ServiceName}\" service to: {assemblyDirectory}");
             }
         }
 
@@ -1416,6 +1436,9 @@ namespace GSF.TimeSeries
         protected override void OnStart(string[] args)
         {
             GenerateLocalCertificate();
+
+            SetupTempPath();
+
             InitializeServiceHelper();
 
             // Register service level event handlers
@@ -1443,6 +1466,28 @@ namespace GSF.TimeSeries
         protected override void OnStop()
         {
             m_serviceHelper.OnStop();
+
+            // As a final operation, shell remote console to clean up temporary razor files
+            try
+            {
+                using (Process shell = new Process())
+                {
+                    shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
+                    {
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        UseShellExecute = false,
+                        Arguments = "-clearCache"
+                    };
+
+                    shell.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                // This is not catastrophic
+                Logger.SwallowException(ex, $"Failed to start \"{ConsoleApplicationName}\" to clear temporary RazorEngine files from dynamic assembly cache.");
+            }
         }
 
         /// <summary>
@@ -1749,7 +1794,7 @@ namespace GSF.TimeSeries
                 bool idArgExists = requestInfo.Request.Arguments.Exists("OrderedArg1");
                 int enumeratedItems = 0;
 
-                adapterList.AppendFormat("System Uptime: {0}", m_serviceHelper.RemotingServer.RunTime.ToString());
+                adapterList.AppendFormat("System Uptime: {0}", m_serviceHelper.RemotingServer.RunTime.ToString(CultureInfo.CurrentCulture));
                 adapterList.AppendLine();
                 adapterList.AppendLine();
 

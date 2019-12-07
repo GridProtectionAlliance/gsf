@@ -27,12 +27,17 @@ using GSF.Threading;
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Defines common functions for the time-series library.
+    /// Defines common properties and functions for the time-series library.
     /// </summary>
-    internal static class Common
+    public static class Common
     {
+        /// <summary>
+        /// Folder name for dyanmically compiled assemblies.
+        /// </summary>
+        public const string DynamicAssembliesFolderName = "DynamicAssemblies";
+
         // Common use static timer for the Time-Series Library
-        public static readonly SharedTimerScheduler TimerScheduler;
+        internal static readonly SharedTimerScheduler TimerScheduler;
 
         //Static Constructor
         static Common()
