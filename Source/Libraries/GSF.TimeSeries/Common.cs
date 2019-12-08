@@ -29,7 +29,7 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Defines common properties and functions for the time-series library.
     /// </summary>
-    public static class Common
+    internal class Common
     {
         /// <summary>
         /// Folder name for dyanmically compiled assemblies.
@@ -37,7 +37,7 @@ namespace GSF.TimeSeries
         public const string DynamicAssembliesFolderName = "DynamicAssemblies";
 
         // Common use static timer for the Time-Series Library
-        internal static readonly SharedTimerScheduler TimerScheduler;
+        public static readonly SharedTimerScheduler TimerScheduler;
 
         //Static Constructor
         static Common()
