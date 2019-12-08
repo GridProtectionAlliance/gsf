@@ -1470,18 +1470,28 @@ namespace GSF.TimeSeries
             // As a final operation, shell remote console to clean up temporary razor files
             try
             {
-                using (Process shell = new Process())
+                if (GSF.Common.IsPosixEnvironment)
                 {
-                    shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
+                    using (Process shell = new Process())
                     {
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        UseShellExecute = false,
-                        Arguments = "-clearCache"
-                    };
+                        shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
+                        {
+                            CreateNoWindow = true,
+                            Arguments = "-clearCache"
+                        };
 
-                    shell.Start();
+                        shell.Start();
+                    }
                 }
+                else
+                {
+                    string batchFileName = FilePath.GetAbsolutePath("ClearRazorAssemblyCache.cmd");
+                    File.WriteAllText(batchFileName, $@"@ECHO OFF{Environment.NewLine}TIMEOUT 2{Environment.NewLine}{ConsoleApplicationName} -clearCache");
+
+                    // This is the only .NET call that will spawn an independent, non-child, process on Windows
+                    Process.Start(batchFileName);
+                }
+
             }
             catch (Exception ex)
             {
@@ -3275,21 +3285,26 @@ namespace GSF.TimeSeries
 
                     try
                     {
-                        ProcessStartInfo psi = new ProcessStartInfo(ConsoleApplicationName)
+                        if (GSF.Common.IsPosixEnvironment)
                         {
-                            CreateNoWindow = true,
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            UseShellExecute = false,
-                            Arguments = ServiceName + " -restart"
-                        };
+                            using (Process shell = new Process())
+                            {
+                                shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
+                                {
+                                    CreateNoWindow = true,
+                                    Arguments = $"{ServiceName} -restart"
+                                };
 
-                        using (Process shell = new Process())
+                                shell.Start();
+                            }
+                        }
+                        else
                         {
-                            shell.StartInfo = psi;
-                            shell.Start();
+                            string batchFileName = FilePath.GetAbsolutePath("RestartService.cmd");
+                            File.WriteAllText(batchFileName, $@"@ECHO OFF{Environment.NewLine}{ConsoleApplicationName} {ServiceName} -restart");
 
-                            if (!shell.WaitForExit(30000))
-                                shell.Kill();
+                            // This is the only .NET call that will spawn an independent, non-child, process on Windows
+                            Process.Start(batchFileName);
                         }
 
                         SendResponse(requestInfo, true);
@@ -3390,8 +3405,6 @@ namespace GSF.TimeSeries
                         ProcessStartInfo psi = new ProcessStartInfo(ConsoleApplicationName)
                         {
                             CreateNoWindow = true,
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            UseShellExecute = false,
                             FileName = "ping",
                             Arguments = hostName,
                             RedirectStandardOutput = true,
