@@ -1599,7 +1599,7 @@
             ko.options.deferUpdates = true;
 
             // Initialize primary view model
-            ko.applyBindings(viewModel);
+            ko.applyBindings(viewModel, document.getElementsByTagName("body")[0]);
 
             ko.watch(viewModel.sequences, { depth: 10 }, function(parents, child, item) {
                 viewModel.isDirty(true);
