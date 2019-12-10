@@ -35,6 +35,7 @@ using System.IO;
 using System.Text;
 using GSF.Units;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Parsing
 {
     /// <summary>
@@ -50,7 +51,7 @@ namespace GSF.Parsing
         /// <summary>
         /// Specifies the default value for the <see cref="ProtocolSyncBytes"/> property.
         /// </summary>
-        public static readonly byte[] DefaultProtocolSyncBytes = new byte[] { 0xAA };
+        public static readonly byte[] DefaultProtocolSyncBytes = { 0xAA };
 
         // Events
 
@@ -90,9 +91,6 @@ namespace GSF.Parsing
         /// </summary>
         protected byte[] UnparsedBuffer;
 
-        private byte[] m_protocolSyncBytes;
-        private long m_buffersProcessed;
-        private string m_name;
         private Ticks m_startTime;
         private Ticks m_stopTime;
         private bool m_enabled;
@@ -106,8 +104,8 @@ namespace GSF.Parsing
         /// </summary>
         protected BinaryImageParserBase()
         {
-            m_protocolSyncBytes = DefaultProtocolSyncBytes;
-            m_name = this.GetType().Name;
+            ProtocolSyncBytes = DefaultProtocolSyncBytes;
+            Name = GetType().Name;
         }
 
         #endregion
@@ -123,10 +121,7 @@ namespace GSF.Parsing
         /// </remarks>
         public virtual bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 if (value && !m_enabled)
@@ -139,25 +134,12 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public abstract bool ProtocolUsesSyncBytes
-        {
-            get;
-        }
+        public abstract bool ProtocolUsesSyncBytes { get; }
 
         /// <summary>
         /// Gets or sets synchronization bytes for this parsing implementation, if used.
         /// </summary>
-        public virtual byte[] ProtocolSyncBytes
-        {
-            get
-            {
-                return m_protocolSyncBytes;
-            }
-            set
-            {
-                m_protocolSyncBytes = value;
-            }
-        }
+        public virtual byte[] ProtocolSyncBytes { get; set; }
 
         /// <summary>
         /// Gets the total amount of time, in seconds, that the <see cref="BinaryImageParserBase"/> has been active.
@@ -187,13 +169,7 @@ namespace GSF.Parsing
         /// Gets the total number of buffer images processed so far.
         /// </summary>
         /// <returns>Total number of buffer images processed so far.</returns>
-        public long TotalProcessedBuffers
-        {
-            get
-            {
-                return m_buffersProcessed;
-            }
-        }
+        public long TotalProcessedBuffers { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether the current stream supports reading.
@@ -201,13 +177,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
-        public override bool CanRead
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanRead => false;
 
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
@@ -215,13 +185,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to false.
         /// </remarks>
-        public override bool CanSeek
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanSeek => false;
 
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
@@ -229,13 +193,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// The <see cref="BinaryImageParserBase"/> is implemented as a WriteOnly stream, so this defaults to true.
         /// </remarks>
-        public override bool CanWrite
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool CanWrite => true;
 
         /// <summary>
         /// Gets current status of <see cref="BinaryImageParserBase"/>.
@@ -258,10 +216,10 @@ namespace GSF.Parsing
                 }
 
                 status.Append("     Total parser run-time: ");
-                status.Append(RunTime.ToString());
+                status.Append(RunTime);
                 status.AppendLine();
                 status.Append("   Total buffers processed: ");
-                status.Append(m_buffersProcessed);
+                status.Append(TotalProcessedBuffers);
                 status.AppendLine();
 
                 return status.ToString();
@@ -271,17 +229,7 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets the name of <see cref="BinaryImageParserBase"/>.
         /// </summary>
-        public virtual string Name
-        {
-            get
-            {
-                return m_name;
-            }
-            set
-            {
-                m_name = value;
-            }
-        }
+        public virtual string Name { get; set; }
 
         #endregion
 
@@ -293,7 +241,7 @@ namespace GSF.Parsing
         public virtual void Start()
         {
             // Reset statistics
-            m_buffersProcessed = 0;
+            TotalProcessedBuffers = 0;
             m_stopTime = 0;
             m_startTime = DateTime.Now.Ticks;
 
@@ -341,30 +289,30 @@ namespace GSF.Parsing
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (m_enabled)
+            if (!m_enabled)
+                return;
+
+            // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
+            // thus the attempt below to "align" data stream to specified ProtocolSyncBytes.
+            if (StreamInitialized)
             {
-                // If ProtocolUsesSyncByte is true, first call to write after start will be uninitialized,
-                // thus the attempt below to "align" data stream to specified ProtocolSyncBytes.
-                if (StreamInitialized)
-                {
-                    // Directly parse frame using calling thread (typically communications thread)
-                    ParseBuffer(buffer, offset, count);
-                }
-                else
-                {
-                    // Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte(s) to "line-up" data stream
-                    int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
-
-                    if (syncBytesPosition > -1)
-                    {
-                        StreamInitialized = true;
-                        ParseBuffer(buffer, syncBytesPosition, count - (syncBytesPosition - offset));
-                    }
-                }
-
-                // Track total processed buffer images
-                m_buffersProcessed++;
+                // Directly parse frame using calling thread (typically communications thread)
+                ParseBuffer(buffer, offset, count);
             }
+            else
+            {
+                // Initial stream may be anywhere in the middle of a frame, so we attempt to locate sync byte(s) to "line-up" data stream
+                int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
+
+                if (syncBytesPosition > -1)
+                {
+                    StreamInitialized = true;
+                    ParseBuffer(buffer, syncBytesPosition, count - (syncBytesPosition - offset));
+                }
+            }
+
+            // Track total processed buffer images
+            TotalProcessedBuffers++;
         }
 
         /// <summary>
@@ -388,10 +336,7 @@ namespace GSF.Parsing
         /// <param name="offset">An <see cref="Int32"/> value for the count.</param>
         /// <returns>An <see cref="Int32"/> as the number of bytes read. Well. It would, if implemented.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException("Cannot read from WriteOnly stream");
-        }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotImplementedException("Cannot read from WriteOnly stream");
 
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
@@ -401,10 +346,7 @@ namespace GSF.Parsing
         /// <param name="origin">A <see cref="SeekOrigin"/>.</param>
         /// <returns>Returns a <see cref="Int64"/> value indicating the point that was sought.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException("WriteOnly stream has no position");
-        }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException("WriteOnly stream has no position");
 
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
@@ -412,10 +354,7 @@ namespace GSF.Parsing
         /// <exception cref="NotImplementedException">WriteOnly stream has no length.</exception>
         /// <param name="value">A <see cref="Int64"/> value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException("WriteOnly stream has no length");
-        }
+        public override void SetLength(long value) => throw new NotImplementedException("WriteOnly stream has no length");
 
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
@@ -424,13 +363,7 @@ namespace GSF.Parsing
         /// WriteOnly stream has no length. Returned value will always be -1.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override long Length
-        {
-            get
-            {
-                return -1;
-            }
-        }
+        public override long Length => -1;
 
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
@@ -441,13 +374,8 @@ namespace GSF.Parsing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Position
         {
-            get
-            {
-                return -1;
-            }
-            set
-            {
-            }
+            get => -1;
+            set { }
         }
 
         #endregion
@@ -460,7 +388,7 @@ namespace GSF.Parsing
             try
             {
                 // Prepend any left over buffer data from last parse call
-                if ((object)UnparsedBuffer != null)
+                if (UnparsedBuffer != null)
                 {
                     // Combine remaining buffer from last call and current buffer together as a single image
                     buffer = UnparsedBuffer.Combine(0, UnparsedBuffer.Length, buffer, offset, count);
@@ -470,11 +398,12 @@ namespace GSF.Parsing
                 }
 
                 endOfBuffer = offset + count - 1;
-                int parsedFrameLength;
 
                 // Move through buffer parsing all available frames
                 while (!(offset > endOfBuffer) && m_enabled)
                 {
+                    int parsedFrameLength;
+
                     try
                     {
                         // Call derived class frame parsing algorithm - this is protocol specific
@@ -496,7 +425,7 @@ namespace GSF.Parsing
 
                                 // We'll still let consumer know there was an issue
                                 OnDataDiscarded(buffer.BlockCopy(offset, parsedFrameLength));
-                                OnParsingException(ex);
+                                OnParsingException(new InvalidOperationException($"Attempting to realign parsing to found protocol sync-byte{(ProtocolSyncBytes.Length > 1 ? "s" : "")} after parsing exception: {ex.Message}", ex));
                             }
                             else
                             {
@@ -576,30 +505,18 @@ namespace GSF.Parsing
         /// Raises the <see cref="DataDiscarded"/> event.
         /// </summary>
         /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
-        protected virtual void OnDataDiscarded(byte[] buffer)
-        {
-            if ((object)DataDiscarded != null)
-                DataDiscarded(this, new EventArgs<byte[]>(buffer));
-        }
+        protected virtual void OnDataDiscarded(byte[] buffer) => DataDiscarded?.Invoke(this, new EventArgs<byte[]>(buffer));
 
         /// <summary>
         /// Raises the <see cref="ParsingException"/> event.
         /// </summary>
         /// <param name="ex">The <see cref="Exception"/> that was encountered during parsing.</param>
-        protected virtual void OnParsingException(Exception ex)
-        {
-            if ((object)ParsingException != null)
-                ParsingException(this, new EventArgs<Exception>(ex));
-        }
+        protected virtual void OnParsingException(Exception ex) => ParsingException?.Invoke(this, new EventArgs<Exception>(ex));
 
         /// <summary>
         /// Raises the <see cref="BufferParsed"/> event.
         /// </summary>
-        protected virtual void OnBufferParsed()
-        {
-            if ((object)BufferParsed != null)
-                BufferParsed(this, EventArgs.Empty);
-        }
+        protected virtual void OnBufferParsed() => BufferParsed?.Invoke(this, EventArgs.Empty);
 
         #endregion
     }
