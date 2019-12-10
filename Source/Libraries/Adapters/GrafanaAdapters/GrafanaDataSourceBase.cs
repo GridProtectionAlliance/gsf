@@ -24,6 +24,7 @@
 using GSF;
 using GSF.Collections;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.NumericalAnalysis;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -806,6 +807,26 @@ namespace GrafanaAdapters
 
             return responses;
         }
+
+        /// <summary>
+        /// Queries current alarm device state.
+        /// </summary>
+        /// <param name="request">Alarm request.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns> Queried device alarm states.</returns>
+        public Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
+                }
+            },
+            cancellationToken);
+        }
+
+
 
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.

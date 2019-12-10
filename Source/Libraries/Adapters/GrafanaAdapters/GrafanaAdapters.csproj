@@ -50,6 +50,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.ServiceModel" />
@@ -69,6 +70,8 @@
     <Compile Include="AnnotationType.cs" />
     <Compile Include="Column.cs" />
     <Compile Include="DataSourceValueGroup.cs" />
+    <Compile Include="DeviceAlarmStateAdapter.cs" />
+    <Compile Include="DeviceStateModels.cs" />
     <Compile Include="GrafanaDataService.NET.cs" />
     <Compile Include="GrafanaDataServiceMono.cs" />
     <Compile Include="GrafanaDataService.cs" />

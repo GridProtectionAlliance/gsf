@@ -50,6 +50,19 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
+        /// Queries openPDC Alarmstates as a Grafana data source.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        public async Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request)
+        {
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
+            return await m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
+        }
+
+
+        /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
         /// </summary>
         /// <param name="request">Query request.</param>

@@ -44,6 +44,13 @@ namespace GrafanaAdapters
         Task<List<TimeSeriesValues>> Query(QueryRequest request);
 
         /// <summary>
+        /// Queries openPDC Alarmstates as a Grafana data source.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/GetAlarmState", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request);
+
+        /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
         /// </summary>
         /// <param name="request">Query request.</param>
